@@ -188,4 +188,8 @@ impl ModuleProfile for Map {
     fn library_hidden(&self) -> &'static [&'static str] {
         &[]
     }
+
+    fn project_tree(&self) -> (&'static str, &'static str) {
+        ("Proje ağacı", "Projede yüzey yok: Arazi sekmesinden yüzey oluşturun; ondan çizilen eş yükselti, platform ve sıfır hattı burada görünür.")
+    }
 }

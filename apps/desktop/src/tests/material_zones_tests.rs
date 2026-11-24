@@ -2,7 +2,6 @@
 //! of a layer, named and factored by their attributes, and the window's answer is the shared case's; and its pictures.
 
 use crate::app::{App, Message};
-use crate::road;
 use crate::surface_analysis_window::{Event as W, Mode, Read, Tab};
 
 fn cases() -> serde_json::Value {
@@ -19,12 +18,12 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::SurfaceAnalysis(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SurfaceAnalysis(e)));
 }
 
 fn read(app: &App) -> Read {
     match &app
-        .road
+        .terrain_work
         .surface_analysis_window
         .as_ref()
         .expect("open")
@@ -49,7 +48,7 @@ fn fark_reads_the_material_zones_from_a_layer() {
     let mut app = app();
     compared(&mut app);
     assert_eq!(
-        app.road
+        app.terrain_work
             .surface_analysis_window
             .as_ref()
             .expect("open")

@@ -5,7 +5,6 @@
 //! Uygula stays off; on the drawing the reference and the vertex are ringed. And the pictures. Docs/adr/4980: on the
 //! two-part area Sahneden seç's vertex click by the first part's hole chooses that ring; Uygula writes the shared case's.
 
-use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -42,7 +41,7 @@ fn on_reference() -> App {
     let mut app = opened();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
         Target::Reference,
     ))));
     app
@@ -57,7 +56,7 @@ fn typed(app: &mut App) {
         G::At(4.0),
         G::Percent(2.0),
     ] {
-        let _ = app.update(Message::Road(road::Event::Grade(e)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(e)));
     }
 }
 
@@ -69,21 +68,21 @@ fn case(name: &str) -> Value {
 fn referanstan_previews_the_case_and_writes_one_step() {
     let mut app = on_reference();
     assert_eq!(
-        (app.dialog, app.road.grade.target),
+        (app.dialog, app.terrain_work.grade.target),
         (
-            Some(Dialog::Road(road::RoadDialogKind::Grade)),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)),
             Target::Reference
         )
     );
     assert!(
-        app.road.grade.raised.is_none() && !app.road.grade.referenced,
+        app.terrain_work.grade.raised.is_none() && !app.terrain_work.grade.referenced,
         "nothing until a reference is given"
     );
     typed(&mut app);
     let step = &case("Eğimle: köşe eşikten %2 yukarıda")["steps"][0];
     let want = &step["result"]["output"];
     let got = serde_json::to_value(
-        app.road
+        app.terrain_work
             .grade
             .raised
             .clone()
@@ -102,7 +101,7 @@ fn referanstan_previews_the_case_and_writes_one_step() {
         (&got["moved"], &got["unset"]),
         (&want["moved"], &want["unset"])
     );
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     let after: Vec<Option<f64>> =
         serde_json::from_value(step["expect"]["fields"]["1"]["zs"].clone()).expect("zs");
     for (a, b) in zs(&app, 1).iter().zip(&after) {
@@ -123,9 +122,9 @@ fn referanstan_previews_the_case_and_writes_one_step() {
 #[test]
 fn two_clicks_take_the_reference_and_the_vertex() {
     let mut app = on_reference();
-    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Pick)));
     assert_eq!(
-        (app.dialog, app.road.grade.picking),
+        (app.dialog, app.terrain_work.grade.picking),
         (None, Some(Pick::Reference))
     );
     // The line's second end (60, 180), 901.5 m.
@@ -134,15 +133,15 @@ fn two_clicks_take_the_reference_and_the_vertex() {
         y: Y0 + 179.99
     })));
     assert_eq!(
-        app.road.grade.picking,
+        app.terrain_work.grade.picking,
         Some(Pick::Vertex),
         "the vertex awaited"
     );
     assert_eq!(
         (
-            app.road.grade.east,
-            app.road.grade.north,
-            app.road.grade.height
+            app.terrain_work.grade.east,
+            app.terrain_work.grade.north,
+            app.terrain_work.grade.height
         ),
         (X0 + 60.0, Y0 + 180.0, 901.5)
     );
@@ -152,11 +151,11 @@ fn two_clicks_take_the_reference_and_the_vertex() {
         y: Y0 + 40.0
     })));
     assert_eq!(
-        (app.road.grade.at, app.dialog),
-        (3.0, Some(Dialog::Road(road::RoadDialogKind::Grade)))
+        (app.terrain_work.grade.at, app.dialog),
+        (3.0, Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)))
     );
     let r = app
-        .road
+        .terrain_work
         .grade
         .raised
         .clone()
@@ -164,16 +163,16 @@ fn two_clicks_take_the_reference_and_the_vertex() {
         .expect("previewed");
     assert!((r.distance - (30.0f64).hypot(140.0)).abs() < 1e-9);
     // By no elevation: the place, the elevation kept to type.
-    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Pick)));
     assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
         x: X0 + 150.0,
         y: Y0 + 250.0
     })));
     assert_eq!(
         (
-            app.road.grade.east,
-            app.road.grade.north,
-            app.road.grade.height
+            app.terrain_work.grade.east,
+            app.terrain_work.grade.north,
+            app.terrain_work.grade.height
         ),
         (X0 + 150.0, Y0 + 250.0, 901.5)
     );
@@ -193,12 +192,12 @@ fn two_clicks_take_the_reference_and_the_vertex() {
 fn the_reference_stays_for_the_next_object() {
     let mut app = on_reference();
     typed(&mut app);
-    let _ = app.update(Message::Road(road::Event::Grade(G::By(By::Difference))));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Difference(-0.4))));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::By(By::Difference))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Difference(-0.4))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     app.selection.set([Slot(2)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let s = &app.road.grade;
+    let s = &app.terrain_work.grade;
     assert_eq!(
         (s.target, s.referenced, s.east, s.north, s.height, s.by),
         (
@@ -214,10 +213,10 @@ fn the_reference_stays_for_the_next_object() {
     let r = s.raised.clone().expect("a plan").expect("previewed");
     assert!((r.after - (849.75 - 0.4)).abs() < 1e-9);
     // Vazgeç lets it go.
-    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Close)));
     let _ = app.update(Message::Run("tool.grade"));
     assert_eq!(
-        (app.road.grade.target, app.road.grade.referenced),
+        (app.terrain_work.grade.target, app.terrain_work.grade.referenced),
         (Target::Grade, false)
     );
 }
@@ -226,9 +225,9 @@ fn the_reference_stays_for_the_next_object() {
 fn a_vertex_without_an_elevation_is_said_and_uygula_stays_off() {
     let mut app = on_reference();
     typed(&mut app);
-    let _ = app.update(Message::Road(road::Event::Grade(G::At(2.0))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::At(2.0))));
     let why = app
-        .road
+        .terrain_work
         .grade
         .raised
         .clone()
@@ -239,7 +238,7 @@ fn a_vertex_without_an_elevation_is_said_and_uygula_stays_off() {
         "1. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin."
     );
     let before = zs(&app, 1);
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     assert_eq!(zs(&app, 1), before, "nothing written");
 }
 
@@ -257,7 +256,7 @@ fn the_reference_and_the_vertex_are_marked() {
         y: Y0 + 40.0,
     };
     assert_eq!(app.grade_marks(), (vec![r, v], vec![r, v]));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Close)));
     assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()), "closed");
 }
 
@@ -292,7 +291,7 @@ fn screens() {
         );
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("tool.grade"));
-        let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
             Target::Reference,
         ))));
         typed(&mut app);
@@ -302,7 +301,7 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // After Uygula: the kerb's vertices in Koordinat listesi, their elevations moved by the same difference.
-        let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
         app.selection.set([Slot(1)]);
         app.show_bottom(crate::bottom::BottomTab::Coords);
         snapshot.settle(&mut app, App::view, &mut update);
@@ -318,16 +317,16 @@ fn on_a_hole() -> App {
     let mut app = opened();
     app.selection.set([Slot(3)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
         Target::Reference,
     ))));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Pick)));
     assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
         x: X0 + 260.0,
         y: Y0 - 15.0
     })));
     assert_eq!(
-        app.road.grade.picking,
+        app.terrain_work.grade.picking,
         Some(Pick::Vertex),
         "the vertex awaited"
     );
@@ -336,7 +335,7 @@ fn on_a_hole() -> App {
         y: Y0 + 9.99
     })));
     assert_eq!(
-        (app.road.grade.ring, app.road.grade.at),
+        (app.terrain_work.grade.ring, app.terrain_work.grade.at),
         ((0, 1), 2.0),
         "the first part's hole, its second vertex"
     );
@@ -347,7 +346,7 @@ fn on_a_hole() -> App {
         G::By(By::Difference),
         G::Difference(-0.5),
     ] {
-        let _ = app.update(Message::Road(road::Event::Grade(e)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(e)));
     }
     app
 }
@@ -357,14 +356,14 @@ fn the_vertex_click_chooses_the_hole_and_uygula_writes_the_case() {
     let mut app = on_a_hole();
     let want = case("Alan: ilk parçanın deliğinin");
     let raised = app
-        .road
+        .terrain_work
         .grade
         .raised
         .clone()
         .expect("a plan")
         .expect("planned");
     assert!((raised.after - 120.25).abs() < 1e-9, "{raised:?}");
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     let doc = app.document.as_ref().expect("a drawing");
     let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(3)) else {
         panic!("the area")

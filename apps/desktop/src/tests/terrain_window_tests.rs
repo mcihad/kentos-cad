@@ -1,6 +1,5 @@
 //! Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4): the window writes through `road.terrains`, and its pictures.
 
-use crate::road;
 use kentos_domain::Slot;
 
 use crate::app::{App, Dialog, Message};
@@ -21,7 +20,7 @@ fn app(work: &str) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Terrains(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Terrains(e)));
 }
 
 /// The boundary of the shared drawing: its tenth object.
@@ -32,7 +31,7 @@ fn made(app: &mut App) {
     let _ = app.update(Message::Run("terrain.new"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Terrains))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains))
     );
     send(app, W::PointLayer("zemin".into()));
     send(app, W::BreaklineLayer("kirik".into()));
@@ -49,7 +48,7 @@ fn the_window_makes_a_surface_and_accepts_it_again() {
     let mut app = app("road");
     made(&mut app);
     assert!(
-        app.road.terrain_window.is_none(),
+        app.terrain_work.terrain_window.is_none(),
         "Kaydet closes the window"
     );
     let doc = &app.document.as_ref().expect("a drawing").model;
@@ -108,10 +107,10 @@ fn landxml_comes_in_as_a_surface() {
 fn an_architecture_project_has_no_surfaces() {
     let mut app = app("architecture");
     let _ = app.update(Message::Run("terrain.surfaces"));
-    assert!(app.road.terrain_window.is_none());
+    assert!(app.terrain_work.terrain_window.is_none());
     assert_ne!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Terrains))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains))
     );
 }
 
@@ -273,7 +272,7 @@ fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
     assert!(app.terrain_picked(at(25.0, 25.0)));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Terrains)),
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)),
         "and comes back"
     );
     send(&mut app, W::EditZ("103,5".into()));
@@ -291,7 +290,7 @@ fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
         !app.terrain_picked(at(1.0, 1.0)),
         "no pick is awaited any more"
     );
-    let w = app.road.terrain_window.as_ref().expect("the window");
+    let w = app.terrain_work.terrain_window.as_ref().expect("the window");
     let edits = w.chosen_def().expect("a surface").edits.clone();
     assert_eq!(edits.len(), 3, "{edits:?}");
     assert_eq!(
@@ -317,7 +316,7 @@ fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
     // Sonuncuyu kaldır, then the triangle again.
     send(&mut app, W::EditUndo);
     assert_eq!(
-        app.road
+        app.terrain_work
             .terrain_window
             .as_ref()
             .and_then(|w| w.chosen_def())
@@ -383,7 +382,7 @@ fn screens_edits() {
         pick(&mut app, 25.0, 25.0);
         assert_eq!(
             app.dialog,
-            Some(Dialog::Road(road::RoadDialogKind::Terrains)),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)),
             "the pick came back through the tool"
         );
         send(&mut app, W::EditZ("103,5".into()));
@@ -394,7 +393,7 @@ fn screens_edits() {
         send(&mut app, W::EditTool(EditTool::RemoveTriangle));
         pick(&mut app, 30.0, 26.0);
         // An edge put in that a later source would cross is said, not dropped: here one crossing the breakline.
-        if let Some(w) = app.road.terrain_window.as_mut() {
+        if let Some(w) = app.terrain_work.terrain_window.as_mut() {
             w.push_edit(kentos_commands::SurfaceEdit::AddEdge {
                 ax: 21.0,
                 ay: 24.0,
@@ -448,7 +447,7 @@ fn pad_app_keeping(work: &str, keep: &[&str]) -> App {
 
 /// The window's row of the surface named so.
 fn row_of(app: &App, name: &str) -> usize {
-    app.road
+    app.terrain_work
         .terrain_window
         .as_ref()
         .expect("the window")
@@ -471,7 +470,7 @@ fn a_saved_surface_is_pasted_into_another_and_kaydet_writes_the_paste() {
     // Nothing chosen yet: Yüzey yapıştır says so.
     send(&mut app, W::Paste);
     assert!(
-        app.road
+        app.terrain_work
             .terrain_window
             .as_ref()
             .and_then(|w| w.chosen_def())
@@ -488,7 +487,7 @@ fn a_saved_surface_is_pasted_into_another_and_kaydet_writes_the_paste() {
         .expect("the button")
         .expect("a message");
     let _ = app.update(press);
-    let w = app.road.terrain_window.as_ref().expect("the window");
+    let w = app.terrain_work.terrain_window.as_ref().expect("the window");
     assert_eq!(
         w.chosen_def().expect("a surface").edits,
         vec![SurfaceEdit::Paste {
@@ -532,7 +531,7 @@ fn a_paste_back_is_a_cycle_and_a_surface_does_not_paste_itself() {
     send(&mut app, W::Choose(pad));
     send(&mut app, W::PasteFrom("t-3".into()));
     send(&mut app, W::Paste);
-    let w = app.road.terrain_window.as_ref().expect("the window");
+    let w = app.terrain_work.terrain_window.as_ref().expect("the window");
     let report = w.edit_report.as_ref().expect("made with its edits");
     let left: Vec<(&str, &str)> = report
         .left
@@ -546,7 +545,7 @@ fn a_paste_back_is_a_cycle_and_a_surface_does_not_paste_itself() {
     send(&mut app, W::PasteFrom("t-8".into()));
     send(&mut app, W::Paste);
     assert!(
-        app.road
+        app.terrain_work
             .terrain_window
             .as_ref()
             .and_then(|w| w.chosen_def())
@@ -644,7 +643,7 @@ fn a_work_without_a_surface_leads_to_yuzey_olustur() {
             crate::files_testing::evidence(&mut snapshot, &app, "ur2-007", "uyari");
         }
         let _ = app.update(message);
-        assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Terrains)), "{work}");
+        assert_eq!(app.dialog, Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)), "{work}");
     }
 }
 
@@ -655,8 +654,8 @@ fn a_refused_save_is_said_in_the_window_and_the_draft_stays() {
     let mut app = app("road");
     let _ = app.update(Message::Run("terrain.new"));
     send(&mut app, W::Save);
-    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Terrains)), "the window stays");
-    let w = app.road.terrain_window.as_ref().expect("the draft stays");
+    assert_eq!(app.dialog, Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)), "the window stays");
+    let w = app.terrain_work.terrain_window.as_ref().expect("the draft stays");
     let why = w.error.clone().expect("the reason in the window");
     assert!(why.contains("noktası ya da kırık hattı olmalı"), "{why}");
     assert!(!w.edits_pane, "the sources in sight");
@@ -669,9 +668,9 @@ fn a_refused_save_is_said_in_the_window_and_the_draft_stays() {
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-008", "kaynaksiz-kaydet");
     }
     send(&mut app, W::PointLayer("zemin".into()));
-    assert!(app.road.terrain_window.as_ref().is_some_and(|w| w.error.is_none()), "fixed, the reason goes");
+    assert!(app.terrain_work.terrain_window.as_ref().is_some_and(|w| w.error.is_none()), "fixed, the reason goes");
     send(&mut app, W::Save);
-    assert!(app.road.terrain_window.is_none(), "saved from the same window");
+    assert!(app.terrain_work.terrain_window.is_none(), "saved from the same window");
 }
 
 /// UR2-040: iki-yuzey.xml (EG 14 points, 22 triangles; FG 8 and 10): its surfaces are listed to choose from; FG alone,
@@ -687,7 +686,7 @@ fn a_landxml_files_surfaces_are_chosen() {
     let _ = app.update(Message::Run("terrain.surfaces"));
     send(&mut app, W::ContourLayer("esyukselti".into()));
     send(&mut app, W::LandXmlChosen(Some(path.clone())));
-    let listed = app.road.terrain_window.as_ref().and_then(|w| w.landxml.clone()).expect("the surfaces listed");
+    let listed = app.terrain_work.terrain_window.as_ref().and_then(|w| w.landxml.clone()).expect("the surfaces listed");
     let found: Vec<(String, usize, usize)> = listed.1.clone();
     assert_eq!(found, vec![("EG".to_owned(), 14, 22), ("FG".to_owned(), 8, 10)]);
     if std::env::var_os("KENTOS_SHOTS").is_some() {

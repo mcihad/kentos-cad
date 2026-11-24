@@ -1,16 +1,16 @@
 //! The road design (Yol) module's part of the shell (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6): its
 //! windows' and panels' state in `App::road`, its messages under `Message::Road`, its windows under
-//! `Dialog::Road`. A new window of the module is added here and in its own file; `app.rs` stays as it is.
+//! `Dialog::Road`. The terrain work it shares with Harita (surfaces, Eğimle kot ver, platforms, drainage, the project
+//! tree) is the core's (terrain_work.rs, docs/adr/9199 §4.4). A new window of the module is added here and in its own
+//! file; `app.rs` stays as it is.
 
 use iced::{Element, Task};
 
 use crate::app::{App, Message};
 
 /// The road design (Yol) module's windows and panels.
+#[derive(Default)]
 pub struct RoadUiState {
-    pub road_project: crate::road_project_panel::PanelState,
-    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
-    pub terrain_window: Option<crate::terrain_window::Window>,
     /// Güzergâh (alignment_window.rs, plan/road.md Y3).
     pub(crate) alignment_window: Option<crate::alignment_window::Window>,
     /// Boykesit (profile_window.rs, plan/road.md Y4).
@@ -40,16 +40,8 @@ pub struct RoadUiState {
     pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
-    /// Platform (platform_window.rs, plan/road.md Y14.3).
-    pub(crate) platform_window: Option<Box<crate::platform_window::Window>>,
-    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
-    pub(crate) terrain_cloud_window: Option<Box<crate::terrain_cloud_window::Window>>,
-    /// Drenaj (drainage_window.rs, plan/road.md Y16.3).
-    pub(crate) drainage_window: Option<Box<crate::drainage_window::Window>>,
     /// Araç izi (swept_window.rs, plan/road.md Y17.3).
     pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
-    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
-    pub surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
     /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
     pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
@@ -62,19 +54,11 @@ pub struct RoadUiState {
     pub(crate) route_window: Option<Box<crate::route_window::Window>>,
     /// Kavşak (junction_window.rs, plan/road.md Y12.2).
     pub(crate) junction_window: Option<Box<crate::junction_window::Window>>,
-    pub(crate) grade: crate::grade_window::State,
-    pub(crate) project_graph: crate::project_graph_window::State,
-    pub sheet_contours: crate::sheet_contours_window::State,
-    pub(crate) section_check: crate::section_check_window::State,
-    pub(crate) stockpile: crate::stockpile_window::State,
 }
 
 /// The road design (Yol) module's messages, `Message::Road`.
 #[derive(Debug, Clone)]
 pub enum Event {
-    RoadProject(crate::road_project_panel::Event),
-    /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
-    Terrains(crate::terrain_window::Event),
     /// An event of Güzergâh (alignment_window.rs, plan/road.md Y3).
     Alignments(crate::alignment_window::Event),
     /// An event of Boykesit (profile_window.rs, plan/road.md Y4).
@@ -104,16 +88,8 @@ pub enum Event {
     Culverts(crate::culvert_window::Event),
     /// An event of İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     RetainingWalls(crate::retaining_wall_window::Event),
-    /// An event of Platform (platform_window.rs, plan/road.md Y14.3).
-    Platforms(crate::platform_window::Event),
-    /// An event of Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
-    TerrainCloud(crate::terrain_cloud_window::Event),
-    /// An event of Drenaj (drainage_window.rs, plan/road.md Y16.3).
-    Drainage(crate::drainage_window::Event),
     /// An event of Araç izi (swept_window.rs, plan/road.md Y17.3).
     Swept(crate::swept_window::Event),
-    /// An event of Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
-    SurfaceAnalysis(crate::surface_analysis_window::Event),
     /// An event of Görüş mesafesi (sight_window.rs, plan/road.md Y20).
     Sight(crate::sight_window::Event),
     /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
@@ -126,18 +102,11 @@ pub enum Event {
     Route(crate::route_window::Event),
     /// An event of Kavşak (junction_window.rs, plan/road.md Y12.2).
     Junctions(crate::junction_window::Event),
-    Grade(crate::grade_window::Event),
-    ProjectGraph(crate::project_graph_window::Event),
-    SheetContours(crate::sheet_contours_window::Event),
-    SectionCheck(crate::section_check_window::Event),
-    Stockpile(crate::stockpile_window::Event),
 }
 
 /// The road design (Yol) module's windows, `Dialog::Road`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RoadDialogKind {
-    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `RoadUiState::terrain_window`.
-    Terrains,
     /// Güzergâh (alignment_window.rs, plan/road.md Y3); the window is `RoadUiState::alignment_window`.
     Alignments,
     /// Boykesit (profile_window.rs, plan/road.md Y4); the window is `RoadUiState::profile_window`.
@@ -168,16 +137,8 @@ pub enum RoadDialogKind {
     Culverts,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3); the window is `RoadUiState::retaining_wall_window`.
     RetainingWalls,
-    /// Platform (platform_window.rs, plan/road.md Y14.3); the window is `RoadUiState::platform_window`.
-    Platforms,
-    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3); the window is `RoadUiState::terrain_cloud_window`.
-    TerrainCloud,
-    /// Drenaj (drainage_window.rs, plan/road.md Y16.3); the window is `RoadUiState::drainage_window`.
-    Drainage,
     /// Araç izi (swept_window.rs, plan/road.md Y17.3); the window is `RoadUiState::swept_window`.
     Swept,
-    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5); the window is `RoadUiState::surface_analysis_window`.
-    SurfaceAnalysis,
     /// Görüş mesafesi (sight_window.rs, plan/road.md Y20); the window is `RoadUiState::sight_window`.
     Sight,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `RoadUiState::platform_water_window`.
@@ -190,24 +151,12 @@ pub enum RoadDialogKind {
     Route,
     /// Kavşak (junction_window.rs, plan/road.md Y12.2); the window is `RoadUiState::junction_window`.
     Junctions,
-    /// Eğimle kot ver (grade_window.rs, docs/adr/1290); its state is `RoadUiState::grade`.
-    Grade,
-    /// İş grafiği (project_graph_window.rs, docs/adr/1940); its state is `RoadUiState::project_graph`.
-    ProjectGraph,
-    /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `RoadUiState::sheet_contours`.
-    SheetContours,
-    /// Kesit kontrolü (section_check_window.rs, docs/adr/5120); its state is `RoadUiState::section_check`.
-    SectionCheck,
-    /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `RoadUiState::stockpile`.
-    Stockpile,
 }
 
 impl App {
     /// A message of the module (`Message::Road`); a window's own handler is in its file.
     pub(crate) fn road_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::RoadProject(e) => self.road_project_event(e),
-            Event::Terrains(event) => self.terrain_event(event),
             Event::Alignments(event) => self.alignment_event(event),
             Event::Profiles(event) => self.profile_event(event),
             Event::Sections(event) => self.section_event(event),
@@ -223,29 +172,19 @@ impl App {
             Event::Guardrails(event) => self.guardrail_event(event),
             Event::Culverts(event) => self.culvert_event(event),
             Event::RetainingWalls(event) => self.retaining_wall_event(event),
-            Event::Platforms(event) => self.platform_event(event),
-            Event::TerrainCloud(event) => self.terrain_cloud_event(event),
-            Event::Drainage(event) => self.drainage_event(event),
             Event::Swept(event) => self.swept_event(event),
-            Event::SurfaceAnalysis(event) => self.surface_analysis_event(event),
             Event::Sight(event) => self.sight_event(event),
             Event::PlatformWater(event) => self.platform_water_event(event),
             Event::HaulPlan(event) => self.haul_plan_event(event),
             Event::Pay(event) => self.pay_event(event),
             Event::Route(event) => self.route_event(event),
             Event::Junctions(event) => self.junction_event(event),
-            Event::Grade(event) => self.grade_event(event),
-            Event::ProjectGraph(event) => self.project_graph_event(event),
-            Event::SheetContours(event) => self.sheet_contours_event(event),
-            Event::SectionCheck(event) => self.section_check_event(event),
-            Event::Stockpile(event) => self.stockpile_event(event),
         }
     }
 
     /// A window of the module (`Dialog::Road`).
     pub(crate) fn road_dialog_view(&self, kind: RoadDialogKind) -> Element<'_, Message> {
         match kind {
-            RoadDialogKind::Terrains => self.terrain_view(),
             RoadDialogKind::Alignments => self.alignment_view(),
             RoadDialogKind::Profiles => self.road_profile_view(),
             RoadDialogKind::Sections => self.road_section_view(),
@@ -261,22 +200,13 @@ impl App {
             RoadDialogKind::Guardrails => self.guardrail_view(),
             RoadDialogKind::Culverts => self.culvert_view(),
             RoadDialogKind::RetainingWalls => self.retaining_wall_view(),
-            RoadDialogKind::Platforms => self.platform_view(),
-            RoadDialogKind::TerrainCloud => self.terrain_cloud_view(),
-            RoadDialogKind::Drainage => self.drainage_view(),
             RoadDialogKind::Swept => self.swept_view(),
-            RoadDialogKind::SurfaceAnalysis => self.surface_analysis_view(),
             RoadDialogKind::Sight => self.sight_view(),
             RoadDialogKind::PlatformWater => self.platform_water_view(),
             RoadDialogKind::HaulPlan => self.haul_plan_view(),
             RoadDialogKind::Pay => self.pay_view(),
             RoadDialogKind::Route => self.route_view(),
             RoadDialogKind::Junctions => self.junction_view(),
-            RoadDialogKind::Grade => self.grade_view(),
-            RoadDialogKind::ProjectGraph => self.project_graph_view(),
-            RoadDialogKind::SheetContours => self.sheet_contours_view(),
-            RoadDialogKind::SectionCheck => self.section_check_view(),
-            RoadDialogKind::Stockpile => self.stockpile_view(),
         }
     }
 }

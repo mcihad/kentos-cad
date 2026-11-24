@@ -4,7 +4,6 @@
 //! step; without break points only the heights change; a drawing with no surface says so and Uygula stays off. And the
 //! pictures.
 
-use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -30,7 +29,7 @@ fn on_surface(slot: u32) -> App {
     let mut app = opened(&cases()["setup"]);
     app.selection.set([Slot(slot)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
         Target::Surface,
     ))));
     app
@@ -45,11 +44,11 @@ fn case_step(name: &str) -> Value {
 #[test]
 fn yuzeyden_previews_and_writes_the_shared_case() {
     let mut app = on_surface(9);
-    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Grade)));
-    assert_eq!(app.road.grade.surface, "t-1", "the project's first surface");
-    let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
+    assert_eq!(app.dialog, Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)));
+    assert_eq!(app.terrain_work.grade.surface, "t-1", "the project's first surface");
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Breaks(true))));
     let plan = app
-        .road
+        .terrain_work
         .grade
         .draped
         .clone()
@@ -58,7 +57,7 @@ fn yuzeyden_previews_and_writes_the_shared_case() {
     assert_eq!((plan.set, plan.outside, plan.inserted), (8, 0, 4));
     let step = case_step("Ara kırık noktalarıyla");
     let want = &step["expect"]["fields"]["9"];
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     assert_eq!(app.dialog, None);
     let doc = app.document.as_ref().expect("a drawing");
     let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(9)) else {
@@ -92,14 +91,14 @@ fn yuzeyden_previews_and_writes_the_shared_case() {
 fn without_break_points_only_the_heights_change() {
     let mut app = on_surface(8);
     let plan = app
-        .road
+        .terrain_work
         .grade
         .draped
         .clone()
         .expect("a plan")
         .expect("planned");
     assert_eq!((plan.set, plan.inserted), (3, 0));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Apply)));
     let doc = app.document.as_ref().expect("a drawing");
     let Some(kentos_commands::Entity::Polyline(p)) = doc.model.get(Slot(8)) else {
         panic!("a polyline")
@@ -120,11 +119,11 @@ fn no_surface_is_said() {
     let mut app = opened(&setup);
     app.selection.set([Slot(8)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
         Target::Surface,
     ))));
-    assert!(app.road.grade.surface.is_empty());
-    assert!(app.road.grade.draped.is_none());
+    assert!(app.terrain_work.grade.surface.is_empty());
+    assert!(app.terrain_work.grade.draped.is_none());
 }
 
 /// The window on Yüzeyden with break points, light wide and dark narrow, `.run/gui-evidence/yuzeyden-kot-4180/`:
@@ -147,10 +146,10 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.selection.set([Slot(9)]);
         let _ = app.update(Message::Run("tool.grade"));
-        let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Target(
             Target::Surface,
         ))));
-        let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Breaks(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

@@ -119,7 +119,7 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::EventLinks) => {
                 crate::event_links_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Terrains) => crate::terrain_window::TITLE.to_owned(),
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains) => crate::terrain_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::Alignments) => {
                 crate::alignment_window::TITLE.to_owned()
             }
@@ -155,17 +155,17 @@ impl App {
             Dialog::Road(road::RoadDialogKind::RetainingWalls) => {
                 crate::retaining_wall_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Platforms) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms) => {
                 crate::platform_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::TerrainCloud) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud) => {
                 crate::terrain_cloud_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Drainage) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage) => {
                 crate::drainage_window::TITLE.to_owned()
             }
             Dialog::Road(road::RoadDialogKind::Swept) => crate::swept_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::SurfaceAnalysis) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SurfaceAnalysis) => {
                 crate::surface_analysis_window::TITLE.to_owned()
             }
             Dialog::Road(road::RoadDialogKind::Sight) => crate::sight_window::TITLE.to_owned(),
@@ -242,12 +242,12 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::FeaturesCode) => {
                 crate::features_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Grade) => crate::grade_window::TITLE.to_owned(),
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade) => crate::grade_window::TITLE.to_owned(),
             Dialog::CleanReport => crate::clean_report_window::TITLE.to_owned(),
             Dialog::OpenReport => crate::open_report_window::TITLE.to_owned(),
             Dialog::ExchangeCheck => crate::exchange_check_window::TITLE.to_owned(),
             Dialog::OverlapLayers => crate::overlap_layers_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::ProjectGraph) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::ProjectGraph) => {
                 crate::project_graph_window::TITLE.to_owned()
             }
             Dialog::Gis(gis::GisDialogKind::FeaturesReconcile) => {
@@ -256,13 +256,13 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::Impact) => crate::impact_window::TITLE.to_owned(),
             Dialog::MapCrs => crate::map_crs::TITLE.to_owned(),
             Dialog::CatalogReport => crate::catalog_report_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::SheetContours) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SheetContours) => {
                 crate::sheet_contours_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::SectionCheck) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SectionCheck) => {
                 crate::section_check_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Stockpile) => {
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile) => {
                 crate::stockpile_window::TITLE.to_owned()
             }
             Dialog::XrefAttach => crate::xrefs_window::ATTACH_TITLE.to_owned(),
@@ -362,7 +362,7 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::Relations)) => self.relations_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::Joins)) => self.joins_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::EventLinks)) => self.event_links_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Terrains)) => self.terrain_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)) => self.terrain_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Alignments)) => self.alignment_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Profiles)) => self.profile_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Sections)) => self.section_control(control),
@@ -388,13 +388,13 @@ impl App {
             Some(Dialog::Road(road::RoadDialogKind::RetainingWalls)) => {
                 self.retaining_wall_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::Platforms)) => self.platform_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::TerrainCloud)) => {
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms)) => self.platform_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud)) => {
                 self.terrain_cloud_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::Drainage)) => self.drainage_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage)) => self.drainage_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Swept)) => self.swept_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::SurfaceAnalysis)) => {
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SurfaceAnalysis)) => {
                 self.surface_analysis_control(control)
             }
             Some(Dialog::Road(road::RoadDialogKind::Sight)) => self.sight_control(control),
@@ -453,11 +453,11 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::FeaturesCode)) => {
                 self.features_code_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::Grade)) => self.grade_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)) => self.grade_control(control),
             Some(Dialog::CleanReport) => self.clean_report_control(control),
             Some(Dialog::OpenReport) => self.open_report_control(control),
             Some(Dialog::ExchangeCheck) => self.exchange_check_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::ProjectGraph)) => {
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::ProjectGraph)) => {
                 self.project_graph_control(control)
             }
             Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile)) => {
@@ -466,13 +466,13 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::Impact)) => self.impact_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::Reproject)) => self.reproject_control(control),
             Some(Dialog::CatalogReport) => self.catalog_report_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::SheetContours)) => {
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SheetContours)) => {
                 self.sheet_contours_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::SectionCheck)) => {
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SectionCheck)) => {
                 self.section_check_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::Stockpile)) => self.stockpile_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile)) => self.stockpile_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => {
                 self.quantities_control(control)
             }

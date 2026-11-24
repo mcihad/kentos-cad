@@ -2,7 +2,6 @@
 //! does; Kesit kontrolü, opened from the selection (the two farthest points the ends), answers what the shared case of
 //! `road.terrains.sectioncheck` answers, and a corridor puts the far point off the line. And their pictures.
 
-use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -43,18 +42,18 @@ const OFF: u32 = 23;
 fn turned(app: &mut App) {
     let _ = app.update(Message::Run("terrain.sheetContours"));
     for d in ["yol", "sev"] {
-        let _ = app.update(Message::Road(road::Event::SheetContours(E::Detail(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SheetContours(E::Detail(
             d.into(),
             false,
         ))));
     }
-    let _ = app.update(Message::Road(road::Event::SheetContours(E::Built(true))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SheetContours(E::Built(true))));
     for e in [
         E::GridY("7".into()),
         E::GridX("3".into()),
         E::GridAngle("45".into()),
     ] {
-        let _ = app.update(Message::Road(road::Event::SheetContours(e)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SheetContours(e)));
     }
 }
 
@@ -65,7 +64,7 @@ fn the_turned_grid_is_the_shared_case_s() {
     let mut app = opened(file("sheet")["setup"].clone());
     turned(&mut app);
     let r = app
-        .road
+        .terrain_work
         .sheet_contours
         .answer
         .clone()
@@ -79,11 +78,11 @@ fn the_turned_grid_is_the_shared_case_s() {
         assert!((got.x - w["x"].as_f64().expect("x")).abs() < 1e-9 && (got.y - w["y"].as_f64().expect("y")).abs() < 1e-9);
     }
     // A typed angle that is not a number is said, nothing planned.
-    let _ = app.update(Message::Road(road::Event::SheetContours(E::GridAngle(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SheetContours(E::GridAngle(
         "elli".into(),
     ))));
     let why = app
-        .road
+        .terrain_work
         .sheet_contours
         .answer
         .clone()
@@ -100,7 +99,7 @@ fn section(app: &mut App, extra: &[u32]) {
             .chain(extra)
             .map(|s| Slot(*s)),
     );
-    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(K::Open)));
 }
 
 /// Kesit kontrolü from the selection: the farthest two are the ends, the contour layer guessed from its name; the answer
@@ -111,12 +110,12 @@ fn the_section_from_the_selection_is_the_shared_case_s() {
     section(&mut app, &[]);
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::SectionCheck))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SectionCheck))
     );
-    assert_eq!(app.road.section_check.contours, "esyukselti");
-    assert_eq!(app.road.section_check.points.len(), 6);
+    assert_eq!(app.terrain_work.section_check.contours, "esyukselti");
+    assert_eq!(app.terrain_work.section_check.points.len(), 6);
     let (r, warnings) = app
-        .road
+        .terrain_work
         .section_check
         .answer
         .clone()
@@ -139,7 +138,7 @@ fn a_corridor_puts_the_far_point_off_the_line() {
     section(&mut app, &[OFF]);
     let state = |app: &App| {
         let (r, _) = app
-            .road
+            .terrain_work
             .section_check
             .answer
             .clone()
@@ -153,15 +152,15 @@ fn a_corridor_puts_the_far_point_off_the_line() {
             .clone()
     };
     assert_eq!(state(&app), "compared");
-    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Corridor(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(K::Corridor(
         "2".into(),
     ))));
     assert_eq!(state(&app), "offLine");
-    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Corridor(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(K::Corridor(
         "iki".into(),
     ))));
     assert!(
-        app.road
+        app.terrain_work
             .section_check
             .answer
             .clone()
@@ -175,7 +174,7 @@ fn a_corridor_puts_the_far_point_off_the_line() {
 fn too_few_points_are_said() {
     let mut app = opened(file("section")["setup"].clone());
     app.selection.set([Slot(A), Slot(B)]);
-    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(K::Open)));
     assert_eq!(app.dialog, None);
 }
 
@@ -196,7 +195,7 @@ fn screens() {
     let grid: Step = turned;
     let drawn: Step = |app| {
         turned(app);
-        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SheetContours(E::Draw)));
         let b = kentos_commands::Bounds {
             min_x: 175.0,
             min_y: 95.0,
@@ -209,7 +208,7 @@ fn screens() {
     let over: Step = |app| {
         app.selection
             .set([A, B, 14, 24, 16, 17, 18, 19].iter().map(|s| Slot(*s)));
-        let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(K::Open)));
     };
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),

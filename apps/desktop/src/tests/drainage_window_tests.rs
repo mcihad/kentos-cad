@@ -3,7 +3,6 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::drainage_window::Event as W;
-use crate::road;
 
 /// A road project with `road.drainage.query`'s drawing: the culverts' corridors and three lattice terrains.
 fn app() -> App {
@@ -17,7 +16,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Drainage(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Drainage(e)));
 }
 
 /// The valley's outlet with its grid, a culvert and the Rational method's values.
@@ -35,11 +34,11 @@ fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
     let _ = app.update(Message::Run("drainage.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Drainage))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage))
     );
     valley(&mut app);
     send(&mut app, W::Preview);
-    let w = app.road.drainage_window.as_ref().expect("open");
+    let w = app.terrain_work.drainage_window.as_ref().expect("open");
     let q = match &w.preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
@@ -51,7 +50,7 @@ fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
     // A change says the preview is old; a culvert's inlet is a discharge point too.
     send(&mut app, W::Field(0, String::new()));
     assert!(
-        app.road
+        app.terrain_work
             .drainage_window
             .as_ref()
             .expect("open")
@@ -69,7 +68,7 @@ fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
         .count();
     send(&mut app, W::Layer("drenaj".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.drainage_window.is_none());
+    assert!(app.terrain_work.drainage_window.is_none());
     assert_eq!(
         app.document
             .as_ref()
@@ -100,7 +99,7 @@ fn a_comma_runoff_reads_as_a_point_and_its_range_is_said() {
         valley(&mut app);
         send(&mut app, W::Field(3, runoff.into()));
         send(&mut app, W::Preview);
-        match &app.road.drainage_window.as_ref().expect("open").preview {
+        match &app.terrain_work.drainage_window.as_ref().expect("open").preview {
             Some(Ok(q)) => Ok(q.catchment.as_ref().and_then(|c| c.peak).map(f64::to_bits)),
             Some(Err(why)) => Err(why.clone()),
             None => Err("no preview".into()),
@@ -120,7 +119,7 @@ fn the_ponds_of_the_pit() {
     send(&mut app, W::Surface("t-4".into()));
     send(&mut app, W::Field(5, "0".into()));
     send(&mut app, W::Preview);
-    let q = match &app.road.drainage_window.as_ref().expect("open").preview {
+    let q = match &app.terrain_work.drainage_window.as_ref().expect("open").preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
     };
@@ -129,7 +128,7 @@ fn the_ponds_of_the_pit() {
     send(&mut app, W::Field(1, "x".into()));
     send(&mut app, W::Field(0, "4004,1".into()));
     send(&mut app, W::Preview);
-    let why = match &app.road.drainage_window.as_ref().expect("open").preview {
+    let why = match &app.terrain_work.drainage_window.as_ref().expect("open").preview {
         Some(Err(why)) => why.clone(),
         other => panic!("refused: {other:?}"),
     };

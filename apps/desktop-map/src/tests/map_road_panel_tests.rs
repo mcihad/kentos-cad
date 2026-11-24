@@ -1,21 +1,20 @@
 //! Yol projesi in a Harita project (road_project_panel.rs, plan/road.md Y13.3): its tree shows the zero line stale and
 //! draws it again. Harita's profile docks the panel, so this runs with the module registered (docs/adr/9199 §4.2).
 
-use crate::road;
 use kentos_commands::RoadNodeState as S;
 use serde_json::{Value, json};
 use crate::app::{App, Message, Panel};
 use crate::road_project_panel::Event as P;
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Road(road::Event::RoadProject(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::RoadProject(e)));
 }
 
 /// A rebuild, run as a job (docs/adr/2440): the panel looked at until it is over.
 fn rebuild(app: &mut App, e: P) {
     send(app, e);
     let start = std::time::Instant::now();
-    while app.road.road_project.running() {
+    while app.terrain_work.road_project.running() {
         assert!(
             start.elapsed() < std::time::Duration::from_secs(120),
             "the rebuild ends"

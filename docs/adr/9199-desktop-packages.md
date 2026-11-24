@@ -153,6 +153,20 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Bağımlılık tabanı: Harita → CBS 3 → 0. Harita'nın paketi yalnız çekirdeğin kabuğuna ve CAD'ine bağlıdır.
 - Sınama: çekirdek 2837, Harita 191, programlar 34.
 
+### §4.4 Adım 4: Harita ile Yol'un ortak arazi işi çekirdekte
+
+- 15 modül (7,5 bin satır) `road/`'dan `cad/`'a taşındı: Arazi yüzeyleri ve düzenlemeleri, yüzey katmanı, pafta
+  eğrileri, yığın, buluttan arazi, yüzey analizi, Eğimle kot ver (başvuru ve yüzeyiyle), platform, drenaj, proje ağacı,
+  iş grafiği ve kesit kontrolü. Son ikisi yalnız ortak pencerelerin düğmesiyle açılır; onlar da ortaktır.
+- Kendi merkezleri `cad/terrain_work.rs`: `TerrainWorkState` (`App::terrain_work`), `terrain_work::Event`
+  (`Message::TerrainWork`), `TerrainDialogKind` (`Dialog::TerrainWork`). Yol'un merkezinden 11 alan, 11 ileti ve 10
+  pencere çıktı; başvurular betikle çevrildi (204 ileti, 59 pencere, 381 durum erişimi).
+- Proje ağacının başlığı ve boş metni modül adına göre dallanıyordu (`self.program == Some(Module::Map)`, programa
+  bakarak); artık açık projenin modülünün profilinden gelir (`ModuleProfile::project_tree`, her profilde açıkça):
+  hepsi bir arada programda Harita projesi de “Proje ağacı”nı gösterir.
+- Bağımlılık tabanı: kabuk → Yol 6 → 4; çekirdekte modül adına göre dal artmadı.
+- Sınama: çekirdek 2837, Harita 191, programlar 34.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

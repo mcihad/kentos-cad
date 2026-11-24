@@ -19,7 +19,6 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -101,7 +100,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Platforms(event))
+    Message::TerrainWork(crate::terrain_work::Event::Platforms(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -203,19 +202,19 @@ impl App {
         let surface = first.id.clone();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = doc.model.road_platforms().first().map(|p| p.id.clone());
-        self.road.platform_window = Some(Box::new(Window {
+        self.terrain_work.platform_window = Some(Box::new(Window {
             chosen: None,
             surface: Some(surface),
             fields: Default::default(),
             layer,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Platforms));
+        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms));
         let _ = self.platform_event(Event::Choose(chosen));
         // A closed boundary selected when the window opens is a new pad's.
         if chosen_boundary(self).is_some()
             && self
-                .road
+                .terrain_work
                 .platform_window
                 .as_ref()
                 .is_some_and(|w| w.chosen.is_none())
@@ -226,7 +225,7 @@ impl App {
 
     fn refresh_platform(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.platform_window.as_mut() else {
+        let Some(w) = self.terrain_work.platform_window.as_mut() else {
             return;
         };
         w.preview = match w
@@ -249,7 +248,7 @@ impl App {
     /// The balance of the pad as typed: written on a reading copy, then asked there.
     fn balance_platform(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.platform_window.as_mut() else {
+        let Some(w) = self.terrain_work.platform_window.as_mut() else {
             return;
         };
         let found = (|| {
@@ -273,7 +272,7 @@ impl App {
     pub(crate) fn platform_event(&mut self, event: Event) -> Task<Message> {
         let kept = self.document.as_ref().map(|d| d.model.road_platforms().to_vec()).unwrap_or_default();
         let picked = chosen_boundary(self);
-        let Some(w) = self.road.platform_window.as_mut() else {
+        let Some(w) = self.terrain_work.platform_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -334,7 +333,7 @@ impl App {
                     w.fields[4] = trimmed((b.elevation * 1000.0).round() / 1000.0);
                 }
                 self.refresh_platform();
-                if let Some(w) = self.road.platform_window.as_mut() {
+                if let Some(w) = self.terrain_work.platform_window.as_mut() {
                     w.preview.balance = found;
                 }
                 return Task::none();
@@ -343,7 +342,7 @@ impl App {
             Event::Draw => return self.draw_platform(),
             Event::Remove => return self.remove_platform(),
             Event::Close => {
-                self.road.platform_window = None;
+                self.terrain_work.platform_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -353,7 +352,7 @@ impl App {
     }
 
     fn save_platform(&mut self) -> Task<Message> {
-        let Some(w) = self.road.platform_window.as_ref() else {
+        let Some(w) = self.terrain_work.platform_window.as_ref() else {
             return Task::none();
         };
         let input = match w.input() {
@@ -379,7 +378,7 @@ impl App {
     }
 
     fn draw_platform(&mut self) -> Task<Message> {
-        let Some(w) = self.road.platform_window.as_ref() else {
+        let Some(w) = self.terrain_work.platform_window.as_ref() else {
             return Task::none();
         };
         let (Some(id), Some(layer)) = (w.chosen.clone(), w.layer.clone()) else {
@@ -391,7 +390,7 @@ impl App {
         let result = road_platforms_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("Platform planda, {} nesne.", out.uids.len()));
-            self.road.platform_window = None;
+            self.terrain_work.platform_window = None;
             self.dialog = None;
         }
         Task::none()
@@ -399,7 +398,7 @@ impl App {
 
     fn remove_platform(&mut self) -> Task<Message> {
         let Some(id) = self
-            .road
+            .terrain_work
             .platform_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -434,7 +433,7 @@ impl App {
     }
 
     pub(crate) fn platform_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.platform_window else {
+        let Some(w) = &self.terrain_work.platform_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -598,7 +597,7 @@ impl App {
     }
 
     pub(crate) fn platform_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.platform_window.is_none() {
+        if self.terrain_work.platform_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

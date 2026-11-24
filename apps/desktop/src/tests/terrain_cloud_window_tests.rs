@@ -1,7 +1,6 @@
 //! Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3): the window previews the cloud's ground points without
 //! writing, takes an area from the selection, writes the points and the surface in one step; and its pictures.
 
-use crate::road;
 use std::path::PathBuf;
 
 use crate::app::{App, Dialog, Message};
@@ -24,7 +23,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::TerrainCloud(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::TerrainCloud(e)));
 }
 
 #[test]
@@ -33,11 +32,11 @@ fn the_window_previews_then_writes_the_ground_points() {
     let _ = app.update(Message::Run("terrain.cloud"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::TerrainCloud))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud))
     );
     send(&mut app, W::Preview);
     let why = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -51,7 +50,7 @@ fn the_window_previews_then_writes_the_ground_points() {
     send(&mut app, W::Layer("zemin".into()));
     send(&mut app, W::Preview);
     let why = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -64,7 +63,7 @@ fn the_window_previews_then_writes_the_ground_points() {
     send(&mut app, W::Class(2));
     send(&mut app, W::Preview);
     let o = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -81,7 +80,7 @@ fn the_window_previews_then_writes_the_ground_points() {
     let before = doc.entities().count();
     send(&mut app, W::Returns(kentos_commands::CloudReturns::Last));
     assert!(
-        app.road
+        app.terrain_work
             .terrain_cloud_window
             .as_ref()
             .expect("open")
@@ -90,7 +89,7 @@ fn the_window_previews_then_writes_the_ground_points() {
     );
     send(&mut app, W::Preview);
     send(&mut app, W::Apply);
-    assert!(app.road.terrain_cloud_window.is_none());
+    assert!(app.terrain_work.terrain_cloud_window.is_none());
     let doc = &app.document.as_ref().expect("a drawing").model;
     let road = doc.settings().road.as_ref().expect("road");
     assert_eq!(road.surfaces.len(), 2);
@@ -111,14 +110,14 @@ fn an_area_comes_from_the_selection() {
     };
     app.selection.set([slot]);
     let _ = app.update(Message::Run("terrain.cloud"));
-    let w = app.road.terrain_cloud_window.as_ref().expect("open");
+    let w = app.terrain_work.terrain_cloud_window.as_ref().expect("open");
     assert_eq!(w.area.as_ref().map(|a| a.1), Some(5));
     send(&mut app, W::Field(0, "2".into()));
     send(&mut app, W::Class(2));
     send(&mut app, W::Layer("zemin".into()));
     send(&mut app, W::Preview);
     let o = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -130,7 +129,7 @@ fn an_area_comes_from_the_selection() {
     assert!(o.cloud.read < 2232 && o.cloud.area.is_some(), "{o:?}");
     send(&mut app, W::ClearArea);
     assert!(
-        app.road
+        app.terrain_work
             .terrain_cloud_window
             .as_ref()
             .expect("open")
@@ -234,7 +233,7 @@ fn the_window_turns_ellipsoidal_heights_by_the_geoid() {
     let _ = app.update(m);
     send(&mut app, W::Preview);
     let o = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -249,7 +248,7 @@ fn the_window_turns_ellipsoidal_heights_by_the_geoid() {
     send(&mut app, W::Heights(0));
     send(&mut app, W::Preview);
     let o = match &app
-        .road
+        .terrain_work
         .terrain_cloud_window
         .as_ref()
         .expect("open")
@@ -316,7 +315,7 @@ fn a_missing_cloud_file_is_said_as_such() {
     send(&mut app, W::Layer("zemin".into()));
     send(&mut app, W::Class(2));
     send(&mut app, W::Preview);
-    let why = match &app.road.terrain_cloud_window.as_ref().expect("open").preview {
+    let why = match &app.terrain_work.terrain_cloud_window.as_ref().expect("open").preview {
         Some(Err(why)) => why.clone(),
         other => panic!("refused: {other:?}"),
     };

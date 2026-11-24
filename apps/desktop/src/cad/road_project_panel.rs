@@ -8,7 +8,7 @@
 //! read again only when the drawing's revision or the depth changes. A rebuild runs as a job (docs/adr/2440): the panel
 //! shows its progress a drawing at a time and Durdur, heard between the drawings; a stopped one writes nothing.
 
-use crate::road;
+use crate::module_profile::ModuleProfile as _;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
@@ -78,7 +78,7 @@ pub fn ticks() -> impl Stream<Item = Message> {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Road(road::Event::RoadProject(e))
+    Message::TerrainWork(crate::terrain_work::Event::RoadProject(e))
 }
 
 /// The last tree read: the revision and the depth it was read at, and what it answered.
@@ -194,22 +194,31 @@ fn key_of(n: &RoadNode) -> String {
 }
 
 impl App {
-    /// A dock pane's title: the road project's tree is “Proje ağacı” in KentOS Harita (its surfaces and what was drawn
-    /// from them, docs/adr/1720), “Yol projesi” elsewhere.
+    /// A dock pane's title: the project tree's is its module's (“Proje ağacı” in KentOS Harita, its surfaces and what
+    /// was drawn from them, docs/adr/1720; “Yol projesi” in KentOS Yol), as the module's profile says.
     pub fn panel_title(&self, panel: crate::app::Panel) -> &'static str {
-        if panel == crate::app::Panel::RoadProject && self.program == Some(kentos_launch::Module::Map) {
-            "Proje ağacı"
+        if panel == crate::app::Panel::RoadProject {
+            self.project_tree_words().0
         } else {
             panel.title()
         }
+    }
+
+    /// The project tree's title and its words while empty: the active module's profile's (the program's with nothing
+    /// open).
+    fn project_tree_words(&self) -> (&'static str, &'static str) {
+        self.active_module().or(self.program).map_or_else(
+            || crate::module_profile::NoProject.project_tree(),
+            |m| crate::module_profile::profile(m).project_tree(),
+        )
     }
 
     /// The tree as the drawing is now, read again when its revision or the depth changed.
     pub fn road_project_read(&self) -> Option<Result<RoadProjectTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
-        let deep = self.road.road_project.deep;
-        let mut kept = self.road.road_project.read.borrow_mut();
+        let deep = self.terrain_work.road_project.deep;
+        let mut kept = self.terrain_work.road_project.read.borrow_mut();
         if let Some((r, d, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
@@ -233,7 +242,7 @@ impl App {
                 }
             }
             Event::Rebuild(id, edited) => {
-                if self.road.road_project.running.is_some() {
+                if self.terrain_work.road_project.running.is_some() {
                     return Task::none();
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -249,7 +258,7 @@ impl App {
                     expected: None,
                     relax_constraints: false,
                 };
-                self.road.road_project.running = Some(Running {
+                self.terrain_work.road_project.running = Some(Running {
                     job: Job::start(format!("yeniden-uret-{}", doc.model.revision()), &doc.model, envelope),
                     session: doc.session,
                     share: Some(0.0),
@@ -258,7 +267,7 @@ impl App {
             }
             Event::Tick => self.road_project_tick(),
             Event::Stop => {
-                if let Some(r) = self.road.road_project.running.as_mut() {
+                if let Some(r) = self.terrain_work.road_project.running.as_mut() {
                     r.job.cancel();
                     r.stopping = true;
                 }
@@ -290,13 +299,13 @@ impl App {
                     self.say(Level::Info, words.to_owned());
                 }
             }
-            Event::Deep(on) => self.road.road_project.deep = on,
+            Event::Deep(on) => self.terrain_work.road_project.deep = on,
             Event::Fold(key) => {
-                if !self.road.road_project.toggled.remove(&key) {
-                    self.road.road_project.toggled.insert(key);
+                if !self.terrain_work.road_project.toggled.remove(&key) {
+                    self.terrain_work.road_project.toggled.insert(key);
                 }
             }
-            Event::Filter(f) => self.road.road_project.filter = f,
+            Event::Filter(f) => self.terrain_work.road_project.filter = f,
         }
         Task::none()
     }
@@ -305,14 +314,14 @@ impl App {
     pub(crate) fn road_project_tick(&mut self) {
         let (Some(doc), Some(r)) = (
             self.document.as_mut(),
-            self.road.road_project.running.as_mut(),
+            self.terrain_work.road_project.running.as_mut(),
         ) else {
             return;
         };
         if doc.session != r.session {
             // The drawing it was started on is gone: nothing to write to.
             r.job.cancel();
-            self.road.road_project.running = None;
+            self.terrain_work.road_project.running = None;
             return;
         }
         let status = r.job.status(&mut doc.model);
@@ -320,7 +329,7 @@ impl App {
             r.share = status.progress;
             return;
         }
-        self.road.road_project.running = None;
+        self.terrain_work.road_project.running = None;
         if status.phase == JobPhase::Cancelled {
             self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned());
             return;
@@ -411,9 +420,9 @@ impl App {
         let on = |b: bool| if b { Check::Checked } else { Check::Unchecked };
         let options = column![
             crate::style::fields::check(
-                on(self.road.road_project.deep),
+                on(self.terrain_work.road_project.deep),
                 "Kurarak denetle".to_owned(),
-                Some(msg(Event::Deep(!self.road.road_project.deep))),
+                Some(msg(Event::Deep(!self.terrain_work.road_project.deep))),
             ),
             crate::style::fields::check(
                 on(tree.auto_rebuild),
@@ -430,25 +439,21 @@ impl App {
             // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
             crate::exchange::words::secondary(
                 crate::project_graph_window::OPEN,
-                Some(Message::Road(road::Event::ProjectGraph(
+                Some(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(
                     crate::project_graph_window::Event::Open
                 ))),
             ),
         ]
         .spacing(4)
         .padding([2, 12]);
-        let running = self.road.road_project.running.as_ref();
+        let running = self.terrain_work.road_project.running.as_ref();
         let rebuild = (tree.rebuildable > 0 && running.is_none()).then(|| msg(Event::Rebuild(None, false)));
         let body = StatusTree::new(items)
-            .toggled(&self.road.road_project.toggled, |key| msg(Event::Fold(key)))
-            .filter(self.road.road_project.filter, |f| msg(Event::Filter(f)))
+            .toggled(&self.terrain_work.road_project.toggled, |key| msg(Event::Fold(key)))
+            .filter(self.terrain_work.road_project.filter, |f| msg(Event::Filter(f)))
             .bulk(icon(Icon::Redo).size(13.0), "Hepsini yeniden üret", tree.rebuildable as usize, rebuild)
             .counted("Güncel değil", "Sorun")
-            .empty(if self.program == Some(kentos_launch::Module::Map) {
-                "Projede yüzey yok: Arazi sekmesinden yüzey oluşturun; ondan çizilen eş yükselti, platform ve sıfır hattı burada görünür."
-            } else {
-                "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun."
-            });
+            .empty(self.project_tree_words().1);
         // A running rebuild (docs/adr/2440): its progress and Durdur.
         let progress_row: Element<'_, Message> = match running {
             Some(r) => iced::widget::row![

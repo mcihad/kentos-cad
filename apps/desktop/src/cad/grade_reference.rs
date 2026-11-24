@@ -46,7 +46,7 @@ fn signed(by: f64, f: &kentos_interaction::Format) -> String {
 
 impl App {
     fn raise_input(&self) -> EntitiesRaise {
-        let s = &self.road.grade;
+        let s = &self.terrain_work.grade;
         EntitiesRaise {
             uid: s.uid.clone(),
             at: (s.at.max(1.0) as u32) - 1,
@@ -61,15 +61,15 @@ impl App {
 
     /// The command's plan for what the window holds; none until a reference is given.
     pub(crate) fn raise_plan(&mut self) {
-        if !self.road.grade.referenced {
-            self.road.grade.raised = None;
+        if !self.terrain_work.grade.referenced {
+            self.terrain_work.grade.raised = None;
             return;
         }
         let input = self.raise_input();
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.road.grade.raised = Some(
+        self.terrain_work.grade.raised = Some(
             match entities_raise::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -95,8 +95,8 @@ impl App {
                     signed(output.by, &f)
                 );
                 self.say(Level::Success, said);
-                let was = std::mem::take(&mut self.road.grade);
-                self.road.grade = State {
+                let was = std::mem::take(&mut self.terrain_work.grade);
+                self.terrain_work.grade = State {
                     target: Target::Reference,
                     referenced: true,
                     east: was.east,
@@ -154,24 +154,24 @@ impl App {
         match self.elevated_near(p, reach) {
             Some((q, z)) => {
                 (
-                    self.road.grade.east,
-                    self.road.grade.north,
-                    self.road.grade.height,
+                    self.terrain_work.grade.east,
+                    self.terrain_work.grade.north,
+                    self.terrain_work.grade.height,
                 ) = (q.x, q.y, z)
             }
             None => {
-                (self.road.grade.east, self.road.grade.north) = (p.x, p.y);
+                (self.terrain_work.grade.east, self.terrain_work.grade.north) = (p.x, p.y);
                 self.warn(format!("{TITLE}: tıklanan yerde kotlu nokta ya da köşe yok; yeri alındı, referansın kotunu yazın."));
             }
         }
-        self.road.grade.referenced = true;
+        self.terrain_work.grade.referenced = true;
         self.start_grade_pick(Pick::Vertex);
     }
 
     /// The reference and the vertex on the drawing: both ringed, the line between them; while the reference is being
     /// picked, nothing; while the vertex is, the reference alone.
     pub(crate) fn reference_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
-        let s = &self.road.grade;
+        let s = &self.terrain_work.grade;
         if !s.referenced || s.picking == Some(Pick::Reference) {
             return (Vec::new(), Vec::new());
         }
@@ -191,7 +191,7 @@ impl App {
         form: Form<'a, Message>,
         width: f32,
     ) -> (Form<'a, Message>, Vec<Element<'a, Message>>, bool) {
-        let s = &self.road.grade;
+        let s = &self.terrain_work.grade;
         let f = self.format();
         let number = |v: f64, on: fn(f64) -> Event, step: f64| {
             NumberInput::new(v, move |x| msg(on(x))).step(step).decimals(3).point().width(width)

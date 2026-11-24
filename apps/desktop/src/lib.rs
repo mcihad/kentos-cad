@@ -93,11 +93,11 @@ mod flatten_window;
 mod reproject_window;
 #[path = "gis/features_window.rs"]
 mod features_window;
-#[path = "road/grade_reference.rs"]
+#[path = "cad/grade_reference.rs"]
 mod grade_reference;
-#[path = "road/grade_surface.rs"]
+#[path = "cad/grade_surface.rs"]
 mod grade_surface;
-#[path = "road/grade_window.rs"]
+#[path = "cad/grade_window.rs"]
 mod grade_window;
 #[path = "shell/clean_report_window.rs"]
 mod clean_report_window;
@@ -107,7 +107,7 @@ mod impact_reach_marks;
 mod exchange_check_window;
 #[path = "shell/overlap_layers_window.rs"]
 mod overlap_layers_window;
-#[path = "road/project_graph_window.rs"]
+#[path = "cad/project_graph_window.rs"]
 mod project_graph_window;
 #[path = "gis/features_reconcile_window.rs"]
 mod features_reconcile_window;
@@ -117,11 +117,11 @@ mod features_reconcile_fill;
 mod impact_window;
 #[path = "shell/catalog_report_window.rs"]
 mod catalog_report_window;
-#[path = "road/section_check_window.rs"]
+#[path = "cad/section_check_window.rs"]
 mod section_check_window;
-#[path = "road/sheet_contours_window.rs"]
+#[path = "cad/sheet_contours_window.rs"]
 mod sheet_contours_window;
-#[path = "road/stockpile_window.rs"]
+#[path = "cad/stockpile_window.rs"]
 mod stockpile_window;
 #[path = "cad/xrefs_review_view.rs"]
 mod xrefs_review_view;
@@ -205,7 +205,7 @@ mod blocks_library;
 mod blocks_panel;
 #[path = "shell/navigator.rs"]
 mod navigator;
-#[path = "road/road_project_panel.rs"]
+#[path = "cad/road_project_panel.rs"]
 pub mod road_project_panel;
 #[path = "shell/bottom.rs"]
 pub mod bottom;
@@ -351,11 +351,11 @@ mod guardrail_window;
 mod culvert_window;
 #[path = "road/retaining_wall_window.rs"]
 mod retaining_wall_window;
-#[path = "road/platform_window.rs"]
+#[path = "cad/platform_window.rs"]
 mod platform_window;
-#[path = "road/terrain_cloud_window.rs"]
+#[path = "cad/terrain_cloud_window.rs"]
 mod terrain_cloud_window;
-#[path = "road/drainage_window.rs"]
+#[path = "cad/drainage_window.rs"]
 mod drainage_window;
 #[path = "arch/design_check_window.rs"]
 mod design_check_window;
@@ -375,7 +375,7 @@ pub mod picture;
 pub mod road_dialog;
 #[path = "road/swept_window.rs"]
 mod swept_window;
-#[path = "road/surface_analysis_window.rs"]
+#[path = "cad/surface_analysis_window.rs"]
 mod surface_analysis_window;
 #[path = "road/pay_window.rs"]
 mod pay_window;
@@ -403,11 +403,11 @@ mod road_exchange;
 mod arch_ifc;
 #[path = "arch/ifc_facts.rs"]
 mod ifc_facts;
-#[path = "road/terrain_layer.rs"]
+#[path = "cad/terrain_layer.rs"]
 mod terrain_layer;
-#[path = "road/terrain_edits.rs"]
+#[path = "cad/terrain_edits.rs"]
 mod terrain_edits;
-#[path = "road/terrain_window.rs"]
+#[path = "cad/terrain_window.rs"]
 mod terrain_window;
 #[path = "arch/program_window.rs"]
 mod program_window;
@@ -467,6 +467,8 @@ mod open_report_window;
 pub mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
 pub mod layer_entries;
+#[path = "cad/terrain_work.rs"]
+pub mod terrain_work;
 #[path = "shell/numbers.rs"]
 pub mod numbers;
 #[path = "shell/module_parts.rs"]

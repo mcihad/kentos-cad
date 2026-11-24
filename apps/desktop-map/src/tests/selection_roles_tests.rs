@@ -80,13 +80,13 @@ fn a_surface_s_points_open_yuzey_on_that_surface() {
     assert_eq!(app.selection_roles().surface.as_deref(), Some("t-3"));
     let _ = app.update(Message::Run("terrain.sheetContours"));
     assert_eq!(
-        app.road.sheet_contours.surface, "t-3",
+        app.terrain_work.sheet_contours.surface, "t-3",
         "Çukur, not the first surface"
     );
     app.dialog = None;
     let _ = app.update(Message::Run("terrain.analysis"));
     let w = app
-        .road
+        .terrain_work
         .surface_analysis_window
         .as_ref()
         .expect("the window");
@@ -95,12 +95,12 @@ fn a_surface_s_points_open_yuzey_on_that_surface() {
         (Some("t-3"), Some("t-1"))
     );
     app.dialog = None;
-    app.road.surface_analysis_window = None;
+    app.terrain_work.surface_analysis_window = None;
     let _ = app.update(Message::Run("terrain.surfaces"));
-    let w = app.road.terrain_window.as_ref().expect("the window");
+    let w = app.terrain_work.terrain_window.as_ref().expect("the window");
     assert_eq!(w.chosen_def().map(|d| d.id.as_str()), Some("t-3"));
     // A building with the points: not a surface's source.
-    app.road.terrain_window = None;
+    app.terrain_work.terrain_window = None;
     app.dialog = None;
     select(&mut app, &[("cukur", 1), ("bina", 1)]);
     assert!(app.selection_roles().surface.is_none());

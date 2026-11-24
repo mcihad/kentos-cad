@@ -4,7 +4,6 @@
 //! the sections along a drawn axis (the arc's case: the window's answer is the shared case's, its sections' ends too).
 
 use crate::app::{App, Message};
-use crate::road;
 use crate::surface_analysis_window::{Event as W, Mode, Read, Tab};
 
 fn cases() -> serde_json::Value {
@@ -28,12 +27,12 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::SurfaceAnalysis(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::SurfaceAnalysis(e)));
 }
 
 fn read(app: &App) -> Read {
     match &app
-        .road
+        .terrain_work
         .surface_analysis_window
         .as_ref()
         .expect("open")
@@ -94,7 +93,7 @@ fn fark_by_sections_is_the_shared_case_s() {
     send(&mut app, W::Field(18, "400".into()));
     send(&mut app, W::Preview);
     assert!(
-        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("semt"))
+        matches!(&app.terrain_work.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("semt"))
     );
 }
 

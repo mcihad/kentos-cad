@@ -52,6 +52,9 @@ pub trait ModuleProfile: Sync {
     fn thematic(&self) -> bool;
     /// The system style library's branches Stil yöneticisi and the symbol pickers leave out.
     fn library_hidden(&self) -> &'static [&'static str];
+    /// The project tree's title and its words while it is empty (road_project_panel.rs, docs/adr/1720): Harita's tree of
+    /// its surfaces, Yol's of its sources; a module without the panel says Yol's.
+    fn project_tree(&self) -> (&'static str, &'static str);
 }
 
 /// `module`'s profile, from its own folder; a module that is a package of its own gives it with its parts
@@ -195,5 +198,9 @@ impl ModuleProfile for NoProject {
 
     fn library_hidden(&self) -> &'static [&'static str] {
         &[]
+    }
+
+    fn project_tree(&self) -> (&'static str, &'static str) {
+        ("Yol projesi", "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun.")
     }
 }

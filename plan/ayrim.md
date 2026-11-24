@@ -121,7 +121,8 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     tek satır 17,4 s → 3,7 s. Kabuk → Harita 0.
   - Adım 3 yapıldı (ADR 9199 §4.3): Harita → CBS 3 → 0 (sayı ve adım yardımcıları çekirdekte); Harita yalnız
     çekirdeğe bağlı.
-  - Sıradaki: Yol paketi. Önce Harita ile Yol'un ortak işi (Arazi pencereleri, eğimle kot, platform, drenaj, proje
-    ağacı) çekirdeğe (ADR 9199 §5'in çözümlemesi); sonra Yol'un `ModuleParts`'ı (dosya seçici sonuçları, görünüm alanında
+  - Adım 4 yapıldı (ADR 9199 §4.4): Harita ile Yol'un ortak arazi işi (15 modül) çekirdekte, kendi merkeziyle
+    (`terrain_work`); proje ağacının sözcükleri profilden.
+  - Sıradaki: Yol paketi: Yol'un `ModuleParts`'ı (dosya seçici sonuçları, görünüm alanında
     seçme ve 3B dışa aktarım yeni kancalar), uzantı trait'leri, paket. Ardından Mimari, CBS; CAD çekirdeğinin kabuktan
     ayrılması.

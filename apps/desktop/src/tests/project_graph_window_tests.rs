@@ -4,7 +4,6 @@
 //! source and the sheet, Güncel olmayanlar filters, Tarifi kaydet writes the graph; nothing is written to the drawing.
 //! Drawn again, the chain is up to date. And its pictures.
 
-use crate::road;
 use serde_json::{Value, json};
 
 use crate::app::{App, Dialog, Message};
@@ -38,13 +37,13 @@ fn app_drawn() -> (App, String) {
 fn the_stale_zero_line_and_the_sheet_that_shows_it() {
     let (mut app, drawn) = app_drawn();
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::ProjectGraph))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::ProjectGraph))
     );
     let g = app
-        .road
+        .terrain_work
         .project_graph
         .answer
         .as_ref()
@@ -71,10 +70,10 @@ fn the_stale_zero_line_and_the_sheet_that_shows_it() {
             "Pafta 1 › Tümsek haritası".to_owned(),
         ]]
     );
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Show(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Show(
         Show::Outdated,
     ))));
-    assert_eq!(app.road.project_graph.show, Show::Outdated);
+    assert_eq!(app.terrain_work.project_graph.show, Show::Outdated);
     // Tarifi kaydet: the graph as JSON, every recipe in it.
     let dir = std::env::temp_dir().join(format!("kentos-is-grafigi-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -90,16 +89,16 @@ fn the_stale_zero_line_and_the_sheet_that_shows_it() {
         "nothing written"
     );
     // Drawn again: the chain is up to date.
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Close)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Close)));
     crate::program_scenes::command(&mut app, "road.project.rebuild", json!({}));
     let rebuilt = app
         .document
         .as_ref()
         .map(|d| d.model.revision().to_string())
         .unwrap_or_default();
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     let g = app
-        .road
+        .terrain_work
         .project_graph
         .answer
         .as_ref()
@@ -124,8 +123,8 @@ fn a_gis_project_has_no_graph() {
         settings.road = None;
         doc.model.set_settings(settings);
     }
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
-    let answer = app.road.project_graph.answer.clone().expect("an answer");
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
+    let answer = app.terrain_work.project_graph.answer.clone().expect("an answer");
     assert!(
         answer.is_err_and(|why| why.contains("yol ve harita projesinde")),
         "refused in words"
@@ -165,7 +164,7 @@ fn screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-grafik-{name}.png"));
         snapshot
@@ -195,7 +194,7 @@ fn provenance_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -210,7 +209,7 @@ fn provenance_screens() {
 /// The recipe of the map project's zero line, saved by Tarifi kaydet… to a scratch folder.
 fn saved_recipe(dir: &std::path::Path) -> std::path::PathBuf {
     let mut a = app();
-    let _ = a.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = a.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     std::fs::create_dir_all(dir).expect("a folder");
     let file = dir.join("tarif.json");
     a.project_graph_save(file.clone());
@@ -232,10 +231,10 @@ pub(crate) fn other_project() -> App {
 
 /// Tariften üret… with `recipe` picked and drawn (Üret) as it is planned (docs/adr/3640).
 fn produce(app: &mut App, recipe: &std::path::Path) {
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
         recipe.to_path_buf(),
     )))));
-    let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Confirm)));
 }
 
 /// docs/adr/3240: the map project's recipe (its zero line, Tümsek over Düz) saved, then Tariften üret in another
@@ -248,9 +247,9 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
     let dir = std::env::temp_dir().join(format!("kentos-tariften-uret-{}", std::process::id()));
     let file = saved_recipe(&dir);
     let mut b = other_project();
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     assert_eq!(
-        b.road
+        b.terrain_work
             .project_graph
             .answer
             .as_ref()
@@ -259,7 +258,7 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
         Some(0)
     );
     produce(&mut b, &file);
-    let out = b.road.project_graph.produced.clone().expect("produced");
+    let out = b.terrain_work.project_graph.produced.clone().expect("produced");
     assert_eq!(out.produced.len(), 1);
     assert_eq!(
         (
@@ -269,7 +268,7 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
         ("t-5", "Düz")
     );
     assert_eq!(
-        produced_lines(&out, &b.road.project_graph.looks),
+        produced_lines(&out, &b.terrain_work.project_graph.looks),
         [
             (
                 Kind::Ok,
@@ -280,7 +279,7 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
         ]
     );
     let g = b
-        .road
+        .terrain_work
         .project_graph
         .answer
         .as_ref()
@@ -299,18 +298,18 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
     assert!(said.contains("1 çizim tariften üretildi"), "{said}");
     // Once more: the project has it.
     produce(&mut b, &file);
-    let again = b.road.project_graph.produced.clone().expect("answered");
+    let again = b.terrain_work.project_graph.produced.clone().expect("answered");
     assert!(again.produced.is_empty());
     assert_eq!(
-        produced_lines(&again, &b.road.project_graph.looks)[1],
+        produced_lines(&again, &b.terrain_work.project_graph.looks)[1],
         (Kind::Info, "Tarifin cz-1 çizimi bırakıldı: Projede bu çizim var (aynı komut, ana kaynak ve katman); Yeniden üret ile güncellenir.".to_owned())
     );
     // One undo takes the drawing back.
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Close)));
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Close)));
     let _ = b.update(Message::Run("edit.undo"));
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     assert_eq!(
-        b.road
+        b.terrain_work
             .project_graph
             .answer
             .as_ref()
@@ -339,7 +338,7 @@ fn produce_screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
         produce(&mut app, &recipe);
         let _ = app.update(Message::Run("view.zoomExtents"));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -362,13 +361,13 @@ fn tariften_uret_shows_the_recipe_s_layers_before_it_draws() {
     let fixtures =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/recipes/v1");
     let mut b = other_project();
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     let revision = b.document.as_ref().map(|d| d.model.revision());
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
         fixtures.join("yeni-katmanli.json"),
     )))));
     let r = b
-        .road
+        .terrain_work
         .project_graph
         .recipe
         .as_ref()
@@ -396,20 +395,20 @@ fn tariften_uret_shows_the_recipe_s_layers_before_it_draws() {
         "nothing written before Üret"
     );
     // Drawn on Drenaj instead: planned again, then drawn, no layer added.
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Layer(
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Layer(
         0,
         "drenaj".into(),
     ))));
-    let lines = plan_lines(b.road.project_graph.recipe.as_ref().expect("still shown"));
+    let lines = plan_lines(b.terrain_work.project_graph.recipe.as_ref().expect("still shown"));
     assert!(
         lines
             .iter()
             .any(|(_, l)| l == "“Kazı sınırı” katmanının yerine seçilen: Drenaj."),
         "{lines:?}"
     );
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
-    assert!(b.road.project_graph.recipe.is_none());
-    let out = b.road.project_graph.produced.clone().expect("produced");
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Confirm)));
+    assert!(b.terrain_work.project_graph.recipe.is_none());
+    let out = b.terrain_work.project_graph.produced.clone().expect("produced");
     assert_eq!(
         (out.produced.len(), out.layers[0].to.as_str()),
         (2, "drenaj")
@@ -426,12 +425,12 @@ fn tariften_uret_shows_the_recipe_s_layers_before_it_draws() {
         .collect();
     assert!(!names.iter().any(|n| n == "Kazı sınırı"), "{names:?}");
     // Vazgeç drops a picked recipe.
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
         fixtures.join("katman-adli.json"),
     )))));
-    assert!(b.road.project_graph.recipe.is_some());
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Cancel)));
-    assert!(b.road.project_graph.recipe.is_none());
+    assert!(b.terrain_work.project_graph.recipe.is_some());
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Cancel)));
+    assert!(b.terrain_work.project_graph.recipe.is_none());
 }
 
 /// `.run/gui-evidence/tarif-katmanlari-3640/`: the picked recipe before Üret (its layer to be added, then found by
@@ -454,7 +453,7 @@ fn recipe_layer_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -467,11 +466,11 @@ fn recipe_layer_screens() {
         .into_iter()
         .enumerate()
         {
-            let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+            let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
                 fixtures.join(file),
             )))));
             if done {
-                let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
+                let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Confirm)));
             }
             snapshot.settle(&mut app, App::view, &mut update);
             let shot = out.join(format!(
@@ -489,7 +488,7 @@ fn recipe_layer_screens() {
                 .expect("writes");
             println!("{}", shot.display());
             if !done {
-                let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Cancel)));
+                let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Cancel)));
             }
         }
     }
@@ -514,13 +513,13 @@ fn tariften_uret_adds_the_recipe_layer_in_its_groups_with_its_style() {
         .expect("a drawing")["layer"]
         .clone();
     let mut b = other_project();
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
     let revision = b.document.as_ref().map(|d| d.model.revision());
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
         path.clone(),
     )))));
     let lines = plan_lines(
-        b.road
+        b.terrain_work
             .project_graph
             .recipe
             .as_ref()
@@ -534,11 +533,11 @@ fn tariften_uret_adds_the_recipe_layer_in_its_groups_with_its_style() {
         revision,
         "nothing written before Üret"
     );
-    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
-    let out = b.road.project_graph.produced.clone().expect("produced");
+    let _ = b.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Confirm)));
+    let out = b.terrain_work.project_graph.produced.clone().expect("produced");
     let done = "“Kazı sınırı” katmanı tarifteki stiliyle “Yol › Toprak işleri” grubuna eklendi. “Toprak işleri” grubu ve \
                 “SINIR” çizgi türü de eklendi.";
-    let said = produced_lines(&out, &b.road.project_graph.looks);
+    let said = produced_lines(&out, &b.terrain_work.project_graph.looks);
     assert!(said.iter().any(|(_, l)| l == done), "{said:?}");
     let model = &b.document.as_ref().expect("a drawing").model;
     let id = out.layers[0].to.clone();
@@ -570,12 +569,12 @@ fn recipe_group_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Open)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Picked(Some(
             recipe.clone(),
         )))));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -585,7 +584,7 @@ fn recipe_group_screens() {
             .save(&shot)
             .expect("writes");
         println!("{}", shot.display());
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Confirm)));
         snapshot.settle(&mut app, App::view, &mut update);
         let shot = out.join(format!("2-uretildi-{name}.png"));
         snapshot
@@ -593,7 +592,7 @@ fn recipe_group_screens() {
             .save(&shot)
             .expect("writes");
         println!("{}", shot.display());
-        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Close)));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(G::Close)));
         // The layer tree given most of the dock, so the group added shows under Yol.
         let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Shared(
             kentos_ui::widget::docking::Side::Right,

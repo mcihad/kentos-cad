@@ -3,7 +3,6 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::platform_window::{Event as W, corners_of, corners_text};
-use crate::road;
 
 /// A road project with `road.platforms.edit`'s drawing: a sloping plane terrain and two pads.
 fn app() -> App {
@@ -17,7 +16,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Platforms(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Platforms(e)));
 }
 
 #[test]
@@ -34,9 +33,9 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     let _ = app.update(Message::Run("platform.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Platforms))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms))
     );
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("p-1"));
     let r = w
         .preview
@@ -47,7 +46,7 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     // A flatter fill slope runs further out and fills more.
     send(&mut app, W::Field(8, "3".into()));
     let more = app
-        .road
+        .terrain_work
         .platform_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -63,7 +62,7 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     }
     send(&mut app, W::Balance);
     let b = match app
-        .road
+        .terrain_work
         .platform_window
         .as_ref()
         .and_then(|w| w.preview.balance.clone())
@@ -73,7 +72,7 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     };
     assert!(b.converged && b.net.abs() <= 0.5, "{b:?}");
     send(&mut app, W::Apply);
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     let balanced = w.preview.report.clone().expect("grades");
     let (c, f) = (
         balanced.cut.expect("closed"),
@@ -90,7 +89,7 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("platform".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.platform_window.is_none());
+    assert!(app.terrain_work.platform_window.is_none());
     let after = app
         .document
         .as_ref()
@@ -109,7 +108,7 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     let _ = app.update(Message::Run("platform.editor"));
     send(&mut app, W::Choose(None));
     let why = app
-        .road
+        .terrain_work
         .platform_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -117,7 +116,7 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     assert!(why.contains("Köşeler"), "{why}");
     send(&mut app, W::Field(1, "200,0; 230,0; 230,20; 200,20".into()));
     let why = app
-        .road
+        .terrain_work
         .platform_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -135,7 +134,7 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     ] {
         send(&mut app, W::Field(k, v.into()));
     }
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
     assert_eq!(
@@ -165,7 +164,7 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     };
     app.selection.set([slot]);
     send(&mut app, W::FromSelection);
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     assert_eq!(w.fields[1], "300,0; 320,0; 320,15; 300,15");
     assert_eq!((w.fields[2].as_str(), w.fields[3].as_str()), ("300", "0"));
 }
@@ -255,9 +254,9 @@ fn a_map_project_grades_its_pads() {
     let _ = app.update(Message::Run("platform.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Platforms))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms))
     );
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     let r = w
         .preview
         .report
@@ -275,7 +274,7 @@ fn a_map_project_grades_its_pads() {
     let _ = app.update(Message::Run("drainage.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Drainage))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage))
     );
 }
 
@@ -325,7 +324,7 @@ fn the_pads_summary_is_previewed_where_and_as_large_as_it_is_drawn() {
     let mut app = app();
     let _ = app.update(Message::Run("platform.editor"));
     let plot_scale = app.document.as_ref().expect("a drawing").model.settings().plot_scale;
-    let w = app.road.platform_window.as_ref().expect("open");
+    let w = app.terrain_work.platform_window.as_ref().expect("open");
     let r = w.preview.report.clone().expect("grades");
     let base: f64 = w.fields[4].replace(',', ".").parse().expect("the base typed");
     let label = platform_label(&r.name, base, &r, plot_scale).expect("a summary");

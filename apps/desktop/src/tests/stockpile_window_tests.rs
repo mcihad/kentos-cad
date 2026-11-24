@@ -3,7 +3,6 @@
 //! typed height, and for the L; the typed height starts at the corners' lowest; nothing is written; Harita and Yol
 //! offer it. And its pictures.
 
-use crate::road;
 use kentos_commands::TerrainsStockpiled;
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -33,7 +32,7 @@ fn output(name: &str) -> Value {
 }
 
 fn answer(app: &App) -> TerrainsStockpiled {
-    app.road
+    app.terrain_work
         .stockpile
         .answer
         .clone()
@@ -68,18 +67,18 @@ fn the_volume_is_the_shared_case_s() {
     let _ = app.update(Message::Run("terrain.stockpile"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Stockpile))
+        Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile))
     );
     assert_eq!(
-        app.road.stockpile.boundary,
+        app.terrain_work.stockpile.boundary,
         cases()["setup"]["uids"][256].as_str().expect("a uid")
     );
-    assert_eq!(app.road.stockpile.base, Base::Fit);
+    assert_eq!(app.terrain_work.stockpile.base, Base::Fit);
     same(
         &answer(&app),
         &output("Beşgen, köşelere oturan eğimli düzlem (en küçük kareler)"),
     );
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(Base::Lowest))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(Base::Lowest))));
     same(
         &answer(&app),
         &output("Beşgen, en alçak köşe: yatay taban köşelerin en alçağında, yığın kazı"),
@@ -91,15 +90,15 @@ fn the_volume_is_the_shared_case_s() {
         .copied()
         .reduce(f64::min)
         .expect("corners");
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(
         Base::Elevation,
     ))));
     assert!(
-        (app.road.stockpile.elevation - (low * 100.0).round() / 100.0).abs() < 1e-12,
+        (app.terrain_work.stockpile.elevation - (low * 100.0).round() / 100.0).abs() < 1e-12,
         "{}",
-        app.road.stockpile.elevation
+        app.terrain_work.stockpile.elevation
     );
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Elevation(101.5))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Elevation(101.5))));
     same(&answer(&app), &output("Beşgen, verilen kot 101,5"));
     let ell = app
         .document
@@ -107,8 +106,8 @@ fn the_volume_is_the_shared_case_s() {
         .and_then(|d| d.model.uid(ELL))
         .expect("the L")
         .to_string();
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(Base::Fit))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Boundary(ell))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(Base::Fit))));
     same(
         &answer(&app),
         &output("L (kapalı çoklu çizgi, iç bükey), eğimli düzlem"),
@@ -118,7 +117,7 @@ fn the_volume_is_the_shared_case_s() {
         revision,
         "nothing written"
     );
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Close)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Close)));
     assert_eq!(app.dialog, None);
 }
 
@@ -161,10 +160,10 @@ fn screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-egimli-duzlem");
-        let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(
             Base::Elevation,
         ))));
-        let _ = app.update(Message::Road(road::Event::Stockpile(E::Elevation(101.5))));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Elevation(101.5))));
         shot(&mut app, "2-kot");
     }
     let mut app = opened(Some(Module::Map));
@@ -189,7 +188,7 @@ fn the_triangulated_base_is_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     app.selection.set([PENTAGON]);
     let _ = app.update(Message::Run("terrain.stockpile"));
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(
         Base::Triangulated,
     ))));
     let got = answer(&app);
@@ -216,7 +215,7 @@ fn the_triangulated_base_is_the_shared_case_s() {
         .and_then(|d| d.model.uid(ELL))
         .expect("the L")
         .to_string();
-    let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Boundary(ell))));
     same(
         &answer(&app),
         &output("L (iç bükey), üçgenlenmiş taban: girintide üçgen yok"),
@@ -244,7 +243,7 @@ fn screens_triangulated() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.selection.set([PENTAGON]);
         let _ = app.update(Message::Run("terrain.stockpile"));
-        let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Base(
             Base::Triangulated,
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -264,7 +263,7 @@ fn screens_triangulated() {
             .and_then(|d| d.model.uid(ELL))
             .expect("the L")
             .to_string();
-        let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
+        let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Stockpile(E::Boundary(ell))));
         shot(&mut app, "2-l");
     }
 }

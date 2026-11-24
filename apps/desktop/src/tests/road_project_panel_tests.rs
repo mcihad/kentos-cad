@@ -2,7 +2,6 @@
 //! stale when its template changes and comes back by Hepsini yeniden üret, Kendiliğinden yeniden üret turns on, a
 //! source's row opens its editor; a rebuild runs as a job whose Durdur writes nothing (docs/adr/2440); and its pictures.
 
-use crate::road;
 use kentos_commands::RoadNodeState as S;
 use serde_json::{Value, json};
 
@@ -25,14 +24,14 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Road(road::Event::RoadProject(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::RoadProject(e)));
 }
 
 /// A rebuild, run as a job (docs/adr/2440): the panel looked at until it is over.
 fn rebuild(app: &mut App, e: P) {
     send(app, e);
     let start = std::time::Instant::now();
-    while app.road.road_project.running() {
+    while app.terrain_work.road_project.running() {
         assert!(
             start.elapsed() < std::time::Duration::from_secs(120),
             "the rebuild ends"
@@ -214,7 +213,7 @@ fn a_rebuild_runs_as_a_job_and_durdur_writes_nothing() {
     let steps = app.document.as_ref().map(|d| d.model.undo_labels().len());
     send(&mut app, P::Rebuild(None, false));
     assert!(
-        app.road.road_project.running(),
+        app.terrain_work.road_project.running(),
         "a job, not the window's own thread"
     );
     send(&mut app, P::Stop);

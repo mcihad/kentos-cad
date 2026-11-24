@@ -10,7 +10,6 @@
 //! left, and where each of the recipe's layers goes: found by its name, added with the recipe's look) and a choice per
 //! recipe layer of this project's layer to draw on instead; Üret draws it, Vazgeç drops it.
 
-use crate::road;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -298,7 +297,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Road(road::Event::ProjectGraph(e))
+    Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(e))
 }
 
 /// Whether a drawing's state is one the print check stops: stale, missing, edited, gone.
@@ -404,9 +403,9 @@ pub fn drawing_rows(g: &RoadProjectGraph, only_outdated: bool) -> Vec<Vec<String
 
 impl App {
     fn project_graph_read(&mut self) {
-        let deep = self.road.road_project.deep;
+        let deep = self.terrain_work.road_project.deep;
         let Some(doc) = self.document.as_ref() else { return };
-        self.road.project_graph.answer = Some(road_project_graph::preview(&doc.model, deep));
+        self.terrain_work.project_graph.answer = Some(road_project_graph::preview(&doc.model, deep));
     }
 
     /// İş grafiği from the project tree's panel: read at the panel's depth.
@@ -415,14 +414,14 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.road.project_graph = State::default();
+        self.terrain_work.project_graph = State::default();
         self.project_graph_read();
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::ProjectGraph));
+        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::ProjectGraph));
         Task::none()
     }
 
     pub(crate) fn project_graph_save(&mut self, path: PathBuf) {
-        let Some(Ok(g)) = &self.road.project_graph.answer else { return };
+        let Some(Ok(g)) = &self.terrain_work.project_graph.answer else { return };
         let text = serde_json::to_string_pretty(g).unwrap_or_default();
         match std::fs::write(&path, text) {
             Ok(()) => self.say(
@@ -436,7 +435,7 @@ impl App {
     /// The picked recipe planned as chosen (docs/adr/3640): nothing written.
     fn project_graph_plan(&mut self) {
         let Some(doc) = self.document.as_mut() else { return };
-        let Some(r) = self.road.project_graph.recipe.as_mut() else { return };
+        let Some(r) = self.terrain_work.project_graph.recipe.as_mut() else { return };
         let input = RoadProjectProduce { path: r.path.display().to_string(), drawings: None, layers: r.given(), add_fields: r.add_fields, expected_revision: None };
         (r.plan, r.warnings) = match road_project_produce::plan(&ExecutionContext::new(&mut doc.model), &input) {
             CommandResult::Completed { output, warnings } => {
@@ -461,7 +460,7 @@ impl App {
     pub(crate) fn project_graph_preview(&mut self, path: PathBuf) {
         let layers = recipe_layers(&path).into_iter().map(|(id, name)| (id, name, AUTO.to_owned())).collect();
         let looks = recipe_looks(&path);
-        self.road.project_graph.recipe =
+        self.terrain_work.project_graph.recipe =
             Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new(), looks, add_fields: false });
         self.project_graph_plan();
     }
@@ -469,7 +468,7 @@ impl App {
     /// Tariften üret (docs/adr/3240): the recipe's drawings drawn in this project with the layers chosen (docs/adr/3640),
     /// one undo step; the graph read again.
     pub(crate) fn project_graph_produce(&mut self) {
-        let Some(r) = self.road.project_graph.recipe.take() else { return };
+        let Some(r) = self.terrain_work.project_graph.recipe.take() else { return };
         let Some(doc) = self.document.as_mut() else { return };
         let path = r.path.clone();
         let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: r.given(), add_fields: r.add_fields, expected_revision: None };
@@ -480,8 +479,8 @@ impl App {
                 if out.produced.is_empty() { Level::Info } else { Level::Success },
                 format!("{TITLE}: {} çizim tariften üretildi{left} ({}).", out.produced.len(), path.display()),
             );
-            self.road.project_graph.produced = Some(out);
-            self.road.project_graph.looks = r.looks;
+            self.terrain_work.project_graph.produced = Some(out);
+            self.terrain_work.project_graph.looks = r.looks;
             self.project_graph_read();
         }
     }
@@ -489,7 +488,7 @@ impl App {
     pub(crate) fn project_graph_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_project_graph(),
-            Event::Show(v) => self.road.project_graph.show = v,
+            Event::Show(v) => self.terrain_work.project_graph.show = v,
             Event::Save => {
                 return Task::perform(
                     async {
@@ -522,21 +521,21 @@ impl App {
             Event::Picked(Some(path)) => self.project_graph_preview(path),
             Event::Picked(None) => {}
             Event::Layer(k, to) => {
-                if let Some((_, _, chosen)) = self.road.project_graph.recipe.as_mut().and_then(|r| r.layers.get_mut(k)) {
+                if let Some((_, _, chosen)) = self.terrain_work.project_graph.recipe.as_mut().and_then(|r| r.layers.get_mut(k)) {
                     *chosen = to;
                 }
                 self.project_graph_plan();
             }
             Event::AddFields(on) => {
-                if let Some(r) = self.road.project_graph.recipe.as_mut() {
+                if let Some(r) = self.terrain_work.project_graph.recipe.as_mut() {
                     r.add_fields = on;
                 }
                 self.project_graph_plan();
             }
             Event::Confirm => self.project_graph_produce(),
-            Event::Cancel => self.road.project_graph.recipe = None,
+            Event::Cancel => self.terrain_work.project_graph.recipe = None,
             Event::Close => {
-                self.road.project_graph = State::default();
+                self.terrain_work.project_graph = State::default();
                 self.dialog = None;
             }
         }
@@ -544,7 +543,7 @@ impl App {
     }
 
     pub(crate) fn project_graph_view(&self) -> Element<'_, Message> {
-        let s = &self.road.project_graph;
+        let s = &self.terrain_work.project_graph;
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         match &s.answer {

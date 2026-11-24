@@ -3,7 +3,6 @@
 //! and removed and the box where they changed; undone, the old lines are back; unticked (the project's choice now), the
 //! drawing is drawn whole; and its pictures.
 
-use crate::road;
 use kentos_commands::RoadNodeState as S;
 use kentos_domain::{Slot, Uuid};
 use serde_json::{Value, json};
@@ -37,14 +36,14 @@ fn regional_app() -> App {
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Road(road::Event::RoadProject(e)));
+    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::RoadProject(e)));
 }
 
 /// A rebuild run as a job (docs/adr/2440), the panel looked at until it is over.
 fn rebuild(app: &mut App, e: P) {
     send(app, e);
     let start = std::time::Instant::now();
-    while app.road.road_project.running() {
+    while app.terrain_work.road_project.running() {
         assert!(
             start.elapsed() < std::time::Duration::from_secs(120),
             "the rebuild ends"

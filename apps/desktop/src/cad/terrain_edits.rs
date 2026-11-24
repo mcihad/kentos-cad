@@ -8,7 +8,6 @@
 //! The edits are the definition's: Kaydet writes them with it (`road.terrains.edit` set), the surface made again from
 //! its sources then says the ones that no longer fit.
 
-use crate::road;
 use std::fmt;
 
 use iced::widget::{button, column, row};
@@ -168,7 +167,7 @@ fn typed(text: &str) -> Result<Option<f64>, ()> {
 impl App {
     /// A tool of Düzenlemeler: the window steps aside for the pick on the drawing.
     pub(crate) fn start_terrain_edit(&mut self, tool: EditTool) -> Task<Message> {
-        let Some(w) = self.road.terrain_window.as_mut() else {
+        let Some(w) = self.terrain_work.terrain_window.as_mut() else {
             return Task::none();
         };
         if w.chosen_def().is_none() {
@@ -188,18 +187,18 @@ impl App {
     /// definition and the window opens again; one that cannot be made is said.
     pub(crate) fn terrain_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool {
         let Some(tool) = self
-            .road
+            .terrain_work
             .terrain_window
             .as_mut()
             .and_then(|w| w.picking.take())
         else {
             return false;
         };
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Terrains));
+        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains));
         let Some(p) = p else {
             return true;
         };
-        let (Some(doc), Some(w)) = (self.document.as_ref(), self.road.terrain_window.as_ref())
+        let (Some(doc), Some(w)) = (self.document.as_ref(), self.terrain_work.terrain_window.as_ref())
         else {
             return true;
         };
@@ -220,7 +219,7 @@ impl App {
         };
         match edit_at(tool, &surface, [p.x, p.y], z) {
             Ok(edit) => {
-                if let Some(w) = self.road.terrain_window.as_mut() {
+                if let Some(w) = self.terrain_work.terrain_window.as_mut() {
                     w.push_edit(edit);
                 }
                 self.refresh_edit_report();
@@ -236,13 +235,13 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
-        let Some(w) = self.road.terrain_window.as_ref() else {
+        let Some(w) = self.terrain_work.terrain_window.as_ref() else {
             return;
         };
         let report = w
             .chosen_def()
             .map(|def| road_terrains::made_of(&doc.model, def).0);
-        if let Some(w) = self.road.terrain_window.as_mut() {
+        if let Some(w) = self.terrain_work.terrain_window.as_mut() {
             w.edit_report = report;
         }
     }
@@ -263,24 +262,24 @@ impl App {
                 .spacing(6)
                 .align_y(Center),
             )
-            .on_press(Message::Road(road::Event::Terrains(Event::EditTool(t))))
+            .on_press(Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::EditTool(t))))
             .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .into()
         };
         let tools = row(EditTool::ALL.map(tool)).spacing(6).wrap();
         let height = kentos_ui::widget::text_field("yüzeyin kotu", z)
-            .on_input(|t| Message::Road(road::Event::Terrains(Event::EditZ(t))));
+            .on_input(|t| Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::EditZ(t))));
         // Yüzey yapıştır (docs/adr/3920): a saved surface other than this one, by its name.
         let kept = self
-            .road
+            .terrain_work
             .terrain_window
             .as_ref()
             .map_or(&[][..], |w| w.kept());
         let others: Vec<&TerrainSurfaceDef> = kept.iter().filter(|k| k.id != def.id).collect();
         let ids: Vec<String> = others.iter().map(|k| k.id.clone()).collect();
         let from = self
-            .road
+            .terrain_work
             .terrain_window
             .as_ref()
             .and_then(|w| w.paste_from.as_ref());
@@ -288,7 +287,7 @@ impl App {
         let select = kentos_ui::widget::select::Select::new(
             others.iter().map(|k| kentos_ui::widget::select::Choice::new(k.name.clone())),
             chosen,
-            move |i| Message::Road(road::Event::Terrains(Event::PasteFrom(ids[i].clone()))),
+            move |i| Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::PasteFrom(ids[i].clone()))),
         )
         .placeholder(if others.is_empty() {
             "kayıtlı başka yüzey yok"
@@ -303,7 +302,7 @@ impl App {
             .spacing(6)
             .align_y(Center),
         )
-        .on_press_maybe(chosen.map(|_| Message::Road(road::Event::Terrains(Event::Paste))))
+        .on_press_maybe(chosen.map(|_| Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::Paste))))
         .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
         let name_of = |id: &str| {
@@ -355,12 +354,12 @@ impl App {
                 words::ghost(
                     UNDO_EDIT,
                     (!def.edits.is_empty())
-                        .then(|| Message::Road(road::Event::Terrains(Event::EditUndo)))
+                        .then(|| Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::EditUndo)))
                 ),
                 words::ghost(
                     CLEAR_EDITS,
                     (!def.edits.is_empty())
-                        .then(|| Message::Road(road::Event::Terrains(Event::EditClear)))
+                        .then(|| Message::TerrainWork(crate::terrain_work::Event::Terrains(Event::EditClear)))
                 ),
             ]
             .spacing(8),

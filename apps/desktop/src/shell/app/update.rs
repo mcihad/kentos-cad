@@ -52,7 +52,7 @@ impl App {
                 Subscription::none()
             },
             // A rebuild running as a job in the project tree (road_project_panel.rs, docs/adr/2440).
-            if self.road.road_project.running() {
+            if self.terrain_work.road_project.running() {
                 Subscription::run(crate::road_project_panel::ticks)
             } else {
                 Subscription::none()
@@ -675,6 +675,7 @@ impl App {
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
+            Message::TerrainWork(inner) => return self.terrain_work_event(inner),
             Message::Road(inner) => return self.road_event(inner),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),

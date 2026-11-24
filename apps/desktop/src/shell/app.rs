@@ -318,6 +318,8 @@ pub enum Dialog {
     PhotoViewer,
     /// Harita sistemi (map_crs.rs, GIS-054): the systems to draw the map in.
     MapCrs,
+    /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
+    TerrainWork(crate::terrain_work::TerrainDialogKind),
     /// A discipline's own windows (docs/adr/8054 §6), drawn by its `state.rs`.
     Road(crate::road::RoadDialogKind),
     /// A module's own window (docs/adr/9199 §3.4), drawn by its parts.
@@ -728,6 +730,8 @@ pub enum Message {
     MapCrs(crate::map_crs::Choose),
     /// Harita sistemi's window closed (GIS-054).
     MapCrsClose,
+    /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
+    TerrainWork(crate::terrain_work::Event),
     /// A discipline's own messages (docs/adr/8054 §6), handled by its `state.rs`.
     Road(crate::road::Event),
     /// A module's own message (docs/adr/9199 §3.4), handled by its parts.
@@ -1202,6 +1206,8 @@ pub struct App {
     /// The disciplines' own windows and panels (docs/adr/8054 §6): each module keeps its state in its
     /// `state.rs`, so a new window of one leaves this struct as it is.
     pub road: crate::road::RoadUiState,
+    /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
+    pub terrain_work: crate::terrain_work::TerrainWorkState,
     /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).
     pub modules: crate::module_parts::ModuleStates,
     pub gis: crate::gis::GisUiState,

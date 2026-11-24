@@ -160,8 +160,6 @@
     ],
     "shell->map": [],
     "shell->road": [
-      "shell/app/start.rs",
-      "shell/app/update.rs",
       "shell/app.rs",
       "shell/module_profile.rs",
       "shell/traces/answers.rs",
