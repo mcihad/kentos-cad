@@ -14,13 +14,20 @@
 //! The levels go after the batch's own numbers and the batch's `Lod` says where (main 0, its own numbers level 0, the
 //! far levels after; ceilings [`FAR_CEILINGS`]), so the GPU draws one level a frame as it draws a curve's levels
 //! (docs/adr/1063 §3). Only the screen's model view takes them (`DecodeOptions::hold_weights`): paper and the PDF draw
-//! every edge. Batches with levels of their own (curves, long lines), instanced ones, marks and patterned fills keep
-//! what they have.
+//! every edge. Instanced batches, marks and patterned fills keep what they have.
+//!
+//! A stroke batch with levels of its own (curves' chords, docs/adr/1063 §3; long lines', 1064 §2) draws its main part
+//! and its coarsest level at 4 m a pixel and farther: a small circle a few chords at every distance. Its far levels
+//! are made from those two on the grid and go after its levels, with the far ceilings after its own; from the first
+//! far level on, the main part is not drawn beside them (`Lod::alone`), since a far level holds it (docs/adr/9207
+//! §6).
 
 use std::collections::HashSet;
 use std::hash::{BuildHasherDefault, Hasher};
 
-use crate::batches::{BatchKind, FillPaintBatch, Lod, StyledLayer};
+use std::ops::Range;
+
+use crate::batches::{BatchKind, FillPaintBatch, Lod, StyledBatch, StyledLayer};
 
 /// Logical px a metre at or under which each far level is drawn: 16, 64 and 256 m a pixel.
 pub const FAR_CEILINGS: [f64; 3] = [1.0 / 16.0, 1.0 / 64.0, 1.0 / 256.0];
@@ -63,7 +70,7 @@ type CellSet<T> = HashSet<T, BuildHasherDefault<Cells>>;
 
 /// The far levels of every batch that takes them, put after its own numbers.
 pub fn add(layer: &mut StyledLayer) {
-    if !layer.batches.iter().any(|b| eligible(&b.kind, b) && b.range.len() / STROKE >= LEAST_ITEMS) {
+    if !layer.batches.iter().any(|b| source(b).is_some_and(|[m, l]| (m.len() + l.len()) / per(b) >= LEAST_ITEMS)) {
         return;
     }
     let has_low = !layer.low.is_empty();
@@ -76,15 +83,16 @@ pub fn add(layer: &mut StyledLayer) {
         if has_low {
             low.extend_from_slice(&layer.low[own.clone()]);
         }
-        let per = match &b.kind {
-            BatchKind::Stroke { .. } => STROKE,
-            _ => TRIANGLE,
-        };
-        if eligible(&b.kind, b) && own.len() / per >= LEAST_ITEMS {
+        let per = per(b);
+        if let Some([main, last]) = source(b)
+            && (main.len() + last.len()) / per >= LEAST_ITEMS
+        {
+            // The numbers drawn farthest now, the main part's then the coarsest level's, as one run.
             let at = |i: usize| {
-                f64::from(layer.data[own.start + i]) + if has_low { f64::from(layer.low[own.start + i]) } else { 0.0 }
+                let k = own.start + if i < main.len() { main.start + i } else { last.start + (i - main.len()) };
+                f64::from(layer.data[k]) + if has_low { f64::from(layer.low[k]) } else { 0.0 }
             };
-            let n = own.len() / per;
+            let n = (main.len() + last.len()) / per;
             let levels: Vec<Vec<f64>> = FAR_CEILINGS
                 .iter()
                 .map(|ceiling| {
@@ -95,8 +103,12 @@ pub fn add(layer: &mut StyledLayer) {
                     }
                 })
                 .collect();
-            if (levels[0].len() as f64) <= MOST_KEPT * own.len() as f64 {
-                let mut lens = vec![own.len()];
+            if (levels[0].len() as f64) <= MOST_KEPT * (main.len() + last.len()) as f64 {
+                let (main, mut lens, mut ceilings, alone) = match &b.lod {
+                    Some(lod) => (lod.main, lod.levels.clone(), lod.ceilings.clone(), lod.levels.len()),
+                    None => (0, vec![own.len()], Vec::new(), 1),
+                };
+                ceilings.extend(FAR_CEILINGS);
                 for level in &levels {
                     lens.push(level.len());
                     for &v in level {
@@ -107,7 +119,7 @@ pub fn add(layer: &mut StyledLayer) {
                         }
                     }
                 }
-                b.lod = Some(Lod { main: 0, levels: lens, ceilings: FAR_CEILINGS });
+                b.lod = Some(Lod { main, levels: lens, ceilings, alone });
             }
         }
         b.range = start..data.len();
@@ -116,11 +128,30 @@ pub fn add(layer: &mut StyledLayer) {
     layer.low = low;
 }
 
-/// Whether a batch takes far levels: a plain stroke or a solid fill, with no levels or instances of its own.
-fn eligible(kind: &BatchKind, b: &crate::batches::StyledBatch) -> bool {
-    b.lod.is_none()
-        && b.instances.is_none()
-        && matches!(kind, BatchKind::Stroke { .. } | BatchKind::Fill { paint: FillPaintBatch::Solid { .. } })
+/// Numbers an item of a batch takes.
+fn per(b: &StyledBatch) -> usize {
+    match &b.kind {
+        BatchKind::Stroke { .. } => STROKE,
+        _ => TRIANGLE,
+    }
+}
+
+/// What a batch's far levels are made of, as ranges of its numbers drawn together farthest now: a plain stroke's or a
+/// solid fill's all of them; a stroke batch with levels of its own (not yet far ones) its main part and its coarsest
+/// level. None for a batch that takes none: instanced, marks, patterned fills.
+fn source(b: &StyledBatch) -> Option<[Range<usize>; 2]> {
+    if b.instances.is_some() {
+        return None;
+    }
+    match (&b.kind, &b.lod) {
+        (BatchKind::Stroke { .. }, Some(lod)) if lod.alone >= lod.levels.len() => {
+            Some(lod.ranges(lod.levels.len().checked_sub(1)?))
+        }
+        (BatchKind::Stroke { .. } | BatchKind::Fill { paint: FillPaintBatch::Solid { .. } }, None) => {
+            Some([0..b.range.len(), 0..0])
+        }
+        _ => None,
+    }
 }
 
 fn cell(x: f64, grid: f64) -> i64 {
@@ -230,6 +261,84 @@ mod tests {
         let out = fills(2, &read(&tris), 10.0);
         assert_eq!(out.len(), 6 + 12, "a triangle and a square of two triangles");
         assert_eq!(&out[6..8], &[50.0, 50.0], "the square is the cell the tiny one lies in");
+    }
+
+    #[test]
+    fn a_curve_batch_takes_far_levels_after_its_own_and_drops_its_main_part_there() {
+        use crate::batches::{Cap, StyledBatch, Unit};
+        // A main part of 10 short lines, then four curve levels; the coarsest has 1 200 chords, 300 small rings.
+        let mut data = Vec::new();
+        let seg = |d: &mut Vec<f32>, x: f32, y: f32| d.extend([x, y, x + 0.5, y + 0.3, 0.0, 0.0]);
+        for k in 0..10 {
+            seg(&mut data, 1000.0 + k as f32 * 50.0, 0.0);
+        }
+        let main = data.len();
+        let mut levels = Vec::new();
+        for (l, count) in [(0, 2400), (1, 1800), (2, 1500), (3, 1200)] {
+            let before = data.len();
+            // Rings of four chords, 30 m apart: a ring's chords lie in one cell of the far grid.
+            for k in 0..count {
+                let r = k / 4;
+                seg(&mut data, (r % 20) as f32 * 30.0 + (k % 4) as f32 * 0.2 + l as f32 * 0.01, (r / 20) as f32 * 30.0);
+            }
+            levels.push(data.len() - before);
+        }
+        let mut layer = StyledLayer {
+            batches: vec![StyledBatch {
+                range: 0..data.len(),
+                kind: BatchKind::Stroke {
+                    color: [1.0; 4],
+                    width: 1.0,
+                    unit: Unit::Px,
+                    dash: None,
+                    dash_offset: 0.0,
+                    cap: Cap::Butt,
+                    blur: 0.0,
+                },
+                level: 0.0,
+                key: 1,
+                bounds: [0.0, 0.0, 1500.0, 1000.0],
+                origin: [0.0, 0.0],
+                reach: 1.0,
+                reach_unit: Unit::Px,
+                min_scale: None,
+                max_scale: None,
+                group: 0,
+                effect: None,
+                weight_cap: 0.0,
+                line_type_loss: None,
+                lod: Some(Lod { main, alone: 4, levels: levels.clone(), ceilings: crate::batches::CURVE_LEVELS.to_vec() }),
+                instances: None,
+            }],
+            data,
+            low: Vec::new(),
+            pictures: Vec::new(),
+            dropped: 0,
+        };
+        add(&mut layer);
+        let b = &layer.batches[0];
+        let lod = b.lod.as_ref().expect("levels");
+        assert_eq!(lod.levels.len(), 7, "its four levels and three far ones");
+        assert_eq!(&lod.levels[..4], &levels[..]);
+        assert_eq!(lod.ceilings.len(), 6);
+        assert!(lod.ceilings.ends_with(&FAR_CEILINGS));
+        assert_eq!(lod.alone, 4);
+        // Near, the main part draws with a level; at the far ones it does not.
+        assert_eq!(lod.ranges(3)[0], 0..main);
+        assert_eq!(lod.ranges(4)[0], 0..0);
+        // The first far level (8 m) at 1/16 px a metre (16 m a pixel): fewer strokes than main and the coarsest level,
+        // and every cell either touched is touched again.
+        assert_eq!(lod.level(1.0 / 20.0, 1.0), 4);
+        let grid = GRID_PX / FAR_CEILINGS[0];
+        let numbers: Vec<f64> = layer.data[b.range.clone()].iter().map(|&v| f64::from(v)).collect();
+        let far = &numbers[lod.ranges(4)[1].clone()];
+        assert!(far.len() < main + levels[3], "{} ≥ {}", far.len(), main + levels[3]);
+        let drawn: HashSet<(i64, i64)> =
+            far.chunks(STROKE).flat_map(|s| [(cell(s[0], grid), cell(s[1], grid)), (cell(s[2], grid), cell(s[3], grid))]).collect();
+        let coarsest = lod.ranges(3)[1].clone();
+        for s in numbers[..main].chunks(STROKE).chain(numbers[coarsest].chunks(STROKE)) {
+            assert!(drawn.contains(&(cell(s[0], grid), cell(s[1], grid))), "a touched cell is left out");
+        }
     }
 
     #[test]

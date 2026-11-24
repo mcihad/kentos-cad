@@ -938,7 +938,7 @@ impl StyledGpu {
                     {
                         g.level = forced.min(lod.levels.len().saturating_sub(1));
                     }
-                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings == kentos_native_style::far_levels::FAR_CEILINGS) {
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
                         print_level(frame.scale, lod, g.level);
                     }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
@@ -1187,7 +1187,7 @@ impl StyledGpu {
                     {
                         g.level = forced.min(lod.levels.len().saturating_sub(1));
                     }
-                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings == kentos_native_style::far_levels::FAR_CEILINGS) {
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
                         print_level(frame.scale, lod, g.level);
                     }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));

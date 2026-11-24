@@ -405,14 +405,17 @@ pub struct StyledBatch {
 }
 
 /// A batch's detail levels (docs/adr/1063 §3), counts of numbers from the start of its range (of its definition's,
-/// for an instanced batch): `main` drawn at every scale, then level 0 (the fine chords of its curves) and the coarser
-/// levels; level `k + 1` drawn where the view's logical px per metre times [`Lod::scale`] is at most `ceilings[k]`,
-/// level 0 above the first ceiling.
+/// for an instanced batch): `main` drawn with the levels before `alone`, then level 0 (the fine chords of its curves)
+/// and the coarser levels; level `k + 1` drawn where the view's logical px per metre times [`Lod::scale`] is at most
+/// `ceilings[k]`, level 0 above the first ceiling. A far level (docs/adr/9207 §6) holds the main part's strokes
+/// itself, on its grid: from `alone` on a level draws without it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Lod {
     pub main: usize,
     pub levels: Vec<usize>,
-    pub ceilings: [f64; 3],
+    pub ceilings: Vec<f64>,
+    /// The first level drawn without the main part; `levels.len()` when every level draws with it.
+    pub alone: usize,
 }
 
 impl Lod {
@@ -433,7 +436,8 @@ impl Lod {
     pub fn ranges(&self, level: usize) -> [std::ops::Range<usize>; 2] {
         let start: usize = self.main + self.levels.iter().take(level).sum::<usize>();
         let len = self.levels.get(level).copied().unwrap_or(0);
-        [0..self.main, start..start + len]
+        let main = if level < self.alone { self.main } else { 0 };
+        [0..main, start..start + len]
     }
 
     /// All its numbers.
@@ -503,10 +507,12 @@ fn lod_of(d: &Value) -> Option<Lod> {
     let list = d.get("lod")?.as_array()?;
     let mut lens = list.iter().map(|v| v.as_f64().unwrap_or(0.0).max(0.0) as usize);
     let main = lens.next()?;
+    let levels: Vec<usize> = lens.collect();
     Some(Lod {
         main,
-        levels: lens.collect(),
-        ceilings: kentos_style_core::style::batch::CURVE_LEVELS,
+        alone: levels.len(),
+        levels,
+        ceilings: kentos_style_core::style::batch::CURVE_LEVELS.to_vec(),
     })
 }
 

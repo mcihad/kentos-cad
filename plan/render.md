@@ -143,7 +143,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Düzey zorlama ölçümü: GPU süresi çizilen örnekle doğru orantılı (örnek başına ~90 ns). NCZ'nin kalan 0,9 M örneği
     uzak düzey almayan eğri ve uzun çizgi düzeylerinde: binlerce küçük daire en kaba eğri düzeyinde bile kirişlerle
     çiziliyor.
-  - **Sıradaki:** uzak düzeyler eğri ve uzun çizgi düzeylerinin ardına da eklenecek (`Lod`'un tavanları genişler).
+  - [x] Uzak düzeyler eğri ve uzun çizgi düzeylerinin ardına da eklendi (ADR 9207 §6). Tekerlek karesinde GPU
+    sivas.kcad'de 84,9 → 69,9 ms, NCZ'de 87,5 → 81,5 ms; çizilen öğe −%11 ve −%8.
+  - **Sıradaki:** NCZ'de kalan 831 bin öğenin dağılımı: toplu çizim türüne, düzeyine ve boyuna göre sayan bir tanı.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.

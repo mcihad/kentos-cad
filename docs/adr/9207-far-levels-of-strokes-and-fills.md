@@ -135,9 +135,63 @@ damgasıyla bulunacak. Adaylar:
 Gölgelendirici bir çizgi örneğini en az 4 piksel genişliğinde bir dörtgen olarak çiziyor
 (`ext = halfW + blur/2 + 1`).
 
+## §6 Eğri ve uzun çizgi düzeylerinin ardına uzak düzeyler (24 Kasım 2026)
+
+§5'in sonraki adımı.
+
+- **Kapsam:** kendi düzeyleri olan çizgi toplu çizimleri de uzak düzey alır. Bunlar eğrilerin kirişleri (1063 §3) ve
+  uzun çizgiler (1064 §2).
+- **Uzak düzeyin kaynağı:** en uzakta çizilen iki parça, yani ana parça ve en kaba düzey. Aynı ızgarada (8, 32 ve
+  128 m) kurulur ve kendi düzeylerinin ardına eklenir.
+- **Tavanlar:** kendi tavanlarının ardına eklenir: 4, 1, 0,25, 1/16, 1/64 ve 1/256 px/m.
+  `Lod.ceilings` sabit üç sayılık bir diziden vektöre geçti.
+- **Ana parça:** uzak düzey ana parçanın çizgilerini de içerir. Bu yüzden o düzeylerde ana parça ayrıca çizilmez
+  (`Lod.alone`, `Lod::ranges`). GPU boş aralığı zaten atlıyordu; çizicide değişiklik gerekmedi.
+- **Örnekli toplu çizimler** (bloklar) uzak düzey almaz: tanımları kendi birimindedir. Uzak bloklar 1065'in vekiliyle
+  çizilir.
+- **Bellek kuralı aynı:** ilk uzak düzey, ana parça ile en kaba düzeyin çizgilerinin en çok dörtte üçünü tutabilir.
+
+**Sınama:** `a_curve_batch_takes_far_levels_after_its_own_and_drops_its_main_part_there`.
+
+- Dört düzeyli bir eğri toplu çizimi yedi düzey alır.
+- Uzak düzeyde ana parça çizilmez.
+- En kaba düzeyin ve ana parçanın dokunduğu her hücreye uzak düzeyde yine dokunulur.
+
+Yerel stilin (56 + 51 + 4), çizicinin (98) ve plot'un (22) sınamaları geçti.
+
+**Ölçüm** (UHD 770, release, `perf::files`, açılış görünümü; ham sonuçlar `docs/perf/files-desktop-rm10b-*.json`):
+
+| Dosya | Çizilen öğe | Tekerlek karesinde GPU (p50 / p95) |
+|---|---|---|
+| sivas.kcad | 1 557 539 → **1 382 830** (−%11) | 84,9 / 92,2 → **69,9 / 90,0 ms** |
+| İmar planı NCZ | 903 516 → **831 268** (−%8) | 87,5 / 93,8 → **81,5 / 86,9 ms** |
+| SİVAS AVM DWG | 259 012, aynı | 21,7 → 21,6 ms |
+| Suşehri DXF | 493 447, aynı | 50,6 → 49,9 ms |
+
+- DWG'de ve DXF'te çizilen öğe değişmedi; nedenine ayrıca bakılmadı.
+- GPU belleği NCZ'de 208 → 222 MB, sivas.kcad'de 153 → 154 MB.
+- Açılış süresi ve en yüksek bellek değişmedi.
+
+**Gerçek pencere** (Xvfb, `.run/gui-evidence/render/rm10b/{once,sonra}-{ncz,sivas}`):
+
+- NCZ'nin kent görünümünde 738 840 pikselin 642'si (%0,09) 20'den büyük farkla değişti; daha uzak görünümde 57.
+- sivas.kcad'de fark yok.
+- Farklar kırmızı eğrilerin yarım piksellik kaymaları, dağınık tek pikseller.
+
+**NCZ'de kalan:** öğe sayısı yalnız %8 azaldı. Kalan 831 bin öğenin hangi toplu çizimlerde olduğu ölçülmedi. Adaylar:
+
+- 1 024 öğeden küçük toplu çizimler: 685 çizim çağrısında ortalama 1 300 öğe düşüyor;
+- örnekli bloklar;
+- uzak tavanın üstündeki tekerlek kareleri: ölçülen kareler 0,037–0,077 px/m'de, 1/16 = 0,0625'in üstündeki ikisinde
+  uzak düzey seçilmiyor.
+
+Sonraki adım: öğeleri toplu çizim türüne, düzeyine ve boyuna göre sayan bir tanı.
+
 ## Uygulama
 
 - `crates/native/style/src/far_levels.rs` (yeni), `batches.rs` (`decode`), `lib.rs`.
+- §6: `far_levels.rs` (`source`, `per`), `batches.rs` (`Lod.ceilings` vektör, `Lod.alone`, `Lod::ranges`), `gpu.rs`
+  (tanının tavan karşılaştırması `ends_with`).
 - `crates/render/wgpu/src/styled/gpu.rs`: düz dolgunun düzeyi; `items` çizilen düzeyi sayar.
 - `crates/render/wgpu/src/{renderer.rs,stats.rs}`: `FrameStats::styled_items`.
 - `apps/desktop/src/shell/perf/files.rs`: açılış görünümünün sayıları (`drawn`), `KENTOS_PERF_SETTINGS`.
