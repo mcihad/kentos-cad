@@ -179,7 +179,7 @@ ADR 8054'ün bekçisi yalnız `apps/desktop/src`'yi sınıyor; dosyalar `crates/
 
 Bekçi genişletilmeli ya da sınır yazılı kuralla netleşmeli (CLAUDE.md §8: 400 satır üstünde ayrıştırmayı değerlendir).
 
-### A11 — P2 — Otomatik denetim yok
+### A11 — P2 — Otomatik denetim yok — ⏸ sahibin kararı: şimdilik yok (F5)
 
 `.github` yok; bütün denetimler elle koşuyor, `main`'e kırmızıyla gönderilebiliyor. A1 ve A3 bunun sonucu. Karar için F5.
 
@@ -211,7 +211,13 @@ iş bitince birleştirilir.
 Dal 45 commit önde; ADR 9200–9219'u kullanıyor. Bugün `main`'deki üç ADR aynı numaraları almıştı; 9300–9302'ye
 taşındı (`63f67c86d`). ADR numarası seçmeden önce birleşmemiş dallar da denetlenmeli.
 
-### A14 — P1 — Web iptalinden sonra kalanlar
+### A14 — P1 — Web iptalinden sonra kalanlar — [x] donduruldu (F3)
+
+**Durum (24 Kasım 2026, `2be9922b5`):** web uygulamasının kuralları ve komutları CLAUDE.md'den, kılavuzdan, package.json'dan ve
+Makefile'dan çıktı; TypeScript kuralları artık portal için (`apps/portal`). Portal donmuş `apps/web`'in `ui/dom`, `core/signal`,
+biçem jetonları ve üretilen sözleşme tiplerini kullanıyor: `apps/web` bu yüzden silinemez. `Client::Web` tanımda kaldı.
+Kalan küçükler: `scripts/wasm/ensure.mjs` artık hiçbir yerden çağrılmıyor; `docs/inventory` ve kılavuzun 00/10 geçmiş kayıtları
+web komutlarını anlatıyor (geçmiş olarak).
 
 Hepsi kullanılmıyor ya da yanlış yönlendiriyor:
 
@@ -437,10 +443,10 @@ ayrıntılı dökümü bu incelemenin kapsamında değil.
 |---|---|
 | F1 | Python ve MCP'de yeni CBS projesi de boş mu açılsın (ADR 9302 §4)? Python'da yaklaşık 50 `Document.new` çağrısı etkilenir. |
 | F2 | Kurum şablonu “Şablondan yeni proje” komutu olarak dönsün mü (ADR 9302 §2.5)? |
-| F3 | Web iptali: web'in kodu, komutları, kılavuz bölümleri ve `Client::Web` silinsin mi, arşivlensin mi (A14)? |
-| F4 | “ArcGIS REST” (servis türü) ve “AutoCAD 2007 DXF” (DXF sürüm adı) gibi adlar başka uygulama adı kuralına girer mi (A6)? |
-| F5 | Otomatik denetim: yerel bir kanca mı, sunucuda CI mı (A11)? |
-| F6 | Kadastronun teknik çıktıları (parsel alan çizelgesi, kroki) GIS-06/07 kararından ayrılsın mı (C2)? |
+| F3 | Web iptali: web'in kodu, komutları, kılavuz bölümleri ve `Client::Web` silinsin mi, arşivlensin mi (A14)? **Karar (24 Kasım): dondur.** Web kuralları ve komutları belgelerden, package.json'dan ve Makefile'dan çıkar; `apps/web` kodu donmuş kalır; web istemcisi ileride web görüntüleyici için tanımda kalır. |
+| F4 | “ArcGIS REST” (servis türü) ve “AutoCAD 2007 DXF” (DXF sürüm adı) gibi adlar başka uygulama adı kuralına girer mi (A6)? **Karar (24 Kasım): sürüm adı değişir** (“DXF (2007 sürümü)”); servis protokolünün adı ve görünmeyen dosya imzaları kalır. |
+| F5 | Otomatik denetim: yerel bir kanca mı, sunucuda CI mı (A11)? **Karar (24 Kasım): şimdilik yok**; denetimler elle (`make arch`, üreteçler, bekçiler). |
+| F6 | Kadastronun teknik çıktıları (parsel alan çizelgesi, kroki) GIS-06/07 kararından ayrılsın mı (C2)? **Karar (24 Kasım): ayrılsın, şimdi yapılsın**; ifraz, tevhit, hisse ve kurum onayı sona kalır. |
 | F7 | Mobil: AY-08'in kalanları (mobil profiller, çevrimdışı düzenleme, mobil teknoloji). |
 
 ---
