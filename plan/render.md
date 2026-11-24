@@ -332,8 +332,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     Kutuyu kesmeyen yol olduğu gibi kalır. Sınamalar: geometri 6, stil çekirdeği 2.
   - [x] Adım 2, masaüstü ([ADR 9220](../docs/adr/9220-deep-view-scene.md)): 500 px/m'den derin sahne; yalnız kutunun
     değdiği nesneler, ayrı önbellekte. 627 ve 10 000 px/m'de resim düzenli sahneninkiyle aynı (0 piksel fark).
-  - [ ] Adım 3: yayların yalnız kutudaki açı aralığı 0,25 piksellik kirişle (RM-09 ile); sonra sınır 10⁴ → 10⁷ px/m.
-    Stilli yol daireleri en çok 72 kirişle çiziyor: ekranda 263 pikseli geçen yarıçapta sapma çeyrek pikseli aşıyor.
+  - [x] Adım 3 (ADR 9220 §2.4): derin sahnede daire ve yaylar kutuda çeyrek piksellik kirişle; sınır 10⁴ → 10⁵ px/m
+    (10 µm/piksel). ~650 px/m'de önce 72-genin köşesi, sonra pürüzsüz yay.
+  - [ ] Adım 4: seçim vurgusu ve ham yol kutuyla bölünür, bombeli kenarlar ve elipsler kutuda yuvarlak; sonra sınır
+    10⁷ px/m.
 
 ## Kabul ölçütleri
 

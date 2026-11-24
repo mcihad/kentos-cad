@@ -908,7 +908,7 @@ fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
         let mut cache = StyledCache::default();
         cache.set_only(Some(deep));
         let mut l = look(&doc);
-        l.view_build.deep = Some(deep);
+        l.view_build.deep = Some(kentos_native_style::Deep { bounds: deep, tolerance: 1e-3 });
         let view = Bounds {
             min_x: deep.min_x + 0.4,
             min_y: deep.min_y + 0.4,

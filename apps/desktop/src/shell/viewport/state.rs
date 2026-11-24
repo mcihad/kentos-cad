@@ -519,7 +519,7 @@ impl Viewport {
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
         let cache = self.styled_in_use();
         cache.borrow_mut().filters_at(s.spatial.filters_version());
-        cache.borrow_mut().set_only(deep);
+        cache.borrow_mut().set_only(deep.map(|d| d.bounds));
         let scene = cache.borrow_mut().scene_themed(
             self.generation,
             &doc.model,
@@ -635,19 +635,24 @@ impl Viewport {
         }
     }
 
-    /// The deep view's box (plan/render.md RM-24): from [`DEEP_PX_PER_M`] in, the view and three times its size round
-    /// it, kept while the view stays in it and has not zoomed twenty times into it; none again below half the
-    /// threshold, so a view at the threshold does not switch back and forth.
-    fn deep_box(&self) -> Option<Bounds> {
+    /// The deep view (plan/render.md RM-24, docs/adr/9220): from [`DEEP_PX_PER_M`] in, the view and three times its
+    /// size round it, its curves round to a quarter pixel there; kept while the view stays in the box and its scale
+    /// within twice the one the tolerance was made at; none again below half the threshold, so a view at the threshold
+    /// does not switch back and forth.
+    fn deep_box(&self) -> Option<kentos_native_style::Deep> {
         let unit = self.camera.metres_per_unit;
         let unit = if unit.is_finite() && unit > 0.0 { unit } else { 1.0 };
         let px_per_m = self.camera.scale / unit;
         let was = self.deep.get();
         let deep = px_per_m >= if was.is_some() { DEEP_PX_PER_M / 2.0 } else { DEEP_PX_PER_M };
         let view = self.camera.visible_bounds();
+        let tolerance = DEEP_TOLERANCE_PX / self.camera.scale;
         let next = deep.then(|| match was {
-            Some(b) if !clip_stale(&view, &b) => b,
-            _ => construction_clip(&view),
+            Some(d) if !clip_stale(&view, &d.bounds) && (0.5..=2.0).contains(&(d.tolerance / tolerance)) => d,
+            _ => kentos_native_style::Deep {
+                bounds: construction_clip(&view),
+                tolerance,
+            },
         });
         self.deep.set(next);
         next

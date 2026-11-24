@@ -500,10 +500,19 @@ pub struct View {
     /// curve itself (docs/adr/1122); off, the renderer measures the drawn chords
     /// (the web's build and the frozen answers until it opts in).
     pub cad_phase: bool,
-    /// Deep zoom (plan/render.md RM-24): a box round the view. Every path's and ring's segments are split where they
-    /// cross its edge (`geom::deep`), so the pieces in the view have their ends near it; inserts are drawn out and
-    /// the far levels left off. None: the drawing as it is.
-    pub deep: Option<Bounds>,
+    /// Deep zoom (plan/render.md RM-24): a box round the view and the curves' tolerance in it. Every path's and
+    /// ring's segments are split where they cross the box's edge (`geom::deep`), so the pieces in the view have their
+    /// ends near it; circles and arcs are round to the tolerance in the box; inserts are drawn out and the far levels
+    /// left off. None: the drawing as it is.
+    pub deep: Option<Deep>,
+}
+
+/// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
+/// in the box (a quarter pixel at the view's scale), world units.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Deep {
+    pub bounds: Bounds,
+    pub tolerance: f64,
 }
 
 impl PartialEq for View {
@@ -646,8 +655,8 @@ impl Patches {
 struct Cx {
     /// Curves' strokes come with their coarser detail levels (docs/adr/1063 §3).
     curve_lod: bool,
-    /// Deep zoom's box (`View::deep`): every path and ring split at its edge.
-    deep: Option<Bounds>,
+    /// The deep view (`View::deep`): every path and ring split at its box's edge, circles and arcs round in it.
+    deep: Option<Deep>,
     plot_precision:bool,
     precision_error:Option<String>,
     patches: Patches,
@@ -864,10 +873,15 @@ fn output_parts(
     env: &Env<'_>,
     cx: &mut Cx,
 ) -> Vec<Geom> {
+    if let Some(d) = cx.deep
+        && let Some(parts) = deep::curve(s, &d)
+    {
+        return parts;
+    }
     let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
         Ok(parts) => match cx.deep {
-            Some(b) => parts.into_iter().map(|g| deep::split(g, &b)).collect(),
+            Some(d) => parts.into_iter().map(|g| deep::split(g, &d.bounds)).collect(),
             None => parts,
         },
         Err(error) => {

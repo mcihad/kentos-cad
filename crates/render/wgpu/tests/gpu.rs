@@ -14,7 +14,6 @@ use kentos_contracts::{
     DocumentSnapshotV1, Entity, EntityBase, LayerNode, LayerNodeType, LayerStyle, LineEntity,
     LineType,
 };
-use kentos_render_wgpu::camera::MAX_SCALE;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
     Camera, FrameInput, Palette, RenderSettings, Renderer, Rgba8, ScenePart, Vec2,
@@ -811,6 +810,9 @@ fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
 /// the view pans by 0.01 mm (0.05 px) at a time; the line must move by
 /// exactly that, with no jitter.
 fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut Gpu) {
+    // The plain scene's 128 m pieces' deepest zoom: the drawing area's styled layers go to `MAX_SCALE` through the
+    // deep view's scene (plan/render.md RM-24, docs/adr/9220).
+    const MAX_SCALE: f64 = 1e4;
     for origin in [
         Vec2::new(486_512.34, 4_420_187.52),
         Vec2::new(0., 0.),
