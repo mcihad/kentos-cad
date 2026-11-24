@@ -743,6 +743,19 @@ fn constraint_groups(bytes: &[u8]) -> usize {
     count
 }
 
+/// A count as the report writes it: digits in threes, a space between (“2 199 464”).
+fn grouped(n: u64) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            out.push(' ');
+        }
+        out.push(c);
+    }
+    out
+}
+
 pub fn read_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, String> {
     read_checked_watched(bytes, opts, watch).map_err(|e| e.message)
 }
@@ -1091,10 +1104,17 @@ fn read_once(
         });
     }
     if out.truncated > 0 {
-        out.report.skip(
+        // As many as were left out (docs/adr/9211): a 657 MB city plan DXF holds 3.2 M objects and opens with its first
+        // million.
+        out.report.skip_n(
             "Nesne sınırı",
-            &format!("ilk {limit} nesne alındı; kalanlar alınmadı (dosyayı katmanlara bölün)"),
+            &format!(
+                "ilk {} nesne alındı, kalan {} nesne alınmadı (dosyayı katmanlara bölün)",
+                grouped(limit as u64),
+                grouped(u64::from(out.truncated))
+            ),
             0,
+            out.truncated,
         );
     }
     if out.exhausted {

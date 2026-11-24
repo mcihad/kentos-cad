@@ -213,8 +213,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     okuyor. 1 milyon nesne sınırında 7,7 s ve en çok 2,1 GB; sınırsız 3 199 462 nesne, 9,4 s ve 5,2 GB.
     Ayrıştırma darboğaz değil. Darboğaz nesne sayısı: NCZ'deki 453 534 nesne, DXF'e aktarılırken parçalanmış.
   - DWG köprüsü 1 GiB'lik DXF metnine izin veriyor, kullanıcının seçtiği DXF ise 256 MiB'te reddediliyor.
-  - **Sahibin kararı gerekiyor:** dosyayı reddetmek mi, yoksa ilk 1 milyon nesneyle raporlu açmak mı (masaüstünde 1 M
-    nesne ~2,8 GB, 3,2 M ~9 GB)? Bölge seçerek açmak (akışlı ve uzamsal süzgeçli) üçüncü yol.
+  - [x] Sahibin kararı (24 Kasım): ilk 1 milyonla raporlu aç ([ADR 9211](../docs/adr/9211-big-dxf-opens-with-its-first-million.md)).
+    Aç'ın sınırı 1 GiB oldu; rapor alınmayanların sayısını veriyor (657 MB'lık DXF: kalan 2 199 464). Sınırdan
+    sonraki nesne okuyucunun ziyaret bütçesini artık harcamıyor.
+  - [ ] Bölge seçerek açmak (akışlı ve uzamsal süzgeçli): asıl hedef, açık.
 - [ ] **RM-21 — DWG doğrudan eşleme.** DWG kod çözücüsünün nesneleri doğrudan KentOS nesnelerine çevrilir. Bellekteki
   DXF metin köprüsü (270–463 MB) kalkar.
 - [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:

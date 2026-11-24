@@ -1485,6 +1485,12 @@ impl<'l> Emitter<'l> {
     }
 
     fn emit_kind(&mut self, e: &Parsed, ctx: &Ctx) {
+        // Past the object limit an object is counted, not read (docs/adr/9211): spending a visit on it ran the visits
+        // out, counted 7 000 of 59 000 left out and blamed nested blocks.
+        if !self.defining && self.out.entities.len() >= self.out.limit {
+            self.out.truncated += 1;
+            return;
+        }
         if !self.out.visit() {
             return;
         }

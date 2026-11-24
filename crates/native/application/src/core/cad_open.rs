@@ -53,6 +53,12 @@ impl From<String> for Refused {
     }
 }
 
+/// The largest CAD file Aç reads (docs/adr/9211): the DWG bridge's DXF limit. Parsing is not what limits a big file:
+/// the city plan's 657 MB DXF parses in 9 s (5.2 GB whole, 2.1 GB to the reader's million objects); its 3.2 M objects
+/// do, and the reader opens the first million and says how many were left out. İçe aktar and the web keep the
+/// formats' own 256 MiB.
+pub const MAX_OPEN_BYTES: usize = 1024 * 1024 * 1024;
+
 /// Byte reading and cancellation belong to the host. This stage also runs off the UI thread.
 pub fn read(
     path: &Path,
@@ -73,10 +79,10 @@ pub fn read_in(
     file_unit: Option<kentos_commands::FileUnit>,
     watch: &mut dyn Watch,
 ) -> Result<Opened, Refused> {
-    if bytes.len() > kentos_formats::dxf::preflight::MAX_BYTES {
+    if bytes.len() > MAX_OPEN_BYTES {
         return Err(refused(
             "cad_file_too_large",
-            "CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.",
+            format!("CAD dosyası {} MiB sınırını aşıyor; dosyayı bölün.", MAX_OPEN_BYTES / (1024 * 1024)),
         ));
     }
     if !watch.step(0, bytes.len() as u64) {
@@ -99,8 +105,8 @@ pub fn read_in(
     // cost 9 of its 24 s (12 November 2026).
     let mut bridge: Option<kentos_dwg::Bridge> = None;
     let mut read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
-        Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch)
-            .map_err(|e| refused("import_unreadable", e)),
+        Format::Dxf => kentos_formats::dxf::read_checked_watched_within(bytes, options, watch, MAX_OPEN_BYTES)
+            .map_err(|e| refused("import_unreadable", e.message)),
         Format::Dwg => {
             if bridge.is_none() {
                 bridge =

@@ -1142,7 +1142,11 @@ fn a_large_file_reads_in_one_pass() {
     };
     let limited = dxf::read(text.as_bytes(), &limit).expect("read");
     assert_eq!(limited.entities.len(), 1000);
-    assert!(skipped(&limited, "Nesne sınırı").is_some());
+    // How many were left out, counted and said (docs/adr/9211).
+    let left = limited.report.skipped.iter().find(|i| i.what == "Nesne sınırı").expect("said");
+    assert_eq!(left.count, 59_000);
+    assert!(left.reason.contains("ilk 1 000 nesne alındı, kalan 59 000 nesne alınmadı"), "{}", left.reason);
+    assert!(skipped(&limited, "Blok (INSERT)").is_none(), "no nested block is blamed");
 }
 
 #[test]
