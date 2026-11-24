@@ -232,10 +232,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - 0 ve 14 türlerinden üç kayıt boş çıktı; “Bilgi” olarak sayılıyor. İçi dolu üç 0 türü kaydı hiçbir okuyucu
     tanımıyor.
   - “Alınmadı” 18 → 15.
-- [ ] **RM-18 — NCZ ↔ DXF denkliği.** Aynı planın NCZ'si (72 MB) ile DXF'i (657 MB) karşılaştırılır:
-  - katman başına nesne sayısı;
-  - kapsam;
-  - yazılar.
+- [x] **RM-18 — NCZ ↔ DXF denkliği** ([ADR 9216](../docs/adr/9216-ncz-and-its-dxf-compared.md)). Aynı planın NCZ'si
+  (72 MB) ile DXF'i (657 MB) katman katman, yazı yazı ve hücre hücre karşılaştırıldı.
+  - Parsel sınırları ve KADASTRO yazıları aynı (5,6 milyon hücrede 2'ye karşı 26 hücre fark; 52 018 yazı bire bir).
+  - NCZ okuyucusu Netcad'in DXF aktarımından fazlasını alıyor: yapılaşma koşulu sembolleri (40 211 yazı), @ROL.
+    DXF'te 148 yazı 0,0'da.
+  - Açık, sahibe soruldu:
+    - 4 149 parselin numarası poligonun etiketinde ve KentOS'ta çizilmiyor;
+    - Netcad sembol kodları (`S84`, 6 664 nokta) çizimsiz;
+    - koruma bantlarının sembollü çizgi tipi ve koruma alanının deseni yok.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
 
 ### F7 — DWG ve DXF alımı
