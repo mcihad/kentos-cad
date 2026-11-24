@@ -626,7 +626,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             axis: A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
             azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
             cell: Unit: m.
-            corners: Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
+            corners: Sections at the axis's inner corners too (docs/adr/4760).
             cut_factor: Unit: 1.
             fill_factor: Unit: 1.
             formula: How the volume between two sections is reckoned; none: the average end area.

@@ -112,7 +112,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_: Unit: m.
             haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
             layer_id:
-            match_lines: Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+            match_lines: Match lines (docs/adr/0998): where one sheet's plan hands over to the next, at the
                 middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
                 sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
             name:

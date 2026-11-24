@@ -68,7 +68,7 @@ UNITS: dict[str, str] = {
     "1": "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
     "percent": "Yüzde (0–100).",
     "station-grade": "Km (m) ve o km'deki eğim oranı çifti: dever çizelgesinin kırık noktaları.",
-    "grade": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977).",
+    "grade": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir.",
     "ppm": "Milyonda bir.",
     "pattern": "Tarama deseninin tanımının birimi; taramanın ölçeğiyle çarpılınca metre.",
     "count": "Adet.",
@@ -110,7 +110,7 @@ UNITS: dict[str, str] = {
     "L/h": "Litre bölü saat: rölantide yakıt.",
     "kg/L": "Kilogram bölü litre: yakıtın litresinin salımı.",
     "volume/h": "Saatte hacim: üretim.",
-    "W/m2K": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038).",
+    "W/m2K": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri).",
 }
 
 
@@ -1520,7 +1520,7 @@ ClashSideName = Literal["mine", "theirs"]
 
 
 class CleanupIgnore(_StrEnum):
-    """A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”)."""
+    """A property two objects may differ in and still be the same."""
     LAYER = "layer"
     COLOR = "color"
     LINE_TYPE = "lineType"
@@ -1957,7 +1957,7 @@ class CrsSource(_StrEnum):
     - ``rfc7946``: A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.
     - ``geoJsonCrs``: A GeoJSON file's legacy `crs` member (the 2008 specification).
     - ``prj``: A Shapefile's `.prj` (WKT).
-    - ``ncz``: A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the
+    - ``ncz``: An NCZ drawing's MPROJ block (datum, projection, zone) and the
     - ``kml``: A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).
     """
     RFC7946 = "rfc7946"
@@ -2171,7 +2171,7 @@ DimensionBondName = Literal["free", "partial", "bound", "broken"]
 
 
 class DimensionFit(_StrEnum):
-    """Where the value goes when it does not fit between the extension lines (AutoCAD's DIMATFIT and DIMTIX): absent,
+    """Where the value goes when it does not fit between the extension lines: absent,
     always between them.
 
     - ``auto``: Beyond the second extension line when the value and the two arrowheads are longer than the line between them.
@@ -2352,7 +2352,7 @@ DimensionTextPlaceName = Literal["centre"]
 
 
 class DimensionZeros(_StrEnum):
-    """Which zeros the number leaves out (AutoCAD's DIMZIN).
+    """Which zeros the number leaves out.
 
     - ``both``
     - ``leading``: The zero before the point: `0.50` → `.50`.
@@ -2398,7 +2398,7 @@ DistanceToName = Literal["face", "grid"]
 class DivideEnds(_StrEnum):
     """Which of an open object's own ends also get a place (docs/adr/0299 §2).
 
-    - ``none``: Neither (AutoCAD's DIVIDE and MEASURE).
+    - ``none``: Neither.
     - ``start``: The object's start.
     - ``end``: The object's end.
     - ``both``: Both.
@@ -3081,7 +3081,7 @@ class FontMatch(_StrEnum):
 
     - ``own``: One of KentOS's own faces (a style naming no file is its own face).
     - ``equivalent``: A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
-    - ``shx``: An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
+    - ``shx``: An SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
     - ``missing``: A face KentOS does not have: drawn in the style's face.
     """
     OWN = "own"
@@ -3512,8 +3512,8 @@ HatchPatternsOperationName = Literal["load", "add", "remove", "export"]
 class HatchWay(_StrEnum):
     """How Tarama finds the region around a point.
 
-    - ``object``: Kapalı nesne (Netcad's): the smallest closed object around the point,
-    - ``lines``: Çizgiler (AutoCAD's): the face the boundaries' line work closes
+    - ``object``: Kapalı nesne: the smallest closed object around the point,
+    - ``lines``: Çizgiler: the face the boundaries' line work closes
     """
     OBJECT = "object"
     LINES = "lines"
@@ -3726,7 +3726,7 @@ InvitationStateName = Literal["accepted", "revoked", "pending", "expired"]
 
 
 class IslandStyle(_StrEnum):
-    """How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).
+    """How a region's islands are taken (docs/adr/0329 §1).
 
     - ``outer``: Dış: the islands are left open, whatever lies inside them too.
     - ``normal``: İç içe (Normal): the islands are left open, the closed objects inside them hatched again, those inside these
@@ -3891,7 +3891,7 @@ LabelLeanName = Literal["northEast", "northWest", "southWest", "southEast", "aut
 
 
 class LabelOverlap(_StrEnum):
-    """Whether a label may cover another (QGIS's three).
+    """Whether a label may cover another.
 
     - ``never``: Never: a label with no free place is not drawn.
     - ``ifNeeded``: When no free place is left, at its best one.
@@ -4193,9 +4193,9 @@ LayerStatesOperationName = Literal["save", "update", "rename", "remove", "apply"
 
 class LeaderArrow(_StrEnum):
     """A leader's arrowhead other than the filled triangle (Dolu üçgen,
-    AutoCAD's Closed filled), which is no value but the field's absence: a
+    Closed filled), which is no value but the field's absence: a
     leader has one spelling (docs/adr/0146 §1). The first three are the
-    first leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`
+    first leaders'; the others the DXF arrowheads (docs/adr/0205 §7, `.kcad`
     schema 30).
 
     - ``open``: Açık ok: the filled triangle's two sides (Open).
@@ -4569,7 +4569,7 @@ MaplibreSourceKindName = Literal["geojson", "vector"]
 
 
 class MatchProperty(_StrEnum):
-    """A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
+    """A property Özellik kopyala gives.
 
     - ``layer``: The layer the objects move to.
     - ``color``: Their own colour, or their layer's.
@@ -4723,7 +4723,7 @@ MergeUnmatchedName = Literal["add", "skip"]
 
 
 class MirrorText(_StrEnum):
-    """What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a
+    """What a mirror does to the texts (docs/adr/0292): texts, multi-line texts, texts along a
     curve, leaders' notes and tables.
 
     - ``readable``: Okunur (MIRRTEXT = 0): in its mirrored place, reading upright; its alignment turned so that it fills that
@@ -5347,8 +5347,8 @@ class OrderTo(_StrEnum):
 
     - ``front``: Öne getir: drawn after every other object of their layer. “Öne getir”.
     - ``back``: Arkaya gönder: drawn before every other object of their layer. “Arkaya gönder”.
-    - ``above``: Nesnenin üstüne: drawn right after the `reference` object (AutoCAD's DRAWORDER Above). “Nesnenin üstüne”.
-    - ``under``: Nesnenin altına: drawn right before the `reference` object (AutoCAD's DRAWORDER Under). “Nesnenin altına”.
+    - ``above``: Nesnenin üstüne: drawn right after the `reference` object. “Nesnenin üstüne”.
+    - ``under``: Nesnenin altına: drawn right before the `reference` object. “Nesnenin altına”.
     """
     FRONT = "front"
     BACK = "back"
@@ -6329,7 +6329,7 @@ PlatformSideName = Literal["cut", "fill", "open"]
 class PointLabelMode(_StrEnum):
     """Where a point's label goes (docs/adr/0212 §3.3).
 
-    - ``around``: Around it, QGIS's cartographic order (top right first).
+    - ``around``: Around it, the cartographic order (top right first).
     - ``center``: On it.
     """
     AROUND = "around"
@@ -7647,7 +7647,7 @@ SchemaKindName = Literal["layers", "forms", "domains", "relations"]
 
 
 class SectionFormula(_StrEnum):
-    """The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
+    """The section method's formula (docs/adr/4340): `(A₀ + A₁)/2 · L`, or
     `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
 
     - ``endArea``
@@ -7874,7 +7874,7 @@ SheetResourceKindName = Literal["drawing", "dependency", "font", "license", "plo
 class ShpEncoding(_StrEnum):
     """The .dbf's text code page.
 
-    - ``utf-8``: UTF-8, named in the .cpg (QGIS and GDAL write it so today).
+    - ``utf-8``: UTF-8, named in the .cpg.
     - ``windows-1254``: Windows-1254 (Turkish Windows), named in the .cpg and the language driver byte, for programs that read only
     """
     UTF_8 = "utf-8"
@@ -9179,7 +9179,7 @@ TraverseShapeName = Literal["connected", "closed", "open"]
 
 
 class TrimEdgeMode(_StrEnum):
-    """AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along
+    """Edge mode: whether a boundary bounds only where it is, or along
     its natural path past its ends too.
 
     - ``none``: A boundary bounds where it is (EDGEMODE 0).
@@ -10037,7 +10037,7 @@ class AreaWork(_Union):
 
 
 class ArrayEdit(_Union):
-    """What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
+    """What changes in the array.
 
     One of:
 
@@ -10378,7 +10378,7 @@ class ConstraintEdit(_Union):
 
 
 class ConstraintRule(_Union):
-    """What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the
+    """What a constraint holds. The geometric kinds come first in the toolbar's order; the
     dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
 
     One of:
@@ -10587,7 +10587,7 @@ class CulvertShapeDef(_Union):
 
 
 class CurveConstruction(_Union):
-    """One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by
+    """One curve to construct: Daire's, Yay's and Elips's methods. A circle by
     its centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).
 
     One of:
@@ -10621,7 +10621,7 @@ class CurveConstruction(_Union):
 
 
 class CurveEdit(_Union):
-    """What changes (AutoCAD PEDIT's Close, Open, Decurve, Spline; SPLINEDIT's Close, Open, Fit data, Edit vertex,
+    """What changes (Close, Open, Decurve, Spline; for a spline: Close, Open, Fit data, Edit vertex,
     Refine, convert to Polyline).
 
     One of:
@@ -11304,7 +11304,7 @@ class HatchEdit(_Union):
 
 
 class HatchOrigin(_Union):
-    """Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+    """Where a pattern's lines are anchored (docs/adr/0331 §2).
 
     One of:
 
@@ -11598,7 +11598,7 @@ class LedgerBy(_Union):
 
 
 class LengthenChange(_Union):
-    """How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).
+    """How the length changes.
 
     One of:
 
@@ -12926,7 +12926,7 @@ class RepairStep(_Union):
 
 
 class RevcloudFrame(_Union):
-    """What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).
+    """What a revision cloud goes round.
 
     One of:
 
@@ -13317,7 +13317,7 @@ class SuperelevationMethod(_Union):
 
 
 class SurfaceEdit(_Union):
-    """An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at
+    """An edit of a terrain surface (docs/adr/1560), as a surface definition keeps them: Nokta ekle (a point at
     a place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge
     between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
     triangle at the place goes).
@@ -16356,7 +16356,7 @@ class AlignmentsWritten(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class AltUnits(_Model):
-    """An alternate unit written after the value in brackets (AutoCAD's DIMALT): `2.500 [2500]`.
+    """An alternate unit written after the value in brackets: `2.500 [2500]`.
     Attributes:
         decimals: Its decimals; absent: the project's length decimals. Unit: count.
     """
@@ -17071,7 +17071,7 @@ class ArcEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "arc"
@@ -21583,7 +21583,7 @@ class BeamEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         tag: Its number ("K101").
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "beam"
@@ -24013,7 +24013,7 @@ class CadImportScale(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CadParameter(_Model):
-    """A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
+    """A named parameter: a dimensional constraint's own, or the user's.
     Attributes:
         expression: Its value as written ([`crate::constraint_expr`]); empty for a reference constraint's parameter, whose value
             is measured.
@@ -25756,7 +25756,7 @@ class CircleEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "circle"
@@ -26848,7 +26848,7 @@ class ColumnEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         type: Its type's name.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "column"
@@ -27353,7 +27353,7 @@ class CommitResult(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CompareZone(_Model):
-    """A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is
+    """A material zone (docs/adr/3540): the material's name (the user's; no class or value is
     guessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and
     its cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).
     Attributes:
@@ -27503,7 +27503,7 @@ class ConflictField(_Model):
 class Constraint(_Model):
     """One constraint.
     Attributes:
-        reference: A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its
+        reference: A dimensional constraint that only measures: it never moves anything and its
             parameter, read-only, takes the measured value.
     """
     id: str
@@ -27622,8 +27622,8 @@ class ConstraintsEdit(_Model):
         allow_flip: Writes even when a shape would turn inside out (the user chose that solution).
         expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
-        hold: Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the
-            second; they are not held afterwards.
+        hold: Objects (persistent ids) this solve does not move (the object picked first stays, the
+            second moves); they are not held afterwards.
     """
     edit: ConstraintEdit
     allow_flip: bool | Unset = UNSET
@@ -27815,7 +27815,7 @@ class ConstructionEntity(_Model):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     id: int
@@ -31296,7 +31296,7 @@ class CutFillSectionLabel(_Model):
 class CutFillSections(_Model):
     """The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
     polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
-    take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
+    take sections too, the formula of the volume between two (none: the average
     end area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'
     kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
     at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.
@@ -33073,7 +33073,7 @@ class DictionaryEntry(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DimensionBreak(_Model):
-    """A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
+    """A gap in one of a dimension's lines where another object crosses it, at the fraction `t` of
     the line; its width the options' `breakSize`.
     Attributes:
         t: Unit: 1.
@@ -33165,7 +33165,7 @@ class DimensionEntity(Entity):
         text_shift: Its value moved from its place (docs/adr/0321 §1).
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         unit: The unit lengths and coordinates are written in; absent: the project's.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         za: Slope: the two points' elevations, metres (docs/adr/0147). Unit: elevation.
         zb: Unit: elevation.
@@ -33545,10 +33545,10 @@ class DimensionLook(_Model):
 class DimensionOptions(_Model):
     """A dimension's options (docs/adr/0321 §1, §2): all absent, the dimension as it always was.
     Attributes:
-        break_size: A break's width, times the value's height, over 0; absent: 1 (AutoCAD's DIMBREAK size). Unit: 1.
-        length_style: Feet and inches in an inch or foot unit (AutoCAD's DIMLUNIT, docs/adr/0262 §2); absent: the project's, unless
+        break_size: A break's width, times the value's height, over 0; absent: 1. Unit: 1.
+        length_style: Feet and inches in an inch or foot unit; absent: the project's, unless
             the dimension names its own unit.
-        round: Lengths and coordinates rounded to this increment, metres, over 0 (AutoCAD's DIMRND). Unit: length.
+        round: Lengths and coordinates rounded to this increment, metres, over 0. Unit: length.
     """
     alt: AltUnits | None | Unset = UNSET
     break_size: float | None | Unset = UNSET
@@ -34248,7 +34248,7 @@ class DimensionStyleDef(_Model):
         ext_weight: Unit: paper-mm.
         options: The value's fit and writing (docs/adr/0321 §1, §2).
         text_gap: Unit: paper-mm.
-        text_style: The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+        text_style: The project text style its value is written in, by its name: when that
             style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
             (a DXF's reader sets both). Schema 186.
     """
@@ -34354,7 +34354,7 @@ class DimensionStyleDef(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DimensionTolerance(_Model):
-    """A tolerance (AutoCAD's DIMTOL and DIMLIM), metres; lengths and coordinates only.
+    """A tolerance, metres; lengths and coordinates only.
     Attributes:
         upper: Above the value, 0 or more. Unit: length.
         decimals: Its decimals; absent: the value's. Unit: count.
@@ -34834,7 +34834,7 @@ class DimensionsReassociated(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DivideBlock(_Model):
-    """A block's inserts at the places instead of points (AutoCAD's Block option, docs/adr/0299 §3).
+    """A block's inserts at the places instead of points.
     Attributes:
         name: The block's name in the drawing.
         align: Each insert turned by the object's direction at its place (the way the object runs from its start), on
@@ -35516,7 +35516,7 @@ class DrainagePond(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DrainagePondsAsk(_Model):
-    """The ponds asked for: at least `minDepth` deep (OpenRoads' minimum depth).
+    """The ponds asked for: at least `minDepth` deep.
     Attributes:
         min_depth: Unit: m.
     """
@@ -37000,7 +37000,7 @@ class EllipseEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "ellipse"
@@ -38691,7 +38691,7 @@ class EntitiesHatch(_Model):
         layer_id: The layer the hatches go to.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
-        draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+        draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:
             `none`.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
@@ -38700,8 +38700,7 @@ class EntitiesHatch(_Model):
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
             is drawn with lines. Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
-        transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
-            HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
+        transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
     """
     region: HatchRegion
     pattern: HatchPatternSpec
@@ -38807,7 +38806,7 @@ class EntitiesJoin(_Model):
     step “Birleştir”. Those on a locked layer are left out with a
     `locked_skipped` warning at `uids[i]`.
 
-    As AutoCAD's JOIN (docs/adr/0296): a chain of lines on one straight line
+    Join (docs/adr/0296): a chain of lines on one straight line
     is that line; a chain of arcs of one circle is one arc, or the circle
     when it closes; any other chain a polyline. The joined object keeps all
     its first object carried; the others' elevations, measures and widths go
@@ -39629,7 +39628,7 @@ class EntitiesRelated(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class EntitiesReverse(_Model):
-    """Input of `cad.entities.reverse` v1, Yönü çevir (AutoCAD's REVERSE): the
+    """Input of `cad.entities.reverse` v1, Yönü çevir: the
     objects of `uids` run the other way round, the same outline, as one undo
     step “Yönü çevir”. Lines swap their ends; polylines, areas (and their
     holes), closed polylines, fit-point curves and NURBS curves run
@@ -40235,7 +40234,7 @@ class EntitiesTransformed(_Model):
 class EntitiesTrim(_Model):
     """Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
     objects trimmed (or extended) at their picks, as one undo step “Buda”
-    (“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,
+    (“Uzat”) (docs/adr/0294): the picks are clicks,
     a fence (Çit) or a crossing window (Kesişen); the boundaries chosen
     (standard mode) or every shown edge (quick mode); `edgeMode` bounds along
     the boundaries' extensions; `eraseUncut` is quick mode's erase of what no
@@ -40277,9 +40276,9 @@ class EntitiesTrim(_Model):
     Attributes:
         boundaries: The boundaries; absent: every shown object (`all`).
         crossing: Kesişen: a crossing window.
-        edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+        edge_mode: The edge mode; absent: `none`.
         erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
-            (AutoCAD's quick mode) instead of being left with a `trim_failed`
+            instead of being left with a `trim_failed`
             warning. Uzat ignores it.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
@@ -41854,7 +41853,7 @@ class ExportQml(_Model):
     """Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is
     for one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).
     Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no
-    class or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
+    class or rule the symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
     Attributes:
         path: An absolute path ending `.qml`.
         layer: The layer's id.
@@ -47529,7 +47528,7 @@ class GridEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "grid"
@@ -48427,7 +48426,7 @@ class HatchEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
@@ -48631,7 +48630,7 @@ class HatchPattern(_Model):
         gradient: A gradient's shape and second colour.
         lines: A pattern's line families.
         name: A pattern's name (`ANSI31`).
-        origin: Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+        origin: Where its lines are anchored in the world (docs/adr/0331 §2): every family goes through
             it as the definition says instead of through the world's origin. Absent: the world's origin. Unit: length.
         scale: A pattern's metres per unit of its definition. Unit: length.
     """
@@ -51349,7 +51348,7 @@ class ImageEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "image"
@@ -53145,7 +53144,7 @@ class ImportPdf(_Model):
 @dataclass(kw_only=True, slots=True)
 class ImportQml(_Model):
     """Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo
-    step “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
+    step “Katman stili”: the file's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
     in order:
     `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,
     `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.
@@ -53467,7 +53466,7 @@ class InsertEntity(Entity):
             a lookup's is not kept (its row's values are).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         y_scale: The factor along the definition's y axis when it is not `scale` (docs/adr/0315 §3), positive and finite;
             absent: `scale`. A negative factor of a DXF is a mirror and a turn here. Unit: 1.
@@ -60075,7 +60074,7 @@ class LayersTimed(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class LayersTranslate(_Model):
-    """Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:
+    """Input of `cad.layers.translate` v1 (docs/adr/0311 §5), the layer translation:
 
     - every layer holding objects (not a group, not drawn from a service)
       takes the first rule whose `from` matches its name, unless its name is
@@ -60235,7 +60234,7 @@ class LeaderEntity(Entity):
             Never empty: no note is the field's absence.
         tip: The place on an object its first arm's tip follows (docs/adr/0326 §3); absent: a free tip.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "leader"
@@ -61242,7 +61241,7 @@ class LineEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         za: The start's elevation, m; absent = none (docs/adr/0142). Unit: elevation.
         zb: The end's elevation, m; absent = none. Unit: elevation.
@@ -66661,7 +66660,7 @@ class NewConstraint(_Model):
     Attributes:
         rule: The rule and its parts. A dimension's `parameter` names its parameter: empty for the next free name
             (`d1`, `ang1`, `rad1`, `dia1`); a name not in use makes a new parameter.
-        reference: A dimension that only measures (AutoCAD's reference parameter): it drives nothing.
+        reference: A dimension that only measures: it drives nothing.
         sense: Where its sense comes from.
         value: A dimension's value: an expression in the drawing's unit and the project's angle unit (`3.5`, `120cm`,
             `genislik / 2`); none keeps the value the drawing measures now. Not for a reference dimension.
@@ -68054,10 +68053,10 @@ class NurbsEntity(Entity):
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
-        closed: Its ends meet (AutoCAD's flag 1); the source's word, kept as written.
+        closed: Its ends meet; the source's word, kept as written.
         color: Colour override; absent = the layer's colour ("katmana göre").
         fit: The points it was drawn through, kept with it; the control points are the source. Unit: length.
-        fit_tolerance: How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44). Unit: length.
+        fit_tolerance: How far the curve may pass from its fit points, ≥ 0. Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -68070,12 +68069,12 @@ class NurbsEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
-        periodic: Periodic (AutoCAD's flag 2): kept as written.
+        periodic: Periodic: kept as written.
         symbol: Library symbol overriding the layer's style.
         tangents: The fit points' start and end tangent directions; null where none was given. Unit: 1.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         weights: Each control point's weight, above 0; absent: all 1 (not rational). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "nurbs"
@@ -68752,7 +68751,7 @@ class OpeningEntity(Entity):
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         type_version: The version of the project type `style` names it last took (docs/adr/0772 §1): it follows that type. Absent: it
             follows none (a KentOS type's values copied once, or none). Unit: version.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "opening"
@@ -73562,7 +73561,7 @@ class PaperPlotLoss(_Model):
 class PaperPlotProfile(_Model):
     """
     Attributes:
-        source: The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
+        source: The `.ctb` or `.stb` table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
             profile made in KentOS.
     """
     id: str
@@ -76053,7 +76052,7 @@ class PathEntity(_Model):
             on an open polyline), in the drawing's length, not the paper's line
             weight (docs/adr/0258 §2). Absent: none, the line is drawn with its
             line weight. One part only. Unit: length.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
             without one (not 0); absent when no vertex has one (docs/adr/0142). Unit: elevation.
@@ -77229,7 +77228,7 @@ class PipeCrossing(_Model):
 class PipeDiameter(_Model):
     """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
     optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
-    pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
+    pipe's top outside (invert + diameter + wall) and the clearances outside to outside.
     Attributes:
         field: The attribute holding each pipe's inner diameter.
         unit: The unit it is written in.
@@ -77349,7 +77348,7 @@ class PipeNear(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PipeProfileCrossing(_Model):
-    """A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
+    """A pipe of the other network crossing the run in plan (docs/adr/2760), shown in a
     profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
     (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
     high, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall
@@ -79098,7 +79097,7 @@ class PointCloudEntity(_Model):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     id: int
@@ -80322,7 +80321,7 @@ class PointEntity(Entity):
             fields above; absent for one point (docs/adr/0174).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         z: Unit: elevation.
     """
@@ -80694,7 +80693,7 @@ class PolygonCreate(_Model):
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
             layer's style.
-        wipeout: An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+        wipeout: An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers
             what is drawn before it, its frame drawn or not. Absent: an ordinary area.
     """
     layer_id: str
@@ -83233,7 +83232,7 @@ class ProfilesCreate(_Model):
 @dataclass(kw_only=True, slots=True)
 class ProfilesDraw(_Model):
     """Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,
-    so it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's
+    so it goes to sheets and DXF as a profile view, from its first to its last PVI. The frame's
     lower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre
     of elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;
     off the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red
@@ -87390,7 +87389,7 @@ class RailingEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "railing"
@@ -87643,7 +87642,7 @@ class RampEntity(Entity):
         slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "ramp"
@@ -87995,7 +87994,7 @@ class RasterEntity(Entity):
         tiles: A GeoPackage tile table it shows from `file` (docs/adr/0627 §3).
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "raster"
@@ -90172,7 +90171,7 @@ class RecordEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "record"
@@ -94775,7 +94774,7 @@ class RoadSheetLaid(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RoadSheetSetDef(_Model):
-    """A plan–profile sheet set (docs/adr/0908 §10; Civil 3D's view frame group): sheets along an alignment, each showing
+    """A plan–profile sheet set (docs/adr/0908 §10): sheets along an alignment, each showing
     its stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'
     revisions it was made from, so the sheets say when the alignment or the profile changed since.
     Attributes:
@@ -94924,7 +94923,7 @@ class RoadSheetsPlan(_Model):
         exaggeration: Unit: 1.
         from_: Unit: m.
         haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
-        match_lines: Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+        match_lines: Match lines (docs/adr/0998): where one sheet's plan hands over to the next, at the
             middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
             sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
@@ -95020,8 +95019,8 @@ class RoadSheetsPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RoadSheetsSections(_Model):
-    """Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production
-    section views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
+    """Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as production
+    section views (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
     on `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide
     and high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;
     the first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The
@@ -95295,7 +95294,7 @@ class RoofEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         thickness: Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25. Unit: length.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "roof"
@@ -101366,7 +101365,7 @@ class SlabEntity(Entity):
         slope: Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "slab"
@@ -103281,7 +103280,7 @@ class SpaceEntity(Entity):
             area of the building's program, by its id. Absent: none.
         void: A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
             kept out of the spaces' total and summed apart (schema 116). Absent: a room.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "space"
@@ -104334,7 +104333,7 @@ class SplineEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "spline"
@@ -105295,7 +105294,7 @@ class StairEntity(Entity):
             of its walking line instead of a landing there, every tread its tread on the walking line, those at the inner
             side narrowing towards the corner (PAİY 31/2-c: at least 0.10 m there, 0.27 m in their middle); absent: a
             landing at each turn. Unit: count.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "stair"
@@ -111500,7 +111499,7 @@ class TableBreaks(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TableCellStyleDef(_Model):
-    """One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.
+    """One of a table style's cell styles, every field optional.
     Attributes:
         align: Its words' horizontal alignment (group 170's left, centre or right).
         border_color: Its borders' colour, `#rrggbb` (groups 64–69).
@@ -111509,7 +111508,7 @@ class TableCellStyleDef(_Model):
         fill: Its background, `#rrggbb` (groups 63 and 283).
         height: Its words' height on the paper, mm (group 140). Unit: paper-mm.
         horizontal_margin: The room between its words and its left and right borders, paper mm (group 40). Unit: paper-mm.
-        text_style: The text style its words are written in, by its name (AutoCAD's group 7).
+        text_style: The text style its words are written in, by its name.
         vertical_margin: The room between its words and its top and bottom borders, paper mm (group 41). Unit: paper-mm.
     """
     align: TableAlign | TableAlignName | None | Unset = UNSET
@@ -111647,7 +111646,7 @@ class TableEntity(Entity):
             not set itself the style gives its drawing (`styled`); absent: none.
         text_style: The project's text style it follows, by its id; absent: Standart.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "table"
@@ -112186,7 +112185,7 @@ class TagEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         text: Its words: its template filled with its object's values, which the document writes.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "tag"
@@ -114440,20 +114439,20 @@ class TerrainsAnalysis(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainsCompare(_Model):
     """Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
-    Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
+    a TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
     area of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or
     `grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result
-    beside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's
+    beside the exact one; `cutFactor` and `fillFactor` (the cut's swell, the fill's
     compaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.
-    `zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with
+    `zones` (docs/adr/3540): material zones, each a closed object bounding one material with
     its own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted
     volumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.
-    `sections` (docs/adr/4340; Civil 3D's sample line volumes): parallel sections `interval` metres apart, across an axis
+    `sections` (docs/adr/4340): parallel sections `interval` metres apart, across an axis
     whose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to
     its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
     the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
     with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
-    `axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,
+    `axis` (docs/adr/4760): the sections stand along a drawn axis instead,
     a line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while
     short of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along
     its radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two
@@ -114475,7 +114474,7 @@ class TerrainsCompare(_Model):
         axis: A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
         azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
         cell: Unit: m.
-        corners: Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
+        corners: Sections at the axis's inner corners too (docs/adr/4760).
         cut_factor: Unit: 1.
         fill_factor: Unit: 1.
         formula: How the volume between two sections is reckoned; none: the average end area.
@@ -114715,7 +114714,7 @@ class TerrainsContoured(_Model):
 class TerrainsContours(_Model):
     """Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a
     layer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line
-    (thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a
+    (thicker; 5 when absent, 0: none), as a surface's major and minor contours. A line through a
     corner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),
@@ -116457,7 +116456,7 @@ class TextEntity(Entity):
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         mask: The text's box is filled with the drawing area's colour before the
-            text is drawn (Netcad's “fon”): what lies under it does not show.
+            text is drawn: what lies under it does not show.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         order: Its place in its layer's drawing order: lower first, equals in the
@@ -116472,9 +116471,8 @@ class TextEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
-            DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`. Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        width_factor: The letters' width times this, the height kept (DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`. Unit: 1.
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "text"
@@ -116834,7 +116832,7 @@ class TextRun(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TextShift(_Model):
-    """The value moved from its place (AutoCAD's text moved, DIMTMOVE 2): metres along the value's own direction and
+    """The value moved from its place: metres along the value's own direction and
     across it (left positive).
     Attributes:
         along: Unit: length.
@@ -118253,7 +118251,7 @@ class TopologyGap(_Model):
 @dataclass(kw_only=True, slots=True)
 class TopologyProfile(_Model):
     """A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)
-    is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's
+    is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (the
     XY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a
     vertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.
     Attributes:
@@ -119753,7 +119751,7 @@ class ViewMarkEntity(_Model):
         size: Its words' height on paper, millimetres; absent: 2.5. Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
         words: The bubble's words, which the document writes.
     """
@@ -122251,7 +122249,7 @@ class WallEntity(Entity):
         style: The project's wall style it was made with, by its id; its components are the style's.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
-        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+        wipeout: An area's mask: it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "wall"
@@ -123623,7 +123621,7 @@ class WideningRow(_Model):
 class Wipeout(_Model):
     """An area's mask (docs/adr/0310 §1).
     Attributes:
-        frame: Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).
+        frame: Whether its boundary is drawn.
     """
     frame: bool
 
@@ -124707,7 +124705,7 @@ class XrefSource(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class XrefViewportOverride(_Model):
-    """A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):
+    """A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2):
     that map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes
     it: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.
     Attributes:
@@ -126678,7 +126676,7 @@ class PolarArrayLayout(ArrayLayout):
 
 @dataclass(kw_only=True, slots=True)
 class LineArrayLayout(ArrayLayout):
-    """Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,
+    """Kopyala's Dizi (docs/adr/0291): `count` places along the displacement (`dx`,
     `dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one
     moves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.
     Attributes:
@@ -127811,7 +127809,7 @@ class ModeConstraintEdit(ConstraintEdit):
 
 @dataclass(kw_only=True, slots=True)
 class FlipConstraintEdit(ConstraintEdit):
-    """The constraint's other solution (AutoCAD's flip): a tangent on the other side, a distance on the other side
+    """The constraint's other solution: a tangent on the other side, a distance on the other side
     of its segment, the angle's other quadrant; the drawing solved again.
     """
     TAG_VALUE: ClassVar[str] = "flip"
@@ -133962,7 +133960,7 @@ class OriginHatchEdit(HatchEdit):
 
 @dataclass(kw_only=True, slots=True)
 class AlignHatchEdit(HatchEdit):
-    """Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
+    """Hizala: the hatches' lines continue the reference's:
     each takes its origin, and the angle and scale too where its pattern is the reference's.
     """
     TAG_VALUE: ClassVar[str] = "align"
@@ -141964,7 +141962,7 @@ class ParallelPointConstruction(PointConstruction):
 @dataclass(kw_only=True, slots=True)
 class TrackPointConstruction(PointConstruction):
     """Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two
-    cross (AutoCAD's .X and .Y point filters).
+    cross.
     """
     TAG_VALUE: ClassVar[str] = "track"
     x: MeasuredPoint
@@ -142096,7 +142094,7 @@ class ChamferRectangleCorners(RectangleCorners):
 
 @dataclass(kw_only=True, slots=True)
 class CornersRectangleFrame(RectangleFrame):
-    """Two opposite corners (AutoCAD RECTANG's two points).
+    """Two opposite corners.
     Attributes:
         a: Unit: length.
         b: Unit: length.
@@ -142217,7 +142215,7 @@ class EdgeRectangleFrame(RectangleFrame):
 
 @dataclass(kw_only=True, slots=True)
 class InscribedRegularFrame(RegularFrame):
-    """Çember içinde: the centre and the first corner (AutoCAD POLYGON's Inscribed).
+    """Çember içinde: the centre and the first corner.
     Attributes:
         center: Unit: length.
         corner: Unit: length.
@@ -144581,8 +144579,7 @@ class RemoveTriangleSurfaceEdit(SurfaceEdit):
 
 @dataclass(kw_only=True, slots=True)
 class PasteSurfaceEdit(SurfaceEdit):
-    """Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil
-    3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go
+    """Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in: where its kept triangles lie, this surface's records made so far go
     and its corners and edges come in; the rest is triangulated anew round it.
     """
     TAG_VALUE: ClassVar[str] = "paste"
@@ -146041,7 +146038,7 @@ class ScaleTransform(Transform):
 @dataclass(kw_only=True, slots=True)
 class MirrorTransform(Transform):
     """Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the
-    texts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's
+    texts (docs/adr/0292): readable (the default) or mirrored. A text's words and a block's
     attribute values never change; a block's own texts and attributes always read upright.
     Attributes:
         a: Unit: length.
@@ -146071,7 +146068,7 @@ class MirrorTransform(Transform):
 
 @dataclass(kw_only=True, slots=True)
 class AlignTransform(Transform):
-    """Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a
+    """Align (hizala): `source` goes onto `target`. With a
     second pair (`source2` and `target2`, given together) the objects
     also turn about `source` so that the direction from `source` to
     `source2` lies along the one from `target` to `target2`, and with
@@ -146296,7 +146293,7 @@ class AllTrimBoundaries(TrimBoundaries):
 @dataclass(kw_only=True, slots=True)
 class AreaTrimBoundaries(TrimBoundaries):
     """Every shown object whose box meets the rectangle (the tools give their
-    view: AutoCAD's quick mode, “every visible edge”).
+    view: “every visible edge”).
     Attributes:
         min: Unit: length.
         max: Unit: length.

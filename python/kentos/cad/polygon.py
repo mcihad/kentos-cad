@@ -100,7 +100,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
-            wipeout: An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+            wipeout: An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers
                 what is drawn before it, its frame drawn or not. Absent: an ordinary area.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).

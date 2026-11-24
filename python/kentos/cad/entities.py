@@ -2375,9 +2375,9 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
             doc: The drawing it works on.
             boundaries: The boundaries; absent: every shown object (`all`).
             crossing: Kesişen: a crossing window.
-            edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+            edge_mode: The edge mode; absent: `none`.
             erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
-                (AutoCAD's quick mode) instead of being left with a `trim_failed`
+                instead of being left with a `trim_failed`
                 warning. Uzat ignores it.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
@@ -3097,7 +3097,7 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id: The layer the hatches go to.
             attrs: GIS attributes, text in v1. Absent: none.
             color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
-            draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+            draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:
                 `none`.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
@@ -3106,8 +3106,7 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
                 is drawn with lines. Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
-            transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
-                HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
+            transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -5728,9 +5727,9 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
             doc: The drawing it works on.
             boundaries: The boundaries; absent: every shown object (`all`).
             crossing: Kesişen: a crossing window.
-            edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+            edge_mode: The edge mode; absent: `none`.
             erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
-                (AutoCAD's quick mode) instead of being left with a `trim_failed`
+                instead of being left with a `trim_failed`
                 warning. Uzat ignores it.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is

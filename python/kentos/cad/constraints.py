@@ -93,8 +93,8 @@ class _ConstraintsEdit(LocalCommand[ConstraintsEdit, ConstraintsEdited, Constrai
             allow_flip: Writes even when a shape would turn inside out (the user chose that solution).
             expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
-            hold: Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the
-                second; they are not held afterwards.
+            hold: Objects (persistent ids) this solve does not move (the object picked first stays, the
+                second moves); they are not held afterwards.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
