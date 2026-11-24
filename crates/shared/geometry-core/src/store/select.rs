@@ -168,11 +168,13 @@ impl Store {
     /// Kapsam denetimi: visible objects lying far from the rest of the
     /// drawing (brought in with a wrong coordinate system, fallen to zero).
     /// The middle half of the objects' centres, per axis, is the drawing's
-    /// core box; an object whose own box lies wholly beyond
-    /// [`EXTENT_FACTOR`] times the core's longer side (at least
-    /// [`EXTENT_MIN_SIDE`]) from it is far. Up to a quarter of the objects
-    /// can be far and still be found. Fewer than four objects have no core;
-    /// infinite lines are left out.
+    /// core box; an object whose own box reaches beyond [`EXTENT_FACTOR`]
+    /// times the core's longer side (at least [`EXTENT_MIN_SIDE`]) from it is
+    /// far: wholly out there, or reaching out there from the drawing (a vertex
+    /// fallen to zero, a number near the largest float, docs/adr/9225), or with
+    /// a box that is not finite. Up to a quarter of the objects can be far and
+    /// still be found. Fewer than four objects have no core; infinite lines are
+    /// left out.
     pub fn extent_outliers(&self) -> Vec<f64> {
         self.far_from_rest(|it| self.pickable(it))
     }
@@ -190,7 +192,7 @@ impl Store {
         }
     }
 
-    /// The objects `among` takes, infinite lines aside, whose box lies wholly beyond the reach of their core box.
+    /// The objects `among` takes, infinite lines aside, whose box reaches beyond the reach of their core box.
     fn far_from_rest(&self, among: impl Fn(&super::Item) -> bool) -> Vec<f64> {
         let items: Vec<_> = self
             .all_items()
@@ -219,10 +221,8 @@ impl Store {
             .into_iter()
             .filter(|it| {
                 let b = &it.bounds;
-                b.max_x < x0 - reach
-                    || b.min_x > x1 + reach
-                    || b.max_y < y0 - reach
-                    || b.min_y > y1 + reach
+                let finite = [b.min_x, b.min_y, b.max_x, b.max_y].iter().all(|v| v.is_finite());
+                !finite || b.min_x < x0 - reach || b.max_x > x1 + reach || b.min_y < y0 - reach || b.max_y > y1 + reach
             })
             .map(|it| it.id)
             .collect()
@@ -509,5 +509,16 @@ mod tests {
         assert!(store(&towns).extent_outliers().is_empty());
         // Three objects have no core.
         assert!(store(&items[..3]).extent_outliers().is_empty());
+        // docs/adr/9225: reaching out from the drawing is far too: a line from a parcel to zero, a polyline with a
+        // vertex at the largest float (fixtures/kcad/v2/drawing.json). Shown whole, either made the drawing a dot. A
+        // line across the block is not.
+        let mut reaching = items[..100].to_vec();
+        reaching.push(r#"{"id":300,"layerId":"0","kind":"line","a":{"x":500010.0,"y":4400010.0},"b":{"x":0.0,"y":0.0}}"#.to_owned());
+        reaching.push(
+            r#"{"id":301,"layerId":"0","kind":"polyline","pts":[{"x":500010.0,"y":4400010.0},{"x":1.7976931348623157e308,"y":-1.7976931348623157e308}]}"#
+                .to_owned(),
+        );
+        reaching.push(r#"{"id":302,"layerId":"0","kind":"line","a":{"x":500000.0,"y":4400000.0},"b":{"x":500195.0,"y":4400195.0}}"#.to_owned());
+        assert_eq!(store(&reaching).extent_outliers(), vec![300.0, 301.0]);
     }
 }

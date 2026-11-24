@@ -236,10 +236,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 ### F5 — CAD görünümü
 
 - [ ] **RM-15 — Çizgi ve dolgu gösterimi.**
+  - **Önce (ADR 9225 §4):** sahibin ayarıyla (Saydamlık kapalı) aynı katmanda alandan sonra yazılmış yazı, alanın
+    dolgusunun altında kalıyor. Çizim sırası belge sırasına uymalı.
   - Çizgi kalınlığı ekranda: en az 1 piksel, kenar yumuşatmalı.
   - Çizgi tipleri ve taramalar gölgelendiricide.
   - Maskeler.
-- [~] **RM-16 — Görsel uygunluk paketi.**
+- [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.
   - [x] Adım 1, önbelleğin değişmezi ([ADR 9221](../docs/adr/9221-objects-the-store-draws-anew.md) §3): bir
@@ -262,7 +264,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Gerçek pencere senaryosu `fixtures/interaction/real/duzenleme-hemen-gorunur.txt` ve `scripts/usage/real/same.py`.
       Oda, pencere, kapı, Delete, Ctrl+Z, bölme duvarı ve çizgi; hemen alınan resim tekerlekten sonrakiyle aynı.
     - Xvfb'de tuşlar senaryoda `fit` olmadığı için ulaşmıyormuş; program sorunu değil.
-  - [ ] Sabit kameralı altın görüntüler (çizimin görünüşü değişince sınama söyler).
+  - [x] Adım 3 ([ADR 9225](../docs/adr/9225-golden-pictures-and-grid-bound.md)): sabit kameralı 15 altın görüntü
+    (`fixtures/render/golden/`). Intel'de 0 fark, yazılım Vulkan'ında en çok 4 eşsiz piksel (izin 16). Eğriler
+    kirişe döndürülünce iki resim kırmızı.
+    - Çekim bir çökme buldu: uç değerli bir nesneyle Tümünü göster ızgarayı sonsuz döngüye sokuyordu (yayında
+      donma). Izgara artık sayabildiğini çiziyor.
+    - Çizimden çok uzağa uzanan nesne (ucu 0,0'a düşen çizgi) de Tümünü göster'in kutusuna girmiyor ve söyleniyor.
+  - Büyük dosyalar yalnız yerelde: ikiz sınaması `KENTOS_PERF_FILES` ile RM-02'nin denetçisinde (`perf::oracle`).
 
 ### F6 — NCZ alımı
 

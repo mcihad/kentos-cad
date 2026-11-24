@@ -38,7 +38,9 @@ noktaya indiriyordu. Kullanıcının gözünde veri kaybolmuştu.
 - **Kutuya girenler:**
   - Donmuş katmanda olmayan nesneler; gizli katmandakiler sayılır (0311 §1).
   - Gösterilen veri katmanlarının tabloları (9101 §5).
-- **Uzak nesneler:** Kapsam denetiminin kuralıyla, aynı nesne kümesi içinde bulunur ve kutuya girmez. Kural, gizli
+- **Uzak nesneler:** Kapsam denetiminin kuralıyla, aynı nesne kümesi içinde bulunur ve kutuya girmez. **Genişleme
+  (25 Kasım):** kutusu çekirdekten erişimin ötesine uzanan (bir ucu 0,0'a düşmüş) ya da sonlu olmayan nesne de uzaktır
+  ([ADR 9225](9225-golden-pictures-and-grid-bound.md) §2.3). Kural, gizli
   katmanlar da sayıldığı için kümeye uygulanır (`Store::extent_outliers_of`). Kapsam denetimi ise yalnız görünenlere
   bakar, değişmedi.
 - **Söylenir (uyarı):** “3 nesne çizimin geri kalanından çok uzakta; görünüme alınmadı. Kapsam denetimi onları

@@ -280,10 +280,28 @@ pub fn grid_spacing(scale: f64, min_px: f64) -> (f64, f64) {
     (minor, minor * if m == 5.0 { 4.0 } else { 5.0 })
 }
 
+/// More grid lines than this across a view are no grid at its spacing: the view's box is not finite or the spacing is
+/// below its coordinates' precision (a drawing of numbers near the largest float, shown whole). None are drawn; the
+/// count stays bounded (an unbounded count looped without end, plan/render.md RM-16).
+const MOST_GRID_LINES: f64 = 20_000.0;
+
+/// The whole multiples of `minor` from `from` to `to` (both finite): the first and how many, or none when there would be
+/// more than [`MOST_GRID_LINES`] or the step is below the numbers' precision.
+fn grid_steps(from: f64, to: f64, minor: f64) -> Option<(f64, u32)> {
+    if !(from.is_finite() && to.is_finite() && minor > 0.0 && minor.is_finite()) {
+        return None;
+    }
+    let first = (from / minor).floor() * minor;
+    let count = ((to - first) / minor).floor() + 1.0;
+    let precise = minor > (first.abs() + to.abs()) * f64::EPSILON * 4.0;
+    (count.is_finite() && count >= 0.0 && count <= MOST_GRID_LINES && precise).then_some((first, count as u32))
+}
+
 /// Grid lines across `area` (absolute world coordinates), on round world
 /// values so that they fall on round TM values, relative to `origin` (the
 /// web's `buildGrid`): the minor lines one drawn layer, the major lines the
-/// next, in `colors` (minor, major).
+/// next, in `colors` (minor, major). None when the area is not finite or would
+/// take more than [`MOST_GRID_LINES`].
 pub fn build_grid(
     area: &Bounds,
     spacing: (f64, f64),
@@ -292,16 +310,19 @@ pub fn build_grid(
 ) -> ScenePart {
     let (minor, major) = spacing;
     let mut b = Builder::new(origin);
-    if !(minor > 0.0 && minor.is_finite()) {
+    let (Some((x0, nx)), Some((y0, ny))) = (
+        grid_steps(area.min_x, area.max_x, minor),
+        grid_steps(area.min_y, area.max_y, minor),
+    ) else {
+        return b.into_part(0.0, BTreeMap::new());
+    };
+    if f64::from(nx) + f64::from(ny) > MOST_GRID_LINES {
         return b.into_part(0.0, BTreeMap::new());
     }
     let is_major = |v: f64| (v / major - (v / major).round()).abs() < 1e-6;
-    let x0 = (area.min_x / minor).floor() * minor;
-    let y0 = (area.min_y / minor).floor() * minor;
     for (major_layer, color) in [(false, colors[0]), (true, colors[1])] {
         let start = b.start();
-        let mut i = 0u32;
-        loop {
+        for i in 0..nx {
             let x = x0 + f64::from(i) * minor;
             if x > area.max_x {
                 break;
@@ -309,10 +330,8 @@ pub fn build_grid(
             if is_major(x) == major_layer {
                 b.segment(Vec2::new(x, area.min_y), Vec2::new(x, area.max_y), color);
             }
-            i += 1;
         }
-        let mut i = 0u32;
-        loop {
+        for i in 0..ny {
             let y = y0 + f64::from(i) * minor;
             if y > area.max_y {
                 break;
@@ -320,7 +339,6 @@ pub fn build_grid(
             if is_major(y) == major_layer {
                 b.segment(Vec2::new(area.min_x, y), Vec2::new(area.max_x, y), color);
             }
-            i += 1;
         }
         b.finish(start);
     }
@@ -358,7 +376,10 @@ pub fn build_grid_framed(
     }
     let (minor, major) = spacing;
     let mut b = Builder::new(origin);
-    if !(minor > 0.0 && minor.is_finite()) {
+    let finite = [area.min_x, area.min_y, area.max_x, area.max_y, at.x, at.y, angle]
+        .iter()
+        .all(|v| v.is_finite());
+    if !(minor > 0.0 && minor.is_finite()) || !finite {
         return b.into_part(0.0, BTreeMap::new());
     }
     let (c, s) = (angle.cos(), angle.sin());
@@ -386,11 +407,15 @@ pub fn build_grid_framed(
         v1 = v1.max(v);
     }
     let is_major = |v: f64| (v / major - (v / major).round()).abs() < 1e-6;
-    let (first_u, first_v) = ((u0 / minor).floor() * minor, (v0 / minor).floor() * minor);
+    let (Some((first_u, nu)), Some((first_v, nv))) = (grid_steps(u0, u1, minor), grid_steps(v0, v1, minor)) else {
+        return b.into_part(0.0, BTreeMap::new());
+    };
+    if f64::from(nu) + f64::from(nv) > MOST_GRID_LINES {
+        return b.into_part(0.0, BTreeMap::new());
+    }
     for (major_layer, color) in [(false, colors[0]), (true, colors[1])] {
         let start = b.start();
-        let mut i = 0u32;
-        loop {
+        for i in 0..nu {
             let u = first_u + f64::from(i) * minor;
             if u > u1 {
                 break;
@@ -398,10 +423,8 @@ pub fn build_grid_framed(
             if is_major(u) == major_layer {
                 b.segment(to_world(u, v0), to_world(u, v1), color);
             }
-            i += 1;
         }
-        let mut i = 0u32;
-        loop {
+        for i in 0..nv {
             let v = first_v + f64::from(i) * minor;
             if v > v1 {
                 break;
@@ -409,7 +432,6 @@ pub fn build_grid_framed(
             if is_major(v) == major_layer {
                 b.segment(to_world(u0, v), to_world(u1, v), color);
             }
-            i += 1;
         }
         b.finish(start);
     }

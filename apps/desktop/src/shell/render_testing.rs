@@ -106,7 +106,11 @@ pub fn area(app: &App) -> [usize; 4] {
 
 /// Two window pictures compared over the region `r`.
 pub fn compare(a: &[u8], b: &[u8], r: [usize; 4]) -> Difference {
-    let (w, h) = (WINDOW.width as usize, WINDOW.height as usize);
+    compare_in(a, b, WINDOW.width as usize, WINDOW.height as usize, r)
+}
+
+/// Two RGBA pictures of `w` × `h` compared over the region `r`.
+pub fn compare_in(a: &[u8], b: &[u8], w: usize, h: usize, r: [usize; 4]) -> Difference {
     let mut d = Difference::default();
     for y in r[1]..r[3] {
         for x in r[0]..r[2] {
@@ -121,6 +125,17 @@ pub fn compare(a: &[u8], b: &[u8], r: [usize; 4]) -> Difference {
         }
     }
     d
+}
+
+/// The region `r` of a window picture, as an RGBA picture of its own: its width, height and rows.
+pub fn crop(picture: &[u8], r: [usize; 4]) -> (usize, usize, Vec<u8>) {
+    let w = WINDOW.width as usize;
+    let (cw, ch) = (r[2] - r[0], r[3] - r[1]);
+    let mut out = Vec::with_capacity(cw * ch * 4);
+    for y in r[1]..r[3] {
+        out.extend_from_slice(&picture[(y * w + r[0]) * 4..(y * w + r[2]) * 4]);
+    }
+    (cw, ch, out)
 }
 
 /// Two pictures and where they differ inside `r` (white: no match within a pixel, grey: not the same), kept as
