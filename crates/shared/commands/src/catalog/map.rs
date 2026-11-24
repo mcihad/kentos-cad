@@ -962,6 +962,81 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 CommandExample { title: "Kapanan parseller de".into(), input: json!({ "history": true }), output: None },
             ],
         },
+        // Parsel alan çizelgesi (todos-new.md C1, F6; docs/adr/9306).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_REPORT.into(),
+            version: crate::CAD_PARCELS_REPORT_VERSION,
+            title: "Parsel alan çizelgesi".into(),
+            summary: "Parsel alan çizelgesini hesaplar; hiçbir şey yazmaz. Parseller uids'in alanlarıdır (verildiği sırayla), yoksa parsel katmanının (parsel) bütün alanları (çizimin sırasıyla). Her parçanın dış halkası, sonra delikleri; her halka haritada görüldüğü gibi saat yönünde, en kuzeydeki köşesinden (aynı kuzeydeyse batıdakinden) başlar. \
+                      Köşe adları: names points (varsayılan) köşede (1 µm) duran ilk adlı noktanın adı, nokta olmayan köşeye yeni numara; names numbers her köşeye yeni numara. Yeni numara prefix ve start'tan (varsayılan 1) birer artan tam sayıdır; çizimdeki noktaların adlarından ya da çizelgenin verdiği bir addan biriyle çakışan atlanır. İki köşenin paylaştığı yer (1 µm) tek ad alır. \
+                      Kenar köşeden halkadaki sonrakine düz uzaklıktır (kiriş); yaylı kenarda yarıçap ve yay boyu da verilir. Alan köşe koordinatlarından projeksiyon düzleminde hesaplanır (Gauss alan formülü, yaylı kenarların parçası dahil); parselin alanı dış halkalarının alanı eksi delikleri. \
+                      Kayıtlı alan (field, varsayılan Tapu alanı (m²)) yazıldığı gibi tutulur, hesap alanı onun üstüne yazılmaz; düz ondalıksa fark (hesap − kayıt) ve Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik (2022) Madde 8(2)'nin arşiv onaylı geometri yanılma sınırı da verilir. cells tablonun sözleridir: koordinat ve uzunluk metre, alan m², projenin ondalıklarıyla; gösterimdir, hesaba girmez. Sonuç resmî uygunluk iddiası değildir. \
+                      Retler: invalid_input (prefix 12 harften uzun ya da denetim karakterli, field 120 harften uzun), invalid_uid, entity_not_found, not_a_parcel (uids[i])."
+                .into(),
+            aliases: vec!["parselalancizelgesi".into(), "alanhesapcizelgesi".into(), "parcelreport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsReport>(),
+            output: schema::<crate::ParcelsReported>(),
+            plan: Some(schema::<crate::ParcelsReported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanının bütün parselleri, köşeler noktaların adlarıyla".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Seçilen iki parsel, köşelere K101'den yeni numara, kenarsız".into(),
+                    input: json!({
+                        "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"],
+                        "names": "numbers", "prefix": "K", "start": 101, "lengths": false
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_TABLE.into(),
+            version: crate::CAD_PARCELS_TABLE_VERSION,
+            title: "Parsel alan çizelgesi tablosu".into(),
+            summary: "cad.parcels.report'un çizelgesini sol üst köşesi at olan bir tablo olarak çizime yazar; tek geri alma adımı “Parsel alan çizelgesi tablosu”. Satırlar: başlık (koordinat sistemiyle), sütun başları (Nokta, Y (m), X (m); lengths ile Kenar (m), yaylı kenar varsa Yarıçap (m)), her parsel için başlığı (ada ve parsel, mahalle), halkalarının köşeleri, Hesap alanı (m²); kaydı varsa Tapu alanı (m²) yazıldığı gibi, okunursa Fark (m²) ve Yanılma sınırı (m²); birden çok parselde Toplam hesap alanı (m²). \
+                      Katman verilmezse etkin katman; height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Tablo kaynağını saklamaz: parseller değişince çizelge yeniden yerleştirilir. \
+                      Retler: cad.parcels.report'unkiler, no_objects (yazılacak parsel yok), not_finite (at), invalid_table (height ya da tablonun sınırları), layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict; uyarı layer_hidden."
+                .into(),
+            aliases: vec!["parselalantablosu".into(), "parceltable".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsTable>(),
+            output: schema::<crate::ParcelsTabled>(),
+            plan: Some(schema::<crate::ParcelsTablePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanının çizelgesi, parsellerin doğusunda".into(),
+                    input: json!({ "at": { "x": 487100.0, "y": 4420200.0 } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Seçilen parselin çizelgesi kendi katmanında, 2 m yazıyla".into(),
+                    input: json!({
+                        "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"],
+                        "at": { "x": 487100.0, "y": 4420200.0 }, "layerId": "tablo", "height": 2.0
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CLEAN.into(),

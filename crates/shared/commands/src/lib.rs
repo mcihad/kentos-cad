@@ -82,6 +82,8 @@ pub mod cad_parcels_boundaries;
 pub mod cad_parcels_check;
 #[path = "map/cad_parcels_record.rs"]
 pub mod cad_parcels_record;
+#[path = "map/cad_parcels_report.rs"]
+pub mod cad_parcels_report;
 #[path = "map/cad_pipes_check.rs"]
 pub mod cad_pipes_check;
 #[path = "map/cad_pipes_profile.rs"]
@@ -488,6 +490,7 @@ pub use cad_topology_clean::*;
 pub use cad_parcels_boundaries::*;
 pub use cad_parcels_check::*;
 pub use cad_parcels_record::*;
+pub use cad_parcels_report::*;
 pub use cad_pipes_check::*;
 pub use cad_pipes_profile::*;
 pub use cad_pipes_rules::*;

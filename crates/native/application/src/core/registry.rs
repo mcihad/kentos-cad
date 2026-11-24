@@ -118,6 +118,8 @@ use crate::parcels_boundaries;
 #[cfg(feature = "mod-map")]
 use crate::parcels_check;
 #[cfg(feature = "mod-map")]
+use crate::parcels_report::{report as parcels_report_query, table as parcels_report_table};
+#[cfg(feature = "mod-map")]
 use crate::pipes_check;
 #[cfg(feature = "mod-map")]
 use crate::pipes_profile;

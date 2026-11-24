@@ -378,6 +378,25 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Parsel alan çizelgesi (docs/adr/9306): the areas it lists; another object is refused as no parcel.
+    Entry {
+        id: "cad.parcels.report",
+        refusals: &[&["invalid_input", "invalid_uid", "entity_not_found", "not_a_parcel"]],
+        warnings: &[],
+        targets: || vec![target(None, &["polygon"], &[], Some("not_a_parcel"), None)],
+    },
+    // Parsel alan çizelgesi tablosu (docs/adr/9306).
+    Entry {
+        id: "cad.parcels.table",
+        refusals: &[
+            &["invalid_input", "invalid_uid", "entity_not_found", "not_a_parcel", "no_objects"],
+            &["not_finite", "invalid_table"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: || vec![target(None, &["polygon"], &[], Some("not_a_parcel"), None)],
+    },
     // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
     Entry {
         id: "cad.topology.clean",

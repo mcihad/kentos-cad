@@ -68819,6 +68819,497 @@
       ]
     },
     {
+      "id": "cad.parcels.report",
+      "version": 1,
+      "title": "Parsel alan çizelgesi",
+      "summary": "Parsel alan çizelgesini hesaplar; hiçbir şey yazmaz. Parseller uids'in alanlarıdır (verildiği sırayla), yoksa parsel katmanının (parsel) bütün alanları (çizimin sırasıyla). Her parçanın dış halkası, sonra delikleri; her halka haritada görüldüğü gibi saat yönünde, en kuzeydeki köşesinden (aynı kuzeydeyse batıdakinden) başlar. Köşe adları: names points (varsayılan) köşede (1 µm) duran ilk adlı noktanın adı, nokta olmayan köşeye yeni numara; names numbers her köşeye yeni numara. Yeni numara prefix ve start'tan (varsayılan 1) birer artan tam sayıdır; çizimdeki noktaların adlarından ya da çizelgenin verdiği bir addan biriyle çakışan atlanır. İki köşenin paylaştığı yer (1 µm) tek ad alır. Kenar köşeden halkadaki sonrakine düz uzaklıktır (kiriş); yaylı kenarda yarıçap ve yay boyu da verilir. Alan köşe koordinatlarından projeksiyon düzleminde hesaplanır (Gauss alan formülü, yaylı kenarların parçası dahil); parselin alanı dış halkalarının alanı eksi delikleri. Kayıtlı alan (field, varsayılan Tapu alanı (m²)) yazıldığı gibi tutulur, hesap alanı onun üstüne yazılmaz; düz ondalıksa fark (hesap − kayıt) ve Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik (2022) Madde 8(2)'nin arşiv onaylı geometri yanılma sınırı da verilir. cells tablonun sözleridir: koordinat ve uzunluk metre, alan m², projenin ondalıklarıyla; gösterimdir, hesaba girmez. Sonuç resmî uygunluk iddiası değildir. Retler: invalid_input (prefix 12 harften uzun ya da denetim karakterli, field 120 harften uzun), invalid_uid, entity_not_found, not_a_parcel (uids[i]).",
+      "aliases": [
+        "parselalancizelgesi",
+        "alanhesapcizelgesi",
+        "parcelreport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.report` v1: the parcels (none: every area on the parcel layer `parsel`), how their corners are\nnamed (none: `points`), a new number's prefix (none: no prefix; at most 12 letters) and first number (none: 1),\nwhether the edges' lengths are listed (none: yes), and the attribute that holds the recorded area (none or blank:\n`Tapu alanı (m²)`; at most 120 letters).\n\nRefusals: `invalid_input` (`prefix`, `field`), `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel`\n(`uids[i]`: not an area).",
+        "properties": {
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lengths": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "names": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CornerNames"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ParcelsReport",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.report` v1: the project's coordinate system (none without one), the tolerance's rule, the\nrecord's attribute, the parcels, their areas' sum, how many corner places there are and how many were named by a\npoint or numbered, and the table's words row by row (as `cad.parcels.table` writes them).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cells": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "named": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "numbered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelReported"
+            },
+            "type": "array"
+          },
+          "places": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "rule",
+          "field",
+          "parcels",
+          "area",
+          "places",
+          "named",
+          "numbered",
+          "cells"
+        ],
+        "title": "ParcelsReported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.report` v1: the project's coordinate system (none without one), the tolerance's rule, the\nrecord's attribute, the parcels, their areas' sum, how many corner places there are and how many were named by a\npoint or numbered, and the table's words row by row (as `cad.parcels.table` writes them).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cells": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "named": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "numbered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelReported"
+            },
+            "type": "array"
+          },
+          "places": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "rule",
+          "field",
+          "parcels",
+          "area",
+          "places",
+          "named",
+          "numbered",
+          "cells"
+        ],
+        "title": "ParcelsReported",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "polygon"
+            ],
+            "refusedWith": "not_a_parcel"
+          }
+        ],
+        "refusals": [
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_parcel"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının bütün parselleri, köşeler noktaların adlarıyla",
+          "input": {}
+        },
+        {
+          "title": "Seçilen iki parsel, köşelere K101'den yeni numara, kenarsız",
+          "input": {
+            "lengths": false,
+            "names": "numbers",
+            "prefix": "K",
+            "start": 101,
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.parcels.table",
+      "version": 1,
+      "title": "Parsel alan çizelgesi tablosu",
+      "summary": "cad.parcels.report'un çizelgesini sol üst köşesi at olan bir tablo olarak çizime yazar; tek geri alma adımı “Parsel alan çizelgesi tablosu”. Satırlar: başlık (koordinat sistemiyle), sütun başları (Nokta, Y (m), X (m); lengths ile Kenar (m), yaylı kenar varsa Yarıçap (m)), her parsel için başlığı (ada ve parsel, mahalle), halkalarının köşeleri, Hesap alanı (m²); kaydı varsa Tapu alanı (m²) yazıldığı gibi, okunursa Fark (m²) ve Yanılma sınırı (m²); birden çok parselde Toplam hesap alanı (m²). Katman verilmezse etkin katman; height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Tablo kaynağını saklamaz: parseller değişince çizelge yeniden yerleştirilir. Retler: cad.parcels.report'unkiler, no_objects (yazılacak parsel yok), not_finite (at), invalid_table (height ya da tablonun sınırları), layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict; uyarı layer_hidden.",
+      "aliases": [
+        "parselalantablosu",
+        "parceltable"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.table` v1: the report's input, and the table's top left corner, its layer (none: the active\none), its words' height (metres; none: the project's table height at its plot scale) and the expected revision.\n\nRefusals: as `cad.parcels.report`'s, `no_objects` (no parcel to write), `not_finite` (`at`), `invalid_table`\n(`height`, or a table past a table's limits), `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,\n`revision_conflict`. Warning: `layer_hidden`.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "layerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lengths": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "names": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CornerNames"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "at"
+        ],
+        "title": "ParcelsTable",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.table` v1: the table's persistent id, how many parcels and rows it has and how many corners\nit numbered.",
+        "properties": {
+          "numbered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "parcels",
+          "rows",
+          "numbered",
+          "revision"
+        ],
+        "title": "ParcelsTabled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.parcels.table` would write: the table, how many parcels and rows it has and how many corners it numbers.",
+        "properties": {
+          "numbered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "table": {
+            "$ref": "#/$defs/Entity"
+          }
+        },
+        "required": [
+          "table",
+          "parcels",
+          "rows",
+          "numbered",
+          "revision"
+        ],
+        "title": "ParcelsTablePlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "polygon"
+            ],
+            "refusedWith": "not_a_parcel"
+          }
+        ],
+        "refusals": [
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_parcel",
+          "no_objects",
+          "not_finite",
+          "invalid_table",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının çizelgesi, parsellerin doğusunda",
+          "input": {
+            "at": {
+              "x": 487100.0,
+              "y": 4420200.0
+            }
+          }
+        },
+        {
+          "title": "Seçilen parselin çizelgesi kendi katmanında, 2 m yazıyla",
+          "input": {
+            "at": {
+              "x": 487100.0,
+              "y": 4420200.0
+            },
+            "height": 2.0,
+            "layerId": "tablo",
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.topology.clean",
       "version": 1,
       "title": "Topolojik temizlik (taşınma raporu)",
@@ -139201,6 +139692,22 @@
         }
       ]
     },
+    "CornerNamed": {
+      "description": "Where a corner's name came from: the point standing on it, or a new number.",
+      "enum": [
+        "point",
+        "number"
+      ],
+      "type": "string"
+    },
+    "CornerNames": {
+      "description": "How the corners are named: by the point standing on each, a new number where none stands (`points`); or each by a\nnew number (`numbers`).",
+      "enum": [
+        "points",
+        "numbers"
+      ],
+      "type": "string"
+    },
     "CornerPick": {
       "description": "Which corner, or corners.",
       "oneOf": [
@@ -191732,6 +192239,88 @@
       ],
       "type": "object"
     },
+    "ParcelReported": {
+      "description": "A parcel as listed: its object, its identity's parts as written (empty when missing), the heading the table gives\nit, its rings, its area computed from the coordinates (square metres), its record's text as written and its value\nwhen it reads, the difference (computed − recorded), the tolerance from the computed area, and the status:\n`within`, `outside`, `noRecord` or `invalidRecord`.",
+      "properties": {
+        "ada": {
+          "type": "string"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "difference": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "heading": {
+          "type": "string"
+        },
+        "il": {
+          "type": "string"
+        },
+        "ilce": {
+          "type": "string"
+        },
+        "mahalle": {
+          "type": "string"
+        },
+        "parsel": {
+          "type": "string"
+        },
+        "recorded": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "recordedText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rings": {
+          "items": {
+            "$ref": "#/$defs/ReportRing"
+          },
+          "type": "array"
+        },
+        "status": {
+          "type": "string"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "il",
+        "ilce",
+        "mahalle",
+        "ada",
+        "parsel",
+        "heading",
+        "rings",
+        "area",
+        "tolerance",
+        "status"
+      ],
+      "type": "object"
+    },
     "ParcelToRecord": {
       "additionalProperties": false,
       "description": "A parcel the document makes: the area that draws it, the area the document states, a plain decimal in square metres\nas written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none), and the lengths it\nstates for the area's edges (none: the area's `Kenar ölçüleri (m)`, the outline's edges' lengths in order, separated\nby `;`, an empty or `-` one unstated; empty: none).",
@@ -204889,6 +205478,49 @@
       ],
       "type": "object"
     },
+    "ReportCorner": {
+      "description": "A corner as listed: its name and where the name came from, its place (x east, y north), and the edge from it to the\nring's next corner: the straight distance between the two (the chord), and for an arc its radius and its length\nalong the arc.",
+      "properties": {
+        "arc": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "at": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "$ref": "#/$defs/CornerNamed"
+        },
+        "radius": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "named",
+        "at",
+        "length"
+      ],
+      "type": "object"
+    },
     "ReportDetail": {
       "description": "A bounded source sample for an aggregated CAD loss report.",
       "properties": {
@@ -204971,6 +205603,43 @@
         "count",
         "reason",
         "lines"
+      ],
+      "type": "object"
+    },
+    "ReportRing": {
+      "description": "A ring as listed: its part (0: the first) and, for a hole, its number in the part (0: the first; none: the outer\nring), its corners clockwise from the northernmost, and the area it encloses (square metres, arcs included).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "corners": {
+          "items": {
+            "$ref": "#/$defs/ReportCorner"
+          },
+          "type": "array"
+        },
+        "hole": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "part": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "part",
+        "corners",
+        "area"
       ],
       "type": "object"
     },

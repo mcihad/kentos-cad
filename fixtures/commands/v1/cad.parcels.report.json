@@ -1,0 +1,6288 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.parcels.report",
+ "commandVersion": 1,
+ "title": "Parsel alan çizelgesi",
+ "note": "ADR 9306. Bağımsız başvuru scripts/fixtures/parcels_report_cases.py: halkalar saat yönünde ve en kuzeydeki köşeden, adlar noktalardan ya da yeni numara, alan rasyonel shoelace ve 50 basamaklı yay parçası, yanılma sınırı 2022 Yönetmeliği Madde 8(2) tablosundan, sözler gösterim kuralıyla; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Parsel alan çizelgesi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parsel",
+    "name": "Parsel sınırı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "nokta",
+    "name": "Noktalar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tablo",
+    "name": "Tablolar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tablo2",
+    "name": "Çizelgeler",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "İç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "tablo",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "301,2"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420015.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "2",
+     "Tapu alanı (m²)": "290"
+    },
+    "pts": [
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "3"
+    },
+    "pts": [
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420015.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.0,
+     0.25,
+     0.0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Yenimahalle",
+     "Ada": "102",
+     "Parsel": "5",
+     "Tapu alanı (m²)": "1.250,50"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420060.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420060.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420030.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420050.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4419995.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4419995.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {
+     "Ada": "103",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "200"
+    },
+    "pts": [
+     {
+      "x": 487100.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487100.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487110.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487110.0,
+      "y": 4420000.0
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487122.0,
+          "y": 4420002.0
+         },
+         {
+          "x": 487122.0,
+          "y": 4420004.0
+         },
+         {
+          "x": 487124.0,
+          "y": 4420004.0
+         },
+         {
+          "x": 487124.0,
+          "y": 4420002.0
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {
+     "Mahalle": "Merkez"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420080.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420085.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420085.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420080.0
+     }
+    ],
+    "label": "Yol fazlası"
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487020.0,
+      "y": 4420080.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420084.0
+     },
+     {
+      "x": 487025.0,
+      "y": 4420084.0
+     },
+     {
+      "x": 487025.0,
+      "y": 4420080.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487000.0,
+     "y": 4420015.0
+    },
+    "label": "P101"
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487020.0,
+     "y": 4420015.0
+    },
+    "label": "P102"
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487020.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487200.0,
+     "y": 4420200.0
+    },
+    "label": "1"
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487210.0,
+     "y": 4420200.0
+    },
+    "label": "2"
+   },
+   {
+    "kind": "point",
+    "id": 14,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487300.0,
+     "y": 4420300.0
+    },
+    "label": "K",
+    "parts": [
+     {
+      "p": {
+       "x": 487040.0,
+       "y": 4420015.0
+      }
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 15,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 487000.0000005,
+     "y": 4420015.0
+    },
+    "label": "P199"
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "cizim",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "4",
+     "Tapu alanı (m²)": " 200.10 "
+    },
+    "pts": [
+     {
+      "x": 487040.0000004,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4419990.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4419990.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     }
+    ]
+   }
+  ],
+  "uids": [
+   "0192f5c0-9306-7000-8000-000000000001",
+   "0192f5c0-9306-7000-8000-000000000002",
+   "0192f5c0-9306-7000-8000-000000000003",
+   "0192f5c0-9306-7000-8000-000000000004",
+   "0192f5c0-9306-7000-8000-000000000005",
+   "0192f5c0-9306-7000-8000-000000000006",
+   "0192f5c0-9306-7000-8000-000000000007",
+   "0192f5c0-9306-7000-8000-000000000008",
+   "0192f5c0-9306-7000-8000-000000000009",
+   "0192f5c0-9306-7000-8000-00000000000a",
+   "0192f5c0-9306-7000-8000-00000000000b",
+   "0192f5c0-9306-7000-8000-00000000000c",
+   "0192f5c0-9306-7000-8000-00000000000d",
+   "0192f5c0-9306-7000-8000-00000000000e",
+   "0192f5c0-9306-7000-8000-00000000000f",
+   "0192f5c0-9306-7000-8000-000000000010"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "plan: parsel katmanının bütün parselleri; köşeler noktalardan, olmayana yeni numara; ortak köşe tek ad",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "11",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "12",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "13",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "14",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "15",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 2033.7463551364492,
+       "places": 16,
+       "named": 3,
+       "numbered": 13,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "6",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "7",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "8",
+         "487000.000",
+         "4420060.000",
+         "40.000",
+         ""
+        ],
+        [
+         "9",
+         "487040.000",
+         "4420060.000",
+         "30.000",
+         ""
+        ],
+        [
+         "10",
+         "487040.000",
+         "4420030.000",
+         "40.000",
+         ""
+        ],
+        [
+         "11",
+         "487000.000",
+         "4420030.000",
+         "30.000",
+         ""
+        ],
+        [
+         "Delik 1",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "12",
+         "487010.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "13",
+         "487020.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "14",
+         "487020.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "15",
+         "487010.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "1.250,50"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "2033.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uygula: salt okunur, çizim değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "11",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "12",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "13",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "14",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "15",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 2033.7463551364492,
+       "places": 16,
+       "named": 3,
+       "numbered": 13,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "6",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "7",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "8",
+         "487000.000",
+         "4420060.000",
+         "40.000",
+         ""
+        ],
+        [
+         "9",
+         "487040.000",
+         "4420060.000",
+         "30.000",
+         ""
+        ],
+        [
+         "10",
+         "487040.000",
+         "4420030.000",
+         "40.000",
+         ""
+        ],
+        [
+         "11",
+         "487000.000",
+         "4420030.000",
+         "30.000",
+         ""
+        ],
+        [
+         "Delik 1",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "12",
+         "487010.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "13",
+         "487020.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "14",
+         "487020.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "15",
+         "487010.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "1.250,50"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "2033.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "verilen sırayla: önce 2, sonra 1",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000002",
+       "0192f5c0-9306-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        }
+       ],
+       "area": 600.0,
+       "places": 6,
+       "named": 3,
+       "numbered": 3,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "3",
+         "487040.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "5",
+         "487000.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "600.00"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "hepsine yeni numara: K öneki, 101'den",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "names": "numbers",
+      "prefix": "K",
+      "start": 101
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K101",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K102",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "K103",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K104",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K102",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K105",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "K106",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K103",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K105",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "K107",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "K108",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K106",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K109",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "K110",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "K111",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "K112",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K113",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "K114",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "K115",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "K116",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 2033.7463551364492,
+       "places": 16,
+       "named": 0,
+       "numbered": 16,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K101",
+         "487000.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K102",
+         "487020.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "K103",
+         "487020.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K104",
+         "487000.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K102",
+         "487020.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K105",
+         "487040.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "K106",
+         "487040.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K103",
+         "487020.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K105",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "K107",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "K108",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K106",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K109",
+         "487000.000",
+         "4420060.000",
+         "40.000",
+         ""
+        ],
+        [
+         "K110",
+         "487040.000",
+         "4420060.000",
+         "30.000",
+         ""
+        ],
+        [
+         "K111",
+         "487040.000",
+         "4420030.000",
+         "40.000",
+         ""
+        ],
+        [
+         "K112",
+         "487000.000",
+         "4420030.000",
+         "30.000",
+         ""
+        ],
+        [
+         "Delik 1",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K113",
+         "487010.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "K114",
+         "487020.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "K115",
+         "487020.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "K116",
+         "487010.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "1.250,50"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "2033.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "hepsine yeni numara, önekisiz: noktaların adları (1, 2) atlanır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "names": "numbers"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "11",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "12",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "13",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "14",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "15",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "16",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "17",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "18",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 2033.7463551364492,
+       "places": 16,
+       "named": 0,
+       "numbered": 16,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "3",
+         "487000.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "5",
+         "487020.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "6",
+         "487000.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "7",
+         "487040.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "8",
+         "487040.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "5",
+         "487020.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "7",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "9",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "10",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "8",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "11",
+         "487000.000",
+         "4420060.000",
+         "40.000",
+         ""
+        ],
+        [
+         "12",
+         "487040.000",
+         "4420060.000",
+         "30.000",
+         ""
+        ],
+        [
+         "13",
+         "487040.000",
+         "4420030.000",
+         "40.000",
+         ""
+        ],
+        [
+         "14",
+         "487000.000",
+         "4420030.000",
+         "30.000",
+         ""
+        ],
+        [
+         "Delik 1",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "15",
+         "487010.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "16",
+         "487020.000",
+         "4420050.000",
+         "10.000",
+         ""
+        ],
+        [
+         "17",
+         "487020.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "18",
+         "487010.000",
+         "4420040.000",
+         "10.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "1.250,50"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "2033.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kenarsız: üç sütun, yay yarıçapı da yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "lengths": false
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "11",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "12",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "13",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "14",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "15",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 2033.7463551364492,
+       "places": 16,
+       "named": 3,
+       "numbered": 13,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000"
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000"
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000"
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000"
+        ],
+        [
+         "6",
+         "487060.000",
+         "4420015.000"
+        ],
+        [
+         "7",
+         "487060.000",
+         "4420000.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "333.75"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         ""
+        ],
+        [
+         "8",
+         "487000.000",
+         "4420060.000"
+        ],
+        [
+         "9",
+         "487040.000",
+         "4420060.000"
+        ],
+        [
+         "10",
+         "487040.000",
+         "4420030.000"
+        ],
+        [
+         "11",
+         "487000.000",
+         "4420030.000"
+        ],
+        [
+         "Delik 1",
+         "",
+         ""
+        ],
+        [
+         "12",
+         "487010.000",
+         "4420050.000"
+        ],
+        [
+         "13",
+         "487020.000",
+         "4420050.000"
+        ],
+        [
+         "14",
+         "487020.000",
+         "4420040.000"
+        ],
+        [
+         "15",
+         "487010.000",
+         "4420040.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "1.250,50"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "2033.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yaylı kenar: kiriş, yarıçap ve yay boyu; alan yay parçasıyla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        }
+       ],
+       "area": 333.7463551364492,
+       "places": 4,
+       "named": 1,
+       "numbered": 3,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "3",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "4",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "delikli parsel: delik saat yönünde, alanı düşülür; tapu alanı okunmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Yenimahalle",
+         "ada": "102",
+         "parsel": "5",
+         "heading": "102 ada 5 parsel (Yenimahalle)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420060.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420060.0
+             },
+             "length": 30.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420030.0
+             },
+             "length": 40.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420030.0
+             },
+             "length": 30.0
+            }
+           ],
+           "area": 1200.0
+          },
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420050.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420040.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0,
+           "hole": 0
+          }
+         ],
+         "area": 1100.0,
+         "recordedText": "1.250,50",
+         "tolerance": 9.200000000000001,
+         "status": "invalidRecord"
+        }
+       ],
+       "area": 1100.0,
+       "places": 8,
+       "named": 0,
+       "numbered": 8,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "102 ada 5 parsel (Yenimahalle)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "3",
+         "487000.000",
+         "4420060.000",
+         "40.000"
+        ],
+        [
+         "4",
+         "487040.000",
+         "4420060.000",
+         "30.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420030.000",
+         "40.000"
+        ],
+        [
+         "6",
+         "487000.000",
+         "4420030.000",
+         "30.000"
+        ],
+        [
+         "Delik 1",
+         "",
+         "",
+         ""
+        ],
+        [
+         "7",
+         "487010.000",
+         "4420050.000",
+         "10.000"
+        ],
+        [
+         "8",
+         "487020.000",
+         "4420050.000",
+         "10.000"
+        ],
+        [
+         "9",
+         "487020.000",
+         "4420040.000",
+         "10.000"
+        ],
+        [
+         "10",
+         "487010.000",
+         "4420040.000",
+         "10.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "1100.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "1.250,50"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çok parçalı alan: ikinci parça ve deliği; kayıt sınır dışında",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000006"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000006",
+         "il": "",
+         "ilce": "",
+         "mahalle": "",
+         "ada": "103",
+         "parsel": "1",
+         "heading": "103 ada 1 parsel",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487100.0,
+              "y": 4420010.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487110.0,
+              "y": 4420010.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487110.0,
+              "y": 4420000.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487100.0,
+              "y": 4420000.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0
+          },
+          {
+           "part": 1,
+           "corners": [
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487120.0,
+              "y": 4420010.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487130.0,
+              "y": 4420010.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487130.0,
+              "y": 4420000.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487120.0,
+              "y": 4420000.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 100.0
+          },
+          {
+           "part": 1,
+           "corners": [
+            {
+             "name": "11",
+             "named": "number",
+             "at": {
+              "x": 487122.0,
+              "y": 4420004.0
+             },
+             "length": 2.0
+            },
+            {
+             "name": "12",
+             "named": "number",
+             "at": {
+              "x": 487124.0,
+              "y": 4420004.0
+             },
+             "length": 2.0
+            },
+            {
+             "name": "13",
+             "named": "number",
+             "at": {
+              "x": 487124.0,
+              "y": 4420002.0
+             },
+             "length": 2.0
+            },
+            {
+             "name": "14",
+             "named": "number",
+             "at": {
+              "x": 487122.0,
+              "y": 4420002.0
+             },
+             "length": 2.0
+            }
+           ],
+           "area": 4.0,
+           "hole": 0
+          }
+         ],
+         "area": 196.0,
+         "recordedText": "200",
+         "recorded": 200.0,
+         "difference": -4.0,
+         "tolerance": 3.26,
+         "status": "outside"
+        }
+       ],
+       "area": 196.0,
+       "places": 12,
+       "named": 0,
+       "numbered": 12,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "103 ada 1 parsel",
+         "",
+         "",
+         ""
+        ],
+        [
+         "3",
+         "487100.000",
+         "4420010.000",
+         "10.000"
+        ],
+        [
+         "4",
+         "487110.000",
+         "4420010.000",
+         "10.000"
+        ],
+        [
+         "5",
+         "487110.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "6",
+         "487100.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "Parça 2",
+         "",
+         "",
+         ""
+        ],
+        [
+         "7",
+         "487120.000",
+         "4420010.000",
+         "10.000"
+        ],
+        [
+         "8",
+         "487130.000",
+         "4420010.000",
+         "10.000"
+        ],
+        [
+         "9",
+         "487130.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "10",
+         "487120.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "Parça 2, delik 1",
+         "",
+         "",
+         ""
+        ],
+        [
+         "11",
+         "487122.000",
+         "4420004.000",
+         "2.000"
+        ],
+        [
+         "12",
+         "487124.000",
+         "4420004.000",
+         "2.000"
+        ],
+        [
+         "13",
+         "487124.000",
+         "4420002.000",
+         "2.000"
+        ],
+        [
+         "14",
+         "487122.000",
+         "4420002.000",
+         "2.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "196.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "200"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-4.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±3.26"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlık: adı ve mahallesi; adı olmayan alan sırasıyla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000007",
+       "0192f5c0-9306-7000-8000-000000000008"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000007",
+         "il": "",
+         "ilce": "",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "",
+         "heading": "Yol fazlası (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420085.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420085.0
+             },
+             "length": 5.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487010.0,
+              "y": 4420080.0
+             },
+             "length": 10.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420080.0
+             },
+             "length": 5.0
+            }
+           ],
+           "area": 50.0
+          }
+         ],
+         "area": 50.0,
+         "tolerance": 1.3,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000008",
+         "il": "",
+         "ilce": "",
+         "mahalle": "",
+         "ada": "",
+         "parsel": "",
+         "heading": "Alan 2",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "7",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420084.0
+             },
+             "length": 5.0
+            },
+            {
+             "name": "8",
+             "named": "number",
+             "at": {
+              "x": 487025.0,
+              "y": 4420084.0
+             },
+             "length": 4.0
+            },
+            {
+             "name": "9",
+             "named": "number",
+             "at": {
+              "x": 487025.0,
+              "y": 4420080.0
+             },
+             "length": 5.0
+            },
+            {
+             "name": "10",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420080.0
+             },
+             "length": 4.0
+            }
+           ],
+           "area": 20.0
+          }
+         ],
+         "area": 20.0,
+         "tolerance": 0.7,
+         "status": "noRecord"
+        }
+       ],
+       "area": 70.0,
+       "places": 8,
+       "named": 0,
+       "numbered": 8,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "Yol fazlası (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "3",
+         "487000.000",
+         "4420085.000",
+         "10.000"
+        ],
+        [
+         "4",
+         "487010.000",
+         "4420085.000",
+         "5.000"
+        ],
+        [
+         "5",
+         "487010.000",
+         "4420080.000",
+         "10.000"
+        ],
+        [
+         "6",
+         "487000.000",
+         "4420080.000",
+         "5.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "50.00"
+        ],
+        [
+         "Alan 2",
+         "",
+         "",
+         ""
+        ],
+        [
+         "7",
+         "487020.000",
+         "4420084.000",
+         "5.000"
+        ],
+        [
+         "8",
+         "487025.000",
+         "4420084.000",
+         "4.000"
+        ],
+        [
+         "9",
+         "487025.000",
+         "4420080.000",
+         "5.000"
+        ],
+        [
+         "10",
+         "487020.000",
+         "4420080.000",
+         "4.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "20.00"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "70.00"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "saat yönünün tersine saklanan halka saat yönünde, kuzeybatıdan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        }
+       ],
+       "area": 300.0,
+       "places": 4,
+       "named": 2,
+       "numbered": 2,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "aynı kuzeyde iki köşe: batıdaki başlar; 1 µm yakındaki köşe aynı yer",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000002",
+       "0192f5c0-9306-7000-8000-000000000010"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000010",
+         "il": "",
+         "ilce": "",
+         "mahalle": "",
+         "ada": "101",
+         "parsel": "4",
+         "heading": "101 ada 4 parsel",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.000000400003046
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487040.0000004,
+              "y": 4420000.0
+             },
+             "length": 10.000000000000009
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4419990.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4419990.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 200.00000200001523
+          }
+         ],
+         "area": 200.00000200001523,
+         "recordedText": "200.10",
+         "recorded": 200.1,
+         "difference": -0.09999799998476533,
+         "tolerance": 3.300000020000152,
+         "status": "within"
+        }
+       ],
+       "area": 500.00000200001523,
+       "places": 6,
+       "named": 2,
+       "numbered": 4,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "3",
+         "487040.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 4 parsel",
+         "",
+         "",
+         ""
+        ],
+        [
+         "4",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "3",
+         "487040.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4419990.000",
+         "20.000"
+        ],
+        [
+         "6",
+         "487020.000",
+         "4419990.000",
+         "10.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "200.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "200.10"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-0.10"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±3.30"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "500.00"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kayıt sınır içinde: fark ve yanılma sınırı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000010"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000010",
+         "il": "",
+         "ilce": "",
+         "mahalle": "",
+         "ada": "101",
+         "parsel": "4",
+         "heading": "101 ada 4 parsel",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.000000400003046
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487040.0000004,
+              "y": 4420000.0
+             },
+             "length": 10.000000000000009
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4419990.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4419990.0
+             },
+             "length": 10.0
+            }
+           ],
+           "area": 200.00000200001523
+          }
+         ],
+         "area": 200.00000200001523,
+         "recordedText": "200.10",
+         "recorded": 200.1,
+         "difference": -0.09999799998476533,
+         "tolerance": 3.300000020000152,
+         "status": "within"
+        }
+       ],
+       "area": 200.00000200001523,
+       "places": 4,
+       "named": 0,
+       "numbered": 4,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 4 parsel",
+         "",
+         "",
+         ""
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487040.000",
+         "4420000.000",
+         "10.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4419990.000",
+         "20.000"
+        ],
+        [
+         "6",
+         "487020.000",
+         "4419990.000",
+         "10.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "200.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "200.10"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-0.10"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±3.30"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çok noktalı nesnenin ikinci noktası köşeyi adlandırır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000003",
+       "0192f5c0-9306-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "heading": "101 ada 3 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 20.0,
+             "radius": 21.25,
+             "arc": 20.823186365783453
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487060.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 333.7463551364492
+          }
+         ],
+         "area": 333.7463551364492,
+         "tolerance": 4.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "6",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "290",
+         "recorded": 290.0,
+         "difference": 10.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        }
+       ],
+       "area": 633.7463551364492,
+       "places": 6,
+       "named": 2,
+       "numbered": 4,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)",
+         "Yarıçap (m)"
+        ],
+        [
+         "101 ada 3 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "20.000",
+         "21.250"
+        ],
+        [
+         "3",
+         "487060.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "4",
+         "487060.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "333.75"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000",
+         ""
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000",
+         ""
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "20.000",
+         ""
+        ],
+        [
+         "6",
+         "487020.000",
+         "4420000.000",
+         "15.000",
+         ""
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "",
+         "290"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "",
+         "+10.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "",
+         "633.75"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başka öznitelikten kayıtlı alan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000001",
+       "0192f5c0-9306-7000-8000-000000000002"
+      ],
+      "field": "Parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Parsel",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "1",
+         "recorded": 1.0,
+         "difference": 299.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "heading": "101 ada 2 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "K (2)",
+             "named": "point",
+             "at": {
+              "x": 487040.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487040.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "2",
+         "recorded": 2.0,
+         "difference": 298.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        }
+       ],
+       "area": 600.0,
+       "places": 6,
+       "named": 3,
+       "numbered": 3,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "1"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "+299.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "101 ada 2 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "K (2)",
+         "487040.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "5",
+         "487040.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "+298.00"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ],
+        [
+         "Toplam hesap alanı (m²)",
+         "",
+         "",
+         "600.00"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "boş öznitelik adı: Tapu alanı (m²)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000001"
+      ],
+      "field": "   "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "heading": "101 ada 1 parsel (Merkez)",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "P101",
+             "named": "point",
+             "at": {
+              "x": 487000.0,
+              "y": 4420015.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "P102",
+             "named": "point",
+             "at": {
+              "x": 487020.0,
+              "y": 4420015.0
+             },
+             "length": 15.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420000.0
+             },
+             "length": 20.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487000.0,
+              "y": 4420000.0
+             },
+             "length": 15.0
+            }
+           ],
+           "area": 300.0
+          }
+         ],
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        }
+       ],
+       "area": 300.0,
+       "places": 4,
+       "named": 2,
+       "numbered": 2,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "101 ada 1 parsel (Merkez)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "P101",
+         "487000.000",
+         "4420015.000",
+         "20.000"
+        ],
+        [
+         "P102",
+         "487020.000",
+         "4420015.000",
+         "15.000"
+        ],
+        [
+         "3",
+         "487020.000",
+         "4420000.000",
+         "20.000"
+        ],
+        [
+         "4",
+         "487000.000",
+         "4420000.000",
+         "15.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "300.00"
+        ],
+        [
+         "Tapu alanı (m²)",
+         "",
+         "",
+         "301,2"
+        ],
+        [
+         "Fark (m²)",
+         "",
+         "",
+         "-1.20"
+        ],
+        [
+         "Yanılma sınırı (m²)",
+         "",
+         "",
+         "±4.30"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ilk numara 0",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000008"
+      ],
+      "names": "numbers",
+      "start": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-9306-7000-8000-000000000008",
+         "il": "",
+         "ilce": "",
+         "mahalle": "",
+         "ada": "",
+         "parsel": "",
+         "heading": "Alan 1",
+         "rings": [
+          {
+           "part": 0,
+           "corners": [
+            {
+             "name": "0",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420084.0
+             },
+             "length": 5.0
+            },
+            {
+             "name": "3",
+             "named": "number",
+             "at": {
+              "x": 487025.0,
+              "y": 4420084.0
+             },
+             "length": 4.0
+            },
+            {
+             "name": "4",
+             "named": "number",
+             "at": {
+              "x": 487025.0,
+              "y": 4420080.0
+             },
+             "length": 5.0
+            },
+            {
+             "name": "5",
+             "named": "number",
+             "at": {
+              "x": 487020.0,
+              "y": 4420080.0
+             },
+             "length": 4.0
+            }
+           ],
+           "area": 20.0
+          }
+         ],
+         "area": 20.0,
+         "tolerance": 0.7,
+         "status": "noRecord"
+        }
+       ],
+       "area": 20.0,
+       "places": 4,
+       "named": 0,
+       "numbered": 4,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ],
+        [
+         "Alan 1",
+         "",
+         "",
+         ""
+        ],
+        [
+         "0",
+         "487020.000",
+         "4420084.000",
+         "5.000"
+        ],
+        [
+         "3",
+         "487025.000",
+         "4420084.000",
+         "4.000"
+        ],
+        [
+         "4",
+         "487025.000",
+         "4420080.000",
+         "5.000"
+        ],
+        [
+         "5",
+         "487020.000",
+         "4420080.000",
+         "4.000"
+        ],
+        [
+         "Hesap alanı (m²)",
+         "",
+         "",
+         "20.00"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "boş liste: parsel yok, yalnız başlıklar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5254,
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [],
+       "area": 0.0,
+       "places": 0,
+       "named": 0,
+       "numbered": 0,
+       "cells": [
+        [
+         "Parsel alan çizelgesi (EPSG:5254)",
+         "",
+         "",
+         ""
+        ],
+        [
+         "Nokta",
+         "Y (m)",
+         "X (m)",
+         "Kenar (m)"
+        ]
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çizgi bir parsel değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000001",
+       "0192f5c0-9306-7000-8000-000000000005"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_parcel",
+       "message": "“0192f5c0-9306-7000-8000-000000000005” bir alan değil; parsel alan çizelgesi yalnız alanları listeler.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "x"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-9306-7000-8000-000000000063"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-9306-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "önek 12 harften uzun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefix": "ÇOKUZUNBİRÖNEK"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Numara öneki “ÇOKUZUNBİRÖNEK” 12 harften uzun; daha kısa bir önek yazın.",
+       "path": "prefix"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "önekte satır sonu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefix": "P\n"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Numara önekinde satır sonu ya da denetim karakteri var; önek tek satırlık bir yazı olmalı.",
+       "path": "prefix"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "öznitelik adı 120 harften uzun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "field": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kayıtlı alanın öznitelik adı 120 harften uzun; tapu alanını tutan özniteliğin adını yazın.",
+       "path": "field"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

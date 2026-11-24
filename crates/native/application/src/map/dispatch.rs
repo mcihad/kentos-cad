@@ -81,6 +81,18 @@ macro_rules! map_commands {
                 parcel_register_list,
                 kentos_commands::ParcelsRecords
             ),
+            kentos_commands::CAD_PARCELS_REPORT => crate::map_dispatch::map_arm!(
+                $command,
+                $then,
+                parcels_report_query,
+                kentos_commands::ParcelsReport
+            ),
+            kentos_commands::CAD_PARCELS_TABLE => crate::map_dispatch::map_arm!(
+                $command,
+                $then,
+                parcels_report_table,
+                kentos_commands::ParcelsTable
+            ),
             kentos_commands::CAD_PARCELS_APPROVE => crate::map_dispatch::map_arm!(
                 $command,
                 $then,

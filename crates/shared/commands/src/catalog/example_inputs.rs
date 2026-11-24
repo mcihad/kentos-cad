@@ -876,6 +876,8 @@ pub(super) fn parsed(id: &str, input: &serde_json::Value) -> serde_json::Result<
         crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(input.clone()).map(|_| ()),
         crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecord>(input.clone()).map(|_| ()),
         crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecords>(input.clone()).map(|_| ()),
+        crate::CAD_PARCELS_REPORT => serde_json::from_value::<crate::ParcelsReport>(input.clone()).map(|_| ()),
+        crate::CAD_PARCELS_TABLE => serde_json::from_value::<crate::ParcelsTable>(input.clone()).map(|_| ()),
         crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApprove>(input.clone()).map(|_| ()),
         crate::CAD_ASBUILT_REVIEW => serde_json::from_value::<crate::AsbuiltReview>(input.clone()).map(|_| ()),
         crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdraw>(input.clone()).map(|_| ()),

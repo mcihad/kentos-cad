@@ -930,6 +930,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_PARCELS_BOUNDARIES, kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION),
     (kentos_commands::CAD_PARCELS_RECORD, kentos_commands::CAD_PARCELS_RECORD_VERSION),
     (kentos_commands::CAD_PARCELS_RECORDS, kentos_commands::CAD_PARCELS_RECORDS_VERSION),
+    // Parsel alan çizelgesi and its table ([`crate::parcels_report`], docs/adr/9306).
+    (kentos_commands::CAD_PARCELS_REPORT, kentos_commands::CAD_PARCELS_REPORT_VERSION),
+    (kentos_commands::CAD_PARCELS_TABLE, kentos_commands::CAD_PARCELS_TABLE_VERSION),
     (kentos_commands::CAD_PARCELS_APPROVE, kentos_commands::CAD_PARCELS_APPROVE_VERSION),
     (kentos_commands::CAD_PARCELS_WITHDRAW, kentos_commands::CAD_PARCELS_WITHDRAW_VERSION),
     (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),

@@ -730,6 +730,10 @@ pub mod parcels_boundaries;
 #[cfg(feature = "mod-map")]
 #[path = "map/parcels_check.rs"]
 pub mod parcels_check;
+// Parsel alan çizelgesi and its table (docs/adr/9306).
+#[cfg(feature = "mod-map")]
+#[path = "map/parcels_report.rs"]
+pub mod parcels_report;
 #[cfg(feature = "mod-map")]
 #[path = "map/pipes_check.rs"]
 pub mod pipes_check;

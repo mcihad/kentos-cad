@@ -1499,6 +1499,9 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             json!({ "measure": { "kind": "radius", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
                     "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })
         }),
+        // Parsel alan çizelgesi: an area is listed, another object is refused as no parcel (docs/adr/9306).
+        ("cad.parcels.report", None, |u| json!({ "uids": [u] })),
+        ("cad.parcels.table", None, |u| json!({ "uids": [u], "at": { "x": 0.0, "y": 0.0 } })),
         // Çoklu çizgiye çevir: a NURBS curve takes it, a polyline is refused for the edit (not its kind).
         (
             "cad.curves.edit",

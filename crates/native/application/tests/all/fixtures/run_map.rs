@@ -51,6 +51,16 @@ macro_rules! map_cases {
                 use kentos_native_application::parcel_register::list_cmd as parcel_register_list;
                 $then!(parcel_register_list, kentos_commands::ParcelsRecords)
             }
+            kentos_commands::CAD_PARCELS_REPORT => {
+                #[cfg(feature = "mod-map")]
+                use kentos_native_application::parcels_report::report as parcels_report_query;
+                $then!(parcels_report_query, kentos_commands::ParcelsReport)
+            }
+            kentos_commands::CAD_PARCELS_TABLE => {
+                #[cfg(feature = "mod-map")]
+                use kentos_native_application::parcels_report::table as parcels_report_table;
+                $then!(parcels_report_table, kentos_commands::ParcelsTable)
+            }
             kentos_commands::CAD_PARCELS_APPROVE => {
                 #[cfg(feature = "mod-map")]
                 use kentos_native_application::parcel_drafts as parcel_approve;

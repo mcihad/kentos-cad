@@ -250,6 +250,24 @@ impl Input for kentos_commands::ParcelsCheck {
     }
 }
 
+impl Input for kentos_commands::ParcelsReport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ParcelsTable {
+    /// `at.x` and `.y`, `height` (docs/adr/9306).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "height" => self.height.as_mut(),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::ParcelsBoundaries {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
