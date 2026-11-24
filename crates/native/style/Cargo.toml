@@ -33,6 +33,9 @@ zune-jpeg = { workspace = true }
 kentos-svg-core = { path = "../../shared/svg-core" }
 # The marker shapes' paths (shapes.rs): the renderer's atlas and the PDF's outlines from one rule.
 tiny-skia = { workspace = true }
+# SVG symbols drawn as vectors on the model screen (svg_marks.rs, plan/render.md RM-11): usvg reads them, its
+# tiny-skia outlines their strokes. The workspace's version, which the desktop already ships (Iced's SVG support).
+resvg = { workspace = true }
 
 [dev-dependencies]
 # The bound legend's documents are written through the product commands (tests/all/bound_legend.rs); the

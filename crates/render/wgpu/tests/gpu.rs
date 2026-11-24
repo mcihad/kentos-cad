@@ -14,7 +14,6 @@ use kentos_contracts::{
     DocumentSnapshotV1, Entity, EntityBase, LayerNode, LayerNodeType, LayerStyle, LineEntity,
     LineType,
 };
-use kentos_render_wgpu::camera::MAX_SCALE;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
     Camera, FrameInput, Palette, RenderSettings, Renderer, Rgba8, ScenePart, Vec2,
@@ -30,6 +29,8 @@ mod hatch;
 mod weights;
 #[path = "gpu/dashes.rs"]
 mod dashes;
+#[path = "gpu/glyphs.rs"]
+mod glyphs;
 #[path = "gpu/precision.rs"]
 mod precision;
 #[path = "gpu/scene3d.rs"]
@@ -500,6 +501,23 @@ fn precise_styled_symbols_on_a_real_gpu() {
     precision::tiny_symbols_keep_their_height(&mut Gpu::open());
 }
 
+/// The drawing's text on the GPU (docs/adr/9212 §4, stage 1).
+#[test]
+fn glyphs_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    let gpu = Gpu::open();
+    glyphs::a_turned_haloed_text_matches_its_outlines_drawn_whole(&gpu);
+    glyphs::a_text_of_pixels_keeps_its_size_as_a_world_text_grows(&gpu);
+    glyphs::sub_pixel_pans_move_the_text_by_the_pan(&gpu);
+    glyphs::fields_on_many_pages_draw_as_on_one(&gpu);
+    glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
+    glyphs::rings_and_lines_cover_their_areas(&gpu);
+    glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
+}
+
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.
 #[test]
 fn paper_widths_on_a_real_gpu() {
@@ -614,6 +632,29 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
         camera.center.x -= 1.0;
     }
     eprintln!("kept picture on the GPU: composed again, the hover drawn over it, 1× and 4×");
+    // A view that moves draws with one sample and its settled frame with four (docs/adr/9207 §8): back at four, the
+    // targets it had keep their picture, the same pixels as drawn whole.
+    let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+    settings.samples = 4;
+    gpu.keep = false;
+    gpu.overlays = 0;
+    let whole = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    gpu.keep = true;
+    gpu.overlays = 1;
+    let kept = |gpu: &Gpu| gpu.renderer.stats(1).expect("stats").picture_kept;
+    let first = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert_eq!(first, whole);
+    settings.samples = 1;
+    let moving = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert!(!kept(gpu), "one sample: its own targets, drawn");
+    settings.samples = 4;
+    let settled = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert!(kept(gpu), "four samples again: the targets kept aside, with their picture");
+    assert_eq!(settled, whole, "the same pixels as drawn whole");
+    assert_eq!(moving.len(), whole.len());
+    gpu.keep = false;
+    gpu.overlays = 0;
+    eprintln!("sample switch on the GPU: the other count's targets kept aside and their picture with them");
 }
 
 /// One grey square turned by 30° on black: its edges cross pixels at every
@@ -753,10 +794,11 @@ fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
     camera.height = 64.0;
     let rgba = gpu.draw_scaled(&[&fixed], &camera, &settings, 128, 128, 2.0);
     let stats = gpu.renderer.stats(1).expect("stats");
+    // The picture, the moved part and the wide picture (docs/adr/1067, 1068), each at the logical size.
     assert_eq!(
         stats.target_bytes,
-        64 * 64 * 4,
-        "one picture at the logical size"
+        3 * 64 * 64 * 4,
+        "the pictures at the logical size"
     );
     assert!(
         !rgba.chunks(4).any(|p| p == [255, 0, 0, 255]),
@@ -769,6 +811,9 @@ fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
 /// the view pans by 0.01 mm (0.05 px) at a time; the line must move by
 /// exactly that, with no jitter.
 fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut Gpu) {
+    // The plain scene's 128 m pieces' deepest zoom: the drawing area's styled layers go to `MAX_SCALE` through the
+    // deep view's scene (plan/render.md RM-24, docs/adr/9220).
+    const MAX_SCALE: f64 = 1e4;
     for origin in [
         Vec2::new(486_512.34, 4_420_187.52),
         Vec2::new(0., 0.),

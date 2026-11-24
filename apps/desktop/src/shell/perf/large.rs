@@ -47,7 +47,7 @@ const BUDGET_MS: f64 = 1000.0 / 60.0;
 /// 1:200 at 96 dpi, logical pixels per metre: the near view.
 const NEAR: f64 = 1.0 / (200.0 * 0.000_264_58);
 
-fn wheel(lines: f32) -> Event {
+pub(super) fn wheel(lines: f32) -> Event {
     Event::Mouse(mouse::Event::WheelScrolled {
         delta: mouse::ScrollDelta::Lines { x: 0.0, y: lines },
     })
@@ -79,7 +79,7 @@ fn typed(ch: char) -> Vec<Event> {
 }
 
 /// UI thread and GPU apart: p50, p95, p99 and the worst, and the frames over 60 Hz's budget.
-fn stats(frames: &[Parts]) -> Value {
+pub(super) fn stats(frames: &[Parts]) -> Value {
     let ui: Vec<f64> = frames.iter().map(Parts::cpu).collect();
     let gpu: Vec<f64> = frames.iter().map(Parts::gpu_ms).collect();
     json!({
@@ -89,6 +89,8 @@ fn stats(frames: &[Parts]) -> Value {
         "gpuP50": percentile(&gpu, 0.5), "gpuP95": percentile(&gpu, 0.95), "gpuP99": percentile(&gpu, 0.99),
         "gpuMax": percentile(&gpu, 1.0),
         "uiOverBudget": ui.iter().filter(|&&t| t > BUDGET_MS).count(),
+        // Frames the app's view was built for (docs/adr/9205): a gesture of the area's live camera builds none.
+        "viewsBuilt": frames.iter().filter(|p| p.rebuilt()).count(),
         "viewP50": percentile(&frames.iter().map(|p| p.view_ms()).collect::<Vec<_>>(), 0.5),
         // The UI thread's parts at its p95 frame: event, app, view, layout, draw.
         "uiP95Parts": frames
@@ -98,7 +100,7 @@ fn stats(frames: &[Parts]) -> Value {
     })
 }
 
-fn one(p: &Parts) -> Value {
+pub(super) fn one(p: &Parts) -> Value {
     json!({ "uiMs": p.cpu(), "gpuMs": p.gpu_ms(), "viewMs": p.view_ms() })
 }
 
@@ -178,7 +180,7 @@ fn view_stats(app: &App) -> Value {
 }
 
 /// The GPU the frames are drawn on, as wgpu tells it (no device is opened for it).
-fn adapter() -> Value {
+pub(super) fn adapter() -> Value {
     use iced::wgpu;
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let adapter =
@@ -197,7 +199,7 @@ fn adapter() -> Value {
 }
 
 /// The fixed trace in the view as it is: the pointer over the drawing, the wheel in and out twice, a pan.
-fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
+pub(super) fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
     let area = app.viewport.bounds;
     let center = area.center();
     // `KENTOS_PERF_TRACE_VIEW` (a diagnosis, docs/adr/1064 §5): what the view did for each pointer and wheel frame.
@@ -229,13 +231,22 @@ fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec
                 if tell {
                     let s = app.viewport.status().stats;
                     println!(
-                        "tekerlek: GPU {:.2} ms, MİB {:?}, ölçeklendi {}, tutuldu {}, yüklenen {} B, çizim çağrısı {}",
+                        "tekerlek: GPU {:.2} ms, MİB {:?}, örnek {}, ölçeklendi {}, tutuldu {}, yüklenen {} B, çizim çağrısı {}, stilli öğe {}, glif {}, ölçek {:.4}",
                         f.gpu_ms(),
                         f.split().map(|x| (x * 10.0).round() / 10.0),
+                        s.samples,
                         s.picture_zoomed,
                         s.picture_kept,
                         s.uploaded_bytes,
-                        s.draw_calls
+                        s.draw_calls,
+                        s.styled_items,
+                        s.glyphs,
+                        app.viewport.live.camera().scale
+                    );
+                    // What the draws gave the GPU in this frame and its read back (two draws of the frame).
+                    println!(
+                        "   çizilen örnek {}",
+                        kentos_render_wgpu::styled::gpu::DRAWN_INSTANCES.swap(0, std::sync::atomic::Ordering::Relaxed)
                     );
                 }
                 wheels.push(f);
@@ -307,9 +318,20 @@ pub(super) fn open(app: &mut App, h: &mut Harness, file: &Path) -> Value {
         }
     };
     let worker = (done_at - t0).as_secs_f64() * 1000.0;
-    let first = h.frame_with(app, &[], |app| {
+    let mut first = h.frame_with(app, &[], |app| {
         let _ = app.update(done);
     });
+    // A unit the drawing's own evidence offers (its survey grid, its letters; docs/adr/9210, 9213) is taken as offered:
+    // the question waits for the user, not for the drawing. The frame after it is the drawing's first. Without this the
+    // Suşehri DXF never opened (24 Nov).
+    if app.opening.is_some() {
+        let rx = drive(app.opening_event(crate::opening::Event::ConfirmUnit));
+        first = h.frame_with(app, &[], |app| {
+            while let Ok((_, m)) = rx.recv_timeout(Duration::from_secs(600)) {
+                let _ = app.update(m);
+            }
+        });
+    }
     let placed = ms(t0);
     // The project's questions (its type, its CAD work) are not part of the drawing's frames.
     app.dialog = None;

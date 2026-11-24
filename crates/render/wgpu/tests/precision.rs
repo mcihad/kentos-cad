@@ -197,9 +197,11 @@ fn a_two_millimetre_detail_is_inspectable_without_changing_its_source() {
     let mut cam = camera(a, 1.0);
     cam.zoom_at(1e9, 800., 500.);
     let span = cam.world_to_screen(b)[0] - cam.world_to_screen(a)[0];
+    // 200 logical pixels at the deepest zoom (10 µm a pixel, docs/adr/9220).
     assert!(
-        (span - 20.).abs() < 1e-4,
-        "2 mm must span 20 logical pixels, got {span}"
+        (span - 0.002 * MAX_SCALE).abs() < 1e-4,
+        "2 mm must span {} logical pixels, got {span}",
+        0.002 * MAX_SCALE
     );
     for origin in origins() {
         assert!(error(gpu_px(&cam, b, origin, 2.), exact_px(&cam, b, 2.)) < 1e-3);
@@ -252,10 +254,16 @@ fn centre_line_offset(corners: [[f32; 2]; 4]) -> f64 {
     (d[0] * -p[1] - d[1] * -p[0]) / d[0].hypot(d[1])
 }
 
+/// The deepest zoom the plain scene's and the highlight's 128 m pieces are cut for. The drawing area's styled layers go
+/// deeper, to [`MAX_SCALE`], through the deep view's scene, which splits them at a box round the view
+/// (plan/render.md RM-24, docs/adr/9220); there these pieces stay within 0.4 px (64 m × 2⁻²⁴ × 10⁵).
+const PIECES_DEEPEST: f64 = 1e4;
+
 #[test]
 fn a_long_line_cut_into_pieces_stays_on_its_exact_place_at_the_deepest_zoom() {
-    // 20 km survey lines in every direction, passing 0.1 mm (half a pixel)
-    // beside the view's centre at the deepest zoom.
+    // 20 km survey lines in every direction, passing 0.1 mm (a pixel)
+    // beside the view's centre at the pieces' deepest zoom.
+    const MAX_SCALE: f64 = PIECES_DEEPEST;
     let cam = camera(Vec2::new(E, N), MAX_SCALE);
     let origin = origins()[0];
     let f = frame(&cam, origin, 1.0);

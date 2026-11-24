@@ -53,6 +53,8 @@ pub(crate) struct Layer<'a> {
     camera: Camera,
     ink: Color,
     danger: Color,
+    /// Where it goes for the area's renderer (plan/render.md RM-14); none: drawn on the canvas.
+    gpu: Option<crate::labels::GlyphSlot>,
 }
 
 /// The surfaces' edges of a revision, and the picture of a view.
@@ -64,9 +66,18 @@ pub(crate) struct State {
 }
 
 /// The layer of a Harita or Yol project with surfaces (docs/adr/1520); none otherwise.
-pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, ink: Color, danger: Color) -> Option<Element<'a, Message>> {
-    let road = doc.settings().road.as_ref()?;
-    if road.surfaces.is_empty() || !kentos_native_application::road_terrains::holds_surfaces(doc.settings().cad_work) {
+pub(crate) fn layer<'a>(
+    doc: &'a Document,
+    camera: &Camera,
+    ink: Color,
+    danger: Color,
+    slot: &crate::labels::GlyphSlot,
+) -> Option<Element<'a, Message>> {
+    let holds = doc.settings().road.as_ref().is_some_and(|road| {
+        !road.surfaces.is_empty() && kentos_native_application::road_terrains::holds_surfaces(doc.settings().cad_work)
+    });
+    if !holds {
+        slot.clear();
         return None;
     }
     Some(
@@ -75,6 +86,7 @@ pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, ink: Color, danger: 
             camera: *camera,
             ink,
             danger,
+            gpu: crate::labels::gpu_text().then(|| slot.clone()),
         })
         .width(Fill)
         .height(Fill)
@@ -83,53 +95,8 @@ pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, ink: Color, danger: 
 }
 
 impl Layer<'_> {
-    /// What the picture depends on: the drawing's revision, the view and the colours.
-    fn key(&self, bounds: Rectangle) -> u64 {
-        use std::hash::{Hash, Hasher};
-        let mut h = std::collections::hash_map::DefaultHasher::new();
-        self.doc.revision().hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
-            for c in self.camera.world_to_screen(p) {
-                c.to_bits().hash(&mut h);
-            }
-        }
-        for c in [bounds.width, bounds.height, self.ink.r, self.ink.a, self.danger.r] {
-            c.to_bits().hash(&mut h);
-        }
-        h.finish()
-    }
-}
-
-impl canvas::Program<Message> for Layer<'_> {
-    type State = State;
-
-    fn draw(
-        &self,
-        state: &State,
-        renderer: &Renderer,
-        _theme: &Theme,
-        bounds: Rectangle,
-        _cursor: mouse::Cursor,
-    ) -> Vec<canvas::Geometry> {
-        let revision = self.doc.revision();
-        let stale = state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision);
-        if stale {
-            let edges = kentos_native_application::road_terrains::made_surfaces(self.doc)
-                .into_iter()
-                .filter_map(|(_, _, s)| s.as_ref().map(edges_of))
-                .collect();
-            *state.built.borrow_mut() = Some((revision, edges));
-        }
-        let key = self.key(bounds);
-        if state.key.get() != key {
-            state.cache.clear();
-            state.key.set(key);
-        }
-        let built = state.built.borrow();
-        let Some((_, surfaces)) = built.as_ref() else {
-            return Vec::new();
-        };
-        vec![state.cache.draw(renderer, bounds.size(), |frame| {
+    /// Its picture, on a canvas frame or for the area's renderer (plan/render.md RM-14).
+    fn paint(&self, frame: &mut impl crate::gpu_frame::Paint, surfaces: &[Edges], bounds: Rectangle) {
             let (w, h) = (bounds.width as f64, bounds.height as f64);
             let screen = |p: [f64; 2]| self.camera.world_to_screen(Vec2::new(p[0], p[1]));
             let path = |edges: &[[[f64; 2]; 2]], least: f64| {
@@ -169,6 +136,58 @@ impl canvas::Program<Message> for Layer<'_> {
                     frame.stroke(&hole, Stroke::default().with_width(1.0).with_color(Color { a: 0.7, ..self.danger }));
                 }
             }
-        })]
+    }
+
+    /// What the picture depends on: the drawing's revision, the view and the colours.
+    fn key(&self, bounds: Rectangle) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        self.doc.revision().hash(&mut h);
+        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+            for c in self.camera.world_to_screen(p) {
+                c.to_bits().hash(&mut h);
+            }
+        }
+        for c in [bounds.width, bounds.height, self.ink.r, self.ink.a, self.danger.r] {
+            c.to_bits().hash(&mut h);
+        }
+        h.finish()
+    }
+}
+
+impl canvas::Program<Message> for Layer<'_> {
+    type State = State;
+
+    fn draw(
+        &self,
+        state: &State,
+        renderer: &Renderer,
+        _theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
+        let revision = self.doc.revision();
+        let stale = state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision);
+        if stale {
+            let edges = kentos_native_application::road_terrains::made_surfaces(self.doc)
+                .into_iter()
+                .filter_map(|(_, _, s)| s.as_ref().map(edges_of))
+                .collect();
+            *state.built.borrow_mut() = Some((revision, edges));
+        }
+        let key = self.key(bounds);
+        let built = state.built.borrow();
+        let Some((_, surfaces)) = built.as_ref() else {
+            return Vec::new();
+        };
+        if let Some(slot) = &self.gpu {
+            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f, surfaces, bounds));
+            return Vec::new();
+        }
+        if state.key.get() != key {
+            state.cache.clear();
+            state.key.set(key);
+        }
+        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame, surfaces, bounds))]
     }
 }

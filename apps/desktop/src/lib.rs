@@ -267,6 +267,8 @@ mod joins_window;
 mod event_links_window;
 #[path = "shell/approved_layer.rs"]
 pub mod approved_layer;
+#[path = "shell/gpu_frame.rs"]
+pub mod gpu_frame;
 #[path = "cad/platform_window.rs"]
 mod platform_window;
 #[path = "cad/terrain_cloud_window.rs"]

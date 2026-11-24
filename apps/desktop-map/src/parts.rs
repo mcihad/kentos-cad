@@ -211,6 +211,7 @@ impl ModuleParts for Map {
             app.selection.version(),
             &app.viewport.camera,
             Tokens::of(&app.theme()).warning,
+            &app.gpu_layers.approved,
         )
         .into_iter()
         .collect()

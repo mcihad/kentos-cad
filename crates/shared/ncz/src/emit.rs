@@ -51,6 +51,19 @@ const WORLD: f64 = 100_000_000.0;
 /// plan note's text gets is worked out for it, `symbols::plan_note`).
 const LINE_PITCH: f64 = 1.45;
 
+/// Why a circle's or an arc's radius is no radius, if it is not.
+fn radius(r: f64) -> Result<(), &'static str> {
+    if !r.is_finite() {
+        Err("yarıçapı sayı değil")
+    } else if r <= 0.0 {
+        Err("yarıçapı sıfır ya da eksi")
+    } else if r > WORLD {
+        Err("yarıçapı 100 000 km'den büyük")
+    } else {
+        Ok(())
+    }
+}
+
 /// What the report calls a record kind.
 fn kind_words(k: Kind) -> &'static str {
     match k {
@@ -184,6 +197,11 @@ struct Emitter {
     by_name: HashMap<String, usize>,
     truncated: u32,
     renamed: BTreeSet<String>,
+    /// Symbol points drawn with the zoning legend's mark (`legend_mark`), and the codes without one, counted.
+    legend: (u32, BTreeMap<String, u32>),
+    /// Objects of the overlays (protection bands, sites, registered buildings, the plan's lines) drawn with the
+    /// legend's symbol their layer's style names (`overlay_symbol`), counted.
+    overlays: u32,
     widths: u32,
     thinnest: f64,
     widest: f64,
@@ -198,6 +216,9 @@ struct Emitter {
     /// Sheets drawn as their cell, and those that keep the file's box, by why.
     framed: u32,
     boxed: BTreeMap<Kept, u32>,
+    /// Records not taken, by kind and reason: how many, and the first one's place when it has one (plan/render.md
+    /// RM-17): the report says where to look in the source.
+    skipped: BTreeMap<(&'static str, &'static str), (u32, Option<Vec2>)>,
 }
 
 impl format::Sink for Emitter {
@@ -234,7 +255,16 @@ impl format::Sink for Emitter {
                     }
                 }
             }
-            Err(why) => self.report.skip(kind_words(e.kind), why, 0),
+            Err(why) => {
+                let at = e.coords.first().filter(|c| {
+                    c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+                });
+                let entry = self.skipped.entry((kind_words(e.kind), why)).or_insert((0, None));
+                entry.0 += 1;
+                if entry.1.is_none() {
+                    entry.1 = at.map(|c| Vec2 { x: c.x, y: c.y });
+                }
+            }
         }
         true
     }
@@ -256,6 +286,8 @@ impl Emitter {
             by_name: HashMap::new(),
             truncated: 0,
             renamed: BTreeSet::new(),
+            legend: (0, BTreeMap::new()),
+            overlays: 0,
             widths: 0,
             thinnest: 0.0,
             widest: 0.0,
@@ -268,6 +300,7 @@ impl Emitter {
             zone: Err(Kept::Unsaid),
             framed: 0,
             boxed: BTreeMap::new(),
+            skipped: BTreeMap::new(),
         }
     }
 
@@ -349,6 +382,16 @@ impl Emitter {
         };
         let v = |c: &format::Coord| Vec2 { x: c.x, y: c.y };
         let mut b = self.base(e, layer);
+        // An overlay layer's symbol, from its style's numbers in Netcad's library, as the zoning legend draws it
+        // (docs/adr/9219); the plan's areas keep Netcad's colours (the owner's choice).
+        if let Some((symbol, area)) = overlay_symbol(&self.fin, e) {
+            b.symbol = Some(symbol.to_owned());
+            // An area's legend symbol is filled: seen through, the plan's lines under it stay (the owner's choice).
+            if area {
+                b.look.transparency = Some(OVERLAY_TRANSPARENCY);
+            }
+            self.overlays += 1;
+        }
         let note = |b: &mut EntityBase, key: &str, value: &str| {
             if !value.is_empty() {
                 b.attrs.insert(key.to_owned(), value.to_owned());
@@ -369,7 +412,23 @@ impl Emitter {
                             note(&mut b, "Ad", &e.name);
                         }
                     }
-                    Kind::Symbol => note(&mut b, "Sembol", &e.label),
+                    Kind::Symbol => {
+                        note(&mut b, "Sembol", &e.label);
+                        // The zoning legend's mark the code stands for, from KentOS's MPYY symbols (docs/adr/9218).
+                        match legend_mark(e.label.trim()) {
+                            Some((symbol, read)) => {
+                                b.symbol = Some(symbol.to_owned());
+                                if let Some((key, value)) = read {
+                                    b.attrs.insert(key.to_owned(), value.to_owned());
+                                }
+                                self.legend.0 += 1;
+                            }
+                            None if !e.label.trim().is_empty() => {
+                                *self.legend.1.entry(e.label.trim().to_owned()).or_default() += 1;
+                            }
+                            None => {}
+                        }
+                    }
                     _ => note(&mut b, "Blok", &e.label),
                 }
                 self.grow(v(c));
@@ -466,9 +525,7 @@ impl Emitter {
             }
             Kind::Circle => {
                 let c = e.coords.first().filter(|c| finite(c)).ok_or(BAD)?;
-                if !(e.radius.is_finite() && e.radius > 0.0 && e.radius <= WORLD) {
-                    return Err("yarıçapı sayı değil ya da sıfır");
-                }
+                radius(e.radius)?;
                 self.grow(v(c));
                 self.push(
                     layer,
@@ -618,8 +675,9 @@ impl Emitter {
     /// The arc the plugin draws (`_approximate_arc`): the angles in degrees
     /// when either is past a full turn in radians, radians otherwise; the end
     /// brought past the start a turn at a time; nothing when the sweep is
-    /// empty, over ten turns, or ends where it began (its chord check). More
-    /// than a whole turn that does not close covers the circle: a circle.
+    /// empty or over ten turns. A whole turn or more covers the circle: a
+    /// circle, also when its ends meet (the reference's chord check lets that
+    /// fall); ends that meet after next to no sweep are no arc.
     fn arc(&mut self, e: &format::Entity, layer: usize, b: EntityBase) -> Result<(), &'static str> {
         let c = e
             .coords
@@ -629,8 +687,9 @@ impl Emitter {
             })
             .ok_or("koordinatı sayı değil ya da ±100 000 km dışında")?;
         let (r, start, end) = (e.radius, e.start_angle, e.end_angle);
-        if !(r.is_finite() && r > 0.0 && r <= WORLD && start.is_finite() && end.is_finite()) {
-            return Err("yarıçapı ya da açıları sayı değil");
+        radius(r)?;
+        if !(start.is_finite() && end.is_finite()) {
+            return Err("açıları sayı değil");
         }
         let radians = start.abs() <= TAU + 0.001 && end.abs() <= TAU + 0.001;
         let (s_deg, mut e_deg) = if radians {
@@ -648,8 +707,11 @@ impl Emitter {
             turns += 1;
         }
         let sweep = e_deg - s_deg;
-        if sweep <= 0.0 || sweep > 3600.0 {
-            return Err("yay açıklığı boş ya da on turdan fazla");
+        if sweep <= 0.0 {
+            return Err("açıklığı boş");
+        }
+        if sweep > 3600.0 {
+            return Err("açıklığı on turdan geniş");
         }
         // The plugin's last point is `start + sweep * steps / steps`, and a
         // chord under a nanometre between its ends is no arc to it.
@@ -657,8 +719,11 @@ impl Emitter {
         let last = s_deg + sweep * steps / steps;
         let (a, z) = (rad(s_deg), rad(last));
         let chord = hypot(cos(z) * r - cos(a) * r, sin(z) * r - sin(a) * r);
-        if chord < 1e-9 {
-            return Err("yayın iki ucu aynı noktada (tam tur)");
+        // Ends that meet: a sweep near a whole turn (359.999…°) covers the circle, as more than a turn does; one near
+        // nothing is no arc at all. The reference lets both fall (plan/render.md RM-17: a full turn was lost).
+        let closed = chord < 1e-9;
+        if closed && sweep < 180.0 {
+            return Err("açıklığı boş");
         }
         let centre = Vec2 { x: c.x, y: c.y };
         for p in [
@@ -673,7 +738,7 @@ impl Emitter {
         ] {
             self.grow(p);
         }
-        if sweep >= 360.0 {
+        if sweep >= 360.0 || closed {
             self.full_turns += 1;
             self.push(
                 layer,
@@ -863,6 +928,14 @@ impl Emitter {
 
     /// The report's lines for what the reference counts or lets fall.
     fn tally(&mut self, header: &Header, tables: &[attributes::Table]) {
+        for (&(what, why), &(n, at)) in &self.skipped {
+            // `+ 0.0` writes a negative zero as 0; the file's easting is Y, its northing X.
+            let reason = match at {
+                Some(at) => format!("{why}; ilki Y {:.0}, X {:.0} yakınında", at.x + 0.0, at.y + 0.0),
+                None => why.to_owned(),
+            };
+            self.report.skip_n(what, &reason, 0, n);
+        }
         for (t, &n) in header.dropped.iter().enumerate() {
             self.report.skip_n(
                 &type_words(t),
@@ -874,7 +947,15 @@ impl Emitter {
         for (t, &n) in header.unsupported.iter().enumerate() {
             self.report.skip_n(
                 &format!("NCZ türü {t}"),
-                "bu okuyucunun tanımadığı geometri türü; okunmadı",
+                "geometri türünü ne bu okuyucu ne başvuru okuyucuları tanıyor; içeriği okunmadı",
+                0,
+                n as u32,
+            );
+        }
+        for (t, &n) in header.empty.iter().enumerate() {
+            self.report.note_n(
+                &format!("NCZ türü {t}"),
+                "kayıt boş: başlığından sonrası sıfır, çizimde karşılığı yok",
                 0,
                 n as u32,
             );
@@ -968,7 +1049,7 @@ impl Emitter {
         }
         self.report.note_n(
             "Yay",
-            "tam turdan geniş olduğu için daire olarak alındı",
+            "tam tur ya da daha geniş olduğu için daire olarak alındı",
             0,
             self.full_turns,
         );
@@ -1136,6 +1217,322 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
+/// The zoning legend's mark a Netcad zoning plan's symbol code stands for (plan/render.md RM-18, docs/adr/9218): the
+/// Mekânsal Planlar Yapım Yönetmeliği area symbol of KentOS's system library (MPYY, uygulama imar planı) whose centroid
+/// mark it is, drawn at the point (a fill symbol on a point draws its centroid marks there), and the attribute that
+/// mark reads (a trade area's level: T1, T2).
+///
+/// Read from the Sivas plan: each code stands inside one kind of area (S75 in 63 kindergarten areas, S96 in the 277
+/// mosque areas…), and its drawing in Netcad's own DXF is that legend's mark (ANA in a triangle, a dome). Netcad's
+/// drawings are not copied: the marks are KentOS's own of the regulation's legend. Codes without one stay a point with
+/// their code: S101 (2 141 points in parks, which Netcad draws empty), the private institutions' Ö marks (S180, S181,
+/// S185), which the legend has no row for, and S15 (one point).
+fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'static str)>)> {
+    let symbol = match code {
+        // A trade area's mark reads its level: T1, T2.
+        "S6" => return Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))),
+        "S7" => return Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "2")))),
+        "S1" => "mpyy.uip.ortak-ozel-kanun.teknoloji-gelistirme-bolgesi",
+        "S9" => "mpyy.uip.calisma.ticaret-konut-alani",
+        "S10" => "mpyy.uip.calisma.ticaret-turizm-alani",
+        "S12" => "mpyy.uip.calisma.belediye-hizmet-alani",
+        "S13" => "mpyy.uip.calisma.idari-hizmet-alani",
+        "S14" => "mpyy.uip.calisma.resmi-kurum-alani",
+        "S16" => "mpyy.uip.calisma.akaryakit-ve-servis-istasyonu-alani",
+        "S17" => "mpyy.uip.calisma.kucuk-sanayi-alani",
+        "S18" => "mpyy.uip.calisma.depolama-alani",
+        "S20" => "mpyy.uip.calisma.pazar-alani",
+        "S21" => "mpyy.uip.calisma.askeri-alan",
+        "S22" => "mpyy.uip.calisma.beton-santrali",
+        "S25" => "mpyy.uip.turizm.otel-alani",
+        "S32" => "mpyy.uip.turizm.gunubirlik-tesis-alani",
+        "S59" => "mpyy.uip.bugunku.tarimsal-nitelikli-alan",
+        "S75" => "mpyy.uip.egitim.anaokulu-alani",
+        "S76" => "mpyy.uip.egitim.ilkokul-alani",
+        "S77" => "mpyy.uip.egitim.ortaokul-alani",
+        "S78" => "mpyy.uip.egitim.lise-alani",
+        "S79" => "mpyy.uip.egitim.ozel-egitim-alani",
+        "S80" => "mpyy.uip.egitim.mesleki-ve-teknik-ogretim-tesisi-alani",
+        "S81" => "mpyy.uip.egitim.yuksek-ogretim-tesisi-alani",
+        "S82" => "mpyy.uip.egitim.halk-egitim-merkezi",
+        "S83" => "mpyy.uip.saglik.saglik-tesisi-alani",
+        "S84" => "mpyy.uip.saglik.ozel-saglik-tesisi-alani",
+        "S86" => "mpyy.uip.saglik.aile-sagligi-merkezi",
+        "S87" => "mpyy.uip.sosyal-kulturel.sosyal-tesis-alani",
+        "S88" => "mpyy.uip.sosyal-kulturel.kulturel-tesis-alani",
+        "S90" => "mpyy.uip.sosyal-kulturel.acik-spor-tesisi-alani",
+        "S91" => "mpyy.uip.sosyal-kulturel.kapali-spor-tesisi-alani",
+        "S96" => "mpyy.uip.ibadet.cami",
+        "S103" => "mpyy.uip.acik-yesil.rekreasyon-alani",
+        "S108" => "mpyy.uip.acik-yesil.meydan",
+        "S113" => "mpyy.uip.acik-yesil.mezarlik-alani",
+        "S114" => "mpyy.uip.acik-yesil.korunacak-bahce",
+        "S118" => "mpyy.uip.karayollari.genel-otopark-alani",
+        "S122" => "mpyy.uip.ortak-karayollari.terminal-otogar",
+        "S146" => "mpyy.uip.enerji.yenilenebilir-enerji-kaynaklarina-dayali-uretim-tesisi-alani",
+        "S152" => "mpyy.uip.enerji.trafo-alani",
+        "S153" => "mpyy.uip.karayollari.elektronik-haberlesme-altyapi-alani",
+        "S155" => "mpyy.uip.ortak-atik.su-kaynaklari-toplama-yeri-kaptaj-alani",
+        "S160" => "mpyy.uip.ortak-atik.teknik-altyapi-alani",
+        "S164" => "mpyy.uip.calisma.ticaret-turizm-konut-alani",
+        "S165" => "mpyy.uip.calisma.toplu-isyerleri",
+        "S175" => "mpyy.uip.calisma.ticaret-alani",
+        _ => return None,
+    };
+    Some((symbol, None))
+}
+
+/// The zoning legend's symbol an overlay layer's style stands for (plan/render.md RM-18, docs/adr/9219): an area of
+/// it the area symbol its layer's symbol number names (or, without one, its line type's area symbol), a line (or an
+/// area of a layer without either) the line symbol its line type number names. Netcad's layer record keeps only these
+/// numbers into its library (docs/adr/9216 §4½);
+/// their meaning is read from the layers that use them in the Sivas plan.
+/// Whether it is an area symbol comes with it.
+fn overlay_symbol(h: &Header, e: &format::Entity) -> Option<(&'static str, bool)> {
+    let (line_type, symbol) = format::layer_style(h, e.layer_code)?;
+    match e.kind {
+        Kind::Polygon | Kind::Triangle => symbol
+            .and_then(overlay_area)
+            .or_else(|| overlay_area_of_line(line_type))
+            .map(|id| (id, true))
+            .or_else(|| overlay_line(line_type).map(|id| (id, false))),
+        Kind::Line | Kind::Polyline => overlay_line(line_type).map(|id| (id, false)),
+        _ => None,
+    }
+}
+
+/// How transparent an overlay area drawn with the legend's area symbol is (the owner's choice, 24 November 2026: the
+/// railway protection band's legend fill hid the railway's line under it; Netcad draws the band without a fill).
+const OVERLAY_TRANSPARENCY: f64 = 0.6;
+
+/// An overlay layer's symbol number in Netcad's library and the zoning legend's area symbol it is: the protection
+/// bands, the sites and the registered buildings. A plan area layer's symbol number is its legend mark's code
+/// (`legend_mark`), not here: those areas keep Netcad's colours and their marks come from the plan's symbol points.
+fn overlay_area(symbol: u8) -> Option<&'static str> {
+    Some(match symbol {
+        35 => "mpyy.uip.ortak-sit.1-derece-arkeolojik-sit-alani",
+        36 => "mpyy.uip.ortak-sit.2-derece-arkeolojik-sit-alani",
+        37 => "mpyy.uip.ortak-sit.3-derece-arkeolojik-sit-alani",
+        42 => "mpyy.uip.ortak-sit.tarihi-sit-alani",
+        52 => "mpyy.uip.korunacak.tescilli-anit-yapi",
+        53 => "mpyy.uip.korunacak.tescilli-bina",
+        55 => "mpyy.uip.korunacak.sit-etkilesim-gecis-alani-siniri",
+        66 => "mpyy.uip.yapi-sinirlamasi.karayollari-yol-kenari-koruma-kusagi",
+        67 => "mpyy.uip.yapi-sinirlamasi.boru-hatti-koruma-kusagi",
+        68 => "mpyy.uip.yapi-sinirlamasi.su-kanallari-koruma-kusagi",
+        71 => "mpyy.uip.yapi-sinirlamasi.demiryollari-koruma-kusagi",
+        74 => "mpyy.uip.yapi-sinirlamasi.enerji-nakil-hatti-koruma-kusagi",
+        _ => return None,
+    })
+}
+
+/// A line type number in Netcad's library and the zoning legend's line symbol it is, each read from the one plan line
+/// layer that uses it. Numbers two different lines share (15: plan approval and staging boundaries) or whose meaning
+/// is not certain (31, 32) are left out.
+fn overlay_line(line_type: u8) -> Option<&'static str> {
+    Some(match line_type {
+        11 => "mpyy.uip.yapi-duzeni.yapi-yaklasma-siniri",
+        // The plan's approval boundaries, whole and by stage: Netcad draws both with this line type.
+        15 => "mpyy.uip.ortak-planlama.plan-onama-siniri",
+        19 => "mpyy.uip.enerji.dogalgaz-boru-hatti",
+        21 => "mpyy.uip.su.atik-su-ana-kollektoru",
+        23 => "mpyy.uip.karayollari.bisiklet-yolu",
+        29 => "mpyy.uip.ortak-planlama.ozel-proje-alani-siniri",
+        32 => "mpyy.uip.ozel-kanun.gecekondu-onleme-bolgesi-siniri",
+        40 => "mpyy.uip.yapi-duzeni.ifraz-hatti",
+        41 => "mpyy.uip.yapi-duzeni.kademe-hatti",
+        42 => "mpyy.uip.ortak-atik.icme-suyu-ana-iletim-hatti",
+        // The implementation plan's legend has no row for it; the master plan's is the regulation's.
+        45 => "mpyy.nip.ozel-kanun.riskli-alan-siniri",
+        _ => return None,
+    })
+}
+
+/// An area of a layer without a symbol number and the zoning legend's area symbol its line type stands for: the
+/// registered parcels, which Netcad hatches (its DXF: 188 parcels, 188 hatches).
+fn overlay_area_of_line(line_type: u8) -> Option<&'static str> {
+    Some(match line_type {
+        13 => "mpyy.uip.korunacak.tescilli-parsel",
+        _ => return None,
+    })
+}
+
+/// The height Netcad writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
+/// shows at the 1:1000 an NCZ opens at (docs/adr/9217).
+const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
+
+/// The fewest `ada/parsel` labelled areas that make a layer a cadastre's (docs/adr/9217).
+const LEAST_PARCELS: usize = 10;
+
+/// Whether a label is a parcel's `ada/parsel`: the layers whose areas mostly carry one are the cadastre's. A plan's
+/// areas carry labels too (`70`, `İRT_A952`, `OA_2_1`), and Netcad writes none of them on the plan.
+fn block_and_parcel(label: &str) -> bool {
+    label.trim().split_once('/').is_some_and(|(ada, _)| !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()))
+        && parcel_number(label).is_some()
+}
+
+/// A parcel's number as Netcad writes it on the plan from the parcel's label: the parcel's part of `ada/parsel`
+/// (`1588/10` → `10`, `103/TH4` → `TH4`), a label without an ada whole (`6587`); none for words (`TESCİL HARİCİ`).
+fn parcel_number(label: &str) -> Option<&str> {
+    let label = label.trim();
+    let number = match label.split_once('/') {
+        Some((ada, parsel)) if !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()) => parsel,
+        Some(_) => return None,
+        None => label,
+    };
+    (!number.is_empty()
+        && number.chars().count() <= 16
+        && !number.chars().any(char::is_whitespace)
+        && number.chars().any(|c| c.is_ascii_digit()))
+    .then_some(number)
+}
+
+/// A ring's area centroid (its first point the origin of the sums, for precision at map coordinates).
+fn area_centroid(pts: &[Vec2]) -> Option<Vec2> {
+    let o = *pts.first()?;
+    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    for i in 0..pts.len() {
+        let (p, q) = (pts[i], pts[(i + 1) % pts.len()]);
+        let (px, py, qx, qy) = (p.x - o.x, p.y - o.y, q.x - o.x, q.y - o.y);
+        let c = px * qy - qx * py;
+        a += c;
+        cx += (px + qx) * c;
+        cy += (py + qy) * c;
+    }
+    (a.abs() > 1e-12 && a.is_finite()).then(|| Vec2 { x: o.x + cx / (3.0 * a), y: o.y + cy / (3.0 * a) })
+}
+
+/// Whether `p` is inside the ring (even-odd).
+fn in_ring(pts: &[Vec2], p: Vec2) -> bool {
+    let mut odd = false;
+    for i in 0..pts.len() {
+        let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+        if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+            odd = !odd;
+        }
+    }
+    odd
+}
+
+/// The parcel numbers Netcad shows from the parcels' labels that no text shows (plan/render.md RM-18, docs/adr/9216
+/// §4, 9217); how many parcels a text of their layer numbers already, and how many were left without one.
+///
+/// Netcad writes each parcel's number at the area centroid of the parcel, centred, 3 m high, whether or not a text of
+/// its own numbers it: the Sivas plan's DXF shows the number twice on most of its parcels. The owner's choice (24
+/// November 2026): only the parcels no text numbers get it. A layer is a cadastre's when at least [`LEAST_PARCELS`] of
+/// its areas, and most of its labelled ones, carry an `ada/parsel` label.
+///
+/// Only a parcel whose centroid lies in it alone gets it. Where parcels lie over one another (an old parcel under its
+/// divisions), Netcad does not write the label's number: on 183 of the Sivas plan's 1 199 such parcels it writes another
+/// one, from a field this reader cannot tie to the parcel (docs/adr/0138). A number left out is better than a wrong one.
+fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
+    struct Area<'a> {
+        ring: &'a [Vec2],
+        bounds: [f64; 4],
+        /// Its label and the number it writes, for a parcel's label.
+        parcel: Option<(&'a str, &'a str)>,
+        shown: bool,
+    }
+    // Each layer's areas, its labelled ones and how many of those carry `ada/parsel`.
+    let mut layers: BTreeMap<&str, (Vec<Area<'_>>, usize, usize)> = BTreeMap::new();
+    for e in entities {
+        let Entity::Polygon(p) = e else { continue };
+        if p.pts.len() < 3 {
+            continue;
+        }
+        let label = p.base.attrs.get("Etiket");
+        let entry = layers.entry(p.base.layer_id.as_str()).or_default();
+        entry.1 += usize::from(label.is_some());
+        entry.2 += usize::from(label.is_some_and(|l| block_and_parcel(l)));
+        let bounds = p.pts.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, q| {
+            [b[0].min(q.x), b[1].min(q.y), b[2].max(q.x), b[3].max(q.y)]
+        });
+        let parcel = label.and_then(|l| parcel_number(l).map(|n| (l.trim(), n)));
+        entry.0.push(Area { ring: &p.pts, bounds, parcel, shown: false });
+    }
+    layers.retain(|_, (_, labelled, slashed)| *slashed >= LEAST_PARCELS && 2 * *slashed >= *labelled);
+    if layers.is_empty() {
+        return (Vec::new(), 0, 0);
+    }
+    // The areas by the 64 m cells their boxes cover; a point is looked for in its own cell's.
+    const CELL: f64 = 64.0;
+    let cell = |v: f64| (v / CELL).floor() as i64;
+    let mut grids: HashMap<&str, HashMap<(i64, i64), Vec<usize>>> = HashMap::new();
+    for (layer, (areas, _, _)) in &layers {
+        let grid = grids.entry(layer).or_default();
+        for (i, a) in areas.iter().enumerate() {
+            for x in cell(a.bounds[0])..=cell(a.bounds[2]) {
+                for y in cell(a.bounds[1])..=cell(a.bounds[3]) {
+                    grid.entry((x, y)).or_default().push(i);
+                }
+            }
+        }
+    }
+    let inside = |a: &Area<'_>, p: Vec2| {
+        (a.bounds[0]..=a.bounds[2]).contains(&p.x) && (a.bounds[1]..=a.bounds[3]).contains(&p.y) && in_ring(a.ring, p)
+    };
+    for e in entities {
+        let Entity::Text(t) = e else { continue };
+        let layer = t.base.layer_id.as_str();
+        let (Some((areas, _, _)), Some(grid)) = (layers.get_mut(layer), grids.get(layer)) else { continue };
+        let text = t.text.trim();
+        for &i in grid.get(&(cell(t.p.x), cell(t.p.y))).map_or(&[][..], Vec::as_slice) {
+            let a = &areas[i];
+            if !a.shown && a.parcel.is_some_and(|(label, number)| text == number || text == label) && inside(a, t.p) {
+                areas[i].shown = true;
+            }
+        }
+    }
+    let mut out = Vec::new();
+    let (mut shown, mut shared) = (0, 0);
+    for (layer, (areas, _, _)) in &layers {
+        let grid = &grids[layer];
+        for (i, a) in areas.iter().enumerate() {
+            let Some((_, number)) = a.parcel else { continue };
+            if a.shown {
+                shown += 1;
+                continue;
+            }
+            let Some(at) = area_centroid(a.ring) else { continue };
+            let alone = grid
+                .get(&(cell(at.x), cell(at.y)))
+                .is_some_and(|near| near.iter().filter(|&&j| inside(&areas[j], at)).eq([&i]));
+            if !alone {
+                shared += 1;
+                continue;
+            }
+            out.push(Entity::Text(TextEntity {
+                annotative: None,
+                base: EntityBase {
+                    look: Default::default(),
+                    id: 0,
+                    layer_id: (*layer).to_owned(),
+                    color: None,
+                    attrs: BTreeMap::new(),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                    label_pins: Vec::new(),
+                    attachments: Vec::new(),
+                },
+                p: at,
+                text: number.to_owned(),
+                height: PARCEL_NUMBER_HEIGHT,
+                rotation: 0.0,
+                align: Some(TextAlign::MiddleCenter),
+                width_factor: None,
+                mask: false,
+                label_of: None,
+                label_scale: None,
+                paragraph: Default::default(),
+                face: Default::default(),
+                path: None,
+            }));
+        }
+    }
+    (out, shown, shared)
+}
+
 pub fn read(
     bytes: &[u8],
     opts: &NczReadOptions,
@@ -1173,6 +1570,47 @@ pub fn read(
     }
     let layers = em.layers();
     let mut entities = std::mem::take(&mut em.out);
+    let (numbers, shown, shared) = parcel_numbers(&entities);
+    if !numbers.is_empty() || shared > 0 {
+        report.about(
+            "Parsel numarası",
+            &format!(
+                "{} parselin numarası yalnız alanın etiketindeydi; Netcad'in gösterdiği gibi alanın ağırlık merkezine \
+                 {} m yüksekliğinde yazıldı. Numarası bir yazıyla zaten görünen {} parsele dokunulmadı. Ağırlık \
+                 merkezi başka bir parselin içinde de kalan {} parsele yazılmadı: üst üste parsellerde Netcad'in \
+                 gösterdiği numara etiketten değil, bu dosyada parsele bağlanamayan bir alandan geliyor.",
+                numbers.len(),
+                PARCEL_NUMBER_HEIGHT,
+                shown,
+                shared
+            ),
+        );
+    }
+    entities.extend(numbers);
+    if em.overlays > 0 {
+        report.about(
+            "Katman sembolü",
+            &format!(
+                "{} nesne katmanının Netcad stilinin karşılığı olan Mekânsal Planlar Yapım Yönetmeliği lejantı \
+                 sembolüyle çizildi (koruma kuşakları, sitler, tescilli yapılar, plan hatları). Plan alanları \
+                 Netcad'in renginde kaldı.",
+                em.overlays
+            ),
+        );
+    }
+    let (marked, unmarked) = std::mem::take(&mut em.legend);
+    if marked > 0 || !unmarked.is_empty() {
+        let left: u32 = unmarked.values().sum();
+        let codes: Vec<String> = unmarked.iter().map(|(code, n)| format!("{code} ({n})")).collect();
+        report.about(
+            "Plan sembolü",
+            &format!(
+                "{marked} sembol noktası Mekânsal Planlar Yapım Yönetmeliği lejantının işaretiyle çizildi (KentOS'un \
+                 MPYY sembolleri). {left} nokta yalnız kodunu taşıyor; lejantta karşılığı olmayan kodlar: {}.",
+                if codes.is_empty() { "yok".to_owned() } else { codes.join(", ") }
+            ),
+        );
+    }
     for e in &mut entities {
         e.base_mut().id = 0;
     }
@@ -1202,6 +1640,160 @@ pub fn read(
 mod tests {
     use super::*;
 
+    fn base(layer: &str, label: Option<&str>) -> EntityBase {
+        EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: layer.into(),
+            color: None,
+            attrs: label.map(|l| BTreeMap::from([("Etiket".to_owned(), l.to_owned())])).unwrap_or_default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        }
+    }
+
+    /// A 20 m square parcel at `x`, labelled.
+    fn parcel(layer: &str, x: f64, label: &str) -> Entity {
+        let pts = [(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)].map(|(a, b)| Vec2 { x: x + a, y: b });
+        Entity::Polygon(PathEntity {
+            space_separator: None,
+            ms: None,
+            base: base(layer, Some(label)),
+            pts: pts.to_vec(),
+            bulges: None,
+            holes: None,
+            zs: None,
+            parts: None,
+            closed: true,
+            widths: None,
+        })
+    }
+
+    fn text(layer: &str, x: f64, y: f64, s: &str) -> Entity {
+        Entity::Text(TextEntity {
+            annotative: None,
+            base: base(layer, None),
+            p: Vec2 { x, y },
+            text: s.into(),
+            height: 2.5,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
+            label_of: None,
+            label_scale: None,
+            paragraph: Default::default(),
+            face: Default::default(),
+            path: None,
+        })
+    }
+
+    /// Every legend mark a code stands for is a symbol of KentOS's system library, an area symbol of the uygulama
+    /// imar planı with a centroid mark (docs/adr/9218); a trade area's level is read by its mark.
+    #[test]
+    fn the_legend_marks_are_the_system_librarys_area_symbols() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../native/style/assets/system-library.kstil");
+        let library: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("the library")).expect("json");
+        let items = library["items"].as_array().expect("items");
+        let mut found = 0;
+        for n in 0..=200 {
+            let code = format!("S{n}");
+            let Some((id, read)) = legend_mark(&code) else { continue };
+            found += 1;
+            let item = items.iter().find(|i| i["id"] == id).unwrap_or_else(|| panic!("{code}: {id} is not in the library"));
+            let layers = item["symbol"]["layers"].as_array().expect("layers");
+            assert_eq!(item["symbol"]["type"], "fill", "{code}");
+            assert!(layers.iter().any(|l| l["type"] == "centroidMarker"), "{code}: {id} has a centroid mark");
+            if let Some((key, _)) = read {
+                assert!(item.to_string().contains(&format!("[{key}]")), "{code}: its mark reads {key}");
+            }
+        }
+        assert_eq!(found, 47);
+        // The overlays' area and line symbols, by their numbers in Netcad's library (docs/adr/9219).
+        let kind = |id: &str| {
+            items.iter().find(|i| i["id"] == id).map(|i| i["symbol"]["type"].as_str().unwrap_or("").to_owned())
+        };
+        let (mut areas, mut lines) = (0, 0);
+        for n in 0..=255u8 {
+            if let Some(id) = overlay_area(n) {
+                areas += 1;
+                assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
+                assert!(legend_mark(&format!("S{n}")).is_none(), "{n}: an overlay's number is no plan area's mark");
+            }
+            if let Some(id) = overlay_area_of_line(n) {
+                areas += 1;
+                assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
+                assert!(overlay_line(n).is_none(), "{n}: a line type is an area's or a line's, not both");
+            }
+            if let Some(id) = overlay_line(n) {
+                lines += 1;
+                assert_eq!(kind(id).as_deref(), Some("line"), "{n}: {id}");
+            }
+        }
+        assert_eq!((areas, lines), (13, 11));
+        assert_eq!(legend_mark("S6"), Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))));
+        assert_eq!(legend_mark("S75"), Some(("mpyy.uip.egitim.anaokulu-alani", None)));
+        assert_eq!(legend_mark("S101"), None, "Netcad draws a park's mark empty");
+        assert_eq!(legend_mark("S180"), None, "a private institution's Ö mark has no row in the legend");
+    }
+
+    #[test]
+    fn a_parcels_number_is_the_part_after_its_block() {
+        assert_eq!(parcel_number("1588/10"), Some("10"));
+        assert_eq!(parcel_number(" 103/TH4 "), Some("TH4"));
+        assert_eq!(parcel_number("6587"), Some("6587"));
+        assert_eq!(parcel_number("TESCİL HARİCİ"), None);
+        assert_eq!(parcel_number("KORUNMA"), None);
+        assert_eq!(parcel_number("A/5"), None, "a block is a number");
+        assert_eq!(parcel_number("12/"), None);
+        assert!(block_and_parcel("1588/10") && !block_and_parcel("6587") && !block_and_parcel("OA_2_1"));
+    }
+
+    /// Of twelve parcels, the eight a text of their layer numbers keep only it; the four others get their number at
+    /// their centroid, centred, 3 m high. A layer of a few labelled areas, or of words, gets none.
+    #[test]
+    fn only_the_parcels_no_text_numbers_get_their_label_written() {
+        let mut all = Vec::new();
+        for i in 0..12 {
+            let x = f64::from(i) * 30.0;
+            all.push(parcel("KADASTRO", x, &format!("101/{i}")));
+            if i % 3 != 0 {
+                // The number inside, as Netcad's own texts are; one of them the whole label.
+                all.push(text("KADASTRO", x + 8.0, 9.0, &if i == 1 { "101/1".to_owned() } else { i.to_string() }));
+            }
+        }
+        // The number of another parcel inside this one does not number it; nor does a text of another layer.
+        all.push(text("KADASTRO", 3.0 * 30.0 + 5.0, 5.0, "7"));
+        all.push(text("YAZI", 6.0 * 30.0 + 5.0, 5.0, "6"));
+        for i in 0..5 {
+            all.push(parcel("AZ", 1000.0 + f64::from(i) * 30.0, &format!("5/{i}")));
+        }
+        for i in 0..12 {
+            all.push(parcel("PLAN", 2000.0 + f64::from(i) * 30.0, "KONUT"));
+            // A plan's areas numbered without a block: Netcad writes none of them.
+            all.push(parcel("PL_KONUT", 3000.0 + f64::from(i) * 30.0, &(70 + i).to_string()));
+        }
+        // A parcel under another (its centroid in both): not written, whatever the label says.
+        all.push(parcel("KADASTRO", 400.0, "101/40"));
+        all.push(parcel("KADASTRO", 405.0, "101/41"));
+        let (numbers, shown, shared) = parcel_numbers(&all);
+        assert_eq!((shown, shared), (8, 2));
+        let written: Vec<(&str, f64, f64)> = numbers
+            .iter()
+            .map(|e| match e {
+                Entity::Text(t) => {
+                    assert_eq!((t.height, t.align, t.base.layer_id.as_str()), (3.0, Some(TextAlign::MiddleCenter), "KADASTRO"));
+                    (t.text.as_str(), t.p.x, t.p.y)
+                }
+                _ => panic!("a text"),
+            })
+            .collect();
+        assert_eq!(written, [("0", 10.0, 10.0), ("3", 100.0, 10.0), ("6", 190.0, 10.0), ("9", 280.0, 10.0)]);
+    }
+
     #[test]
     fn black_and_white_are_ink() {
         assert_eq!(app_color(0xFF00_0000), "ink");
@@ -1229,6 +1821,52 @@ mod tests {
         let p = Place::new(Vec2 { x: 100.0, y: 50.0 }, 0.5, 90.0);
         assert_eq!(p.apply((10.0, 0.0)), Vec2 { x: 100.0, y: 55.0 });
         assert_eq!(p.apply((0.0, 10.0)), Vec2 { x: 95.0, y: 50.0 });
+    }
+
+    /// The city plan NCZ lost a whole turn whose ends meet (plan/render.md RM-17); what still falls says why and where.
+    #[test]
+    fn a_full_turn_whose_ends_meet_is_a_circle_and_what_falls_says_where() {
+        use crate::format::Sink;
+        let mut em = Emitter::new(&NczReadOptions::default());
+        let arc = |x: f64, y: f64, r: f64, a0: f64, a1: f64| format::Entity {
+            radius: r,
+            start_angle: a0,
+            end_angle: a1,
+            ..record(Kind::Arc, &[(x, y, 0.0)])
+        };
+        let circle = |x: f64, y: f64, r: f64| format::Entity { radius: r, ..record(Kind::Circle, &[(x, y, 0.0)]) };
+        let pi = std::f64::consts::PI;
+        for e in [
+            // A whole turn short of a hair, in radians: its ends meet.
+            arc(100.0, 200.0, 5.0, -pi, pi - 1e-13),
+            // Next to no sweep: no arc.
+            arc(300.0, 400.0, 5.0, 1.0, 1.0 + 1e-13),
+            // A radius of nothing; two that are no number.
+            arc(500.0, 600.0, 0.0, 0.0, 1.0),
+            circle(700.0, 800.0, f64::NAN),
+            circle(701.0, 801.0, f64::NAN),
+        ] {
+            em.entity(&e);
+        }
+        assert!(
+            matches!(em.out.as_slice(), [Entity::Circle(c)] if c.r == 5.0 && c.c == Vec2 { x: 100.0, y: 200.0 }),
+            "{:?}",
+            em.out
+        );
+        em.tally(&Header::default(), &[]);
+        let report = std::mem::take(&mut em.report).import();
+        let skipped: Vec<(&str, u32, &str)> =
+            report.skipped.iter().map(|i| (i.what.as_str(), i.count, i.reason.as_str())).collect();
+        for want in [
+            ("Yay", 1, "açıklığı boş; ilki Y 300, X 400 yakınında"),
+            ("Yay", 1, "yarıçapı sıfır ya da eksi; ilki Y 500, X 600 yakınında"),
+            ("Daire", 2, "yarıçapı sayı değil; ilki Y 700, X 800 yakınında"),
+        ] {
+            assert!(skipped.contains(&want), "{want:?} in {skipped:?}");
+        }
+        assert!(report.notes.iter().any(|i| i.what == "Yay"
+            && i.count == 1
+            && i.reason == "tam tur ya da daha geniş olduğu için daire olarak alındı"));
     }
 
     /// A record of `kind` on one layer whose vertices the file gave (x easting, y northing, z).

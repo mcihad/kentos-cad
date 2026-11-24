@@ -59,6 +59,7 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 | `move X Y` | İmleci aradaki noktalardan geçirerek götürür |
 | `click X Y [right\|middle]`, `dclick X Y`, `drag X1 Y1 X2 Y2` | Tık, çift tık, sürükleme |
 | `wheel X Y N` | Orada N tekerlek adımı: artı yaklaştırır, eksi uzaklaştırır |
+| `burst X Y N ARA AD [X0 Y0 X1 Y1]` | Hızlı el: N çentik ARA ms arayla, beklemeden; ardından bölge (çizim alanı) her değiştikçe `AD-<ms>.png`, 400 ms durgunluğa ya da 6 saniyeye kadar; son değişimin son çentikten kaç ms sonra geldiği yazılır (plan/render.md RM-01) |
 | `key SPEC` | `Return`, `Escape`, `Home`, `F8`, `ctrl+a` … |
 | `type METİN` | Metni tuş tuş yazar |
 | `shot AD` | Ekranın resmi: `ÇIKTI/AD.png` |

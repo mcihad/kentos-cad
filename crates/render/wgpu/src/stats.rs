@@ -10,6 +10,9 @@ pub struct FrameStats {
     pub triangles: u64,
     /// Point marks drawn.
     pub markers: u64,
+    /// The styled layers' vertices (fills) and instances (strokes, marks) drawn: the drawing's own objects
+    /// (plan/render.md F3). The counts above are the plain parts': the grid, the underlay, the highlights.
+    pub styled_items: u64,
     /// Draw calls issued, the background included.
     pub draw_calls: u32,
     /// Buffer bytes uploaded while preparing the frame: the frame uniform, plus
@@ -36,4 +39,6 @@ pub struct FrameStats {
     pub picture_zoomed: bool,
     /// With `picture_zoomed`: the ring a zoom out uncovered came from the wide picture, not drawn (docs/adr/1068 §2).
     pub picture_zoomed_wide: bool,
+    /// The drawing's text's glyphs drawn on the GPU (docs/adr/9212 §5).
+    pub glyphs: u64,
 }

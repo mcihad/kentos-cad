@@ -42,6 +42,7 @@ use crate::expr::{Expr, Measured, Needs, Scope, Unit as ReadingUnit, Value};
 /// A border look (its weight's bits, its colour) and its rings, each with whether it is closed.
 type BorderLook = ((Option<u64>, Option<String>), Vec<(Vec<Vec2>, bool)>);
 
+mod deep;
 mod instances;
 
 /// Symbol levels across classes: every fill before any line, every line before any marker.
@@ -499,6 +500,19 @@ pub struct View {
     /// curve itself (docs/adr/1122); off, the renderer measures the drawn chords
     /// (the web's build and the frozen answers until it opts in).
     pub cad_phase: bool,
+    /// Deep zoom (plan/render.md RM-24): a box round the view and the curves' tolerance in it. Every path's and
+    /// ring's segments are split where they cross the box's edge (`geom::deep`), so the pieces in the view have their
+    /// ends near it; circles and arcs are round to the tolerance in the box; inserts are drawn out and the far levels
+    /// left off. None: the drawing as it is.
+    pub deep: Option<Deep>,
+}
+
+/// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
+/// in the box (a quarter pixel at the view's scale), world units.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Deep {
+    pub bounds: Bounds,
+    pub tolerance: f64,
 }
 
 impl PartialEq for View {
@@ -511,6 +525,7 @@ impl PartialEq for View {
             && self.curve_lod == o.curve_lod
             && self.line_lod == o.line_lod
             && self.block_proxy == o.block_proxy
+            && self.deep == o.deep
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -535,6 +550,7 @@ impl Default for View {
             line_lod: false,
             block_proxy: false,
             cad_phase: false,
+            deep: None,
         }
     }
 }
@@ -639,6 +655,8 @@ impl Patches {
 struct Cx {
     /// Curves' strokes come with their coarser detail levels (docs/adr/1063 §3).
     curve_lod: bool,
+    /// The deep view (`View::deep`): every path and ring split at its box's edge, circles and arcs round in it.
+    deep: Option<Deep>,
     plot_precision:bool,
     precision_error:Option<String>,
     patches: Patches,
@@ -707,12 +725,13 @@ pub fn build_layer_in(
     };
     let mut sink = BatchSink::new(origin);
     sink.set_position_low(view.position_low);
-    sink.set_line_lod(view.line_lod && view.map.is_none() && !view.plot_precision);
+    sink.set_line_lod(view.line_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none());
     sink.set_map(view.map);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
     let mut cx = Cx {
-        curve_lod: view.curve_lod && view.map.is_none() && !view.plot_precision,
+        curve_lod: view.curve_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none(),
+        deep: view.deep,
         plot_precision:view.plot_precision,
         precision_error:None,
         patches: Patches::default(),
@@ -721,7 +740,11 @@ pub fn build_layer_in(
     };
     let whole = program.renderer.as_ref().filter(|r| r.whole());
     let mut taken = Taken::default();
-    let mut instancer = (view.instancing && view.map.is_none() && view.walls.is_none() && !view.plot_precision)
+    let mut instancer = (view.instancing
+        && view.map.is_none()
+        && view.walls.is_none()
+        && !view.plot_precision
+        && view.deep.is_none())
         .then(|| instances::Instancer::new(store, o));
     for (i, &id) in o.ids.iter().enumerate() {
         let [mode, a, simple, color] = [
@@ -850,9 +873,17 @@ fn output_parts(
     env: &Env<'_>,
     cx: &mut Cx,
 ) -> Vec<Geom> {
+    if let Some(d) = cx.deep
+        && let Some(parts) = deep::curve(s, &d)
+    {
+        return parts;
+    }
     let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
-        Ok(parts) => parts,
+        Ok(parts) => match cx.deep {
+            Some(d) => parts.into_iter().map(|g| deep::split(g, &d.bounds)).collect(),
+            None => parts,
+        },
         Err(error) => {
             cx.precision_error.get_or_insert(error);
             vec![]

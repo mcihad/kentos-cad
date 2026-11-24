@@ -522,6 +522,8 @@ fn perf() {
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
+        marks: None,
     };
     let started = Instant::now();
     for _ in 0..frames {
@@ -619,6 +621,8 @@ fn file_paint() {
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
+        marks: None,
     };
     let started = Instant::now();
     for _ in 0..frames {

@@ -53,6 +53,12 @@ impl From<String> for Refused {
     }
 }
 
+/// The largest CAD file Aç reads (docs/adr/9211): the DWG bridge's DXF limit. Parsing is not what limits a big file:
+/// the city plan's 657 MB DXF parses in 9 s (5.2 GB whole, 2.1 GB to the reader's million objects); its 3.2 M objects
+/// do, and the reader opens the first million and says how many were left out. İçe aktar and the web keep the
+/// formats' own 256 MiB.
+pub const MAX_OPEN_BYTES: usize = 1024 * 1024 * 1024;
+
 /// Byte reading and cancellation belong to the host. This stage also runs off the UI thread.
 pub fn read(
     path: &Path,
@@ -73,10 +79,10 @@ pub fn read_in(
     file_unit: Option<kentos_commands::FileUnit>,
     watch: &mut dyn Watch,
 ) -> Result<Opened, Refused> {
-    if bytes.len() > kentos_formats::dxf::preflight::MAX_BYTES {
+    if bytes.len() > MAX_OPEN_BYTES {
         return Err(refused(
             "cad_file_too_large",
-            "CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.",
+            format!("CAD dosyası {} MiB sınırını aşıyor; dosyayı bölün.", MAX_OPEN_BYTES / (1024 * 1024)),
         ));
     }
     if !watch.step(0, bytes.len() as u64) {
@@ -84,7 +90,7 @@ pub fn read_in(
     }
     // A metric CAD template is the explicit fallback only when the source declares no known unit.
     // A declared source unit wins. No current project's units/scale/preferences participate.
-    let options = DxfReadOptions {
+    let mut options = DxfReadOptions {
         unit: Some(DrawingUnit::Mm),
         file_unit,
         scale: Some(1.0),
@@ -99,8 +105,8 @@ pub fn read_in(
     // cost 9 of its 24 s (12 November 2026).
     let mut bridge: Option<kentos_dwg::Bridge> = None;
     let mut read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
-        Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch)
-            .map_err(|e| refused("import_unreadable", e)),
+        Format::Dxf => kentos_formats::dxf::read_checked_watched_within(bytes, options, watch, MAX_OPEN_BYTES)
+            .map_err(|e| refused("import_unreadable", e.message)),
         Format::Dwg => {
             if bridge.is_none() {
                 bridge =
@@ -123,6 +129,37 @@ pub fn read_in(
     }
     if let Some(e) = import_apply::unusable_block(&result.blocks) {
         return Err(refused("import_unreadable", e));
+    }
+    // A survey grid's metres, whatever the file declares or not (plan/render.md RM-23, docs/adr/9210): read in the
+    // millimetres a template declares (or the fallback's), they put a town into a few metres. The Suşehri DXF
+    // declares millimetres and opened 12 m wide; so did four more of the samples. Read again in metres, said, and the
+    // unit asked (`UnitSource::Grid`).
+    let grid = if format != Format::Ncz && file_unit.is_none() {
+        result
+            .unit
+            .as_ref()
+            .filter(|u| u.used != 6)
+            .and_then(|u| survey_grid(result.bounds, u.factor))
+    } else {
+        None
+    };
+    // Letters under a millimetre high in the unit read, a plan's as metres (docs/adr/9213): a template's millimetres
+    // on a drawing made in metres. The house plan DXF of the samples declares millimetres and opened as a sheet 5 cm
+    // wide, its letters 0.08 mm high; the view's deepest zoom (0.1 mm a pixel) stopped at the whole sheet. Read again
+    // in metres, said, and the unit asked (`UnitSource::TextHeight`).
+    let letters = if grid.is_none() && format != Format::Ncz && file_unit.is_none() {
+        result
+            .unit
+            .as_ref()
+            .filter(|u| u.used != 6)
+            .and_then(|u| small_letters(&result.entities, u.factor).map(|h| (h, u.factor)))
+    } else {
+        None
+    };
+    if grid.is_some() || letters.is_some() {
+        // Every read below too, the one at the drawing's scale among them.
+        options.file_unit = Some(kentos_commands::FileUnit::M);
+        result = read_at(&options, watch)?;
     }
     let unit = match result.unit.as_ref().map(|u| u.used) {
         Some(1) => DrawingUnit::In,
@@ -162,6 +199,47 @@ pub fn read_in(
         for note in result.report.notes.iter_mut().filter(|n| n.what == "Birim") {
             note.reason = format!("Kaynak {} biriminde; model fiziksel boyutunda açıldı.", decision.name);
         }
+    }
+    if let (Some(_), Some(u)) = (grid, result.unit.as_mut()) {
+        u.source = kentos_commands::UnitSource::Grid;
+    }
+    if let (Some(_), Some(u)) = (letters, result.unit.as_mut()) {
+        u.source = kentos_commands::UnitSource::TextHeight;
+    }
+    if let (Some((height, factor)), Some(decision)) = (letters, result.unit.as_ref()) {
+        let declared = decision
+            .declared
+            .and_then(kentos_commands::units::insunits)
+            .map(|(_, name)| name);
+        let (read, metres) = (decimal(height * 1000.0), decimal(height / factor * 100.0));
+        let reason = match declared {
+            Some(name) => format!(
+                "dosya {name} bildiriyor ama yazıları bu birimde {read} mm yüksekliğinde (ortanca), okunamayacak kadar \
+                 küçük; metre okununca {metres} cm, bir planın yazısı. Değerler metre okundu. Birimi biliyorsanız seçin."
+            ),
+            None => format!(
+                "dosya birim bildirmiyor; yazıları milimetre okununca {read} mm yüksekliğinde (ortanca), metre okununca \
+                 {metres} cm, bir planın yazısı: değerler metre okundu. Birimi biliyorsanız seçin."
+            ),
+        };
+        say_unit(&mut result.report, reason);
+    }
+    if let (Some([east, north]), Some(decision)) = (grid, result.unit.as_ref()) {
+        let declared = decision
+            .declared
+            .and_then(kentos_commands::units::insunits)
+            .map(|(_, name)| name);
+        let reason = match declared {
+            Some(name) => format!(
+                "dosya {name} bildiriyor ama koordinatları ülkenin ölçme ızgarasında (Y {east:.0}, X {north:.0} \
+                 yakınında); değerler metre okundu. Birimi biliyorsanız seçin."
+            ),
+            None => format!(
+                "dosya birim bildirmiyor; koordinatları ülkenin ölçme ızgarasında (Y {east:.0}, X {north:.0} \
+                 yakınında) olduğu için değerler metre okundu. Birimi biliyorsanız seçin."
+            ),
+        };
+        say_unit(&mut result.report, reason);
     }
     let name = path
         .file_stem()
@@ -261,6 +339,77 @@ pub fn read_in(
     })
 }
 
+/// Where a file's numbers lie when they are a national survey grid's metres (plan/render.md RM-23): the
+/// middle of `bounds` (metres as read, `factor` metres a file unit) taken back to the file's numbers is a transverse
+/// Mercator easting and a northing of Turkey's latitudes (UTM and the 3° zones: 36–42° N is 3.98–4.66 M), and the
+/// drawing fits in a zone. None elsewhere: a drawing near its origin, as buildings are drawn, keeps the template's
+/// millimetres.
+fn survey_grid(bounds: Option<kentos_commands::Bounds>, factor: f64) -> Option<[f64; 2]> {
+    let b = bounds?;
+    if !(factor.is_finite() && factor > 0.0) {
+        return None;
+    }
+    let [x0, y0, x1, y1] = [b.min_x, b.min_y, b.max_x, b.max_y].map(|v| v / factor);
+    let (east, north) = ((x0 + x1) / 2.0, (y0 + y1) / 2.0);
+    let fits = (x1 - x0) <= 400_000.0 && (y1 - y0) <= 400_000.0;
+    ((100_000.0..=900_000.0).contains(&east) && (3_850_000.0..=4_750_000.0).contains(&north) && fits)
+        .then_some([east, north])
+}
+
+/// The report's “Birim” note says `reason`; the reader says a unit read in the drawing's own unit quietly, so it is
+/// added when there is none.
+fn say_unit(report: &mut kentos_commands::ImportReport, reason: String) {
+    let mut said = false;
+    for note in report.notes.iter_mut().filter(|n| n.what == "Birim") {
+        note.reason.clone_from(&reason);
+        said = true;
+    }
+    if !said {
+        report.notes.insert(
+            0,
+            kentos_commands::ReportItem {
+                severity: None,
+                details: Vec::new(),
+                what: "Birim".into(),
+                count: 1,
+                reason,
+                lines: Vec::new(),
+            },
+        );
+    }
+}
+
+/// A number with two decimals at most, a comma before them (a note's Turkish).
+fn decimal(v: f64) -> String {
+    let t = format!("{v:.2}");
+    t.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
+}
+
+/// The middle height of a drawing's texts when its letters are too small to be letters in the unit they were read
+/// in and a plan's as metres (docs/adr/9213): under a millimetre high as read (metres as read; `factor` metres a file
+/// unit), 2 cm to 2 m as metres. Plans are lettered 2 to 5 mm high on paper, 2 cm to 2 m in the model at 1:10 to
+/// 1:500; a letter under a millimetre is printed by no scale a building's drawing is made at. None with fewer than
+/// three texts in the model.
+fn small_letters(entities: &[kentos_commands::Entity], factor: f64) -> Option<f64> {
+    if !(factor.is_finite() && factor > 0.0) {
+        return None;
+    }
+    let mut heights: Vec<f64> = entities
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.height),
+            _ => None,
+        })
+        .filter(|h| h.is_finite() && *h > 0.0)
+        .collect();
+    if heights.len() < 3 {
+        return None;
+    }
+    heights.sort_by(f64::total_cmp);
+    let middle = heights[heights.len() / 2];
+    (middle < 0.001 && (0.02..=2.0).contains(&(middle / factor))).then_some(middle)
+}
+
 fn source_style(l: &kentos_commands::ImportLayer) -> LayerStyle {
     LayerStyle {
         color: l.color.clone(),
@@ -350,6 +499,98 @@ mod tests {
             assert!(doc.is_dirty());
             assert!(doc.undo().is_none(), "opening must not be undoable");
         }
+    }
+
+    /// A file whose numbers lie in the survey grid opens in metres, undeclared or declaring millimetres, and its unit
+    /// is asked; one near its origin keeps the template's millimetres (plan/render.md RM-23, docs/adr/9210).
+    #[test]
+    fn an_undeclared_file_in_the_survey_grid_opens_in_metres() {
+        let dxf = |x: f64, y: f64| {
+            format!(
+                "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n\
+                 0\nLINE\n8\n0\n10\n{x}\n20\n{y}\n11\n{}\n21\n{y}\n0\nENDSEC\n0\nEOF\n",
+                x + 10.0
+            )
+        };
+        let open = |x: f64, y: f64| {
+            read(Path::new("kent.dxf"), dxf(x, y).as_bytes(), Format::Dxf, &mut kentos_formats::watch::Quiet)
+                .expect("opens")
+        };
+        let length = |o: &Opened| {
+            o.document
+                .entities()
+                .find_map(|e| if let Entity::Line(l) = e { Some(l.b.x - l.a.x) } else { None })
+                .expect("a line")
+        };
+        let town = open(422_000.0, 4_449_000.0);
+        assert_eq!(town.document.settings().unit(), DrawingUnit::M);
+        assert!((length(&town) - 10.0).abs() < 1e-9, "{}", length(&town));
+        let decision = town.unit.as_ref().expect("a decision");
+        assert_eq!((decision.source, decision.declared), (kentos_commands::UnitSource::Grid, None), "asked");
+        assert!(
+            town.report.notes.iter().any(|n| n.what == "Birim"
+                && n.reason.contains("birim bildirmiyor; koordinatları ülkenin ölçme ızgarasında (Y 422005, X 4449000 yakınında)")),
+            "{:?}",
+            town.report.notes
+        );
+        // Declared millimetres on a survey drawing (a template's): metres too, and said.
+        let declared = dxf(422_000.0, 4_449_000.0).replacen("$ACADVER\n1\nAC1015\n", "$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n", 1);
+        let town = read(Path::new("kent.dxf"), declared.as_bytes(), Format::Dxf, &mut kentos_formats::watch::Quiet).expect("opens");
+        assert_eq!(town.document.settings().unit(), DrawingUnit::M);
+        assert!((length(&town) - 10.0).abs() < 1e-9, "{}", length(&town));
+        let decision = town.unit.as_ref().expect("a decision");
+        assert_eq!((decision.source, decision.declared), (kentos_commands::UnitSource::Grid, Some(4)));
+        assert!(
+            town.report.notes.iter().any(|n| n.what == "Birim" && n.reason.starts_with("dosya milimetre bildiriyor ama")),
+            "{:?}",
+            town.report.notes
+        );
+        let room = open(0.0, 0.0);
+        assert_eq!(room.document.settings().unit(), DrawingUnit::Mm);
+        assert!((length(&room) - 0.01).abs() < 1e-12, "{}", length(&room));
+    }
+
+    /// A building drawn in metres in a template that declares millimetres (docs/adr/9213): its letters 0.1 mm high
+    /// as declared, 10 cm as metres. It opens in metres, said, its unit asked; letters a millimetre drawing's own size
+    /// keep its millimetres.
+    #[test]
+    fn letters_under_a_millimetre_open_a_plan_in_metres() {
+        let dxf = |height: f64| {
+            let texts: String = (0..4)
+                .map(|i| format!("0\nTEXT\n8\n0\n10\n{}\n20\n1\n40\n{height}\n1\nOda {i}\n", f64::from(i) * 3.0))
+                .collect();
+            format!(
+                "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\n\
+                 ENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n12.5\n21\n0\n{texts}0\nENDSEC\n0\nEOF\n"
+            )
+        };
+        let open = |height: f64| {
+            read(Path::new("ev.dxf"), dxf(height).as_bytes(), Format::Dxf, &mut kentos_formats::watch::Quiet)
+                .expect("opens")
+        };
+        let length = |o: &Opened| {
+            o.document
+                .entities()
+                .find_map(|e| if let Entity::Line(l) = e { Some(l.b.x - l.a.x) } else { None })
+                .expect("a line")
+        };
+        let plan = open(0.1);
+        assert_eq!(plan.document.settings().unit(), DrawingUnit::M);
+        assert!((length(&plan) - 12.5).abs() < 1e-9, "{}", length(&plan));
+        let decision = plan.unit.as_ref().expect("a decision");
+        assert_eq!((decision.source, decision.declared), (kentos_commands::UnitSource::TextHeight, Some(4)), "asked");
+        assert!(
+            plan.report.notes.iter().any(|n| n.what == "Birim"
+                && n.reason.starts_with("dosya milimetre bildiriyor ama yazıları bu birimde 0,1 mm yüksekliğinde")
+                && n.reason.contains("metre okununca 10 cm")),
+            "{:?}",
+            plan.report.notes
+        );
+        // Letters 2.5 mm high: a millimetre drawing as it says.
+        let part = open(2.5);
+        assert_eq!(part.document.settings().unit(), DrawingUnit::Mm);
+        assert!((length(&part) - 0.0125).abs() < 1e-12, "{}", length(&part));
+        assert_eq!(part.unit.as_ref().map(|u| u.source), Some(kentos_commands::UnitSource::Declared));
     }
 
     /// A polyline the reader cannot carry exactly opens approximated and said (Aç); İçe aktar's rule still refuses

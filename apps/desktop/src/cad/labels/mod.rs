@@ -42,8 +42,11 @@ use crate::drawing_fonts;
 use crate::viewport::Canvas;
 use kentos_native_style::color::ColorMode;
 
+mod gpu;
 mod layer;
 mod unicode;
+pub use gpu::{GlyphSlot, on as gpu_text};
+pub(crate) use gpu::text_run;
 #[cfg(test)]
 mod parts_tests;
 
@@ -55,11 +58,12 @@ mod parts_tests;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>);
+pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>, GlyphSlot, GlyphSlot);
 
-/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), and the
-/// view's scale they were placed at.
-type Kept = (u64, u64, Shown, Option<Bounds>, f64);
+/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), the
+/// view's scale they were placed at, and which placing they are: a count of placings, which the labels' picture is
+/// drawn again for (docs/adr/9202).
+type Kept = (u64, u64, Shown, Option<Bounds>, f64, u64);
 
 /// A view's box in the world.
 type Bounds = kentos_geometry_core::geometry::Bounds;
@@ -71,7 +75,7 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, _, spots, _, _)| spots.clone())
+        self.0.borrow().as_ref().map(|(_, _, spots, _, _, _)| spots.clone())
     }
 
     /// The bands its labels' parts were painted as (docs/adr/0786 §3).
@@ -79,16 +83,33 @@ impl Spots {
         self.1.clone()
     }
 
+    /// The texts its labels' last painting sent to the drawing area's renderer (docs/adr/9212 §4, stage 2).
+    pub fn glyphs(&self) -> &GlyphSlot {
+        &self.2
+    }
+
+    /// The screen's marks (grid north, the scale bar, the axes) its layer last sent the renderer (RM-14).
+    pub fn marks(&self) -> &GlyphSlot {
+        &self.3
+    }
+
     /// The key the kept labels were asked for (a test's).
     #[cfg(test)]
     pub(crate) fn key(&self) -> Option<u64> {
-        self.0.borrow().as_ref().map(|(key, _, _, _, _)| *key)
+        self.0.borrow().as_ref().map(|(key, _, _, _, _, _)| *key)
+    }
+
+    /// Which placing the kept labels are (a test's): one more each time they are placed.
+    #[cfg(test)]
+    pub(crate) fn placing(&self) -> Option<u64> {
+        self.0.borrow().as_ref().map(|k| k.5)
     }
 
     /// The labels for `key` (the drawing and the view), asked when not known; while `moving`, the last ones asked for
     /// the same drawing (`content`, the key without the view). Asked for `wide`, a box round the view (true sizes,
     /// docs/adr/0626 §7), the last ones serve while the view moves inside it and are asked again, moving or not,
-    /// once it leaves it: a text coming into view is never missing. With them, the view's scale they were placed at.
+    /// once it leaves it: a text coming into view is never missing. With them, the view's scale they were placed at
+    /// and which placing they are.
     fn get(
         &self,
         key: u64,
@@ -96,7 +117,7 @@ impl Spots {
         moving: bool,
         (view, wide, scale): (Bounds, Option<Bounds>, f64),
         ask: impl FnOnce(Bounds) -> LabelParts,
-    ) -> (Shown, f64) {
+    ) -> (Shown, f64, u64) {
         let mut kept = self.0.borrow_mut();
         let inside = |asked: &Option<Bounds>| {
             asked.is_none_or(|b| {
@@ -110,20 +131,21 @@ impl Spots {
         // that, the old places were drawn over a view they no longer fitted until the view stopped).
         let near = |at: f64| at > 0.0 && scale > 0.0 && (scale / at).max(at / scale) <= 1.25;
         match kept.as_ref() {
-            Some((known, _, spots, _, at)) if *known == key => (spots.clone(), *at),
-            Some((_, same, spots, asked, at))
+            Some((known, _, spots, _, at, placing)) if *known == key => (spots.clone(), *at, *placing),
+            Some((_, same, spots, asked, at, placing))
                 if moving
                     && *same == content
                     && inside(asked)
                     && near(*at)
                     && (!spots.survey_names || *at == scale) =>
             {
-                (spots.clone(), *at)
+                (spots.clone(), *at, *placing)
             }
             _ => {
+                let placing = kept.as_ref().map_or(0, |k| k.5) + 1;
                 let spots = Rc::new(ask(wide.unwrap_or(view)));
-                *kept = Some((key, content, spots.clone(), wide, scale));
-                (spots, scale)
+                *kept = Some((key, content, spots.clone(), wide, scale, placing));
+                (spots, scale, placing)
             }
         }
     }
@@ -194,6 +216,9 @@ pub struct Engine {
     pub keep: bool,
     /// The view is moving (a pan, the wheel): the last placing is kept until it settles (docs/adr/0597).
     pub moving: bool,
+    /// The texts go to the drawing area's renderer as glyphs where they can (docs/adr/9212 §4, stage 2): the drawing
+    /// area's own labels, not Büyüteç's, a data layer's or another view's.
+    pub gpu: bool,
 }
 
 /// The same through Büyüteç's camera (docs/adr/0181 §5): the drawing's
@@ -231,6 +256,7 @@ pub fn lens_layer<'a>(
         Engine {
             keep: false,
             moving: false,
+            gpu: false,
             ..engine
         },
         None,
@@ -369,7 +395,7 @@ fn build<'a>(
         })
     };
     let placed_scale = camera.scale;
-    let (spots, placed_at) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
+    let (spots, placed_at, placing) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
         let mut spots = spatial.label_parts(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
@@ -422,6 +448,11 @@ fn build<'a>(
     format!("{format:?}").hash(&mut look);
     let look = look.finish();
     look.hash(&mut key);
+    // Which placing is drawn, and whether a moving view holds its texts' sizes (docs/adr/9202). The view stopping
+    // places the labels again at the same camera: without these the picture kept the placing made for the view the
+    // wheel started from, its texts at that view's sizes, until the next move. A million-object project's labels
+    // stayed so after every wheel gesture (RM-02's truth check: 4 of 4 settled frames).
+    (placing, engine.moving).hash(&mut key);
     // What an object's bands are painted with besides it and its layer's colour (docs/adr/0786 §3): the view, the
     // colours, the typeface, the number formats and the faint level.
     let mut band_key = DefaultHasher::new();
@@ -469,6 +500,8 @@ fn build<'a>(
             LabelSize::Screen { .. } => Some((placed_at, false)),
             _ => None,
         },
+        gpu: engine.gpu.then(|| gpu::Sink::new(kept.glyphs().clone())),
+        marks: engine.gpu.then(|| kept.marks().clone()),
     };
     // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
     if true_size && labels.turned.is_none() {
@@ -685,6 +718,11 @@ struct Labels<'a> {
     /// true size (Kaybolmasın; Ekranda sabit does not clamp): a grown text drawn as high on the screen as there
     /// (docs/adr/1064 §6). None: drawn by its placing's growth as it is.
     held: Option<(f64, bool)>,
+    /// Where the pieces that may go to the drawing area's renderer go (docs/adr/9212 §4, stage 2); none: all on the
+    /// canvas.
+    gpu: Option<gpu::Sink>,
+    /// Where the screen's marks go to the drawing area's renderer (docs/adr/9214); none: on the canvas.
+    marks: Option<GlyphSlot>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -764,6 +802,8 @@ pub fn paint_in_map(
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
+        marks: None,
     }
     .paint(frame);
 }
@@ -857,6 +897,8 @@ fn collect(
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
+        marks: None,
     }
     .paint(&mut list);
     list.labels
@@ -935,8 +977,16 @@ impl canvas::Program<Message> for Labels<'_> {
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
             crate::label_picture::set_twisted(self.turned.is_some());
             crate::label_picture::set_moving(self.moving);
+            // The pieces that may go to the renderer go there (gpu.rs); the scene draws them in this frame.
+            if let Some(sink) = &self.gpu {
+                sink.begin();
+            }
+            let sink = self.gpu.as_ref();
             let Some(area) = self.turned else {
-                self.paint(frame);
+                self.paint(&mut gpu::Split { frame, sink, view: &self.view });
+                if let Some(sink) = sink {
+                    sink.publish(self.view.map_px());
+                }
                 return;
             };
             // The upright picture's middle on the area's, turned by the twist (docs/adr/0285 §2).
@@ -950,13 +1000,12 @@ impl canvas::Program<Message> for Labels<'_> {
                     -(self.view.width / 2.0) as f32,
                     -(self.view.height / 2.0) as f32,
                 ));
-                self.paint(f);
+                self.paint(&mut gpu::Split { frame: f, sink, view: &self.view });
             });
-            if let Some(lift) = self.map_marks {
-                let ucs = self.format.ucs.map(|u| u[2]);
-                let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &area);
-                frame.marks(&area, &self.colors, self.format.axes, ucs, lift, per_unit);
+            if let Some(sink) = sink {
+                sink.publish(self.view.map_px());
             }
+            self.marks_of(frame, &area);
         })]
     }
 }

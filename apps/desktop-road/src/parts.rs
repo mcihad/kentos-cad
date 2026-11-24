@@ -278,6 +278,7 @@ impl ModuleParts for Road {
                 accent: tokens.accent,
                 warning: tokens.warning,
             },
+            &app.gpu_layers.alignment,
         )
         .into_iter()
         .collect()

@@ -293,6 +293,10 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
             .map_err(|e| error("import_unreadable", format!("DWG okunamadı: {e}")))?;
         complete(&outcome.stats)?;
         let dropped = drop_unread(&mut outcome.document);
+        // The codec looks an owner's extension dictionary up by walking every object, and a map walks its whole
+        // capacity: the SİVAS AVM DWG's 486 531 DGN line style records dropped above left its map at 904 536 places for
+        // 21 280 objects, and its DXF took 11.3 s to write. Shrunk, 4.9 s; the text is the same byte for byte.
+        outcome.document.objects.shrink_to_fit();
         // R14 has no per-entity lineweight field. The upstream legacy
         // decoder's zero is a missing field, not a 0 mm object override.
         if source == DwgVersion::AC1014 {

@@ -122,14 +122,18 @@ fn every_record_type_on_its_layer_with_the_files_system() {
         .expect("the sheet");
     assert_eq!(attr(sheet, "Pafta"), Some("H40-D-07-B-1-C"));
     let skipped: Vec<&str> = r.report.skipped.iter().map(|s| s.what.as_str()).collect();
-    assert_eq!(
-        skipped,
-        [
-            "NCZ türü 8",
-            "NCZ türü 14",
-            "Pafta çerçevesinin gerçek biçimi"
-        ]
-    );
+    assert_eq!(skipped, ["Pafta çerçevesinin gerçek biçimi"]);
+    // The records of the types no reader knows have nothing past their header: no object, so not lost
+    // (plan/render.md RM-17).
+    for t in ["NCZ türü 8", "NCZ türü 14"] {
+        assert!(
+            r.report.notes.iter().any(|n| n.what == t
+                && n.count == 1
+                && n.reason == "kayıt boş: başlığından sonrası sıfır, çizimde karşılığı yok"),
+            "{t}: {:?}",
+            r.report.notes
+        );
+    }
     // One record gives a pen, 2 tenths of a millimetre: the line in the container, and only it
     // takes its own weight; the others are drawn in their layer's (docs/adr/0139).
     let weighed: Vec<(usize, f64)> = r

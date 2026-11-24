@@ -1,0 +1,244 @@
+{
+  "environment": {
+    "commit": "4d2d29224",
+    "date": "2026-11-23",
+    "dirtyTree": true,
+    "machine": {
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13500",
+      "kernel": "7.0.0-42-generic",
+      "memoryGb": 23.0,
+      "os": "Ubuntu 26.04.1 LTS",
+      "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "threads": 20
+    },
+    "machineText": "13th Gen Intel(R) Core(TM) i5-13500, 20 iş parçacığı, 23 GB; Ubuntu 26.04.1 LTS (7.0.0-42-generic); rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "gpu": {
+    "backend": "Vulkan",
+    "driver": "Intel open-source Mesa driver",
+    "driverInfo": "Mesa 26.0.8-1ubuntu0.3",
+    "name": "Intel(R) UHD Graphics 770 (ADL-S GT1)"
+  },
+  "label": "once",
+  "rows": [
+    {
+      "burst": {
+        "in": {
+          "burstFrame": {
+            "gpuMs": 11.210424999999999,
+            "uiMs": 0.22377600000000003,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 15,
+            "gpuMax": 18.692007,
+            "gpuP50": 13.126183,
+            "gpuP95": 16.748965000000002,
+            "gpuP99": 18.692007,
+            "uiMax": 4.818778,
+            "uiOverBudget": 0,
+            "uiP50": 0.157683,
+            "uiP95": 0.168722,
+            "uiP95Parts": [
+              0.0,
+              0.00031800000000000003,
+              0.0,
+              0.0,
+              0.168404
+            ],
+            "uiP99": 4.818778,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 228.942859,
+          "notches": 14,
+          "scale": 0.1054370490932684
+        },
+        "out": {
+          "burstFrame": {
+            "gpuMs": 28.299369000000002,
+            "uiMs": 0.23256700000000002,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 16,
+            "gpuMax": 31.151139,
+            "gpuP50": 11.087758,
+            "gpuP95": 27.60077,
+            "gpuP99": 31.151139,
+            "uiMax": 7.012412,
+            "uiOverBudget": 0,
+            "uiP50": 0.15390099999999998,
+            "uiP95": 0.177764,
+            "uiP95Parts": [
+              0.0,
+              0.000322,
+              0.0,
+              0.0,
+              0.17744200000000002
+            ],
+            "uiP99": 7.012412,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 263.735581,
+          "notches": 14,
+          "scale": 0.012911444437495954
+        }
+      },
+      "bytes": 2931259,
+      "drawn": {
+        "drawCalls": 15,
+        "markers": 0,
+        "pictureKept": false,
+        "residentBytes": 20417876,
+        "segments": 318144,
+        "styledItems": 160000,
+        "triangles": 0
+      },
+      "everything": {
+        "box": [
+          496282.3679230958,
+          4386872.55413715,
+          583646.7217303421,
+          4438067.44586285
+        ],
+        "frame": {
+          "gpuMs": 8.992217,
+          "uiMs": 2.411672,
+          "viewMs": 0.326207
+        },
+        "originInView": false,
+        "scale": 0.012911444437495975
+      },
+      "file": "yogun.kcad",
+      "frames": {
+        "imleç": {
+          "frames": 60,
+          "gpuMax": 17.664347,
+          "gpuP50": 12.818667000000001,
+          "gpuP95": 14.951324,
+          "gpuP99": 16.081534,
+          "uiMax": 2.1258860000000004,
+          "uiOverBudget": 0,
+          "uiP50": 0.713747,
+          "uiP95": 0.8220559999999999,
+          "uiP95Parts": [
+            0.042294,
+            0.12106499999999999,
+            0.22758199999999998,
+            0.311413,
+            0.119702
+          ],
+          "uiP99": 0.831426,
+          "viewP50": 0.196627,
+          "viewsBuilt": 60
+        },
+        "kaydırma": {
+          "frames": 40,
+          "gpuMax": 14.175345,
+          "gpuP50": 12.733203,
+          "gpuP95": 14.074911,
+          "gpuP99": 14.175345,
+          "uiMax": 0.20387,
+          "uiOverBudget": 0,
+          "uiP50": 0.167551,
+          "uiP95": 0.180811,
+          "uiP95Parts": [
+            0.0401,
+            0.000041,
+            0.0,
+            0.0,
+            0.14067
+          ],
+          "uiP99": 0.20387,
+          "viewP50": 0.0,
+          "viewsBuilt": 0
+        },
+        "tekerlek": {
+          "frames": 32,
+          "gpuMax": 26.521735,
+          "gpuP50": 15.834244,
+          "gpuP95": 24.046139,
+          "gpuP99": 26.521735,
+          "uiMax": 4.661483,
+          "uiOverBudget": 0,
+          "uiP50": 0.166622,
+          "uiP95": 0.187454,
+          "uiP95Parts": [
+            0.0718,
+            0.000041,
+            0.0,
+            0.0,
+            0.11561300000000001
+          ],
+          "uiP99": 4.661483,
+          "viewP50": 0.0,
+          "viewsBuilt": 1
+        }
+      },
+      "memory": {
+        "peakMb": 340.51953125,
+        "residentBootMb": 164.71484375,
+        "residentEndMb": 336.7890625,
+        "residentOpenMb": 320.3125
+      },
+      "objects": 20000,
+      "onGpu": true,
+      "open": {
+        "firstFrame": {
+          "gpuMs": 88.140547,
+          "uiMs": 52.39203800000001,
+          "viewMs": 20.754079
+        },
+        "framesWhileOpening": {
+          "frames": 1,
+          "gpuMax": 62.79140900000001,
+          "gpuP50": 62.79140900000001,
+          "gpuP95": 62.79140900000001,
+          "gpuP99": 62.79140900000001,
+          "uiMax": 4.661739,
+          "uiOverBudget": 0,
+          "uiP50": 4.661739,
+          "uiP95": 4.661739,
+          "uiP95Parts": [
+            0.0,
+            0.000313,
+            0.112369,
+            0.408505,
+            4.140552
+          ],
+          "uiP99": 4.661739,
+          "viewP50": 0.112369,
+          "viewsBuilt": 1
+        },
+        "settledMs": 240.33216299999998,
+        "threadMs": 80.41390299999999,
+        "toFirstFrameMs": 226.145352
+      },
+      "openFit": [
+        496282.3679230958,
+        4386872.55413715,
+        583646.7217303421,
+        4438067.44586285
+      ],
+      "select": {
+        "frame": {
+          "gpuMs": 36.733799999999995,
+          "uiMs": 24.482739,
+          "viewMs": 16.64775
+        },
+        "selected": 1,
+        "viewMs": 16.64775
+      }
+    }
+  ],
+  "setup": {
+    "burstNotches": 14,
+    "profile": "release (lto thin)",
+    "window": [
+      1440.0,
+      900.0
+    ]
+  }
+}

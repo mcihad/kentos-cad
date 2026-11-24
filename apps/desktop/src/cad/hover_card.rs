@@ -682,6 +682,29 @@ mod tests {
     }
 
     #[test]
+    fn the_card_goes_when_the_view_moves_under_a_still_pointer() {
+        use crate::viewport::Event;
+        use iced::{Point, Vector};
+        for moved in [
+            Event::Zoomed { factor: 1.15, at: Point::new(300.0, 200.0) },
+            Event::Panned { by: Vector::new(40.0, 0.0), at: Point::new(340.0, 200.0) },
+            Event::Extents,
+        ] {
+            let mut app = app_with_drawing();
+            app.selection.set_hover(Some(Slot(5)));
+            let _ = app.follow_hover();
+            app.hover_card_due(app.selection.hover_version());
+            assert_eq!(app.hover_card, Some(Slot(5)));
+            // The object the card names was under the pointer before the view moved (docs/adr/9204).
+            let _ = app.update(Message::Viewport(moved.clone()));
+            let _ = app.follow_hover();
+            assert_eq!(app.selection.hover(), None, "{moved:?}: nothing is hovered until the pointer moves");
+            assert_eq!(app.hover_card, None, "{moved:?}: the card goes");
+            assert!(app.hover_card_view().is_none());
+        }
+    }
+
+    #[test]
     fn the_card_waits_for_the_same_hover_and_goes_with_it() {
         let mut app = app_with_drawing();
         app.selection.set_hover(Some(Slot(5)));

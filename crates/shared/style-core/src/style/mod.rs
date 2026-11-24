@@ -23,6 +23,7 @@ pub mod place;
 pub mod prim;
 pub mod resolve;
 pub mod rules;
+pub mod seen_through;
 pub mod thematic;
 
 #[cfg(test)]

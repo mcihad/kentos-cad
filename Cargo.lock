@@ -3718,6 +3718,7 @@ dependencies = [
  "kentos-svg-core",
  "libm",
  "png 0.18.1",
+ "resvg",
  "roxmltree 0.21.2",
  "serde",
  "serde_json",
@@ -3942,6 +3943,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiny-skia",
+ "ttf-parser",
  "wgpu",
 ]
 

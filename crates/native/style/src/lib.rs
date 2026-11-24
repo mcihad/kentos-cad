@@ -41,6 +41,10 @@ pub mod classify;
 pub mod color;
 pub mod cpu;
 pub mod designer;
+// Far levels of plain strokes and solid fills on the model screen (plan/render.md RM-10).
+pub mod far_levels;
+// SVG symbols as vectors on the model screen (plan/render.md RM-11).
+pub mod svg_marks;
 pub mod legend;
 pub mod line_types;
 pub mod phases;
@@ -66,7 +70,7 @@ pub use color::StylePalette;
 /// An object's geometry as the core takes it (the application's typed turn, docs/adr/0339 §1).
 pub use kentos_scene_query::geometry::shape as entity_shape;
 /// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
-pub use kentos_style_core::style::build::{View, raster_key};
+pub use kentos_style_core::style::build::{Deep, View, raster_key};
 /// The extensions' functions a style may call (docs/adr/8057 §8): what the host registers.
 pub use kentos_style_core::style::externals;
 pub use library::{Item, ItemKind, Source, StyleLibrary};

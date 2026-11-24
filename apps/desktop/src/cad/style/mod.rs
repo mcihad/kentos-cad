@@ -159,6 +159,7 @@ impl Styles {
         crate::viewport::Styling {
             spatial,
             styles: self,
+            glyphs: &[],
             screen_symbols: settings.text("graphics.symbolSize") == "screen",
             line_weights: settings.bool("graphics.lineWeights"),
             view_build: kentos_native_style::View {
@@ -176,6 +177,8 @@ impl Styles {
                 block_proxy: self.block_proxy,
                 // CAD line types along the source curve, as the sheet and the PDF (docs/adr/1122).
                 cad_phase: true,
+                // The drawing as it is; the deep view's scene sets its own box (plan/render.md RM-24).
+                deep: None,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

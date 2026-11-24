@@ -12,6 +12,8 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The drawing's faces' outlines for the glyph atlas (docs/adr/9212).
+ttf-parser = { workspace = true }
 # The 3D scene's camera, tiles and contents (docs/adr/0910 §4–§5), and their renderer in its own package (docs/adr/8073
 # §2), re-exported as `scene3d`.
 kentos-scene3d = { path = "../../shared/scene3d" }

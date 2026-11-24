@@ -42,6 +42,8 @@ struct State {
     made: Cell<Option<(Camera, f32)>>,
     /// The texts too small to read, as one mesh made with the picture (docs/adr/0786 §4): drawn with it, kept with it.
     bands: std::cell::RefCell<Option<mesh::Cache>>,
+    /// What the screen's marks last sent to the area's renderer were drawn for (`Labels::marks_key`, docs/adr/9214).
+    marks: Cell<u64>,
 }
 
 impl Layer<'_> {
@@ -180,9 +182,19 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
         let size = Size::new(bounds.width + 2.0 * margin, bounds.height + 2.0 * margin);
         let geometry = state.cache.draw(renderer, size, |frame| {
             frame.translate(Vector::new(margin, margin));
-            self.labels.paint_texts(frame, margin);
+            // The pieces that may go to the renderer go there (gpu.rs); the scene draws them in this frame.
+            let sink = self.labels.gpu.as_ref();
+            if let Some(sink) = sink {
+                sink.begin();
+            }
+            self.labels.paint_texts(&mut super::gpu::Split { frame, sink, view: &self.labels.view }, margin);
             let looks = self.labels.band_looks();
-            *state.bands.borrow_mut() = band_mesh(&looks, Vector::new(margin, margin), size);
+            // The bands with the texts on the GPU (docs/adr/9212 §9), else as one mesh.
+            let on_gpu = sink.is_some_and(|sink| sink.bands(&looks, &self.labels.view));
+            if let Some(sink) = sink {
+                sink.publish(self.labels.view.map_px());
+            }
+            *state.bands.borrow_mut() = if on_gpu { None } else { band_mesh(&looks, Vector::new(margin, margin), size) };
         });
         let to_view = moved(&made, &self.labels.view) - Vector::new(margin, margin);
         renderer.with_layer(bounds, |renderer| {
@@ -194,8 +206,15 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
                         renderer.draw_mesh_cache(bands.clone());
                     }
                 });
-                // The marks follow the screen, not the drawing.
-                if self.labels.map_marks.is_some() {
+                // The marks follow the screen, not the drawing: the area's renderer draws them, sent again when they
+                // change (docs/adr/9214), else they are drawn here.
+                if self.labels.marks.is_some() {
+                    let key = self.labels.marks_key(bounds.size());
+                    if state.marks.get() != key {
+                        state.marks.set(key);
+                        self.labels.paint_marks(&mut Frame::new(renderer, bounds.size()));
+                    }
+                } else if self.labels.map_marks.is_some() {
                     let mut frame = Frame::new(renderer, bounds.size());
                     self.labels.paint_marks(&mut frame);
                     renderer.draw_geometry(frame.into_geometry());

@@ -95,43 +95,23 @@ impl App {
     }
 
     /// The whole drawing in view (Tümünü göster, the middle button's double
-    /// click): the store's box, a block's insert by its pieces and a leader
-    /// by its note, as the web's `PickIndex.extent` takes it.
+    /// click): [`extents_box`]. The objects it leaves out, far from the rest,
+    /// are said: Kapsam denetimi selects them (docs/adr/9203).
     pub(crate) fn zoom_extents(&mut self) {
         let Some(doc) = &self.document else {
             return;
         };
-        self.spatial.sync(&doc.model);
-        // A frozen layer's objects are not counted (docs/adr/0311 §1); a hidden one's are.
-        let tree = doc.model.layers();
-        let bounds = if tree.leaves().iter().any(|l| tree.is_frozen(&l.id)) {
-            let ids: Vec<f64> = doc
-                .model
-                .entities()
-                .filter(|e| !tree.is_frozen(&e.base().layer_id))
-                .map(|e| f64::from(e.base().id))
-                .collect();
-            self.spatial.store().extent(Some(&ids))
-        } else {
-            self.spatial.extent()
-        };
-        // The shown data layers' tables count too (docs/adr/9101 §5): their rows are not in the drawing.
-        let settings = doc.settings();
-        let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(tree.nodes())
-            .into_iter()
-            .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
-            .collect();
-        if let Some(b) = &bounds {
-            boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
-        }
-        let bounds = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
-            min_x: b[0],
-            min_y: b[1],
-            max_x: b[2],
-            max_y: b[3],
-        });
+        let (bounds, far) = extents_box(doc, &mut self.spatial);
         if let Some(bounds) = bounds {
             self.viewport.show(&bounds);
+        }
+        if far > 0 {
+            self.say(
+                kentos_interaction::Level::Warn,
+                format!(
+                    "{far} nesne çizimin geri kalanından çok uzakta; görünüme alınmadı. Kapsam denetimi onları seçer."
+                ),
+            );
         }
     }
 
@@ -154,6 +134,55 @@ impl App {
             ),
         }
     }
+}
+
+/// What Tümünü göster shows, and an opened drawing that keeps no view of its own: the box of the objects not on a
+/// frozen layer (docs/adr/0311 §1; a hidden one's count), a block's insert by its pieces and a leader by its note as the
+/// store has them, with the shown data layers' tables (docs/adr/9101 §5); less the objects lying far from the rest of
+/// them by Kapsam denetimi's rule (docs/adr/0141, 9203), whose number comes with it. An object fallen to zero or brought
+/// in another system made the whole drawing a dot, and the drawing seemed to have lost its data: the 453 534 objects
+/// of a city plan were shown over 8 800 km.
+pub(crate) fn extents_box(
+    doc: &crate::document::Document,
+    spatial: &mut kentos_interaction::Spatial,
+) -> (Option<kentos_render_wgpu::Bounds>, usize) {
+    spatial.sync(&doc.model);
+    let tree = doc.model.layers();
+    let counted: Option<Vec<f64>> = tree.leaves().iter().any(|l| tree.is_frozen(&l.id)).then(|| {
+        doc.model
+            .entities()
+            .filter(|e| !tree.is_frozen(&e.base().layer_id))
+            .map(|e| f64::from(e.base().id))
+            .collect()
+    });
+    let store = spatial.store();
+    let far = store.extent_outliers_of(counted.as_deref());
+    let bounds = if far.is_empty() {
+        store.extent(counted.as_deref())
+    } else {
+        let left: std::collections::HashSet<u64> = far.iter().map(|id| id.to_bits()).collect();
+        let near: Vec<f64> = counted
+            .unwrap_or_else(|| doc.model.entities().map(|e| f64::from(e.base().id)).collect())
+            .into_iter()
+            .filter(|id| !left.contains(&id.to_bits()))
+            .collect();
+        store.extent(Some(&near))
+    };
+    let settings = doc.settings();
+    let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(tree.nodes())
+        .into_iter()
+        .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
+        .collect();
+    if let Some(b) = &bounds {
+        boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
+    }
+    let bounds = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
+        min_x: b[0],
+        min_y: b[1],
+        max_x: b[2],
+        max_y: b[3],
+    });
+    (bounds, far.len())
 }
 
 /// An object kind as the web titles it (`ENTITY_KIND_LABEL`).

@@ -335,6 +335,9 @@ pub struct Header {
     pub layer_names: Vec<String>,
     /// LEX.ST2, 0xFFRRGGBB.
     pub layer_colors: Vec<u32>,
+    /// LEX.ST2, each layer's line type and symbol numbers in Netcad's library (docs/adr/9216 §4½, 9219): byte 5 of the
+    /// layer's 256-byte item, and byte 17 when byte 19 says it is set. The drawings are in that library, not the file.
+    pub layer_styles: Vec<(u8, Option<u8>)>,
     /// `5.2.0.1035N`.
     pub version_name: String,
     /// TILED_XML's `SRS…`, as the reference cleans it.
@@ -349,8 +352,11 @@ pub struct Header {
     pub datum: u8,
     /// The zone byte: the central meridian for 3°.
     pub zone: u8,
-    /// Geometry records of a type the reference does not read, by type byte.
+    /// Geometry records of a type the reference does not read, by type byte; those with nothing past their header are
+    /// `empty` instead.
     pub unsupported: [u64; 256],
+    /// Records of a type the reference does not read whose body is all zeros: no object (plan/render.md RM-17).
+    pub empty: [u64; 256],
     /// Geometry records of a type it reads that produced nothing: too short,
     /// a coordinate outside ±100 000 km, no text, no height, fewer than two
     /// points, no area. By type byte.
@@ -374,6 +380,7 @@ impl Default for Header {
         Self {
             layer_names: Vec::new(),
             layer_colors: Vec::new(),
+            layer_styles: Vec::new(),
             version_name: String::new(),
             epsg: String::new(),
             projection_text: String::new(),
@@ -382,6 +389,7 @@ impl Default for Header {
             datum: 0,
             zone: 0,
             unsupported: [0; 256],
+            empty: [0; 256],
             dropped: [0; 256],
             smart_marks: 0,
             swept_blocks: 0,
@@ -455,6 +463,15 @@ fn geometry_color(h: &Header, layer_code: u8, color_code: u8) -> Option<u32> {
 /// code 0 on it takes; none when no LEX.ST2 table covers it.
 pub fn layer_color(h: &Header, layer_code: u8) -> Option<u32> {
     geometry_color(h, layer_code, 0)
+}
+
+/// A layer's line type and symbol numbers (`Header::layer_styles`), by its code as its colour is looked up.
+pub fn layer_style(h: &Header, layer_code: u8) -> Option<(u8, Option<u8>)> {
+    let (n, code) = (h.layer_styles.len(), usize::from(layer_code));
+    if code < n {
+        return Some(h.layer_styles[code]);
+    }
+    (code >= 1 && code - 1 < n).then(|| h.layer_styles[code - 1])
 }
 
 /// `_layer_name` against the tables in `h`.
@@ -977,6 +994,9 @@ impl Parser<'_, '_> {
                 }
                 let c = |k: usize| u32::from(self.data[item + k]);
                 self.header.layer_colors.push(to_argb(c(0), c(1), c(2)));
+                let byte = |k: usize| self.data.get(item + k).copied().filter(|_| item + k < block_end);
+                let symbol = (byte(19) == Some(1)).then(|| byte(17)).flatten().filter(|&n| n != 0);
+                self.header.layer_styles.push((byte(5).unwrap_or(0), symbol));
             }
         }
     }
@@ -1088,7 +1108,14 @@ impl Parser<'_, '_> {
             15 => self.parse_smart_object(offset, block_size),
             _ => {
                 if self.mode == Mode::Entities {
-                    self.header.unsupported[usize::from(t)] += 1;
+                    // A record with nothing past its header holds no object (the city plan NCZ: three of type 0 and
+                    // the file's last, of type 14; plan/render.md RM-17): not a loss.
+                    let body = self.data.get(offset + 7..(offset + block_size + 1).min(self.size())).unwrap_or(&[]);
+                    if body.iter().all(|&b| b == 0) {
+                        self.header.empty[usize::from(t)] += 1;
+                    } else {
+                        self.header.unsupported[usize::from(t)] += 1;
+                    }
                 }
                 return;
             }
@@ -1946,6 +1973,40 @@ mod tests {
         let bytes = [0xDD, 0xDE, 0xD0, 0xF0, 0xFD, 0xFE, 0xC7, 0x80, b'a'];
         assert_eq!(decode(&bytes), "İŞĞğışÇ\u{80}a");
         assert_eq!(strip_nul_space(b"\0 ab \0"), b"ab");
+    }
+
+    /// A record of a type no reader knows with nothing past its header holds no object: counted apart, not as lost
+    /// (the city plan NCZ: three of type 0 and the file's last, of type 14; plan/render.md RM-17).
+    #[test]
+    fn a_record_of_an_unknown_type_with_nothing_past_its_header_is_empty_not_lost() {
+        // A geometry block: its tag, its size (the four bytes past it and its body, less its type's two), its type
+        // twice, then its body.
+        let block = |t: u8, body: &[u8]| {
+            let mut b = vec![GEOMETRY];
+            b.extend(u32::try_from(body.len() + 2).expect("small").to_le_bytes());
+            b.extend([t, t]);
+            b.extend(body);
+            b
+        };
+        for (t, body, empty) in [(14u8, vec![0u8; 79], true), (0, vec![0, 0, 0x1e, 0, 0x35, 0x0d], false)] {
+            let data = block(t, &body);
+            let mut header = Header::default();
+            let mut parser = Parser {
+                data: &data,
+                mode: Mode::Entities,
+                header: &mut header,
+                sink: None,
+                fin: None,
+                span: ENTITY_SPAN,
+                entity: Entity::default(),
+                record: 0,
+                appended: 0,
+                stopped: false,
+            };
+            parser.parse_geometry(0, 6 + body.len(), 0);
+            let t = usize::from(t);
+            assert_eq!((header.empty[t], header.unsupported[t]), if empty { (1, 0) } else { (0, 1) }, "type {t}");
+        }
     }
 
     #[test]

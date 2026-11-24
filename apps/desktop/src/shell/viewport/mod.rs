@@ -24,7 +24,9 @@
 //! The selection and the hovered object are two more scene parts, drawn after
 //! every layer (`highlight.rs`, docs/adr/0029).
 
+pub(crate) mod follow;
 pub(crate) mod highlight;
+pub(crate) mod live;
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -119,6 +121,9 @@ pub enum Event {
     Zoomed { factor: f64, at: Point },
     /// Show everything (a middle double click).
     Extents,
+    /// A wheel turn or a middle-button pan the area made on its live camera has settled (live.rs, docs/adr/9205): from
+    /// the camera it started at to the one it stopped at. Wheel turns and pans reach the app so, once a gesture.
+    ViewChanged { from: Camera, to: Camera },
     /// Put this world point in the middle of the area.
     CenterOn(Vec2),
     /// The left button went down here (logical pixels from the area's top-left).
@@ -148,6 +153,8 @@ pub struct Status {
     pub failure: Option<SampleFailure>,
     /// The styled atlas left images for another frame (docs/adr/0090): the area asks for one.
     pub images_pending: bool,
+    /// The glyph atlas left the fields of some letters for another frame (docs/adr/9212 §5): the area asks for one.
+    pub glyphs_pending: bool,
     /// The window's device pixels per logical pixel, as the last frame was drawn.
     pub scale_factor: f32,
 }
@@ -175,6 +182,10 @@ pub struct Styling<'a> {
     /// The labels placed this frame: the masks cutting with a layer's labels take
     /// their boxes (docs/adr/0226 §3).
     pub labels: Option<&'a kentos_interaction::spatial::LabelParts>,
+    /// What the overlays' painting sends the area's renderer, bottom first: the drawing's text (labels/gpu.rs,
+    /// docs/adr/9212 §4), the layers over the drawing and the screen's marks (gpu_frame.rs, docs/adr/9214). None: the
+    /// canvas draws them all.
+    pub glyphs: &'a [crate::labels::GlyphSlot],
 }
 
 /// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
@@ -306,6 +317,13 @@ type KeptLineTypes = (
 /// The drawing area's state in the app.
 pub struct Viewport {
     pub camera: Camera,
+    /// The camera the area draws with while a gesture runs, shared with its widget (live.rs, docs/adr/9205).
+    pub(crate) live: live::LiveView,
+    /// The app's camera last given to `live`: a change of the app's own is pushed when its view is built.
+    live_sent: std::cell::Cell<Camera>,
+    /// Where the pointer is on the area, logical pixels; `None` off it. A settled gesture puts the world point under
+    /// it again through the camera it stopped at (docs/adr/9205).
+    pointer_px: Option<Point>,
     pub sheet_saved_camera: Option<Camera>,
     /// The world point under the pointer; `None` off the area.
     pub cursor: Option<Vec2>,
@@ -336,6 +354,11 @@ pub struct Viewport {
     status: Arc<Mutex<Status>>,
     /// The drawing's layers through the style engine, as last built (docs/adr/0090).
     styled: RefCell<crate::style::scene::StyledCache>,
+    /// A deep view's scene (plan/render.md RM-24): the objects its box meets, their paths split at the box's edge;
+    /// drawn instead of `styled` while the view is deeper than [`DEEP_PX_PER_M`].
+    deep_styled: RefCell<crate::style::scene::StyledCache>,
+    /// The deep view's box and curves' tolerance while the view is deep (`Viewport::deep_box`).
+    deep: std::cell::Cell<Option<kentos_native_style::Deep>>,
     /// The project's line types as the style engine draws them, by the drawing's session and generation: made again
     /// only when the drawing changed, not every frame (docs/adr/0313 §3).
     line_types: RefCell<Option<KeptLineTypes>>,
@@ -346,6 +369,10 @@ pub struct Viewport {
     zoomed_at: Option<Instant>,
     /// The view's last move, a pan or the wheel: the labels keep their placing until it settles (docs/adr/0597).
     moved_at: Option<Instant>,
+    /// Every frame drawn afresh (plan/render.md RM-02, docs/adr/9202): no picture kept, moved or scaled from an
+    /// earlier frame and no labels kept while the view moves. The truth a frame with them is compared with; set by
+    /// the measurements only.
+    pub(crate) fresh: bool,
     /// A view of a split area that is not the active one, its place among them (split_view.rs, docs/adr/0285 §3,
     /// 0637 §1): its events come as `Message::OtherViewport`.
     pub(crate) other: Option<usize>,
@@ -431,6 +458,16 @@ fn construction_clip(view: &Bounds) -> Bounds {
         max_y: view.max_y + 3.0 * h,
     }
 }
+
+/// From this deep (logical pixels per metre) a view draws its deep scene (plan/render.md RM-24), back below half of
+/// it. A segment is placed on the GPU as well as its ends are near the camera (2⁻²⁴ of their distance): a 2 km
+/// segment through a view at 10 000 px/m was off by 0.6 px. From here the view's box is a few dozen metres wide and
+/// holds few objects, so its scene builds in a moment.
+pub(crate) const DEEP_PX_PER_M: f64 = 500.0;
+
+/// How far a deep view's chord may stray from its circle or arc, logical pixels (plan/render.md RM-24): the drawing's
+/// 72 chords a turn strayed past it from a radius of 263 pixels on.
+pub(crate) const DEEP_TOLERANCE_PX: f64 = 0.25;
 
 /// Whether the construction lines must be clipped again: the view left the
 /// box, or zoomed in so far that the box holds needlessly long lines.
@@ -547,7 +584,6 @@ struct Program {
     /// The grid, the drawing's parts and the highlights, bottom first.
     parts: [Arc<ScenePart>; 7],
     origin: Vec2,
-    camera: Camera,
     settings: RenderSettings,
     status: Arc<Mutex<Status>>,
     /// The pointer's look the running tool asks for over the area.
@@ -561,10 +597,16 @@ struct Program {
     moving: bool,
     /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068).
     drawing: Option<u64>,
+    /// A picture of an earlier frame may serve (`FrameInput::keep_picture`); off for `Viewport::fresh`.
+    keep: bool,
+    /// The camera the area draws with while a gesture runs (live.rs, docs/adr/9205).
+    live: live::LiveView,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
     passive: bool,
+    /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214).
+    glyphs: Vec<crate::labels::GlyphSlot>,
 }
 
 impl Program {
@@ -650,6 +692,17 @@ impl shader::Program<Message> for Program {
                 Hold::Wait(until) => shader::Action::request_redraw_at(until),
             });
         }
+        // A live gesture settled: the app is told once, from where it started to where it stopped (live.rs).
+        if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
+            && let Some(at) = self.live.settles_at()
+        {
+            if *now < at {
+                return Some(shader::Action::request_redraw_at(at));
+            }
+            if let Some((from, to)) = self.live.take() {
+                return Some(shader::Action::publish(self.message(Event::ViewChanged { from, to })));
+            }
+        }
         // Screen-sized symbols wait for the wheel to stop, then are built again (docs/adr/0090).
         if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
             && let Some(at) = self.settle_at
@@ -660,13 +713,16 @@ impl shader::Program<Message> for Program {
                 shader::Action::request_redraw_at(at)
             });
         }
-        // The styled atlas left images for another frame (docs/adr/0090).
+        // The styled atlas left images for another frame (docs/adr/0090), the glyph atlas letters (docs/adr/9212 §5).
         if let iced::Event::Window(iced::window::Event::RedrawRequested(_)) = event
             && self
                 .status
                 .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .images_pending
+                .map(|s| s.images_pending || s.glyphs_pending)
+                .unwrap_or_else(|e| {
+                    let s = e.into_inner();
+                    s.images_pending || s.glyphs_pending
+                })
         {
             return Some(shader::Action::request_redraw());
         }
@@ -679,6 +735,18 @@ impl shader::Program<Message> for Program {
             };
         }
         let action = match event {
+            // The wheel and a middle-button pan of the active view move its live camera: a frame, no message, no
+            // view of the app's (live.rs, docs/adr/9205). The app hears of it once the view settles.
+            // A frame drawn afresh (`Viewport::fresh`) takes the old way: every turn a message, the truth the live
+            // view is checked against (perf::oracle).
+            Some(Event::Zoomed { factor, at }) if self.other.is_none() && self.keep => {
+                self.live.zoom(factor, at, Instant::now());
+                shader::Action::request_redraw()
+            }
+            Some(Event::Panned { by, .. }) if self.other.is_none() && self.keep => {
+                self.live.pan(by, Instant::now());
+                shader::Action::request_redraw()
+            }
             Some(event) => shader::Action::publish(self.message(event)),
             None => shader::Action::request_redraw(),
         };
@@ -690,18 +758,26 @@ impl shader::Program<Message> for Program {
     }
 
     fn draw(&self, _state: &Gesture, _cursor: mouse::Cursor, _bounds: Rectangle) -> Frame {
+        // The live camera: a gesture's frames are drawn without the app's view (live.rs).
+        let camera = self.live.camera();
+        let moving = self.moving || self.live.moving();
         Frame {
             id: self.id,
             parts: self.parts.clone(),
             origin: self.origin,
-            camera: self.camera,
-            settings: self.settings,
+            camera,
+            // One sample while moving (docs/adr/9207 §8), unless the setting scales the last sharp picture instead
+            // (`drawing`, docs/adr/1068): its picture is the settled frame's, drawn with the setting's samples, and a
+            // frame of one sample would put it aside (`perf::stability`'s wheel test caught it).
+            settings: drawn_with(self.settings, moving && self.drawing.is_none()),
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
             lens: false,
-            moving: self.moving,
+            moving,
             drawing: self.drawing,
+            keep: self.keep,
+            glyphs: self.glyphs.clone(),
         }
     }
 
@@ -888,6 +964,14 @@ pub(crate) fn wheel_steps(delta: &mouse::ScrollDelta) -> f64 {
 }
 
 /// One frame of the drawing area, handed to the renderer.
+/// The settings a frame of the drawing area is drawn with: one sample while the view moves (docs/adr/9207 §8). The
+/// strokes smooth their own edges, and blending them into four samples was a third of a far view's frame on the GPU
+/// (81 → 55 ms, the city plan NCZ). The settled frame has the setting's count and is drawn whole again: its picture's
+/// key holds whether the view moved.
+fn drawn_with(settings: RenderSettings, moving: bool) -> RenderSettings {
+    if moving { RenderSettings { samples: 1, ..settings } } else { settings }
+}
+
 pub struct Frame {
     id: ViewId,
     parts: [Arc<ScenePart>; 7],
@@ -905,6 +989,11 @@ pub struct Frame {
     moving: bool,
     /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068); none in Büyüteç's window.
     drawing: Option<u64>,
+    /// A picture of an earlier frame may serve (`FrameInput::keep_picture`).
+    keep: bool,
+    /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214); none in
+    /// Büyüteç's window.
+    glyphs: Vec<crate::labels::GlyphSlot>,
 }
 
 impl fmt::Debug for Frame {
@@ -965,7 +1054,7 @@ impl shader::Primitive for Frame {
                         // Iced draws the window again for any event; the drawing is
                         // drawn again only when it changed. The hovered object (the
                         // last part) goes over it (kentos-render-wgpu, renderer.rs).
-                        keep_picture: true,
+                        keep_picture: self.keep,
                         overlays: 1,
                         moving: self.moving,
                         drawing: self.drawing,
@@ -984,6 +1073,10 @@ impl shader::Primitive for Frame {
                         &kentos_render_wgpu::styled::NoImages,
                     ),
                 };
+                // The overlays over the picture in the stack's order (docs/adr/9212 §4, 9214): an empty list takes the
+                // last away.
+                let sets: Vec<_> = self.glyphs.iter().map(crate::labels::GlyphSlot::get).collect();
+                let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &sets);
                 Status {
                     stats: renderer.stats(self.id).unwrap_or_default(),
                     error: prepared
@@ -993,6 +1086,7 @@ impl shader::Primitive for Frame {
                     supported: renderer.sample_counts().to_vec(),
                     failure: renderer.sample_failure(self.id).cloned(),
                     images_pending,
+                    glyphs_pending,
                     scale_factor: scale,
                 }
             }
@@ -1072,6 +1166,8 @@ impl shader::Program<Message> for Lens {
             lens: true,
             moving: false,
             drawing: None,
+            keep: true,
+            glyphs: Vec::new(),
         }
     }
 }

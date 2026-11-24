@@ -170,6 +170,102 @@ const MARKER_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
     wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32];
 const RASTER_ATTRIBUTES: [wgpu::VertexAttribute; 1] = wgpu::vertex_attr_array![0 => Float32x4];
 
+/// `KENTOS_DIAG_LEVEL=print` (a measurement's): the first far-levelled batch's scale and level, once a frame.
+fn print_level(scale: f64, lod: &kentos_native_style::batches::Lod, level: usize) {
+    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    static FRAME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    if *ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").is_ok_and(|v| v == "print")) {
+        let now = DRAWN_INSTANCES.load(std::sync::atomic::Ordering::Relaxed);
+        if FRAME.swap(now, std::sync::atomic::Ordering::Relaxed) != now {
+            eprintln!("DÜZEY ölçek {scale:.5} tavanlar {:?} düzey {level} / {}", lod.ceilings, lod.levels.len());
+        }
+    }
+}
+
+/// `KENTOS_DIAG_ITEMS` (a measurement's, plan/render.md RM-10): whether a frame's drawn items are printed by kind.
+fn diag_items_asked() -> bool {
+    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ASKED.get_or_init(|| std::env::var_os("KENTOS_DIAG_ITEMS").is_some())
+}
+
+/// A drawn batch's share by its kind, levels, instancing and size. An instanced batch's work is its definition's drawn
+/// items times its instances (each insert draws them all), which `items` does not count.
+fn parts_add(
+    parts: &mut std::collections::BTreeMap<String, (u64, u32)>,
+    g: &GpuBatch,
+    b: &kentos_native_style::batches::StyledBatch,
+    drawn: u64,
+    floats: usize,
+) {
+    use kentos_native_style::batches::CURVE_LEVELS;
+    use kentos_native_style::far_levels::FAR_CEILINGS;
+    let (work, how) = match &g.own {
+        Some(p) => {
+            let per = u64::from(p.per_item.max(1));
+            let definition = if g.proxied {
+                p.proxy.as_ref().map_or(0, |r| u64::from(r.end - r.start)) / per
+            } else if let Some(lod) = &b.lod {
+                lod.ranges(g.level).iter().map(|r| r.len() as u64).sum::<u64>() / floats as u64
+            } else {
+                u64::from(p.vertices) / per
+            };
+            (definition * u64::from(p.count), if g.proxied { "örnekli vekil" } else { "örnekli" })
+        }
+        None => (drawn, ""),
+    };
+    let kind = match &b.kind {
+        BatchKind::Stroke { dash: Some(_), .. } => "çizgi kesikli",
+        BatchKind::Stroke { .. } => "çizgi",
+        BatchKind::Fill { paint: FillPaintBatch::Solid { .. } } => "dolgu",
+        BatchKind::Fill { paint: FillPaintBatch::Hatch { .. } } => "tarama",
+        BatchKind::Fill { .. } => "dolgu (desen/resim)",
+        BatchKind::Marker { .. } => "işaret",
+    };
+    let levels = match &b.lod {
+        None => "düzeysiz".to_owned(),
+        Some(l) => {
+            let name = if l.ceilings[..] == FAR_CEILINGS[..] {
+                "uzak"
+            } else if l.ceilings.starts_with(&CURVE_LEVELS) && l.ceilings.ends_with(&FAR_CEILINGS) {
+                "eğri+uzak"
+            } else if l.ceilings[..] == CURVE_LEVELS[..] {
+                "eğri"
+            } else {
+                "başka"
+            };
+            format!("{name} d{}", g.level)
+        }
+    };
+    let size = if b.range.len() / floats < 1024 { "<1024" } else { "≥1024" };
+    let e = parts.entry(format!("{kind} {how} | {levels} | {size}")).or_insert((0, 0));
+    e.0 += work;
+    e.1 += 1;
+}
+
+/// Prints a frame's parts once for each total, the largest first.
+fn print_items(parts: &std::collections::BTreeMap<String, (u64, u32)>, total: u64) {
+    static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    if LAST.swap(total, std::sync::atomic::Ordering::Relaxed) == total {
+        return;
+    }
+    let mut rows: Vec<_> = parts.iter().collect();
+    rows.sort_by_key(|r| std::cmp::Reverse(r.1.0));
+    let work: u64 = rows.iter().map(|r| r.1.0).sum();
+    eprintln!("ÖĞELER sayılan {total}, iş (örnekliler tanım × örnek) {work}");
+    for (key, (items, batches)) in rows.iter().take(24) {
+        eprintln!("  {items:>9} {batches:>5} toplu  {key}");
+    }
+}
+
+fn forced_level() -> Option<usize> {
+    static LEVEL: std::sync::OnceLock<Option<usize>> = std::sync::OnceLock::new();
+    *LEVEL.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").ok().and_then(|v| v.parse().ok()))
+}
+
+/// Instances (strokes, marks) the draws were given since this was last read: a measurement's count of what reached
+/// the GPU (plan/render.md F3).
+pub static DRAWN_INSTANCES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Floats per stroke segment, fill vertex and marker (the contract's strides).
 pub const STROKE_FLOATS: usize = 6;
 pub const AREA_FLOATS: usize = 2;
@@ -911,6 +1007,15 @@ impl StyledGpu {
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    // `KENTOS_DIAG_LEVEL` (a measurement's, plan/render.md F3): every batch with levels at this one.
+                    if let Some(forced) = forced_level()
+                        && let Some(lod) = &b.lod
+                    {
+                        g.level = forced.min(lod.levels.len().saturating_sub(1));
+                    }
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
+                        print_level(frame.scale, lod, g.level);
+                    }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
@@ -1151,6 +1256,15 @@ impl StyledGpu {
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    // `KENTOS_DIAG_LEVEL` (a measurement's, plan/render.md F3): every batch with levels at this one.
+                    if let Some(forced) = forced_level()
+                        && let Some(lod) = &b.lod
+                    {
+                        g.level = forced.min(lod.levels.len().saturating_sub(1));
+                    }
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
+                        print_level(frame.scale, lod, g.level);
+                    }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
@@ -1608,11 +1722,24 @@ impl StyledGpu {
                         for r in lod.ranges(level) {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
+                                DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
                                 pass.draw(0..6, a..z);
                             }
                         }
                     }
-                    (_, true) => pass.draw(0..6, 0..b.count),
+                    (_, true) => {
+                        DRAWN_INSTANCES.fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
+                        pass.draw(0..6, 0..b.count)
+                    }
+                    // A solid fill's far level (kentos_native_style::far_levels, docs/adr/9207): the level's vertices.
+                    (Some(lod), false) if end == i => {
+                        for r in lod.ranges(level) {
+                            let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
+                            if z > a {
+                                pass.draw(a..z, 0..1);
+                            }
+                        }
+                    }
                     (_, false) => pass.draw(0..count, 0..1),
                 }
             }
@@ -1621,7 +1748,35 @@ impl StyledGpu {
             }
         };
         // A service's vector tiles are drawn where its batch is (docs/adr/0208 §9).
+        // `KENTOS_DIAG_SKIP` (a measurement's, plan/render.md F3): the styled batches of these pipes left undrawn.
+        let skipped = |g: &GpuBatch| {
+            static ASKED: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+            let asked = ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_SKIP").unwrap_or_default());
+            !asked.is_empty()
+                && match g.pipe {
+                    Pipe::Stroke | Pipe::StrokeInstanced => {
+                        // Halves of the strokes: dashed or not, small batches or large, wide or blurred (style units).
+                        let f = &g.block.f;
+                        asked.split(',').any(|w| match w {
+                            "stroke" => true,
+                            "stroke-dash" => f[21] > 0.0,
+                            "stroke-plain" => f[21] <= 0.0,
+                            "stroke-small" => g.count < 2000,
+                            "stroke-big" => g.count >= 2000,
+                            "stroke-wide" => f[20] > 1.0,
+                            "stroke-blur" => f[24] > 1.0,
+                            _ => false,
+                        })
+                    }
+                    Pipe::Solid | Pipe::SolidInstanced => asked.contains("solid"),
+                    Pipe::Hatch => asked.contains("hatch"),
+                    Pipe::Pattern | Pipe::Tile | Pipe::Gradient => asked.contains("pattern"),
+                    Pipe::Marker => asked.contains("marker"),
+                    Pipe::Image | Pipe::Raster | Pipe::Cloud => asked.contains("raster"),
+                }
+        };
         let mut draw = |layer: &GpuLayer, i: usize| match layer.batches.get(i) {
+            Some(g) if skipped(g) => {}
             Some(g) if !g.vector.is_empty() => {
                 for id in &g.vector {
                     if let Some((tile, _)) = view.vector_layers.get(id) {
@@ -1690,7 +1845,7 @@ const VECTOR_LAYERS: usize = 384;
 
 /// A frame's uniform: the camera centre in two float32 parts (docs/adr/0157
 /// §2), so the shader takes it from each batch's tile without losing digits.
-fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
+pub(crate) fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
     let hi = [frame.center[0] as f32, frame.center[1] as f32];
     StyledFrameUniform {
         offset: hi,
@@ -2026,6 +2181,26 @@ impl ViewStyled {
         {
             let data = &layer.source.layer.data;
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
+                // A symbol drawn by its vectors gives the boxes its markers had (docs/adr/9208).
+                if b.instances.as_ref().is_some_and(|i| i.mark.is_some()) {
+                    if !g.visible || g.count == 0 {
+                        continue;
+                    }
+                    let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
+                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(&layer.source.layer, b) {
+                        let (w, h) = (size[0] * px_per_m, size[1] * px_per_m);
+                        let (dx, dy) = ((middle[0] - tile[0]) * px_per_m, (middle[1] - tile[1]) * px_per_m);
+                        let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
+                        let (x, y) = (vw / 2.0 + u, vh / 2.0 - v);
+                        let reach = w.max(h) + f64::from(grow) + 2.0;
+                        if x < -reach || y < -reach || x > vw + reach || y > vh + reach {
+                            continue;
+                        }
+                        let (sa, ca) = (turn - twist).sin_cos();
+                        out.push([x as f32, y as f32, (w / 2.0) as f32, (h / 2.0) as f32, ca as f32, -sa as f32, grow]);
+                    }
+                    continue;
+                }
                 let BatchKind::Marker {
                     unit,
                     look,
@@ -2103,6 +2278,39 @@ impl ViewStyled {
             u.viewport,
             self.twist,
         )
+    }
+
+    /// The vertices (fills) and instances (strokes, marks) of the batches drawn in the last frame: the styled layers'
+    /// share of a frame's work (plan/render.md F3).
+    pub fn items(&self) -> u64 {
+        let mut n = 0u64;
+        let diag = diag_items_asked();
+        let mut parts: std::collections::BTreeMap<String, (u64, u32)> = std::collections::BTreeMap::new();
+        for layer in &self.layers {
+            for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
+                if !g.visible {
+                    continue;
+                }
+                let floats = match b.kind {
+                    BatchKind::Stroke { .. } => STROKE_FLOATS,
+                    BatchKind::Marker { .. } => MARKER_FLOATS,
+                    _ => AREA_FLOATS,
+                };
+                // A batch with levels draws one of them (docs/adr/1063 §3, 9207).
+                let k = match (&b.lod, &b.instances) {
+                    (Some(lod), None) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
+                    _ => u64::from(g.count),
+                };
+                n += k;
+                if diag {
+                    parts_add(&mut parts, g, b, k, floats);
+                }
+            }
+        }
+        if diag {
+            print_items(&parts, n);
+        }
+        n
     }
 
     /// Batches drawn in the last frame, and the bytes the layers hold on the GPU.

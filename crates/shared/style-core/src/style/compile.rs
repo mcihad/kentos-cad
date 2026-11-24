@@ -993,8 +993,9 @@ fn emit_fill_layer(
 /// symbol can be given to any object: a line symbol on an area draws its
 /// edges (the area's rings as closed lines, left = inside), a marker symbol
 /// sits at an area's inside point or a line's middle, a fill symbol fills
-/// a closed line. A fill symbol on an open line or a point, and a line
-/// symbol on a point, draw nothing. `level_base` orders symbol layers
+/// a closed line. A fill symbol on a point draws its centroid marks at the
+/// point, which stands for an area (docs/adr/9218). A fill symbol on an open
+/// line, and a line symbol on a point, draw nothing. `level_base` orders symbol layers
 /// across a layer (fills first, then lines, then markers).
 pub fn compile_symbol(
     symbol: &Symbol,
@@ -1099,6 +1100,12 @@ fn layer_on(
             }
         }
         SymbolType::Fill => {
+            // A point stands for an area at the area's own point (an NCZ plan's legend mark, docs/adr/9218): a fill
+            // symbol on it draws its centroid marks there, its fills nothing.
+            if let (Geom::Marker(at), Layer::CentroidMarker { marker, .. }) = (geom, l) {
+                emit_marker_symbol(marker, *at, 0.0, level, t, env, sink);
+                return;
+            }
             let closed;
             let rings: &[Vec<Vec2>] = match geom {
                 Geom::Fill(r) => r,

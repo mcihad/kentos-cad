@@ -119,6 +119,9 @@ pub struct StyledCache {
     /// (docs/adr/0210 §6): a part whose objects came or went is built again.
     window: Option<kentos_geometry_core::time::Window>,
     time_hidden: SlotSet,
+    /// A deep view's box (plan/render.md RM-24): only the objects it meets are built, their paths split at its edge
+    /// by the look's `View::deep`. None: every object.
+    only: Option<Bounds>,
     /// Layers whose renderer depends on the view (docs/adr/0213 §3): the view's scale and the box they were built for.
     view_built: HashMap<String, ViewBuilt>,
     /// A count that keeps every heat map picture's key new.
@@ -237,6 +240,11 @@ pub fn construction_clip(view: &Bounds) -> Bounds {
     }
 }
 
+/// Whether boxes `a` and `b` meet (touching counts).
+fn meets(a: &Bounds, b: &Bounds) -> bool {
+    a.min_x <= b.max_x && a.max_x >= b.min_x && a.min_y <= b.max_y && a.max_y >= b.min_y
+}
+
 /// Whether construction lines must be clipped again: the view left the box, or zoomed far in.
 fn clip_stale(view: &Bounds, clip: &Bounds) -> bool {
     let inside = view.min_x >= clip.min_x
@@ -326,6 +334,12 @@ pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_commands:
 }
 
 impl StyledCache {
+    /// Builds only the objects `b` meets from the next scene on (a deep view's, plan/render.md RM-24); none: every
+    /// object. The look's `View::deep` is the same box, so a new box builds every layer again.
+    pub fn set_only(&mut self, b: Option<Bounds>) {
+        self.only = b;
+    }
+
     /// The symbol scale the layers were last built at, and whether on the screen.
     pub fn built_scale(&self) -> Option<(f64, bool)> {
         self.look.as_ref().map(|l| (l.symbol_scale, l.screen))
@@ -678,9 +692,17 @@ impl StyledCache {
             // The slider's window over a temporal layer: the objects it shows, the others noted.
             // The view's filter over a layer: its own filter, or the slider's window over a temporal layer.
             let timed = node.filter.is_some() || (node.time.is_some() && window.is_some());
+            let only = self.only;
             let hidden = &mut self.time_hidden;
             let mut keep = |e: &&Entity| {
                 let id = e.base().id;
+                // A deep view's scene: the objects its box meets; the others neither built nor noted as the window's
+                // (an object the store has no box for is kept).
+                if let Some(b) = &only
+                    && store.get(f64::from(id)).is_some_and(|item| !meets(&item.bounds, b))
+                {
+                    return false;
+                }
                 let shown = !timed || store.view_shown(f64::from(id));
                 if shown {
                     hidden.remove(&id);

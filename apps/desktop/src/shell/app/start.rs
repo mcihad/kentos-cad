@@ -107,6 +107,7 @@ impl App {
             cad_inspection: Default::default(),
             vertices: Default::default(),
             label_spots: Default::default(),
+            gpu_layers: Default::default(),
             split: None,
             service_marks: Default::default(),
             service_credits: false,

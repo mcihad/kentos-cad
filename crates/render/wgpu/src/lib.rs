@@ -39,6 +39,7 @@
 pub mod camera;
 pub mod color;
 pub mod compose;
+pub mod glyphs;
 pub mod layout;
 pub mod precision;
 pub mod renderer;

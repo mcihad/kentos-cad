@@ -591,3 +591,65 @@ fn the_scene_is_built_again_only_when_its_inputs_change() {
     let (relit, _) = scene(&app, Mode::Light, &light);
     assert_ne!(relit.id, changed.id);
 }
+
+/// The wheel turned over the area through the real widgets (docs/adr/9205): the area's live camera moves at once, the
+/// app's waits, nothing of the app runs; once the view has been still for the settle, the app takes the camera the
+/// gesture stopped at, in one message, and keeps the view it left in its history.
+#[test]
+fn a_wheel_turn_moves_the_live_camera_and_reaches_the_app_once_settled() {
+    use crate::app::App;
+    use kentos_ui::snapshot::{Input, Snapshot};
+    let mut app = crate::files_testing::app_with_drawing();
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let before = app.viewport.camera;
+    assert_eq!(app.viewport.live.camera(), before, "the area shows the app's camera");
+    let at = app.viewport.bounds.center();
+    snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 1.0));
+    snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 1.0));
+    assert_eq!(app.viewport.camera, before, "the app's camera waits for the view to settle");
+    let live = app.viewport.live.camera();
+    assert!(live.scale > before.scale, "the area's live camera zoomed in: {} → {}", before.scale, live.scale);
+    assert!(!app.view_history.can_back(), "nothing recorded yet");
+    std::thread::sleep(live::SETTLE + Duration::from_millis(40));
+    snapshot.settle(&mut app, App::view, &mut update);
+    assert_eq!(app.viewport.camera, live, "the app took the camera the gesture stopped at");
+    assert!(!app.viewport.live.moving(), "told once");
+    assert!(app.view_history.can_back(), "the view left is kept");
+}
+
+/// While a gesture has not yet settled, a move reads the pointer through the camera the screen shows without taking
+/// the gesture (the app would build the view's labels and curves again on every move); a press takes it first
+/// (docs/adr/9205).
+#[test]
+fn a_move_reads_the_live_camera_and_a_press_takes_it() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.update(Message::Viewport(Event::Resized(AREA)));
+    let _ = app.view();
+    let before = app.viewport.camera;
+    assert_eq!(app.viewport.live.camera(), before);
+    app.viewport.live.zoom(1.5, Point::new(400.0, 300.0), iced::time::Instant::now());
+    let live = app.viewport.live.camera();
+    assert_ne!(live, before);
+    let near = |a: kentos_render_wgpu::Vec2, b: kentos_render_wgpu::Vec2| (a.x - b.x).abs() < 1e-9 && (a.y - b.y).abs() < 1e-9;
+    let _ = app.update(Message::Viewport(Event::Moved(Point::new(120.0, 80.0))));
+    assert_eq!(app.viewport.camera, before, "a move does not take the gesture");
+    assert!(near(app.viewport.cursor.expect("a point"), live.screen_to_world(120.0, 80.0)), "read through the live camera");
+    let _ = app.update(Message::Viewport(Event::Pressed(Point::new(130.0, 90.0))));
+    assert_eq!(app.viewport.camera, live, "a press takes the gesture first");
+    assert!(!app.viewport.live.moving());
+    assert!(near(app.viewport.cursor.expect("a point"), live.screen_to_world(130.0, 90.0)));
+}
+
+/// While the view moves, its frames are drawn with one sample; settled, with the setting's (docs/adr/9207 §8).
+#[test]
+fn a_moving_view_draws_with_one_sample_and_a_settled_one_with_the_settings() {
+    let settings = RenderSettings { samples: 4, ..RenderSettings::new(Rgba8::rgb(0, 0, 0)) };
+    assert_eq!(drawn_with(settings, true).samples, 1);
+    assert_eq!(drawn_with(settings, false), settings);
+    // Nothing else changes while moving.
+    assert_eq!(RenderSettings { samples: 4, ..drawn_with(settings, true) }, settings);
+}

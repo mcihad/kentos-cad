@@ -7,6 +7,9 @@ impl Viewport {
     pub fn new() -> Self {
         Self {
             camera: Camera::default(),
+            live: super::live::LiveView::new(Camera::default()),
+            live_sent: std::cell::Cell::new(Camera::default()),
+            pointer_px: None,
             sheet_saved_camera: None,
             cursor: None,
             bounds: Rectangle::default(),
@@ -23,10 +26,13 @@ impl Viewport {
             underlay_part: RefCell::new(None),
             status: Arc::new(Mutex::new(Status::default())),
             styled: RefCell::new(crate::style::scene::StyledCache::default()),
+            deep_styled: RefCell::new(crate::style::scene::StyledCache::default()),
+            deep: std::cell::Cell::new(None),
             line_types: RefCell::new(None),
             phasings: RefCell::new(None),
             zoomed_at: None,
             moved_at: None,
+            fresh: false,
             other: None,
             passive: false,
             theme: None,
@@ -202,8 +208,14 @@ impl Viewport {
                     self.fit(doc);
                 }
             }
-            Event::Moved(at) => self.cursor = Some(self.world(at)),
-            Event::Left => self.cursor = None,
+            Event::Moved(at) => {
+                self.pointer_px = Some(at);
+                self.cursor = Some(self.world(at));
+            }
+            Event::Left => {
+                self.pointer_px = None;
+                self.cursor = None;
+            }
             Event::Panned { by, at } => {
                 self.camera.pan_by(f64::from(by.x), f64::from(by.y));
                 self.cursor = Some(self.world(at));
@@ -215,6 +227,14 @@ impl Viewport {
                 self.cursor = Some(self.world(at));
                 self.zoomed_at = Some(Instant::now());
                 self.moved_at = self.zoomed_at;
+            }
+            // A gesture the area made on its live camera, settled (live.rs): its camera is the app's now, and the
+            // pointer's world point is the one under the same place of the screen. The view has already been still
+            // for the labels' settle: they and screen-sized symbols are placed for it at once.
+            Event::ViewChanged { to, .. } => {
+                self.camera = to;
+                self.live_sent.set(to);
+                self.cursor = self.pointer_px.map(|at| self.world(at));
             }
             // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
             Event::Extents => {
@@ -322,14 +342,13 @@ impl Viewport {
             (palette.background.0, accent.0, settings.samples, settings.hi_dpi).hash(&mut h);
             settings.highlight_width.to_bits().hash(&mut h);
             styling.map(|s| (s.screen_symbols, s.line_weights)).hash(&mut h);
-            (graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
+            (!self.fresh && graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
         };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
             document: doc.session,
             parts: [grid, underlay, fixed, curves, construction, selected, hovered],
             origin,
-            camera: self.camera,
             settings,
             status: self.status.clone(),
             cursor,
@@ -337,14 +356,17 @@ impl Viewport {
             images: styling.map(|s| s.styles.images.clone()),
             settle_at: styling
                 .filter(|s| {
-                    s.screen_symbols || self.styled.try_borrow().is_ok_and(|c| c.scales_with_view())
+                    s.screen_symbols || self.styled_in_use().try_borrow().is_ok_and(|c| c.scales_with_view())
                 })
                 .and_then(|_| self.settling())
                 .max(self.moved_until()),
             moving: self.moving(),
             drawing,
+            keep: !self.fresh,
+            live: self.live_for_view(),
             other: self.other,
             passive: self.passive,
+            glyphs: styling.map(|s| s.glyphs.to_vec()).unwrap_or_default(),
         })
         .width(Fill)
         .height(Fill)
@@ -443,6 +465,8 @@ impl Viewport {
                 }
             }
         };
+        // Deep, the view's own scene of the objects round it, their paths split at its box (plan/render.md RM-24).
+        let deep = self.deep_box();
         let look = crate::style::scene::Look {
             phasing,
             line_types,
@@ -461,6 +485,7 @@ impl Viewport {
             origin: self.draw_origin(doc),
             view_build: kentos_native_style::View {
                 map: self.camera.map,
+                deep,
                 ..s.view_build
             },
             view_colors: s.view_colors,
@@ -492,10 +517,10 @@ impl Viewport {
             );
         }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
-        self.styled
-            .borrow_mut()
-            .filters_at(s.spatial.filters_version());
-        let scene = self.styled.borrow_mut().scene_themed(
+        let cache = self.styled_in_use();
+        cache.borrow_mut().filters_at(s.spatial.filters_version());
+        cache.borrow_mut().set_only(deep.map(|d| d.bounds));
+        let scene = cache.borrow_mut().scene_themed(
             self.generation,
             &doc.model,
             nodes,
@@ -512,7 +537,7 @@ impl Viewport {
             2,
         );
         // The masks cutting with a layer's placed labels (docs/adr/0226 §3).
-        let asks = self.styled.borrow().label_masks().to_vec();
+        let asks = cache.borrow().label_masks().to_vec();
         let scene = with_mask_labels(scene, &asks, s.labels, &doc.model, look.origin);
         // The pictures the style engine made (heat maps, docs/adr/0213 §2.6): handed to the atlas by
         // key, the ones no longer drawn let go.
@@ -604,16 +629,48 @@ impl Viewport {
         if !screen || self.settling().is_none() {
             return now;
         }
-        match self.styled.try_borrow().ok().and_then(|c| c.built_scale()) {
+        match self.styled_in_use().try_borrow().ok().and_then(|c| c.built_scale()) {
             Some((built, true)) => built,
             _ => now,
+        }
+    }
+
+    /// The deep view (plan/render.md RM-24, docs/adr/9220): from [`DEEP_PX_PER_M`] in, the view and three times its
+    /// size round it, its curves round to a quarter pixel there; kept while the view stays in the box and its scale
+    /// within twice the one the tolerance was made at; none again below half the threshold, so a view at the threshold
+    /// does not switch back and forth.
+    fn deep_box(&self) -> Option<kentos_native_style::Deep> {
+        let unit = self.camera.metres_per_unit;
+        let unit = if unit.is_finite() && unit > 0.0 { unit } else { 1.0 };
+        let px_per_m = self.camera.scale / unit;
+        let was = self.deep.get();
+        let deep = px_per_m >= if was.is_some() { DEEP_PX_PER_M / 2.0 } else { DEEP_PX_PER_M };
+        let view = self.camera.visible_bounds();
+        let tolerance = DEEP_TOLERANCE_PX / self.camera.scale;
+        let next = deep.then(|| match was {
+            Some(d) if !clip_stale(&view, &d.bounds) && (0.5..=2.0).contains(&(d.tolerance / tolerance)) => d,
+            _ => kentos_native_style::Deep {
+                bounds: construction_clip(&view),
+                tolerance,
+            },
+        });
+        self.deep.set(next);
+        next
+    }
+
+    /// The styled layers the view draws: the deep view's scene while there is one, else the drawing's.
+    fn styled_in_use(&self) -> &RefCell<crate::style::scene::StyledCache> {
+        if self.deep.get().is_some() {
+            &self.deep_styled
+        } else {
+            &self.styled
         }
     }
 
     /// The layers whose Nokta yoğunluğu left dots out since last asked, each once (docs/adr/0213 §2.4):
     /// name and count.
     pub fn take_dropped(&self) -> Vec<(String, u64)> {
-        self.styled
+        self.styled_in_use()
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())
             .unwrap_or_default()
@@ -631,10 +688,26 @@ impl Viewport {
         self.moved_at = on.then(|| Instant::now() + std::time::Duration::from_secs(3600));
     }
 
+    /// The live camera for the area this view builds (live.rs): a change the app made to its own camera since the last
+    /// view is pushed to it first, and ends a gesture the area was running (the app's change wins).
+    pub(super) fn live_for_view(&self) -> super::live::LiveView {
+        if self.camera != self.live_sent.get() {
+            self.live.set(self.camera);
+            self.live_sent.set(self.camera);
+        }
+        self.live.clone()
+    }
+
+    /// A gesture the area is running or has not yet told, taken by the app before it reads the pointer (live.rs):
+    /// the camera it started at and the one the area shows.
+    pub fn take_live(&mut self) -> Option<(Camera, Camera)> {
+        self.live.take()
+    }
+
     /// Whether the view is moving (a pan or the wheel within the last [`SYMBOLS_SETTLE`]): the labels keep their
     /// placing meanwhile (docs/adr/0597).
     pub fn moving(&self) -> bool {
-        self.moved_until().is_some()
+        !self.fresh && self.moved_until().is_some()
     }
 
     /// When the view's move settles and the labels are placed again, while it has not.
@@ -958,8 +1031,14 @@ impl Viewport {
 
     /// The world point at a position of the area, through the float64 camera.
     pub fn world(&self, at: Point) -> Vec2 {
-        self.camera
+        self.shown()
             .screen_to_world(f64::from(at.x), f64::from(at.y))
+    }
+
+    /// The camera the area shows: a running gesture's live one (live.rs), else the app's. The pointer's world point
+    /// and a snap's reach are read through it, so a move while the wheel turns lands where the screen shows it.
+    pub fn shown(&self) -> Camera {
+        if self.live.moving() { self.live.camera() } else { self.camera }
     }
 }
 

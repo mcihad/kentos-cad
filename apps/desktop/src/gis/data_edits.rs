@@ -751,8 +751,11 @@ impl App {
     /// The edited layers' rows not saved yet, dashed in the warning colour over the drawing: a new row whose style draws
     /// nothing (a class it has no value for yet) still shows.
     pub(crate) fn data_edits_layer(&self, color: iced::Color) -> Option<Element<'_, Message>> {
-        let (_, outlines) = self.gis.data_edits.pending.as_ref()?;
-        crate::approved_layer::layer(Some(outlines), 0, &self.viewport.camera, color)
+        let Some((_, outlines)) = self.gis.data_edits.pending.as_ref() else {
+            self.gpu_layers.edits.clear();
+            return None;
+        };
+        crate::approved_layer::layer(Some(outlines), 0, &self.viewport.camera, color, &self.gpu_layers.edits)
     }
 
     /// The question: Kaydet, Kaydetme, Vazgeç.

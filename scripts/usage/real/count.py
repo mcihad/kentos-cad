@@ -49,7 +49,7 @@ def count(path):
             c["tik"] += 1
             ops["P"] += 2
             ops["B"] += 2
-        elif word == "wheel":
+        elif word in ("wheel", "burst"):
             to("mouse")
             n = abs(int(rest.split()[2]))
             c["teker"] += n

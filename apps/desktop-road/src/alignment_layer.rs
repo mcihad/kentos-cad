@@ -97,6 +97,8 @@ pub(crate) struct Layer<'a> {
     doc: &'a Document,
     camera: Camera,
     colors: Colors,
+    /// Where it goes for the area's renderer (plan/render.md RM-14); none: drawn on the canvas.
+    gpu: Option<crate::labels::GlyphSlot>,
 }
 
 /// The alignments of a revision, and the picture of a view.
@@ -108,8 +110,14 @@ pub(crate) struct State {
 }
 
 /// The layer of a road project with alignments; none otherwise.
-pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, colors: Colors) -> Option<Element<'a, Message>> {
+pub(crate) fn layer<'a>(
+    doc: &'a Document,
+    camera: &Camera,
+    colors: Colors,
+    slot: &crate::labels::GlyphSlot,
+) -> Option<Element<'a, Message>> {
     if doc.road_alignments().is_empty() || doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+        slot.clear();
         return None;
     }
     Some(
@@ -117,6 +125,7 @@ pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, colors: Colors) -> O
             doc,
             camera: *camera,
             colors,
+            gpu: crate::labels::gpu_text().then(|| slot.clone()),
         })
         .width(Fill)
         .height(Fill)
@@ -125,52 +134,8 @@ pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, colors: Colors) -> O
 }
 
 impl Layer<'_> {
-    fn key(&self, bounds: Rectangle) -> u64 {
-        use std::hash::{Hash, Hasher};
-        let mut h = std::collections::hash_map::DefaultHasher::new();
-        self.doc.revision().hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
-            for c in self.camera.world_to_screen(p) {
-                c.to_bits().hash(&mut h);
-            }
-        }
-        for c in [bounds.width, bounds.height, self.colors.ink.r, self.colors.accent.g, self.colors.warning.b] {
-            c.to_bits().hash(&mut h);
-        }
-        h.finish()
-    }
-}
-
-impl canvas::Program<Message> for Layer<'_> {
-    type State = State;
-
-    fn draw(
-        &self,
-        state: &State,
-        renderer: &Renderer,
-        _theme: &Theme,
-        bounds: Rectangle,
-        _cursor: mouse::Cursor,
-    ) -> Vec<canvas::Geometry> {
-        let revision = self.doc.revision();
-        if state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision) {
-            let all = made_alignments(self.doc)
-                .into_iter()
-                .filter_map(|(d, b)| b.ok().map(|b| drawn(&d, &b)))
-                .collect();
-            *state.built.borrow_mut() = Some((revision, all));
-        }
-        let key = self.key(bounds);
-        if state.key.get() != key {
-            state.cache.clear();
-            state.key.set(key);
-        }
-        let built = state.built.borrow();
-        let Some((_, all)) = built.as_ref() else {
-            return Vec::new();
-        };
-        let c = self.colors;
-        vec![state.cache.draw(renderer, bounds.size(), |frame| {
+    /// Its picture, on a canvas frame or for the area's renderer (plan/render.md RM-14).
+    fn paint(&self, frame: &mut impl crate::gpu_frame::Paint, all: &[Drawn], c: Colors) {
             let screen = |p: [f64; 2]| {
                 let [x, y] = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
                 Point::new(x as f32, y as f32)
@@ -298,6 +263,57 @@ impl canvas::Program<Message> for Layer<'_> {
                     });
                 }
             }
-        })]
+    }
+
+    fn key(&self, bounds: Rectangle) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        self.doc.revision().hash(&mut h);
+        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+            for c in self.camera.world_to_screen(p) {
+                c.to_bits().hash(&mut h);
+            }
+        }
+        for c in [bounds.width, bounds.height, self.colors.ink.r, self.colors.accent.g, self.colors.warning.b] {
+            c.to_bits().hash(&mut h);
+        }
+        h.finish()
+    }
+}
+
+impl canvas::Program<Message> for Layer<'_> {
+    type State = State;
+
+    fn draw(
+        &self,
+        state: &State,
+        renderer: &Renderer,
+        _theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
+        let revision = self.doc.revision();
+        if state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision) {
+            let all = made_alignments(self.doc)
+                .into_iter()
+                .filter_map(|(d, b)| b.ok().map(|b| drawn(&d, &b)))
+                .collect();
+            *state.built.borrow_mut() = Some((revision, all));
+        }
+        let key = self.key(bounds);
+        let built = state.built.borrow();
+        let Some((_, all)) = built.as_ref() else {
+            return Vec::new();
+        };
+        let c = self.colors;
+        if let Some(slot) = &self.gpu {
+            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f, all, c));
+            return Vec::new();
+        }
+        if state.key.get() != key {
+            state.cache.clear();
+            state.key.set(key);
+        }
+        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame, all, c))]
     }
 }

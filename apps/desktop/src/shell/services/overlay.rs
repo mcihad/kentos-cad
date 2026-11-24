@@ -16,7 +16,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use iced::alignment::Vertical;
-use iced::widget::canvas::{self, Frame, LineJoin, Stroke};
+use iced::widget::canvas::{self, LineJoin, Stroke};
 use iced::widget::text;
 use iced::{Color, Element, Fill, Font, Pixels, Point, Rectangle, Renderer, Theme, Vector, mouse};
 use kentos_commands::{DrawingFont, ServiceKind, ServiceLayer};
@@ -222,12 +222,14 @@ fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
 
 /// The labels' layer over the drawing area, under the drawing's own text;
 /// none while no vector service shows.
-pub fn layer<'a>(marks: Rc<Marks>, key: u64) -> Option<Element<'a, Message>> {
+pub fn layer<'a>(marks: Rc<Marks>, key: u64, camera: Camera, slot: &crate::labels::GlyphSlot) -> Option<Element<'a, Message>> {
     if marks.labels.is_empty() {
+        slot.clear();
         return None;
     }
+    let gpu = crate::labels::gpu_text().then(|| slot.clone());
     Some(
-        canvas::Canvas::new(Labels { marks, key })
+        canvas::Canvas::new(Labels { marks, key, camera, gpu })
             .width(Fill)
             .height(Fill)
             .into(),
@@ -237,6 +239,30 @@ pub fn layer<'a>(marks: Rc<Marks>, key: u64) -> Option<Element<'a, Message>> {
 struct Labels {
     marks: Rc<Marks>,
     key: u64,
+    /// The view its labels are placed on, and where they go for the area's renderer (plan/render.md RM-14); none:
+    /// drawn on the canvas.
+    camera: Camera,
+    gpu: Option<crate::labels::GlyphSlot>,
+}
+
+impl Labels {
+    /// The labels, turned with a twisted view as a picture of them.
+    fn paint_all(&self, frame: &mut impl crate::gpu_frame::Paint) {
+        let Some((twist, area, upright)) = self.marks.turn else {
+            for d in &self.marks.labels {
+                paint(frame, d);
+            }
+            return;
+        };
+        frame.with_save(|f| {
+            f.translate(Vector::new(area[0] / 2.0, area[1] / 2.0));
+            f.rotate(twist);
+            f.translate(Vector::new(-upright[0] / 2.0, -upright[1] / 2.0));
+            for d in &self.marks.labels {
+                paint(f, d);
+            }
+        });
+    }
 }
 
 #[derive(Default)]
@@ -256,33 +282,23 @@ impl canvas::Program<Message> for Labels {
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
+        if let Some(slot) = &self.gpu {
+            // A twisted view's turn is drawn with them, as on the canvas: their points are the area's own.
+            crate::gpu_frame::publish(slot, self.key, self.camera, bounds.size(), |f| self.paint_all(f));
+            return Vec::new();
+        }
         if state.key.get() != self.key {
             state.cache.clear();
             state.key.set(self.key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| {
-            let Some((twist, area, upright)) = self.marks.turn else {
-                for d in &self.marks.labels {
-                    paint(frame, d);
-                }
-                return;
-            };
-            frame.with_save(|f| {
-                f.translate(Vector::new(area[0] / 2.0, area[1] / 2.0));
-                f.rotate(twist);
-                f.translate(Vector::new(-upright[0] / 2.0, -upright[1] / 2.0));
-                for d in &self.marks.labels {
-                    paint(f, d);
-                }
-            });
-        })]
+        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint_all(frame))]
     }
 }
 
 /// A label: a point's lines through the glyph cache over eight copies in
 /// its halo's colour; a line's letters as outlines turned along it, the
 /// halo stroked under them.
-fn paint(frame: &mut Frame, d: &Drawn) {
+fn paint(frame: &mut impl crate::gpu_frame::Paint, d: &Drawn) {
     for line in &d.lines {
         let top = crate::labels::baseline_in(&line.text, d.font, d.size);
         let text = |position: Point, color: Color| canvas::Text {

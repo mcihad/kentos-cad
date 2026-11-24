@@ -11,6 +11,7 @@ pub mod bulge;
 pub mod centroid;
 pub mod curtain;
 pub mod curve_outline;
+pub mod deep;
 pub mod delaunay;
 pub mod dimension;
 pub mod ellipse;

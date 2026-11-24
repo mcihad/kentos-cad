@@ -2,7 +2,18 @@
 //! the layer tree's rows.
 
 use super::*;
+use crate::viewport::follow::{Follow, Follows};
 use iced::widget::column;
+
+/// An overlay of the drawing area on the live view (viewport/follow.rs, docs/adr/9205).
+fn following<'a>(
+    built: kentos_render_wgpu::Camera,
+    live: &crate::viewport::live::LiveView,
+    follows: Follows,
+    content: Element<'a, Message>,
+) -> Element<'a, Message> {
+    Follow::new(built, live.clone(), follows, content).into()
+}
 
 impl App {
     /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips; and the
@@ -145,9 +156,18 @@ impl App {
                         .marks(&doc.model, &self.viewport.camera, &colors, key);
                     (marks, key)
                 });
-                let service_labels = services
-                    .as_ref()
-                    .and_then(|(marks, key)| crate::services::overlay::layer(marks.clone(), *key));
+                let service_labels = match services.as_ref() {
+                    Some((marks, key)) => crate::services::overlay::layer(
+                        marks.clone(),
+                        *key,
+                        self.viewport.camera,
+                        &self.gpu_layers.services,
+                    ),
+                    None => {
+                        self.gpu_layers.services.clear();
+                        None
+                    }
+                };
                 let credits = services
                     .as_ref()
                     .map(|(marks, _)| self.credits_view(marks))
@@ -175,11 +195,28 @@ impl App {
                     self.color_mode(),
                     self.label_size(),
                     lift,
-                    self.label_engine(),
+                    // The drawing's text through the area's renderer where it can (docs/adr/9212 §4, stage 2).
+                    crate::labels::Engine { gpu: crate::labels::gpu_text(), ..self.label_engine() },
                     None,
                 );
+                // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).
+                let skip_labels = std::env::var("KENTOS_DIAG_SKIP").is_ok_and(|s| s.contains("labels"));
                 // This frame's placed labels: the masks' shapes (docs/adr/0226 §3).
                 let spots = self.label_spots.last();
+                // What the overlays below send the area's renderer, in their stack's order (gpu_frame.rs,
+                // docs/adr/9214): drawn over the picture, under the marks, grips and cards left on the canvas.
+                let layers = &self.gpu_layers;
+                let mut glyphs = vec![
+                    layers.terrain.clone(),
+                    layers.alignment.clone(),
+                    layers.approved.clone(),
+                    layers.services.clone(),
+                ];
+                glyphs.extend(self.data_label_glyphs());
+                glyphs.extend([layers.selection.clone(), layers.edits.clone()]);
+                if !skip_labels {
+                    glyphs.extend([self.label_spots.glyphs().clone(), self.label_spots.marks().clone()]);
+                }
                 let area = self.viewport.view(
                     doc,
                     self.canvas(),
@@ -189,6 +226,8 @@ impl App {
                     self.session.cursor(),
                     Some(crate::viewport::Styling {
                         labels: spots.as_deref(),
+                        // The texts and shapes the overlays' painting sends it (labels/gpu.rs, gpu_frame.rs).
+                        glyphs: &glyphs,
                         ..self.styles.styling(&self.spatial, &self.settings)
                     }),
                 );
@@ -198,14 +237,18 @@ impl App {
                 let typing = self.text_field_view();
                 // The paragraph editor over the drawing (paragraph_editor.rs, docs/adr/0182 §4).
                 let writing = self.paragraph_view();
-                let active: Element<'_, Message> = ContextMenu::controlled(
-                    stack![area]
+                // The drawing's overlays go with the area's live camera while a gesture runs, built for the app's
+                // (viewport/follow.rs, docs/adr/9205): the labels and the data layers' marks moved and scaled with the
+                // scene; the marks drawn at a screen size, the cards and the editors hidden until the view settles.
+                let (built, live) = (self.viewport.camera, &self.viewport.live);
+                let drawn = iced::widget::Stack::new()
                         // A road project's terrain surfaces over the drawing (terrain_layer.rs, plan/road.md Y2.4).
                         .extend(crate::terrain_layer::layer(
                             &doc.model,
                             &self.viewport.camera,
                             mark_colors(self.canvas()).fg,
                             Tokens::of(&self.theme()).danger,
+                            &self.gpu_layers.terrain,
                         ))
                         // The modules' layers over the drawing (Harita işi's approved shapes, docs/adr/4480).
                         .extend(crate::module_parts::all().iter().flat_map(|parts| parts.area_layers(self)))
@@ -216,26 +259,32 @@ impl App {
                         .extend(self.data_selection_layer(crate::view::rgba_color(accent)))
                         // The edited data layers' rows not saved yet, whatever their style draws (data_edits.rs).
                         .extend(self.data_edits_layer(Tokens::of(&self.theme()).warning))
-                        .push(labels)
+                        // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).
+                        .extend((!skip_labels).then_some(labels));
+                let still = |e| following(built, live, Follows::Still, e);
+                let active: Element<'_, Message> = ContextMenu::controlled(
+                    stack![area, following(built, live, Follows::Moved, drawn.into())]
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())
-                        .push(over)
+                        // The marks, grips, the crosshair and a tool's preview are drawn at a size on the screen: moved
+                        // and scaled with the view they grew sevenfold in a fast wheel. They wait for the view to settle.
+                        .push(following(built, live, Follows::Still, over))
                         .extend(credits)
                         // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).
                         .extend(self.navigation_view())
                         // The rollover card beside the pointer (hover_card.rs).
-                        .extend(self.hover_card_view())
+                        .extend(self.hover_card_view().map(still))
                         // Bilgi's card beside the object clicked (info_card.rs, docs/adr/0225 §5).
-                        .extend(self.info_card_view())
+                        .extend(self.info_card_view().map(still))
                         // A changed external reference's card (xrefs_watch.rs, docs/adr/0349 §3).
                         .extend(self.xref_notice_view())
                         // A write the bonds refused, with its way through (bond_notice.rs, docs/adr/0790 §2).
                         .extend(self.bond_notice_view())
                         // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
-                        .extend(self.selection_chip())
+                        .extend(self.selection_chip().map(still))
                         .extend(self.scene_browse_strip())
-                        .extend(typing)
-                        .extend(writing)
+                        .extend(typing.map(still))
+                        .extend(writing.map(still))
                         .extend(self.command_bar()),
                     self.drawing_menu.map(|open| open.at),
                     move |_| self.drawing_menu_items(),

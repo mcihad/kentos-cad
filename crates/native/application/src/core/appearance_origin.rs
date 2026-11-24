@@ -319,12 +319,18 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
     let standard = standard_layer(resolved.as_ref(), &node.name);
     let note = standard.as_ref().map(|(_, n)| n.as_str());
     let vps = viewport_styles(doc, node);
-    let on_layer = |has: &dyn Fn(&Entity) -> bool| {
-        let n = doc
-            .entities()
-            .filter(|x| x.base().layer_id == base.layer_id && has(x))
-            .count();
-        u32::try_from(n).unwrap_or(u32::MAX)
+    // How many of the layer's objects carry their own colour, line type and weight: one pass over the layer, by the
+    // document's layer index (docs/adr/9206). Three passes over every object of the drawing took 37 ms of each frame
+    // while one object of a 601 619-object drawing was selected: the panel is built with every view.
+    let owners = {
+        let mut n = [0usize; 3];
+        for x in doc.by_layer(&base.layer_id) {
+            let b = x.base();
+            n[0] += usize::from(b.color.is_some());
+            n[1] += usize::from(b.look.line_type.is_some() || b.look.line_pattern.is_some());
+            n[2] += usize::from(b.line_weight.is_some());
+        }
+        n.map(|k| u32::try_from(k).unwrap_or(u32::MAX))
     };
     let insert = matches!(e, Entity::Insert(_));
     let mut out = vec![explain_part(
@@ -335,7 +341,7 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
             layer: node.style.color.clone(),
             viewport: &|s: &LayerStyle| s.color.clone(),
             standard: standard.as_ref().map(|(l, _)| l.color.clone()),
-            owners: on_layer(&|x: &Entity| x.base().color.is_some()),
+            owners: owners[0],
         },
         node,
         note,
@@ -358,9 +364,7 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
                 standard: standard
                     .as_ref()
                     .map(|(l, _)| l.line_type.label().to_owned()),
-                owners: on_layer(&|x: &Entity| {
-                    x.base().look.line_type.is_some() || x.base().look.line_pattern.is_some()
-                }),
+                owners: owners[1],
             },
             node,
             note,
@@ -376,7 +380,7 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
                 layer: weight(node.style.line_weight),
                 viewport: &|s: &LayerStyle| weight(s.line_weight),
                 standard: standard.as_ref().map(|(l, _)| weight(l.line_weight)),
-                owners: on_layer(&|x: &Entity| x.base().line_weight.is_some()),
+                owners: owners[2],
             },
             node,
             note,

@@ -20,7 +20,7 @@
 //! picture.
 
 use iced::alignment::Vertical;
-use iced::widget::canvas::{Frame, Path, Stroke, Text};
+use iced::widget::canvas::{Path, Stroke, Text};
 use iced::widget::text;
 use iced::{Color, Font, Pixels, Point, Size, Vector};
 use kentos_interaction::Axes;
@@ -50,7 +50,7 @@ const UCS_NAME: f32 = 7.0;
 /// the CAD project's always, a CBS project's shows it beside its marks when
 /// it is not the world's (`ucs`: its angle; none, the world's).
 pub fn paint(
-    frame: &mut Frame,
+    frame: &mut impl crate::gpu_frame::Paint,
     camera: &Camera,
     colors: &Colors,
     axes: Axes,
@@ -76,7 +76,8 @@ pub fn paint(
             }
         }
         Axes::Cad => {
-            origin_mark(frame, camera, colors);
+            // A place on the drawing: it moves with the drawing while the view moves (docs/adr/9214).
+            frame.on_map_of(camera, |frame| origin_mark(frame, camera, colors));
             ucs_icon(
                 frame,
                 ucs_origin(size, ucs.unwrap_or(0.0) - twist),
@@ -105,7 +106,7 @@ pub fn origin_at(camera: &Camera, size: Size) -> Option<Point> {
 
 /// The drawing's 0,0 (UR-005): a small ring with a cross through it and “0,0” above to the right, in the ink's
 /// colour with a halo, so it reads on lines and fills alike.
-fn origin_mark(frame: &mut Frame, camera: &Camera, colors: &Colors) {
+fn origin_mark(frame: &mut impl crate::gpu_frame::Paint, camera: &Camera, colors: &Colors) {
     let Some(o) = origin_at(camera, frame.size()) else {
         return;
     };
@@ -173,7 +174,7 @@ fn ucs_reach(angle: f64) -> (f32, f32) {
 /// on the ground, so the screen's way round), the square only for the world's
 /// axes (a UCS's icon has none).
 fn ucs_icon(
-    frame: &mut Frame,
+    frame: &mut impl crate::gpu_frame::Paint,
     o: Point,
     colors: &Colors,
     angle: f64,
@@ -299,7 +300,7 @@ fn two_digits(v: f64) -> String {
     format!("{v:.decimals$}")
 }
 
-fn north_arrow(frame: &mut Frame, size: Size, colors: &Colors, twist: f64) {
+fn north_arrow(frame: &mut impl crate::gpu_frame::Paint, size: Size, colors: &Colors, twist: f64) {
     if twist != 0.0 {
         // Turned about its middle as the view turns the north (clockwise on the screen).
         let middle = Vector::new(size.width - 30.0, 22.0 + 17.0);
@@ -343,7 +344,7 @@ fn north_arrow(frame: &mut Frame, size: Size, colors: &Colors, twist: f64) {
     );
 }
 
-fn scale_bar(frame: &mut Frame, scale: f64, size: Size, colors: &Colors) {
+fn scale_bar(frame: &mut impl crate::gpu_frame::Paint, scale: f64, size: Size, colors: &Colors) {
     if !(scale.is_finite() && scale > 0.0) {
         return;
     }
@@ -392,7 +393,7 @@ struct Mark<'t> {
 }
 
 /// The text over eight copies of it in the halo's colour (the web's `haloText`).
-fn haloed(frame: &mut Frame, mark: Mark<'_>, halo: Color) {
+fn haloed(frame: &mut impl crate::gpu_frame::Paint, mark: Mark<'_>, halo: Color) {
     let text = |position: Point, color: Color| Text {
         content: mark.text.to_owned(),
         position,
