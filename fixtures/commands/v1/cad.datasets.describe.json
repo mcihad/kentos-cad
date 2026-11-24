@@ -647,7 +647,7 @@
          ],
          "geographic": [
           35.848012971546865,
-          39.91412444931137,
+          39.914124449311366,
           35.848246946567066,
           39.91415177456457
          ],
@@ -1038,7 +1038,7 @@
          ],
          "geographic": [
           35.848012971546865,
-          39.91412444931137,
+          39.914124449311366,
           35.848246946567066,
           39.91415177456457
          ],
@@ -2687,7 +2687,7 @@
          ],
          "geographic": [
           35.848012971546865,
-          39.91412444931137,
+          39.914124449311366,
           35.848246946567066,
           39.91415177456457
          ],
@@ -2718,11 +2718,11 @@
             [
              [
               35.848012971546865,
-              39.91412444931137
+              39.914124449311366
              ],
              [
               35.848246946567066,
-              39.91412444931137
+              39.914124449311366
              ],
              [
               35.848246946567066,
@@ -2734,7 +2734,7 @@
              ],
              [
               35.848012971546865,
-              39.91412444931137
+              39.914124449311366
              ]
             ]
            ]
@@ -6784,7 +6784,7 @@
          ],
          "geographic": [
           35.848012971546865,
-          39.91412444931137,
+          39.914124449311366,
           35.848246946567066,
           39.91415177456457
          ],
@@ -7959,12 +7959,39 @@
          ],
          "geographic": [
           35.84793042395497,
-          39.91406129786978,
+          39.914061297869786,
           35.848445913525815,
           39.91445824882468
          ],
          "srid": 5256,
          "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
+         ],
          "derivation": {
           "tool": "geometry.buffer",
           "label": "Tampon",
@@ -7999,33 +8026,6 @@
          ],
          "upstream": [
           "parsel"
-         ],
-         "dictionary": [
-          {
-           "name": "no",
-           "alias": "Parsel no",
-           "kind": "text",
-           "required": true,
-           "filled": 3
-          },
-          {
-           "name": "nitelik",
-           "kind": "text",
-           "choices": 2,
-           "filled": 1
-          },
-          {
-           "name": "alan",
-           "kind": "decimal",
-           "unit": "m²",
-           "filled": 2
-          },
-          {
-           "name": "Uzaklık",
-           "kind": "decimal",
-           "unit": "m",
-           "filled": 3
-          }
          ]
         }
        ],
@@ -8413,12 +8413,39 @@
          ],
          "geographic": [
           35.84793042395497,
-          39.91406129786978,
+          39.914061297869786,
           35.848445913525815,
           39.91445824882468
          ],
          "srid": 5256,
          "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
+         ],
          "derivation": {
           "tool": "geometry.buffer",
           "label": "Tampon",
@@ -8454,33 +8481,6 @@
          "stale": true,
          "upstream": [
           "parsel"
-         ],
-         "dictionary": [
-          {
-           "name": "no",
-           "alias": "Parsel no",
-           "kind": "text",
-           "required": true,
-           "filled": 3
-          },
-          {
-           "name": "nitelik",
-           "kind": "text",
-           "choices": 2,
-           "filled": 1
-          },
-          {
-           "name": "alan",
-           "kind": "decimal",
-           "unit": "m²",
-           "filled": 2
-          },
-          {
-           "name": "Uzaklık",
-           "kind": "decimal",
-           "unit": "m",
-           "filled": 3
-          }
          ]
         }
        ],
@@ -8877,12 +8877,39 @@
          ],
          "geographic": [
           35.84793042395497,
-          39.91406129786978,
+          39.914061297869786,
           35.848445913525815,
           39.91445824882468
          ],
          "srid": 5256,
          "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
+         ],
          "derivation": {
           "tool": "geometry.buffer",
           "label": "Tampon",
@@ -8917,33 +8944,6 @@
          ],
          "upstream": [
           "parsel"
-         ],
-         "dictionary": [
-          {
-           "name": "no",
-           "alias": "Parsel no",
-           "kind": "text",
-           "required": true,
-           "filled": 3
-          },
-          {
-           "name": "nitelik",
-           "kind": "text",
-           "choices": 2,
-           "filled": 1
-          },
-          {
-           "name": "alan",
-           "kind": "decimal",
-           "unit": "m²",
-           "filled": 2
-          },
-          {
-           "name": "Uzaklık",
-           "kind": "decimal",
-           "unit": "m",
-           "filled": 3
-          }
          ]
         }
        ],
@@ -9360,7 +9360,7 @@
          ],
          "geographic": [
           35.848012971546865,
-          39.91412444931137,
+          39.914124449311366,
           35.848246946567066,
           39.91415177456457
          ],
