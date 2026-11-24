@@ -4,8 +4,9 @@
 //! file, every module), found next to the launcher and then on `PATH`
 //! (`kentos_launch::programs`). Any other program is the manifest's path
 //! (relative to its folder) or a name on `PATH`. A place the user showed
-//! (Konumu seç…) comes first. What is not found says why, so that the card
-//! can say it and offer to show the place.
+//! (Konumu seç…) comes first when it is a program the app can start
+//! (`place.rs`). What is not found says why, so that the card can say it and
+//! offer to show the place.
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -13,6 +14,7 @@ use std::path::{Path, PathBuf};
 use kentos_launch::{Module, args};
 
 use crate::manifest::{Launch, Manifest, State};
+use crate::place;
 
 /// The program every KentOS module can run in (docs/adr/0801).
 pub const KENTOS_CAD: &str = "kentos-cad";
@@ -70,13 +72,9 @@ pub fn resolve(app: &Manifest, place: Option<&Path>, finder: &dyn Finder) -> Fou
         Launch::Url(url) => Found::Url(url.clone()),
         Launch::Kentos(module) => {
             if let Some(place) = place {
-                return if place.is_file() {
-                    Found::Program(kentos_spec(*module, place.to_path_buf()))
-                } else {
-                    Found::Missing(format!(
-                        "Gösterilen yer “{}” artık yok. Konumu yeniden seçin.",
-                        place.display()
-                    ))
+                return match place::program_at(app, place) {
+                    Ok(program) => Found::Program(kentos_spec(*module, program)),
+                    Err(why) => Found::Missing(why),
                 };
             }
             // Each module is an application of its own (docs/adr/0802; the owner: “her biri ayrı uygulama
@@ -102,13 +100,10 @@ pub fn resolve(app: &Manifest, place: Option<&Path>, finder: &dyn Finder) -> Fou
         } => {
             let base = app.origin.base();
             let path = match place {
-                Some(place) if place.is_file() => place.to_path_buf(),
-                Some(place) => {
-                    return Found::Missing(format!(
-                        "Gösterilen yer “{}” artık yok. Konumu yeniden seçin.",
-                        place.display()
-                    ));
-                }
+                Some(place) => match place::program_at(app, place) {
+                    Ok(program) => program,
+                    Err(why) => return Found::Missing(why),
+                },
                 None => {
                     let given = Path::new(program);
                     let has_folder = given.is_absolute() || given.components().count() > 1;
@@ -352,8 +347,9 @@ pub(crate) mod tests {
                 && why.contains("kentos-cad"),
             "{why}"
         );
-        // kentos-cad shown with Konumu seç… is the user's own choice: it starts in the module.
-        let Found::Program(spec) = resolve(
+        // A file that is not a program, shown with Konumu seç…, does not start: the card says what to choose
+        // (place.rs), and the search is not asked in its stead.
+        let Found::Missing(why) = resolve(
             &gis(),
             Some(
                 Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -362,12 +358,12 @@ pub(crate) mod tests {
             ),
             &cad_only,
         ) else {
-            panic!("the place shown");
+            panic!("not a program");
         };
-        assert_eq!(
-            spec.with_file(None).args,
-            Vec::<OsString>::new(),
-            "a program not named kentos-cad: no flag"
+        assert!(
+            why.contains("“Cargo.toml” bir program değil")
+                && why.contains("kentos-gis ya da kentos-cad"),
+            "{why}"
         );
     }
 
@@ -404,8 +400,14 @@ pub(crate) mod tests {
     #[test]
     fn a_place_shown_comes_first_and_a_gone_one_is_said() {
         let dir = crate::files::scratch("resolve-place");
-        let shown = dir.join("kentos-cad");
-        std::fs::write(&shown, b"").expect("a program");
+        let shown = dir.join(format!("kentos-cad{}", std::env::consts::EXE_SUFFIX));
+        std::fs::write(&shown, b"#!/bin/sh\n").expect("a program");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&shown, std::fs::Permissions::from_mode(0o755))
+                .expect("runnable");
+        }
         let none = Fixed(HashMap::new());
         let Found::Program(spec) = resolve(&gis(), Some(&shown), &none) else {
             panic!("found");

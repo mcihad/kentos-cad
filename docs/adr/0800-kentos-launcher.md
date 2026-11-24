@@ -132,7 +132,8 @@ KentOS'un çıkardığı:
   `kentos-cad --modul <id>`; ikisi de önce launcher'ın yanında, sonra `PATH`'te. `program` türünde tam yol, manifestin klasörüne göre
   yol ya da `PATH`'teki ad. Bulunamayanın kartı “Bulunamadı” der, düğmesi **Konumu seç…** olur, nedeni ipucundadır. Seçilen yer
   yalnız o uygulama için `$XDG_CONFIG_HOME/kentos-launcher/konumlar.json`'a yazılır, ⋯ menüsünde **Konumu sıfırla** bırakır; yeri
-  kaybolan konum söylenir.
+  kaybolan konum söylenir. Program olmayan yer (çizim, klasör, başka modülün programı) alınmaz; önceden kalmışsa açılışta unutulur
+  (Ek, 24 Kasım 2026).
 - **Her uygulama kendi sürecidir.** Kabuksuz başlar, standart girdisi boş, çıktısı ve hatası
   `$XDG_STATE_HOME/kentos-launcher/gunluk/<id>.log`'a (önceki kopyası çalışıyorsa `<id>-2.log` …); Unix'te kendi süreç grubunda
   (launcher'ın terminaline basılan Ctrl+C ona gitmez). Launcher onu beklemez: bir şey çalışırken saniyede bir bakar. 0'dan başka bir
@@ -239,3 +240,38 @@ KentOS'un çıkardığı:
   kartta olmayan rengi; “6 uygulama • 3 kurulu • 3 yakında”; oklar altı kartta; aramada “3B ŞEHİR” ve “afet”; altı resmin boyu);
   clippy temiz. Resimler (`.run/shots/`): Uygulamalar koyu ve açık 1440 × 900, koyu 1100 × 650 ve bütün ızgara 1440 × 1240; Uygulama
   ekle 13 ve 18 px; simge sayfası (`--boyut 1440x1280`: on sekiz satır 900 piksele sığmaz).
+
+## Ek (24 Kasım 2026): Konumu seç… yalnız programı alır
+
+- **Bulgu.** Sahip: “launcher üzerinden gis çalışmıyor”. Sahibin `konumlar.json`'unda KentOS GIS'in yeri olarak bir çizim
+  kayıtlıydı (`samples/konut-3-1.dxf`, aynı gün 11.39). Gösterilen yer aramadan önce geldiği için kart her başlatmada çizimi
+  program diye çalıştırmaya çalışıyordu; program bulunsa da GIS açılmıyordu. `resolve` yerin yalnız dosya olmasına bakıyordu. Bir
+  sınama da program olmayan bir dosyanın (`Cargo.toml`) GIS'in programı diye alınmasını bekliyordu.
+- **Karar** (`apps/launcher/src/place.rs`, `program_at`). Gösterilen yer şu koşullarla programdır:
+  - Var olmalı.
+  - Klasörse bir uygulama paketi (`.app`) olmalı; içindeki modülün kendi programı, yoksa `kentos-cad` çalışır.
+  - Sistem onu çalıştırabilmeli: Unix'te çalıştırma izni, Windows'ta `.exe`, `.com`, `.bat` ya da `.cmd`.
+  - KentOS modülünün kartında ya `kentos-cad` ya da modülün kendi programı olmalı. Başka modülün programı yanlış modülü açardı.
+    Kullanıcının eklediği uygulamada herhangi bir program olabilir.
+- **Uygulanışı:**
+  - **Seçerken:** program olmayan yer kaydedilmez. Uyarı nedenini ve ne seçileceğini söyler: ““konut-3-1.dxf” bir program değil.
+    KentOS GIS için kentos-gis ya da kentos-cad programını seçin.”
+  - **Açılışta:** önceden kalmış böyle bir yer unutulur, program yeniden aranır. Bildirim “KentOS GIS için gösterilen yer unutuldu;
+    program kendiliğinden aranıyor.” der, nedeni ayrıntısındadır.
+  - **Kaybolan yer:** unutulmaz, çünkü sürücü geri gelebilir; kart eskisi gibi “artık yok” der.
+- **Modüller ve kanallar** (CLAUDE.md'nin modül ve otomasyon kuralı):
+
+  | Modül | Durum |
+  |---|---|
+  | Mimari, Harita, Yol, CBS | Var: dört kartta aynı denetim |
+
+  | Kanal | Durum |
+  |---|---|
+  | Python, MCP, yapay zekâ ajanı, eklenti | Yok. Gerekçe: bu, başlatıcının kullanıcı ayarıdır; belge, proje ya da komut değildir, otomasyon başlatıcıyı sürmez. |
+- **Doğrulama:**
+  - `cargo test -p kentos-launcher`: 63 sınama geçti. Yedisi yeni: `place.rs`'te altı; `app.rs`'te sahibin durumu, yani kayıtlı
+    çizim unutulur, dosyadan da silinir, GIS yeniden bulunur, yeniden seçilince reddedilir. `resolve`'un sınaması yeni davranışa
+    göre değişti.
+  - Release başlatıcı yeniden derlendi.
+  - `kentos-gis --modul mimari` kendi modülünü bilerek reddetti; pencere açılmadan.
+  - Sahibin kendi dosyası bir sonraki açılışta bu yolla temizlenir.

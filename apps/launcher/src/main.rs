@@ -16,6 +16,7 @@ mod locations;
 mod manifest;
 mod notices;
 mod pictures;
+mod place;
 mod process;
 mod recent;
 mod registry;

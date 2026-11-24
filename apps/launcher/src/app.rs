@@ -277,6 +277,7 @@ impl Launcher {
                 self.now,
             );
         }
+        self.forget_stale_places();
         self.resolve_all();
         if self
             .selected
@@ -284,6 +285,38 @@ impl Launcher {
             .is_some_and(|id| self.registry.get(id).is_none())
         {
             self.selected = None;
+        }
+    }
+
+    /// Forgets the places kept for apps that are there but cannot be their program (a drawing chosen by mistake,
+    /// another module's program): the card searches again, and the notice says what was forgotten and why. A place
+    /// that is gone is kept; the card says it is gone.
+    fn forget_stale_places(&mut self) {
+        let stale: Vec<(String, String, String)> = self
+            .registry
+            .apps
+            .iter()
+            .filter_map(|app| {
+                let place = self.locations.get(&app.id)?;
+                let why = crate::place::stale(app, place)?;
+                Some((app.id.clone(), app.name.clone(), why))
+            })
+            .collect();
+        for (id, name, why) in stale {
+            match self.locations.clear(&id) {
+                Ok(()) => self.say(
+                    Severity::Warning,
+                    format!("{name} için gösterilen yer unutuldu; program kendiliğinden aranıyor."),
+                    Some(why),
+                ),
+                Err(e) => self.say(
+                    Severity::Error,
+                    format!(
+                        "{name} için gösterilen yer silinemedi ({e}). Ayar klasörünün iznini denetleyin."
+                    ),
+                    Some(why),
+                ),
+            }
         }
     }
 
@@ -436,6 +469,16 @@ impl Launcher {
             | Message::ProgramPicked(None) => {}
             Message::Locate(id) => return self.pick_program(id),
             Message::Located(id, Some(path)) => {
+                // A drawing or another file the system cannot run is not kept as the program: the card would
+                // never start again (place.rs).
+                let refused = self
+                    .registry
+                    .get(&id)
+                    .and_then(|app| crate::place::program_at(app, &path).err());
+                if let Some(why) = refused {
+                    self.say(Severity::Warning, why, None);
+                    return Task::none();
+                }
                 if let Err(e) = self.locations.set(&id, path) {
                     self.say(
                         Severity::Error,
@@ -1043,5 +1086,58 @@ mod tests {
             1,
             "a soon app starts nothing and says nothing"
         );
+    }
+
+    #[test]
+    fn a_drawing_kept_as_a_modules_program_is_forgotten_and_the_module_found_again() {
+        // What the owner's launcher kept (24 November 2026): a drawing shown as KentOS GIS's program, which made the
+        // card try to run the drawing.
+        let dir = crate::files::scratch("app-stale-place");
+        let drawing = dir.join("konut-3-1.dxf");
+        std::fs::write(&drawing, b"0\nEOF\n").expect("a drawing");
+        let file = dir.join("konumlar.json");
+        Locations::open(&file)
+            .set("kentos-gis", drawing.clone())
+            .expect("kept");
+        let mut launcher = Launcher::new(
+            Folders::default(),
+            Locations::open(&file),
+            Box::new(kentos(&["kentos-gis"])),
+            Processes::quiet(),
+            None,
+        );
+        launcher.set_registry(Registry::builtin());
+        assert_eq!(launcher.locations.get("kentos-gis"), None, "forgotten");
+        assert_eq!(
+            Locations::open(&file).get("kentos-gis"),
+            None,
+            "and in the file"
+        );
+        let Some(Found::Program(spec)) = launcher.found.get("kentos-gis") else {
+            panic!("found again by the search");
+        };
+        assert_eq!(spec.program, PathBuf::from("/opt/kentos/kentos-gis"));
+        let said: Vec<(String, Option<String>)> = launcher
+            .notices
+            .newest_first()
+            .map(|n| (n.text.clone(), n.detail.clone()))
+            .collect();
+        assert_eq!(said.len(), 1, "{said:?}");
+        assert_eq!(
+            said[0].0,
+            "KentOS GIS için gösterilen yer unutuldu; program kendiliğinden aranıyor."
+        );
+        assert!(
+            said[0]
+                .1
+                .as_deref()
+                .is_some_and(|d| d.contains("“konut-3-1.dxf” bir program değil")),
+            "{said:?}"
+        );
+        // Shown again with Konumu seç…: refused and not kept.
+        let _ = launcher.update(Message::Located("kentos-gis".into(), Some(drawing)));
+        assert_eq!(launcher.locations.get("kentos-gis"), None, "not kept");
+        assert_eq!(launcher.notices.len(), 2);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
