@@ -515,5 +515,11 @@ fn a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew() {
     // Nothing since now; a mark from another store's future: none.
     assert_eq!(s.redrawn_since(s.redraw_mark()), Some(&[][..]));
     assert_eq!(s.redrawn_since(s.redraw_mark() + 5), None);
+    // Another drawing typeface: a text measured again with it is named too.
+    s.put_json(r##"[{"id":4,"layerId":"yazi","kind":"text","p":{"x":1,"y":2},"text":"Salon","height":0.3}]"##)
+        .unwrap();
+    let mark = s.redraw_mark();
+    s.set_font(crate::text::Font::from_id("arimo"));
+    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&4.0));
 }
 

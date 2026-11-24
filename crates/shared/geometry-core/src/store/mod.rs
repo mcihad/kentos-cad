@@ -760,6 +760,8 @@ impl Store {
                 it.bounds = bounds;
                 it.expanded = expanded;
                 it.veiled = veiled;
+                let id = it.id;
+                self.redrew(id);
             }
             self.loosen(*s);
         }
@@ -1193,7 +1195,10 @@ impl Store {
                 it.bounds = bounds;
                 it.expanded = expanded;
                 it.veiled = veiled;
+                let id = it.id;
                 self.loosen(s);
+                // A space a tag came to or left draws its own label or not (docs/adr/0344): its source the same.
+                self.redrew(id);
             }
         }
         self.maybe_rebuild();
