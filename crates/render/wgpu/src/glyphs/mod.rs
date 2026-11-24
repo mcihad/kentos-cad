@@ -17,9 +17,22 @@ pub mod sdf;
 pub use atlas::{GlyphAtlas, GlyphKey, Lookup, Slot};
 pub use gpu::{GlyphGpu, GlyphLayer};
 
+use std::sync::Arc;
+
 use kentos_geometry_core::text::shaping::placed::PlacedGlyph;
 
 use crate::Rgba8;
+
+/// A view's texts as its host hands them over (docs/adr/9212 §5): the renderer builds their layer again when the
+/// version changes, and draws it over the view's picture every frame.
+#[derive(Clone, Debug, Default)]
+pub struct GlyphSet {
+    pub version: u64,
+    pub texts: Arc<Vec<GlyphText>>,
+    /// The logical pixels a metre the pixel texts were placed at: while the view zooms they grow with it, as a picture
+    /// of them would, until they are placed again (0: they keep their size).
+    pub placed_px: f64,
+}
 
 /// What a text's sizes and offsets are in.
 #[derive(Clone, Copy, Debug, PartialEq)]

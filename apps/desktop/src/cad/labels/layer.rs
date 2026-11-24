@@ -180,7 +180,15 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
         let size = Size::new(bounds.width + 2.0 * margin, bounds.height + 2.0 * margin);
         let geometry = state.cache.draw(renderer, size, |frame| {
             frame.translate(Vector::new(margin, margin));
-            self.labels.paint_texts(frame, margin);
+            // The pieces that may go to the renderer go there (gpu.rs); the scene draws them in this frame.
+            let sink = self.labels.gpu.as_ref();
+            if let Some(sink) = sink {
+                sink.begin();
+            }
+            self.labels.paint_texts(&mut super::gpu::Split { frame, sink, view: &self.labels.view }, margin);
+            if let Some(sink) = sink {
+                sink.publish(self.labels.view.map_px());
+            }
             let looks = self.labels.band_looks();
             *state.bands.borrow_mut() = band_mesh(&looks, Vector::new(margin, margin), size);
         });

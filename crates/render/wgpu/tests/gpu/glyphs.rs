@@ -73,11 +73,16 @@ fn middle(layout: &placed::Layout) -> [f64; 2] {
 
 /// The texts drawn over the grey through `frame`, read back as RGBA.
 fn draw(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &StyledFrame) -> Vec<u8> {
+    draw_grown(gpu, glyphs, texts, frame, 1.0)
+}
+
+/// As [`draw`], the pixel texts grown `grow` times.
+fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &StyledFrame, grow: f32) -> Vec<u8> {
     let (device, queue) = (&gpu.device, &gpu.queue);
     let mut layer = glyphs.layer(device, queue, texts, None);
     assert!(!layer.pending, "every field made without a deadline");
     glyphs.ensure(device, 1);
-    glyphs.prepare(device, queue, &mut layer, frame);
+    glyphs.prepare(device, queue, &mut layer, frame, grow);
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("glyphs target"),
         size: wgpu::Extent3d { width: W, height: H, depth_or_array_layers: 1 },
@@ -297,6 +302,12 @@ pub fn a_text_of_pixels_keeps_its_size_as_a_world_text_grows(gpu: &Gpu) {
     eprintln!("glyphs: the world text's ink ×{grown:.3}, the pixel text's ×{kept:.3} at twice the scale");
     assert!((grown - 4.0).abs() < 0.2, "the world text grows four times in area: ×{grown:.3}");
     assert!((kept - 1.0).abs() < 0.03, "the pixel text keeps its size: ×{kept:.3}");
+    // Grown with the view as a picture of it would (a gesture before the texts are placed again), it is the world
+    // text at the new scale.
+    let picture = draw_grown(gpu, &mut glyphs, std::slice::from_ref(&pixels), &nearer, 2.0);
+    let (mean, _, _) = compare(&w40, &picture);
+    eprintln!("glyphs: the pixel text grown twice against the world text at twice the scale: {mean:.3}");
+    assert!(mean < 0.2, "{mean:.3}");
 }
 
 /// Pans of a quarter, a half and a whole pixel at the survey grid's numbers, a centimetre text at 2000 px a metre:

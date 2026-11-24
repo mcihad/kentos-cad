@@ -3,7 +3,7 @@
 // (`glyphs/gpu.rs`), from the field's own constants.
 struct Frame {
   offset: vec2f,     // camera centre from the glyph layer's origin, metres: the float32 high part
-  scale: vec2f,      // unused here (the styled frame's layout)
+  grow: vec2f,       // x: how much the pixel texts grow while the view zooms (the styled frame's clip scale's place)
   pxPerM: f32,       // device px per metre
   dpr: f32,
   viewport: vec2f,   // device px
@@ -42,7 +42,7 @@ fn twisted(d: vec2f) -> vec2f {
   let e = quad.xy + c * quad.zw;
   let px = (flags & 0x10000u) != 0u;
   var k = frame.pxPerM;
-  if (px) { k = frame.dpr; }
+  if (px) { k = frame.dpr * frame.grow.x; }
   var d = (vec2f(m.x * e.x + m.z * e.y, m.y * e.x + m.w * e.y) + offset) * k;
   if (!px || (flags & 0x20000u) != 0u) { d = twisted(d); }
   // The anchor less the camera part by part: the high parts first, exact near the camera, then the low ones.
@@ -57,7 +57,9 @@ fn twisted(d: vec2f) -> vec2f {
   // axes). Never under the share that keeps the field's reach half a pixel: its box's edge stays clear of ink.
   let perField = max(sqrt(abs(m.x * m.w - m.z * m.y)) * k / EM_PX, 0.5 / SPREAD_PX);
   // The halo within the field's reach, its last half pixel left clear for the same reason.
-  o.k = vec2f(perField, clamp(haloPx * frame.dpr, 0.0, SPREAD_PX * perField - 0.5));
+  var haloK = frame.dpr;
+  if (px) { haloK = k; }
+  o.k = vec2f(perField, clamp(haloPx * haloK, 0.0, SPREAD_PX * perField - 0.5));
   return o;
 }
 

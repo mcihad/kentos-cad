@@ -153,6 +153,8 @@ pub struct Status {
     pub failure: Option<SampleFailure>,
     /// The styled atlas left images for another frame (docs/adr/0090): the area asks for one.
     pub images_pending: bool,
+    /// The glyph atlas left the fields of some letters for another frame (docs/adr/9212 §5): the area asks for one.
+    pub glyphs_pending: bool,
     /// The window's device pixels per logical pixel, as the last frame was drawn.
     pub scale_factor: f32,
 }
@@ -180,6 +182,9 @@ pub struct Styling<'a> {
     /// The labels placed this frame: the masks cutting with a layer's labels take
     /// their boxes (docs/adr/0226 §3).
     pub labels: Option<&'a kentos_interaction::spatial::LabelParts>,
+    /// The drawing's text the labels' painting sends the area's renderer (labels/gpu.rs, docs/adr/9212 §4); none:
+    /// the canvas draws it all.
+    pub glyphs: Option<&'a crate::labels::GlyphSlot>,
 }
 
 /// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
@@ -584,6 +589,8 @@ struct Program {
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
     passive: bool,
+    /// The drawing's text for the renderer (labels/gpu.rs, docs/adr/9212 §4).
+    glyphs: Option<crate::labels::GlyphSlot>,
 }
 
 impl Program {
@@ -690,13 +697,16 @@ impl shader::Program<Message> for Program {
                 shader::Action::request_redraw_at(at)
             });
         }
-        // The styled atlas left images for another frame (docs/adr/0090).
+        // The styled atlas left images for another frame (docs/adr/0090), the glyph atlas letters (docs/adr/9212 §5).
         if let iced::Event::Window(iced::window::Event::RedrawRequested(_)) = event
             && self
                 .status
                 .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .images_pending
+                .map(|s| s.images_pending || s.glyphs_pending)
+                .unwrap_or_else(|e| {
+                    let s = e.into_inner();
+                    s.images_pending || s.glyphs_pending
+                })
         {
             return Some(shader::Action::request_redraw());
         }
@@ -748,6 +758,7 @@ impl shader::Program<Message> for Program {
             moving,
             drawing: self.drawing,
             keep: self.keep,
+            glyphs: self.glyphs.clone(),
         }
     }
 
@@ -961,6 +972,8 @@ pub struct Frame {
     drawing: Option<u64>,
     /// A picture of an earlier frame may serve (`FrameInput::keep_picture`).
     keep: bool,
+    /// The drawing's text for the renderer (labels/gpu.rs, docs/adr/9212 §4); none in Büyüteç's window.
+    glyphs: Option<crate::labels::GlyphSlot>,
 }
 
 impl fmt::Debug for Frame {
@@ -1040,6 +1053,9 @@ impl shader::Primitive for Frame {
                         &kentos_render_wgpu::styled::NoImages,
                     ),
                 };
+                // The drawing's text over the picture (docs/adr/9212 §4): an empty set takes the last away.
+                let glyphs = self.glyphs.as_ref().map(crate::labels::GlyphSlot::get).unwrap_or_default();
+                let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &glyphs);
                 Status {
                     stats: renderer.stats(self.id).unwrap_or_default(),
                     error: prepared
@@ -1049,6 +1065,7 @@ impl shader::Primitive for Frame {
                     supported: renderer.sample_counts().to_vec(),
                     failure: renderer.sample_failure(self.id).cloned(),
                     images_pending,
+                    glyphs_pending,
                     scale_factor: scale,
                 }
             }
@@ -1129,6 +1146,7 @@ impl shader::Program<Message> for Lens {
             moving: false,
             drawing: None,
             keep: true,
+            glyphs: None,
         }
     }
 }

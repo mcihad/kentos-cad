@@ -115,3 +115,73 @@ Her aşama kendi ölçümüyle (yakın ve uzak tekerlek karesi, yazı sayısı) 
 - Çeyrek ve yarım pikseldeki ~0,02 px'lik sapma, harfler piksel ızgarasını geçerken alanın örneklenmesinden geliyor:
   tam pikselde sıfır.
 - Görüntüler: `.run/gui-evidence/render/rm13/` (GPU ile referans yan yana: `yan-yana.png`).
+
+## §6 Aşama 2: nesne yazıları GPU'da (24 Kasım 2026)
+
+**GPU'ya giden** (`apps/desktop/src/cad/labels/gpu.rs`):
+
+- yazı nesnelerinin ve öncü notlarının parçaları (`LabelSpot::Text`);
+- blok yazıları (`PieceText`);
+- maskesiz çok satırlı yazıların satırları (`Line`).
+
+**Kanvasta kalan:**
+
+- maskeli ya da altı çizili parça;
+- ölçü değerleri, etiket motorunun etiketleri, tablo hücreleri;
+- okunamayacak kadar küçük yazının bantları, maskeler;
+- SHX yazılar ve Unicode profilli yazılar;
+- harfi çizim yüzlerinde olmadığı için sistem yazı tipine düşen parça.
+
+Bunlar aşama 3'ün işi.
+
+**Nasıl:**
+
+- **Ayrım `Ink` katmanında:** kanvası saran bir `Ink` (`Split`), bulunulan yerin GPU'ya gidebilen parçasını glif olarak
+  toplar, gerisini kanvasa verir.
+  - Bant belleğinin sayacı (`Counted`, ADR 0786 §3) her iki durumda da parçayı sayar. Saymasaydı, sözcükleri GPU'ya
+    giden parça “yalnız bant çizdi” sanılıp sonraki boyamalarda yazısız kalırdı.
+- **Glifler kanvasınkiyle aynı:** parça, kanvasın şekillendirdiği gibi şekillendirilir (Iced'in yazısı, 100 px'te).
+  - Her glifin yüzü, metin sisteminin yüklediği baytlar çizim yüzleriyle karşılaştırılarak bulunur (Iced yüzlerin
+    kopyasını tutar).
+  - Yerleşim, eğim, genişlik çarpanı ve döndürme kanvasın sırasıyla uygulanır (labels/turned.rs).
+- **Aynı karede:** Iced önce bileşenleri çizer, sonra ilkelleri hazırlar. Kanvas resmini yaparken yazıları ortak bir
+  yuvaya bırakır (`GlyphSlot`, `Spots` içinde); sahne aynı karenin hazırlığında onları okur ve resmin, vurgunun
+  üstüne çizer. Glifleri ayrıca yerleştirmek ya da bir kare beklemek gerekmez.
+- **Birim ve hareket:**
+  - Yazı, kanvasın koyduğu yerde haritaya bağlanır; glifler oradan piksel olarak yerleştirilir.
+  - Döndürülmüş görünümde dik yerleştirilip görünümle döner; kanvasın döndürülmüş resmiyle aynı.
+  - Bir hareket boyunca, yazılar yeniden yerleştirilene dek canlı ölçeğin yerleştirme ölçeğine oranıyla büyür
+    (`GlyphSet::placed_px`). Bu, kanvasın taşınan ve ölçeklenen resmiyle aynı davranış.
+- **Bekleyen glif:** bir karede en çok 8 ms alan yapılır. Kalanlar olduğunda alan bir kare daha ister (görüntüler
+  için olan yol, `Status::glyphs_pending`).
+- **Karşılaştırma:** `KENTOS_DIAG_TEXT=canvas` yazıların hepsini kanvasta tutar (ölçüm ve önce/sonra görüntüleri için).
+
+**Bilinen sıra farkı:** veri katmanlarının etiketleri, yol projesinin arazi ve eksen katmanları ve onaylı şekiller artık
+çizim yazısının üstünde. Önceden altındaydı. Onlar da GPU'ya geçince (aşama 3 ve RM-14) eski sıra geri gelir.
+
+**Sınamalar:**
+
+- `labels::gpu`: bir yazı çizim yüzünün glifleri olarak, kanvasın ölçtüğü genişlikte; parçanın gliflerinin çapadan
+  yerleşimi (sol, orta, döndürülmüş); maskeli ve altı çizili parça ile başka bir yerin parçası kanvasta.
+- Yazı, sahne ve bölünmüş görünüm sınamaları: 64 geçti.
+- GPU sınaması: 2 kat büyütülmüş piksel yazısı, 2 kat ölçekteki dünya yazısıyla aynı (fark 0,000).
+
+**Gerçek pencere** (`.run/gui-evidence/render/rm13/`, Xvfb):
+
+- **Çizim:** iki katlı ev projesi, metre açılmış (ADR 9213).
+- **Karşılaştırma:** aynı ikili, aynı senaryo; önce `KENTOS_DIAG_TEXT=canvas` ile kanvas (`yazi-kanvas/`), sonra
+  GPU (`birim-sonra/`). Çizim alanının pikselleri:
+
+| Görünüm | Farklı piksel | Dörtte birden fazla sapan |
+|---|---|---|
+| Açılış (pafta, başlıklar ~10 px) | %0,35 | 152 |
+| 4 tekerlek adımı | %0,07 | 47 |
+| 8 adım (basamak numaraları ~20 px) | %0,04 | 0 |
+| 12 adım (~70 px) | %0,07 | 200 |
+
+- Fark yalnız harf kenarlarının yumuşatmasında: kanvasın glif önbelleği ipuçlu (hinted) bitmap çizer, GPU alanı.
+- Yer, boy ve kalınlık aynı. Büyütülmüş kesitler: `kesit-plan-basliklari.png`, `kesit-buyuk-rakam.png`.
+
+**Ölçüm:** kare süreleri (yakın ve uzak tekerlek karesi) release derlemesiyle, ADR 9207 §8'in ölçümüyle birlikte
+toplu ölçülecek (sahibin seçimi, 24 Kasım: “Sonra toplu ölç”). Ölçüm koşumunun tekerlek satırı artık GPU'nun çizdiği
+glif sayısını da yazıyor (`glif`).

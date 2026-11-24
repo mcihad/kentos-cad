@@ -42,8 +42,10 @@ use crate::drawing_fonts;
 use crate::viewport::Canvas;
 use kentos_native_style::color::ColorMode;
 
+mod gpu;
 mod layer;
 mod unicode;
+pub use gpu::{GlyphSlot, on as gpu_text};
 #[cfg(test)]
 mod parts_tests;
 
@@ -55,7 +57,7 @@ mod parts_tests;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>);
+pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>, GlyphSlot);
 
 /// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), the
 /// view's scale they were placed at, and which placing they are: a count of placings, which the labels' picture is
@@ -78,6 +80,11 @@ impl Spots {
     /// The bands its labels' parts were painted as (docs/adr/0786 §3).
     fn bands(&self) -> Rc<RefCell<BandMemo>> {
         self.1.clone()
+    }
+
+    /// The texts its labels' last painting sent to the drawing area's renderer (docs/adr/9212 §4, stage 2).
+    pub fn glyphs(&self) -> &GlyphSlot {
+        &self.2
     }
 
     /// The key the kept labels were asked for (a test's).
@@ -203,6 +210,9 @@ pub struct Engine {
     pub keep: bool,
     /// The view is moving (a pan, the wheel): the last placing is kept until it settles (docs/adr/0597).
     pub moving: bool,
+    /// The texts go to the drawing area's renderer as glyphs where they can (docs/adr/9212 §4, stage 2): the drawing
+    /// area's own labels, not Büyüteç's, a data layer's or another view's.
+    pub gpu: bool,
 }
 
 /// The same through Büyüteç's camera (docs/adr/0181 §5): the drawing's
@@ -240,6 +250,7 @@ pub fn lens_layer<'a>(
         Engine {
             keep: false,
             moving: false,
+            gpu: false,
             ..engine
         },
         None,
@@ -483,6 +494,7 @@ fn build<'a>(
             LabelSize::Screen { .. } => Some((placed_at, false)),
             _ => None,
         },
+        gpu: engine.gpu.then(|| gpu::Sink::new(kept.glyphs().clone())),
     };
     // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
     if true_size && labels.turned.is_none() {
@@ -699,6 +711,9 @@ struct Labels<'a> {
     /// true size (Kaybolmasın; Ekranda sabit does not clamp): a grown text drawn as high on the screen as there
     /// (docs/adr/1064 §6). None: drawn by its placing's growth as it is.
     held: Option<(f64, bool)>,
+    /// Where the pieces that may go to the drawing area's renderer go (docs/adr/9212 §4, stage 2); none: all on the
+    /// canvas.
+    gpu: Option<gpu::Sink>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -778,6 +793,7 @@ pub fn paint_in_map(
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
     }
     .paint(frame);
 }
@@ -871,6 +887,7 @@ fn collect(
         bands_out: None,
         moving: false,
         held: None,
+        gpu: None,
     }
     .paint(&mut list);
     list.labels
@@ -949,8 +966,16 @@ impl canvas::Program<Message> for Labels<'_> {
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
             crate::label_picture::set_twisted(self.turned.is_some());
             crate::label_picture::set_moving(self.moving);
+            // The pieces that may go to the renderer go there (gpu.rs); the scene draws them in this frame.
+            if let Some(sink) = &self.gpu {
+                sink.begin();
+            }
+            let sink = self.gpu.as_ref();
             let Some(area) = self.turned else {
-                self.paint(frame);
+                self.paint(&mut gpu::Split { frame, sink, view: &self.view });
+                if let Some(sink) = sink {
+                    sink.publish(self.view.map_px());
+                }
                 return;
             };
             // The upright picture's middle on the area's, turned by the twist (docs/adr/0285 §2).
@@ -964,8 +989,11 @@ impl canvas::Program<Message> for Labels<'_> {
                     -(self.view.width / 2.0) as f32,
                     -(self.view.height / 2.0) as f32,
                 ));
-                self.paint(f);
+                self.paint(&mut gpu::Split { frame: f, sink, view: &self.view });
             });
+            if let Some(sink) = sink {
+                sink.publish(self.view.map_px());
+            }
             if let Some(lift) = self.map_marks {
                 let ucs = self.format.ucs.map(|u| u[2]);
                 let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &area);

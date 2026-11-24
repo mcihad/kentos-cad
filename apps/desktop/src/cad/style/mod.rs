@@ -159,6 +159,7 @@ impl Styles {
         crate::viewport::Styling {
             spatial,
             styles: self,
+            glyphs: None,
             screen_symbols: settings.text("graphics.symbolSize") == "screen",
             line_weights: settings.bool("graphics.lineWeights"),
             view_build: kentos_native_style::View {

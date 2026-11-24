@@ -39,4 +39,6 @@ pub struct FrameStats {
     pub picture_zoomed: bool,
     /// With `picture_zoomed`: the ring a zoom out uncovered came from the wide picture, not drawn (docs/adr/1068 §2).
     pub picture_zoomed_wide: bool,
+    /// The drawing's text's glyphs drawn on the GPU (docs/adr/9212 §5).
+    pub glyphs: u64,
 }

@@ -76,6 +76,7 @@ impl App {
             pinned: self.settings.bool("graphics.pinnedLabels"),
             keep: true,
             moving: self.viewport.moving(),
+            gpu: false,
         }
     }
 

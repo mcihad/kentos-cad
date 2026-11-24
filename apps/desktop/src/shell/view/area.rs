@@ -189,9 +189,12 @@ impl App {
                     self.color_mode(),
                     self.label_size(),
                     lift,
-                    self.label_engine(),
+                    // The drawing's text through the area's renderer where it can (docs/adr/9212 §4, stage 2).
+                    crate::labels::Engine { gpu: crate::labels::gpu_text(), ..self.label_engine() },
                     None,
                 );
+                // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).
+                let skip_labels = std::env::var("KENTOS_DIAG_SKIP").is_ok_and(|s| s.contains("labels"));
                 // This frame's placed labels: the masks' shapes (docs/adr/0226 §3).
                 let spots = self.label_spots.last();
                 let area = self.viewport.view(
@@ -203,6 +206,8 @@ impl App {
                     self.session.cursor(),
                     Some(crate::viewport::Styling {
                         labels: spots.as_deref(),
+                        // The texts the labels' painting sends it (labels/gpu.rs), drawn over the picture.
+                        glyphs: (!skip_labels).then(|| self.label_spots.glyphs()),
                         ..self.styles.styling(&self.spatial, &self.settings)
                     }),
                 );
@@ -250,7 +255,7 @@ impl App {
                         // The edited data layers' rows not saved yet, whatever their style draws (data_edits.rs).
                         .extend(self.data_edits_layer(Tokens::of(&self.theme()).warning))
                         // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).
-                        .extend((!std::env::var("KENTOS_DIAG_SKIP").is_ok_and(|s| s.contains("labels"))).then_some(labels));
+                        .extend((!skip_labels).then_some(labels));
                 let still = |e| following(built, live, Follows::Still, e);
                 let active: Element<'_, Message> = ContextMenu::controlled(
                     stack![area, following(built, live, Follows::Moved, drawn.into())]

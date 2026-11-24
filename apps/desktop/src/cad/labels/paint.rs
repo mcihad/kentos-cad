@@ -340,6 +340,9 @@ impl Labels<'_> {
                     | LabelSpot::Cell { slot, .. } => *slot,
                 };
                 self.current.set(Some(slot));
+                if let Some(sink) = &self.gpu {
+                    sink.spot(spot);
+                }
                 let Some(entity) = self.doc.get(slot) else {
                     continue;
                 };
@@ -931,6 +934,9 @@ impl Labels<'_> {
         }
         if let Some(m) = memo.as_deref_mut() {
             m.end();
+        }
+        if let Some(sink) = &self.gpu {
+            sink.close();
         }
         let frame = &mut *frame.ink;
         // The view's own camera again for what follows.

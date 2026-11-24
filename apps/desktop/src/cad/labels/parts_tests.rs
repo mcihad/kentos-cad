@@ -91,6 +91,7 @@ fn bands(
         bands_out: Some(()),
         moving: false,
         held: None,
+        gpu: None,
     };
     let mut ink = Collect {
         doc,

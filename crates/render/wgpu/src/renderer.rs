@@ -115,6 +115,8 @@ pub struct SampleFailure {
 /// box is its geometry's; its widths, halos and marks reach out as far as their own reach says, this covers the
 /// anti-aliasing ramp the reach leaves out.
 const MOVED_STRIP_MARGIN_PX: f64 = 4.0;
+/// The CPU time a frame spends making new glyph fields (docs/adr/9212 §5: 0.24 ms each); the rest wait for the next.
+const GLYPH_BUDGET: std::time::Duration = std::time::Duration::from_millis(8);
 
 /// What a frame of a view needs besides its scene parts.
 #[derive(Clone, Copy, Debug)]
@@ -192,6 +194,8 @@ pub struct Renderer {
     styled: Option<StyledGpu>,
     /// The composing pipelines, made with the first composed frame (docs/adr/0226).
     composer: Option<Composer>,
+    /// The drawing's text's pipeline and glyph atlas, made with the first texts (docs/adr/9212 §5).
+    glyphs: Option<crate::glyphs::GlyphGpu>,
 }
 
 impl fmt::Debug for Renderer {
@@ -251,6 +255,7 @@ impl Renderer {
             chunk_bytes: device.limits().max_buffer_size.min(MAX_CHUNK_BYTES),
             styled: None,
             composer: None,
+            glyphs: None,
         })
     }
 
@@ -447,6 +452,19 @@ impl Renderer {
             screen_scale: camera.screen_scale(),
             twist: camera.twist,
             map: camera.map,
+        };
+        state.host = Drawn {
+            size_px: [frame.size_px[0].max(1.0), frame.size_px[1].max(1.0)],
+            scale_factor: frame.scale_factor,
+            center: [
+                frame.camera.center.x - frame.origin.x,
+                frame.camera.center.y - frame.origin.y,
+            ],
+            origin: [frame.origin.x, frame.origin.y],
+            scale: frame.camera.map_px(),
+            screen_scale: frame.camera.screen_scale(),
+            twist: frame.camera.twist,
+            map: frame.camera.map,
         };
         let uniform = camera.frame_uniform(
             frame.origin,
@@ -645,6 +663,55 @@ impl Renderer {
         pending
     }
 
+    /// The view's texts (docs/adr/9212 §5), after [`Renderer::prepare`] of the same frame: their layer built again
+    /// when the set's version changes or glyphs were left for later, the camera written, drawn over the picture and
+    /// the overlays at the host's resolution by [`Renderer::draw`] or [`Renderer::render`]. True while glyphs wait for
+    /// their fields: the host draws once more.
+    pub fn prepare_glyphs(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: ViewId,
+        set: &crate::glyphs::GlyphSet,
+    ) -> bool {
+        let format = self.format;
+        let Some(state) = self.views.get_mut(&view) else {
+            return false;
+        };
+        if set.texts.is_empty() {
+            state.glyphs = None;
+            state.stats.glyphs = 0;
+            return false;
+        }
+        let gpu = self.glyphs.get_or_insert_with(|| crate::glyphs::GlyphGpu::new(device, format));
+        gpu.ensure(device, 1);
+        if state.glyphs.as_ref().is_none_or(|(version, layer)| *version != set.version || layer.pending) {
+            let deadline = std::time::Instant::now() + GLYPH_BUDGET;
+            let layer = gpu.layer(device, queue, &set.texts, Some(deadline));
+            state.glyphs = Some((set.version, layer));
+        }
+        let Some((_, layer)) = state.glyphs.as_mut() else {
+            return false;
+        };
+        let h = state.host;
+        let frame = StyledFrame {
+            center: h.center,
+            origin: h.origin,
+            scale: h.scale,
+            dpr: h.scale_factor,
+            size_px: h.size_px,
+            scale_denominator: h.screen_scale,
+            twist: h.twist,
+            map: h.map,
+        };
+        let grow = if set.placed_px > 0.0 { (h.scale / set.placed_px) as f32 } else { 1.0 };
+        gpu.prepare(device, queue, layer, &frame, grow);
+        state.stats.glyphs = u64::from(layer.len());
+        state.stats.draw_calls += u32::from(!layer.is_empty());
+        state.stats.resident_bytes += layer.bytes();
+        layer.pending
+    }
+
     /// Whether `view` draws into its own targets this frame: the host then
     /// calls [`Renderer::render`] instead of [`Renderer::draw`].
     pub fn owns_targets(&self, view: ViewId) -> bool {
@@ -664,6 +731,10 @@ impl Renderer {
             self.styled.as_ref().map(|g| (g, 1)),
             state.parts.len(),
         );
+        // The texts over everything (docs/adr/9212 §5).
+        if let (Some(gpu), Some((_, layer))) = (&self.glyphs, &state.glyphs) {
+            gpu.draw(pass, layer, 1);
+        }
     }
 
     /// A panned view's picture (docs/adr/1067 §2): the kept one moved by `shift` whole picture pixels (x right, y
@@ -955,6 +1026,13 @@ impl Renderer {
             pass.set_bind_group(0, bind, &[]);
             let all = state.parts.len();
             state.draw_parts(&mut pass, host, all - state.overlays..all);
+        }
+        // The texts over the picture and the overlays, at the host's resolution (docs/adr/9212 §5): a kept, moved or
+        // scaled picture keeps none of them, so they move with the camera whatever the picture does.
+        if let (Some(gpu), Some((_, layer))) = (&self.glyphs, &state.glyphs) {
+            let [x, y, w, h] = state.viewport;
+            pass.set_viewport(x, y, w, h, 0.0, 1.0);
+            gpu.draw(&mut pass, layer, 1);
         }
     }
 
@@ -1318,6 +1396,11 @@ struct View {
     /// This frame's zoomed picture (docs/adr/1068): its plan, and whether the sharp picture is set aside as the source
     /// first.
     zoom: Option<(crate::zoomed::Plan, bool)>,
+    /// The host's camera and area this frame (the picture's may be on whole pixels or scaled): the texts are drawn at
+    /// it, over the picture.
+    host: Drawn,
+    /// The view's texts on the GPU (docs/adr/9212 §5) and the version of the set they were built from.
+    glyphs: Option<(u64, crate::glyphs::GlyphLayer)>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -1430,6 +1513,8 @@ impl View {
             plain_zoom: None,
             zoom_content: None,
             zoom: None,
+            host: Drawn::default(),
+            glyphs: None,
         }
     }
 

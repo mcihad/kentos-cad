@@ -189,7 +189,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Alan yapımı 0,24 ms; 22 yüzün Latin ve Türkçe takımı 553 ms, 3 sayfa.
     - Döndürülmüş, haleli yazı CPU'da bütünüyle çizilmiş referanstan ortalama 0,24 / 255 farklı.
     - Piksel birimi yakınlaşınca boyunu koruyor; kaydırma float32 adımının altında da kayıpsız.
-  - [ ] Aşama 2: nesne yazıları ve parçaları kanvastan çıkar.
+  - [x] Aşama 2: nesne yazıları, blok yazıları ve maskesiz çok satırlı yazılar GPU'da (ADR 9212 §6).
+    - Glifler kanvasınkiyle aynı (Iced'in şekillendirmesi); yazılar aynı karede sahnenin üstüne çiziliyor.
+    - Ev projesinde kanvasla fark piksellerin %0,04–0,35'i, yalnız kenar yumuşatmasında.
+    - Kare süreleri toplu ölçümde.
   - [ ] Aşama 3: ölçü değerleri, etiketler, eğri boyunca harfler, hücreler, çağrı kutuları.
   - [ ] Aşama 4: kanvas katmanı kalkar; yazılar da canlı kamerayla çizilir.
 - [ ] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
@@ -251,7 +254,6 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     metre okunuyor ve birim soruluyor (metre seçili).
   - Suşehri DXF'i (milimetre bildiriyordu, 12 m açılıyordu) ve 6 örnek daha artık gerçek boyunda.
   - Mimari çizimler değişmedi. Birim bildirmeyen ve orijinde duran çizim eskisi gibi soruluyor.
-  - Yazı boyundan çıkarım kullanılmadı: tek başına güvenilir değil.
   - [x] İkinci adım: yazı boyundan birim ([ADR 9213](../docs/adr/9213-cad-unit-from-letter-heights.md)). Sahibin sözü
     (24 Kasım): “bu proje bu kadar büyütülüyor … ölçü sistemi ile mi alakalı”, “Ama Autocad kusursuz büyütebiliyor”.
     - Milimetre bildiren iki katlı ev projesi 5 cm'lik pafta açılıyor, en derin ölçek (0,1 mm/piksel) paftanın

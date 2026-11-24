@@ -14,6 +14,20 @@ use super::{GlyphText, GlyphUnit};
 use crate::Rgba8;
 use crate::styled::StyledFrame;
 
+/// The frame a layer is drawn in (WGSL `Frame` in `glyphs.wgsl`): the styled frame's layout, its unused clip scale
+/// holding how much the pixel texts grow.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+struct FrameUniform {
+    offset: [f32; 2],
+    grow: [f32; 2],
+    px_per_m: f32,
+    dpr: f32,
+    viewport: [f32; 2],
+    offset_lo: [f32; 2],
+    twist: [f32; 2],
+}
+
 /// A glyph as the shader reads it (`glyphVs` in `glyphs.wgsl`).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
@@ -170,7 +184,7 @@ impl GlyphGpu {
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<StyledFrameUniform>() as u64),
+                        min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<FrameUniform>() as u64),
                     },
                     count: None,
                 },
@@ -333,7 +347,7 @@ impl GlyphGpu {
         self.upload(device, queue);
         let frame = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("kentos.glyphs.frame"),
-            size: std::mem::size_of::<StyledFrameUniform>() as u64,
+            size: std::mem::size_of::<FrameUniform>() as u64,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -374,8 +388,16 @@ impl GlyphGpu {
         }
     }
 
-    /// The layer's frame: the camera from its origin (bound again to the texture if it was made again).
-    pub fn prepare(&self, device: &wgpu::Device, queue: &wgpu::Queue, layer: &mut GlyphLayer, frame: &StyledFrame) {
+    /// The layer's frame: the camera from its origin, and how much the pixel texts `grow` (bound again to the
+    /// texture if it was made again).
+    pub fn prepare(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        layer: &mut GlyphLayer,
+        frame: &StyledFrame,
+        grow: f32,
+    ) {
         if layer.bound != self.generation {
             layer.bind = self.bind(device, &layer.frame);
             layer.bound = self.generation;
@@ -384,7 +406,16 @@ impl GlyphGpu {
             frame.center[0] + frame.origin[0] - layer.origin[0],
             frame.center[1] + frame.origin[1] - layer.origin[1],
         ];
-        let uniform = crate::styled::gpu::frame_uniform(&StyledFrame { center, ..*frame });
+        let styled: StyledFrameUniform = crate::styled::gpu::frame_uniform(&StyledFrame { center, ..*frame });
+        let uniform = FrameUniform {
+            offset: styled.offset,
+            grow: [if grow.is_finite() && grow > 0.0 { grow } else { 1.0 }, 0.0],
+            px_per_m: styled.px_per_m,
+            dpr: styled.dpr,
+            viewport: styled.viewport,
+            offset_lo: styled.offset_lo,
+            twist: styled.twist,
+        };
         queue.write_buffer(&layer.frame, 0, bytemuck::bytes_of(&uniform));
     }
 
@@ -406,6 +437,7 @@ mod tests {
 
     #[test]
     fn the_instance_is_as_the_shader_reads_it() {
+        assert_eq!(std::mem::size_of::<FrameUniform>(), std::mem::size_of::<StyledFrameUniform>());
         assert_eq!(std::mem::size_of::<Instance>(), 88);
         let last = ATTRIBUTES.last().expect("attributes");
         assert_eq!(last.offset + last.format.size(), 88);
