@@ -71,6 +71,34 @@ DXF'in nesne çokluğu Netcad'in aktarımından geliyor:
      4 080 daire.
    - NCZ'deki poligonlar çizgi tipi ya da desen taşımıyor (`look` boş). Sonuç: düz çizgiyle çiziliyorlar.
 
+## §4½ Katmanların stil kaydı (24 Kasım, çözüldü)
+
+**Kayıt:** NCZ'nin `LEX.ST2` bloğu her katman için 256 baytlık bir kayıt tutuyor. Okuyucu bunun yalnız ilk 3 baytını
+(renk) okuyordu. Katman adlarıyla eşlenince (renkler tutuyor: PL_KONUT #8C541A, PL_PARK #249C22) şu alanlar
+çıktı:
+
+| Bayt | Ne | Örnek |
+|---|---|---|
+| 0–2 | renk (RGB) | |
+| 5 | çizgi tipinin numarası | HAT_IFRAZ 40, HAT_KADEME 41, HAT_DOGALGAZ 19, KADASTRO 35, KST_DEMIRYOLU_KORU 4 |
+| 7–14 | çizgi kalınlığı, mm (f64) | KADASTRO 0,3; ADAKENARI 0,5 |
+| 16 | dolgu türü | plan alanlarında 5 |
+| 17 (19 = 1 iken) | katmanın sembol numarası | aşağıda |
+| 28–43 | 16 baytlık bir kimlik (GUID) | desenin ya da sembolün kütüphanedeki kimliği |
+
+**Sembol numarasının anlamı:**
+
+- **Plan alanlarında** alanın lejant kodu: PL_ANAOKULU 75, PL_CAMI 96, PL_TRAFO_ALANI 152, PL_PARK 101. Bunlar SM_SEMBOL
+  noktalarının kodları (ADR 9218).
+- **Koruma kuşaklarında** kuşağın desen sembolü: karayolu 66, boru hattı 67, su kanalı 68, demiryolu 71, enerji nakil
+  74.
+- **Sitlerde ve tescilli yapılarda:** 1./2./3. derece arkeolojik sit 35/36/37, tarihi sit 42, tescilli anıt yapı 52,
+  tescilli bina 53, sit etkileşim geçiş alanı 55.
+
+**Sonuç:** kayıtlar çizgi tiplerinin ve desenlerin çizimini değil, Netcad'in kütüphanesine numarasını taşıyor; çizim
+NCZ'de yok. Sembollerdeki gibi ancak KentOS'un MPYY sembollerine eşlenerek gösterilebilir. Bunun bir görünüm kararı
+var (plan alanlarının rengi), sahibe soruldu.
+
 ## §5 Karar
 
 - NCZ okuyucusu bu planda veri kaybetmiyor. Netcad'in kendi DXF aktarımından fazlasını, doğru konumda ve doğru renkle
