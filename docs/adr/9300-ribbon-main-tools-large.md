@@ -76,3 +76,4 @@
 - **Not:** `scripts/ui/ribbon.py` geride kalmış: `catalog/v1/ribbon.json` son haftalarda doğrudan düzenlenmiş
   (`ifc.view`, `terrain.sheetContours`, nokta bulutu komutları, Mimari'nin kolon ve kiriş aileleri …). Betikle
   üretmek bunları siler; bu iş JSON'u doğrudan düzenledi. Betiğin JSON'la eşitlenmesi ayrı iştir (TODOS.md).
+  **Kapandı (24 Kasım 2026, todos-new A9):** betik 54 farkın hepsini aldı, yine tek kaynak; `--check` yeşil.

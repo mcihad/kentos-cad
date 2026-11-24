@@ -6,12 +6,11 @@ fixtures/shell/README.md; docs/specs/ribbon.md).
     python3 scripts/fixtures/ribbon_cases.py           # writes the file
     python3 scripts/fixtures/ribbon_cases.py --check   # writes nothing; compares
 
-Writes fixtures/shell/v1/ribbon.json. The words, the offers and the web's
-tab names are written here by hand from the web's ribbon; every answer
-below is worked out here, apart from the web's TypeScript.
-apps/web/src/ui/ribbon/ribbonPlan.test.ts holds the web to the file (and the
-tab names to the ribbon the web builds), and the desktop's ribbon reads the
-same file.
+Writes fixtures/shell/v1/ribbon.json. The words and the offers are written
+here by hand; the tabs come from the desktop's ribbon (catalog/v1/ribbon.json,
+written by scripts/ui/ribbon.py), so the two cannot drift apart. Every answer
+below is worked out here, apart from the desktop's Rust, which reads the
+same file (the cancelled web app read it too).
 
 `--check` rebuilds the file in memory and compares it with the one on disk.
 """
@@ -48,12 +47,23 @@ SAMPLES = {
     'cannotStart': (['Daire', '3 nokta'], lambda t, l: f'“{t}: {l}” şu an başlatılamadı.'),
 }
 
-# The web's tabs in each ready project type (app/ribbon.ts CAD_RIBBON_TABS, GIS_RIBBON_TABS; docs/adr/0165 §6), in order;
-# the selection tab is contextual.
-TABS = {
+# The tab lists the key tip cases below were written with (the web's former CAD_RIBBON_TABS and GIS_RIBBON_TABS,
+# docs/adr/0165 §6): samples for the key tip rules, not today's ribbon. The tabs the file lists come from the desktop's
+# ribbon (`ribbon_tabs`).
+SAMPLE_TABS = {
     'cad': [('file', 'Dosya'), ('home', 'Giriş'), ('insert', 'Ekle'), ('annotate', 'Açıklama'), ('modify', 'Değiştir'), ('view', 'Görünüm'), ('manage', 'Yönet'), ('output', 'Çıktı'), ('selection', 'Seçim')],
     'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('map', 'Harita'), ('data', 'Veri'), ('edit', 'Düzenle'), ('analysis', 'Analiz'), ('raster', 'Raster'), ('survey', 'Ölçme'), ('view', 'Görünüm'), ('output', 'Çıktı'), ('selection', 'Seçim')],
 }
+
+# A project type's tabs as the desktop's ribbon has them (catalog/v1/ribbon.json, written by scripts/ui/ribbon.py):
+# its own tabs, then the contextual tabs that open in it (a contextual tab with no `modes` opens in both).
+RIBBON = json.loads(open('catalog/v1/ribbon.json', encoding='utf-8').read())
+
+
+def ribbon_tabs(mode):
+    own = [(t['id'], t['label'], False) for t in RIBBON['tabs'][mode]]
+    contextual = [(t['id'], t['label'], True) for t in RIBBON['contextual'] if mode in t.get('modes', [mode])]
+    return own + contextual
 
 # ── Answers ─────────────────────────────────────────────────────────
 
@@ -190,7 +200,7 @@ def split_face(e):
 
 LETTERS = ['Çizim', 'İşlemler', 'Görünüm: ölçü', 'Değiştir', 'Kâğıt', 'ışık', 'I/O 2', 'Yeni proje', 'Kaydet…', '3 nokta', 'Aç–kapat']
 ASSIGNS = [
-    ('the tabs of the CBS type', [l for _, l in TABS['gis'][:-1]], []),
+    ('the tabs of the CBS type', [l for _, l in SAMPLE_TABS['gis'][:-1]], []),
     ('one first letter each', ['Dosya', 'Giriş', 'Harita'], []),
     ('shared first letters get two, from the initials first', ['Yeni proje', 'Yapıştır', 'Yakınlaştır', 'Yay'], []),
     ('a reserved tip is never given', ['1. adım', 'Kaydet', 'Kes'], ['1', '2']),
@@ -249,7 +259,7 @@ def fill(o):
 
 
 def tabs_of(mode, selection):
-    return [label for tid, label in TABS[mode] if tid != 'selection' or selection]
+    return [label for tid, label in SAMPLE_TABS[mode] if tid != 'selection' or selection]
 
 
 # ── The Özellikler panel's lists and a command's row in a menu ──────
@@ -315,7 +325,8 @@ file = {
     'texts': fill(dict(TEXTS)),
     'quickAccessFixed': QUICK_ACCESS,
     'quickAccessOffers': OFFERS,
-    'tabs': {mode: [{'id': tid, 'label': label, **({'contextual': True} if tid == 'selection' else {})} for tid, label in tabs] for mode, tabs in TABS.items()},
+    'tabs': {mode: [{'id': tid, 'label': label, **({'contextual': True} if contextual else {})}
+                   for tid, label, contextual in ribbon_tabs(mode)] for mode in ('cad', 'gis')},
     'keyTips': {
         'letters': [{'label': l, 'letters': letters_of(l)} for l in LETTERS],
         'assign': [{'title': t, 'labels': labels, 'reserved': reserved, 'tips': assign_key_tips(labels, reserved)} for t, labels, reserved in ASSIGNS],

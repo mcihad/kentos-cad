@@ -143,7 +143,12 @@ değişkenler, karelaj, atlas, PNG, SVG, ön denetim. Ama Komut ara, komut satı
 “bekliyor / pafta açık değil” diye görüyor. Manifesto da `sheet.grid`'i bekleyen, `sheet.zoomIn`/`zoomOut`'u yarım sayıyor.
 Katalog, pafta kipiyle eşlenmeli.
 
-### A9 — P1 — Şeridin iki kaynağı ayrışmış
+### A9 — P1 — Şeridin iki kaynağı ayrışmış — [x] yapıldı
+
+**Durum (24 Kasım 2026):** tek kaynak `scripts/ui/ribbon.py`: JSON'a elle eklenen 54 fark betiğe yorumlarıyla taşındı
+(Mimari aileleri, nokta bulutu, rol panelleri, Ağ sekmesi, tip panelleri…). JSON betikle yeniden yazıldı; yalnız alan sırası
+değişti. `ribbon_cases.py` sekmeleri artık masaüstünün şeridinden okuyor. İkisinin de `--check`'i yeşil. Şerit, kısayol
+harfi, katalog, modül, ayarlar, Mimari şeridi ve programlar arası sınamalar geçti.
 
 - `scripts/ui/ribbon.py` 426 satır geride: çalıştırılırsa JSON'a elle eklenmiş komutları siler (TODOS.md'de yazılı).
 - `fixtures/shell/v1/ribbon.json` da eski (`ribbon_cases`).
