@@ -22,6 +22,7 @@ import json
 import sqlite3
 import struct
 import sys
+import tempfile
 import zlib
 from collections import Counter
 from pathlib import Path
@@ -505,14 +506,20 @@ def document(all_cases):
 
 
 def main():
-    text = json.dumps(document(cases()), ensure_ascii=False, indent=1) + "\n"
+    global OUT
     target = OUT / "expected.json"
     if "--check" in sys.argv:
+        # --check writes nothing: the GeoPackages are made again in a temporary folder (their bytes are sqlite's, which
+        # differs between Python builds; only expected.json is compared).
+        with tempfile.TemporaryDirectory() as tmp:
+            OUT = Path(tmp)
+            text = json.dumps(document(cases()), ensure_ascii=False, indent=1) + "\n"
         on_disk = target.read_text(encoding="utf-8") if target.exists() else ""
         if on_disk != text:
             sys.exit(f"{target} differs: run python3 scripts/fixtures/gpkg_open_cases.py")
         print("ok")
         return
+    text = json.dumps(document(cases()), ensure_ascii=False, indent=1) + "\n"
     target.write_text(text, encoding="utf-8")
     print(f"wrote {target} and {len(list(OUT.glob('*.gpkg')))} GeoPackages")
 

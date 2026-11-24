@@ -37,9 +37,12 @@ OUT = ROOT / "fixtures/commands/v1"
 SETTLED = ab.SETTLED
 W, J, u, dist = ab.W, ab.J, ab.u, ab.dist
 
-# A plain line beside the rooms, for a general (not architectural) constraint.
+# A plain line beside the rooms, for a general (not architectural) constraint. The rooms are arch_bond_cases.py's
+# first twelve objects, its two rooms and their doors: the grids, columns and arc walls it gained later (ids 13–19,
+# ADR 8049) are not in these scenes, and the line keeps the id 13 the cases were written with.
 LINE = {"kind": "line", "id": 13, "layerId": "duvar", "attrs": {}, "a": ab.P(0, 30), "b": ab.P(4, 30)}
-ENTITIES = ab.ENTITIES + [LINE]
+ENTITIES = [e for e in ab.ENTITIES if e["id"] <= 12] + [LINE]
+assert [e["id"] for e in ENTITIES] == list(range(1, 14)), "the scene's ids are its file order (kcad_v2_reference.py)"
 IDS = [e["id"] for e in ENTITIES]
 
 CORRIDOR = ab.CORRIDOR                                       # S's inner face to C's lower face: 1.20
@@ -110,6 +113,7 @@ class Scene:
 
     def setup(self):
         s = copy.deepcopy(ab.SETUP)
+        s["layers"] = [layer for layer in s["layers"] if layer["id"] != "kolon"]  # no columns in these scenes
         s["entities"] = copy.deepcopy(ENTITIES)
         s["uids"] = [ws.uid(e["id"]) for e in ENTITIES]
         cons = []

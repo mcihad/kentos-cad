@@ -24,14 +24,20 @@ OUT = 'fixtures/cloud/v1/share.json'
 TZ = 'Europe/Istanbul'
 ZONE = ZoneInfo(TZ)
 
-ROLE_LABEL = {'owner': 'Sahip', 'manager': 'Yönetici', 'editor': 'Düzenleyici', 'commenter': 'Yorumcu', 'viewer': 'Görüntüleyici'}
-GRANT_ROLES = ['viewer', 'commenter', 'editor', 'manager']
-INVITE_ROLES = ['viewer', 'commenter', 'editor']
+# Veri girişi (docs/adr/0411) and who reads the künye's personal particulars (docs/adr/8100) as the desktop's
+# Paylaş window and the server give them.
+ROLE_LABEL = {'owner': 'Sahip', 'manager': 'Yönetici', 'editor': 'Düzenleyici', 'entry': 'Veri girişi',
+              'commenter': 'Yorumcu', 'viewer': 'Görüntüleyici'}
+GRANT_ROLES = ['viewer', 'commenter', 'entry', 'editor', 'manager']
+INVITE_ROLES = ['viewer', 'commenter', 'entry', 'editor']
 ROLE_HINT = {
-    'viewer': 'Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.',
+    'viewer': 'Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez. Künyenin kişisel bilgileri ona gizlidir.',
     'commenter': 'Görüntüleyicinin yapabildikleri ve yorum.',
-    'editor': 'Nesneleri çizer, değiştirir ve siler.',
-    'manager': 'Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, projeyi paylaşır.',
+    'entry': 'Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun '
+             'gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez. Künyenin kişisel bilgileri ona gizlidir.',
+    'editor': 'Nesneleri çizer, değiştirir ve siler; künyenin kişisel bilgilerini görür.',
+    'manager': 'Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, '
+               'projeyi paylaşır.',
 }
 BLOCK_TEXT = {
     'expired': 'Paylaşımın süresi doldu',
