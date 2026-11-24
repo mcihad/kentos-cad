@@ -2401,7 +2401,7 @@
       "id": "tool.planRecognize",
       "title": "Planı tanı",
       "icon": "planRecognize",
-      "description": "Seçilen patlatılmış planı (ofisin DWG/DXF'i: duvar çift çizgi, kapı kanat ve yay, pencere paralel çizgiler, kolon çevre) duvara, kapıya, pencereye ve boşluğa çevirir. Her katmanın rolü adından gelir (DUVAR, KAPI, PENCERE, KOLON; aks, merdiven, yazı, mobilya yok sayılır), Araç ayarları'nda katman katman değiştirilir. Kat (L) ve Kaynak çizgiler (K) seçilir; tanınmayanlar çizimde kalır ve söylenir. Tek adımda (ADR 8048).",
+      "description": "Seçilen patlatılmış planı (ofisin DWG/DXF'i: duvar çift çizgi, kapı kanat ve yay, pencere paralel çizgiler, kolon çevre) duvara, kapıya, pencereye ve boşluğa çevirir. Her katmanın rolü adından gelir (DUVAR, KAPI, PENCERE, KOLON; aks, merdiven, yazı, mobilya yok sayılır), Araç ayarları'nda katman katman değiştirilir. Kat (L) ve Kaynak çizgiler (K) seçilir; tanınmayanlar çizimde kalır ve söylenir. Tek adımda.",
       "aliases": [
         "PLANITANI",
         "PLANTANI",
@@ -2954,7 +2954,7 @@
       "id": "tool.railing",
       "title": "Korkuluk",
       "icon": "railing",
-      "description": "Bağımsız korkuluk (docs/adr/8045 §3). Çizgi (S): Çiz — küpeştenin orta çizgisi nokta nokta tıklanır, Enter yazar, Kapat (K) ya da ilk noktaya tıklamak kapalı yazar; Boşluktan — döşemedeki galeri boşluğunun içine tıklanır, korkuluk boşluğun kenarı boyunca döşemenin üstünde yürür. Yükseklik (Y, 1,10 m; PAİY 38/1 döşemeden en az 1,10 m), Dolgu (D: Dikey çubuk, Cam, Dolu), Aralık (A, 0,10 m; PAİY 38/4 boşluklardan en çok 0,10 m çaplı geçiş), Küpeşte (E, 5 cm), Kot farkı (F). Daha alçak ya da aralığı daha geniş korkuluk yazılır, önizleme ve ileti kırmızıyla söyler. Planda küpeşte eni kadar aralıklı iki ince çizgi. Etkin kata, dolgusunun katmanına yazılır: MM-KORK-CUBUK, MM-KORK-CAM, MM-KORK-DOLU.",
+      "description": "Bağımsız korkuluk. Çizgi (S): Çiz — küpeştenin orta çizgisi nokta nokta tıklanır, Enter yazar, Kapat (K) ya da ilk noktaya tıklamak kapalı yazar; Boşluktan — döşemedeki galeri boşluğunun içine tıklanır, korkuluk boşluğun kenarı boyunca döşemenin üstünde yürür. Yükseklik (Y, 1,10 m; PAİY 38/1 döşemeden en az 1,10 m), Dolgu (D: Dikey çubuk, Cam, Dolu), Aralık (A, 0,10 m; PAİY 38/4 boşluklardan en çok 0,10 m çaplı geçiş), Küpeşte (E, 5 cm), Kot farkı (F). Daha alçak ya da aralığı daha geniş korkuluk yazılır, önizleme ve ileti kırmızıyla söyler. Planda küpeşte eni kadar aralıklı iki ince çizgi. Etkin kata, dolgusunun katmanına yazılır: MM-KORK-CUBUK, MM-KORK-CAM, MM-KORK-DOLU.",
       "aliases": [
         "RAILING",
         "KORKULUK"

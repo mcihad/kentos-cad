@@ -1767,7 +1767,7 @@
       "short": "Nokta listesi",
       "category": "Koordinat",
       "icon": "importNcn",
-      "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
+      "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NOKTALISTESI"
       ],
@@ -4268,7 +4268,7 @@
       "title": "DXF…",
       "category": "Dosya",
       "icon": "importDxf",
-      "description": "AutoCAD DXF (ASCII) çizimini içe aktarır: katmanlar, bloklar (patlatılarak), yaylı çoklu çizgiler, taramalar ve yazılar; alınamayanlar nedeniyle listelenir. DWG açılamaz: kapalı (tescilli) bir biçimdir; AutoCAD ya da Netcad'de DXF olarak kaydedip onu açın.",
+      "description": "DXF (ASCII) çizimini içe aktarır: katmanlar, bloklar (patlatılarak), yaylı çoklu çizgiler, taramalar ve yazılar; alınamayanlar nedeniyle listelenir. DWG açılamaz: kapalı (tescilli) bir biçimdir; çizimi başka bir çizim programında DXF olarak kaydedip onu açın.",
       "aliases": [
         "DXF",
         "DXFAL",
@@ -4423,7 +4423,7 @@
       "title": "Koordinat listesi (NCN, TXT, CSV)…",
       "category": "Dosya",
       "icon": "importNcn",
-      "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
+      "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NCN",
         "KOORDINATAL",
@@ -4458,14 +4458,13 @@
     },
     {
       "id": "file.import.ncz",
-      "title": "Netcad NCZ…",
+      "title": "NCZ…",
       "category": "Dosya",
       "icon": "importNcz",
-      "description": "Netcad NCZ çizimini içe aktarır: katmanlar, noktalar, çizgiler, yaylı çoklu çizgiler, yazılar ve imar planının akıllı nesneleri (yerleşim, yapılaşma, yol, plan notu, fonksiyon adı) Netcad sembolleriyle, en üstte çizilerek. Dosyanın bildirdiği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+      "description": "NCZ çizimini içe aktarır: katmanlar, noktalar, çizgiler, yaylı çoklu çizgiler, yazılar ve imar planının akıllı nesneleri (yerleşim, yapılaşma, yol, plan notu, fonksiyon adı) dosyadaki sembollerle, en üstte çizilerek. Dosyanın bildirdiği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
       "aliases": [
         "NCZ",
-        "NCZAL",
-        "NETCAD"
+        "NCZAL"
       ],
       "kind": "action",
       "shortcuts": [],
@@ -5798,7 +5797,7 @@
       "short": "Sanal bulut kaydet",
       "category": "Nokta bulutu",
       "icon": "pointCloudVpc",
-      "description": "Seçili nokta bulutunun dosyalarını sanal bulut (.vpc, QGIS ve PDAL'ın biçimi) olarak yazar: her dosyanın yolu, nokta sayısı ve kapsamı, sistemi EPSG kodluysa WGS 84'teki çerçevesi.",
+      "description": "Seçili nokta bulutunun dosyalarını sanal bulut (.vpc, nokta bulutu dosyalarını bir arada tanımlayan açık biçim) olarak yazar: her dosyanın yolu, nokta sayısı ve kapsamı, sistemi EPSG kodluysa WGS 84'teki çerçevesi.",
       "aliases": [
         "VPC",
         "SANALBULUT",
@@ -7531,7 +7530,7 @@
       "title": "Spline…",
       "category": "İşlemler",
       "icon": "splineSurface",
-      "description": "Noktalardan geçen en az eğrilikli yüzey (ArcGIS'in Spline'ı): düzenlemeli ya da gerilimli.",
+      "description": "Noktalardan geçen en az eğrilikli yüzey (spline): düzenlemeli ya da gerilimli.",
       "aliases": [
         "SPLINEYUZEY",
         "SPLINEINTERPOLASYON"
@@ -9900,7 +9899,7 @@
       "title": "Eğrilik…",
       "category": "İşlemler",
       "icon": "curvature",
-      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (birimi 1/100 m⁻¹) yazar.",
       "aliases": [
         "EGRILIK",
         "EGRISELLIK"
@@ -12650,7 +12649,7 @@
       "title": "Yay",
       "category": "Çizim",
       "icon": "arc",
-      "description": "AutoCAD’in tüm yay yöntemleri: üç nokta; başlangıç-merkez-bitiş/açı/kiriş; başlangıç-bitiş-merkez/açı/yön/yarıçap; merkez-başlangıç; son nesneye teğet devam.",
+      "description": "Tüm yay yöntemleri: üç nokta; başlangıç-merkez-bitiş/açı/kiriş; başlangıç-bitiş-merkez/açı/yön/yarıçap; merkez-başlangıç; son nesneye teğet devam.",
       "aliases": [
         "A",
         "ARC",
@@ -13151,7 +13150,7 @@
       "title": "Orta hat",
       "category": "Çizim",
       "icon": "centerline",
-      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar (Netcad’in Orta Hat Çiz’i).",
+      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar.",
       "aliases": [
         "ORTAHAT",
         "ORTAHATCIZ",
@@ -13388,7 +13387,7 @@
       "title": "Koordinat yaz",
       "category": "Açıklama",
       "icon": "coordinateLabel",
-      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey (Netcad’in Koordinat Yaz’ı); şablon, basamak, yön ve yükseklik seçilir.",
+      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey; şablon, basamak, yön ve yükseklik seçilir.",
       "aliases": [
         "KOORDINATYAZ",
         "KOORYAZ",
@@ -13735,7 +13734,7 @@
       "title": "Paralel kaydır",
       "category": "Düzenle",
       "icon": "edgeShift",
-      "description": "Bir alanın ya da çoklu çizginin düz kenarını kendine paralel kaydırır, komşu kenarlar uzar ya da kısalır; uzaklık yazılarak, imleçle ya da alanın hedef değerine göre (Netcad’in Paralel Kaydır’ı ve Alan Düzeltme (Paralel)’i).",
+      "description": "Bir alanın ya da çoklu çizginin düz kenarını kendine paralel kaydırır, komşu kenarlar uzar ya da kısalır; uzaklık yazılarak, imleçle ya da alanın hedef değerine göre.",
       "aliases": [
         "PARALELKAYDIR",
         "KENARKAYDIR",
@@ -14028,7 +14027,7 @@
       "title": "Tarama",
       "category": "Açıklama",
       "icon": "hatch",
-      "description": "Tıklanan kapalı alanı desenle, düz renkle ya da degradeyle tarar; ilişkili tarama sınırını izler (docs/adr/0186).",
+      "description": "Tıklanan kapalı alanı desenle, düz renkle ya da degradeyle tarar; ilişkili tarama sınırını izler.",
       "aliases": [
         "H",
         "HATCH",
@@ -16628,7 +16627,7 @@
       "title": "Km yaz",
       "category": "Açıklama",
       "icon": "stationLabels",
-      "description": "Bir güzergâhın üzerine aralıkla km yazar (0+020, 0+040 …): istasyonlarda yola dik işaret, dik ve okunur km yazısı, isteğe bağlı enkesit hattı ve eksenden sapmalı nokta; tek adımda (Netcad’in Obje Üzerinde Dizi’si).",
+      "description": "Bir güzergâhın üzerine aralıkla km yazar (0+020, 0+040 …): istasyonlarda yola dik işaret, dik ve okunur km yazısı, isteğe bağlı enkesit hattı ve eksenden sapmalı nokta; tek adımda.",
       "aliases": [
         "KMYAZ",
         "KILOMETREYAZ",
@@ -17888,7 +17887,7 @@
       "short": "Kalınlık",
       "category": "Görünüm",
       "icon": "lineWeight",
-      "description": "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (AutoCAD LWT); hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.",
+      "description": "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir; hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.",
       "aliases": [
         "KALINLIK",
         "LWT",
@@ -18765,7 +18764,7 @@
         "Devam"
       ],
       "steps": 3,
-      "description": "AutoCAD’in tüm yay yöntemleri: üç nokta; başlangıç-merkez-bitiş/açı/kiriş; başlangıç-bitiş-merkez/açı/yön/yarıçap; merkez-başlangıç; son nesneye teğet devam.",
+      "description": "Tüm yay yöntemleri: üç nokta; başlangıç-merkez-bitiş/açı/kiriş; başlangıç-bitiş-merkez/açı/yön/yarıçap; merkez-başlangıç; son nesneye teğet devam.",
       "productCommand": "cad.arc.create",
       "status": "implemented",
       "platforms": {
@@ -19129,7 +19128,7 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar (Netcad’in Orta Hat Çiz’i).",
+      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -19293,7 +19292,7 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey (Netcad’in Koordinat Yaz’ı); şablon, basamak, yön ve yükseklik seçilir.",
+      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey; şablon, basamak, yön ve yükseklik seçilir.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -19578,7 +19577,7 @@
       "rare": true,
       "methods": [],
       "steps": 3,
-      "description": "Bir alanın ya da çoklu çizginin düz kenarını kendine paralel kaydırır, komşu kenarlar uzar ya da kısalır; uzaklık yazılarak, imleçle ya da alanın hedef değerine göre (Netcad’in Paralel Kaydır’ı ve Alan Düzeltme (Paralel)’i).",
+      "description": "Bir alanın ya da çoklu çizginin düz kenarını kendine paralel kaydırır, komşu kenarlar uzar ya da kısalır; uzaklık yazılarak, imleçle ya da alanın hedef değerine göre.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
@@ -19806,7 +19805,7 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "Tıklanan kapalı alanı desenle, düz renkle ya da degradeyle tarar; ilişkili tarama sınırını izler (docs/adr/0186).",
+      "description": "Tıklanan kapalı alanı desenle, düz renkle ya da degradeyle tarar; ilişkili tarama sınırını izler.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -21827,7 +21826,7 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "Bir güzergâhın üzerine aralıkla km yazar (0+020, 0+040 …): istasyonlarda yola dik işaret, dik ve okunur km yazısı, isteğe bağlı enkesit hattı ve eksenden sapmalı nokta; tek adımda (Netcad’in Obje Üzerinde Dizi’si).",
+      "description": "Bir güzergâhın üzerine aralıkla km yazar (0+020, 0+040 …): istasyonlarda yola dik işaret, dik ve okunur km yazısı, isteğe bağlı enkesit hattı ve eksenden sapmalı nokta; tek adımda.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -26522,7 +26521,7 @@
       "id": "interpolation.spline",
       "label": "Spline",
       "category": "İnterpolasyon",
-      "description": "Noktalardan geçen en az eğrilikli yüzey (ArcGIS'in Spline'ı): düzenlemeli ya da gerilimli.",
+      "description": "Noktalardan geçen en az eğrilikli yüzey (spline): düzenlemeli ya da gerilimli.",
       "aliases": [
         "SPLINEYUZEY",
         "SPLINEINTERPOLASYON"
@@ -32117,7 +32116,7 @@
       "id": "surface.curvature",
       "label": "Eğrilik",
       "category": "Yüzey analizi",
-      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (birimi 1/100 m⁻¹) yazar.",
       "aliases": [
         "EGRILIK",
         "EGRISELLIK"
