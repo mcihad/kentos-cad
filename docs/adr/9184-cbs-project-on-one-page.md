@@ -1,5 +1,9 @@
 # ADR 9184: CBS projesi tek sayfada kurulur: ad, amaç, konum ve saklama
 
+- **Güncelleme (2026-11-24, [ADR 9202](9202-cbs-new-project-simple.md)):** sahibin sözüyle (“amaç bölümü gereksiz”,
+  “wizard kaldırma ama sadeleştir”) amaç ve saklama kartları ve Kurum şablonu kalktı. Sayfa ad, il ve koordinat
+  sistemidir; proje boş açılır (yalnız Açıklama), yeri ilk Kaydet'te sorulur.
+
 - **Durum:** kabul edildi (2026-11-23); adım VY-83. Plan: [plan/veri.md](../../plan/veri.md) VY-83.
 - **İstek:** sahibin sözü (23 Kasım 2026): “büyük arayüz işi (3, 12, 13, 15) ile devam”. Değerlendirmenin 3. maddesinin
   kalanı (ADR 9138): “sihirbazın tek karar sayfası (ad, amaç, CRS, saklama ve sonuçları), boş kent haritası şablonu.”

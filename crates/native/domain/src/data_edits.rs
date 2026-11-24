@@ -122,7 +122,7 @@ impl Document {
     fn not_editing(&self, layer: &str) -> Refusal {
         let name = self.layers.get(layer).map_or(layer, |n| n.name.as_str());
         Refusal(format!(
-            "“{name}” düzenlemeye açık değil. Katmanlar'da katmanın sağ tuşundan Düzenlemeyi başlat'ı seçin."
+            "“{name}” düzenlemeye açık değil. Önce düzenleme oturumunu açın: Düzenle sekmesinde Düzenlemeyi başlat."
         ))
     }
 

@@ -115,150 +115,10 @@ pub const WORKS: [Work; 3] = [
     },
 ];
 
-/// What a CBS project is for (docs/adr/9184): the layers it starts with. A cadastral sheet's tree is one choice
-/// among three, never imposed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Purpose {
-    /// An empty city map: one draft layer, the rest made as the work needs.
-    City,
-    /// A cadastral sheet's standard tree.
-    #[default]
-    Cadastre,
-    /// The institution's template project: its layers, styles, forms and relations, none of its objects.
-    Template,
-}
-
-/// A purpose as its card says it.
-pub struct PurposeCard {
-    pub purpose: Purpose,
-    pub name: &'static str,
-    pub note: &'static str,
-    pub icon: &'static str,
-}
-
-/// The purposes a CBS project is chosen among (docs/adr/9184).
-pub const PURPOSES: [PurposeCard; 3] = [
-    PurposeCard {
-        purpose: Purpose::City,
-        name: "Boş kent haritası",
-        note: "Bir taslak katmanıyla başlar; katmanları işinize göre kurarsınız.",
-        icon: "layers",
-    },
-    PurposeCard {
-        purpose: Purpose::Cadastre,
-        name: "Kadastro paftası",
-        note: "Taslak, Kadastro, Ulaşım, Topografya, Jeodezi ve Pafta gruplarıyla başlar.",
-        icon: "parcel",
-    },
-    PurposeCard {
-        purpose: Purpose::Template,
-        name: "Kurum şablonu",
-        note: "Kurumun şablon projesinin katmanları, stilleri ve formlarıyla başlar; nesneleri alınmaz.",
-        icon: "projectPack",
-    },
-];
-
-/// Where a CBS project's data is (docs/adr/9196 §2, CLAUDE.md §25 rule 5): its layers' objects and attributes are the
-/// tables of this store, made by Oluştur.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum DataPlace {
-    /// A GeoPackage file, named for the project unless another is given.
-    #[default]
-    Geopackage,
-    /// A PostgreSQL database's schema.
-    Postgres,
-    /// KentOS Bulut: the project and its data are a cloud database project.
-    Cloud,
-}
-
-/// A data place as its card says it: its name and what choosing it means.
-pub struct DataPlaceCard {
-    pub data: DataPlace,
-    pub name: &'static str,
-    pub note: &'static str,
-    pub icon: &'static str,
-}
-
-/// The places a CBS project's data is kept, each with its consequence in one sentence (docs/adr/9196 §2).
-pub const DATA_PLACES: [DataPlaceCard; 3] = [
-    DataPlaceCard {
-        data: DataPlace::Geopackage,
-        name: "GeoPackage",
-        note: "Katmanlar bir GeoPackage dosyasının tablolarıdır; tek dosya taşınır ve paylaşılır, başka CBS programları da okur.",
-        icon: "dataSources",
-    },
-    DataPlaceCard {
-        data: DataPlace::Postgres,
-        name: "PostgreSQL",
-        note: "Katmanlar bir veritabanı şemasının tablolarıdır; yetkili herkes aynı satırları görür, kim neyi yazar veritabanının rolleriyle denetlenir.",
-        icon: "server",
-    },
-    DataPlaceCard {
-        data: DataPlace::Cloud,
-        name: "KentOS Bulut",
-        note: "Proje ve verisi bulut veritabanındadır; roller ve formlar sunucuda denetlenir, oluşturmak için giriş gerekir.",
-        icon: "cloud",
-    },
-];
-
-/// Where a CBS project's file is kept (docs/adr/9184, 9196 §2): its structure, styles, settings and annotation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Storage {
-    /// A `.kcad` file beside its data.
-    #[default]
-    File,
-    /// In the GeoPackage of its data (docs/adr/9107).
-    Geopackage,
-    /// In the PostgreSQL schema of its data (docs/adr/9107).
-    Database,
-}
-
-/// A storage as its card says it: its name and what choosing it means.
-pub struct StorageCard {
-    pub storage: Storage,
-    pub name: &'static str,
-    pub note: &'static str,
-    pub icon: &'static str,
-}
-
-/// The places a project file is kept, each with its consequence in one sentence (docs/adr/9184, 9196 §2).
-pub const STORAGES: [StorageCard; 3] = [
-    StorageCard {
-        storage: Storage::File,
-        name: "Dosya (.kcad)",
-        note: "Proje dosyası verinin yanında bir .kcad dosyasıdır; tablolar kendi kaynağında kalır, taşırken ikisini birlikte taşıyın.",
-        icon: "save",
-    },
-    StorageCard {
-        storage: Storage::Geopackage,
-        name: "GeoPackage'ın içinde",
-        note: "Proje dosyası verisiyle aynı GeoPackage dosyasında durur; tek dosya taşınır ve paylaşılır.",
-        icon: "dataSources",
-    },
-    StorageCard {
-        storage: Storage::Database,
-        name: "Veritabanının içinde",
-        note: "Proje dosyası verisiyle aynı şemada durur; yetkili herkes açar.",
-        icon: "server",
-    },
-];
-
-/// The project file's places a data place offers (docs/adr/9196 §2): a GeoPackage's data a `.kcad` beside it or the
-/// file itself, a schema's a `.kcad` or the schema; a cloud project's file is the cloud's, nothing to choose.
-pub fn storages_for(data: DataPlace) -> &'static [Storage] {
-    match data {
-        DataPlace::Geopackage => &[Storage::File, Storage::Geopackage],
-        DataPlace::Postgres => &[Storage::File, Storage::Database],
-        DataPlace::Cloud => &[],
-    }
-}
-
-/// What a CBS project keeps where, said under the choices (docs/adr/9196 §2).
-pub const DATA_NOTE: &str = "Katmanların nesneleri ve öznitelikleri veri deposunun tablolarıdır; proje dosyası yapıyı, \
-     stilleri, ayarları ve açıklamaları (yazı, ölçü, pafta) tutar.";
+/// What a new CBS project starts as, said on its page (docs/adr/9202): no layer. Layers are added from data sources
+/// or made as new tables; the first Kaydet asks where the project file goes (the owner's word of 24 November 2026).
+pub const CBS_START_NOTE: &str = "Proje boş açılır: katmanları Harita ▸ Veri ekle ile var olan tablolardan ya da \
+     Veri ▸ Yeni katman ile yeni tablolar olarak eklersiniz. Projenin nereye kaydedileceği ilk Kaydet'te sorulur.";
 
 /// What the wizard holds while it is open; what is not chosen follows the others.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
@@ -292,18 +152,6 @@ pub struct Draft {
     /// ROAD-NUM-03): the wizard's Kotlar.
     #[serde(default)]
     pub ellipsoidal_heights: bool,
-    /// What a CBS project is for (docs/adr/9184).
-    #[serde(default)]
-    pub purpose: Purpose,
-    /// Where a CBS project's data is (docs/adr/9196 §2).
-    #[serde(default)]
-    pub data: DataPlace,
-    /// Where a CBS project's file is kept (docs/adr/9184, 9196 §2): one its data place offers.
-    #[serde(default)]
-    pub storage: Storage,
-    /// The institution's template file, when the purpose is one.
-    #[serde(default)]
-    pub template: Option<String>,
 }
 
 /// Map scales for a CBS project, drawing scales for a CAD one (1:N).
@@ -400,7 +248,8 @@ fn unit_choice(id: DrawingUnit) -> &'static UnitChoice {
 fn layers(kind: Kind) -> &'static str {
     match kind {
         Kind::Cad => "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen",
-        Kind::Gis => "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta",
+        // Docs/adr/9202: a CBS project starts empty.
+        Kind::Gis => "Yok: Veri ekle ya da Yeni katman ile eklenir",
     }
 }
 
@@ -488,23 +337,11 @@ impl Draft {
             annotation: None,
             chosen_work: None,
             ellipsoidal_heights: false,
-            purpose: Purpose::default(),
-            data: DataPlace::default(),
-            storage: Storage::default(),
-            template: None,
         }
     }
 
-    /// Its data's place chosen: the project file's place follows when the new place does not offer it.
-    pub fn choose_data(&mut self, data: DataPlace) {
-        self.data = data;
-        if !storages_for(data).contains(&self.storage) {
-            self.storage = Storage::File;
-        }
-    }
-
-    /// The steps the wizard shows for this type (docs/adr/9184): a CBS project decides its name, purpose, place and
-    /// storage on one page; a CAD project is asked what it is for first.
+    /// The steps the wizard shows for this type: a CBS project's name and place on one page (docs/adr/9184, 9202); a
+    /// CAD project is asked what it is for first.
     pub fn steps(&self) -> &'static [Step] {
         match self.kind {
             Kind::Cad => &STEPS,
@@ -515,12 +352,6 @@ impl Draft {
     /// What the rail writes under each step the type shows.
     pub fn notes_of_steps(&self) -> Vec<String> {
         self.steps().iter().map(|s| self.note(*s)).collect()
-    }
-
-    /// The template's file name as said, when one is chosen.
-    pub fn template_name(&self) -> Option<String> {
-        let path = self.template.as_deref()?;
-        Some(std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned()))
     }
 
     /// The work a CAD draft is made for, when its coordinates and unit are one's (a request may ask others).
@@ -720,29 +551,7 @@ impl Draft {
             },
             scale_text(self.scale()),
         ));
-        if self.kind == Kind::Gis {
-            let purpose = PURPOSES.iter().find(|c| c.purpose == self.purpose).map_or("", |c| c.name);
-            lines.push(("Amaç", purpose.to_owned()));
-            let layers = match self.purpose {
-                Purpose::City => "Boş kent haritası: Taslak".to_owned(),
-                Purpose::Cadastre => layers(self.kind).to_owned(),
-                Purpose::Template => match self.template_name() {
-                    Some(t) => format!("Kurum şablonu: {t}"),
-                    None => "Kurum şablonu: seçilmedi".to_owned(),
-                },
-            };
-            lines.push(("Katmanlar", layers));
-            let data = DATA_PLACES.iter().find(|c| c.data == self.data).map_or("", |c| c.name);
-            lines.push(("Veri", data.to_owned()));
-            let file = if self.data == DataPlace::Cloud {
-                "Bulutta"
-            } else {
-                STORAGES.iter().find(|c| c.storage == self.storage).map_or("", |c| c.name)
-            };
-            lines.push(("Proje dosyası", file.to_owned()));
-        } else {
-            lines.push(("Katmanlar", layers(self.kind).to_owned()));
-        }
+        lines.push(("Katmanlar", layers(self.kind).to_owned()));
         lines.push((
             "Açılış",
             if local {
@@ -767,9 +576,6 @@ impl Draft {
                 "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
                 self.srid()
             )),
-            Step::Details if self.kind == Kind::Gis && self.purpose == Purpose::Template && self.template.is_none() => {
-                Some("Kurum şablonu seçilmedi: Şablon seç… ile şablon projenin dosyasını gösterin.".to_owned())
-            }
             Step::Coords if !self.is_local() && system(self.srid()).is_none() => Some(format!(
                 "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
                 self.srid()
@@ -973,80 +779,22 @@ mod tests {
         assert_eq!(Step::Coords.name(Kind::Gis), "Konum");
     }
 
-    /// A CBS project decides its name, purpose, place and storage on one page (docs/adr/9184): a cadastral sheet
-    /// is one purpose among three, a template is shown before Oluştur, and the summary says the purpose and where
-    /// the project is kept. A CAD project keeps its three steps.
+    /// A CBS project's page asks its name and its place only (docs/adr/9184, 9202; the owner's word of 24 November
+    /// 2026: “amaç bölümü gereksiz”): it starts empty, its layers added afterwards, and the first Kaydet asks where it
+    /// goes. The summary says so; a CAD project keeps its three steps.
     #[test]
-    fn a_cbs_project_decides_its_purpose_and_storage_on_one_page() {
+    fn a_cbs_project_asks_its_name_and_place_and_starts_empty() {
         let mut d = Draft::initial(Workspace::Gis, 5256, DrawingFont::Barlow, None);
         assert_eq!(d.steps(), &[Step::Type, Step::Details][..]);
-        assert_eq!((d.purpose, d.storage, d.template.as_deref()), (Purpose::Cadastre, Storage::File, None));
         assert_eq!(Step::Details.name(Kind::Gis), "Proje");
-        assert_eq!(
-            PURPOSES.map(|c| (c.purpose, c.name)),
-            [
-                (Purpose::City, "Boş kent haritası"),
-                (Purpose::Cadastre, "Kadastro paftası"),
-                (Purpose::Template, "Kurum şablonu")
-            ]
-        );
-        assert_eq!(
-            DATA_PLACES.map(|c| (c.data, c.name)),
-            [
-                (DataPlace::Geopackage, "GeoPackage"),
-                (DataPlace::Postgres, "PostgreSQL"),
-                (DataPlace::Cloud, "KentOS Bulut")
-            ]
-        );
-        assert_eq!(
-            STORAGES.map(|c| (c.storage, c.name)),
-            [
-                (Storage::File, "Dosya (.kcad)"),
-                (Storage::Geopackage, "GeoPackage'ın içinde"),
-                (Storage::Database, "Veritabanının içinde")
-            ]
-        );
-        // Every choice says what it means in one sentence.
-        for note in PURPOSES
-            .map(|c| c.note)
-            .into_iter()
-            .chain(DATA_PLACES.map(|c| c.note))
-            .chain(STORAGES.map(|c| c.note))
-            .chain([DATA_NOTE])
-        {
-            assert!(note.ends_with('.') && note.matches(". ").count() == 0, "{note}");
-        }
         assert_eq!(d.notes_of_steps(), ["CBS · harita", "Yeni proje"]);
-        d.purpose = Purpose::Template;
-        assert_eq!(
-            d.blocked(Step::Details).as_deref(),
-            Some("Kurum şablonu seçilmedi: Şablon seç… ile şablon projenin dosyasını gösterin.")
-        );
-        d.template = Some("/kurum/Belediye şablonu.kcad".into());
-        assert_eq!(d.blocked(Step::Details), None);
-        assert_eq!(d.template_name().as_deref(), Some("Belediye şablonu.kcad"));
-        // The project file's place is one its data's place offers (docs/adr/9196 §2).
-        assert_eq!((d.data, d.storage), (DataPlace::Geopackage, Storage::File));
-        d.storage = Storage::Geopackage;
-        d.choose_data(DataPlace::Postgres);
-        assert_eq!(d.storage, Storage::File, "a GeoPackage is not a schema's place");
-        d.storage = Storage::Database;
         let summary = d.summary();
         let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
-        assert_eq!(
-            (line("Amaç"), line("Katmanlar"), line("Veri"), line("Proje dosyası")),
-            (
-                Some("Kurum şablonu"),
-                Some("Kurum şablonu: Belediye şablonu.kcad"),
-                Some("PostgreSQL"),
-                Some("Veritabanının içinde")
-            )
-        );
-        d.choose_data(DataPlace::Cloud);
-        let summary = d.summary();
-        let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
-        assert_eq!(line("Proje dosyası"), Some("Bulutta"));
-        assert!(storages_for(DataPlace::Cloud).is_empty());
+        assert_eq!(line("Katmanlar"), Some("Yok: Veri ekle ya da Yeni katman ile eklenir"));
+        for gone in ["Amaç", "Veri", "Proje dosyası"] {
+            assert_eq!(line(gone), None, "{gone}");
+        }
+        assert!(CBS_START_NOTE.contains("boş açılır") && CBS_START_NOTE.contains("ilk Kaydet"));
         // The place is on the same page: a system this version does not know stops Oluştur there.
         d.srid = Some(1234);
         assert_eq!(
@@ -1055,7 +803,6 @@ mod tests {
         );
         let cad = Draft::initial(Workspace::Cad, 5256, DrawingFont::Barlow, None);
         assert_eq!(cad.steps(), &STEPS[..]);
-        assert!(cad.summary().iter().all(|(k, _)| *k != "Amaç" && *k != "Veri"));
     }
 
     #[test]

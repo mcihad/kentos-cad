@@ -15,7 +15,7 @@ use std::f64::consts::PI;
 
 use kentos_contracts::{
     AngleUnit, ArchSettings, AreaUnit, Bounds, CadWork, DOCUMENT_FORMAT, DOCUMENT_VERSION,
-    DocumentSnapshotV1, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
+    DocumentSnapshotV1, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerGeometry, LayerNode,
     LayerNodeType, LayerStyle, LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles,
     Vec2, Workspace, ground_floor,
 };
@@ -30,6 +30,9 @@ pub const NEW_PROJECT_NAME: &str = "Yeni proje";
 pub const STANDARD_ACTIVE_LAYER: &str = "taslak";
 /// The layer a CAD project's new objects go to at first.
 pub const CAD_ACTIVE_LAYER: &str = "cizim";
+/// The one layer a new CBS project of the wizard starts with (docs/adr/9202): its texts and notes, which the project
+/// file keeps (CLAUDE.md §25 rule 5); a project's tree holds at least one layer (`.kcad`).
+pub const CBS_START_LAYER: &str = "aciklama";
 /// Plot scales offered (the web's `PLOT_SCALES`).
 pub const PLOT_SCALES: [f64; 5] = [500.0, 1000.0, 2000.0, 5000.0, 25_000.0];
 
@@ -405,10 +408,13 @@ pub fn cad_layers() -> Vec<LayerNode> {
     ]
 }
 
-/// An empty city map's layers (docs/adr/9184): one draft layer; the map tools' layers come when they first write
-/// (`standard_layer`).
-pub fn city_layers() -> Vec<LayerNode> {
-    vec![node("taslak", "Taslak", style("ink", None))]
+/// A new CBS project's tree (docs/adr/9202, the owner's word of 24 November 2026: a new project comes empty, its layers
+/// added from sources): one annotation layer, Açıklama, for texts and notes; no drawing or data layer. Its features go to
+/// the data layers Veri ekle and Yeni katman add. (It replaced the wizard's purposes, an empty city map among them.)
+pub fn cbs_start_layers() -> Vec<LayerNode> {
+    let mut layer = node(CBS_START_LAYER, "Açıklama", style("ink", None));
+    layer.geometry = Some(LayerGeometry::Annotation);
+    vec![layer]
 }
 
 /// The standard layer tree of a cadastral sheet: what a new project starts

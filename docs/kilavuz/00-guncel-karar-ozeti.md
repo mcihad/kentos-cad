@@ -285,6 +285,9 @@
   - **Katalogda sütun, kapsam ve ilişkili tablolar** (23 Kasım, rapor 7'nin kalanı; [ADR 9183](../adr/9183-catalog-column-extent-and-related-tables.md), VY-82): seçilen
     tablonun kimliği geometri sütununu ve kapsamını söyler; yabancı anahtarla bağlı tablolar altında düğmeyle seçilir.
     Topoloji sonucu PostGIS tablosu dışarıda yazılınca da eskir (`Source::change_mark`, ADR 9182).
+  - **CBS'nin yeni projesi sade** (24 Kasım, sahibin sözü; [ADR 9202](../adr/9202-cbs-new-project-simple.md)): sayfa ad, il
+    ve koordinat sistemidir; proje boş açılır (yalnız Açıklama); katmanlar Veri ekle ve Yeni katman ile eklenir; yeri
+    ilk Kaydet'te sorulur. Aşağıdaki 23 Kasım kaydının amaç ve saklama kartları kalktı.
   - **CBS projesi tek sayfada** (23 Kasım, rapor 3'ün kalanı; [ADR 9184](../adr/9184-cbs-project-on-one-page.md), VY-83): sihirbazın
     CBS adımları ikidir; ad, amaç (Boş kent haritası, Kadastro paftası, Kurum şablonu), il ve koordinat sistemi, saklama
     (Dosya, GeoPackage içinde, PostgreSQL veritabanında) aynı sayfada, her biri sonucunu bir cümleyle söyler. Kurum

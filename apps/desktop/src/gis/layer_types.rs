@@ -60,7 +60,13 @@ fn command_makes(id: &str) -> Option<&'static [&'static str]> {
 pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> {
     let kinds = command_makes(id)?;
     let layers = doc.layers();
-    let active = layers.get(layers.active())?;
+    let Some(active) = layers.get(layers.active()) else {
+        // An empty project, a new CBS project's start (docs/adr/9202): nothing is drawn before a layer is added.
+        return layers.leaves().is_empty().then(|| {
+            "Projede katman yok: önce Harita ▸ Veri ekle ile bir tablo ya da Veri ▸ Yeni katman ile yeni bir katman ekleyin."
+                .to_owned()
+        });
+    };
     // A data layer (docs/adr/9101, 9128): drawn on only in its edit session, of its table's geometry.
     if let Some(data) = &active.data {
         if data.read_only {
@@ -71,8 +77,7 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
         }
         if !doc.editing(&active.id) {
             return Some(format!(
-                "Etkin katman “{}” düzenlemeye kapalı: çizmek için önce Düzenlemeyi başlat'ı seçin (Katmanlar'da katmanın \
-                 sağ tuşu ya da Düzenle sekmesi).",
+                "Etkin katman “{}” düzenlemeye kapalı: çizmek için önce Düzenle sekmesinde Düzenlemeyi başlat'ı seçin.",
                 active.name
             ));
         }
@@ -100,6 +105,16 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     let leaves = layers.leaves();
     let typed = leaves.iter().find(|n| fits(n) && n.geometry.is_some());
     let other = typed.or_else(|| leaves.iter().find(|n| fits(n)));
+    // An annotation layer and no layer of the kind, a new CBS project's start (docs/adr/9202): its objects go to a
+    // data layer, never into the annotation turned into a drawing layer.
+    if other.is_none() && geometry == LayerGeometry::Annotation {
+        return Some(format!(
+            "Etkin katman “{}” bir açıklama katmanı; {} bu katmana yazılmaz. Nesneler veri katmanlarına çizilir: \
+             Harita ▸ Veri ekle ile bir tablo ya da Veri ▸ Yeni katman ile yeni bir katman ekleyin.",
+            active.name,
+            kentos_commands::kind_words(kind)
+        ));
+    }
     let way = match other {
         Some(n) => format!("“{}” katmanını etkin yapın", n.name),
         None => "türüne uyan bir katmanı etkin yapın".to_owned(),

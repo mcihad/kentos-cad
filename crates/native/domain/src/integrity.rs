@@ -109,7 +109,7 @@ impl Document {
                 out.push(Fault {
                     uid: change.uid,
                     message: format!(
-                        "“{}” bir veri katmanı ve düzenlemeye açık değil; satırları tablosunda durur. Katmanlar'da katmanın sağ tuşundan Düzenlemeyi başlat'ı seçin.",
+                        "“{}” bir veri katmanı ve düzenlemeye açık değil; satırları tablosunda durur. Önce düzenleme oturumunu açın: Düzenle sekmesinde Düzenlemeyi başlat.",
                         node.name
                     ),
                     code: Some(kentos_contracts::codes::DATA_LAYER_NOT_EDITING),

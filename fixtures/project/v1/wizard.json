@@ -46,20 +46,8 @@
           "1:1.000"
         ],
         [
-          "Amaç",
-          "Kadastro paftası"
-        ],
-        [
           "Katmanlar",
-          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
-        ],
-        [
-          "Veri",
-          "GeoPackage"
-        ],
-        [
-          "Proje dosyası",
-          "Dosya (.kcad)"
+          "Yok: Veri ekle ya da Yeni katman ile eklenir"
         ],
         [
           "Açılış",
@@ -119,20 +107,8 @@
           "1:1.000"
         ],
         [
-          "Amaç",
-          "Kadastro paftası"
-        ],
-        [
           "Katmanlar",
-          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
-        ],
-        [
-          "Veri",
-          "GeoPackage"
-        ],
-        [
-          "Proje dosyası",
-          "Dosya (.kcad)"
+          "Yok: Veri ekle ya da Yeni katman ile eklenir"
         ],
         [
           "Açılış",
@@ -192,20 +168,8 @@
           "1:5.000"
         ],
         [
-          "Amaç",
-          "Kadastro paftası"
-        ],
-        [
           "Katmanlar",
-          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
-        ],
-        [
-          "Veri",
-          "GeoPackage"
-        ],
-        [
-          "Proje dosyası",
-          "Dosya (.kcad)"
+          "Yok: Veri ekle ya da Yeni katman ile eklenir"
         ],
         [
           "Açılış",
@@ -540,14 +504,12 @@
         "name": "Ankara-Mahalle-Hizmetleri",
         "plotScale": null,
         "province": 6,
-        "purpose": "city",
         "srid": null,
-        "storage": "geopackage",
         "type": "gis",
         "unit": "m"
       },
       "firstSystem": 5255,
-      "name": "CBS, Ankara, boş kent haritası, GeoPackage içinde",
+      "name": "CBS, Ankara, boş proje",
       "notes": [
         "CBS · harita",
         "Ankara-Mahalle-Hizmetleri"
@@ -585,20 +547,8 @@
           "1:1.000"
         ],
         [
-          "Amaç",
-          "Boş kent haritası"
-        ],
-        [
           "Katmanlar",
-          "Boş kent haritası: Taslak"
-        ],
-        [
-          "Veri",
-          "GeoPackage"
-        ],
-        [
-          "Proje dosyası",
-          "GeoPackage'ın içinde"
+          "Yok: Veri ekle ya da Yeni katman ile eklenir"
         ],
         [
           "Açılış",
@@ -615,15 +565,12 @@
         "name": "Sivas imar",
         "plotScale": null,
         "province": 58,
-        "purpose": "template",
         "srid": null,
-        "storage": "database",
-        "template": "/kurum/Belediye şablonu.kcad",
         "type": "gis",
         "unit": "m"
       },
       "firstSystem": 5256,
-      "name": "CBS, Sivas, kurum şablonu, PostgreSQL",
+      "name": "CBS, Sivas, il dilimi",
       "notes": [
         "CBS · harita",
         "Sivas imar"
@@ -661,20 +608,8 @@
           "1:1.000"
         ],
         [
-          "Amaç",
-          "Kurum şablonu"
-        ],
-        [
           "Katmanlar",
-          "Kurum şablonu: Belediye şablonu.kcad"
-        ],
-        [
-          "Veri",
-          "GeoPackage"
-        ],
-        [
-          "Proje dosyası",
-          "Veritabanının içinde"
+          "Yok: Veri ekle ya da Yeni katman ile eklenir"
         ],
         [
           "Açılış",

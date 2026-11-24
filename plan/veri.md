@@ -612,6 +612,8 @@ numaraları raporunkidir.
   - Kalan: gerçek pencerede deneme, web.
 - [x] **VY-83 — CBS projesi tek sayfada kurulur: ad, amaç, konum ve saklama (rapor 3'ün kalanı).**
   ([ADR 9184](../docs/adr/9184-cbs-project-on-one-page.md))
+  - 24 Kasım ([ADR 9202](../docs/adr/9202-cbs-new-project-simple.md)): sahibin sözüyle sadeleşti: sayfa ad ve konumdur;
+    amaç, saklama ve Kurum şablonu kalktı; proje boş açılır, yeri ilk Kaydet'te sorulur. Aşağıdakiler geçmiştir.
   - Sihirbazın CBS adımları ikidir; ad, amaç, il ve koordinat sistemi, saklama aynı sayfada. Kartlar sonuçlarını birer
     cümleyle söyler; veri notu bağlamakla kopyalamayı ayırır.
   - Boş kent haritası yalnız Taslak katmanıyla başlar; Kadastro paftası öntanımlı kalır.

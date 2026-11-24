@@ -397,7 +397,7 @@ impl App {
             self.say(
                 kentos_interaction::Level::Info,
                 format!(
-                    "Bekleyen veri düzenlemeleri geri geldi ({}). Kaynağa yazmak için durum çubuğundaki “Kaynağa yazılmadı”ya ya da Katmanlar'da katmanın sağ tuşundan Değişiklikleri kaydet'e tıklayın; başkasının o arada değiştirdiği satırlar kaydederken sorulur.",
+                    "Bekleyen veri düzenlemeleri geri geldi ({}). Kaynağa yazmak için durum çubuğundaki “Kaynağa yazılmadı”ya ya da Düzenle sekmesinde Değişiklikleri kaydet'e tıklayın; başkasının o arada değiştirdiği satırlar kaydederken sorulur.",
                     back.join("; ")
                 ),
             );

@@ -12,7 +12,7 @@ use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Them
 use kentos_interaction::fixed;
 use kentos_project::crs::datum_label;
 use kentos_project::provinces;
-use kentos_project::wizard::{Coords, DATA_NOTE, DATA_PLACES, DataPlace, PURPOSES, Purpose, STORAGES, WORKS, storages_for};
+use kentos_project::wizard::{CBS_START_NOTE, Coords, WORKS};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, metrics, shape, typography};
 use kentos_ui::widget::Banner;
@@ -21,7 +21,6 @@ use kentos_ui::{label, style};
 use super::{Event, Note, State, art, event, strip};
 use crate::app::Message;
 use crate::catalog::{Mode, catalog};
-use crate::exchange::words;
 
 /// A page's title and what it is about.
 fn head<'a>(title: &'a str, lead: &'a str) -> Element<'a, Message> {
@@ -689,8 +688,9 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
 
 // ── CBS projesi: tek sayfa ─────────────────────────────────────────────
 
-/// A CBS project's one page (docs/adr/9184): its name, what it is for, where it is and where it is kept, each choice
-/// saying in a sentence what it means; nothing changes until Oluştur.
+/// A CBS project's one page (docs/adr/9184, 9202): its name and where it is, the province and the system; the project
+/// opens empty, its layers added afterwards and its place asked at its first Kaydet, as the note says. Nothing changes
+/// until Oluştur.
 pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message> {
     let d = &s.draft;
     let name = kentos_ui::widget::text_field("Proje adı", &d.name)
@@ -698,38 +698,9 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
         .on_input(|t| event(Event::Name(t)))
         .on_submit(event(Event::Next))
         .width(typography::from_default(420.0));
-    let purposes = Row::with_children(PURPOSES.iter().map(|c| {
-        small_card(c.icon, c.name, c.note, d.purpose == c.purpose, event(Event::Purpose(c.purpose)))
-    }))
-    .spacing(10);
-    let mut purpose = Column::new().push(purposes).spacing(8);
-    if d.purpose == Purpose::Template {
-        purpose = purpose.push(template_row(s));
-    }
-    // Where its data is and where its project file goes (docs/adr/9196 §2).
-    let places = Row::with_children(DATA_PLACES.iter().map(|c| {
-        small_card(c.icon, c.name, c.note, d.data == c.data, event(Event::Data(c.data)))
-    }))
-    .spacing(10);
-    let data = column![places, place_fields(s), label::caption(DATA_NOTE)].spacing(8);
-    let offered = storages_for(d.data);
-    let file: Element<'_, Message> = if offered.is_empty() {
-        label::caption("Proje dosyası bulutta, verisiyle aynı projededir.").into()
-    } else {
-        Row::with_children(STORAGES.iter().filter(|c| offered.contains(&c.storage)).map(|c| {
-            small_card(c.icon, c.name, c.note, d.storage == c.storage, event(Event::Storage(c.storage)))
-        }))
-        .spacing(10)
-        .into()
-    };
-    // The decisions first, the place's lists and the zone strip under them.
-    let mut parts = vec![
-        section("Proje adı", name),
-        section("Amaç", purpose),
-        section("Veri", data),
-        section("Proje dosyası", file),
-    ];
-    parts.extend(place_in(s, typography::from_default(132.0)));
+    // What comes after, under the name: in a low window the zone strip is what scrolls out of sight, not this.
+    let mut parts = vec![section("Proje adı", name), Banner::info(CBS_START_NOTE).into()];
+    parts.extend(place_in(s, typography::from_default(220.0)));
     if let Some(note) = current {
         parts.push(if note.warn {
             Banner::warning(note.text).into()
@@ -739,121 +710,9 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
     }
     page(
         head(
-            "Ad, amaç, konum ve saklama",
-            "Hepsi bu sayfadadır; Oluştur’a basana kadar değiştirebilirsiniz. Ölçek, yazı boyları ve yazı tipi Proje ayarları’ndadır.",
+            "Ad ve konum",
+            "Projenin adını ve koordinat sistemini seçin; Oluştur’a basana kadar değiştirebilirsiniz. Ölçek, yazı boyları ve yazı tipi Proje ayarları’ndadır.",
         ),
         parts,
     )
 }
-
-/// Where the data place's tables are made: a GeoPackage's path, a database's connection and schema; the cloud's
-/// workspace is chosen in Buluta yükle.
-fn place_fields(s: &State) -> Element<'_, Message> {
-    let p = &s.place;
-    match s.draft.data {
-        DataPlace::Geopackage => row![
-            container(
-                kentos_ui::widget::text_field("GeoPackage dosyasının yolu (.gpkg)", &p.path)
-                    .on_input(|t| event(Event::DataPath(t)))
-            )
-            .width(Fill),
-            words::secondary("Gözat…", Some(event(Event::DataBrowse))),
-        ]
-        .spacing(8)
-        .align_y(Center)
-        .into(),
-        DataPlace::Postgres => {
-            let list = kentos_postgis::connections::store().list();
-            let mut c = Column::new().spacing(6);
-            if !list.is_empty() {
-                let names: Vec<String> = list.iter().map(|c| c.name.clone()).collect();
-                c = c.push(
-                    container(
-                        kentos_ui::widget::select::Select::new(
-                            names.into_iter().map(kentos_ui::widget::select::Choice::new),
-                            p.connection,
-                            |i| event(Event::Connection(i)),
-                        )
-                        .searchable(false),
-                    )
-                    .width(typography::from_default(320.0)),
-                );
-            }
-            c.push(
-                row![
-                    container(
-                        kentos_ui::widget::text_field("postgresql://kullanıcı@sunucu:5432/veritabanı", &p.address)
-                            .on_input(|t| event(Event::Address(t)))
-                    )
-                    .width(FillPortion(3)),
-                    container(kentos_ui::widget::text_field("şema: public", &p.schema).on_input(|t| event(Event::Schema(t))))
-                        .width(FillPortion(1)),
-                ]
-                .spacing(8),
-            )
-            .into()
-        }
-        DataPlace::Cloud => {
-            label::caption("Oluştur, Buluta yükle penceresini açar; çalışma alanını orada seçersiniz.").into()
-        }
-    }
-}
-
-/// A choice on a CBS project's page: its icon and name over what choosing it means, the round mark in the corner.
-fn small_card<'a>(
-    icon_name: &'static str,
-    name: &'a str,
-    note: &'a str,
-    on: bool,
-    message: Message,
-) -> Element<'a, Message> {
-    let mark = container(icon(crate::icons::from_web(Some(icon_name))).size(16.0))
-        .center_x(typography::from_default(28.0))
-        .center_y(typography::from_default(28.0))
-        .style(mark_box(on));
-    button(
-        column![
-            row![
-                mark,
-                text(name)
-                    .font(typography::ui_strong())
-                    .size(typography::body())
-                    .width(Fill),
-                check(on),
-            ]
-            .spacing(8)
-            .align_y(Center),
-            text(note)
-                .size(typography::caption())
-                .style(style::text::muted),
-        ]
-        .spacing(6),
-    )
-    .on_press(message)
-    .padding(10)
-    .width(Fill)
-    .style(card(on))
-    .into()
-}
-
-/// Under Kurum şablonu: Şablon seç… and what the template brings, while it is read, or why it cannot be one.
-fn template_row(s: &State) -> Element<'_, Message> {
-    let said: Element<'_, Message> = match (&s.template_reading, &s.template) {
-        (Some(path), _) => label::muted(format!(
-            "“{}” okunuyor…",
-            path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
-        ))
-        .into(),
-        (None, Some(Ok(t))) => label::body(format!("“{}”: {}; nesneleri alınmaz.", t.name(), t.words())).into(),
-        (None, Some(Err(why))) => words::text_line(words::Kind::Error, why.clone()),
-        (None, None) => label::muted("Kurumun şablon projesini (.kcad) gösterin.").into(),
-    };
-    row![
-        words::secondary("Şablon seç…", Some(event(Event::PickTemplate))),
-        container(said).width(Fill),
-    ]
-    .spacing(10)
-    .align_y(Center)
-    .into()
-}
-

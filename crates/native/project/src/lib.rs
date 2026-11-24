@@ -16,7 +16,6 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
-pub mod cbs_tables;
 pub mod choice_form;
 pub mod crs;
 pub mod definition_form;

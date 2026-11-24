@@ -3,6 +3,10 @@
 - **Durum:** kabul edildi (2026-11-23); plan [plan/ayrim.md](../../plan/ayrim.md) AY-01 (karar), AY-05 ve AY-06
   (uygulama). ADR 9107'nin “CBS'de veri her hâlükârda veritabanında” sözünü kural yapar. ADR 9184'ün saklama
   kartlarını ve ADR 0031'in iki bulut biçiminin her türe açık olmasını değiştirir.
+- **Güncelleme (2026-11-24, [ADR 9202](9202-cbs-new-project-simple.md)):** sihirbaz veri yerini ve proje dosyasının
+  yerini sormaz, tablo kurmaz; CBS projesi boş açılır (yalnız Açıklama). Tablolar Veri ▸ Yeni katman ile kurulur
+  (yeri sorulur), var olanlar Harita ▸ Veri ekle ile eklenir; proje dosyasının yeri ilk Kaydet'te sorulur. §2'nin
+  sihirbazdan söz eden yerleri ve `kentos_project::cbs_tables` geçmiştir.
 - **İstek:** sahibin sözleri (23 Kasım 2026), sırasıyla:
   - “gis projelerinde veriler tamamen veri tabanına kaydedilir öz nitelikler de veritabanına kaydedilir proje dosyası
     sadece katman özelliklerini projenin yapısını ve diğer ayarları tutar bu buluta da kaydedilebilir dosyaya da
