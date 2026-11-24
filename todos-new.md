@@ -24,7 +24,12 @@ Bu incelemede düzeltilenler ayrıca yazılı (bölüm H); doğrulanmayanlar bö
 
 ## A. Düzeltilmesi gerekenler (doğrulandı)
 
-### A1 — P0 — Üreteçlerin `--check`'i kırmızı
+### A1 — P0 — Üreteçlerin `--check`'i kırmızı — [~] ortam sabit, 749/821 yeşil
+
+**Durum (24 Kasım 2026, ADR 9303):** ortam uv ile sabit (`scripts/fixtures/pyproject.toml`, `uv.lock`), `make fixtures-check`.
+Son basamak farkının nedeni macOS 27.2.1'in matematik kitaplığı; üreteçler doğru yuvarlanan `crmath.py` kullanıyor.
+Kalan 68 kırmızı: 2 ulp'den fazla kayan kitaplık başvuruları (PROJ, GDAL, GEOS, IfcOpenShell, numpy), ~40 Yol üreteci,
+ortam (GDAL'da LERC yok, PNG baytları); 4'ü QGIS istiyor. Hangisinin yeniden yazılacağı sahibin kararı.
 
 825 betikten 506'sı yeşil, **40'ı kırmızı**. 258'i bu makinede koşamıyor:
 
@@ -153,7 +158,7 @@ yalnız Harita ve CBS'de. Değişiklikler Python, MCP, ajan ve eklentiden `cad.s
 `file.export.atlas` ve `file.preflight.sheets` ile yapılabiliyor. Karelaj (`sheet.grid`) bekliyor.
 
 **Bulunan boşluklar (yeni maddeler):**
-- **A8b — P1:** tasarımcı değişiklikleri `cad.sheets.edit`'ten geçirmiyor; aynı çekirdek işlemi kendi kopyasına
+- **A8b — P1 — [~] başlandı:** `2bbd7a898` (`replace_ops`); kalan yama ve sınamalar `.run/a8b-taslak/`'ta hazır. Tasarımcı değişiklikleri `cad.sheets.edit`'ten geçirmiyor; aynı çekirdek işlemi kendi kopyasına
   uygulayıp bütün pafta kitabını `Document::set_sheets` ile yazıyor. Geçmişte komut ve girdisi görünmüyor, sürüm denetimi
   (`expectedRevision`) yok, tekrar oynatılamıyor (CLAUDE.md §25 kural 6).
 - **A8c — P2:** SVG ve PNG dışa aktarma, `.kpafta` alışverişi ve Şablon olarak kaydet için ürün komutu yok.
@@ -279,7 +284,12 @@ Manifesto (`docs/cad/manifest.md`): CBS'ye özgü olmayan 1 018 satırdan 41'i.
 
 Özellikle betikle NCZ, NCN, GeoJSON ya da KML alışverişi yapılamıyor.
 
-### B4 — P1 — Kısayol özelleştirme
+### B4 — P1 — Kısayol özelleştirme — [x] yapıldı
+
+**Durum (24 Kasım 2026, `07e99bb9e` ve sözleşme dilimi `2bbd7a898`'in içinde, ADR 9308):** Ayarlar › Kısayollar:
+komuta kendi tuşu ve adı, çakışmada sorup taşıma, KentOS'un ve sistemin ayırdığı tuşlar reddi, varsayılana dönüş, anında
+uygulama; dört modülde. Kanallar yok (kişinin arayüz tercihi). Resimleri çekilmedi (`keymap_tests::screens` hazır).
+Sahibe sorular: pafta tasarımcısının tuşları, iki vuruşlu kısayollar, Python'a salt okur erişim.
 
 Kullanıcı kısayol ve takma ad tanımlayamıyor. Ayarlarda böyle bir bölüm yok; yalnız Klavye kısayolları listesi ve klasik
 CAD takma ad profili var.
@@ -328,7 +338,11 @@ Katalogda bekliyorlar, şeritte yerleri yok:
 - **Pafta bölümlemesi** (`map.sheet`). Atlas kapsam katmanından sayfa yapıyor; standart pafta adı ve indeksi yok.
 - **Hacim hesabı** (`analysis.volume`). Arazi'de Stok hacmi var.
 
-### C2 — P1 — Kadastro ve resmî işlem çıktıları kodda yok
+### C2 — P1 — Kadastro ve resmî işlem çıktıları kodda yok — [~] parsel alan çizelgesi yapıldı (F6)
+
+**Durum (24 Kasım 2026, ADR 9306):** `cad.parcels.report` ve `cad.parcels.table` (Harita › Plan › Ada ve parsel ›
+Alan çizelgesi): köşe adları, Y, X, kenar, yay, koordinatlardan alan, tapu alanı ayrı, fark ve yanılma sınırı; CSV ve
+çizime tablo; Python, MCP, ajan, eklenti. Kalan: ölçü ve aplikasyon krokisi; kendini güncelleyen tablo (sahibin kararı).
 
 - kamulaştırma (0 dosya);
 - tescil bildirimi, değişiklik beyannamesi, fen klasörü (0);
