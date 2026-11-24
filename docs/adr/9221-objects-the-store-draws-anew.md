@@ -77,6 +77,10 @@ kaynağı değişmeden açılımı değişenler (`redrew`).
   - yazı tipi değişince yeniden ölçülen yazı.
 
   Gelecekteki bir işaret `None`. Deponun 95 sınaması geçti.
+- **Masaüstü, değişmez** (RM-16'nın 1. adımı):
+  `style::scene_tests::every_edit_of_walls_and_openings_draws_as_a_new_cache_draws`. Beş düzenlemenin her birinden
+  sonra önbelleğin sahnesi yeni bir önbelleğinkiyle aynı: kapı kaldırma, pencere ekleme, duvar taşıma, ucuna duvar
+  bağlama, geri alma. Depo günlüğünün kullanımı kapatılınca ilk düzenlemede kırmızı.
 - **Masaüstü:** `style::scene_tests::a_door_moved_along_its_wall_draws_the_wall_again`. Örnek çizimde
   (`fixtures/kcad/v2/openings.json`, duvar ve kapı ayrı katmanlarda) kapı duvar boyunca 1 m kayar; önbelleğin sahnesi
   yeni bir önbelleğinkiyle aynı. Önbellek düzeltmesi geri alınınca bu sınama kırmızı (“drawn as a new cache draws it”),
