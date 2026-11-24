@@ -235,9 +235,20 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Çizgi kalınlığı ekranda: en az 1 piksel, kenar yumuşatmalı.
   - Çizgi tipleri ve taramalar gölgelendiricide.
   - Maskeler.
-- [ ] **RM-16 — Görsel uygunluk paketi.**
+- [~] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.
+  - [x] Adım 1, önbelleğin değişmezi ([ADR 9221](../docs/adr/9221-objects-the-store-draws-anew.md) §3): bir
+    düzenlemeden sonra önbelleğin sahnesi yeni bir önbelleğin sahnesiyle aynı. Duvar ve açıklık çizimi üzerinde beş
+    düzenleme sınanıyor:
+    - kapı kaldırma;
+    - pencere ekleme;
+    - duvar taşıma;
+    - ucuna duvar bağlama;
+    - geri alma.
+
+    Depo günlüğü kapatılınca sınama ilk düzenlemede kırmızı.
+  - [ ] Sabit kameralı altın görüntüler; düzenlemeli gerçek pencere senaryoları (kapı, pencere, duvar, çizgi).
 
 ### F6 — NCZ alımı
 

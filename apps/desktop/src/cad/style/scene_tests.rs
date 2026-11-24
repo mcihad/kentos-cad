@@ -954,15 +954,81 @@ fn drawn_of(scene: &StyledScene) -> Vec<(u64, Vec<u32>)> {
         .collect()
 }
 
+/// The openings' drawing (fixtures/kcad/v2/openings.json): a 6 m wall (slot 1, layer duvar), a door (slot 2) and a window
+/// (slot 3) on it (layer kapi), an opening whose wall is gone (slot 4).
+fn openings() -> Document {
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/openings.json")).expect("the openings' drawing");
+    Document::from_v2(snapshot, None).expect("opens")
+}
+
+/// What the cache that drew `doc` draws after `edit`, against what a new cache draws of it (plan/render.md RM-16, docs/adr
+/// 9221): every object whose drawing the edit changes is built again, whatever changed it, at once.
+fn draws_as_new(mut doc: Document, what: &str, edit: impl FnOnce(&mut Document)) {
+    let library = kentos_native_style::system::library();
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let before = scene_of(&mut cache, &doc, &mut spatial, &library);
+    edit(&mut doc);
+    let after = scene_of(&mut cache, &doc, &mut spatial, &library);
+    let fresh = scene_of(&mut StyledCache::default(), &doc, &mut Spatial::of(&doc.model), &library);
+    assert_ne!(drawn_of(&after), drawn_of(&before), "{what}: the drawing changed");
+    assert_eq!(drawn_of(&after), drawn_of(&fresh), "{what}: drawn as a new cache draws it");
+}
+
+/// The owner, 24 November 2026: “pencere koyuyoruz ama görünmüyor, zoom yapınca ancak gözüküyor”. Every edit to the
+/// openings' drawing draws at once what a new cache draws: the walls' gaps come from their doors and windows, a wall's
+/// corners from the walls it joins, neither from the wall's own source (docs/adr/0340, 0341).
+#[test]
+fn every_edit_of_walls_and_openings_draws_as_a_new_cache_draws() {
+    let v = |x: f64, y: f64| kentos_commands::Vec2 { x, y };
+    draws_as_new(openings(), "a door taken off", |doc| {
+        assert_eq!(doc.model.remove(&[Slot(2)]), 1);
+    });
+    draws_as_new(openings(), "a window put on", |doc| {
+        let Some(Entity::Opening(mut w)) = doc.model.get(Slot(3)).cloned() else {
+            panic!("a window");
+        };
+        w.opening.at = 5.2;
+        w.opening.number = Some("P2".into());
+        doc.model.add(Entity::Opening(w)).expect("added");
+    });
+    draws_as_new(openings(), "the wall moved", |doc| {
+        let Some(Entity::Wall(mut wall)) = doc.model.get(Slot(1)).cloned() else {
+            panic!("a wall");
+        };
+        for p in &mut wall.wall.pts {
+            p.y += 0.5;
+        }
+        assert!(doc.model.update(Slot(1), Entity::Wall(wall)));
+    });
+    draws_as_new(openings(), "a wall joined at its end", |doc| {
+        let Some(Entity::Wall(mut wall)) = doc.model.get(Slot(1)).cloned() else {
+            panic!("a wall");
+        };
+        wall.wall.pts = vec![v(6.0, 0.0), v(6.0, 4.0)];
+        doc.model.add(Entity::Wall(wall)).expect("added");
+    });
+    draws_as_new(openings(), "a door moved, then the move undone", |doc| {
+        let Some(Entity::Opening(mut door)) = doc.model.get(Slot(2)).cloned() else {
+            panic!("a door");
+        };
+        let at = door.opening.at;
+        door.opening.at += 1.0;
+        assert!(doc.model.update(Slot(2), Entity::Opening(door.clone())));
+        door.opening.at = at + 2.0;
+        assert!(doc.model.update(Slot(2), Entity::Opening(door)));
+        assert!(doc.model.undo().is_some(), "undone");
+    });
+}
+
 /// docs/adr/0341 §2: a wall's gaps come from its doors and windows, its own source the same. A door moved along its wall
 /// (on another layer) draws the wall again at once, as a new cache draws it, not only after a zoom rebuilds the walls
 /// (the owner, 24 November 2026: a window put on a wall did not show until the view was zoomed or moved).
 #[test]
 fn a_door_moved_along_its_wall_draws_the_wall_again() {
     let library = kentos_native_style::system::library();
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/openings.json")).expect("the openings' drawing");
-    let mut doc = Document::from_v2(snapshot, None).expect("opens");
+    let mut doc = openings();
     let mut spatial = Spatial::of(&doc.model);
     let mut cache = StyledCache::default();
     let before = scene_of(&mut cache, &doc, &mut spatial, &library);
