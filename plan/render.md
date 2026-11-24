@@ -312,6 +312,21 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     bağlı: 100 000 px/m'de ~0,5 px, 1 000 000 px/m'de ~5 px sapma.
   - Yol: parçalar görünüme göre yeniden kökenlenir ya da kesilir (RM-08 ve RM-09'un döşemeleriyle); sonra sınır
     kalkar ya da kesinliğe bağlanır.
+  - Tasarım (24 Kasım, kodu okuyarak):
+    - Kesinliği bozan, kenarın kameradan uzak ucudur. Hata, ucun kameraya uzaklığı × 2⁻²⁴ kadar.
+    - GPU'da çözülemez: uzak uçtan hesaplanan her değer aynı hatayı taşır. WGSL'de iki-float hilesi sürücüye göre
+      bozuluyor.
+    - Stilli yol uzun kenarları hiç bölmüyor; ham CAD yolu 128 m'de bölüyor.
+    - **Derin sahne:** ölçek 5 000 px/m'yi geçince (birimle çarpılır) görünüm kutusuyla (görünüm ±3 genişlik, yardımcı
+      çizgilerin `construction_clip`'i) kesişen nesnelerden ayrı bir sahne kurulur. Kenarlar kutunun sınırında ve
+      içinde ek noktalarla **bölünür, kesilmez**: yol uzunluğu, kesik evresi, işaret aralığı ve dolgu aynı kalır. Bu
+      sahne düzenli sahnenin yerine çizilir; kutu bayatlayınca (görünüm çıktı ya da 20 kat içeri) yeniden kurulur.
+    - **Eğriler:** kutuyla kesişen yayın yalnız kutudaki açı aralığı, 0,25 piksellik kirişle parçalanır (RM-09'un ilk
+      adımı).
+    - **Sınır:** `MAX_SCALE` 10⁴ → 10⁷ px/m. Kutu içinde uçlar en çok yarım kutu ötede, 10⁷'de hata ~4·10⁻⁴ px.
+    - Uygulamada bütün katmanlar stil motorundan geçiyor (`cad/style/scene.rs`); ham CAD sahnesi (`build_fixed`,
+      `build_curves`) yalnız stil kitaplığı yokken. Derin sahne önce stilli yolda kurulur, ham yol ve seçim vurgusu
+      aynı kutuyla ardından gelir. Derin sahne, döşemeler gelince (RM-08) en ince döşeme düzeyi olur.
 
 ## Kabul ölçütleri
 
