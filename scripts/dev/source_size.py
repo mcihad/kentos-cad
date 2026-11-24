@@ -5,6 +5,7 @@ Masaüstünün çekirdeği (apps/desktop/src) bu sınırı kendi sınamasıyla t
 aynı sınırı çalışma alanının öbür crate'lerine ve programlarına uygular (crates/, apps/; crates/vendor/ dış koddur).
 
 - Yeni bir dosya sınırı geçemez.
+- Modül bildirimleri (`mod x;`, `#[path = …]`) sayılmaz: içeriği alt dosyaya veren satırlardır.
 - Bugün sınırı geçen dosyalar tabandadır (source_size.baseline.json) ve büyüyemez: böyle bir dosyaya ekleyen iş onu önce
   konularına göre alt dosyalara böler.
 - Taban yalnız küçülür: küçülen dosyanın sayısı `--write` ile düşürülür, sınırın altına inen tabandan çıkar. Büyüyen ya
@@ -14,6 +15,7 @@ aynı sınırı çalışma alanının öbür crate'lerine ve programlarına uygu
     python3 scripts/dev/source_size.py --write   # tabanı küçültür
 """
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,9 +32,14 @@ def sources():
             yield path
 
 
+# A module's declaration (`mod x;`, its `#[path = …]`) is how a big file hands its content to a child file: it is not
+# counted, so splitting a file never makes its parent grow.
+DECLARATION = re.compile(r'^\s*(#\[path\s*=.*\]|(pub(\([a-z]+\))?\s+)?mod\s+\w+;)\s*$')
+
+
 def lines_of(path):
     with open(ROOT / path, encoding='utf-8', errors='replace') as f:
-        return sum(1 for _ in f)
+        return sum(1 for line in f if not DECLARATION.match(line))
 
 
 def main():
