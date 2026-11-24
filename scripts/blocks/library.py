@@ -510,6 +510,259 @@ stall.dynamic(
      {"kind": "stretch", "parameter": "Boy", "pieces": [outline], "min": P(-0.5, 2.45), "max": P(5.0, 8.0)}])
 blocks.append(stall)
 
+# ── D6 (docs/adr/9307): the everyday families of an office, a school, a clinic, an accessible wet room and a site's
+# landscape, each at real size in metres, plan view. Where a size comes from an official text its block's description
+# says so (“kaynak”); every other size is a plainly labelled typical size. Base points are on the block's description.
+# Turned points for a seat or a tree's lobes: ──
+
+
+def turned(pts, cx, cy, a):
+    c, s = math.cos(a), math.sin(a)
+    return [(round(cx + x * c - y * s, 9), round(cy + x * s + y * c, 9)) for x, y in pts]
+
+
+def seat(block, cx, cy, a, w=0.45, d=0.45):
+    """A chair seen from above: its seat and back. (cx, cy) is the middle of the seat's front edge, the sitter facing
+    the direction a (0 = +y is the way the back lies); the back stands behind the seat."""
+    body = [(-w / 2, 0), (w / 2, 0), (w / 2, d), (-w / 2, d)]
+    block.path(turned(body, cx, cy, a), closed=True)
+    back = [(-w / 2, d), (w / 2, d)]
+    p = turned(back, cx, cy, a)
+    block.line(p[0], p[1])
+    q = turned([(-w / 2, d - 0.06), (w / 2, d - 0.06)], cx, cy, a)
+    block.line(q[0], q[1])
+
+
+def lobes(block, r, count, bump):
+    """A tree's or a shrub's scalloped crown: `count` arcs standing out from the chords of a circle of radius r - bump/2."""
+    step = 2 * math.pi / count
+    rr = r - bump * 0.5
+    for k in range(count):
+        a0, a1 = k * step, (k + 1) * step
+        p0 = (rr * math.cos(a0), rr * math.sin(a0))
+        p1 = (rr * math.cos(a1), rr * math.sin(a1))
+        chord = math.dist(p0, p1)
+        ar = chord * 0.6
+        am = (a0 + a1) / 2
+        mid = ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
+        h = math.sqrt(ar * ar - (chord / 2) ** 2)
+        # the arc's centre lies inward of the chord by h; the outer part of its circle is the lobe
+        block.arc((mid[0] - h * math.cos(am), mid[1] - h * math.sin(am)), ar, am - math.asin(chord / 2 / ar), am + math.asin(chord / 2 / ar))
+
+
+# Office: meeting tables with their chairs (a table's long side along x, its middle the base point).
+def meeting(n, people, length, depth, per_side, ends):
+    b = Block(n, f"Toplantı masası {people} kişilik", "Ofis/Toplantı", ["toplantı", "masa", "ofis", f"{people} kişilik"],
+              f"Toplantı masası {length * 100:.0f} × {depth * 100:.0f} cm, {people} sandalyeli (tipik ölçü: yazılı bir kaynağı yok); "
+              "taban noktası masanın merkezi. Görünüş: Sandalyeli / Yalnız masa.")
+    b.rect(-length / 2, -depth / 2, length / 2, depth / 2)
+    ids = []
+    gap = length / per_side
+    for i in range(per_side):
+        x = -length / 2 + gap * (i + 0.5)
+        before = len(b.data["entities"])
+        seat(b, x, -depth / 2 - 0.05, math.pi, 0.45, 0.45)
+        seat(b, x, depth / 2 + 0.05, 0.0, 0.45, 0.45)
+        ids += list(range(before + 1, len(b.data["entities"]) + 1))
+    if ends:
+        before = len(b.data["entities"])
+        seat(b, -length / 2 - 0.05, 0, Q, 0.45, 0.45)
+        seat(b, length / 2 + 0.05, 0, -Q, 0.45, 0.45)
+        ids += list(range(before + 1, len(b.data["entities"]) + 1))
+    b.dynamic([{"kind": "visibility", "name": "Görünüş", "states": [{"name": "Sandalyeli"}, {"name": "Yalnız masa", "hidden": ids}]}], [])
+    return b
+
+
+blocks.append(meeting(41, 4, 1.8, 0.9, 1, True))
+blocks.append(meeting(42, 6, 2.4, 1.0, 2, True))
+blocks.append(meeting(43, 8, 3.0, 1.1, 3, True))
+
+ws = Block(44, "İş istasyonu", "Ofis/Çalışma", ["iş istasyonu", "bölme", "ofis", "çalışma"],
+           "Ofis bölmeli L biçimli iş istasyonu 160 × 160 cm, bölme panelleri 5 cm, sandalyesiyle (tipik ölçü: yazılı bir "
+           "kaynağı yok); taban noktası arka sol köşe, çalışan +y yönünde oturur. Görünüş: Sandalyeli / Yalnız masa.")
+ws.path([(0, 0), (1.6, 0), (1.6, 1.6), (1.55, 1.6), (1.55, 0.05), (0, 0.05)], closed=True)   # the panels
+ws.path([(0.05, 0.05), (1.55, 0.05), (1.55, 0.65), (0.65, 0.65), (0.65, 1.55), (0.05, 1.55)], closed=True)  # the L top
+ws.line((0, 0), (0, 1.0))
+w_before = len(ws.data["entities"])
+seat(ws, 1.0, 1.05, math.pi, 0.5, 0.5)
+ws.dynamic([{"kind": "visibility", "name": "Görünüş",
+             "states": [{"name": "Sandalyeli"}, {"name": "Yalnız masa", "hidden": list(range(w_before + 1, len(ws.data["entities"]) + 1))}]}], [])
+blocks.append(ws)
+
+archive = Block(45, "Arşiv dolabı", "Ofis/Depolama", ["arşiv", "dosya dolabı", "dolap", "ofis"],
+                "Çift kapaklı arşiv dolabı 100 × 40 cm (tipik ölçü: yazılı bir kaynağı yok); taban noktası arka sol köşe, "
+                "kapakları +y yönünde. Genişlik 60–240 cm, 20 cm adımla.")
+a_body = archive.rect(0, 0, 1.0, 0.4)
+a_front = archive.line((0, 0.36), (1.0, 0.36))
+a_mid = archive.line((0.5, 0.36), (0.5, 0.4))
+archive.dynamic(
+    [{"kind": "linear", "name": "Genişlik", "from": P(0, 0), "to": P(1.0, 0), "rule": {"min": 0.6, "max": 2.4, "step": 0.2}}],
+    [{"kind": "stretch", "parameter": "Genişlik", "pieces": [a_body, a_front, a_mid], "min": P(0.9, -0.1), "max": P(1.1, 0.5)}])
+blocks.append(archive)
+
+# School: desks seen from above with their chairs on +y; the teacher's desk (MEB's own 120 × 60 cm); the board.
+single_desk = Block(46, "Öğrenci sırası (tek)", "Okul/Sıralar", ["sıra", "öğrenci", "okul", "tek"],
+                    "Tek kişilik öğrenci sırası 60 × 45 cm, sandalyesiyle (tipik ölçü: yazılı bir kaynağı yok); taban noktası "
+                    "sıranın ön sol köşesi, öğrenci +y yönünde oturur. Görünüş: Sandalyeli / Yalnız sıra.")
+single_desk.rect(0, 0, 0.6, 0.45)
+d1 = len(single_desk.data["entities"])
+seat(single_desk, 0.3, 0.55, math.pi, 0.4, 0.4)
+single_desk.dynamic([{"kind": "visibility", "name": "Görünüş",
+                      "states": [{"name": "Sandalyeli"}, {"name": "Yalnız sıra", "hidden": list(range(d1 + 1, len(single_desk.data["entities"]) + 1))}]}], [])
+blocks.append(single_desk)
+
+double_desk = Block(47, "Öğrenci sırası (çift)", "Okul/Sıralar", ["sıra", "öğrenci", "okul", "çift"],
+                    "İki kişilik öğrenci sırası 120 × 45 cm, iki sandalyesiyle (tipik ölçü: yazılı bir kaynağı yok); taban "
+                    "noktası sıranın ön sol köşesi, öğrenciler +y yönünde oturur. Görünüş: Sandalyeli / Yalnız sıra.")
+double_desk.rect(0, 0, 1.2, 0.45)
+double_desk.line((0.6, 0), (0.6, 0.45))
+d2 = len(double_desk.data["entities"])
+seat(double_desk, 0.3, 0.55, math.pi, 0.4, 0.4)
+seat(double_desk, 0.9, 0.55, math.pi, 0.4, 0.4)
+double_desk.dynamic([{"kind": "visibility", "name": "Görünüş",
+                      "states": [{"name": "Sandalyeli"}, {"name": "Yalnız sıra", "hidden": list(range(d2 + 1, len(double_desk.data["entities"]) + 1))}]}], [])
+blocks.append(double_desk)
+
+teacher = Block(48, "Öğretmen masası", "Okul/Öğretmen", ["öğretmen", "masa", "okul"],
+                "Öğretmen masası 120 × 60 cm (kaynak: Millî Eğitim Bakanlığı donatım listesi, öğretmen masası 120 × 60 × 75 cm); "
+                "taban noktası masanın arka sol köşesi, öğretmen +y yönünde oturur. Görünüş: Sandalyeli / Yalnız masa.")
+teacher.rect(0, 0, 1.2, 0.6)
+teacher.line((0.05, 0.05), (1.15, 0.05))
+t0 = len(teacher.data["entities"])
+seat(teacher, 0.6, 0.7, math.pi, 0.5, 0.5)
+teacher.dynamic([{"kind": "visibility", "name": "Görünüş",
+                  "states": [{"name": "Sandalyeli"}, {"name": "Yalnız masa", "hidden": list(range(t0 + 1, len(teacher.data["entities"]) + 1))}]}], [])
+blocks.append(teacher)
+
+board = Block(49, "Yazı tahtası", "Okul/Tahta", ["tahta", "yazı tahtası", "sınıf", "okul"],
+              "Duvara asılı yazı tahtası 300 × 4 cm planda (tipik ölçü: yazılı bir kaynağı yok); taban noktası tahtanın sol "
+              "ucu, duvar x boyunca, sınıf +y yönünde. Uzunluk 120–600 cm, 60 cm adımla.")
+bd = board.rect(0, 0, 3.0, 0.04)
+bd_line = board.line((0, 0.02), (3.0, 0.02))
+board.dynamic(
+    [{"kind": "linear", "name": "Uzunluk", "from": P(0, 0), "to": P(3.0, 0), "rule": {"min": 1.2, "max": 6.0, "step": 0.6}}],
+    [{"kind": "stretch", "parameter": "Uzunluk", "pieces": [bd, bd_line], "min": P(2.9, -0.1), "max": P(3.1, 0.1)}])
+blocks.append(board)
+
+# Clinic: a patient's bed, an examination couch, a clinical basin.
+pbed = Block(50, "Hasta yatağı", "Sağlık/Yataklar", ["hasta yatağı", "yatak", "hastane", "sağlık"],
+             "Hastane yatağı 90 × 200 cm, başı ve kenar korkulukları çizili (tipik ölçü: yazılı bir kaynağı yok); taban "
+             "noktası baş ucunun sol köşesi, yatak +y yönünde, baş ucu duvara.")
+pbed.rect(0, 0, 0.9, 2.0)
+pbed.rect(0.05, 0.05, 0.85, 0.35)
+pbed.line((0, 0.1), (0.9, 0.1))
+pbed.line((0, 0.9), (0.9, 0.9))
+pbed.line((0, 1.4), (0.9, 1.4))
+pbed.line((0.03, 0.9), (0.03, 1.9))
+pbed.line((0.87, 0.9), (0.87, 1.9))
+blocks.append(pbed)
+
+couch = Block(51, "Muayene masası", "Sağlık/Muayene", ["muayene", "masa", "sağlık", "kanepe"],
+              "Muayene masası 60 × 190 cm, baş yükseltisiyle (tipik ölçü: yazılı bir kaynağı yok); taban noktası baş ucunun "
+              "sol köşesi, masa +y yönünde.")
+couch.rect(0, 0, 0.6, 1.9)
+couch.rect(0.05, 0.05, 0.55, 0.45)
+couch.line((0, 0.6), (0.6, 0.6))
+blocks.append(couch)
+
+cbasin = Block(52, "Lavabo (sağlık)", "Sağlık/Lavabo", ["lavabo", "klinik", "sağlık", "el yıkama"],
+               "Klinik el yıkama lavabosu 60 × 50 cm, uzun musluklu, dolapsız ve duvara asılı (tipik ölçü: yazılı bir kaynağı "
+               "yok); taban noktası duvarda ortası, lavabo +y yönünde.")
+cbasin.rect(-0.3, 0, 0.3, 0.5)
+cbasin.ellipse((0, 0.28), (0.24, 0), 0.75)
+cbasin.circle((0, 0.28), 0.025)
+cbasin.line((0, 0.04), (0, 0.1))
+cbasin.circle((0, 0.04), 0.02)
+blocks.append(cbasin)
+
+# Accessible wet room: the sizes below marked “kaynak” are those of the Diyanet İşleri Başkanlığı's public Erişilebilirlik
+# Kılavuzu (docs/adr/9307): turning circle 150 cm, a 90 cm clear side of the toilet, the toilet's axis 46 cm from the
+# side wall, bars 4 cm off the wall and Ø32–38 mm, the basin's 75 cm under and 86 cm top, 20.5 cm of knee depth.
+awc = Block(53, "Erişilebilir klozet", "Erişilebilir/WC", ["erişilebilir", "engelli", "klozet", "wc", "tutunma barı"],
+            "Erişilebilir klozet (asma, 37 × 54 cm) ve tutunma barları; taban noktası arka duvarda klozetin ortası, yan duvar "
+            "solda 46 cm (kaynak: Erişilebilirlik Kılavuzu, Tip 2), boş yan sağda en az 90 cm. Sabit bar yan duvarda, "
+            "duvardan 4 cm, çubuk Ø35 mm; sağdaki hareketli bar 80 cm (bar boyları tipik). Görünüş: Sade / Boşluk zarfı.")
+awc.rect(-0.185, 0, 0.185, 0.08)
+awc.ellipse((0, 0.31), (0, 0.23), 0.8)
+awc.rect(-0.425, 0.15, -0.39, 0.95)
+awc.rect(0.33, 0.04, 0.365, 0.84)
+awc.line((-0.46, 0), (-0.46, 1.2))
+a_env, a_look = clearance(awc, 0.185, 0, 1.085, 0.54)
+awc.dynamic([a_look], [])
+blocks.append(awc)
+
+abasin = Block(54, "Erişilebilir lavabo", "Erişilebilir/Lavabo", ["erişilebilir", "engelli", "lavabo", "tutunma barı"],
+               "Erişilebilir lavabo 60 × 50 cm, yuvarlak kenarlı, dolapsız, asılı; iki yanında tutunma barı. Taban noktası "
+               "duvarda ortası, lavabo +y yönünde. Diz boşluğu en az 20,5 cm derin, lavabo üstü en çok 86 cm "
+               "(kaynak: Erişilebilirlik Kılavuzu); lavabo eni, bar boyu ve önündeki 80 × 90 cm yaklaşım boşluğu tipiktir. Görünüş: Sade / Boşluk zarfı.")
+abasin.path([(-0.25, 0), (0.25, 0), (0.3, 0.05), (0.3, 0.35), (0.2, 0.5), (-0.2, 0.5), (-0.3, 0.35), (-0.3, 0.05)], closed=True)
+abasin.ellipse((0, 0.27), (0.2, 0), 0.65)
+abasin.circle((0, 0.07), 0.02)
+abasin.rect(-0.75, 0.04, -0.35, 0.075)
+abasin.rect(0.35, 0.04, 0.75, 0.075)
+b_env, b_look = clearance(abasin, -0.4, 0.5, 0.4, 1.4)
+abasin.dynamic([b_look], [])
+blocks.append(abasin)
+
+turn = Block(55, "Dönüş alanı Ø150", "Erişilebilir/Dönüş alanı", ["erişilebilir", "engelli", "dönüş", "tekerlekli sandalye", "manevra"],
+             "Tekerlekli sandalye dönüş alanı, Ø150 cm kesikli daire (kaynak: Erişilebilirlik Kılavuzu: klozet, lavabo ve "
+             "donatılar hariç en az 150 cm çapında boşluk). Taban noktası dairenin merkezi; yalnız çizim yardımcısıdır.")
+dashed(turn, turn.circle((0, 0), 0.75))
+turn.line((-0.12, 0), (0.12, 0))
+turn.line((0, -0.12), (0, 0.12))
+turn.attribute("ETIKET", (0, -0.9), 0.12, value="Ø150", prompt="Etiket", align="middleCenter")
+blocks.append(turn)
+
+# Landscape: trees at three crowns, a shrub, a car, a bicycle's place. Trees and shrubs are typical sizes (no text gives
+# them); the car is typical, its bay being the parking place's (2.40 × 4.90 m, Otopark Yönetmeliği 5/1-h-8, 9); the bicycle's
+# place is 70 × 200 cm (Bisiklet Yolları Yönetmeliği 17/9-a).
+def tree(n, diameter, lobes_count, trunk):
+    r = diameter / 2
+    b = Block(n, f"Ağaç Ø{diameter:g} m", "Peyzaj/Ağaç", ["ağaç", "peyzaj", "bitki", f"Ø{diameter:g}"],
+              f"Ağaç, taç çapı {diameter:g} m, gövdesi Ø{trunk * 200:.0f} cm (tipik ölçü: yazılı bir kaynağı yok); taban noktası gövdenin merkezi.")
+    lobes(b, r, lobes_count, r * 0.2)
+    b.circle((0, 0), trunk)
+    b.line((-trunk * 1.8, 0), (trunk * 1.8, 0))
+    b.line((0, -trunk * 1.8), (0, trunk * 1.8))
+    return b
+
+
+blocks.append(tree(56, 3, 12, 0.1))
+blocks.append(tree(57, 5, 16, 0.15))
+blocks.append(tree(58, 8, 20, 0.2))
+
+shrub = Block(59, "Çalı", "Peyzaj/Çalı", ["çalı", "peyzaj", "bitki"],
+              "Çalı, taç çapı 1,2 m (tipik ölçü: yazılı bir kaynağı yok); taban noktası merkez.")
+lobes(shrub, 0.6, 10, 0.1)
+shrub.circle((0, 0), 0.04)
+blocks.append(shrub)
+
+car = Block(60, "Otomobil", "Peyzaj/Otomobil", ["otomobil", "araç", "binek", "plan"],
+            "Otomobil planı 180 × 450 cm (tipik ölçü: yazılı bir kaynağı yok; park yeri 240 × 490 cm'dir, Otopark "
+            "Yönetmeliği 5/1-h-8, 9); taban noktası arka sol köşe, araç +y yönüne bakar.")
+car.path([(0.08, 0), (1.72, 0), (1.8, 0.1), (1.8, 4.3), (1.7, 4.5), (0.1, 4.5), (0, 4.3), (0, 0.1)], closed=True)
+car.path([(0.12, 1.15), (1.68, 1.15), (1.6, 1.7), (0.2, 1.7)], closed=True)       # the rear window
+car.path([(0.15, 1.75), (1.65, 1.75), (1.65, 2.9), (0.15, 2.9)], closed=True)     # the roof
+car.path([(0.2, 2.95), (1.6, 2.95), (1.7, 3.5), (0.1, 3.5)], closed=True)         # the windscreen
+car.line((0.1, 3.55), (0.1, 4.35))
+car.line((1.7, 3.55), (1.7, 4.35))
+for x0, x1, y0, y1 in ((-0.04, 0.04, 0.55, 1.15), (1.76, 1.84, 0.55, 1.15), (-0.04, 0.04, 3.2, 3.8), (1.76, 1.84, 3.2, 3.8)):
+    car.rect(x0, y0, x1, y1)   # the wheels' tread, standing a little out of the body
+car.rect(-0.12, 3.0, 0.0, 3.2)
+car.rect(1.8, 3.0, 1.92, 3.2)   # the mirrors
+blocks.append(car)
+
+bike = Block(61, "Bisiklet park yeri", "Peyzaj/Bisiklet", ["bisiklet", "park yeri", "peyzaj"],
+             "Yola dik tek bisiklet park yeri 70 × 200 cm (kaynak: Bisiklet Yolları Yönetmeliği 17/9-a: iki bisiklet arası "
+             "en az 70 cm, boyuna en az 200 cm); bisiklet planı tipik. Taban noktası yerin yola bakan sol köşesi, +y yönünde.")
+dashed(bike, bike.rect(0, 0, 0.7, 2.0))
+bike.rect(0.325, 0.12, 0.375, 0.77)
+bike.rect(0.325, 1.12, 0.375, 1.77)
+bike.line((0.35, 0.77), (0.35, 1.12))
+bike.line((0.1, 1.7), (0.6, 1.7))
+bike.line((0.3, 1.1), (0.4, 1.1))
+blocks.append(bike)
+
 # ── What each block is as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its IFC
 # class and type, its body a box over its drawn outline from the floor up to its top. The tops of the basin (85 cm),
 # the toilet (42 cm, its bowl's rim without the seat) and the urinal (70 cm, its front edge) are the installation
@@ -536,6 +789,15 @@ ELEMENTS = {
     "Buzdolabı": ("electricAppliance", "REFRIGERATOR"), "Bulaşık makinesi": ("electricAppliance", "DISHWASHER"),
     "Çamaşır makinesi": ("electricAppliance", "WASHINGMACHINE"), "Kurutma makinesi": ("electricAppliance", "TUMBLEDRYER"),
     "Asansör": ("transportElement", "ELEVATOR", 2.2),
+    # D6 (docs/adr/9307): the office, school and clinic furniture and the accessible and clinical basins. Heights are
+    # KentOS's own common sizes except the teacher's desk (75 cm, the ministry's list).
+    "Toplantı masası 4 kişilik": ("furniture", "TABLE", 0.75), "Toplantı masası 6 kişilik": ("furniture", "TABLE", 0.75),
+    "Toplantı masası 8 kişilik": ("furniture", "TABLE", 0.75), "İş istasyonu": ("furniture", "DESK", 0.75),
+    "Arşiv dolabı": ("furniture", "USERDEFINED", 1.8), "Öğrenci sırası (tek)": ("furniture", "DESK", 0.75),
+    "Öğrenci sırası (çift)": ("furniture", "DESK", 0.75), "Öğretmen masası": ("furniture", "DESK", 0.75),
+    "Hasta yatağı": ("furniture", "BED", 0.6), "Muayene masası": ("furniture", "BED", 0.75),
+    "Lavabo (sağlık)": ("sanitaryTerminal", "WASHHANDBASIN", 0.85),
+    "Erişilebilir lavabo": ("sanitaryTerminal", "WASHHANDBASIN", 0.86),
 }
 for b in blocks:
     if b.data["name"] in ELEMENTS:

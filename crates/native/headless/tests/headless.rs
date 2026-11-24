@@ -23,6 +23,8 @@ mod coverage;
 mod pens;
 #[path = "headless/scales.rs"]
 mod scales;
+#[path = "headless/block_families.rs"]
+mod block_families;
 
 #[path = "headless/cad_open.rs"]
 mod cad_open;
