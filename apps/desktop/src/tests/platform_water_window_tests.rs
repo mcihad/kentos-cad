@@ -1,7 +1,8 @@
 //! Platform suyu (platform_water_window.rs, plan/road.md Y22): the window reads `road.corridors.water` as the shared
 //! cases do.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::platform_water_window::Event as W;
 use crate::road;
 
@@ -22,7 +23,7 @@ fn case(name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::PlatformWater(e)));
+    let _ = app.update(Message::from(road::Event::PlatformWater(e)));
 }
 
 #[test]
@@ -36,18 +37,15 @@ fn the_window_reads_water_on_the_platform() {
         .revision()
         .to_string();
     let _ = app.update(Message::Run("corridor.water"));
-    assert!(matches!(
-        app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::PlatformWater))
-    ));
+    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::PlatformWater)));
     send(&mut app, W::Preview);
     assert!(
-        matches!(&app.road.platform_water_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("eğimi yazın"))
+        matches!(&app.modules.road().platform_water_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("eğimi yazın"))
     );
     send(&mut app, W::Corridor("c-2".into()));
     send(&mut app, W::Least("3".into()));
     send(&mut app, W::Preview);
-    let w = app.road.platform_water_window.as_ref().expect("open");
+    let w = app.modules.road().platform_water_window.as_ref().expect("open");
     let Some(Ok((r, tris))) = &w.preview else {
         panic!("a read")
     };

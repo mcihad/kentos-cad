@@ -167,6 +167,19 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Bağımlılık tabanı: kabuk → Yol 6 → 4; çekirdekte modül adına göre dal artmadı.
 - Sınama: çekirdek 2837, Harita 191, programlar 34.
 
+### §4.5 Adım 5: Yol modül arayüzünün arkasında (aynı crate'te)
+
+- `road/parts.rs`: 37 komut kimliği (editörler, LandXML, IFC, glTF), 22 pencerenin başlığı ve iz denetimi (izlerin
+  kodundan betikle üretildi), eksen katmanı (`alignment_layer`). Profil parçalardan gelir.
+- Dosya seçicilerin cevapları (`LandxmlExport`, `LandxmlMachine`, `LandxmlAlignments`, `IfcExport`, `GltfExport`)
+  çekirdeğin iletisi değil, Yol'un iletisidir. 3B penceresinin glTF düğmesi `gltf.export` komutunu çalıştırır; komut
+  Yol'un parçalarına gider, yeni kanca gerekmedi.
+- `Message::Road`, `Dialog::Road`, `App.road` kalktı: `From<road::Event> for Message`, `road::dialog(kind)`,
+  `RoadState` (`modules.road()`, `road_mut()`; 470 erişim betikle).
+- Kayıt: paketine ayrılmamış modülün parçaları çekirdeğin kayıt dosyasındadır (`module_profile::IN_CORE`); `all()`
+  onları programın kaydettikleriyle birleştirir.
+- Bağımlılık tabanı: kabuk → Yol 4 → 1 (kayıt dosyası). Sınama: çekirdek 2837, Harita 191, programlar 34.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

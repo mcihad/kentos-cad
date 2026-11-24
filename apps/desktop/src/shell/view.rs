@@ -321,7 +321,6 @@ impl App {
             Asking::LayerStates => self.layer_states_view(),
             Asking::Views => self.views_view(),
             Asking::TerrainWork(inner) => self.terrain_work_dialog_view(inner),
-            Asking::Road(inner) => self.road_dialog_view(inner),
             Asking::Propose => self.propose_view(),
             Asking::Scene3d => self.scene3d_view(),
             Asking::IfcViewer => self.ifc_viewer_view(),

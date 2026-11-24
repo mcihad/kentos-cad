@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
@@ -30,7 +31,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::label;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -85,7 +86,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Guardrails(event))
+    Message::from(road::Event::Guardrails(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -150,7 +151,7 @@ impl App {
         let corridor = first.id.clone();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = doc.model.road_guardrails().first().map(|g| g.id.clone());
-        self.road.guardrail_window = Some(Box::new(Window {
+        self.modules.road_mut().guardrail_window = Some(Box::new(Window {
             chosen: None,
             corridor: Some(corridor),
             fields: ["Otokorkuluk".into(), String::new(), "10".into(), String::new(), String::new(), String::new(), String::new()],
@@ -158,13 +159,13 @@ impl App {
             layer,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Guardrails));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Guardrails));
         let _ = self.guardrail_event(Event::Choose(chosen));
     }
 
     fn refresh_guardrail(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.guardrail_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().guardrail_window.as_mut() else {
             return;
         };
         let range = w
@@ -189,7 +190,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.road_guardrails().to_vec())
             .unwrap_or_default();
-        let Some(w) = self.road.guardrail_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().guardrail_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -241,7 +242,7 @@ impl App {
             Event::Draw => return self.draw_guardrail(),
             Event::Remove => return self.remove_guardrail(),
             Event::Close => {
-                self.road.guardrail_window = None;
+                self.modules.road_mut().guardrail_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -252,7 +253,7 @@ impl App {
 
     /// Kaydet: `road.guardrails.edit`, one undo step; the window stays on it.
     fn save_guardrail(&mut self) -> Task<Message> {
-        let Some(w) = self.road.guardrail_window.as_ref() else {
+        let Some(w) = self.modules.road().guardrail_window.as_ref() else {
             return Task::none();
         };
         let input = match w.input() {
@@ -278,7 +279,7 @@ impl App {
 
     /// Planda çiz: the saved guardrail's runs with their km, `road.guardrails.draw`, one undo step.
     fn draw_guardrail(&mut self) -> Task<Message> {
-        let Some(w) = self.road.guardrail_window.as_ref() else {
+        let Some(w) = self.modules.road().guardrail_window.as_ref() else {
             return Task::none();
         };
         let (Some(id), Some(layer)) = (w.chosen.clone(), w.layer.clone()) else {
@@ -290,7 +291,7 @@ impl App {
         let result = road_guardrails_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("{} korkuluk planda, toplam {:.1} m.", out.runs, out.length));
-            self.road.guardrail_window = None;
+            self.modules.road_mut().guardrail_window = None;
             self.dialog = None;
         }
         Task::none()
@@ -298,7 +299,7 @@ impl App {
 
     fn remove_guardrail(&mut self) -> Task<Message> {
         let Some(id) = self
-            .road
+            .modules.road()
             .guardrail_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -327,7 +328,7 @@ impl App {
     }
 
     pub(crate) fn guardrail_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.guardrail_window else {
+        let Some(w) = &self.modules.road().guardrail_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -450,7 +451,7 @@ impl App {
     }
 
     pub(crate) fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.guardrail_window.is_none() {
+        if self.modules.road().guardrail_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

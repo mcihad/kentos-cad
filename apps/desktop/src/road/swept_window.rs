@@ -18,6 +18,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
@@ -33,7 +34,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::label;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -105,7 +106,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Swept(event))
+    Message::from(road::Event::Swept(event))
 }
 
 fn number(text: &str, what: &str) -> Result<f64, String> {
@@ -186,7 +187,7 @@ impl App {
         let (_, path) = chosen(self);
         let source = if junction.is_some() && path.is_none() { Source::Junction } else { Source::Object };
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.road.swept_window = Some(Box::new(Window {
+        self.modules.road_mut().swept_window = Some(Box::new(Window {
             fields: Default::default(),
             trailer: false,
             source,
@@ -201,12 +202,12 @@ impl App {
             obstacle_lines: Vec::new(),
             warnings: Vec::new(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Swept));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Swept));
     }
 
     fn preview_swept(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.swept_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().swept_window.as_mut() else {
             return;
         };
         let (preview, warnings) = match w.query().and_then(|q| road_swept::preview(&doc.model, &q))
@@ -228,7 +229,7 @@ impl App {
 
     pub(crate) fn swept_event(&mut self, event: Event) -> Task<Message> {
         let (picked, path) = chosen(self);
-        let Some(w) = self.road.swept_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().swept_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -270,12 +271,12 @@ impl App {
             }
             Event::Draw => return self.draw_swept(),
             Event::Close => {
-                self.road.swept_window = None;
+                self.modules.road_mut().swept_window = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
-        if let Some(w) = self.road.swept_window.as_mut() {
+        if let Some(w) = self.modules.road_mut().swept_window.as_mut() {
             w.preview = None;
             w.warnings.clear();
         }
@@ -283,7 +284,7 @@ impl App {
     }
 
     fn draw_swept(&mut self) -> Task<Message> {
-        let Some(w) = self.road.swept_window.as_ref() else {
+        let Some(w) = self.modules.road().swept_window.as_ref() else {
             return Task::none();
         };
         let (query, Some(layer), every) = (w.query(), w.layer.clone(), w.every()) else {
@@ -302,14 +303,14 @@ impl App {
         let result = road_swept_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("Araç izi planda, {} nesne.", out.uids.len()));
-            self.road.swept_window = None;
+            self.modules.road_mut().swept_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     pub(crate) fn swept_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.swept_window else {
+        let Some(w) = &self.modules.road().swept_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -467,7 +468,7 @@ impl App {
     }
 
     pub(crate) fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.swept_window.is_none() {
+        if self.modules.road().swept_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

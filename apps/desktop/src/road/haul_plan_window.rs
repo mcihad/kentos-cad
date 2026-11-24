@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -27,7 +28,7 @@ use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
@@ -139,7 +140,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::HaulPlan(event))
+    Message::from(road::Event::HaulPlan(event))
 }
 
 /// Thousands parted by a thin space, for the large volumes and moments.
@@ -178,11 +179,11 @@ impl App {
             self.warn("Taşıma planı bir Brüknerde kurulur: önce Brükner oluştur ile bir Brükner yazın.".to_owned());
             return;
         };
-        self.road.haul_plan_window = Some(Box::new(Window {
+        self.modules.road_mut().haul_plan_window = Some(Box::new(Window {
             haul: Some(first),
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::HaulPlan));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::HaulPlan));
         let _ = self.haul_plan_event(Event::Preview);
     }
 
@@ -198,7 +199,7 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.road.haul_plan_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -257,13 +258,13 @@ impl App {
                 return Task::none();
             }
             Event::Format(f) => {
-                if let Some(w) = self.road.haul_plan_window.as_mut() {
+                if let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() {
                     w.format = Some(f);
                 }
                 return Task::none();
             }
             Event::Write => {
-                let Some(w) = &self.road.haul_plan_window else {
+                let Some(w) = &self.modules.road().haul_plan_window else {
                     return Task::none();
                 };
                 let (Some(doc), Some(Ok(planned))) = (&self.document, &w.preview) else {
@@ -280,7 +281,7 @@ impl App {
                 return crate::table_write::save(sheets, w.format.unwrap_or(kentos_commands::WorkbookFormat::Xlsx), name);
             }
             Event::Close => {
-                self.road.haul_plan_window = None;
+                self.modules.road_mut().haul_plan_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -292,7 +293,7 @@ impl App {
     /// The plan approved today as planned now with the window's objective, or its approval taken off (docs/adr/0954);
     /// then the window reads it again.
     fn approve_haul(&mut self, on: bool) -> Task<Message> {
-        let Some(w) = &self.road.haul_plan_window else {
+        let Some(w) = &self.modules.road().haul_plan_window else {
             return Task::none();
         };
         let Some(haul) = w.haul.clone() else {
@@ -314,7 +315,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = road_hauls_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            if let Some(w) = self.road.haul_plan_window.as_mut() {
+            if let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() {
                 w.approval_note.clear();
             }
             self.say(
@@ -326,7 +327,7 @@ impl App {
     }
 
     pub(crate) fn haul_plan_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.haul_plan_window else {
+        let Some(w) = &self.modules.road().haul_plan_window else {
             return iced::widget::text("").into();
         };
         if let Some(x) = &w.fleet {
@@ -623,7 +624,7 @@ impl App {
     }
 
     pub(crate) fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.road.haul_plan_window else {
+        let Some(w) = &self.modules.road().haul_plan_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         if w.fleet.is_some() {

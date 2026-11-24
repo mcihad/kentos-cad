@@ -1,7 +1,8 @@
 //! Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1): the window reads the runs as the rule is typed, saves the
 //! guardrail and draws its runs, each one undo step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::guardrail_window::Event as W;
 use crate::road;
 
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Guardrails(e)));
+    let _ = app.update(Message::from(road::Event::Guardrails(e)));
 }
 
 #[test]
@@ -26,9 +27,9 @@ fn the_window_saves_and_draws_the_guardrail() {
     let _ = app.update(Message::Run("guardrail.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Guardrails))
+        Some(crate::road::dialog(road::RoadDialogKind::Guardrails))
     );
-    let w = app.road.guardrail_window.as_ref().expect("open");
+    let w = app.modules.road().guardrail_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("o-1"));
     let r = w
         .preview
@@ -40,7 +41,7 @@ fn the_window_saves_and_draws_the_guardrail() {
     send(&mut app, W::Warrant(0, false, "0".into()));
     send(&mut app, W::Warrant(0, true, String::new()));
     let more = app
-        .road
+        .modules.road()
         .guardrail_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -48,7 +49,7 @@ fn the_window_saves_and_draws_the_guardrail() {
     assert!(more.left + more.right > r.left + r.right, "{more:?}");
     send(&mut app, W::Field(1, " ".into()));
     let why = app
-        .road
+        .modules.road()
         .guardrail_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -62,7 +63,7 @@ fn the_window_saves_and_draws_the_guardrail() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("korkuluk".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.guardrail_window.is_none());
+    assert!(app.modules.road().guardrail_window.is_none());
     let after = app
         .document
         .as_ref()
@@ -82,7 +83,7 @@ fn a_new_guardrail_needs_its_rule() {
     send(&mut app, W::Choose(None));
     send(&mut app, W::Field(0, "Yeni korkuluk".into()));
     let why = app
-        .road
+        .modules.road()
         .guardrail_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -92,7 +93,7 @@ fn a_new_guardrail_needs_its_rule() {
     for (k, v) in [(1, "Kurum tablosu"), (4, "30"), (5, "15"), (6, "40")] {
         send(&mut app, W::Field(k, v.into()));
     }
-    let w = app.road.guardrail_window.as_ref().expect("open");
+    let w = app.modules.road().guardrail_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
     assert_eq!(

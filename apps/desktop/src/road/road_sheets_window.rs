@@ -13,6 +13,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
@@ -25,7 +26,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::label;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -86,7 +87,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::RoadSheets(event))
+    Message::from(road::Event::RoadSheets(event))
 }
 
 fn number(text: &str) -> Result<Option<f64>, String> {
@@ -165,7 +166,7 @@ impl App {
         let alignment = first.id.clone();
         let profile = doc.model.road_profiles().iter().find(|p| p.alignment == alignment).map(|p| p.id.clone());
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.road.road_sheets_window = Some(Box::new(Window {
+        self.modules.road_mut().road_sheets_window = Some(Box::new(Window {
             alignment: Some(alignment),
             profile,
             layer,
@@ -178,14 +179,14 @@ impl App {
             match_lines: false,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::RoadSheets));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::RoadSheets));
         self.refresh_road_sheets();
     }
 
     fn refresh_road_sheets(&mut self) {
         let input = self.road_sheets_input();
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.road_sheets_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().road_sheets_window.as_mut() else {
             return;
         };
         let line = w
@@ -205,7 +206,7 @@ impl App {
     }
 
     pub(crate) fn road_sheets_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road.road_sheets_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().road_sheets_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -226,7 +227,7 @@ impl App {
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
-                self.road.road_sheets_window = None;
+                self.modules.road_mut().road_sheets_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -238,7 +239,7 @@ impl App {
     /// The window's input; with Yer left empty the views go under the drawing (docs/adr/0991): laid at the origin first
     /// (nothing written), then moved down by how far the highest reaches over its lower left, KGM's rows over it too.
     fn road_sheets_input(&mut self) -> Result<RoadSheetsPlan, String> {
-        let Some(w) = self.road.road_sheets_window.as_ref() else {
+        let Some(w) = self.modules.road().road_sheets_window.as_ref() else {
             return Err(String::new());
         };
         if w.profile.is_none() || !w.fields[0].trim().is_empty() {
@@ -259,7 +260,7 @@ impl App {
             None => 0.0,
         };
         let at = self.under_drawing(up);
-        self.road
+        self.modules.road()
             .road_sheets_window
             .as_ref()
             .map_or(Err(String::new()), |w| w.input_with(Some(at)))
@@ -267,7 +268,7 @@ impl App {
 
     /// Paftaları oluştur: `road.sheets.plan`, one undo step; the sheets shown.
     fn make_road_sheets(&mut self) -> Task<Message> {
-        if self.road.road_sheets_window.is_none() {
+        if self.modules.road().road_sheets_window.is_none() {
             return Task::none();
         }
         let input = match self.road_sheets_input() {
@@ -286,14 +287,14 @@ impl App {
             format!("“{}”: {} pafta, {views} boykesit görünümü ({}–{}).", out.name, out.sheets.len(),
                 out.sheets.first().map_or("", |s| s.number.as_str()), out.sheets.last().map_or("", |s| s.number.as_str())),
         );
-        self.road.road_sheets_window = None;
+        self.modules.road_mut().road_sheets_window = None;
         self.dialog = None;
         self.follow_sheet_book();
         self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
     }
 
     pub(crate) fn road_sheets_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.road_sheets_window else {
+        let Some(w) = &self.modules.road().road_sheets_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -477,7 +478,7 @@ impl App {
     }
 
     pub(crate) fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.road_sheets_window.is_none() {
+        if self.modules.road().road_sheets_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

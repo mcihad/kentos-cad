@@ -1,6 +1,7 @@
 //! Görüş mesafesi (sight_window.rs, plan/road.md Y20): the window reads `road.profiles.sight` as the shared cases do.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::sight_window::Event as W;
 
@@ -22,7 +23,7 @@ fn case(name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Sight(e)));
+    let _ = app.update(Message::from(road::Event::Sight(e)));
 }
 
 /// Fills the window from a case's input (no range: the window reads the whole profile).
@@ -45,19 +46,16 @@ fn the_window_reads_a_profile_s_sight_distance() {
         .revision()
         .to_string();
     let _ = app.update(Message::Run("profile.sight"));
-    assert!(matches!(
-        app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Sight))
-    ));
+    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Sight)));
     send(&mut app, W::Preview);
     assert!(
-        matches!(&app.road.sight_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("yazılmadı"))
+        matches!(&app.modules.road().sight_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("yazılmadı"))
     );
     // The whole crest profile, as the shared case reads it by its name.
     let step = case("Ad ile, bütün boykesit");
     fill(&mut app, &step["input"]);
     send(&mut app, W::Preview);
-    let Some(Ok(r)) = &app.road.sight_window.as_ref().expect("open").preview else {
+    let Some(Ok(r)) = &app.modules.road().sight_window.as_ref().expect("open").preview else {
         panic!("a sight")
     };
     let want = &step["result"]["output"];
@@ -67,14 +65,14 @@ fn the_window_reads_a_profile_s_sight_distance() {
     // A required distance not met warns and gathers the short stretches.
     send(&mut app, W::Field(4, "150".into()));
     send(&mut app, W::Preview);
-    let w = app.road.sight_window.as_ref().expect("open");
+    let w = app.modules.road().sight_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else {
         panic!("a sight")
     };
     assert!(!r.short.is_empty());
     assert!(w.warnings.iter().any(|x| x.contains("150 m'den kısa")));
     send(&mut app, W::Close);
-    assert!(app.road.sight_window.is_none());
+    assert!(app.modules.road().sight_window.is_none());
     assert_eq!(
         app.document
             .as_ref()

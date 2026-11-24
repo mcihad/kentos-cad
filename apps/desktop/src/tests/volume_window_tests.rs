@@ -1,7 +1,8 @@
 //! Kübaj (volume_window.rs, plan/road.md Y8): the window computes the volume as it is typed, writes through
 //! `road.volumes.edit` (one undo step) and writes the sheet as a file; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::volume_window::Event as W;
 
@@ -18,7 +19,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Volumes(e)));
+    let _ = app.update(Message::from(road::Event::Volumes(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -31,7 +32,7 @@ fn the_window_makes_a_volume_and_shows_it_computed() {
     let _ = app.update(Message::Run("volume.new"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Volumes))
+        Some(crate::road::dialog(road::RoadDialogKind::Volumes))
     );
     send(&mut app, W::Name("Prizmoidal kübaj".into()));
     send(&mut app, W::Method(kentos_commands::VolumeMethod::Prismoidal));
@@ -39,12 +40,12 @@ fn the_window_makes_a_volume_and_shows_it_computed() {
     send(&mut app, W::Factor(0, 1, "600".into()));
     send(&mut app, W::Factor(0, 2, "1,25".into()));
     send(&mut app, W::Factor(0, 3, "0,9".into()));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
     assert!(rep.rows.len() > 20 && rep.cut > 1000.0, "{} rows, {} m³", rep.rows.len(), rep.cut);
     assert!((rep.factored_cut - 1.25 * rep.cut).abs() < 1e-6, "{rep:?}");
     send(&mut app, W::Save);
-    assert!(app.road.volume_window.is_none(), "Kaydet closes the window");
+    assert!(app.modules.road().volume_window.is_none(), "Kaydet closes the window");
     let doc = model(&mut app);
     assert_eq!(doc.road_volumes().len(), 3);
     assert_eq!(doc.road_volumes()[2].factors[0].cut, Some(1.25));
@@ -58,18 +59,18 @@ fn a_saved_volume_keeps_its_corridor_and_a_bad_factor_is_refused() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Corridor("c-2".into()));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     assert_eq!(w.preview.report.as_ref().map(|r| r.corridor.as_str()), Some("c-1"), "the corridor stays");
     send(&mut app, W::Add);
     send(&mut app, W::Factor(0, 2, "x".into()));
     assert!(
-        app.road
+        app.modules.road()
             .volume_window
             .as_ref()
             .is_some_and(|w| w.preview.why.is_some())
     );
     send(&mut app, W::Save);
-    assert!(app.road.volume_window.is_some(), "the window stays");
+    assert!(app.modules.road().volume_window.is_some(), "the window stays");
     assert_eq!(model(&mut app).road_volumes()[0].factors.len(), 2);
 }
 
@@ -79,7 +80,7 @@ fn stripping_and_benching_are_typed_and_saved() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     let before = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .and_then(|w| w.preview.report.as_ref())
@@ -90,7 +91,7 @@ fn stripping_and_benching_are_typed_and_saved() {
     send(&mut app, W::Strip(0, 2, "0,3".into()));
     send(&mut app, W::Bench(0, "3".into()));
     send(&mut app, W::Bench(1, "0,5".into()));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
     assert!(rep.strip.is_some_and(|v| v > 100.0) && rep.bench.is_some_and(|v| v > 10.0), "{:?} {:?}", rep.strip, rep.bench);
     assert!(rep.cut < before, "the stripped ground leaves less cut: {} → {}", before, rep.cut);
@@ -145,7 +146,7 @@ fn an_approved_volume_stays_and_says_how_it_changed() {
     densify(&mut app);
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let approval = w.preview.report.as_ref().and_then(|r| r.approval.as_ref()).expect("an approval");
     assert!(approval.changed && !approval.rows.is_empty(), "{approval:?}");
     assert!(w.preview.warnings.iter().any(|x| x.code == "volume_changed"));
@@ -159,7 +160,7 @@ fn an_approved_volume_stays_and_says_how_it_changed() {
     send(&mut app, W::Name("Başka".into()));
     send(&mut app, W::Save);
     assert!(
-        app.road.volume_window.is_some(),
+        app.modules.road().volume_window.is_some(),
         "refused: the window stays"
     );
     assert_eq!(model(&mut app).road_volumes()[0].name, "Ana kübaj");
@@ -290,7 +291,7 @@ fn the_window_measures_by_a_rule_and_shows_the_layers() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     let road = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -301,7 +302,7 @@ fn the_window_measures_by_a_rule_and_shows_the_layers() {
         W::Rule(Some(kentos_commands::VolumeRule::FormationGround)),
     );
     let formation = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -362,7 +363,7 @@ fn the_curve_correction_is_switched_said_and_saved() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     let plain = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -373,7 +374,7 @@ fn the_curve_correction_is_switched_said_and_saved() {
     assert!(plain.curve.is_none());
     send(&mut app, W::Curve(true));
     let curved = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -386,7 +387,7 @@ fn the_curve_correction_is_switched_said_and_saved() {
     assert!(c.fill.abs() > 1.0, "the case corridor's curve moves the fill: {c:?}");
     // Another method takes the correction off (it is the end areas'), back on end areas it is off.
     send(&mut app, W::Method(kentos_commands::VolumeMethod::Prismoidal));
-    assert!(!app.road.volume_window.as_ref().unwrap().rows[0].curve);
+    assert!(!app.modules.road().volume_window.as_ref().unwrap().rows[0].curve);
     send(&mut app, W::Method(kentos_commands::VolumeMethod::EndArea));
     send(&mut app, W::Curve(true));
     send(&mut app, W::Save);
@@ -509,25 +510,25 @@ fn the_window_reads_the_uncertainty_as_the_shared_case_does() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.road.volume_window.as_ref().unwrap().budget.is_none(),
+        app.modules.road().volume_window.as_ref().unwrap().budget.is_none(),
         "no σ, no budget"
     );
     for (k, v) in [(0, "0,05"), (1, "0,02"), (2, "3")] {
         send(&mut app, W::Uncertainty(k, v.into()));
     }
-    let w = app.road.volume_window.as_ref().unwrap();
+    let w = app.modules.road().volume_window.as_ref().unwrap();
     let (b, _) = w.budget.clone().expect("asked").expect("reads");
     let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().unwrap()).abs() <= 1e-6 * v.as_f64().unwrap().abs().max(1.0);
     assert!(close(b.cut.bound, &want["cut"]["bound"]) && close(b.fill.sigma, &want["fill"]["sigma"]), "{b:?}");
     assert_eq!(b.fill.accepted, want["fill"]["accepted"].as_bool());
     send(&mut app, W::View(crate::volume_window::Shown::Budget));
     assert_eq!(
-        app.road.volume_window.as_ref().unwrap().shown,
+        app.modules.road().volume_window.as_ref().unwrap().shown,
         crate::volume_window::Shown::Budget
     );
     send(&mut app, W::Uncertainty(0, "x".into()));
     let why = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -599,7 +600,7 @@ fn the_window_reads_the_progress_as_the_shared_case_does() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.road.volume_window.as_ref().unwrap().progress.is_none(),
+        app.modules.road().volume_window.as_ref().unwrap().progress.is_none(),
         "no survey, no progress"
     );
     let pick = |app: &App, field, name| {
@@ -611,7 +612,7 @@ fn the_window_reads_the_progress_as_the_shared_case_does() {
     let _ = app.update(m);
     let m = pick(&app, crate::volume_window::PREVIOUS, "Eylül ölçüsü");
     let _ = app.update(m);
-    let w = app.road.volume_window.as_ref().unwrap();
+    let w = app.modules.road().volume_window.as_ref().unwrap();
     assert_eq!(w.shown, crate::volume_window::Shown::Progress, "choosing a survey shows its list");
     let (p, _) = w.progress.clone().expect("asked").expect("reads");
     let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().unwrap()).abs() <= 1e-6 * v.as_f64().unwrap().abs().max(1.0);
@@ -623,7 +624,7 @@ fn the_window_reads_the_progress_as_the_shared_case_does() {
     let m = pick(&app, crate::volume_window::SURVEY, "Mevcut zemin");
     let _ = app.update(m);
     let why = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -635,7 +636,7 @@ fn the_window_reads_the_progress_as_the_shared_case_does() {
     let m = pick(&app, crate::volume_window::SURVEY, "Yok");
     let _ = app.update(m);
     assert!(
-        app.road.volume_window.as_ref().unwrap().progress.is_none(),
+        app.modules.road().volume_window.as_ref().unwrap().progress.is_none(),
         "no survey, no progress"
     );
 }
@@ -700,7 +701,7 @@ fn the_window_compares_alternatives_as_the_shared_case_does() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.road
+        app.modules.road()
             .volume_window
             .as_ref()
             .unwrap()
@@ -709,7 +710,7 @@ fn the_window_compares_alternatives_as_the_shared_case_does() {
         "nothing picked, no comparison"
     );
     send(&mut app, W::Alternative("v-5".into(), true));
-    let w = app.road.volume_window.as_ref().unwrap();
+    let w = app.modules.road().volume_window.as_ref().unwrap();
     assert_eq!(w.shown, crate::volume_window::Shown::Compare);
     let (c, _) = w.comparison.clone().expect("asked").expect("reads");
     let got = c.alternatives[1].against.as_ref().expect("against the base");
@@ -723,7 +724,7 @@ fn the_window_compares_alternatives_as_the_shared_case_does() {
     assert!((largest - plan[0]["largest"].as_f64().unwrap()).abs() < 0.05, "the trace reaches the largest departure");
     send(&mut app, W::Alternative("v-5".into(), false));
     assert!(
-        app.road
+        app.modules.road()
             .volume_window
             .as_ref()
             .unwrap()
@@ -780,7 +781,7 @@ fn the_window_reads_the_ledger_as_the_shared_cases_do() {
         case["steps"][0]["result"]["output"].clone()
     };
     let check = |app: &App, name: &str| {
-        let w = app.road.volume_window.as_ref().unwrap();
+        let w = app.modules.road().volume_window.as_ref().unwrap();
         let (l, _) = w.ledger.clone().expect("asked").expect("reads");
         let o = want(name);
         let groups = o["groups"].as_array().unwrap();
@@ -799,7 +800,7 @@ fn the_window_reads_the_ledger_as_the_shared_cases_do() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.road.volume_window.as_ref().unwrap().ledger.is_none(),
+        app.modules.road().volume_window.as_ref().unwrap().ledger.is_none(),
         "not read until shown"
     );
     send(&mut app, W::View(crate::volume_window::Shown::Ledger));
@@ -812,7 +813,7 @@ fn the_window_reads_the_ledger_as_the_shared_cases_do() {
     send(&mut app, W::LedgerDecimals(0));
     check(&app, "Tam sayıya yuvarlama");
     send(&mut app, W::LedgerStep("dilim".into()));
-    let why = match app.road.volume_window.as_ref().unwrap().ledger.clone() {
+    let why = match app.modules.road().volume_window.as_ref().unwrap().ledger.clone() {
         Some(Err(why)) => why,
         other => panic!("a step that is no number: {other:?}"),
     };
@@ -875,7 +876,7 @@ fn the_sheet_totals_are_rounded_once() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     let report = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -891,7 +892,7 @@ fn the_sheet_totals_are_rounded_once() {
     send(&mut app, W::View(crate::volume_window::Shown::Ledger));
     send(&mut app, W::LedgerDecimals(0));
     let (l, _) = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -926,7 +927,7 @@ fn approvals_are_kept_in_the_history() {
         Some((1, Some("1. hakediş".into())))
     );
     assert!(
-        app.road
+        app.modules.road()
             .volume_window
             .as_ref()
             .unwrap()
@@ -950,7 +951,7 @@ fn approvals_are_kept_in_the_history() {
     assert!(v.history.iter().all(|a| a.ended.as_ref().is_some_and(|e| e.at.is_some())), "each ended on its day");
     send(&mut app, W::View(crate::volume_window::Shown::History));
     let h = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -1046,7 +1047,7 @@ fn the_states_read_the_shared_cases_and_densities_are_typed() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::View(crate::volume_window::Shown::States));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let Some(Ok((st, warnings))) = &w.states else { panic!("the states read: {:?}", w.states) };
     assert!(st.fill_loose < st.fill, "a fill factor of 0.9 asks less than the fill");
     assert!(warnings.iter().any(|x| x.code == "volume_factor_physics"));
@@ -1057,7 +1058,7 @@ fn the_states_read_the_shared_cases_and_densities_are_typed() {
     for (k, v) in [(2, ""), (3, ""), (4, "1,75"), (5, "1,3"), (6, "1,85"), (7, "Zemin etüdü raporu, SK-7 sondajı")] {
         send(&mut app, W::Factor(1, k, v.into()));
     }
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let Some(Ok((st, _))) = &w.states else { panic!("the states read: {:?}", w.states) };
     let cases: serde_json::Value =
         serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.volumes.states.json")).expect("cases");
@@ -1116,7 +1117,7 @@ fn the_window_says_what_the_volume_is_computed_from() {
     send(&mut app, W::Choose(0));
     let said = |app: &App| {
         let rep = app
-            .road
+            .modules.road()
             .volume_window
             .as_ref()
             .and_then(|w| w.preview.report.clone())
@@ -1159,14 +1160,14 @@ fn the_window_computes_on_a_grid() {
     send(&mut app, W::Name("Izgara kübajı".into()));
     send(&mut app, W::Method(kentos_commands::VolumeMethod::Grid));
     let why = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
         .expect("no cell yet");
     assert!(why.contains("hücre boyunu"), "{why}");
     send(&mut app, W::Cell("2".into()));
-    let w = app.road.volume_window.as_ref().expect("open");
+    let w = app.modules.road().volume_window.as_ref().expect("open");
     let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
     assert_eq!(rep.step, Some(2.0));
     assert!(rep.cut > 1000.0 && rep.cut_area.is_some(), "{rep:?}");
@@ -1233,7 +1234,7 @@ fn the_window_reads_no_progress_on_heights_not_shown_one() {
     let m = pick(&app, crate::volume_window::SURVEY, "Eylül ölçüsü");
     let _ = app.update(m);
     let why = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -1248,7 +1249,7 @@ fn the_window_reads_no_progress_on_heights_not_shown_one() {
     let m = pick(&app, crate::volume_window::HEIGHTS, "Aynı say (taslak)");
     let _ = app.update(m);
     let (p, warnings) = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -1309,7 +1310,7 @@ fn the_window_says_what_a_volume_measures() {
     let _ = app.update(Message::Run("volume.editor"));
     send(&mut app, W::Choose(0));
     let rep = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()
@@ -1322,7 +1323,7 @@ fn the_window_says_what_a_volume_measures() {
     assert_eq!(basis.sides, kentos_commands::VolumeSides::Daylights);
     send(&mut app, W::Choose(1));
     let rep = app
-        .road
+        .modules.road()
         .volume_window
         .as_ref()
         .unwrap()

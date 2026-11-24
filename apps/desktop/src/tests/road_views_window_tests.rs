@@ -2,6 +2,7 @@
 //! its corridor, one km drives the plan, the profile and the section, the steps go between the sections' km's, a typed
 //! km is taken with the alignment's km, the sample line set's sections come too; and its pictures.
 
+use crate::road::RoadState;
 use crate::road;
 use serde_json::Value;
 
@@ -21,14 +22,14 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: V) {
-    let _ = app.update(Message::Road(road::Event::RoadViews(e)));
+    let _ = app.update(Message::from(road::Event::RoadViews(e)));
 }
 
 #[test]
 fn one_km_drives_the_three_views() {
     let mut app = app();
     let w = app
-        .road
+        .modules.road()
         .road_views_window
         .as_ref()
         .expect("Görünüşler opens");
@@ -46,51 +47,51 @@ fn one_km_drives_the_three_views() {
     // Sonraki and Önceki go between the sections' km's; Son to the last.
     send(&mut app, V::Step(1));
     assert_eq!(
-        app.road.road_views_window.as_ref().unwrap().station,
+        app.modules.road().road_views_window.as_ref().unwrap().station,
         rows[1]
     );
     send(&mut app, V::Step(2));
     assert_eq!(
-        app.road.road_views_window.as_ref().unwrap().station,
+        app.modules.road().road_views_window.as_ref().unwrap().station,
         *rows.last().unwrap()
     );
     send(&mut app, V::Step(-1));
     assert_eq!(
-        app.road.road_views_window.as_ref().unwrap().station,
+        app.modules.road().road_views_window.as_ref().unwrap().station,
         rows[rows.len() - 2]
     );
     // A km between two sections: the nearest is shown.
     let mid = 0.5 * (rows[0] + rows[1]) - 0.01;
     send(&mut app, V::Station(mid));
-    let w = app.road.road_views_window.as_ref().unwrap();
+    let w = app.modules.road().road_views_window.as_ref().unwrap();
     assert_eq!(w.shown().map(|s| s.0), Some(0));
     // A typed km, as the window writes it (“k+mmm.mmm”) and in metres, goes back to its station.
     send(&mut app, V::Station(50.0));
-    let written = app.road.road_views_window.as_ref().unwrap().km.clone();
+    let written = app.modules.road().road_views_window.as_ref().unwrap().km.clone();
     let metres = written.replace('+', "").replace('.', ",");
     send(&mut app, V::Station(0.0));
     send(&mut app, V::Km(written.clone()));
     send(&mut app, V::KmGo);
     assert!(
-        (app.road.road_views_window.as_ref().unwrap().station - 50.0).abs() < 1e-6,
+        (app.modules.road().road_views_window.as_ref().unwrap().station - 50.0).abs() < 1e-6,
         "{written}"
     );
     send(&mut app, V::Station(0.0));
     send(&mut app, V::Km(metres.clone()));
     send(&mut app, V::KmGo);
     assert!(
-        (app.road.road_views_window.as_ref().unwrap().station - 50.0).abs() < 1e-6,
+        (app.modules.road().road_views_window.as_ref().unwrap().station - 50.0).abs() < 1e-6,
         "{metres}"
     );
     send(&mut app, V::Station(75.0));
     // Beyond the alignment: said, the km stays.
     send(&mut app, V::Km("99+000".into()));
     send(&mut app, V::KmGo);
-    assert!((app.road.road_views_window.as_ref().unwrap().station - 75.0).abs() < 1e-9);
+    assert!((app.modules.road().road_views_window.as_ref().unwrap().station - 75.0).abs() < 1e-9);
     // A sample line set's sections instead of the corridor's.
     let doc = &app.document.as_ref().unwrap().model;
     let alignment = app
-        .road
+        .modules.road()
         .road_views_window
         .as_ref()
         .unwrap()
@@ -104,7 +105,7 @@ fn one_km_drives_the_three_views() {
     {
         let id = set.id.clone();
         send(&mut app, V::Source(Source::Set(id)));
-        let w = app.road.road_views_window.as_ref().unwrap();
+        let w = app.modules.road().road_views_window.as_ref().unwrap();
         assert!(
             !w.read.rows.is_empty(),
             "the set's sections: {:?}",
@@ -112,7 +113,7 @@ fn one_km_drives_the_three_views() {
         );
     }
     send(&mut app, V::Close);
-    assert!(app.road.road_views_window.is_none());
+    assert!(app.modules.road().road_views_window.is_none());
 }
 
 /// The window, wide and light, narrow and dark, at a km on a curve; `.run/gui-evidence/yol-gorunusler-*`:
@@ -143,7 +144,7 @@ fn screens() {
             println!("{}", file.display());
         };
         let rows: Vec<f64> = app
-            .road
+            .modules.road()
             .road_views_window
             .as_ref()
             .unwrap()
@@ -172,7 +173,7 @@ fn screens() {
 #[test]
 fn the_red_line_at_the_km_is_the_query_s() {
     let mut app = app();
-    let w = app.road.road_views_window.as_ref().expect("open");
+    let w = app.modules.road().road_views_window.as_ref().expect("open");
     let (id, length) = (w.profile.clone().expect("a profile"), w.read.length);
     for k in 0..=20 {
         let s = length * f64::from(k) / 20.0;

@@ -422,7 +422,8 @@ impl App {
                 let parts = if w.cut { road_scene::with_terrain_cut(&w.parts) } else { w.parts.to_vec() };
                 w.scene = Arc::new(road(&parts, !w.flat));
             }
-            Event::Export => return self.export_gltf(),
+            // glTF ver: the module's command (docs/adr/9199 §3.3).
+            Event::Export => return self.run("gltf.export"),
             Event::Close => self.scene3d_gone(),
             Event::Sized(..) => {}
             // A building's alone.

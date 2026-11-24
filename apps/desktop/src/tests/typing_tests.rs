@@ -3,6 +3,7 @@
 //! the window only for a message or a frame a widget asks for; the fields that keep what is typed sent neither, and
 //! the letter waited for the caret's next blink or a timer. Each key here must be drawn at its own frame.
 
+use crate::road::RoadState;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -206,14 +207,14 @@ fn the_pay_grid_draws_each_key_at_once() {
     let _ = app.update(Message::Run("payItems.editor"));
     let mut snapshot = offscreen(Size::new(1440.0, 900.0));
     snapshot.settle(&mut app, App::view, &mut update);
-    let items = app.road.pay_window.as_ref().map_or(0, |w| w.items.len());
+    let items = app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len());
     let add = *find(&mut snapshot, &app, "Poz ekle")
         .1
         .first()
         .expect("Poz ekle is shown");
     snapshot.input(&mut app, App::view, &mut update, Input::Click(add.center()));
     assert_eq!(
-        app.road.pay_window.as_ref().map_or(0, |w| w.items.len()),
+        app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len()),
         items + 1,
         "Poz ekle added a row"
     );
@@ -234,7 +235,7 @@ fn the_pay_grid_draws_each_key_at_once() {
         [true, true]
     );
     assert_eq!(
-        app.road
+        app.modules.road()
             .pay_window
             .as_ref()
             .map(|w| w.items[items][0].clone()),

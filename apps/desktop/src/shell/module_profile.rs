@@ -62,9 +62,10 @@ pub trait ModuleProfile: Sync {
 pub fn profile(module: Module) -> &'static dyn ModuleProfile {
     match module {
         Module::Architecture => &crate::arch_profile::Architecture,
-        Module::Road => &crate::road_profile::Road,
         Module::Gis => &crate::gis_profile::Gis,
-        Module::Map => crate::module_parts::parts(module).map_or(&NoProject as &dyn ModuleProfile, |p| p.profile()),
+        Module::Map | Module::Road => {
+            crate::module_parts::parts(module).map_or(&NoProject as &dyn ModuleProfile, |p| p.profile())
+        }
     }
 }
 
@@ -204,3 +205,7 @@ impl ModuleProfile for NoProject {
         ("Yol projesi", "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun.")
     }
 }
+
+/// The modules whose parts are still in the core's package (docs/adr/9199 §4.5): the shell takes them with the ones a
+/// program registers.
+pub(crate) const IN_CORE: &[&'static dyn crate::module_parts::ModuleParts] = &[&crate::road_parts::Road];

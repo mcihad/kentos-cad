@@ -17,6 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
@@ -62,7 +63,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Road(road::Event::Superelevations(Dever::Transition(e)))
+    Message::from(road::Event::Superelevations(Dever::Transition(e)))
 }
 
 impl Transition {
@@ -91,7 +92,7 @@ impl App {
     /// Geçiş öner… from Dever: the window on the chosen schedule, the template, the speed and the relative gradient
     /// from Dever's Denetim.
     pub(crate) fn open_transition(&mut self) {
-        let Some(w) = self.road.superelevation_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
         let mut x = Transition {
@@ -107,7 +108,7 @@ impl App {
     /// The proposal read again on the chosen schedule as typed.
     pub(crate) fn refresh_transition(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.superelevation_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
         let def = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.def());
@@ -127,7 +128,7 @@ impl App {
 
     /// An event of the window.
     pub(crate) fn transition_event(&mut self, event: Event) {
-        let Some(w) = self.road.superelevation_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
         let Some(x) = w.transition.as_mut() else {
@@ -195,7 +196,7 @@ impl App {
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Back)).form_width(420.0).width(1200.0).close_caption(BACK);
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let normal = self
-            .road
+            .modules.road()
             .superelevation_window
             .as_ref()
             .and_then(|w| w.chosen.and_then(|i| w.rows.get(i)))

@@ -2,7 +2,8 @@
 //! quadrant or along the selected line without writing, takes the selection as obstacles and draws the tracks in one
 //! step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::swept_window::{Event as W, Source};
 
@@ -18,7 +19,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Swept(e)));
+    let _ = app.update(Message::from(road::Event::Swept(e)));
 }
 
 /// The uid of the setup's `k`th added object (road_swept_cases.py's order: line, ell, bend, arc, curb, post, …).
@@ -43,15 +44,15 @@ fn truck(app: &mut App) {
 fn the_window_previews_a_quadrant_and_draws_it() {
     let mut app = app();
     let _ = app.update(Message::Run("swept.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Swept)));
-    let w = app.road.swept_window.as_ref().expect("open");
+    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Swept)));
+    let w = app.modules.road().swept_window.as_ref().expect("open");
     assert_eq!(
         (w.source, w.junction.as_deref()),
         (Source::Junction, Some("j-1"))
     );
     // Nothing is filled in: the sizes are the user's.
     send(&mut app, W::Preview);
-    match &app.road.swept_window.as_ref().expect("open").preview {
+    match &app.modules.road().swept_window.as_ref().expect("open").preview {
         Some(Err(why)) => assert!(why.contains("yazılmalı"), "{why}"),
         other => panic!("refused: {other:?}"),
     }
@@ -61,7 +62,7 @@ fn the_window_previews_a_quadrant_and_draws_it() {
     }
     send(&mut app, W::Quadrant(1));
     send(&mut app, W::Preview);
-    let w = app.road.swept_window.as_ref().expect("open");
+    let w = app.modules.road().swept_window.as_ref().expect("open");
     let q = match &w.preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
@@ -71,7 +72,7 @@ fn the_window_previews_a_quadrant_and_draws_it() {
     // A change says the preview is old.
     send(&mut app, W::Field(9, "0.5".into()));
     assert!(
-        app.road
+        app.modules.road()
             .swept_window
             .as_ref()
             .expect("open")
@@ -90,7 +91,7 @@ fn the_window_previews_a_quadrant_and_draws_it() {
         .entities()
         .count();
     send(&mut app, W::Draw);
-    assert!(app.road.swept_window.is_none());
+    assert!(app.modules.road().swept_window.is_none());
     let after = app
         .document
         .as_ref()
@@ -111,12 +112,12 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     let mut app = app();
     select(&mut app, &[ELL]);
     let _ = app.update(Message::Run("swept.editor"));
-    let w = app.road.swept_window.as_ref().expect("open");
+    let w = app.modules.road().swept_window.as_ref().expect("open");
     assert_eq!((w.source, w.path.as_deref()), (Source::Object, Some(ELL)));
     truck(&mut app);
     send(&mut app, W::Trailer(true));
     send(&mut app, W::Preview);
-    match &app.road.swept_window.as_ref().expect("open").preview {
+    match &app.modules.road().swept_window.as_ref().expect("open").preview {
         Some(Err(why)) => assert!(why.contains("Mafsal"), "{why}"),
         other => panic!("refused: {other:?}"),
     }
@@ -126,7 +127,7 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     select(&mut app, &[ISLAND, POST]);
     send(&mut app, W::Obstacles);
     assert_eq!(
-        app.road
+        app.modules.road()
             .swept_window
             .as_ref()
             .expect("open")
@@ -135,7 +136,7 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
         2
     );
     send(&mut app, W::Preview);
-    let w = app.road.swept_window.as_ref().expect("open");
+    let w = app.modules.road().swept_window.as_ref().expect("open");
     let q = match &w.preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
@@ -156,7 +157,7 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     );
     send(&mut app, W::Clear);
     assert!(
-        app.road
+        app.modules.road()
             .swept_window
             .as_ref()
             .expect("open")

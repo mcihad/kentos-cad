@@ -1,6 +1,7 @@
 //! Kamyon filosu (haul_fleet_window.rs, plan/road.md Y32.3): opened from Taşıma planı it reads `road.hauls.trucks` as
 //! the shared cases do; the values are kept when it is closed; and its pictures.
 
+use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::haul_fleet_window::{Event as F, Listed, Road};
 use crate::haul_plan_window::Event as P;
@@ -24,14 +25,14 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: F) {
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::Fleet(e))));
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::Fleet(e))));
 }
 
 /// The case's truck and times typed in the window, its fleet and fuel too.
 fn typed(app: &mut App, input: &serde_json::Value) {
     let _ = app.update(Message::Run("haul.plan"));
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::Haul("h-2".into()))));
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::OpenFleet)));
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::Haul("h-2".into()))));
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::OpenFleet)));
     let t = &input["truck"];
     let text = |v: &serde_json::Value| v.as_f64().map(|n| format!("{n}").replace('.', ",")).unwrap_or_default();
     let values = [
@@ -54,7 +55,7 @@ fn the_window_reads_the_fleet_as_the_cases_do_and_keeps_its_values() {
     let c = case("Yakıt, rölanti ve karbon");
     typed(&mut app, &c["steps"][0]["input"]);
     let want = &c["steps"][0]["result"]["output"];
-    let w = app.road.haul_plan_window.as_ref().expect("open");
+    let w = app.modules.road().haul_plan_window.as_ref().expect("open");
     let x = w.fleet.as_ref().expect("the fleet window");
     let out = x.result.clone().expect("read").expect("reads");
     assert_eq!(out.hauls.len(), want["hauls"].as_array().unwrap().len());
@@ -69,7 +70,7 @@ fn the_window_reads_the_fleet_as_the_cases_do_and_keeps_its_values() {
     send(&mut app, F::Trace(2));
     send(&mut app, F::List(Listed::Fleet));
     let x = app
-        .road
+        .modules.road()
         .haul_plan_window
         .as_ref()
         .unwrap()
@@ -90,7 +91,7 @@ fn the_window_reads_the_fleet_as_the_cases_do_and_keeps_its_values() {
     );
     send(&mut app, F::Road(Road::Ground));
     let x = app
-        .road
+        .modules.road()
         .haul_plan_window
         .as_ref()
         .unwrap()
@@ -105,10 +106,10 @@ fn the_window_reads_the_fleet_as_the_cases_do_and_keeps_its_values() {
     assert!(why.contains("Arazi km"), "{why}");
     // Geri keeps the values; opened again they are there.
     send(&mut app, F::Back);
-    assert!(app.road.haul_plan_window.as_ref().unwrap().fleet.is_none());
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::OpenFleet)));
+    assert!(app.modules.road().haul_plan_window.as_ref().unwrap().fleet.is_none());
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::OpenFleet)));
     let x = app
-        .road
+        .modules.road()
         .haul_plan_window
         .as_ref()
         .unwrap()
@@ -122,10 +123,10 @@ fn the_window_reads_the_fleet_as_the_cases_do_and_keeps_its_values() {
 fn a_missing_value_says_what_to_type() {
     let mut app = app();
     let _ = app.update(Message::Run("haul.plan"));
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::Haul("h-2".into()))));
-    let _ = app.update(Message::Road(road::Event::HaulPlan(P::OpenFleet)));
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::Haul("h-2".into()))));
+    let _ = app.update(Message::from(road::Event::HaulPlan(P::OpenFleet)));
     let x = app
-        .road
+        .modules.road()
         .haul_plan_window
         .as_ref()
         .unwrap()
@@ -139,7 +140,7 @@ fn a_missing_value_says_what_to_type() {
         send(&mut app, F::Field(k, v.into()));
     }
     let x = app
-        .road
+        .modules.road()
         .haul_plan_window
         .as_ref()
         .unwrap()
@@ -183,8 +184,8 @@ fn screens() {
             match step {
                 "bos" => {
                     let _ = app.update(Message::Run("haul.plan"));
-                    let _ = app.update(Message::Road(road::Event::HaulPlan(P::Haul("h-2".into()))));
-                    let _ = app.update(Message::Road(road::Event::HaulPlan(P::OpenFleet)));
+                    let _ = app.update(Message::from(road::Event::HaulPlan(P::Haul("h-2".into()))));
+                    let _ = app.update(Message::from(road::Event::HaulPlan(P::OpenFleet)));
                 }
                 _ => typed(&mut app, &input),
             }

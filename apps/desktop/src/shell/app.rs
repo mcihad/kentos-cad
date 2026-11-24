@@ -321,7 +321,6 @@ pub enum Dialog {
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     TerrainWork(crate::terrain_work::TerrainDialogKind),
     /// A discipline's own windows (docs/adr/8054 §6), drawn by its `state.rs`.
-    Road(crate::road::RoadDialogKind),
     /// A module's own window (docs/adr/9199 §3.4), drawn by its parts.
     Module(crate::module_parts::ModuleDialog),
     Gis(crate::gis::GisDialogKind),
@@ -536,19 +535,10 @@ pub enum Message {
     Scene3d(crate::scene3d_window::Event),
     /// An event of IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
     IfcViewer(crate::ifc_viewer::Event),
-    /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
-    LandxmlExport(Option<std::path::PathBuf>),
-    /// Makine kontrolüne ver's file, or none (road_exchange.rs, docs/adr/1031).
-    LandxmlMachine(Option<std::path::PathBuf>),
-    /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
-    LandxmlAlignments(Option<std::path::PathBuf>),
-    /// IFC ver's file, or none (road_exchange.rs, plan/road.md Y10.3).
-    IfcExport(Option<std::path::PathBuf>),
     /// IFC dışa aktar (bina): the file chosen (arch_ifc.rs, docs/adr/8047).
     IfcBuildingExport(Option<std::path::PathBuf>),
     /// IFC dışa aktar (bina, kesilmiş gövde): the file chosen (arch_ifc.rs, docs/adr/8071 §4).
     IfcBuildingExportCut(Option<std::path::PathBuf>),
-    GltfExport(Option<std::path::PathBuf>),
     AnnotationStyles(crate::annotation_styles::Event),
     TableStyleDefs(crate::table_style_window::Event),
     SheetSet(crate::sheet_set::Event),
@@ -733,7 +723,6 @@ pub enum Message {
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     TerrainWork(crate::terrain_work::Event),
     /// A discipline's own messages (docs/adr/8054 §6), handled by its `state.rs`.
-    Road(crate::road::Event),
     /// A module's own message (docs/adr/9199 §3.4), handled by its parts.
     Module(crate::module_parts::ModuleEvent),
     Gis(crate::gis::Event),
@@ -1205,7 +1194,6 @@ pub struct App {
     pub hand_over: fn(kentos_launch::Module, &std::path::Path) -> Result<String, String>,
     /// The disciplines' own windows and panels (docs/adr/8054 §6): each module keeps its state in its
     /// `state.rs`, so a new window of one leaves this struct as it is.
-    pub road: crate::road::RoadUiState,
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     pub terrain_work: crate::terrain_work::TerrainWorkState,
     /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).

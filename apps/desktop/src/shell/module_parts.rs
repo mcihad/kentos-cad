@@ -143,6 +143,12 @@ pub fn all() -> &'static [&'static dyn ModuleParts] {
     ALL.get_or_init(|| {
         let registered = REGISTERED.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut list: Vec<&'static dyn ModuleParts> = registered.clone();
+        // The modules still in the core's package (module_profile.rs).
+        for parts in crate::module_profile::IN_CORE {
+            if !list.iter().any(|p| p.module() == parts.module()) {
+                list.push(*parts);
+            }
+        }
         list.sort_by_key(|p| Module::ALL.iter().position(|m| *m == p.module()));
         list
     })

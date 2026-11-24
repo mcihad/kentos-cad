@@ -21,13 +21,13 @@ fn aks() -> std::path::PathBuf {
 #[test]
 fn alignments_come_in_from_landxml_and_go_out_again() {
     let mut app = app();
-    let _ = app.update(Message::LandxmlAlignments(Some(aks())));
+    let _ = app.update(Message::from(crate::road::Event::LandxmlAlignments(Some(aks()))));
     let doc = &app.document.as_ref().expect("a drawing").model;
     let names: Vec<&str> = doc.road_alignments().iter().map(|a| a.name.as_str()).collect();
     assert_eq!(names, ["Ana aks", "Dar kurp", "Kırık aks", "Denklemli aks"]);
     assert_eq!(doc.road_profiles().len(), 1);
     let out = std::env::temp_dir().join(format!("kentos-desktop-landxml-{}.xml", std::process::id()));
-    let _ = app.update(Message::LandxmlExport(Some(out.clone())));
+    let _ = app.update(Message::from(crate::road::Event::LandxmlExport(Some(out.clone()))));
     let text = std::fs::read_to_string(&out).expect("written");
     assert_eq!(text.matches("<Alignment ").count(), 4);
     assert!(text.contains("<StaEquation staInternal=\"120\""), "the km equation goes out again");
@@ -56,7 +56,7 @@ fn screens() {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
-        let _ = app.update(Message::LandxmlAlignments(Some(aks())));
+        let _ = app.update(Message::from(crate::road::Event::LandxmlAlignments(Some(aks()))));
         let _ = app.update(Message::RibbonTab("alignment"));
         let _ = app.update(Message::Run("alignment.editor"));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -89,17 +89,17 @@ fn machine_control_needs_the_projects_heights() {
     let said = |app: &App| app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
     let mut app = exported_as(None);
     let out = std::env::temp_dir().join(format!("kentos-desktop-machine-{}.xml", std::process::id()));
-    let _ = app.update(Message::LandxmlMachine(Some(out.clone())));
+    let _ = app.update(Message::from(crate::road::Event::LandxmlMachine(Some(out.clone()))));
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.contains("<CoordinateSystem name=\"TUREF / TM30\" epsgCode=\"5254\""), "the horizontal system");
     assert!(text.contains("verticalCoordinateSystemName=\"Antalya height\""), "the heights' system");
     assert!(said(&app).contains("Makine kontrolü dosyası yazıldı") && said(&app).contains("Antalya height (EPSG:5775)"));
     let _ = std::fs::remove_file(&out);
     let mut app = exported_as(Some("Makine kontrolü: projenin kotları söylenmemiş"));
-    let _ = app.update(Message::LandxmlMachine(Some(out.clone())));
+    let _ = app.update(Message::from(crate::road::Event::LandxmlMachine(Some(out.clone()))));
     assert!(!out.exists(), "nothing written");
     assert!(said(&app).contains("Proje ayarları › Kotlar"), "{}", said(&app));
-    let _ = app.update(Message::LandxmlExport(Some(out.clone())));
+    let _ = app.update(Message::from(crate::road::Event::LandxmlExport(Some(out.clone()))));
     assert!(out.exists(), "LandXML ver writes it for exchange");
     let _ = std::fs::remove_file(&out);
 }
@@ -125,7 +125,7 @@ fn screens_machine() {
             app.apply_settings();
             let _ = app.update(Message::RibbonTab("corridor"));
             let file = std::env::temp_dir().join(format!("kentos-y96-{step}-{name}-{}.xml", std::process::id()));
-            let _ = app.update(Message::LandxmlMachine(Some(file.clone())));
+            let _ = app.update(Message::from(crate::road::Event::LandxmlMachine(Some(file.clone()))));
             let _ = std::fs::remove_file(&file);
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {

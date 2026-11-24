@@ -1,7 +1,8 @@
 //! İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3): the window reads the wall as it is typed, saves it and
 //! draws it, each one undo step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::retaining_wall_window::Event as W;
 use crate::road;
 
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::RetainingWalls(e)));
+    let _ = app.update(Message::from(road::Event::RetainingWalls(e)));
 }
 
 #[test]
@@ -26,9 +27,9 @@ fn the_window_saves_and_draws_the_wall() {
     let _ = app.update(Message::Run("retainingWall.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::RetainingWalls))
+        Some(crate::road::dialog(road::RoadDialogKind::RetainingWalls))
     );
-    let w = app.road.retaining_wall_window.as_ref().expect("open");
+    let w = app.modules.road().retaining_wall_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("d-1"));
     let r = w
         .preview
@@ -39,7 +40,7 @@ fn the_window_saves_and_draws_the_wall() {
     // A wider footing makes more concrete.
     send(&mut app, W::Field(8, "3.2".into()));
     let more = app
-        .road
+        .modules.road()
         .retaining_wall_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -52,7 +53,7 @@ fn the_window_saves_and_draws_the_wall() {
     );
     send(&mut app, W::Field(10, "3".into()));
     let why = app
-        .road
+        .modules.road()
         .retaining_wall_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -66,7 +67,7 @@ fn the_window_saves_and_draws_the_wall() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("korkuluk".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.retaining_wall_window.is_none());
+    assert!(app.modules.road().retaining_wall_window.is_none());
     let after = app
         .document
         .as_ref()
@@ -85,7 +86,7 @@ fn a_new_wall_needs_its_stations_and_cross() {
     let _ = app.update(Message::Run("retainingWall.editor"));
     send(&mut app, W::Choose(None));
     let why = app
-        .road
+        .modules.road()
         .retaining_wall_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -101,7 +102,7 @@ fn a_new_wall_needs_its_stations_and_cross() {
     ] {
         send(&mut app, W::Field(k, v.into()));
     }
-    let w = app.road.retaining_wall_window.as_ref().expect("open");
+    let w = app.modules.road().retaining_wall_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
     assert_eq!(

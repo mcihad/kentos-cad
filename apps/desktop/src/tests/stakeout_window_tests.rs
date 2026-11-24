@@ -1,7 +1,8 @@
 //! Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10): the window reads the table as it is typed and writes
 //! nothing to the drawing; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::stakeout_window::Event as W;
 
@@ -27,7 +28,7 @@ fn app_with(heights: Option<serde_json::Value>) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Stakeout(e)));
+    let _ = app.update(Message::from(road::Event::Stakeout(e)));
 }
 
 #[test]
@@ -37,11 +38,11 @@ fn the_window_reads_the_table_as_it_is_typed() {
     let _ = app.update(Message::Run("stakeout.table"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Stakeout))
+        Some(crate::road::dialog(road::RoadDialogKind::Stakeout))
     );
     send(&mut app, W::Field(2, "50".into()));
     send(&mut app, W::Field(3, "axis, daylight".into()));
-    let w = app.road.stakeout_window.as_ref().expect("open");
+    let w = app.modules.road().stakeout_window.as_ref().expect("open");
     let t = w
         .preview
         .table
@@ -59,7 +60,7 @@ fn the_window_reads_the_table_as_it_is_typed() {
         W::Distances(kentos_commands::StakeoutDistances::Ground),
     );
     let t = app
-        .road
+        .modules.road()
         .stakeout_window
         .as_ref()
         .and_then(|w| w.preview.table.clone())
@@ -76,14 +77,14 @@ fn the_window_reads_the_table_as_it_is_typed() {
     );
     send(&mut app, W::Field(3, "kerb".into()));
     let why = app
-        .road
+        .modules.road()
         .stakeout_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
         .expect("refused");
     assert!(why.contains("kerb"), "{why}");
     send(&mut app, W::Close);
-    assert!(app.road.stakeout_window.is_none());
+    assert!(app.modules.road().stakeout_window.is_none());
     assert_eq!(
         app.document.as_ref().expect("a drawing").model.revision(),
         revision,
@@ -226,7 +227,7 @@ fn the_table_says_its_sources_and_when_it_was_written() {
     let _ = app.update(Message::Run("stakeout.table"));
     send(&mut app, W::Field(2, "20".into()));
     let table = app
-        .road
+        .modules.road()
         .stakeout_window
         .as_ref()
         .and_then(|w| w.preview.table.clone())

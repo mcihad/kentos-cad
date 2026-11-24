@@ -1,7 +1,8 @@
 //! Ön güzergâh (route_window.rs, plan/road.md Y12.1): the window reads the route as it is typed and draws it, one undo
 //! step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::route_window::Event as W;
 
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Route(e)));
+    let _ = app.update(Message::from(road::Event::Route(e)));
 }
 
 fn typed(app: &mut App) {
@@ -30,9 +31,9 @@ fn typed(app: &mut App) {
 fn the_window_finds_and_draws_the_route() {
     let mut app = app();
     let _ = app.update(Message::Run("route.finder"));
-    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Route)));
+    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Route)));
     let why = app
-        .road
+        .modules.road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -40,14 +41,14 @@ fn the_window_finds_and_draws_the_route() {
     assert!(why.contains("yazılmalı"), "{why}");
     typed(&mut app);
     let open = app
-        .road
+        .modules.road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.route.clone())
         .expect("a route");
     send(&mut app, W::Avoid("yasak".into()));
     let around = app
-        .road
+        .modules.road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.route.clone())
@@ -60,7 +61,7 @@ fn the_window_finds_and_draws_the_route() {
     );
     send(&mut app, W::Field(6, "0.5".into()));
     let why = app
-        .road
+        .modules.road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -76,7 +77,7 @@ fn the_window_finds_and_draws_the_route() {
         .count();
     send(&mut app, W::Layer("guzergah".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.route_window.is_none());
+    assert!(app.modules.road().route_window.is_none());
     assert_eq!(
         app.document
             .as_ref()

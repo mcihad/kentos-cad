@@ -24,6 +24,7 @@
 //! then sets), each one undo step, and closes. The rates, runoffs, widths and limits come from the standard or the
 //! project: nothing is filled in for the user.
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
@@ -39,7 +40,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Elided, Form};
 use kentos_ui::{label, style};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
@@ -299,7 +300,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Superelevations(event))
+    Message::from(road::Event::Superelevations(event))
 }
 
 impl App {
@@ -314,21 +315,21 @@ impl App {
             return;
         }
         let kept = doc.model.road_superelevations().to_vec();
-        self.road.superelevation_window = Some(Box::new(Window {
+        self.modules.road_mut().superelevation_window = Some(Box::new(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
             check_template: doc.model.road_templates().first().map(|t| t.id.clone()),
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Superelevations));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Superelevations));
         self.refresh_superelevation();
     }
 
     /// Dever oluştur from the ribbon: the window with a new schedule on the first alignment.
     pub(crate) fn new_superelevation(&mut self) {
         self.open_superelevations();
-        if self.road.superelevation_window.is_some() {
+        if self.modules.road().superelevation_window.is_some() {
             let _ = self.superelevation_event(Event::New);
         }
     }
@@ -336,7 +337,7 @@ impl App {
     /// The chosen schedule built again as typed, and its alignment's curves.
     pub(crate) fn refresh_superelevation(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.superelevation_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -405,7 +406,7 @@ impl App {
             _ => {}
         }
         let alignments = self.superelevation_alignments();
-        let Some(w) = self.road.superelevation_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return Task::none();
         };
         let mut warning = None;
@@ -527,7 +528,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.road.superelevation_window = None;
+                self.modules.road_mut().superelevation_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -565,7 +566,7 @@ impl App {
 
     /// Aksa yeniden bağla: the chosen saved schedule takes its alignment's present revision, one undo step.
     fn rebind_superelevation(&mut self) -> Task<Message> {
-        let Some(w) = &self.road.superelevation_window else {
+        let Some(w) = &self.modules.road().superelevation_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -578,7 +579,7 @@ impl App {
         if self.superelevation_write(Self::blank_edit(RoadEditOperation::Rebind, &r.id.clone())) {
             let Some(doc) = &self.document else { return Task::none() };
             let kept = doc.model.road_superelevations().to_vec();
-            if let Some(w) = self.road.superelevation_window.as_mut() {
+            if let Some(w) = self.modules.road_mut().superelevation_window.as_mut() {
                 w.rows = kept.iter().map(Row::of).collect();
                 w.kept = kept;
             }
@@ -590,7 +591,7 @@ impl App {
 
     /// Kaydet: the removed first, then the changed and the new.
     fn save_superelevations(&mut self) -> Task<Message> {
-        let Some(w) = self.road.superelevation_window.clone() else {
+        let Some(w) = self.modules.road().superelevation_window.clone() else {
             return Task::none();
         };
         let mut defs = Vec::new();
@@ -626,14 +627,14 @@ impl App {
                 return Task::none();
             }
         }
-        self.road.superelevation_window = None;
+        self.modules.road_mut().superelevation_window = None;
         self.dialog = None;
         self.say(Level::Success, "Dever çizelgeleri kaydedildi.");
         Task::none()
     }
 
     pub(crate) fn road_superelevation_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.superelevation_window else {
+        let Some(w) = &self.modules.road().superelevation_window else {
             return iced::widget::text("").into();
         };
         if let Some(x) = &w.widen {
@@ -843,7 +844,7 @@ impl App {
     }
 
     pub(crate) fn superelevation_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.road.superelevation_window else {
+        let Some(w) = &self.modules.road().superelevation_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         if w.widen.is_some() {

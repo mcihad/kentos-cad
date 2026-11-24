@@ -2,6 +2,7 @@
 //! reads `road.profiles.lengths`; Kısaları uzat sets the short curves in Boykesit's PVI table, which Kaydet writes;
 //! the values typed are kept when it is closed; and its pictures.
 
+use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::profile_lengths_window::Event as L;
 use crate::profile_window::Event as W;
@@ -21,7 +22,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Profiles(e)));
+    let _ = app.update(Message::from(road::Event::Profiles(e)));
 }
 
 fn lengths(app: &mut App, e: L) {
@@ -54,7 +55,7 @@ fn typed(app: &mut App) {
 }
 
 fn window(app: &App) -> &crate::profile_lengths_window::Lengths {
-    app.road
+    app.modules.road()
         .profile_window
         .as_ref()
         .and_then(|w| w.lengths.as_deref())
@@ -87,7 +88,7 @@ fn short_curves_are_lengthened_in_their_kind_and_saved() {
     // two cut to share the gap; the profile still builds.
     lengths(&mut app, L::Apply);
     assert!(
-        app.road.profile_window.as_ref().unwrap().lengths.is_none(),
+        app.modules.road().profile_window.as_ref().unwrap().lengths.is_none(),
         "back to Boykesit"
     );
     assert!(

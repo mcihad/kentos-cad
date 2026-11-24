@@ -207,16 +207,6 @@ impl App {
                             mark_colors(self.canvas()).fg,
                             Tokens::of(&self.theme()).danger,
                         ))
-                        // A road project's alignments, km and curve points (alignment_layer.rs, plan/road.md Y3).
-                        .extend(crate::alignment_layer::layer(
-                            &doc.model,
-                            &self.viewport.camera,
-                            crate::alignment_layer::Colors {
-                                ink: mark_colors(self.canvas()).fg,
-                                accent: Tokens::of(&self.theme()).accent,
-                                warning: Tokens::of(&self.theme()).warning,
-                            },
-                        ))
                         // The modules' layers over the drawing (Harita işi's approved shapes, docs/adr/4480).
                         .extend(crate::module_parts::all().iter().flat_map(|parts| parts.area_layers(self)))
                         .extend(service_labels)

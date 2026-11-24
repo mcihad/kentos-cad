@@ -23,6 +23,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{Column, container, row, scrollable, space};
@@ -41,7 +42,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::label;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -143,7 +144,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Junctions(event))
+    Message::from(road::Event::Junctions(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -279,7 +280,7 @@ impl App {
         }
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = doc.model.road_junctions().first().map(|j| j.id.clone());
-        self.road.junction_window = Some(Box::new(Window {
+        self.modules.road_mut().junction_window = Some(Box::new(Window {
             chosen: None,
             kind: JunctionKind::AtGrade,
             legs: [Some(axes[0].clone()), Some(axes[1].clone())],
@@ -299,13 +300,13 @@ impl App {
             overlap_cell: String::new(),
             overlap: None,
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Junctions));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Junctions));
         let _ = self.junction_event(Event::Choose(chosen));
     }
 
     fn refresh_junction(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.junction_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().junction_window.as_mut() else {
             return;
         };
         w.preview = match w
@@ -340,7 +341,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.road_junctions().to_vec())
             .unwrap_or_default();
-        let Some(w) = self.road.junction_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().junction_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -395,7 +396,7 @@ impl App {
             Event::Draw => return self.draw_junction(),
             Event::Remove => return self.remove_junction(),
             Event::Close => {
-                self.road.junction_window = None;
+                self.modules.road_mut().junction_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -405,7 +406,7 @@ impl App {
     }
 
     fn save_junction(&mut self) -> Task<Message> {
-        let Some(w) = self.road.junction_window.as_ref() else {
+        let Some(w) = self.modules.road().junction_window.as_ref() else {
             return Task::none();
         };
         let input = match w.input() {
@@ -427,7 +428,7 @@ impl App {
     }
 
     fn tie_junction(&mut self) -> Task<Message> {
-        let Some(w) = self.road.junction_window.as_ref() else {
+        let Some(w) = self.modules.road().junction_window.as_ref() else {
             return Task::none();
         };
         let input = match w.tie_input() {
@@ -448,7 +449,7 @@ impl App {
     }
 
     fn draw_junction(&mut self) -> Task<Message> {
-        let Some(w) = self.road.junction_window.as_ref() else {
+        let Some(w) = self.modules.road().junction_window.as_ref() else {
             return Task::none();
         };
         let (Some(id), Some(layer)) = (w.chosen.clone(), w.layer.clone()) else {
@@ -460,7 +461,7 @@ impl App {
         let result = road_junctions_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
             self.say(Level::Success, "Kavşağın dönüş yayları planda.");
-            self.road.junction_window = None;
+            self.modules.road_mut().junction_window = None;
             self.dialog = None;
         }
         Task::none()
@@ -468,7 +469,7 @@ impl App {
 
     fn remove_junction(&mut self) -> Task<Message> {
         let Some(id) = self
-            .road
+            .modules.road()
             .junction_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -498,7 +499,7 @@ impl App {
     }
 
     pub(crate) fn junction_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.junction_window else {
+        let Some(w) = &self.modules.road().junction_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -835,7 +836,7 @@ impl App {
     }
 
     pub(crate) fn junction_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.junction_window.is_none() {
+        if self.modules.road().junction_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

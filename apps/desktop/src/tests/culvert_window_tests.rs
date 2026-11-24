@@ -1,7 +1,8 @@
 //! Menfez (culvert_window.rs, plan/road.md Y11.2): the window reads the culvert as it is typed, saves it and draws its
 //! barrel, each one undo step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::culvert_window::Event as W;
 use crate::road;
 
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Culverts(e)));
+    let _ = app.update(Message::from(road::Event::Culverts(e)));
 }
 
 #[test]
@@ -26,9 +27,9 @@ fn the_window_saves_and_draws_the_culvert() {
     let _ = app.update(Message::Run("culvert.editor"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Culverts))
+        Some(crate::road::dialog(road::RoadDialogKind::Culverts))
     );
-    let w = app.road.culvert_window.as_ref().expect("open");
+    let w = app.modules.road().culvert_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("m-1"));
     assert!(!w.pipe);
     let r = w
@@ -40,7 +41,7 @@ fn the_window_saves_and_draws_the_culvert() {
     // A wider skew makes a longer barrel.
     send(&mut app, W::Field(2, "30".into()));
     let longer = app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.preview.report.clone())
@@ -48,7 +49,7 @@ fn the_window_saves_and_draws_the_culvert() {
     assert!(longer.length > r.length, "{} → {}", r.length, longer.length);
     send(&mut app, W::Field(3, "kot".into()));
     let why = app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -65,7 +66,7 @@ fn the_window_saves_and_draws_the_culvert() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("korkuluk".into()));
     send(&mut app, W::Draw);
-    assert!(app.road.culvert_window.is_none());
+    assert!(app.modules.road().culvert_window.is_none());
     let after = app
         .document
         .as_ref()
@@ -85,7 +86,7 @@ fn a_new_pipe_culvert_needs_its_sizes() {
     send(&mut app, W::Choose(None));
     send(&mut app, W::Pipe(true));
     let why = app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -103,7 +104,7 @@ fn a_new_pipe_culvert_needs_its_sizes() {
     for (k, v) in [(1, station.to_string()), (3, invert.to_string()), (4, "1".into()), (8, "1".into()), (9, "0.1".into())] {
         send(&mut app, W::Field(k, v));
     }
-    let w = app.road.culvert_window.as_ref().expect("open");
+    let w = app.modules.road().culvert_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
     assert_eq!(
@@ -123,7 +124,7 @@ fn the_hydraulics_read_the_shared_case() {
     let mut app = app();
     let _ = app.update(Message::Run("culvert.editor"));
     assert!(
-        app.road
+        app.modules.road()
             .culvert_window
             .as_ref()
             .expect("open")
@@ -133,7 +134,7 @@ fn the_hydraulics_read_the_shared_case() {
     );
     send(&mut app, W::Hydraulic(0, "60".into()));
     let why = match app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.hydraulics.clone())
@@ -145,7 +146,7 @@ fn the_hydraulics_read_the_shared_case() {
     send(&mut app, W::Hydraulic(2, "0,4".into()));
     send(&mut app, W::Hydraulic(4, "1.66".into()));
     let why = match app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.hydraulics.clone())
@@ -155,7 +156,7 @@ fn the_hydraulics_read_the_shared_case() {
     };
     assert!(why.contains("birlikte"), "{why}");
     send(&mut app, W::Hydraulic(5, "60".into()));
-    let w = app.road.culvert_window.as_ref().expect("open");
+    let w = app.modules.road().culvert_window.as_ref().expect("open");
     assert_eq!(
         w.inlet,
         kentos_commands::CulvertInlet::BoxWingwall30To75,
@@ -180,7 +181,7 @@ fn the_hydraulics_read_the_shared_case() {
     // A pipe offers only the pipes' inlets.
     send(&mut app, W::Choose(Some("m-2".into())));
     assert_eq!(
-        app.road.culvert_window.as_ref().expect("open").inlet,
+        app.modules.road().culvert_window.as_ref().expect("open").inlet,
         kentos_commands::CulvertInlet::PipeSquareHeadwall
     );
 }
@@ -194,7 +195,7 @@ fn the_closure_reads_the_shared_cases() {
     send(&mut app, W::Page(2));
     send(&mut app, W::Flood(0, "60".into()));
     let why = match app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.closure.clone())
@@ -207,7 +208,7 @@ fn the_closure_reads_the_shared_cases() {
     send(&mut app, W::Flood(2, "12".into()));
     send(&mut app, W::Hydraulic(2, "0.4".into()));
     let why = match app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.closure.clone())
@@ -226,7 +227,7 @@ fn the_closure_reads_the_shared_cases() {
     };
     let check = |app: &App, name: &str| {
         let (read, _) = app
-            .road
+            .modules.road()
             .culvert_window
             .as_ref()
             .and_then(|w| w.closure.clone())
@@ -252,7 +253,7 @@ fn the_closure_reads_the_shared_cases() {
     check(&app, "Debi ve Cd aralığıyla");
     send(&mut app, W::Flood(5, String::new()));
     let why = match app
-        .road
+        .modules.road()
         .culvert_window
         .as_ref()
         .and_then(|w| w.closure.clone())

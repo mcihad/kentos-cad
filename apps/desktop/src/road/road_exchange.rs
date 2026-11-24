@@ -15,12 +15,12 @@ use crate::app::{App, Message};
 impl App {
     /// LandXML ver from the ribbon: where to write the file.
     pub(crate) fn export_landxml(&mut self) -> Task<Message> {
-        self.ask_landxml("LandXML ver", Message::LandxmlExport)
+        self.ask_landxml("LandXML ver", |path| Message::from(crate::road::Event::LandxmlExport(path)))
     }
 
     /// Makine kontrolüne ver from the ribbon (docs/adr/1031): where to write the file.
     pub(crate) fn export_landxml_machine(&mut self) -> Task<Message> {
-        self.ask_landxml("Makine kontrolüne ver", Message::LandxmlMachine)
+        self.ask_landxml("Makine kontrolüne ver", |path| Message::from(crate::road::Event::LandxmlMachine(path)))
     }
 
     fn ask_landxml(&mut self, title: &'static str, then: fn(Option<PathBuf>) -> Message) -> Task<Message> {
@@ -112,7 +112,7 @@ impl App {
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            Message::LandxmlAlignments,
+            |path| Message::from(crate::road::Event::LandxmlAlignments(path)),
         )
     }
 
@@ -158,7 +158,7 @@ impl App {
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            Message::IfcExport,
+            |path| Message::from(crate::road::Event::IfcExport(path)),
         )
     }
 
@@ -208,7 +208,7 @@ impl App {
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            Message::GltfExport,
+            |path| Message::from(crate::road::Event::GltfExport(path)),
         )
     }
 

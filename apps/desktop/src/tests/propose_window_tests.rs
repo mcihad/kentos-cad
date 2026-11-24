@@ -1,6 +1,7 @@
 //! Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25): the window reads `road.profiles.propose` as the shared
 //! cases do and writes the proposal as a new profile.
 
+use crate::road::RoadState;
 use crate::app::{App, Dialog, Message};
 use crate::propose_window::Event as W;
 use crate::road;
@@ -144,12 +145,12 @@ fn screens_crossings() {
         let _ = app.update(Message::Propose(W::Close));
         let _ = app.update(Message::Run("profile.editor"));
         let rows = app
-            .road
+            .modules.road()
             .profile_window
             .as_ref()
             .and_then(|w| w.rows.iter().position(|r| r_id(r) == "b-6"));
         if let Some(i) = rows {
-            let _ = app.update(Message::Road(road::Event::Profiles(
+            let _ = app.update(Message::from(road::Event::Profiles(
                 crate::profile_window::Event::Choose(i),
             )));
         }

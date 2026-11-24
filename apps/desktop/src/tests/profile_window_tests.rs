@@ -1,7 +1,8 @@
 //! Boykesit (profile_window.rs, plan/road.md Y4): the window writes through `road.profiles`, each write one undo step;
 //! and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::profile_window::Event as W;
 use crate::road;
 
@@ -22,7 +23,7 @@ fn app(profiles: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Profiles(e)));
+    let _ = app.update(Message::from(road::Event::Profiles(e)));
 }
 
 fn profiles(app: &App) -> Vec<kentos_commands::ProfileDef> {
@@ -34,7 +35,7 @@ fn made(app: &mut App) {
     let _ = app.update(Message::Run("profile.new"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Profiles))
+        Some(crate::road::dialog(road::RoadDialogKind::Profiles))
     );
     send(app, W::FromGround);
     send(app, W::Add);
@@ -53,12 +54,12 @@ fn made(app: &mut App) {
 fn the_window_makes_a_profile_on_the_terrain_and_rebinds_a_stale_one() {
     let mut app = app(false);
     made(&mut app);
-    let w = app.road.profile_window.as_ref().expect("open");
+    let w = app.modules.road().profile_window.as_ref().expect("open");
     assert!(w.ground.length > 600.0, "the alignment's terrain is read");
     send(&mut app, W::Save);
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(
-        app.road.profile_window.is_none(),
+        app.modules.road().profile_window.is_none(),
         "Kaydet closes the window: {said:?}"
     );
     let list = profiles(&app);
@@ -117,7 +118,7 @@ fn curves_that_overlap_are_refused_and_the_window_stays() {
     send(&mut app, W::Pvi(1, 3, "400".into()));
     send(&mut app, W::Save);
     assert!(
-        app.road.profile_window.is_some(),
+        app.modules.road().profile_window.is_some(),
         "a refused write leaves the window open"
     );
     assert!(profiles(&app).is_empty());
@@ -209,7 +210,7 @@ fn typing_a_pvi_tells_what_saving_it_makes_stale() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("profile.editor"));
     assert!(
-        app.road
+        app.modules.road()
             .profile_window
             .as_ref()
             .expect("open")
@@ -230,7 +231,7 @@ fn typing_a_pvi_tells_what_saving_it_makes_stale() {
         .expect("the case")["steps"][0]["result"]["output"]
         .clone();
     let Some(Ok((imp, warnings))) = app
-        .road
+        .modules.road()
         .profile_window
         .as_ref()
         .expect("open")
@@ -250,7 +251,7 @@ fn typing_a_pvi_tells_what_saving_it_makes_stale() {
     // Typed back to the saved elevation: the line does not change.
     send(&mut app, W::Pvi(1, 2, "101,5".into()));
     assert!(
-        app.road
+        app.modules.road()
             .profile_window
             .as_ref()
             .expect("open")
@@ -262,7 +263,7 @@ fn typing_a_pvi_tells_what_saving_it_makes_stale() {
     send(&mut app, W::Save);
     let _ = app.update(Message::Run("profile.editor"));
     assert!(
-        app.road
+        app.modules.road()
             .profile_window
             .as_ref()
             .expect("open")
@@ -323,7 +324,7 @@ fn the_status_says_the_length_in_space_apart_from_the_km_s() {
         panic!("the query reads")
     };
     let asked = output.profiles[0].length3d;
-    let w = app.road.profile_window.as_ref().expect("open");
+    let w = app.modules.road().profile_window.as_ref().expect("open");
     let (said, bad) = crate::profile_window::status(&w.rows[0], false, &w.ground);
     assert!(!bad, "{said}");
     let want = format!(
@@ -416,7 +417,7 @@ fn screens_kgm() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
+        let _ = app.update(Message::from(road::Event::Profiles(W::Cancel)));
         // The bands under the frame: the frame's lower left is (0, −200); the bands go about 43 text heights down.
         app.viewport.camera.fit(
             &kentos_render_wgpu::Bounds {
@@ -499,7 +500,7 @@ fn screens_span() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
+        let _ = app.update(Message::from(road::Event::Profiles(W::Cancel)));
         // The frame: lower left (0, −200), 669 m long, 12 m × 10 high.
         app.viewport.camera.fit(
             &kentos_render_wgpu::Bounds {
@@ -618,7 +619,7 @@ fn screens_corridor_choice() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
+        let _ = app.update(Message::from(road::Event::Profiles(W::Cancel)));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y88-cizim-{name}.png"));

@@ -1,7 +1,8 @@
 //! Koridor (corridor_window.rs, plan/road.md Y7): the window builds the corridor as it is typed, writes through
 //! `road.corridors.edit` and draws the slope plan (`road.corridors.draw`), each write one undo step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::corridor_window::Event as W;
 use crate::road;
 
@@ -19,7 +20,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Corridors(e)));
+    let _ = app.update(Message::from(road::Event::Corridors(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -59,7 +60,7 @@ fn the_window_makes_a_corridor_and_shows_it_built() {
     let _ = app.update(Message::Run("corridor.new"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Corridors))
+        Some(crate::road::dialog(road::RoadDialogKind::Corridors))
     );
     send(&mut app, W::Name("Kuzey koridoru".into()));
     for (k, v) in [(0, "25"), (1, "25"), (2, "20"), (3, "10")] {
@@ -67,7 +68,7 @@ fn the_window_makes_a_corridor_and_shows_it_built() {
     }
     send(&mut app, W::Add);
     send(&mut app, W::Region(0, 1, "280".into()));
-    let w = app.road.corridor_window.as_ref().expect("open");
+    let w = app.modules.road().corridor_window.as_ref().expect("open");
     let rep = w
         .preview
         .report
@@ -81,7 +82,7 @@ fn the_window_makes_a_corridor_and_shows_it_built() {
     );
     send(&mut app, W::Save);
     assert!(
-        app.road.corridor_window.is_none(),
+        app.modules.road().corridor_window.is_none(),
         "Kaydet closes the window"
     );
     let doc = model(&mut app);
@@ -106,7 +107,7 @@ fn a_saved_corridor_is_drawn_and_a_stale_one_rebound() {
     // A region left without its end is refused and the window stays.
     send(&mut app, W::Add);
     send(&mut app, W::Save);
-    assert!(app.road.corridor_window.is_some());
+    assert!(app.modules.road().corridor_window.is_some());
 }
 
 /// The window and the slope plan over the drawing, wide and narrow, light and dark; `.run/gui-evidence/yol-y7-*`:
@@ -196,7 +197,7 @@ fn the_window_checks_the_sampling_as_the_shared_case_does() {
     let want = &case["steps"][0]["result"]["output"]["corridors"][0]["sampling"];
     let mut app = app();
     checked(&mut app);
-    let w = app.road.corridor_window.as_ref().expect("open");
+    let w = app.modules.road().corridor_window.as_ref().expect("open");
     let rep = w
         .preview
         .report
@@ -225,7 +226,7 @@ fn a_tolerance_without_the_least_step_says_what_to_type() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Field(7, "0,05".into()));
-    let w = app.road.corridor_window.as_ref().expect("open");
+    let w = app.modules.road().corridor_window.as_ref().expect("open");
     assert_eq!(
         w.preview.why.as_deref(),
         Some("Kesitleri denetlemek için en kısa adımı da yazın.")
@@ -311,7 +312,7 @@ fn the_daylights_read_the_shared_case() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.road
+        app.modules.road()
             .corridor_window
             .as_ref()
             .unwrap()
@@ -324,7 +325,7 @@ fn the_daylights_read_the_shared_case() {
     send(&mut app, W::Daylight(true));
     send(&mut app, W::Sensitive("10".into()));
     let (d, warnings) = app
-        .road
+        .modules.road()
         .corridor_window
         .as_ref()
         .unwrap()
@@ -356,7 +357,7 @@ fn the_daylights_read_the_shared_case() {
             .any(|w| w.code == "corridor_daylight_crossings")
     );
     send(&mut app, W::Sensitive("sıfır".into()));
-    let why = match app.road.corridor_window.as_ref().unwrap().daylights.clone() {
+    let why = match app.modules.road().corridor_window.as_ref().unwrap().daylights.clone() {
         Some(Err(why)) => why,
         other => panic!("a threshold that is no number: {other:?}"),
     };
@@ -426,14 +427,14 @@ fn the_protected_areas_read_the_shared_case() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Protected(true));
-    let why = match app.road.corridor_window.as_ref().unwrap().protected.clone() {
+    let why = match app.modules.road().corridor_window.as_ref().unwrap().protected.clone() {
         Some(Err(why)) => why,
         other => panic!("no layer yet: {other:?}"),
     };
     assert!(why.contains("katman"), "{why}");
     send(&mut app, W::ProtectedLayer("korunan".into()));
     let (z, warnings) = app
-        .road
+        .modules.road()
         .corridor_window
         .as_ref()
         .unwrap()
@@ -464,7 +465,7 @@ fn the_protected_areas_read_the_shared_case() {
     // Back to the plan: nothing read.
     send(&mut app, W::Daylight(false));
     assert!(
-        app.road
+        app.modules.road()
             .corridor_window
             .as_ref()
             .unwrap()
@@ -530,7 +531,7 @@ fn the_preflight_reads_the_shared_cases() {
     let mut app = preflight_app("Dar kurp: katlanma ve üst üste binme");
     let _ = app.update(Message::Run("corridor.editor"));
     let at = app
-        .road
+        .modules.road()
         .corridor_window
         .as_ref()
         .expect("open")
@@ -540,7 +541,7 @@ fn the_preflight_reads_the_shared_cases() {
         .expect("c-3");
     send(&mut app, W::Choose(at));
     send(&mut app, W::Check(true));
-    let w = app.road.corridor_window.as_ref().expect("open");
+    let w = app.modules.road().corridor_window.as_ref().expect("open");
     let Some(Ok((c, warnings))) = &w.preflight else {
         panic!("the check reads: {:?}", w.preflight)
     };
@@ -552,7 +553,7 @@ fn the_preflight_reads_the_shared_cases() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Check(true));
     send(&mut app, W::Margin("0,95".into()));
-    let w = app.road.corridor_window.as_ref().expect("open");
+    let w = app.modules.road().corridor_window.as_ref().expect("open");
     let Some(Ok((c, _))) = &w.preflight else {
         panic!("the check reads")
     };
@@ -589,7 +590,7 @@ fn screens_preflight() {
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("corridor.editor"));
         let at = app
-            .road
+            .modules.road()
             .corridor_window
             .as_ref()
             .expect("open")
@@ -623,7 +624,7 @@ fn a_slope_transition_closes_the_seam_and_is_written() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Check(true));
     let seam = |app: &App| {
-        let w = app.road.corridor_window.as_ref().expect("open");
+        let w = app.modules.road().corridor_window.as_ref().expect("open");
         let Some(Ok((c, _))) = &w.preflight else {
             panic!("the check reads: {:?}", w.preflight)
         };
@@ -704,7 +705,7 @@ const WIDENING_CASE: &str = "Tek eğimli devere bağlı: genişlemenin başı km
 #[test]
 fn the_window_says_the_superelevation_s_stations() {
     let said = |app: &App| {
-        let w = app.road.corridor_window.as_ref().expect("open");
+        let w = app.modules.road().corridor_window.as_ref().expect("open");
         let rep = w
             .preview
             .report

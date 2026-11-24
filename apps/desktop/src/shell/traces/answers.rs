@@ -9,7 +9,6 @@
 use crate::app::{App, Dialog, Message};
 use crate::arch;
 use crate::gis;
-use crate::road;
 
 /// A control of the open window, by its words.
 #[derive(Clone, Copy, Debug)]
@@ -120,41 +119,6 @@ impl App {
                 crate::event_links_window::TITLE.to_owned()
             }
             Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains) => crate::terrain_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Alignments) => {
-                crate::alignment_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Profiles) => crate::profile_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Sections) => crate::section_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Superelevations) => {
-                crate::superelevation_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Corridors) => {
-                crate::corridor_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Volumes) => crate::volume_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Hauls) => crate::haul_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Stakeout) => {
-                crate::stakeout_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::RoadSheets) => {
-                crate::road_sheets_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::RoadViews) => {
-                crate::road_views_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::RoadAlignmentFit) => {
-                crate::road_alignment_fit_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::RoadProfileFit) => {
-                crate::road_profile_fit_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Guardrails) => {
-                crate::guardrail_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Culverts) => crate::culvert_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::RetainingWalls) => {
-                crate::retaining_wall_window::TITLE.to_owned()
-            }
             Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms) => {
                 crate::platform_window::TITLE.to_owned()
             }
@@ -164,25 +128,12 @@ impl App {
             Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage) => {
                 crate::drainage_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Swept) => crate::swept_window::TITLE.to_owned(),
             Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SurfaceAnalysis) => {
                 crate::surface_analysis_window::TITLE.to_owned()
             }
-            Dialog::Road(road::RoadDialogKind::Sight) => crate::sight_window::TITLE.to_owned(),
             Dialog::Propose => crate::propose_window::TITLE.to_owned(),
             Dialog::Arch(arch::ArchDialogKind::DesignCheck) => {
                 crate::design_check_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::PlatformWater) => {
-                crate::platform_water_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::HaulPlan) => {
-                crate::haul_plan_window::TITLE.to_owned()
-            }
-            Dialog::Road(road::RoadDialogKind::Pay) => crate::pay_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Route) => crate::route_window::TITLE.to_owned(),
-            Dialog::Road(road::RoadDialogKind::Junctions) => {
-                crate::junction_window::TITLE.to_owned()
             }
             Dialog::Scene3d => crate::scene3d_window::TITLE.to_owned(),
             Dialog::IfcViewer => crate::ifc_viewer::TITLE.to_owned(),
@@ -363,52 +314,18 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::Joins)) => self.joins_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::EventLinks)) => self.event_links_control(control),
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)) => self.terrain_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Alignments)) => self.alignment_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Profiles)) => self.profile_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Sections)) => self.section_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Superelevations)) => {
-                self.superelevation_control(control)
-            }
-            Some(Dialog::Road(road::RoadDialogKind::Corridors)) => self.corridor_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Volumes)) => self.volume_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Hauls)) => self.haul_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Stakeout)) => self.stakeout_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::RoadSheets)) => {
-                self.road_sheets_control(control)
-            }
-            Some(Dialog::Road(road::RoadDialogKind::RoadViews)) => self.road_views_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::RoadAlignmentFit)) => {
-                self.road_alignment_fit_control(control)
-            }
-            Some(Dialog::Road(road::RoadDialogKind::RoadProfileFit)) => {
-                self.road_profile_fit_control(control)
-            }
-            Some(Dialog::Road(road::RoadDialogKind::Guardrails)) => self.guardrail_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Culverts)) => self.culvert_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::RetainingWalls)) => {
-                self.retaining_wall_control(control)
-            }
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms)) => self.platform_control(control),
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud)) => {
                 self.terrain_cloud_control(control)
             }
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage)) => self.drainage_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Swept)) => self.swept_control(control),
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SurfaceAnalysis)) => {
                 self.surface_analysis_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::Sight)) => self.sight_control(control),
             Some(Dialog::Propose) => self.propose_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::DesignCheck)) => {
                 self.design_check_control(control)
             }
-            Some(Dialog::Road(road::RoadDialogKind::PlatformWater)) => {
-                self.platform_water_control(control)
-            }
-            Some(Dialog::Road(road::RoadDialogKind::HaulPlan)) => self.haul_plan_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Pay)) => self.pay_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Route)) => self.route_control(control),
-            Some(Dialog::Road(road::RoadDialogKind::Junctions)) => self.junction_control(control),
             Some(Dialog::Scene3d) => self.scene3d_control(control),
             Some(Dialog::IfcViewer) => self.ifc_viewer_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::Program)) => self.program_control(control),

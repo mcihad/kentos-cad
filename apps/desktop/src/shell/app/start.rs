@@ -285,7 +285,6 @@ impl App {
             server_checking: false,
             server_quiet: false,
             server_health: None,
-            road: Default::default(),
             terrain_work: Default::default(),
             modules: crate::module_parts::ModuleStates::start(),
             gis: crate::gis::GisUiState {

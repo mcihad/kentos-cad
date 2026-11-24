@@ -1,10 +1,11 @@
 //! Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b): the window reads the profile as the view is
 //! typed, makes it as one undo step; and its pictures.
 
+use crate::road::RoadState;
 use crate::road;
 use kentos_domain::Slot;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::road_profile_fit_window::Event as W;
 
 /// The drawn grades, the crest arc and the sag arc of `road.profiles.fit`'s drawing (after its 120 terrain points).
@@ -24,7 +25,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::RoadProfileFit(e)));
+    let _ = app.update(Message::from(road::Event::RoadProfileFit(e)));
 }
 
 /// The view of the drawing: its datum 90 m at (0; −500), a metre of elevation 10 units.
@@ -39,17 +40,17 @@ fn the_window_makes_the_profile_as_one_step() {
     let mut app = app();
     let _ = app.update(Message::Run("profile.fromLine"));
     assert!(
-        app.road.road_profile_fit_window.is_none(),
+        app.modules.road().road_profile_fit_window.is_none(),
         "nothing selected"
     );
     app.selection.set([GRADES]);
     let _ = app.update(Message::Run("profile.fromLine"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::RoadProfileFit))
+        Some(crate::road::dialog(road::RoadDialogKind::RoadProfileFit))
     );
     let why = app
-        .road
+        .modules.road()
         .road_profile_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -57,7 +58,7 @@ fn the_window_makes_the_profile_as_one_step() {
     assert!(why.contains("kıyas kotu"), "{why}");
     view(&mut app);
     send(&mut app, W::Field(4, "60".into()));
-    let w = app.road.road_profile_fit_window.as_ref().expect("open");
+    let w = app.modules.road().road_profile_fit_window.as_ref().expect("open");
     let fitted = w
         .preview
         .fitted
@@ -71,7 +72,7 @@ fn the_window_makes_the_profile_as_one_step() {
     assert_eq!(fitted.curves, 2);
     send(&mut app, W::Field(4, "400".into()));
     let why = app
-        .road
+        .modules.road()
         .road_profile_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -86,7 +87,7 @@ fn the_window_makes_the_profile_as_one_step() {
         .road_profiles()
         .len();
     send(&mut app, W::Make);
-    assert!(app.road.road_profile_fit_window.is_none());
+    assert!(app.modules.road().road_profile_fit_window.is_none());
     assert_eq!(
         app.document
             .as_ref()

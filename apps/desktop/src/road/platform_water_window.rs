@@ -14,6 +14,7 @@
 //! └───────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -23,7 +24,7 @@ use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
@@ -74,7 +75,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::PlatformWater(event))
+    Message::from(road::Event::PlatformWater(event))
 }
 
 impl Window {
@@ -104,16 +105,16 @@ impl App {
             self.warn("Platform suyu bir koridorda okunur: önce Koridor'da bir koridor oluşturun.".to_owned());
             return;
         };
-        self.road.platform_water_window = Some(Box::new(Window {
+        self.modules.road_mut().platform_water_window = Some(Box::new(Window {
             corridor: Some(first),
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::PlatformWater));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::PlatformWater));
         let _ = self.platform_water_event(Event::Preview);
     }
 
     pub(crate) fn platform_water_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road.platform_water_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().platform_water_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -142,7 +143,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.road.platform_water_window = None;
+                self.modules.road_mut().platform_water_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -152,7 +153,7 @@ impl App {
     }
 
     pub(crate) fn platform_water_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.platform_water_window else {
+        let Some(w) = &self.modules.road().platform_water_window else {
             return iced::widget::text("").into();
         };
         let list: Vec<(String, String)> = self
@@ -221,7 +222,7 @@ impl App {
     }
 
     pub(crate) fn platform_water_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.platform_water_window.is_none() {
+        if self.modules.road().platform_water_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

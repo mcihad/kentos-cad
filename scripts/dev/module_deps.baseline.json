@@ -160,10 +160,7 @@
     ],
     "shell->map": [],
     "shell->road": [
-      "shell/app.rs",
-      "shell/module_profile.rs",
-      "shell/traces/answers.rs",
-      "shell/view/area.rs"
+      "shell/module_profile.rs"
     ],
     "cad->gis": [
       "cad/block_attributes.rs",

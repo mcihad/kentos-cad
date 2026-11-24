@@ -2,6 +2,7 @@
 //! stale when its template changes and comes back by Hepsini yeniden üret, Kendiliğinden yeniden üret turns on, a
 //! source's row opens its editor; a rebuild runs as a job whose Durdur writes nothing (docs/adr/2440); and its pictures.
 
+use crate::road::RoadState;
 use kentos_commands::RoadNodeState as S;
 use serde_json::{Value, json};
 
@@ -73,7 +74,7 @@ fn the_panel_rebuilds_what_went_stale() {
         .position(|n| n.id == "c-1")
         .expect("the corridor");
     send(&mut app, P::Open(k));
-    assert!(app.road.corridor_window.is_some(), "Koridor opens");
+    assert!(app.modules.road().corridor_window.is_some(), "Koridor opens");
 }
 
 /// The panel in the dock, wide and light, narrow and dark: two stale drawings, then drawn again; deep with its

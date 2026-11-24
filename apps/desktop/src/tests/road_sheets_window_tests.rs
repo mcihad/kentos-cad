@@ -1,7 +1,8 @@
 //! Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5): the window reads the sheets as it is typed, lays them as
 //! one undo step and shows them; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::road_sheets_window::Event as W;
 
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::RoadSheets(e)));
+    let _ = app.update(Message::from(road::Event::RoadSheets(e)));
 }
 
 #[test]
@@ -26,9 +27,9 @@ fn the_window_lays_the_sheets_as_one_step() {
     let _ = app.update(Message::Run("road.sheets"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::RoadSheets))
+        Some(crate::road::dialog(road::RoadDialogKind::RoadSheets))
     );
-    let w = app.road.road_sheets_window.as_ref().expect("open");
+    let w = app.modules.road().road_sheets_window.as_ref().expect("open");
     let laid = w
         .preview
         .laid
@@ -39,7 +40,7 @@ fn the_window_lays_the_sheets_as_one_step() {
     let count = laid.sheets.len();
     send(&mut app, W::Profile(None));
     let plan_only = app
-        .road
+        .modules.road()
         .road_sheets_window
         .as_ref()
         .and_then(|w| w.preview.laid.clone())
@@ -47,7 +48,7 @@ fn the_window_lays_the_sheets_as_one_step() {
     assert!(plan_only.sheets.iter().all(|s| s.view.is_none()));
     send(&mut app, W::Field(1, "bir".into()));
     let why = app
-        .road
+        .modules.road()
         .road_sheets_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -63,7 +64,7 @@ fn the_window_lays_the_sheets_as_one_step() {
         .entities()
         .count();
     send(&mut app, W::Make);
-    assert!(app.road.road_sheets_window.is_none());
+    assert!(app.modules.road().road_sheets_window.is_none());
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.road_sheet_sets().len(), 1);
     assert_eq!(doc.road_sheet_sets()[0].sheets.len(), count);
@@ -154,7 +155,7 @@ fn the_sheets_take_kgm_s_bands() {
     send(&mut app, W::Field(1, "1000".into()));
     send(&mut app, W::Profile(Some("b-1".into())));
     let plain = app
-        .road
+        .modules.road()
         .road_sheets_window
         .as_ref()
         .and_then(|w| w.preview.laid.clone())
@@ -162,7 +163,7 @@ fn the_sheets_take_kgm_s_bands() {
     send(&mut app, W::Kgm(true));
     send(&mut app, W::Dever(Some("d-1".into())));
     let kgm = app
-        .road
+        .modules.road()
         .road_sheets_window
         .as_ref()
         .and_then(|w| w.preview.laid.clone())
@@ -492,7 +493,7 @@ fn screens_profile_splits() {
 fn an_empty_place_puts_the_views_under_the_drawing() {
     let mut app = kgm_app();
     let _ = app.update(Message::Run("road.sheets"));
-    let w = app.road.road_sheets_window.as_ref().expect("open");
+    let w = app.modules.road().road_sheets_window.as_ref().expect("open");
     assert!(w.fields[0].is_empty(), "Yer starts empty");
     send(&mut app, W::Field(1, "1000".into()));
     send(&mut app, W::Profile(Some("b-1".into())));
@@ -502,7 +503,7 @@ fn an_empty_place_puts_the_views_under_the_drawing() {
     app.spatial.sync(doc);
     let before = app.spatial.extent().expect("a drawing");
     let laid = app
-        .road
+        .modules.road()
         .road_sheets_window
         .as_ref()
         .and_then(|w| w.preview.laid.clone())
@@ -730,12 +731,12 @@ fn screens_place_arrows() {
             let _ = app.update(message);
         };
         let _ = app.update(Message::Run("alignment.editor"));
-        let _ = app.update(Message::Road(road::Event::Alignments(A::Choose(0))));
-        let _ = app.update(Message::Road(road::Event::Alignments(A::Place(
+        let _ = app.update(Message::from(road::Event::Alignments(A::Choose(0))));
+        let _ = app.update(Message::from(road::Event::Alignments(A::Place(
             0,
             "KAMAN".into(),
         ))));
-        let _ = app.update(Message::Road(road::Event::Alignments(A::Place(
+        let _ = app.update(Message::from(road::Event::Alignments(A::Place(
             1,
             "ANKARA-NİĞDE OTOYOLU".into(),
         ))));
@@ -746,7 +747,7 @@ fn screens_place_arrows() {
             .save(&file)
             .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Road(road::Event::Alignments(A::Save)));
+        let _ = app.update(Message::from(road::Event::Alignments(A::Save)));
         if name == "genis" {
             let _ = app.update(Message::Run("road.sheets"));
             send(&mut app, W::Field(1, "1000".into()));

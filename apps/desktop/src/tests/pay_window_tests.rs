@@ -1,7 +1,8 @@
 //! Poz metrajı (pay_window.rs, plan/road.md Y11.4): the window reads the quantities as the book is typed and saves it,
 //! one undo step; and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::pay_window::Event as W;
 use crate::road;
 use kentos_commands::PayMeasure;
@@ -22,15 +23,15 @@ fn app(with_book: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Pay(e)));
+    let _ = app.update(Message::from(road::Event::Pay(e)));
 }
 
 #[test]
 fn the_window_reads_and_saves_the_book() {
     let mut app = app(true);
     let _ = app.update(Message::Run("payItems.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Pay)));
-    let w = app.road.pay_window.as_ref().expect("open");
+    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Pay)));
+    let w = app.modules.road().pay_window.as_ref().expect("open");
     let a = w
         .preview
         .answer
@@ -41,7 +42,7 @@ fn the_window_reads_and_saves_the_book() {
     // A price for the guardrail makes it count.
     send(&mut app, W::Item(2, 3, "40".into()));
     let priced = app
-        .road
+        .modules.road()
         .pay_window
         .as_ref()
         .and_then(|w| w.preview.answer.clone())
@@ -50,7 +51,7 @@ fn the_window_reads_and_saves_the_book() {
     assert!((priced.total - a.total - 40.0 * a.rows[2].quantity).abs() < 1e-6);
     send(&mut app, W::Field(0, " ".into()));
     let why = app
-        .road
+        .modules.road()
         .pay_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -71,7 +72,7 @@ fn a_new_book_gets_its_items_and_rules() {
     let mut app = app(false);
     let _ = app.update(Message::Run("payItems.editor"));
     let why = app
-        .road
+        .modules.road()
         .pay_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -86,7 +87,7 @@ fn a_new_book_gets_its_items_and_rules() {
     send(&mut app, W::AddRule);
     send(&mut app, W::Measure(0, PayMeasure::WallConcrete));
     let a = app
-        .road
+        .modules.road()
         .pay_window
         .as_ref()
         .and_then(|w| w.preview.answer.clone())

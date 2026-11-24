@@ -15,6 +15,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
@@ -28,7 +29,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::label;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -76,7 +77,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Route(event))
+    Message::from(road::Event::Route(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -123,20 +124,20 @@ impl App {
             return;
         }
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.road.route_window = Some(Box::new(Window {
+        self.modules.road_mut().route_window = Some(Box::new(Window {
             surface,
             fields: Default::default(),
             avoid: Vec::new(),
             layer,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Route));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Route));
         self.refresh_route();
     }
 
     fn refresh_route(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.route_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().route_window.as_mut() else {
             return;
         };
         w.preview = match w
@@ -155,7 +156,7 @@ impl App {
     }
 
     pub(crate) fn route_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road.route_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().route_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -171,7 +172,7 @@ impl App {
             Event::Layer(l) => w.layer = Some(l),
             Event::Draw => return self.draw_route(),
             Event::Close => {
-                self.road.route_window = None;
+                self.modules.road_mut().route_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -181,7 +182,7 @@ impl App {
     }
 
     fn draw_route(&mut self) -> Task<Message> {
-        let Some(w) = self.road.route_window.as_ref() else {
+        let Some(w) = self.modules.road().route_window.as_ref() else {
             return Task::none();
         };
         let ask = match w.ask() {
@@ -203,14 +204,14 @@ impl App {
                 Level::Success,
                 format!("Ön güzergâh planda, {:.2} m; aks için çizgiyi seçip Aksı çizgiye oturt'u kullanın.", out.route.length),
             );
-            self.road.route_window = None;
+            self.modules.road_mut().route_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     pub(crate) fn route_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.route_window else {
+        let Some(w) = &self.modules.road().route_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -305,7 +306,7 @@ impl App {
     }
 
     pub(crate) fn route_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.route_window.is_none() {
+        if self.modules.road().route_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

@@ -1,12 +1,13 @@
 //! Enkesit's window on screen: the set's and the template's editors, the drawing row and the controls
 //! found by their words.
 
+use crate::road::RoadState;
 use super::*;
 use iced::widget::column;
 
 impl App {
     pub(crate) fn road_section_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.section_window else {
+        let Some(w) = &self.modules.road().section_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style {
@@ -290,7 +291,7 @@ impl App {
     }
 
     pub(crate) fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.road.section_window else {
+        let Some(w) = &self.modules.road().section_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

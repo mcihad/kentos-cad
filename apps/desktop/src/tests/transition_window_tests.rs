@@ -2,6 +2,7 @@
 //! `road.superelevations.transitions` as the shared cases do, and Çizelgeye yaz puts the runoffs and shares into
 //! Dever's cells, which Kaydet writes; and its pictures.
 
+use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
 use crate::superelevation_window::Event as D;
@@ -20,7 +21,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: T) {
-    let _ = app.update(Message::Road(road::Event::Superelevations(D::Transition(
+    let _ = app.update(Message::from(road::Event::Superelevations(D::Transition(
         e,
     ))));
 }
@@ -29,7 +30,7 @@ fn send(app: &mut App, e: T) {
 fn typed(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.editor"));
     let at = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -37,8 +38,8 @@ fn typed(app: &mut App) {
         .iter()
         .position(|r| r.id == "d-5")
         .expect("d-5");
-    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(at))));
-    let _ = app.update(Message::Road(road::Event::Superelevations(
+    let _ = app.update(Message::from(road::Event::Superelevations(D::Choose(at))));
+    let _ = app.update(Message::from(road::Event::Superelevations(
         D::OpenTransition,
     )));
     for (k, v) in [
@@ -64,7 +65,7 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
     let mut app = app();
     typed(&mut app);
     let x = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .and_then(|w| w.transition.as_deref())
@@ -81,7 +82,7 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
         want["findings"].as_array().unwrap().len()
     );
     send(&mut app, T::Apply);
-    let w = app.road.superelevation_window.as_ref().unwrap();
+    let w = app.modules.road().superelevation_window.as_ref().unwrap();
     assert!(w.transition.is_none(), "Çizelgeye yaz goes back to Dever");
     let def = w.rows[w.chosen.unwrap()].def().expect("builds");
     let kentos_commands::SuperelevationMethod::Curves { curves } = def.method else {
@@ -96,7 +97,7 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     let mut app = app();
     let _ = app.update(Message::Run("superelevation.editor"));
     let at = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -104,13 +105,13 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
         .iter()
         .position(|r| r.id == "d-5")
         .unwrap();
-    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(at))));
-    let _ = app.update(Message::Road(road::Event::Superelevations(
+    let _ = app.update(Message::from(road::Event::Superelevations(D::Choose(at))));
+    let _ = app.update(Message::from(road::Event::Superelevations(
         D::OpenTransition,
     )));
     send(&mut app, T::Field(0, "1".into()));
     let x = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .and_then(|w| w.transition.as_deref())
@@ -119,7 +120,7 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     assert!(why.contains("1'den büyük bir n"), "{why}");
     send(&mut app, T::Back);
     assert!(
-        app.road
+        app.modules.road()
             .superelevation_window
             .as_ref()
             .unwrap()

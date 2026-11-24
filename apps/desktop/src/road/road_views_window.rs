@@ -20,6 +20,7 @@
 //! A press in the plan or the profile, or a drag along them, moves the km there; the arrows step between the sections'
 //! km's; the slider and the typed km (with the alignment's equations) move it anywhere, the section shown the nearest.
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{column, container, row, slider};
@@ -34,7 +35,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::profile_window::{self, Ground};
 use crate::traces::Control;
@@ -103,7 +104,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::RoadViews(event))
+    Message::from(road::Event::RoadViews(event))
 }
 
 fn at_station(s: f64) -> Message {
@@ -162,7 +163,7 @@ impl App {
         };
         let alignment = first.id.clone();
         let (profile, source) = choices_on(&doc.model, &alignment);
-        self.road.road_views_window = Some(Box::new(Window {
+        self.modules.road_mut().road_views_window = Some(Box::new(Window {
             alignment: Some(alignment),
             profile,
             source,
@@ -171,10 +172,10 @@ impl App {
             exaggeration: "10".into(),
             read: Read::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::RoadViews));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::RoadViews));
         self.refresh_road_views();
         // The first section's km, where there is one.
-        if let Some(w) = self.road.road_views_window.as_mut() {
+        if let Some(w) = self.modules.road_mut().road_views_window.as_mut() {
             let s = w.read.rows.first().map_or(0.0, |r| r.station);
             w.set_station(s);
         }
@@ -183,7 +184,7 @@ impl App {
     /// The window's drawing read again.
     fn refresh_road_views(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.road_views_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().road_views_window.as_mut() else {
             return;
         };
         let model = &doc.model;
@@ -234,7 +235,7 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let Some(w) = self.road.road_views_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().road_views_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -292,7 +293,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.road.road_views_window = None;
+                self.modules.road_mut().road_views_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -302,7 +303,7 @@ impl App {
     }
 
     pub(crate) fn road_views_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.road_views_window else {
+        let Some(w) = &self.modules.road().road_views_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -474,7 +475,7 @@ impl App {
     }
 
     pub(crate) fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.road_views_window.is_none() {
+        if self.modules.road().road_views_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

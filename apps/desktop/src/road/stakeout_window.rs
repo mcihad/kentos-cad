@@ -14,6 +14,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row};
@@ -32,7 +33,7 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words;
 use crate::traces::Control;
 
@@ -93,7 +94,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Road(road::Event::Stakeout(event))
+    Message::from(road::Event::Stakeout(event))
 }
 
 fn number(text: &str) -> Result<Option<f64>, String> {
@@ -173,7 +174,7 @@ impl App {
             self.warn("Aplikasyon cetveli bir koridorun noktalarıdır: önce Koridor'da bir koridor oluşturun.".to_owned());
             return;
         };
-        self.road.stakeout_window = Some(Box::new(Window {
+        self.modules.road_mut().stakeout_window = Some(Box::new(Window {
             corridor: Some(first.id.clone()),
             fields: Default::default(),
             distances: StakeoutDistances::Grid,
@@ -182,13 +183,13 @@ impl App {
             send: StakeoutSendFormat::Landxml,
             send_fields: Default::default(),
         }));
-        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Stakeout));
+        self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Stakeout));
         self.refresh_stakeout();
     }
 
     fn refresh_stakeout(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road.stakeout_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().stakeout_window.as_mut() else {
             return;
         };
         w.preview = match w
@@ -208,7 +209,7 @@ impl App {
     }
 
     pub(crate) fn stakeout_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road.stakeout_window.as_mut() else {
+        let Some(w) = self.modules.road_mut().stakeout_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -270,7 +271,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.road.stakeout_window = None;
+                self.modules.road_mut().stakeout_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -282,7 +283,7 @@ impl App {
     /// The file chosen: the points written by `road.stakeout.send` (the dialog asked before writing over).
     pub(crate) fn stakeout_sent(&mut self, path: Option<PathBuf>) {
         let Some(mut path) = path else { return };
-        let Some(w) = self.road.stakeout_window.as_ref() else {
+        let Some(w) = self.modules.road().stakeout_window.as_ref() else {
             return;
         };
         let (ext, name) = road_stakeout_send::extension(w.send);
@@ -306,7 +307,7 @@ impl App {
     }
 
     pub(crate) fn road_stakeout_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road.stakeout_window else {
+        let Some(w) = &self.modules.road().stakeout_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -440,7 +441,7 @@ impl App {
     }
 
     pub(crate) fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road.stakeout_window.is_none() {
+        if self.modules.road().stakeout_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

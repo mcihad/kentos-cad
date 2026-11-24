@@ -676,7 +676,6 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
             Message::TerrainWork(inner) => return self.terrain_work_event(inner),
-            Message::Road(inner) => return self.road_event(inner),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
             Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
@@ -701,17 +700,12 @@ impl App {
             Message::PictureWritten(written) => self.picture_written(written),
             Message::Scene3d(event) => return self.scene3d_event(event),
             Message::IfcViewer(event) => return self.ifc_viewer_event(event),
-            Message::LandxmlExport(path) => return self.landxml_chosen(path),
-            Message::LandxmlMachine(path) => return self.landxml_machine_chosen(path),
-            Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
-            Message::IfcExport(path) => return self.ifc_chosen(path),
             Message::IfcBuildingExport(path) => {
                 return self.ifc_building_chosen(path, kentos_commands::IfcView::DesignTransfer);
             }
             Message::IfcBuildingExportCut(path) => {
                 return self.ifc_building_chosen(path, kentos_commands::IfcView::Reference);
             }
-            Message::GltfExport(path) => return self.gltf_chosen(path),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::TableStyleDefs(event) => return self.table_style_window_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),

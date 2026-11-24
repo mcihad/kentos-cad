@@ -59,6 +59,13 @@ pub struct RoadUiState {
 /// The road design (Yol) module's messages, `Message::Road`.
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// The files LandXML ver, Makine kontrolüne ver, LandXML'den aks al, IFC ver and glTF ver chose (road_exchange.rs);
+    /// none when the picker was left.
+    LandxmlExport(Option<std::path::PathBuf>),
+    LandxmlMachine(Option<std::path::PathBuf>),
+    LandxmlAlignments(Option<std::path::PathBuf>),
+    IfcExport(Option<std::path::PathBuf>),
+    GltfExport(Option<std::path::PathBuf>),
     /// An event of Güzergâh (alignment_window.rs, plan/road.md Y3).
     Alignments(crate::alignment_window::Event),
     /// An event of Boykesit (profile_window.rs, plan/road.md Y4).
@@ -153,10 +160,105 @@ pub enum RoadDialogKind {
     Junctions,
 }
 
+impl RoadDialogKind {
+    /// Every window, in the order their numbers go (`ModuleDialog::kind`).
+    pub const ALL: [RoadDialogKind; 22] = [
+        RoadDialogKind::Alignments,
+        RoadDialogKind::Profiles,
+        RoadDialogKind::Sections,
+        RoadDialogKind::Superelevations,
+        RoadDialogKind::Corridors,
+        RoadDialogKind::Volumes,
+        RoadDialogKind::Hauls,
+        RoadDialogKind::Stakeout,
+        RoadDialogKind::RoadSheets,
+        RoadDialogKind::RoadViews,
+        RoadDialogKind::RoadAlignmentFit,
+        RoadDialogKind::RoadProfileFit,
+        RoadDialogKind::Guardrails,
+        RoadDialogKind::Culverts,
+        RoadDialogKind::RetainingWalls,
+        RoadDialogKind::Swept,
+        RoadDialogKind::Sight,
+        RoadDialogKind::PlatformWater,
+        RoadDialogKind::HaulPlan,
+        RoadDialogKind::Pay,
+        RoadDialogKind::Route,
+        RoadDialogKind::Junctions,
+    ];
+
+    /// The window's number (`ModuleDialog::kind`), its place in [`Self::ALL`]; a match with no arm for the rest, so a
+    /// new window does not build without its number.
+    pub const fn number(self) -> u16 {
+        match self {
+            RoadDialogKind::Alignments => 0,
+            RoadDialogKind::Profiles => 1,
+            RoadDialogKind::Sections => 2,
+            RoadDialogKind::Superelevations => 3,
+            RoadDialogKind::Corridors => 4,
+            RoadDialogKind::Volumes => 5,
+            RoadDialogKind::Hauls => 6,
+            RoadDialogKind::Stakeout => 7,
+            RoadDialogKind::RoadSheets => 8,
+            RoadDialogKind::RoadViews => 9,
+            RoadDialogKind::RoadAlignmentFit => 10,
+            RoadDialogKind::RoadProfileFit => 11,
+            RoadDialogKind::Guardrails => 12,
+            RoadDialogKind::Culverts => 13,
+            RoadDialogKind::RetainingWalls => 14,
+            RoadDialogKind::Swept => 15,
+            RoadDialogKind::Sight => 16,
+            RoadDialogKind::PlatformWater => 17,
+            RoadDialogKind::HaulPlan => 18,
+            RoadDialogKind::Pay => 19,
+            RoadDialogKind::Route => 20,
+            RoadDialogKind::Junctions => 21,
+        }
+    }
+
+    /// The window of number `kind`; none for a number the module has not.
+    pub fn of(kind: u16) -> Option<Self> {
+        Self::ALL.get(usize::from(kind)).copied()
+    }
+}
+
+/// The module's window `kind` as the shell's.
+pub fn dialog(kind: RoadDialogKind) -> crate::app::Dialog {
+    crate::app::Dialog::Module(crate::module_parts::ModuleDialog { module: kentos_launch::Module::Road, kind: kind.number() })
+}
+
+impl From<Event> for Message {
+    fn from(event: Event) -> Self {
+        Message::Module(crate::module_parts::ModuleEvent::new(kentos_launch::Module::Road, event))
+    }
+}
+
+/// The module's state among the modules' (`App::modules`).
+pub trait RoadState {
+    fn road(&self) -> &RoadUiState;
+    fn road_mut(&mut self) -> &mut RoadUiState;
+}
+
+impl RoadState for crate::module_parts::ModuleStates {
+    fn road(&self) -> &RoadUiState {
+        // Every program with the module's parts starts its state (ModuleStates::start).
+        self.get::<RoadUiState>().expect("Yol modülünün durumu başlatılmamış")
+    }
+
+    fn road_mut(&mut self) -> &mut RoadUiState {
+        self.get_mut::<RoadUiState>().expect("Yol modülünün durumu başlatılmamış")
+    }
+}
+
 impl App {
-    /// A message of the module (`Message::Road`); a window's own handler is in its file.
+    /// A message of the module; a window's own handler is in its file.
     pub(crate) fn road_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::LandxmlExport(path) => self.landxml_chosen(path),
+            Event::LandxmlMachine(path) => self.landxml_machine_chosen(path),
+            Event::LandxmlAlignments(path) => self.landxml_alignments_chosen(path),
+            Event::IfcExport(path) => self.ifc_chosen(path),
+            Event::GltfExport(path) => self.gltf_chosen(path),
             Event::Alignments(event) => self.alignment_event(event),
             Event::Profiles(event) => self.profile_event(event),
             Event::Sections(event) => self.section_event(event),
@@ -182,7 +284,7 @@ impl App {
         }
     }
 
-    /// A window of the module (`Dialog::Road`).
+    /// A window of the module.
     pub(crate) fn road_dialog_view(&self, kind: RoadDialogKind) -> Element<'_, Message> {
         match kind {
             RoadDialogKind::Alignments => self.alignment_view(),

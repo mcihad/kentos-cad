@@ -2,7 +2,8 @@
 //! not build, and writes through `road.superelevations.edit`, each write one undo step; its axis of rotation and
 //! Denetim (docs/adr/0931); and its pictures.
 
-use crate::app::{App, Dialog, Message};
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::road;
 use crate::superelevation_window::Event as W;
 
@@ -26,7 +27,7 @@ fn app(schedules: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Road(road::Event::Superelevations(e)));
+    let _ = app.update(Message::from(road::Event::Superelevations(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -38,7 +39,7 @@ fn made(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.new"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Road(road::RoadDialogKind::Superelevations))
+        Some(crate::road::dialog(road::RoadDialogKind::Superelevations))
     );
     send(app, W::Name("Ana aks deveri".into()));
     send(app, W::Normal(0, "-2,5".into()));
@@ -54,7 +55,7 @@ fn made(app: &mut App) {
 fn the_window_makes_a_schedule_and_shows_its_diagram() {
     let mut app = app(false);
     made(&mut app);
-    let w = app.road.superelevation_window.as_ref().expect("open");
+    let w = app.modules.road().superelevation_window.as_ref().expect("open");
     let report = w.report.as_ref().expect("built").as_ref().expect("builds");
     assert_eq!(report.critical.len(), 8, "NC, LC, RC and FS in and out");
     assert!(
@@ -65,7 +66,7 @@ fn the_window_makes_a_schedule_and_shows_its_diagram() {
     assert!(!report.left_widening.is_empty(), "the inside widens");
     send(&mut app, W::Save);
     assert!(
-        app.road.superelevation_window.is_none(),
+        app.modules.road().superelevation_window.is_none(),
         "Kaydet closes the window"
     );
     let doc = model(&mut app);
@@ -80,7 +81,7 @@ fn a_rate_below_the_normal_slope_says_why_and_a_blank_is_refused() {
     let mut app = app(false);
     made(&mut app);
     send(&mut app, W::Cell(0, 1, "2".into()));
-    let w = app.road.superelevation_window.as_ref().expect("open");
+    let w = app.modules.road().superelevation_window.as_ref().expect("open");
     let why = w
         .report
         .as_ref()
@@ -91,7 +92,7 @@ fn a_rate_below_the_normal_slope_says_why_and_a_blank_is_refused() {
     // A blank rate is not a number; the window stays and nothing is written.
     send(&mut app, W::Cell(0, 1, String::new()));
     send(&mut app, W::Save);
-    assert!(app.road.superelevation_window.is_some());
+    assert!(app.modules.road().superelevation_window.is_some());
     assert!(model(&mut app).road_superelevations().is_empty());
 }
 
@@ -105,15 +106,15 @@ fn a_stale_schedule_is_rebound_and_a_used_one_stays() {
     assert_eq!(doc.road_superelevations()[1].alignment_revision, 3);
     assert_eq!(doc.undo().as_deref(), Some("Dever"));
     // A set on the main alignment takes d-1 in Enkesit; then d-1 cannot be removed.
-    let _ = app.update(Message::Road(road::Event::Superelevations(W::Cancel)));
+    let _ = app.update(Message::from(road::Event::Superelevations(W::Cancel)));
     let _ = app.update(Message::Run("section.editor"));
-    let _ = app.update(Message::Road(road::Event::Sections(
+    let _ = app.update(Message::from(road::Event::Sections(
         crate::section_window::Event::Choose(crate::section_window::Chosen::Set(0)),
     )));
-    let _ = app.update(Message::Road(road::Event::Sections(
+    let _ = app.update(Message::from(road::Event::Sections(
         crate::section_window::Event::Superelevation(Some("d-1".into())),
     )));
-    let _ = app.update(Message::Road(road::Event::Sections(
+    let _ = app.update(Message::from(road::Event::Sections(
         crate::section_window::Event::Save,
     )));
     assert_eq!(
@@ -132,7 +133,7 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     use kentos_commands::SuperelevationPivot as P;
     let mut app = app(false);
     made(&mut app);
-    let w = app.road.superelevation_window.as_ref().expect("open");
+    let w = app.modules.road().superelevation_window.as_ref().expect("open");
     assert_eq!(
         w.check_template.as_deref(),
         Some("tk-1"),
@@ -151,7 +152,7 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     send(&mut app, W::Check(1, "0,05".into()));
     send(&mut app, W::Check(2, "400".into()));
     let c = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -173,7 +174,7 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
         .fold(0.0, f64::max);
     send(&mut app, W::Pivot(Some(P::InsideEdge)));
     let c = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -190,7 +191,7 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     // n of 1:n at most 1 says why.
     send(&mut app, W::Check(2, "1".into()));
     let why = app
-        .road
+        .modules.road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -277,21 +278,21 @@ fn screens() {
         if name == "acik-genis" {
             // Enkesit's set takes the schedule; the lanes turn with it on the curve.
             let _ = app.update(Message::Run("section.editor"));
-            let _ = app.update(Message::Road(road::Event::Sections(
+            let _ = app.update(Message::from(road::Event::Sections(
                 crate::section_window::Event::Choose(crate::section_window::Chosen::Set(0)),
             )));
-            let _ = app.update(Message::Road(road::Event::Sections(
+            let _ = app.update(Message::from(road::Event::Sections(
                 crate::section_window::Event::Superelevation(Some("d-1".into())),
             )));
-            let _ = app.update(Message::Road(road::Event::Sections(
+            let _ = app.update(Message::from(road::Event::Sections(
                 crate::section_window::Event::Save,
             )));
             let _ = app.update(Message::Run("section.editor"));
-            let _ = app.update(Message::Road(road::Event::Sections(
+            let _ = app.update(Message::from(road::Event::Sections(
                 crate::section_window::Event::Choose(crate::section_window::Chosen::Set(0)),
             )));
             for _ in 0..6 {
-                let _ = app.update(Message::Road(road::Event::Sections(
+                let _ = app.update(Message::from(road::Event::Sections(
                     crate::section_window::Event::Next,
                 )));
             }
