@@ -413,7 +413,15 @@ BIM planı Z13: 2+1 daire gerçek pencerede 82 etkileşim ve 121,3 s; hedef en �
 
 Yalnız rampa eğimi denetleniyor. TSE metni ücretli, bekleniyor (`bim-plan.md` §8).
 
-### D6 — P2 — Blok kitaplığı küçük
+### D6 — P2 — Blok kitaplığı küçük — [x] yapıldı
+
+**Durum (24 Kasım 2026; `0d667170d`, `4ed89bd20`, ADR 9307):** temel kitaplık 40'tan 61 bloğa çıktı: Ofis (toplantı masası
+4/6/8, iş istasyonu, arşiv dolabı), Okul (tek ve çift sıra, öğretmen masası, yazı tahtası), Sağlık (hasta yatağı, muayene
+masası, lavabo), Erişilebilir (klozet ve barları, lavabo, Ø150 dönüş alanı), Peyzaj (ağaç Ø3/5/8, çalı, otomobil,
+bisiklet yeri). Kaynağı olan ölçüler kaynağıyla (Erişilebilirlik Kılavuzu, Otopark ve Bisiklet Yolları yönetmelikleri, MEB
+donatım listesi), öbürleri “tipik” diye yazılı. Mimari, Harita ve Yol'da var; CBS'de yok. Python, MCP, ajan ve eklenti
+var olan blok komutlarıyla ekliyor. **Kalan:** erişilebilir WC'nin Tip 1'i (iki yanı boş; 800 m² üstü yapılar), TS 9111
+metni gelince ölçülerin denetimi.
 
 Temel kitaplıkta (`catalog/v1/blocks/kentos-temel.kblok`) 40 blok var: kapı, pencere, ev mobilyası ve tek bir
 çalışma masası, ıslak hacim, mutfak, asansör, otopark yeri, kot ve kuzey işaretleri. Öbür kitaplık (`kentos-ofis.kblok`)
