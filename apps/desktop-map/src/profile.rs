@@ -182,7 +182,9 @@ impl ModuleProfile for Map {
     }
 
     fn thematic(&self) -> bool {
-        false
+        // The symbology engine is Harita's too (docs/adr/0213, 0802; the owner, 24 November 2026): a zoning plan's
+        // outside faded (Ters alan), its decisions' densities (Sürekli renk) and figures (Grafik), the analysis sheets.
+        true
     }
 
     fn library_hidden(&self) -> &'static [&'static str] {

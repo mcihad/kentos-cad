@@ -1292,8 +1292,9 @@ fn the_settings_name_karelaj_by_the_program_s_axes() {
     }
 }
 
-/// Katman stili lists the thematic renderers in KentOS GIS (and kentos-cad); KentOS Mimari and KentOS Harita list the
-/// classic ones, and a layer drawn with a thematic one keeps it and shows it there.
+/// Katman stili lists the thematic renderers in KentOS GIS, KentOS Harita (the owner, 24 November 2026: the symbology
+/// engine is a map-cad's too) and kentos-cad; KentOS Mimari lists the classic ones, and a layer drawn with a thematic
+/// one keeps it and shows it there.
 #[test]
 fn katman_stili_lists_the_thematic_renderers_in_a_gis() {
     use crate::style::layer_style::{Event as Ls, KINDS, Kind};
@@ -1308,7 +1309,7 @@ fn katman_stili_lists_the_thematic_renderers_in_a_gis() {
         let _ = app.update(Message::LayerStyle(Ls::Open(Some("parsel".into()))));
         app.styles.layer_style.as_ref().expect("the window").kinds()
     };
-    for (program, thematic) in [(None, true), (MIMARI, false), (HARITA, false), (GIS, true)] {
+    for (program, thematic) in [(None, true), (MIMARI, false), (HARITA, true), (GIS, true)] {
         with(drawn, program, |app| {
             assert_eq!(app.shows_thematic_renderers(), thematic, "{program:?}");
             let kinds = open(app);
@@ -1333,13 +1334,13 @@ fn katman_stili_lists_the_thematic_renderers_in_a_gis() {
             }
         });
     }
-    // A layer drawn with Ters alan in kentos-cad keeps it in KentOS Harita, listed after the classic ones.
+    // A layer drawn with Ters alan in kentos-cad keeps it in KentOS Mimari, listed after the classic ones.
     with(drawn, None, |app| {
         let _ = open(app);
         let _ = app.update(Message::LayerStyle(Ls::Kind(Kind::Inverted)));
         let _ = app.update(Message::LayerStyle(Ls::Done));
         assert!(app.styles.layer_style.is_none(), "{}", last_said(app));
-        app.program = HARITA;
+        app.program = MIMARI;
         let _ = app.update(Message::Swallowed);
         let kinds = open(app);
         assert_eq!(
@@ -1504,7 +1505,7 @@ fn shoot_after(
 /// 1440×900, dark (and a few light, `-acik`). Not a correctness test (the tests above are).
 ///
 /// ```text
-/// KENTOS_SHOTS_ONLY=ayrim2 cargo test -p kentos-desktop --lib module_surface_tests::pictures_of_the_options -- --ignored --nocapture --test-threads=1
+/// KENTOS_SHOTS_ONLY=ayrim2 RUST_MIN_STACK=67108864 cargo test -p kentos-cad module_surface_tests::pictures_of_the_options -- --ignored --nocapture --test-threads=1
 /// ```
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
@@ -1617,8 +1618,8 @@ fn pictures_of_the_options() {
             );
             let _ = app.update(Message::DialogClosed);
         }
-        // Katman stili's list: the classic renderers in KentOS Harita, the thematic ones too in KentOS GIS.
-        for (program, word) in [(HARITA, "harita"), (GIS, "gis")] {
+        // Katman stili's list: the classic renderers in KentOS Mimari, the thematic ones too in KentOS Harita and GIS.
+        for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita"), (GIS, "gis")] {
             let mut app = ground(program, theme);
             let _ = app.update(Message::LayerStyle(crate::style::layer_style::Event::Open(
                 Some("parsel".into()),

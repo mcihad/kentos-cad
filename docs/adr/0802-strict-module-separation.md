@@ -187,8 +187,11 @@ sunduğu komutlar şeritteki yerleriyle döküldü (`module_tests::dump_module_c
   - Kuzey oku'nun Coğrafi kuzey'i yalnız koordinat sistemli çizimde var.
 - **Yüzeylerin kalanı:** İçe aktar'da PDF her programda var. Yeni projeler'in birim satırı yalnız kentos-cad'de. Karelaj aralıkları
   programın eksenleriyle adlanır (CAD'de X doğu, Y kuzey). Katman stili'nin tematik işleyicileri (Sürekli renk, Orantılı sembol,
-  İki değişkenli renk, Nokta yoğunluğu, Grafik, Isı haritası, Kümeleme, Yayma, Ters alan) GIS'te ve kentos-cad'de; bir katman
-  onlardan biriyle çiziliyorsa her yerde kalır. Mimari'nin Stil yöneticisi ve sembol seçicileri imar planı simgelerini (MPYY) göstermez.
+  İki değişkenli renk, Nokta yoğunluğu, Grafik, Isı haritası, Kümeleme, Yayma, Ters alan) GIS'te, Harita'da ve kentos-cad'de;
+  bir katman onlardan biriyle çiziliyorsa her yerde kalır. **24 Kasım 2026, sahibin kararı:** Harita'da da açıldı (önce yalnız
+  GIS ve kentos-cad'deydi; kısıtın yazılı bir gerekçesi yoktu, motor her programda çiziyordu). Semboloji motoru CBS'nin
+  değil, her modülündür: imar planında plan sınırının dışı (Ters alan), kararların yoğunluğu (Sürekli renk) ve değerleri
+  (Grafik), plan raporunun analiz paftaları. Mimari klasik türlerde kalır. Mimari'nin Stil yöneticisi ve sembol seçicileri imar planı simgelerini (MPYY) göstermez.
   Noktalar'ın Cihaza gönder'i yalnız `field.send`'i sunan programda. Uygulama menüsünün Bulut listesi programın kendi projelerini
   listeler. Öznitelikler'in Mahal ayırıcı satırı Mimari'nin.
 - **Durum çubuğu:** yardımcıların genişliği artık ölçülür (`status_aids_width`): harf başına tahmin 13 px'te 40 px fazlaydı ve KentOS

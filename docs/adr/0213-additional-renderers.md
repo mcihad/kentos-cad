@@ -243,6 +243,12 @@ grafik ≤ 70 ms (çerçevesiz ≤ 60 ms; her dilimin çerçevesi kendi çizgisi
 noktası ≤ 60 ms, 100 000 noktanın ısı haritası (20 px, kalite 2) ≤ 40 ms, 100 000 noktanın kümelenmesi ≤ 30 ms, 10 000 parselin ters
 alanı ≤ 40 ms; web'de aynı işler ≤ 2,5 katı. Pastanın ilk bütçesi (60 ms) çerçevesizdi; çerçeve ölçülünce ayrıldı (Doğrulama).
 
+### Güncelleme (24 Kasım 2026)
+
+- Dokuz tematik işleyici masaüstünde KentOS GIS'in yanında KentOS Harita'nın Katman stili'nde de listelenir (sahibin kararı,
+  ADR 0802'nin notu; profilin `thematic`'i). Pafta onları kâğıdın ölçeğinde kurar (§3); DXF yazıcısı katman stillerini başka
+  programa çizmez, raporunda sayar: klasik işleyiciler ve kitaplık sembolleri için de böyledir.
+
 ## Uygulama
 
 - **Stil çekirdeği** (`kentos_style_core::style`): okuyucu `model.rs` (dokuz tür, `inner`, `view_needs`, `whole`; okurken hoşgörülü),
