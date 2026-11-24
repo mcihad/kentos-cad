@@ -179,6 +179,8 @@ impl Styles {
                 cad_phase: true,
                 // The drawing as it is; the deep view's scene sets its own box (plan/render.md RM-24).
                 deep: None,
+                // The viewport gives its own, from its unit (plan/render.md RM-09).
+                curve_tolerance: None,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

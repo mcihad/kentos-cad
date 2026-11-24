@@ -204,6 +204,7 @@ fn builds_the_web_s_batches() {
                 // The web's recorded build: chord-measured dashes (docs/adr/1122).
                 cad_phase: false,
                 deep: None,
+                curve_tolerance: None,
             },
             frame: None,
             reading_unit: ReadingUnit::METRE,

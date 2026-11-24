@@ -505,6 +505,11 @@ pub struct View {
     /// ends near it; circles, arcs, ellipses and bulged edges are round to the tolerance in and near the box; inserts
     /// are drawn out and the far levels left off. None: the drawing as it is.
     pub deep: Option<Deep>,
+    /// The screen's curves round to this world tolerance at every point (plan/render.md RM-09): circles, arcs, ellipses
+    /// and bulged edges drawn with as many chords as keep them within it, where a deep view does not draw them (its own
+    /// box and tolerance). The drawing area gives the quarter pixel at the deep view's threshold, so they stay round
+    /// at every zoom short of it. Not in a map's view, a plot or a block's definition. None: 72 chords a turn.
+    pub curve_tolerance: Option<f64>,
 }
 
 pub use kentos_geometry_core::geom::deep::Deep;
@@ -520,6 +525,7 @@ impl PartialEq for View {
             && self.line_lod == o.line_lod
             && self.block_proxy == o.block_proxy
             && self.deep == o.deep
+            && self.curve_tolerance == o.curve_tolerance
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -545,6 +551,7 @@ impl Default for View {
             block_proxy: false,
             cad_phase: false,
             deep: None,
+            curve_tolerance: None,
         }
     }
 }
@@ -651,6 +658,9 @@ struct Cx {
     curve_lod: bool,
     /// The deep view (`View::deep`): every path and ring split at its box's edge, circles and arcs round in it.
     deep: Option<Deep>,
+    /// The screen's curves round to this world tolerance outside a deep view (`View::curve_tolerance`); none while a
+    /// block's definition is recorded (its units are not the drawing's).
+    curve_tolerance: Option<f64>,
     plot_precision:bool,
     precision_error:Option<String>,
     patches: Patches,
@@ -726,6 +736,9 @@ pub fn build_layer_in(
     let mut cx = Cx {
         curve_lod: view.curve_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none(),
         deep: view.deep,
+        curve_tolerance: view
+            .curve_tolerance
+            .filter(|t| *t > 0.0 && view.deep.is_none() && view.map.is_none() && !view.plot_precision),
         plot_precision:view.plot_precision,
         precision_error:None,
         patches: Patches::default(),
@@ -867,13 +880,15 @@ fn output_parts(
     env: &Env<'_>,
     cx: &mut Cx,
 ) -> Vec<Geom> {
-    if let Some(d) = cx.deep
+    // A deep view's curves round in its box; the screen's round everywhere to its tolerance (plan/render.md RM-09).
+    let round = cx.deep.or(cx.curve_tolerance.map(deep::everywhere));
+    if let Some(d) = round
         && let Some(parts) = deep::curve(s, &d)
     {
         return parts;
     }
-    // A deep view's bulged edges as points, round in its box; a CAD line type's dash is still measured on `s` itself.
-    let refined = cx.deep.and_then(|d| deep::refined(s, &d));
+    // Bulged edges as points the same way; a CAD line type's dash is still measured on `s` itself.
+    let refined = round.and_then(|d| deep::refined(s, &d));
     let s = refined.as_ref().unwrap_or(s);
     let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
