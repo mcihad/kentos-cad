@@ -188,3 +188,13 @@ desenli çizilen nesne sayısında:
   katmanın renginde, bloğa göreyse yerleştirmenin kırmızısında (önce üçü de yerleştirmenin kırmızısındaydı).
 - `KENTOS_SAVE_KCAD=1 cargo run --release -p kentos-native-application --example open_cad -- DOSYA.dwg`: Aç ve
   Kaydet'in kodlaması; 12 DWG'nin 12'si kaydedildi.
+
+## Ek (24 Kasım 2026): her zaman sahibin deposunun en güncel `main`'i
+
+- **Sahibin kararı:** “farkı inceleme sabitleme de yapma her zaman en güncel halini çeksin”. `acadrust` artık
+  `github.com/mcihad/acadrust`'ın `main` dalından alınır (`branch = "main"`); revizyona sabitlenmez, sürümler arası fark
+  incelenmez. Önceki kural (başka bir uygulamanın kilidindeki revizyon, yalnız CAD-IO derlemiyle güncelleme) kalktı.
+- **Uygulanışı:** `make desktop`, `make desktop-release` ve `make build-desktop` önce `cargo update -p acadrust` çalıştırır;
+  o derlemenin aldığı revizyonu `Cargo.lock` yazar ve lock değişikliği işle birlikte commit edilir.
+- **İlk geçiş:** `93449222` (eski depo) → `265cc683` (595 commit ileride; sürüm adı 0.6.8). Yeni dolaylı bağımlılıklar
+  `whichever` ve `whichever-macros` 0.7.3. `cargo check -p kentos-cad` temiz, `kentos-dwg` sınamaları geçti, `make arch` temiz.

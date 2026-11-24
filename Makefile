@@ -84,10 +84,12 @@ dev-api: ## Yalnız API (kentosd serve; .env.local ve PostGIS gerekir)
 	@$(SVC) wait api $(API_URL)/v1/health 30
 
 desktop: ## Masaüstü programı kentos-cad (MODUL=mimari|harita|cbs|yol ile modülün programı, FILE=çizim.kcad)
+	@cargo update -q -p acadrust
 	@$(HEAVY) cargo build -q -p kentos-cad
 	@$(SVC) start desktop target/debug/kentos-cad $(if $(MODUL),--modul $(MODUL)) $(FILE)
 
 desktop-release: ## Masaüstü programını ve başlatıcıyı release derler (bu Mac'te ~8 dk), modül programlarının bağlantılarını koyar
+	cargo update -q -p acadrust
 	$(HEAVY) cargo build --release -p kentos-cad -p kentos-launcher -j 10
 	python3 scripts/desktop/module_links.py target/release
 	@echo "• target/release/kentos-cad (kentos-mimari, kentos-harita, kentos-gis, kentos-yol) ve target/release/kentos-launcher"
@@ -167,6 +169,7 @@ build-rust: ## Sunucu ve ortak Rust crate'lerini derler (masaüstü hariç)
 	$(HEAVY) cargo build
 
 build-desktop: ## Masaüstü programını (kentos-cad), arayüz kütüphanesini ve vitrini derler
+	cargo update -q -p acadrust
 	$(HEAVY) cargo build -p kentos-ui -p kentos-ui-showcase -p kentos-cad
 
 catalog: ## Ürün komutu katalogunu yeniden yazar (ADR 0013; farkı okuyup commit edin)
