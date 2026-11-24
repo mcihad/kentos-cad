@@ -47,8 +47,13 @@ parçalarını yeniden kuruyor (`doc.changes_since`).
 **Depo, kendiliğinden yeniden çizdiklerini sayar.** `Store` artık yeniden çizdiği nesnelerin kimliklerini sırayla tutuyor:
 kaynağı değişmeden açılımı değişenler (`redrew`).
 
-- Kayda giren yerler: birleşimi ya da boşluğu değişen duvarlar (`settle_walls`'ın iki dalı) ve görünüşünü yeniden alan
-  kolonlar (`settle_columns`).
+- Kayda giren yerler:
+  - birleşimi ya da boşluğu değişen duvarlar (`settle_walls`'ın iki dalı);
+  - görünüşünü yeniden alan kolonlar (`settle_columns`);
+  - Tadilat görünümünün işaretleri değişince yeniden açılan duvar ve açıklıklar (`set_renovation`);
+  - etiketi gelen ya da giden mahaller, kendi adlarını artık çizen ya da çizmeyenler (`set_tagged_spaces`);
+  - çizim yazı tipi değişince yeniden ölçülen yazılar ve bloklar (`set_font`).
+- Duvar görünümü (`set_wall_view`), bloklar ve zaman penceresi önbelleğin kendi anahtarlarıyla zaten yeniden kuruluyor.
 - `redraw_mark()` listenin sonunu verir. `redrawn_since(mark)` o işaretten beri yeniden çizilenleri verir.
 - Liste nesne sayısının dört katını (en az 65 536) aşınca bırakılır. Ulaşamadığı işarete `None` döner, ve önbellek her
   şeyi yeniden kurar.
@@ -65,9 +70,13 @@ kaynağı değişmeden açılımı değişenler (`redrew`).
 
 **Sınamalar:**
 
-- **Depo:** `store::walls::a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew`. Duvar, başka katmandaki
-  pencereyle kesilince, pencere kalkınca ve ucuna yeni duvar bağlanınca listede. Gelecekteki bir işaret `None`.
-  Deponun 95 sınaması geçti.
+- **Depo:** `store::walls::a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew`. Listede olanlar:
+  - başka katmandaki pencereyle kesilen duvar;
+  - pencere kalkınca kapanan duvar;
+  - ucuna yeni duvar bağlanan duvar;
+  - yazı tipi değişince yeniden ölçülen yazı.
+
+  Gelecekteki bir işaret `None`. Deponun 95 sınaması geçti.
 - **Masaüstü:** `style::scene_tests::a_door_moved_along_its_wall_draws_the_wall_again`. Örnek çizimde
   (`fixtures/kcad/v2/openings.json`, duvar ve kapı ayrı katmanlarda) kapı duvar boyunca 1 m kayar; önbelleğin sahnesi
   yeni bir önbelleğinkiyle aynı. Önbellek düzeltmesi geri alınınca bu sınama kırmızı (“drawn as a new cache draws it”),
@@ -85,7 +94,9 @@ kaynağı değişmeden açılımı değişenler (`redrew`).
 
 - `crates/shared/geometry-core/src/store/mod.rs`: `redrawn`, `redrawn_gone`, `REDRAWN_KEPT`, `redraw_mark`,
   `redrawn_since`, `redrew`.
-- `crates/shared/geometry-core/src/store/wall_joins.rs`: `settle_walls` ve `settle_columns` yeniden çizdiklerini sayar.
+- `crates/shared/geometry-core/src/store/wall_joins.rs`: `settle_walls`, `settle_columns` ve `set_renovation` yeniden
+  çizdiklerini sayar.
+- `crates/shared/geometry-core/src/store/mod.rs`: `set_font` ve `set_tagged_spaces` de.
 - `crates/shared/geometry-core/src/store/walls.rs`: sınama.
 - `apps/desktop/src/cad/style/scene.rs`: `StyledCache::redraw`, kısa yolun koşulu, kirli parçalar.
 - `apps/desktop/src/cad/style/scene_tests.rs`: sınama ve `drawn_of`.

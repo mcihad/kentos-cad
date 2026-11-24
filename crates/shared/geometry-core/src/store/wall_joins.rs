@@ -254,6 +254,8 @@ impl Store {
                 it.bounds = bounds;
                 it.expanded = expanded;
                 it.veiled = None;
+                let id = it.id;
+                self.redrew(id);
             }
             self.loosen(s);
         }
