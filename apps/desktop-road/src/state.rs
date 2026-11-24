@@ -12,6 +12,8 @@ use crate::app::{App, Message};
 /// The road design (Yol) module's windows and panels.
 #[derive(Default)]
 pub struct RoadUiState {
+    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+    pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
     /// Güzergâh (alignment_window.rs, plan/road.md Y3).
     pub(crate) alignment_window: Option<crate::alignment_window::Window>,
     /// Boykesit (profile_window.rs, plan/road.md Y4).
@@ -60,6 +62,8 @@ pub struct RoadUiState {
 /// The road design (Yol) module's messages, `Message::Road`.
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+    DesignCheck(crate::design_check_window::Event),
     /// The files LandXML ver, Makine kontrolüne ver, LandXML'den aks al, IFC ver and glTF ver chose (road_exchange.rs);
     /// none when the picker was left.
     LandxmlExport(Option<std::path::PathBuf>),
@@ -159,11 +163,13 @@ pub enum RoadDialogKind {
     Route,
     /// Kavşak (junction_window.rs, plan/road.md Y12.2); the window is `RoadUiState::junction_window`.
     Junctions,
+    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+    DesignCheck,
 }
 
 impl RoadDialogKind {
     /// Every window, in the order their numbers go (`ModuleDialog::kind`).
-    pub const ALL: [RoadDialogKind; 22] = [
+    pub const ALL: [RoadDialogKind; 23] = [
         RoadDialogKind::Alignments,
         RoadDialogKind::Profiles,
         RoadDialogKind::Sections,
@@ -186,6 +192,7 @@ impl RoadDialogKind {
         RoadDialogKind::Pay,
         RoadDialogKind::Route,
         RoadDialogKind::Junctions,
+        RoadDialogKind::DesignCheck,
     ];
 
     /// The window's number (`ModuleDialog::kind`), its place in [`Self::ALL`]; a match with no arm for the rest, so a
@@ -214,6 +221,7 @@ impl RoadDialogKind {
             RoadDialogKind::Pay => 19,
             RoadDialogKind::Route => 20,
             RoadDialogKind::Junctions => 21,
+            RoadDialogKind::DesignCheck => 22,
         }
     }
 
@@ -261,6 +269,7 @@ impl StateApp for App {
     /// A message of the module; a window's own handler is in its file.
     fn road_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::DesignCheck(event) => self.design_check_event(event),
             Event::LandxmlExport(path) => self.landxml_chosen(path),
             Event::LandxmlMachine(path) => self.landxml_machine_chosen(path),
             Event::LandxmlAlignments(path) => self.landxml_alignments_chosen(path),
@@ -316,6 +325,7 @@ impl StateApp for App {
             RoadDialogKind::Pay => self.pay_view(),
             RoadDialogKind::Route => self.route_view(),
             RoadDialogKind::Junctions => self.junction_view(),
+            RoadDialogKind::DesignCheck => self.design_check_view(),
         }
     }
 }

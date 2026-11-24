@@ -4,6 +4,7 @@
 pub(crate) use crate::alignment_window::AlignmentWindowApp;
 pub(crate) use crate::corridor_window::CorridorWindowApp;
 pub(crate) use crate::culvert_window::CulvertWindowApp;
+pub(crate) use crate::design_check_window::DesignCheckWindowApp;
 pub(crate) use crate::guardrail_window::GuardrailWindowApp;
 pub(crate) use crate::haul_fleet_window::HaulFleetWindowApp;
 pub(crate) use crate::haul_plan_window::HaulPlanWindowApp;

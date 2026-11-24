@@ -24,8 +24,6 @@ pub(crate) struct ArchUiState {
     /// Etkin kat (active_level.rs, docs/adr/0713): the level new architectural objects go on, the session's.
     pub(crate) active_level: crate::active_level::Chosen,
     pub(crate) arch_template: Option<crate::architecture_template::Window>,
-    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
-    pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6).
@@ -83,8 +81,6 @@ pub enum Event {
     TemplatesPanel(crate::templates_panel::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
-    /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
-    DesignCheck(crate::design_check_window::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     WallStyles(crate::wall_styles::Event),
@@ -128,8 +124,6 @@ pub enum ArchDialogKind {
     RemoveTemplate,
     /// Şablon düzenleyici (template_editor.rs); its form is `ArchUiState::template_editor`.
     TemplateEditor,
-    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21); the window is `ArchUiState::design_check_window`.
-    DesignCheck,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `ArchUiState::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -181,7 +175,6 @@ impl App {
             Event::ToolSetting(event) => return self.tool_setting(event),
             Event::TemplatesPanel(event) => return self.templates_panel_event(event),
             Event::TemplateEditor(event) => return self.template_editor_event(event),
-            Event::DesignCheck(event) => return self.design_check_event(event),
             Event::Program(event) => return self.program_event(event),
             Event::WallStyles(event) => return self.wall_styles_event(event),
             Event::WallJoins(event) => return self.wall_joins_event(event),
@@ -211,7 +204,6 @@ impl App {
         match kind {
             ArchDialogKind::RemoveTemplate => self.remove_template_question(),
             ArchDialogKind::TemplateEditor => self.template_editor_view(),
-            ArchDialogKind::DesignCheck => self.design_check_view(),
             ArchDialogKind::Program => self.program_view(),
             ArchDialogKind::SpaceMerge => self.space_merge_question(),
             ArchDialogKind::WallStyles => self.wall_styles_view(),

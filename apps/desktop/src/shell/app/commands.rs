@@ -626,7 +626,6 @@ impl App {
             "drainage.editor" => self.open_drainage(),
             "terrain.analysis" => self.open_surface_analysis(),
             "profile.propose" => self.open_propose(),
-            "alignment.check" => self.open_design_check(),
             "scene3d.view" => return self.open_scene3d(),
             "ifc.view" => return self.pick_ifc_model(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).

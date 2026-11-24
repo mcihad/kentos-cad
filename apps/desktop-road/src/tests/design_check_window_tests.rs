@@ -1,8 +1,8 @@
 //! Tasarım denetimi (design_check_window.rs, plan/road.md Y21): the window reads `road.alignments.check` and
 //! `road.profiles.check` as the shared cases do.
 
-use crate::app::{App, Dialog, Message};
-use crate::arch;
+use crate::road::RoadState;
+use crate::app::{App, Message};
 use crate::design_check_window::{Event as W, Read};
 
 const ALIGNMENTS: &str = include_str!("../../../../fixtures/commands/v1/road.alignments.check.json");
@@ -23,11 +23,11 @@ fn case(text: &str, name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Arch(arch::Event::DesignCheck(e)));
+    let _ = app.update(Message::from(crate::road::Event::DesignCheck(e)));
 }
 
 fn read(app: &App) -> Read {
-    match &app.arch.design_check_window.as_ref().expect("open").preview {
+    match &app.modules.road().design_check_window.as_ref().expect("open").preview {
         Some(Ok(r)) => r.clone(),
         other => panic!("read: {other:?}"),
     }
@@ -51,13 +51,10 @@ fn the_window_checks_an_alignment_and_a_profile() {
         .revision()
         .to_string();
     let _ = app.update(Message::Run("alignment.check"));
-    assert!(matches!(
-        app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::DesignCheck))
-    ));
+    assert_eq!(app.dialog, Some(crate::road::dialog(crate::road::RoadDialogKind::DesignCheck)));
     send(&mut app, W::Preview);
     assert!(
-        matches!(&app.arch.design_check_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("kural"))
+        matches!(&app.modules.road_mut().design_check_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("kural"))
     );
     // Every rule of the shared case at once.
     alignment_rules(&mut app, ["180", "120", "50", "100", "60", "60", "1.2"]);
@@ -81,7 +78,7 @@ fn the_window_checks_an_alignment_and_a_profile() {
         want["findings"].as_array().expect("findings").len()
     );
     assert!(
-        app.arch
+        app.modules.road_mut()
             .design_check_window
             .as_ref()
             .expect("open")

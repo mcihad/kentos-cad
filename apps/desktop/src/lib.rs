@@ -323,8 +323,6 @@ mod platform_window;
 mod terrain_cloud_window;
 #[path = "cad/drainage_window.rs"]
 mod drainage_window;
-#[path = "arch/design_check_window.rs"]
-mod design_check_window;
 #[path = "shell/propose_window.rs"]
 pub mod propose_window;
 #[path = "shell/picture.rs"]

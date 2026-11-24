@@ -173,6 +173,11 @@ impl ModuleParts for Road {
             "landxml.importAlignments" => app.import_landxml_alignments(),
             "ifc.export" => app.export_ifc(),
             "gltf.export" => app.export_gltf(),
+            // Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+            "alignment.check" => {
+                app.open_design_check();
+                Task::none()
+            }
             _ => return None,
         })
     }
@@ -215,6 +220,7 @@ impl ModuleParts for Road {
             K::Pay => crate::pay_window::TITLE,
             K::Route => crate::route_window::TITLE,
             K::Junctions => crate::junction_window::TITLE,
+            K::DesignCheck => crate::design_check_window::TITLE,
         }
         .to_owned()
     }
@@ -246,6 +252,7 @@ impl ModuleParts for Road {
             K::Pay => app.pay_control(control),
             K::Route => app.route_control(control),
             K::Junctions => app.junction_control(control),
+            K::DesignCheck => app.design_check_control(control),
         }
     }
 

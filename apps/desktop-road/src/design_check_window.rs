@@ -1,5 +1,5 @@
 //! Tasarım denetimi (plan/road.md Y21, docs/adr/0922 §3, `alignment.check`): an alignment or a profile checked against
-//! the user's design rules, as Civil 3D's design check sets and OpenRoads' design standards do. The limits are the
+//! the user's design rules. The limits are the
 //! user's (the design standard's); KentOS fills in none, a rule left empty is not checked. The window reads
 //! `road.alignments.check` or `road.profiles.check` (nothing written) whenever a value changes (docs/adr/0975 §4: no
 //! Önizle): along the stations, the alignment's elements (tangent, clothoid, curve) or the profile, the stretches
@@ -17,7 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::arch;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
 use kentos_commands::{AlignmentsCheck, AlignmentsChecked, DesignFinding, RoadProfilesCheck, RoadProfilesChecked};
@@ -27,7 +27,7 @@ use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
@@ -121,7 +121,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Arch(arch::Event::DesignCheck(event))
+    Message::from(crate::road::Event::DesignCheck(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -167,9 +167,17 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait DesignCheckWindowApp {
+    fn open_design_check(&mut self);
+    fn design_check_event(&mut self, event: Event) -> Task<Message>;
+    fn design_check_view(&self) -> Element<'_, Message>;
+    fn design_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl DesignCheckWindowApp for App {
     /// Tasarım denetimi: the window on the road project's first alignment and profile.
-    pub(crate) fn open_design_check(&mut self) {
+    fn open_design_check(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -184,17 +192,17 @@ impl App {
             return;
         };
         let profile = doc.model.road_profiles().first().map(|p| p.id.clone());
-        self.arch.design_check_window = Some(Box::new(Window {
+        self.modules.road_mut().design_check_window = Some(Box::new(Window {
             alignment: Some(alignment),
             profile,
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::DesignCheck));
+        self.dialog = Some(crate::road::dialog(crate::road::RoadDialogKind::DesignCheck));
         let _ = self.design_check_event(Event::Preview);
     }
 
-    pub(crate) fn design_check_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.design_check_window.as_mut() else {
+    fn design_check_event(&mut self, event: Event) -> Task<Message> {
+        let Some(w) = self.modules.road_mut().design_check_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -232,7 +240,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.arch.design_check_window = None;
+                self.modules.road_mut().design_check_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -241,8 +249,8 @@ impl App {
         self.design_check_event(Event::Preview)
     }
 
-    pub(crate) fn design_check_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.design_check_window else {
+    fn design_check_view(&self) -> Element<'_, Message> {
+        let Some(w) = &self.modules.road().design_check_window else {
             return iced::widget::text("").into();
         };
         let model = self.document.as_ref().map(|d| &d.model);
@@ -371,8 +379,8 @@ impl App {
         d.view()
     }
 
-    pub(crate) fn design_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.arch.design_check_window else {
+    fn design_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        let Some(w) = &self.modules.road().design_check_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

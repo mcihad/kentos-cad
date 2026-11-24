@@ -381,9 +381,6 @@ mod terrain_cloud_window_tests;
 #[path = "tests/drainage_window_tests.rs"]
 mod drainage_window_tests;
 #[cfg(test)]
-#[path = "tests/design_check_window_tests.rs"]
-mod design_check_window_tests;
-#[cfg(test)]
 #[path = "tests/extract_window_tests.rs"]
 mod extract_window_tests;
 #[cfg(test)]

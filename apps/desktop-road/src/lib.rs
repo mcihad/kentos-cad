@@ -32,6 +32,8 @@ mod alignment_window;
 mod corridor_window;
 #[path = "culvert_window.rs"]
 mod culvert_window;
+#[path = "design_check_window.rs"]
+mod design_check_window;
 #[path = "guardrail_window.rs"]
 mod guardrail_window;
 #[path = "haul_fleet_window.rs"]
@@ -92,6 +94,9 @@ mod volume_window;
 mod widening_window;
 
 // The module's tests (docs/adr/9199 §4.6).
+#[cfg(test)]
+#[path = "tests/design_check_window_tests.rs"]
+mod design_check_window_tests;
 #[cfg(test)]
 #[path = "tests/picture_tests.rs"]
 mod picture_tests;

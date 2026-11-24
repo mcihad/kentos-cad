@@ -366,7 +366,6 @@ impl App {
                 template: None,
                 active_level: Default::default(),
                 arch_template: None,
-                design_check_window: None,
                 program_window: None,
                 wall_styles: None,
                 wall_joins: None,
