@@ -3549,6 +3549,9 @@
     tahminle düzeltilmez. İçe aktarın açık kaynak birimi/bilinen ölçü yolu ADR 0621'deki gibi sürer.
   - Özellik hücresi yalnız yazı/düzenleme durumu değişince yeniden yerleşir; tek karmaşık nesnenin geometrik
     özellikleri de belge/seçim değişene kadar önbellektedir. Eşzamansız ek dosya eylemleri canlıdır.
+- **Web uygulaması iptal edildi (sahibin sözü, 24 Kasım 2026: “web uygulaması iptal edildi”).** 12 Ekim'in arası kalıcı oldu:
+  web'e dönülmez, TODOS.md §0.2'ye yeni satır yazılmaz, ADR'ler web adımı yazmaz. Bulut portalı (`apps/portal`, ADR 9000) bu
+  kararın dışındadır. Aşağıdaki 12 Ekim kaydı geçmiştir.
 - **Web katmanına ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](../../docs/adr/0228-web-pause-desktop-and-cloud-first.md)).**
   - Web'in son hâli **`1aad00d0`**'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta (`kentosd`), Python'da ve
     MCP'de yapılır.

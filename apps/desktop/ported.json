@@ -616,7 +616,11 @@
     "sheet.fromTemplate",
     "view.assistant",
     "extensions.manage",
-    "extensions.install"
+    "extensions.install",
+    "layer.edit",
+    "layer.editSave",
+    "layer.editRollback",
+    "layer.editReview"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

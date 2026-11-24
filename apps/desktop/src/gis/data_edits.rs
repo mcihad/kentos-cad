@@ -146,6 +146,9 @@ pub(crate) enum After {
     Stop,
     /// The drawing is left for this.
     Leave(Then),
+    /// The ribbon's Değişiklikleri geri al (docs/adr/9201): the layers' changes let go, their sessions kept open. Asked
+    /// first, since letting go is no undo step.
+    Rollback,
 }
 
 /// The question's answers.
@@ -247,7 +250,7 @@ impl App {
     }
 
     /// The edited layers with changes among `layers` (every edited one when empty), in the tree's order.
-    fn data_modified_layers(&self, layers: &[String]) -> Vec<String> {
+    pub(crate) fn data_modified_layers(&self, layers: &[String]) -> Vec<String> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -285,6 +288,19 @@ impl App {
     fn ask_data_edits(&mut self, layers: Vec<String>, after: After) {
         self.gis.data_edits.asking = Some(Ask { layers, after });
         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataEdits));
+    }
+
+    /// Değişiklikleri geri al on the ribbon (docs/adr/9201): every edited layer with changes, asked about once; nothing
+    /// asked when none has any, a word while a save is under way.
+    pub(crate) fn ask_data_rollback(&mut self) {
+        if self.data_saving() {
+            self.warn("Katman değişiklikleri tabloya yazılıyor; yazma bitince yeniden deneyin.");
+            return;
+        }
+        let layers = self.data_modified_layers(&[]);
+        if !layers.is_empty() {
+            self.ask_data_edits(layers, After::Rollback);
+        }
     }
 
     pub fn data_edits_event(&mut self, event: Event) -> Task<Message> {
@@ -450,7 +466,7 @@ impl App {
                 let names: Vec<String> = ask.layers.iter().map(|l| self.data_layer_name(l)).collect();
                 let action = match ask.after {
                     After::Stop => SessionAction::Cancel,
-                    After::Leave(_) => SessionAction::Rollback,
+                    After::Leave(_) | After::Rollback => SessionAction::Rollback,
                 };
                 if let Err(why) = self.data_session(action, ask.layers.clone()) {
                     self.warn(why);
@@ -462,7 +478,7 @@ impl App {
                 }
                 self.output(format!("Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.", names.join(", ")));
                 match ask.after {
-                    After::Stop => Task::none(),
+                    After::Stop | After::Rollback => Task::none(),
                     After::Leave(then) => self.leave(then),
                 }
             }
@@ -484,6 +500,8 @@ impl App {
                 Task::none()
             }
             After::Leave(then) => self.leave(then),
+            // Saved instead of let go: the sessions stay open.
+            After::Rollback => Task::none(),
         }
     }
 
@@ -764,7 +782,24 @@ impl App {
         let title = match ask.after {
             After::Stop => "Düzenlemeyi bitir",
             After::Leave(_) => "Kaynağa yazılmamış katman değişiklikleri",
+            After::Rollback => "Değişiklikleri geri al",
         };
+        // Letting go asks only that (docs/adr/9201): the changes are gone for good, the source stays as it was.
+        if matches!(ask.after, After::Rollback) {
+            let question = kentos_ui::widget::Confirm::new(
+                title,
+                message(Event::Answer(Answer::Discard)),
+                message(Event::Answer(Answer::Cancel)),
+            )
+            .message(format!("{whose} değişiklikler bırakılsın mı?"))
+            .detail(format!(
+                "{} Bırakılan değişiklik geri alınamaz; kaynak olduğu gibi kalır, katmanlar düzenlemeye açık kalır.",
+                detail.join(" ")
+            ))
+            .confirm("Değişiklikleri geri al")
+            .destructive();
+            return kentos_ui::widget::overlay::modal(question, message(Event::Answer(Answer::Cancel)));
+        }
         // Leaving a project kept on this computer, the changes may wait with it (docs/adr/9111 §3); each answer says
         // what it does to the source and to this device (docs/adr/9123).
         let can_keep = matches!(ask.after, After::Leave(_))

@@ -54,6 +54,10 @@ impl App {
         if crate::doc_tabs::COMMANDS.contains(&id) {
             return self.doc_tabs_command(id);
         }
+        // Düzenleme: the data layers' edit session (edit_commands.rs, docs/adr/9201).
+        if let Some(task) = self.edit_command(id) {
+            return task;
+        }
         if let Some(tool) = id.strip_prefix("tool.")
             && Session::tools().contains(&tool)
         {
@@ -757,6 +761,10 @@ impl App {
                 return Some(on);
             }
         }
+        // Düzenlemeyi başlat lit while the active layer is being edited (edit_commands.rs, docs/adr/9201).
+        if let Some(on) = self.edit_checked(id) {
+            return Some(on);
+        }
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
@@ -852,6 +860,10 @@ impl App {
             if let Some(on) = parts.enabled(self, id) {
                 return on;
             }
+        }
+        // Düzenleme's (edit_commands.rs, docs/adr/9201).
+        if let Some(on) = self.edit_available(id) {
+            return on;
         }
         let doc = self.document.as_ref().map(|doc| &doc.model);
         match id {
@@ -957,6 +969,9 @@ impl App {
         let title = catalog().get(id).map_or(id, |c| c.title);
         if let Some(why) = self.not_offered(id, title) {
             return Some(why);
+        }
+        if crate::edit_commands::COMMANDS.contains(&id) {
+            return self.edit_why(id);
         }
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked().map(str::to_owned),

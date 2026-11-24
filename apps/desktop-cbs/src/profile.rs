@@ -86,7 +86,6 @@ impl ModuleProfile for Gis {
         use LayerEntry as E;
         match entry {
             E::Activate
-            | E::EditSession
             | E::Visibility
             | E::Lock
             | E::Freeze

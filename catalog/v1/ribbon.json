@@ -3660,6 +3660,59 @@
     "label": "Düzenle",
     "panels": [
      {
+      "label": "Düzenleme",
+      "icon": "edit",
+      "items": [
+       {
+        "command": "layer.edit",
+        "size": "large"
+       },
+       {
+        "command": "layer.editSave",
+        "size": "small"
+       },
+       {
+        "command": "layer.editRollback",
+        "size": "small"
+       },
+       {
+        "command": "layer.editReview",
+        "size": "small"
+       }
+      ],
+      "keep": true
+     },
+     {
+      "label": "Katmanlar",
+      "icon": "layers",
+      "items": [
+       {
+        "builtin": "layers"
+       }
+      ],
+      "overflow": [
+       "tool.layerOff",
+       "tool.layerIsolate",
+       "layer.unisolate",
+       "tool.layerLock",
+       "tool.layerFreeze",
+       "layer.thawAll",
+       "tool.layerMakeActive",
+       "tool.layerMatch",
+       "tool.copyToLayer",
+       "layer.merge",
+       "layer.states",
+       "layer.stateSave",
+       "layer.translate",
+       "layer.purge",
+       "layer.list"
+      ],
+      "launcher": {
+       "command": "style.layerStyle",
+       "title": "Katman stili…"
+      }
+     },
+     {
       "label": "Oluştur",
       "icon": "line",
       "items": [
@@ -3710,49 +3763,6 @@
        "tool.fourthCorner"
       ],
       "keep": true
-     },
-     {
-      "label": "Şablonlar",
-      "icon": "templates",
-      "items": [
-       {
-        "builtin": "templates"
-       }
-      ],
-      "launcher": {
-       "command": "template.panel",
-       "title": "Şablonlar paneli"
-      }
-     },
-     {
-      "label": "Katmanlar",
-      "icon": "layers",
-      "items": [
-       {
-        "builtin": "layers"
-       }
-      ],
-      "overflow": [
-       "tool.layerOff",
-       "tool.layerIsolate",
-       "layer.unisolate",
-       "tool.layerLock",
-       "tool.layerFreeze",
-       "layer.thawAll",
-       "tool.layerMakeActive",
-       "tool.layerMatch",
-       "tool.copyToLayer",
-       "layer.merge",
-       "layer.states",
-       "layer.stateSave",
-       "layer.translate",
-       "layer.purge",
-       "layer.list"
-      ],
-      "launcher": {
-       "command": "style.layerStyle",
-       "title": "Katman stili…"
-      }
      },
      {
       "label": "Değiştir",
@@ -3850,6 +3860,19 @@
        "tool.toArea",
        "tool.toPolyline"
       ]
+     },
+     {
+      "label": "Şablonlar",
+      "icon": "templates",
+      "items": [
+       {
+        "builtin": "templates"
+       }
+      ],
+      "launcher": {
+       "command": "template.panel",
+       "title": "Şablonlar paneli"
+      }
      }
     ]
    },

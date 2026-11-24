@@ -487,6 +487,8 @@ mod data_conflict;
 mod data_relink;
 #[path = "gis/data_edits.rs"]
 pub mod data_edits;
+#[path = "gis/edit_commands.rs"]
+mod edit_commands;
 #[path = "gis/data_pending.rs"]
 mod data_pending;
 #[path = "gis/data_rows.rs"]

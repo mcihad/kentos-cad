@@ -175,16 +175,17 @@ impl App {
             Some(if data.read_only {
                 " Veri katmanı, salt okunur: çizilmez.".to_owned()
             } else if doc.model.editing(&n.id) {
-                " Veri katmanı düzenleniyor: çizilenler Kaynağa yaz'a kadar katmanda bekler.".to_owned()
+                " Veri katmanı düzenleniyor: çizilenler Değişiklikleri kaydet'e kadar katmanda bekler.".to_owned()
             } else {
-                " Veri katmanı düzenlemeye kapalı: çizmek için katmanın sağ tuşundan Düzenlemeyi başlat.".to_owned()
+                " Veri katmanı düzenlemeye kapalı: çizmek için Düzenle sekmesinde Düzenlemeyi başlat.".to_owned()
             })
         });
         let tip_body = format!(
             "Yeni nesnelerin çizildiği katman; CBS projesinde Katmanlar'da bir katmana bir kez basmak onu seçer. Kilitli katman seçilemez; kilidi Katmanlar panelinden açın.{}",
             session.unwrap_or_default()
         );
-        let mut buttons: Vec<Button<'static, Message>> = [
+        // The data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9201), no more this panel's (9169).
+        let buttons: Vec<Button<'static, Message>> = [
             "layer.new",
             "layer.newGroup",
             "layer.showAll",
@@ -193,12 +194,6 @@ impl App {
         .into_iter()
         .filter_map(|id| self.small(id))
         .collect();
-        // A data layer drawn on: its edit session shown and started or ended here, in place of Katman paneli
-        // (docs/adr/9169); a read-only one says why it is not drawn on.
-        if let Some(session) = active.and_then(|n| self.session_button(n)) {
-            buttons.pop();
-            buttons.push(session);
-        }
         let s = typography::scaled;
         let field_width = move |level: Level| if level >= 2 { s(150.0) } else { s(204.0) };
         let row_width = |pair: &[Button<'static, Message>], icons: bool| {
@@ -242,44 +237,6 @@ impl App {
             )
         };
         Some(Group::new(panel.label).stepped(widths, view, folded))
-    }
-
-    /// The edit session of the layer drawn on when it is a data layer (docs/adr/9169): its button's words, what a press
-    /// sends (none: off) and its tip. Düzenlemeyi başlat while closed, Düzenlemeyi bitir while open; off, with why, on a
-    /// read-only connection.
-    pub(crate) fn session_state(&self, node: &LayerNode) -> Option<(&'static str, Option<Message>, String)> {
-        let data = node.data.as_ref()?;
-        let doc = self.document.as_ref()?;
-        let edit = |e| Some(crate::data_edits::event(e));
-        Some(if data.read_only {
-            ("Salt okunur", None, format!("“{}” salt okunur bağlantıdan geliyor: çizilmez ve kaynağa yazılmaz.", node.name))
-        } else if doc.model.editing(&node.id) {
-            (
-                "Düzenlemeyi bitir",
-                edit(crate::data_edits::Event::Stop(node.id.clone())),
-                format!(
-                    "“{}” düzenleniyor: çizilenler ve değişenler Kaynağa yaz'a kadar katmanda bekler. Bitirmek, değişiklik varsa önce sorar.",
-                    node.name
-                ),
-            )
-        } else {
-            (
-                "Düzenlemeyi başlat",
-                edit(crate::data_edits::Event::Start(node.id.clone())),
-                format!("“{}” düzenlemeye kapalı: çizmek ve değiştirmek için düzenlemeyi başlatın.", node.name),
-            )
-        })
-    }
-
-    /// The edit session's button (see [`App::session_state`]).
-    fn session_button(&self, node: &LayerNode) -> Option<Button<'static, Message>> {
-        let (words, press, body) = self.session_state(node)?;
-        let glyph = crate::icons::from_web(Some(if press.is_some() { "edit" } else { "lock" }));
-        Some(
-            Button::small(glyph, words)
-                .on_press_maybe(press)
-                .tip(kentos_ui::widget::Tip::new("Düzenleme oturumu").body(body)),
-        )
     }
 
     /// The layers as the field's menu lists them (the web's `layerField`):
@@ -617,8 +574,6 @@ const ROW_GAP: f32 = 2.0;
 const STACK_PAD: f32 = 2.0;
 
 mod menus;
-#[cfg(test)]
-mod session_tests;
 #[cfg(test)]
 mod tests;
 

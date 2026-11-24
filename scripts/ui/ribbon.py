@@ -565,13 +565,18 @@ GIS = [
     # Parsel oluştur and Plan yolu are KentOS Harita's drafting (docs/adr/0802): a CBS parcel is a Kapalı alan with
     # its layer's form. A layer's four kinds of object are drawn with four large tools (docs/adr/9200 §3).
     T("edit", "Düzenle", [
+        # A data layer's edit session (docs/adr/9201): the active layer's opened and closed, every edited layer's changes
+        # saved, let go or looked at; no more in the layer's right-click menu. Kept: in a narrow window (1100 px) Oluştur's
+        # tools go small and named before the session's button folds, since nothing is drawn on a closed layer.
+        P("Düzenleme", "edit", [L("layer.edit"), S("layer.editSave"), S("layer.editRollback"), S("layer.editReview")],
+          keep=True),
+        # The active layer the session opens beside it; Şablonlar last, the first to fold in a narrow window.
+        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
+          launcher=toCmd("style.layerStyle", "Katman stili…")),
         P("Oluştur", "line", [L("tool.point"), L("tool.line"), L("tool.polyline"), L("tool.polygon"), SP("circle"),
             SP("rectangle"), S("tool.adjoin"), S("tool.text")],
           overflow=["tool.arc", "tool.ellipse", "tool.spline", "tool.vertexPoints", "tool.divide", "tool.pointsBetween",
             "tool.intersectPoint", "tool.centerline", "tool.sector", "tool.rangeRings", "tool.fourthCorner"], keep=True),
-        P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
-        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
-          launcher=toCmd("style.layerStyle", "Katman stili…")),
         P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.vertex"), S("tool.reshape"),
             S("tool.break"), S("tool.offset"), S("tool.join"), S("tool.erase")],
           # Kısıt is CAD's (docs/adr/0802): CBS shows neither the marks nor Parametreler.
@@ -583,6 +588,7 @@ GIS = [
         P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSplit"), S("tool.areaSubtract")],
           overflow=["tool.areaIntersect", "tool.boundary", "tool.polygonize", "tool.partsJoin", "tool.partsSplit",
             "tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline"]),
+        P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
     ]),
     T("data", "Veri", [
         P("Katman", "layerAdd", [NEW_LAYER, S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),

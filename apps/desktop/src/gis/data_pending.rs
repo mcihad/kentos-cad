@@ -98,11 +98,6 @@ pub(crate) fn open() -> Message {
     message(Event::Open(None))
 }
 
-/// A layer menu's Değişiklikleri incele…: the window on that layer.
-pub(crate) fn open_at(layer: String) -> Message {
-    message(Event::Open(Some(layer)))
-}
-
 /// The window on this layer, or the first waiting one.
 pub(crate) fn open_at_message(layer: Option<String>) -> Message {
     message(Event::Open(layer))

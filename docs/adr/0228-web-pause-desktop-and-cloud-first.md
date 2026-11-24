@@ -1,5 +1,10 @@
 # ADR 0228: Web katmanına ara; masaüstü ve bulut önce, mobil ve web için modüler düzen
 
+- **Güncelleme (2026-11-24):** sahibin sözü: “web uygulaması iptal edildi unutma”. Ara kalıcı oldu: web uygulaması
+  (`apps/web`) geliştirilmez, ona dönüş planı yoktur; TODOS.md §0.2'ye yeni satır yazılmaz, ADR'ler web adımı yazmaz.
+  Ortak çekirdek, sözleşmeler ve modüler düzen (mobil istemciler için) sürer. Bulut portalı (`apps/portal`, ADR 9000)
+  bu kararın dışındadır.
+
 - **Durum:** kabul edildi (2026-10-12). Sahibin kararı (12 Ekim): “bundan sonra web katmanına devam etmeyeceğiz masaüstü ve gerektiğinde
   bulut tarafı tamamen bittikten sonra web tarafını geliştireceğiz”, “ortak hesaplama tipleri vesaire aynı şekilde devam edecek”,
   “ileride görüntüleme için falan mobil uygulama da geliştireceğiz onun için kod organizasyon düzgün olmalı”, “web şu anda bize zaman

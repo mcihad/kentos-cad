@@ -51,8 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
-- ADR 9200 (şeridin ana araçları büyük kalır): web'in `Ribbon.fit`'i korunan paneli öbürleri katlanana kadar büyük
-  tutmalı; CBS'nin Düzenle'sinde Oluştur'un dört büyük aracı (Nokta, Çizgi, Çoklu çizgi, Kapalı alan) webde de.
+**Kapandı (24 Kasım 2026):** web uygulaması iptal edildi (sahibin sözü); bu bölüme yeni satır yazılmaz. Aşağıdakiler
+yalnız geçmiş kayıttır.
+
 - Kullanım raporu 2'nin masaüstü düzeltmeleri (`usage-reporting-2.md`): UR2-001'de Çizgi'nin Bitir'i (Enter, kısa sağ tık,
   menü) zinciri bitirip aracı kapatır ([ADR 0018](docs/adr/0018-tool-session-and-input.md) güncellemesi); web'in çizgi
   aracı hâlâ açık kalır, `line-chain`, `point-calc`, `arc-variants`, `usage-blocks-view` izleri yeni davranışı bekler.

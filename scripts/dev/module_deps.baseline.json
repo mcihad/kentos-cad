@@ -113,7 +113,6 @@
       "shell/project/settings.rs",
       "shell/project/survey.rs",
       "shell/ribbon_keys.rs",
-      "shell/ribbon_panels/mod.rs",
       "shell/ribbon_search.rs",
       "shell/saving.rs",
       "shell/services/window.rs",

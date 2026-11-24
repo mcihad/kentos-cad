@@ -8,8 +8,8 @@ impl App {
     /// A row's context menu: what is done most at its top (make active, hide, lock, isolate, select, zoom), the rest
     /// in submenus by what it is about (Görünürlük, Görünüş, Veri, Kenet, Senaryo, Sıra), then the node itself
     /// (rename, add, copy, merge) and Sil. Each entry shows where the active module has it and the layer's kind is one
-    /// it is about (layer_entries.rs, docs/adr/9195 §5): a data layer has its edit session and no freeze, a service's
-    /// its own items, a raster's and a cloud's look is their tab's.
+    /// it is about (layer_entries.rs, docs/adr/9195 §5): a data layer has no freeze, a service its own items, a raster's
+    /// and a cloud's look is their tab's. A data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9201).
     pub fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
         let id = node.id.clone();
         let event = |e: Event| Message::Layer(e);
@@ -25,45 +25,6 @@ impl App {
                     (!active).then(|| event(Event::Activate(id.clone()))),
                 )
                 .icon(Icon::Check);
-        }
-        // A data layer's edit session (docs/adr/9103 §5): opened and closed here, its changes saved or let go.
-        if has(LayerEntry::EditSession) && let Some(data) = &node.data {
-            use crate::data_edits::{Event as Edit, event as edit};
-            let model = self.document.as_ref().map(|d| &d.model);
-            let editing = model.is_some_and(|m| m.editing(&id));
-            let modified = editing && model.is_some_and(|m| m.data_modified(&id));
-            menu = menu
-                .item(
-                    if editing { "Düzenlemeyi bitir" } else { "Düzenlemeyi başlat" },
-                    (editing || !data.read_only).then(|| {
-                        edit(if editing { Edit::Stop(id.clone()) } else { Edit::Start(id.clone()) })
-                    }),
-                )
-                .icon(icon("edit"))
-                .item(
-                    "Değişiklikleri kaydet",
-                    modified.then(|| edit(Edit::Save(vec![id.clone()]))),
-                )
-                .icon(icon("save"))
-                .item(
-                    "Değişiklikleri geri al",
-                    modified.then(|| edit(Edit::Rollback(vec![id.clone()]))),
-                )
-                .icon(icon("undo"))
-                // Katman değişiklikleri on this layer (docs/adr/9123): its rows the source does not have, one by one.
-                .item("Değişiklikleri incele…", modified.then(|| crate::data_pending::open_at(id.clone())))
-                .icon(icon("table"));
-            // Every layer being edited, when another than this one is too (the session's own Kaydet and Geri al).
-            let others = model.map_or(0, |m| m.edited_layers().iter().filter(|l| **l != id).count());
-            if others > 0 {
-                let any = model.is_some_and(|m| m.edited_layers().iter().any(|l| m.data_modified(l)));
-                menu = menu
-                    .item("Bütün katmanları kaydet", any.then(|| edit(Edit::Save(Vec::new()))))
-                    .icon(icon("save"))
-                    .item("Bütün katmanları geri al", any.then(|| edit(Edit::Rollback(Vec::new()))))
-                    .icon(icon("undo"));
-            }
-            menu = menu.separator();
         }
         if has(LayerEntry::Visibility) {
             menu = menu

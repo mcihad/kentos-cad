@@ -8,6 +8,9 @@
   düzenlenen bir veri katmanının kaydedilmemiş satırları, kaydedilene kadar çizimde katmanın nesneleri olarak bekler
   (§2). Düzenlenmeyen veri katmanı yine nesne tutmaz; tutmasına bütünlük denetimi izin vermez.
 - **Web:** ertelendi (ADR 0228). **`.kcad`:** şema değişmez (§2). **Komut:** `cad.layers.session` v1 (§3).
+- **Güncelleme (2026-11-24, [ADR 9201](9201-edit-session-on-the-ribbon.md)):** oturum katmanın sağ tuş menüsünden
+  açılmaz; Düzenle sekmesinin Düzenleme panelindedir (Düzenlemeyi başlat/bitir, Değişiklikleri kaydet, geri al,
+  incele). §5'in menüden söz eden yerleri bu güncellemeyle okunur.
 - **Bağımlılık:** yeni dış kitaplık yok. Python ve MCP veri sürücülerini kaydeder (§3).
 
 ## §1 Bağlam ve araştırma

@@ -581,6 +581,9 @@ mod pg_testing;
 #[path = "gis/data_edits_tests.rs"]
 mod data_edits_tests;
 #[cfg(test)]
+#[path = "gis/edit_commands_tests.rs"]
+mod edit_commands_tests;
+#[cfg(test)]
 #[path = "gis/data_journal_tests.rs"]
 mod data_journal_tests;
 #[cfg(test)]

@@ -8,7 +8,7 @@
     mantıksal olarak ribonda en önemli araçlar genelde büyük olur”.
 - **Kural:** CLAUDE.md §25 kural 2: şerit her modülün profilinden gelir; bu iş yerleşimi değil, sığdırmayı ve düğmenin
   genişliğini değiştirir. Dört modülün (CBS, Mimari, Harita, Yol) şeridi aynı kuralla çizilir.
-- **Web:** ertelendi (ADR 0228); web'in `Ribbon.fit`'i aynı değişikliği bekler (TODOS.md §0.2).
+- **Web:** iptal edildi (sahibin sözü, 24 Kasım 2026; ADR 0228).
 
 ## §1 Araştırma (24 Kasım 2026'da okundu)
 

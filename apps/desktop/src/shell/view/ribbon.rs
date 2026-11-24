@@ -454,8 +454,11 @@ impl App {
             move || rows_menu(&menu, folded)
         };
         let make = |command: &Command, size: Size| {
-            // The label is the short name without its “…” (the web's `ribbonLabel`); the tip has the title.
-            let label = command.short.strip_suffix('…').unwrap_or(command.short);
+            // The label is the short name without its “…” (the web's `ribbonLabel`); the tip has the title. Düzenlemeyi
+            // başlat says Düzenlemeyi bitir while its layer is being edited (edit_commands.rs, docs/adr/9201).
+            let label = self
+                .edit_face(command.id)
+                .unwrap_or_else(|| command.short.strip_suffix('…').unwrap_or(command.short));
             let button = sized(size, command.icon, label);
             #[cfg(target_os = "macos")]
             let button = match crate::accessibility::Tool::from_id(command.id) {

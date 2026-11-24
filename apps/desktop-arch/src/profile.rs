@@ -111,8 +111,7 @@ impl ModuleProfile for Architecture {
             | E::Merge
             | E::Remove => true,
             // A map's and a CBS's: services, tables, sources, feature data and other programs' style files.
-            E::EditSession
-            | E::Service
+            E::Service
             | E::Refresh
             | E::Export
             | E::Migrate

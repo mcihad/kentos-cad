@@ -48,11 +48,22 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
         for tab in tabs {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
-            // At 1440 every button keeps its name: no panel down to icons (docs/adr/0622 §3).
+            // At 1440 every button keeps its name: no panel down to icons (docs/adr/0622 §3); the tab's main tools are
+            // large, and at most one less important panel folds into its named button (docs/adr/9200: CBS's Düzenle
+            // folds Şablonlar, its last).
             let (levels, _) = fitted(&app, tab, 1440.0);
+            let keep: Vec<bool> = groups(&app, tab).iter().map(Group::keeps).collect();
             assert!(
-                levels.iter().all(|&l| l <= 1),
+                levels.iter().all(|&l| l != 2),
                 "{mode} {tab}: icons only at 1440 px ({levels:?})"
+            );
+            assert!(
+                levels.iter().zip(&keep).all(|(&l, &kept)| !kept || l == 0),
+                "{mode} {tab}: main tools small at 1440 px ({levels:?})"
+            );
+            assert!(
+                levels.iter().filter(|&&l| l == 3).count() <= 1,
+                "{mode} {tab}: panels folded at 1440 px ({levels:?})"
             );
             // Wide windows show every panel as designed. CBS's Veri, with Alt türler and Değer
             // bileşimleri (docs/adr/0422, 0423), is 3474 px in the interface's typefaces; its
@@ -131,7 +142,9 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
 }
 
 /// CBS's Düzenle draws a layer's four kinds of object with four large tools, Nokta, Çizgi, Çoklu çizgi and Kapalı alan
-/// (the owner's word of 24 November 2026), and keeps them large at 1100 and 1440 px: Oluştur is the tab's kept panel.
+/// (the owner's word of 24 November 2026), large at 1440 px: Oluştur is one of the tab's kept panels. At 1100 px the
+/// session's Düzenlemeyi başlat stays large and the four go small with their names (docs/adr/9201): nothing is drawn on
+/// a closed layer.
 #[test]
 fn cbs_draws_a_layers_four_kinds_with_large_tools() {
     use crate::catalog::{Item, Size};
@@ -152,10 +165,11 @@ fn cbs_draws_a_layers_four_kinds_with_large_tools() {
         })
         .collect();
     assert_eq!(large, ["tool.point", "tool.line", "tool.polyline", "tool.polygon"]);
-    for width in [1100.0, 1440.0] {
+    let session = shown.iter().position(|p| p.label == "Düzenleme").expect("Düzenleme");
+    for (width, drawing) in [(1440.0, 0), (1100.0, 1)] {
         let (levels, overflow) = fitted(&app, "edit", width);
         assert!(!overflow, "{width}: {levels:?}");
-        assert_eq!(levels[at], 0, "Oluştur at {width} px: {levels:?}");
+        assert_eq!((levels[session], levels[at]), (0, drawing), "Düzenleme and Oluştur at {width} px: {levels:?}");
     }
 }
 

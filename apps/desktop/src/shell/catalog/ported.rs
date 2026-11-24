@@ -849,4 +849,9 @@ pub const PORTED: &[&str] = &[
     // docs/adr/8057 §3: Eklentiler, the extension manager, and Paket yükle (extensions/).
     "extensions.manage",
     "extensions.install",
+    // docs/adr/9201: Düzenle's Düzenleme panel, a data layer's edit session (edit_commands.rs).
+    "layer.edit",
+    "layer.editSave",
+    "layer.editRollback",
+    "layer.editReview",
 ];

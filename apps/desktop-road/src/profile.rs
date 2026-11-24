@@ -113,8 +113,7 @@ impl ModuleProfile for Road {
             | E::Remove => true,
             // A CBS table is a road's read-only underlay (docs/adr/9196 §2); no forms, cards, statistics or other
             // programs' style files.
-            E::EditSession
-            | E::Migrate
+            E::Migrate
             | E::Counts
             | E::StyleFiles
             | E::Sld

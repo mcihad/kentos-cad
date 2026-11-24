@@ -15,11 +15,8 @@ pub use kentos_launch::LayerKind;
 /// An entry of a layer's right-click menu (cad/layering/menus.rs), placed by module and by layer kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LayerEntry {
-    /// Etkin katman yap.
+    /// Etkin katman yap. (A data layer's edit session is no entry: it is Düzenle's Düzenleme panel's, docs/adr/9201.)
     Activate,
-    /// Düzenlemeyi başlat or bitir, Değişiklikleri kaydet, geri al and incele, Bütün katmanları kaydet and geri al
-    /// (docs/adr/9103 §5).
-    EditSession,
     /// Gizle or Göster, Yalnızca bunu göster, Görünürlük ▸ Tüm katmanları göster.
     Visibility,
     /// Kilitle or Kilidi aç.
@@ -107,9 +104,8 @@ pub enum LayerEntry {
 
 impl LayerEntry {
     /// Every entry, in the menu's order.
-    pub const ALL: [LayerEntry; 43] = [
+    pub const ALL: [LayerEntry; 42] = [
         LayerEntry::Activate,
-        LayerEntry::EditSession,
         LayerEntry::Visibility,
         LayerEntry::Lock,
         LayerEntry::Freeze,
@@ -180,7 +176,6 @@ impl LayerEntry {
             LayerEntry::Duplicate | LayerEntry::Merge => {
                 &[Drawing, Annotation, Bound, Raster, PointCloud]
             }
-            LayerEntry::EditSession => &[Data],
             LayerEntry::Service => &[Service],
             // A layer whose objects a service fed.
             LayerEntry::Refresh => &[Drawing],

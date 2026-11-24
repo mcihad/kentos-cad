@@ -4992,6 +4992,68 @@
    "tests": 1
   },
   {
+   "id": "layer.edit",
+   "kind": "command",
+   "title": "Düzenleme oturumu",
+   "level": "semantic",
+   "via": [
+    "cad.layers.session"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.session",
+   "mcp": "cad.layers.session",
+   "note": "Düzenle'nin Düzenleme paneli etkin veri katmanını cad.layers.session start ile açar, stop ile kapatır; değişiklik varsa kapatmadan sorulur (ADR 9103, 9201).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.editReview",
+   "kind": "command",
+   "title": "Değişiklikleri incele…",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Katman değişiklikleri penceresi: kaynağa yazılmamış satırlar katman katman (ADR 9123, 9201).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.editRollback",
+   "kind": "command",
+   "title": "Değişiklikleri geri al",
+   "level": "semantic",
+   "via": [
+    "cad.layers.session"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.session",
+   "mcp": "cad.layers.session",
+   "note": "Bir kez sorulur; değişiklikler cad.layers.session rollback ile bırakılır, katmanlar açık kalır (ADR 9201).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.editSave",
+   "kind": "command",
+   "title": "Değişiklikleri kaydet",
+   "level": "semantic",
+   "via": [
+    "cad.layers.session"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.session",
+   "mcp": "cad.layers.session",
+   "note": "Düzenlenen bütün katmanların değişiklikleri kaynaklarına cad.layers.session save'in yazıcısıyla (data_write), her kaynak tek işlemde (ADR 9103, 9201).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.fields",
    "kind": "command",
    "title": "Alanlar…",

@@ -5,6 +5,9 @@
   kalanı (ADR 9128 §4): “Düzenle sekmesinde hedef katman, kalem ve ‘Düzenlemeyi başlat/bitir’ sürekli görünsün. Yetki
   yoksa gerekçeyi, oturum kapalıysa harekete geçiren düğmeyi göster.”
 - **Web:** ertelendi (ADR 0228); TODOS.md §0.2. **`.kcad`:** değişmedi. **Komut:** yok.
+- **Güncelleme (2026-11-24, [ADR 9201](9201-edit-session-on-the-ribbon.md)):** Katmanlar panelindeki oturum düğmesi
+  kalktı; dar pencerede panel katlanınca görünmüyordu. Oturum Düzenle sekmesinin ilk paneli Düzenleme'nin komutlarıdır;
+  Katmanlar panelinde Katman paneli düğmesi yerine döndü.
 
 ## §1 Bağlam
 

@@ -44,7 +44,8 @@ satıra (749 KB) büyüdüğü için bölündü.
 
 ## Çalışırken
 
-- **Masaüstü ve bulut önce:** web'e ara verildi (ADR 0228); web'e ait adımlar atlanır, gerekenleri TODOS.md §0.2'ye yazılır.
+- **Masaüstü ve bulut:** web uygulaması iptal edildi (sahibin sözü, 24 Kasım 2026; ADR 0228'in arası kalıcı oldu); web'e
+  ait adım ve not yazılmaz, TODOS.md §0.2'ye yeni satır eklenmez. Bulut portalı (`apps/portal`, ADR 9000) bunun dışındadır.
 - **Modül ve istemci ayrımı (kesin kural, 23 Kasım 2026):** §25'in sekiz kuralı her değişiklikte uygulanır; yeni
   panel, sekme, menü öğesi, komut, modül ya da istemci onlarla eklenir.
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
@@ -147,8 +148,8 @@ dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
 tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedenini bildirin.
 Üretim iddiası veya tamamlandı işareti için TODOS.md kabul kapılarını kullanın.
 Komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse `pnpm inventory`
-çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md). Web dururken (ADR 0228) envanter donmuştur;
-yeni komutların kaydı `catalog/v1/additions.json`'dadır, web'de gerekenler TODOS.md §0.2'ye yazılır.
+çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md). Web uygulaması iptal edildiği için
+(ADR 0228, 24 Kasım 2026) envanter donmuştur; yeni komutların kaydı `catalog/v1/additions.json`'dadır.
 Çizimi ya da projeyi değiştiren yeni araç ve komut, §9.2'deki komut, Python ve MCP bütünlüğü olmadan tamamlandı sayılmaz.
 
 ## 11. Teknik borç

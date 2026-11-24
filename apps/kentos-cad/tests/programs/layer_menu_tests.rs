@@ -20,9 +20,8 @@ use crate::scenes::{Objects, layer, open_edited};
 /// The table of docs/adr/9195 §5: each entry, the words its presence is read by, the modules that have it (M Mimari,
 /// H Harita, Y Yol, C CBS) and the kinds of layer it is about (d çizim, a açıklama, v veri tablosu, b bağlı,
 /// s servis, r raster, n nokta bulutu, g grup).
-const TABLE: [(LayerEntry, &str, &str, &str); 43] = [
+const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
     (LayerEntry::Activate, "Etkin katman yap", "MHYC", "davbrn"),
-    (LayerEntry::EditSession, "Düzenlemeyi başlat", "C", "v"),
     (
         LayerEntry::Visibility,
         "Yalnızca bunu göster",
@@ -253,6 +252,20 @@ fn check(module: Option<Module>, program: Option<Module>) -> Vec<String> {
                 ));
             }
         }
+        // The edit session is Düzenle's Düzenleme panel's alone (docs/adr/9201): no layer's menu starts or saves it.
+        for label in [
+            "Düzenlemeyi başlat",
+            "Düzenlemeyi bitir",
+            "Değişiklikleri kaydet",
+            "Değişiklikleri geri al",
+            "Değişiklikleri incele…",
+            "Bütün katmanları kaydet",
+            "Bütün katmanları geri al",
+        ] {
+            if has(&menu, label) {
+                wrong.push(format!("{module:?} in {program:?}, {kind:?}: “{label}” in the menu"));
+            }
+        }
     }
     wrong
 }
@@ -411,6 +424,16 @@ fn each_modules_layer_menu_pictures() {
         size,
         &out,
     );
+}
+
+/// The picture of docs/adr/9201: a CBS data layer's right-click menu without the edit session (Düzenle's Düzenleme
+/// panel holds it), light at 1440×900, into `.run/gui-evidence/kullanim-9201/`. For the owner, run by hand.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn the_data_layer_menu_without_its_session_picture() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9201");
+    std::fs::create_dir_all(&out).expect("a folder");
+    picture(Module::Gis, "Veri katmanı", LayerKind::Data, None, Size::new(1440.0, 900.0), &out);
 }
 
 /// The pictures of docs/adr/9198: Görünürlük ▸ Mobilde ▸ on a CBS project's data layer (Göster, Düzenle, Gösterme) and

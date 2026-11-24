@@ -123,10 +123,8 @@ impl ModuleProfile for Map {
             | E::Duplicate
             | E::Merge
             | E::Remove => true,
-            // A CBS's: a table's edit session (a CBS table is a map's read-only underlay, docs/adr/9196 §2), the move
-            // into a table, counts, time, charts, typed layers and scenarios.
-            E::EditSession
-            | E::Migrate
+            // A CBS's: the move into a table, counts, time, charts, typed layers and scenarios.
+            E::Migrate
             | E::Counts
             | E::Time
             | E::Chart
