@@ -57,8 +57,10 @@ DXF'in nesne çokluğu Netcad'in aktarımından geliyor:
      bunu nitelik olarak saklıyor, yazı üretmiyor.
    - Netcad'in davranışı: her parselin içine etiketin parsel kısmını 3,0 boyunda yazıyor. DXF'te bu türden 46 605 yazı
      var; 42 551'i parselin kendi numarası (“10”).
-   - Sonuç: 42 677 parselin numarası NCZ'nin ayrı yazısıyla zaten görünüyor; Netcad bunlarda numarayı iki kez
-     çiziyor. **4 149 parsel (%8,9) KentOS'ta numarasız**, örneğin `103/TH4`, `4943/1`, `136/104`.
+   - Sonuç: 44 430 parselin numarası NCZ'nin ayrı yazısıyla zaten görünüyor; Netcad bunlarda numarayı iki kez
+     çiziyor. **2 396 parsel KentOS'ta numarasız**, örneğin `103/TH4`, `4943/1`, `136/104`.
+   - İlk ölçüm 4 149 demişti. O ölçüm bir yazıyı yalnız ilk bulduğu poligona saymıştı; üst üste parseller sayıyı
+     şişirdi. Düzeltme ADR 9217'de.
 2. **Semboller.**
    - Durum: SM_SEMBOL'ün 6 664 noktası (ve SM_SIMGE, PL_PARK, TESCILLI_BINA'nın noktaları) yalnız kodunu taşıyor
      (`"Sembol": "S84"`). Sembolün çizimi NCZ'de yok, Netcad'in kütüphanesinde.
@@ -78,7 +80,10 @@ DXF'in nesne çokluğu Netcad'in aktarımından geliyor:
   - Netcad sembol kodlarının KentOS sembollerine eşlenmesi; çizimleri yönetmeliğin lejantından, Netcad'in
     kütüphanesinden değil;
   - NCZ'nin çizgi tipi ve desen kayıtlarının çözülmesi.
-- Bunlar sahibe soruldu.
+- Bunlar sahibe soruldu. Kararları (24 Kasım):
+  - parsel numarası yalnız eksiklere ([ADR 9217](9217-ncz-parcel-numbers-from-labels.md));
+  - semboller yönetmelik lejantından KentOS'un kendi çizimiyle;
+  - NCZ'nin çizgi tipi ve desen kayıtları çözülecek.
 
 ## Uygulama
 

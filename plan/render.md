@@ -237,10 +237,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Parsel sınırları ve KADASTRO yazıları aynı (5,6 milyon hücrede 2'ye karşı 26 hücre fark; 52 018 yazı bire bir).
   - NCZ okuyucusu Netcad'in DXF aktarımından fazlasını alıyor: yapılaşma koşulu sembolleri (40 211 yazı), @ROL.
     DXF'te 148 yazı 0,0'da.
-  - Açık, sahibe soruldu:
-    - 4 149 parselin numarası poligonun etiketinde ve KentOS'ta çizilmiyor;
-    - Netcad sembol kodları (`S84`, 6 664 nokta) çizimsiz;
-    - koruma bantlarının sembollü çizgi tipi ve koruma alanının deseni yok.
+  - [x] Parsel numaraları ([ADR 9217](../docs/adr/9217-ncz-parcel-numbers-from-labels.md), sahibin kararı: yalnız
+    eksiklere).
+    - Durum: 2 396 parselin numarası yalnız etiketindeydi.
+    - Yazılan: ağırlık merkezi tek parselde kalan 1 117'sine, Netcad'in kuralıyla (ağırlık merkezine ortalı, 3 m).
+      1 106'sı Netcad'in etiketiyle aynı yerde ve aynı metinde, farklı numara yok.
+    - Atlanan: üst üste parsellerdeki 1 199'u. Orada Netcad başka bir alandan numara yazıyor, o alan okunamıyor.
+  - [ ] Netcad sembol kodları (`S84`, 6 664 nokta) çizimsiz. Sahibin kararı: yönetmelik lejantından KentOS'un kendi
+    sembolleri.
+  - [ ] Koruma bantlarının sembollü çizgi tipi ve koruma alanının deseni yok. Sahibin kararı: NCZ'nin stil kayıtları
+    çözülecek.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
 
 ### F7 — DWG ve DXF alımı

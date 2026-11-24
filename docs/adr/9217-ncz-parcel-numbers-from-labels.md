@@ -36,7 +36,7 @@ Okuyucu (`kentos_ncz::read`, `parcel_numbers`) okumanın sonunda şu kuralı uyg
 
 1. **Kadastro katmanı:** katmanın etiketli alanlarının çoğu, ve en az 10'u, `ada/parsel` biçiminde (ada sayı, `/`,
    parsel). Planın alanları da etiket taşıyor (`70`, `İRT_A952`, `OA_2_1`) ama Netcad onları yazmıyor. İlk sürüm bu
-   koşul olmadan 41 katmanı kadastro saydı.
+   koşul olmadan KADASTRO'nun yanında 41 katmanı daha kadastro saydı.
 2. **Numara:** `ada/parsel`'in parsel kısmı; adasız etikette (`6587`) etiketin tamamı. Rakam içermeyen ya da boşluklu
    etiket numara değildir (`TESCİL HARİCİ`).
 3. **Zaten görünüyor mu:** aynı katmandaki bir yazı parselin içinde duruyor ve metni numara ya da etiketin tamamıysa,
