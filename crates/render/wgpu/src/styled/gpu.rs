@@ -182,6 +182,81 @@ fn print_level(scale: f64, lod: &kentos_native_style::batches::Lod, level: usize
     }
 }
 
+/// `KENTOS_DIAG_ITEMS` (a measurement's, plan/render.md RM-10): whether a frame's drawn items are printed by kind.
+fn diag_items_asked() -> bool {
+    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ASKED.get_or_init(|| std::env::var_os("KENTOS_DIAG_ITEMS").is_some())
+}
+
+/// A drawn batch's share by its kind, levels, instancing and size. An instanced batch's work is its definition's drawn
+/// items times its instances (each insert draws them all), which `items` does not count.
+fn parts_add(
+    parts: &mut std::collections::BTreeMap<String, (u64, u32)>,
+    g: &GpuBatch,
+    b: &kentos_native_style::batches::StyledBatch,
+    drawn: u64,
+    floats: usize,
+) {
+    use kentos_native_style::batches::CURVE_LEVELS;
+    use kentos_native_style::far_levels::FAR_CEILINGS;
+    let (work, how) = match &g.own {
+        Some(p) => {
+            let per = u64::from(p.per_item.max(1));
+            let definition = if g.proxied {
+                p.proxy.as_ref().map_or(0, |r| u64::from(r.end - r.start)) / per
+            } else if let Some(lod) = &b.lod {
+                lod.ranges(g.level).iter().map(|r| r.len() as u64).sum::<u64>() / floats as u64
+            } else {
+                u64::from(p.vertices) / per
+            };
+            (definition * u64::from(p.count), if g.proxied { "örnekli vekil" } else { "örnekli" })
+        }
+        None => (drawn, ""),
+    };
+    let kind = match &b.kind {
+        BatchKind::Stroke { dash: Some(_), .. } => "çizgi kesikli",
+        BatchKind::Stroke { .. } => "çizgi",
+        BatchKind::Fill { paint: FillPaintBatch::Solid { .. } } => "dolgu",
+        BatchKind::Fill { paint: FillPaintBatch::Hatch { .. } } => "tarama",
+        BatchKind::Fill { .. } => "dolgu (desen/resim)",
+        BatchKind::Marker { .. } => "işaret",
+    };
+    let levels = match &b.lod {
+        None => "düzeysiz".to_owned(),
+        Some(l) => {
+            let name = if l.ceilings[..] == FAR_CEILINGS[..] {
+                "uzak"
+            } else if l.ceilings.starts_with(&CURVE_LEVELS) && l.ceilings.ends_with(&FAR_CEILINGS) {
+                "eğri+uzak"
+            } else if l.ceilings[..] == CURVE_LEVELS[..] {
+                "eğri"
+            } else {
+                "başka"
+            };
+            format!("{name} d{}", g.level)
+        }
+    };
+    let size = if b.range.len() / floats < 1024 { "<1024" } else { "≥1024" };
+    let e = parts.entry(format!("{kind} {how} | {levels} | {size}")).or_insert((0, 0));
+    e.0 += work;
+    e.1 += 1;
+}
+
+/// Prints a frame's parts once for each total, the largest first.
+fn print_items(parts: &std::collections::BTreeMap<String, (u64, u32)>, total: u64) {
+    static LAST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    if LAST.swap(total, std::sync::atomic::Ordering::Relaxed) == total {
+        return;
+    }
+    let mut rows: Vec<_> = parts.iter().collect();
+    rows.sort_by(|a, b| b.1.0.cmp(&a.1.0));
+    let work: u64 = rows.iter().map(|r| r.1.0).sum();
+    eprintln!("ÖĞELER sayılan {total}, iş (örnekliler tanım × örnek) {work}");
+    for (key, (items, batches)) in rows.iter().take(24) {
+        eprintln!("  {items:>9} {batches:>5} toplu  {key}");
+    }
+}
+
 fn forced_level() -> Option<usize> {
     static LEVEL: std::sync::OnceLock<Option<usize>> = std::sync::OnceLock::new();
     *LEVEL.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").ok().and_then(|v| v.parse().ok()))
@@ -2209,24 +2284,31 @@ impl ViewStyled {
     /// share of a frame's work (plan/render.md F3).
     pub fn items(&self) -> u64 {
         let mut n = 0u64;
+        let diag = diag_items_asked();
+        let mut parts: std::collections::BTreeMap<String, (u64, u32)> = std::collections::BTreeMap::new();
         for layer in &self.layers {
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
                 if !g.visible {
                     continue;
                 }
+                let floats = match b.kind {
+                    BatchKind::Stroke { .. } => STROKE_FLOATS,
+                    BatchKind::Marker { .. } => MARKER_FLOATS,
+                    _ => AREA_FLOATS,
+                };
                 // A batch with levels draws one of them (docs/adr/1063 §3, 9207).
-                n += match (&b.lod, &b.instances) {
-                    (Some(lod), None) => {
-                        let floats = match b.kind {
-                            BatchKind::Stroke { .. } => STROKE_FLOATS,
-                            BatchKind::Marker { .. } => MARKER_FLOATS,
-                            _ => AREA_FLOATS,
-                        };
-                        lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum()
-                    }
+                let k = match (&b.lod, &b.instances) {
+                    (Some(lod), None) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
                     _ => u64::from(g.count),
                 };
+                n += k;
+                if diag {
+                    parts_add(&mut parts, g, b, k, floats);
+                }
             }
+        }
+        if diag {
+            print_items(&parts, n);
         }
         n
     }

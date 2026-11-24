@@ -168,7 +168,9 @@ Yerel stilin (56 + 51 + 4), çizicinin (98) ve plot'un (22) sınamaları geçti.
 | SİVAS AVM DWG | 259 012, aynı | 21,7 → 21,6 ms |
 | Suşehri DXF | 493 447, aynı | 50,6 → 49,9 ms |
 
-- DWG'de ve DXF'te çizilen öğe değişmedi; nedenine ayrıca bakılmadı.
+- DWG ile DXF'te çizilen öğe değişmedi, çünkü ikisinde de uzak düzey çizilmiyor:
+  - DWG'nin açılış görünümü 0,153 px/m (6,5 m/piksel), uzak tavanların üstünde;
+  - DXF birimsiz olduğu için milimetre sayılıyor (RM-23) ve 88 px/m'de açılıyor.
 - GPU belleği NCZ'de 208 → 222 MB, sivas.kcad'de 153 → 154 MB.
 - Açılış süresi ve en yüksek bellek değişmedi.
 
@@ -178,20 +180,45 @@ Yerel stilin (56 + 51 + 4), çizicinin (98) ve plot'un (22) sınamaları geçti.
 - sivas.kcad'de fark yok.
 - Farklar kırmızı eğrilerin yarım piksellik kaymaları, dağınık tek pikseller.
 
-**NCZ'de kalan:** öğe sayısı yalnız %8 azaldı. Kalan 831 bin öğenin hangi toplu çizimlerde olduğu ölçülmedi. Adaylar:
+**Kalan öğeler nerede** (`KENTOS_DIAG_ITEMS`). Açılış görünümü NCZ'de 0,0314, sivas.kcad'de 0,0319 px/m, yani
+~32 m/piksel; ikisinde de ilk uzak düzey çiziliyor.
 
-- 1 024 öğeden küçük toplu çizimler: 685 çizim çağrısında ortalama 1 300 öğe düşüyor;
-- örnekli bloklar;
-- uzak tavanın üstündeki tekerlek kareleri: ölçülen kareler 0,037–0,077 px/m'de, 1/16 = 0,0625'in üstündeki ikisinde
-  uzak düzey seçilmiyor.
+| Toplu çizimler (öğe, toplu çizim sayısı) | NCZ (831 268) | sivas.kcad (1 382 830) |
+|---|---|---|
+| Kendi düzeyi olan çizgi, en kaba düzeyde (d3), 1 024'ten büyük, uzak düzey **almamış** | **536 227** (159) | 310 046 (112) |
+| Aynısı, 1 024'ten küçük | 49 063 (203) | 21 364 (121) |
+| Eğri+uzak, ilk uzak düzeyde (d4) | 178 823 (24) | 17 789 (55) |
+| Düz çizgi, ilk uzak düzeyde (d1) | 3 187 (3) | 240 052 (124) |
+| Düz çizgi, uzak düzey **almamış** | 57 252 (261) | 74 631 (132) |
+| Düz dolgu (köşe), uzak düzey **almamış** | — | **623 694** (168) |
+| Düz dolgu, ilk uzak düzeyde | — | 19 533 (1) |
+| Tarama ve desen | — | 73 458 (13) |
+| İşaret | 6 716 (31) | 2 263 (74) |
 
-Sonraki adım: öğeleri toplu çizim türüne, düzeyine ve boyuna göre sayan bir tanı.
+Örnekli toplu çizim (blok) iki dosyanın açılış görünümünde de yok.
+
+**Sonuç:** kalan işin çoğu, 1 024 öğeden büyük olduğu hâlde uzak düzey **almamış** toplu çizimlerde.
+
+- Uzak düzeyi yalnız iki koşul engeller: boyut sınırı ve bellek kuralı. NCZ'nin 159 toplu çizimi ortalama 3 372 öğe
+  çiziyor, boyut sınırının çok üstünde. Geriye bellek kuralı kalıyor: ilk uzak düzey öğelerin dörtte birini atamıyor.
+  Bu, toplu çizim başına ayrıca sayılmadı.
+- Izgara kümelemesi yalnız ızgaradan (8 m) kısa parçaları birleştiriyor. En kaba eğri düzeyi 1 m toleransla
+  sadeleştirilmiş uzun çizgilerin parçaları zaten bundan uzun. Parselin üçgenleri de çoğunlukla bir alan bırakıyor.
+
+32 m/piksel görünümde 1 m tolerans gereğinin yaklaşık 10 katı ince.
+
+**Sonraki adım:**
+
+- Uzak düzeyde yollar, ızgaraya oturtulmadan önce uzak toleransla sadeleştirilecek (Douglas–Peucker).
+- Ayrıca çizgi örneği başına ~90 ns'nin (§5) nereden geldiği ölçülecek. Bu maliyet yalnız uzak görünümü değil her
+  görünümü etkiliyor.
 
 ## Uygulama
 
 - `crates/native/style/src/far_levels.rs` (yeni), `batches.rs` (`decode`), `lib.rs`.
 - §6: `far_levels.rs` (`source`, `per`), `batches.rs` (`Lod.ceilings` vektör, `Lod.alone`, `Lod::ranges`), `gpu.rs`
-  (tanının tavan karşılaştırması `ends_with`).
+  (tanının tavan karşılaştırması `ends_with`; `KENTOS_DIAG_ITEMS`: bir karenin çizilen öğeleri türe, düzeye ve boya
+  göre, örnekliler tanım × örnek olarak).
 - `crates/render/wgpu/src/styled/gpu.rs`: düz dolgunun düzeyi; `items` çizilen düzeyi sayar.
 - `crates/render/wgpu/src/{renderer.rs,stats.rs}`: `FrameStats::styled_items`.
 - `apps/desktop/src/shell/perf/files.rs`: açılış görünümünün sayıları (`drawn`), `KENTOS_PERF_SETTINGS`.

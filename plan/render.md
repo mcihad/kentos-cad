@@ -145,7 +145,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     çiziliyor.
   - [x] Uzak düzeyler eğri ve uzun çizgi düzeylerinin ardına da eklendi (ADR 9207 §6). Tekerlek karesinde GPU
     sivas.kcad'de 84,9 → 69,9 ms, NCZ'de 87,5 → 81,5 ms; çizilen öğe −%11 ve −%8.
-  - **Sıradaki:** NCZ'de kalan 831 bin öğenin dağılımı: toplu çizim türüne, düzeyine ve boyuna göre sayan bir tanı.
+  - [x] Kalan öğelerin dağılımı (`KENTOS_DIAG_ITEMS`, ADR 9207 §6). NCZ'nin 831 bin öğesinin 536 bini, sivas.kcad'in
+    1,38 M öğesinin 624 bin köşesi uzak düzey **almamış** büyük toplu çizimlerde. Izgara kümelemesi uzun parçaları ve
+    alan bırakan üçgenleri azaltamıyor, bellek kuralı düzeyi reddediyor.
+  - **Sıradaki:**
+    - Uzak düzeyde yollar ızgaradan önce uzak toleransla sadeleştirilecek (Douglas–Peucker).
+    - Çizgi örneği başına ~90 ns'nin kaynağı ölçülecek.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
