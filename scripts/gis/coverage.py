@@ -2,7 +2,8 @@
 """The coverage matrix of commands and processing tools (docs/adr/0548; plan/gis.md CBS-41): not command names alone but
 operation + option + data type + host, each cell with the shared cases that exercise it.
 
-Product commands (apps/web/src/contracts/generated/commandCatalog.json):
+Product commands (apps/web/src/contracts/generated/commandCatalog.json: the Rust catalog kentos-commands writes and its
+tests hold, KENTOS_WRITE_CATALOG=1; only its folder is the frozen web app's):
 - hosts: masaüstü (the catalog's `desktop` host), başsız (`headless`), Python (every command is a `kentos.cad` call,
   scripts/python/sdk.py), MCP (every command with a desktop host is a tool, crates/native/mcp/src/tools.rs), sunucu;
 - options: the input schema's choice points: a tagged union's variant (`kind: "distance"`), a string enum's value, a
@@ -12,7 +13,7 @@ Product commands (apps/web/src/contracts/generated/commandCatalog.json):
   in its input (by the key's name, anywhere in the input), or it is the schema's default and a case leaves the key out;
   a target kind is exercised when a command step names (`$uidOf:N`) an object of that kind in the case's document.
 
-Processing tools (`cad.processing.tools` on a new drawing, through the Python SDK; run this script with .run/py's Python):
+Processing tools (`cad.processing.tools` on a new drawing, through the Python SDK built at this commit, docs/adr/0131):
 - options: a `choice` parameter's values, a `boolean`'s true and false;
 - evidence: fixtures/processing/v1/*.json (`run.tool`, `values`; a value left out is the default), and whether the tool
   is run through the command: the `cad.processing.run` / `.batch` cases, and every case of a file the equivalence test
@@ -20,9 +21,10 @@ Processing tools (`cad.processing.tools` on a new drawing, through the Python SD
   give the same drawing), the headless, Python and MCP path.
 
 Writes docs/gis/coverage.json (every cell) and docs/gis/coverage.md (counts and the open cells). `--check` says
-whether both are what this script writes.
+whether both are what this script writes. Without the SDK it stops and says so (exit 2) instead of writing a matrix
+without the tools: what it writes would depend on whether the machine had built the SDK.
 
-    .run/py/bin/python scripts/gis/coverage.py [--check]
+    scripts/fixtures/py scripts/gis/coverage.py [--check]
 """
 
 from __future__ import annotations
@@ -370,8 +372,6 @@ def render(commands: list[dict], processing: list[dict] | None) -> str:
             if opts or r["cases"] == 0 or r["command"] == 0:
                 lines.append(f"| `{r['id']}` | {r['cases']} | {r['command']} | {', '.join(opts) or '—'} |")
         lines.append("")
-    else:
-        lines += ["## İşlemler araçları", "", "Python SDK'sı (`kentos`) yüklenemedi; betiği `.run/py/bin/python` ile çalıştırın.", ""]
     return "\n".join(lines)
 
 
@@ -379,6 +379,10 @@ def main() -> None:
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     commands = command_rows(catalog)
     processing = processing_rows()
+    if processing is None:
+        print("KentOS'un Python SDK'sı yüklenemedi (python/kentos ve yerel modülü, docs/adr/0131): bu commit'te maturin "
+              "ile derleyip betiği scripts/fixtures/py ile çalıştırın; SDK'sız matris yazılmaz.", file=sys.stderr)
+        sys.exit(2)
     data = {"format": "kentos.coverage", "version": 1, "commands": commands, "processing": processing}
     text_json = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     text_md = render(commands, processing)
