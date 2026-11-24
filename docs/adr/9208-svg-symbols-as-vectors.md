@@ -113,22 +113,28 @@ hattı. Önce tümü gösterildi, ardından ortadaki şerareye 8, 4, 4 ve 8 çen
 Karşılaştırma sayfası: `.run/gui-evidence/render/rm11/rm11-karsilastirma.png`.
 
 **Ölçüm** (UHD 770, release, `perf::files`): büyük örnek dosyaların (sivas.kcad, NCZ, DWG, DXF) hiçbirinde SVG işaret
-yok, onlarda dönüşüm hiçbir şey yapmadan döner. Maliyet yapay bir çizimde ölçüldü: 0807 stilli 20 000 hat, 380'er m.
-Tablonun “sonra”sı **ilk sürümün**, yani simgeyi her boyda vektörle çizen sürümün ölçümüdür (b41e253a5). Karma yolun
-ölçümü için sürüm derlemesi 24 Kasım'da bellek azaldığı için durduruldu; ölçüm sahibin onayıyla yinelenecek.
+yok, onlarda dönüşüm hiçbir şey yapmadan döner. Maliyet yapay bir çizimde ölçüldü: 0807 stilli 20 000 hat, 380'er m,
+120 000'den çok şerare. Ölçülen kareler genel görünüm ve çevresi; orada simgeler 128 pikselden küçüktür.
 
-| | Önce | Sonra (ilk sürüm, her boyda vektör) |
-|---|---|---|
-| Tekerlek karesinde GPU (p50 / p95) | 15,8 / 24,0 ms | 16,3 / 20,2 ms |
-| Kaydırma karesinde GPU (p50) | 12,7 ms | 13,0 ms |
-| İmleç karesinde GPU (p50) | 12,8 ms | 13,2 ms |
-| Açılışın ilk karesi, GPU / arayüz | 88 / 52 ms | 136 / 36 ms |
-| GPU'da tutulan | 20,4 MB | 29,4 MB |
-| En yüksek bellek | 341 MB | 363 MB |
+Yapay çizimin tarifi: `svg-cizgi.kcad`'in katmanı ve stilleriyle, 200 × 100'lük bir ızgarada 400 m × 250 m arayla
+30° eğimli 380 m'lik çizgiler. Ham sonuçlar `docs/perf/files-desktop-rm11-{once,ilk,karma}-*.json`.
 
-Kare başına maliyet yarım milisaniyenin altında kaldı. İlk karedeki GPU artışı sonraki karelerde yok, yani tek
-seferlik; olası nedeni örnek tamponlarının ilk yüklenmesi. Arayüzün payı azaldı; olası nedeni simgelerin artık atlasa
-rasterleştirilmemesi. İki neden de ayrıca ölçülmedi. Yazı işaretleri (ENH) bitmap'te kaldı.
+| | Önce | İlk sürüm (her boyda vektör) | Karma (son) |
+|---|---|---|---|
+| Çizilen öğe | 160 000 | 580 198 | 160 000 |
+| Tekerlek karesinde GPU (p50 / p95) | 15,8 / 24,0 ms | 16,3 / 20,2 ms | 15,9 / 23,6 ms |
+| Kaydırma karesinde GPU (p50) | 12,7 ms | 13,0 ms | 12,3 ms |
+| İmleç karesinde GPU (p50) | 12,8 ms | 13,2 ms | 13,3 ms |
+| Açılışın ilk karesi, GPU / arayüz | 88 / 52 ms | 136 / 36 ms | 145 / 38 ms |
+| GPU'da tutulan | 20,4 MB | 29,4 MB | 35,0 MB |
+| En yüksek bellek | 341 MB | 363 MB | 372 MB |
+
+- **Kare süreleri:** karma yolda öncekiyle aynı, ölçüm gürültüsü içinde; uzakta yine bitmap çiziliyor.
+- **Bedel:** iki çizim yolu birlikte tutulduğu için 120 000 simgede GPU'da +14,6 MB ve ilk karede tek seferlik
+  +57 ms. İlk karenin GPU artışı sonraki karelerde yok; olası nedeni tamponların ilk yüklenmesi, ayrıca ölçülmedi.
+- Yazı işaretleri (ENH) bitmap'te kaldı.
+- Ölçümün sırası: ilk sürüm b41e253a5 ile. Karma yolun sürüm derlemesi 24 Kasım'da bellek azaldığı için bir kez
+  durduruldu; sahibin onayıyla 4 iş parçacığıyla yeniden derlendi.
 
 ## Uygulama
 
