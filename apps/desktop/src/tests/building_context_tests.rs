@@ -235,67 +235,6 @@ fn screen(app: &App, x: f64, y: f64) -> iced::Point {
     iced::Point::new(sx as f32, sy as f32)
 }
 
-fn dimensions(app: &App) -> Vec<(f64, String)> {
-    let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities()
-        .filter_map(|e| match e {
-            kentos_commands::Entity::Dimension(d) => Some((
-                (d.b.x - d.a.x).hypot(d.b.y - d.a.y),
-                d.base.layer_id.clone(),
-            )),
-            _ => None,
-        })
-        .collect()
-}
-
-#[test]
-fn the_plus_beside_a_wall_s_distance_writes_a_permanent_dimension_that_follows_the_walls() {
-    use crate::viewport::Event;
-    let (mut app, [a, _], ids) = two_walls();
-    let _ = app.update(Message::WindowResized(iced::Size::new(1440.0, 900.0)));
-    app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds {
-            min_x: 17.0,
-            min_y: 18.0,
-            max_x: 27.0,
-            max_y: 27.0,
-        },
-        24.0,
-    );
-    app.selection.set([a]);
-    // The pointer by the wall's right face: its distances drawn, the + across from each padlock.
-    let _ = app.update(Message::Viewport(Event::Moved(screen(&app, 20.4, 22.5))));
-    let plus = app.session.temporary_permanents();
-    assert!(!plus.is_empty(), "a + beside the clear distance");
-    assert_eq!(dimensions(&app).len(), 0);
-    let p = screen(&app, plus[0].x, plus[0].y);
-    let _ = app.update(Message::Viewport(Event::Moved(p)));
-    let _ = app.update(Message::Viewport(Event::Pressed(p)));
-    let _ = app.update(Message::Viewport(Event::Released(p)));
-    let written = dimensions(&app);
-    assert_eq!(written.len(), 1, "one dimension, not a chain");
-    assert!(
-        (written[0].0 - 3.75).abs() < 1e-6,
-        "the clear distance: {written:?}"
-    );
-    assert_eq!(
-        written[0].1, "mm-xxxx-olcu",
-        "KentOS Mimari's dimension layer"
-    );
-    assert!(crate::files_testing::last_said(&app).contains("Kalıcı ölçü yazıldı"));
-    // The second wall moved half a metre away: the dimension, bound to both faces, says 4.25.
-    command(
-        &mut app,
-        "cad.entities.transform",
-        json!({"uids": [ids[1]], "transform": {"kind": "move", "dx": 0.5, "dy": 0.0}}),
-    );
-    let moved = dimensions(&app);
-    assert!(
-        (moved[0].0 - 4.25).abs() < 1e-6,
-        "it follows the walls: {moved:?}"
-    );
-}
-
 #[test]
 fn the_snap_marker_says_a_wall_s_face_and_axis_in_a_building_s_words() {
     use kentos_geometry_core::entity::Shape;

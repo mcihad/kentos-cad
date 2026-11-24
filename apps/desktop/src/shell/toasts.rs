@@ -11,7 +11,7 @@ use crate::app::{App, Message};
 
 impl App {
     /// Shows a notice; the same one again counts up instead of stacking.
-    pub(crate) fn toast(&mut self, toast: Toast<Message>) {
+    pub fn toast(&mut self, toast: Toast<Message>) {
         self.toasts.push(toast);
     }
 
@@ -28,7 +28,7 @@ impl App {
 
     /// What a window that closed on its Kaydet did: in the message log as before, and as a notice,
     /// since the window that would have said it is gone. A warning stays longer; an error waits.
-    pub(crate) fn announce(&mut self, level: Level, text: impl Into<String>) {
+    pub fn announce(&mut self, level: Level, text: impl Into<String>) {
         let text = crate::keys::shown(&text.into());
         self.say(level, text.clone());
         // The first sentence is the title, the rest its body: “Tablo kaydedildi” · “Ctrl+Z geri alır.”

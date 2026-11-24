@@ -87,7 +87,7 @@ impl Viewport {
     }
 
     /// The underlay models' plan at the active level (docs/adr/8101): its version and lines; drawn under the drawing.
-    pub(crate) fn set_underlay(&mut self, plan: (u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)) {
+    pub fn set_underlay(&mut self, plan: (u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)) {
         self.underlay = (!plan.1.is_empty()).then_some(plan);
     }
 

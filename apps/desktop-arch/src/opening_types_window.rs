@@ -1591,5 +1591,5 @@ fn refit(w: &mut Window, t: &OpeningType, f: &Format) {
 }
 
 #[cfg(test)]
-#[path = "../tests/opening_types_tests.rs"]
+#[path = "tests/opening_types_tests.rs"]
 mod tests;

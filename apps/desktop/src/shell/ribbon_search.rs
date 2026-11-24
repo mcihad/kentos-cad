@@ -134,7 +134,7 @@ impl App {
     /// What the text typed finds: the catalog's commands, then the user's
     /// models by their names, ranked together (models have no aliases;
     /// ties keep the web's order, the models registered after).
-    pub(crate) fn hits(&self) -> Vec<Hit> {
+    pub fn hits(&self) -> Vec<Hit> {
         let q = fold_turkish(&self.ribbon_search);
         // A module's program finds only its own commands (docs/adr/0802).
         let mut scored: Vec<(f64, Hit)> = scored_commands(&q, self.module_names())
@@ -183,7 +183,7 @@ impl App {
 
     /// The rows for the text typed: where each command lives, or why it
     /// does not run here; a command that does not run here is dimmed.
-    pub(crate) fn search_rows(&self) -> Vec<Found<'static>> {
+    pub fn search_rows(&self) -> Vec<Found<'static>> {
         self.hits()
             .into_iter()
             .map(|hit| {
@@ -245,13 +245,13 @@ impl App {
     }
 
     /// The text typed into Komut ara.
-    pub(crate) fn search_typed(&mut self, text: String) {
+    pub fn search_typed(&mut self, text: String) {
         self.ribbon_search = text;
     }
 
     /// Enter or a click on a row: the command runs; the box empties and
     /// gives the keyboard back (a tool takes it next, the web's `view.focus`).
-    pub(crate) fn search_run(&mut self, index: usize) -> Task<Message> {
+    pub fn search_run(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
             Some(Hit::Extension(hit)) => {

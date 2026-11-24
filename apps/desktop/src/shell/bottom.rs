@@ -271,7 +271,7 @@ impl App {
 
     /// The panel's lists' height: the kept panel height as the window shows
     /// it, less the tab row (layout.rs).
-    pub(crate) fn bottom_log(&self) -> f32 {
+    pub fn bottom_log(&self) -> f32 {
         self.bottom_log
             .unwrap_or_else(command_line::default_log_height)
     }

@@ -126,6 +126,10 @@ iced_runtime = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# The test kit's PDF reader inflates the plotter's streams (`testing`; the core's own tests have it as a dev-dependency).
+miniz_oxide = { workspace = true, optional = true }
+# The test kit's typography lock (appearance.rs `TYPOGRAPHY`; a dev-dependency of the core's own tests too).
+parking_lot = { version = "=0.13.0", optional = true }
 # The same Unicode grapheme rules already used by Iced's editor; persistent text ranges remain scalar indexed.
 unicode-segmentation = "=1.13.3"
 # The digital project regulation's rule catalog (docs/adr/8062): Dijital proje kuralları, its IFC rows and schema
@@ -145,7 +149,7 @@ raw-window-handle = "=0.6.2"
 [features]
 # The core as its own tests see it, for a module package's tests (docs/adr/9199 §3.6): the test helpers
 # (files_testing …) and the switches that keep a test off the device's keychain, the network and the e-signature card.
-testing = []
+testing = ["dep:miniz_oxide", "dep:parking_lot"]
 # The e-signature's software test card and in-process test server for demos and the real-window acceptance
 # (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 and KENTOS_IMZA_DENEME_SUNUCU=1 pick them. Never in a release build.
 esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]

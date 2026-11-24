@@ -849,5 +849,5 @@ impl MaterialsWindowApp for App {
 }
 
 #[cfg(test)]
-#[path = "../tests/materials_tests.rs"]
+#[path = "tests/materials_tests.rs"]
 mod tests;

@@ -2,6 +2,9 @@
 //! PDF/A, one a sheet, on A4 multiples and named by EK-2, and writes the delivery list beside them; a wrong name, one file
 //! for all and PDF/A off shut the gate, each said. By hand: an independent reading (qpdf, Poppler) of the section
 //! building's and the 2+1 flat's packages, and of files broken on purpose.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::path::{Path, PathBuf};
 
@@ -242,7 +245,7 @@ fn an_independent_reading_passes_the_packages_and_refuses_broken_files() {
     finish(&mut building);
     let (ok, verdict) = independent(&first);
     assert!(ok, "{verdict}");
-    let mut flat = crate::traces::ek_rules_tests::flat();
+    let mut flat = crate::traces::flat();
     let second = evidence("bagimsiz-2p1");
     permit_publication(&mut flat, &second);
     assert!(report_ready(&flat), "the flat's check passes");

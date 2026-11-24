@@ -10,6 +10,9 @@
 //! plotter's tests/support/files.rs). Python and the MCP server replay the
 //! same file; the mouse-and-keyboard trace draws the same room
 //! (fixtures/interaction/v1/acceptance-room.json).
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::collections::BTreeMap;
 

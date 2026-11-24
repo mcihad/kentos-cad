@@ -103,8 +103,8 @@ impl App {
     pub(crate) fn apply_appearance(&mut self) {
         // A font-sensitive test may already hold this on the same thread;
         // another test's App::boot must not reset its global font mid-layout.
-        #[cfg(test)]
-        let _typography = tests::TYPOGRAPHY.lock();
+        #[cfg(any(test, feature = "testing"))]
+        let _typography = TYPOGRAPHY.lock();
         let s = &self.settings;
         let word = |key: &str| s.effective(key).as_str().unwrap_or_default().to_owned();
         self.mode = match word("appearance.theme").as_str() {
@@ -160,9 +160,15 @@ impl App {
     }
 }
 
+/// The interface's typography is KentOS UI's, one for the whole process: tests that measure text hold this for the
+/// whole interaction; the test-only apply_appearance also takes it, including a nested App boot on this thread (the
+/// core's tests and a module package's, `testing`). Do not join a worker that applies appearance while holding it.
+#[cfg(any(test, feature = "testing"))]
+pub static TYPOGRAPHY: parking_lot::ReentrantMutex<()> = parking_lot::ReentrantMutex::new(());
+
 #[cfg(test)]
 pub(crate) mod tests {
-    use parking_lot::ReentrantMutex;
+    pub(crate) use super::TYPOGRAPHY;
 
     use kentos_ui::theme::typography::{self, Family, Typography};
     use kentos_ui::theme::{Accent, Mode};
@@ -173,11 +179,6 @@ pub(crate) mod tests {
     use crate::files_testing::app_with_drawing;
     use crate::viewport::Canvas;
 
-    /// The interface's typography is KentOS UI's, one for the whole process:
-    /// Tests that measure text hold this for the whole interaction; test-only
-    /// apply_appearance also takes it, including nested App boot on this thread.
-    /// Do not join a worker that applies appearance while holding this guard.
-    pub(crate) static TYPOGRAPHY: ReentrantMutex<()> = ReentrantMutex::new(());
 
     /// A look's preference chosen as Uygulama ayarları chooses it.
     fn choose(app: &mut App, key: &str, value: Value) {

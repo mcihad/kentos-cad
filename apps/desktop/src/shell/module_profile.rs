@@ -207,4 +207,4 @@ impl ModuleProfile for NoProject {
 
 /// The modules whose parts are still in the core's package (docs/adr/9199 §4.5): the shell takes them with the ones a
 /// program registers.
-pub(crate) const IN_CORE: &[&'static dyn crate::module_parts::ModuleParts] = &[&crate::arch_parts::Architecture];
+pub(crate) const IN_CORE: &[&'static dyn crate::module_parts::ModuleParts] = &[];

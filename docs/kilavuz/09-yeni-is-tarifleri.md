@@ -173,7 +173,9 @@ masaüstü sınamaları koşar (`module_catalog_tests`).
      çekirdeğe bağlanır; `ModuleParts`'ı uygular, `register()`'ı programların `main`'inde çağrılır, sınamalarında
      `ctor` ile çağrılır. Durumu `App.modules`'te, iletisi `Message::Module`, penceresi `Dialog::Module`'dür;
      `impl App`'leri uzantı trait'idir (`ext.rs`). `module_deps.py`'nin `PACKAGES`'ına girer. Programlar arası
-     sınamalar `apps/kentos-cad/tests/programs`'tadır.
+     sınamalar `apps/kentos-cad/tests/programs`'tadır. Sınamaları çekirdeğin sınama kitini kullanır
+     (`kentos-desktop`'un `testing` özelliği: `files_testing`, `tools_scenes`, `tools_screens::take` …); modülün
+     resimleri kendi `screens` toplayıcısındadır (örneği `apps/desktop-arch/src/tests/arch_screens.rs`).
 8. **Resim:** modülün penceresi, her katman türünün menüsü ve sihirbazı.
 
 **Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici; karar [ADR 9197](../adr/9197-mobile-clients.md)):

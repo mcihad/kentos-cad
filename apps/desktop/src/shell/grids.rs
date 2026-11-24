@@ -3,8 +3,8 @@
 //! (else `~/.local/share/…`; `KENTOS_GRID_DIR` first) under their SHA-256,
 //! `<id>.gsb` an NTv2 grid, `<id>.gtx` or `<id>.tif` a geoid model or a
 //! velocity grid (docs/adr/0631 §3), the name of the file each came from and
-//! its kind beside it in `<id>.json`, as QGIS and ArcGIS keep theirs in the
-//! user's folder. A project names its grid choice's file by
+//! its kind beside it in `<id>.json`: the grids are the user's, kept in the
+//! user's folder, not the project's. A project names its grid choice's file by
 //! its SHA-256 and size (`GridChoice`). The grids the open project names are
 //! read into the core (`ntv2::register`) on a thread of their own when it
 //! opens and when its choices change; one this device does not have is said

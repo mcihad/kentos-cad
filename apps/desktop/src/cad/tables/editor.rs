@@ -36,7 +36,7 @@ use crate::traces::Control;
 
 /// A schedule's cells and its draft (UR-058), apart so this file keeps to its subject's size.
 mod schedule;
-pub(crate) use schedule::schedule_cell;
+pub use schedule::schedule_cell;
 use schedule::schedule_planned;
 
 /// The window's title, which a trace names it by.
@@ -342,7 +342,7 @@ impl Editor {
 impl App {
     /// Tabloyu düzenle for the table at `slot` (the selection's, or a double
     /// click's); the keyboard goes to the grid (from the command line too).
-    pub(crate) fn open_table_editor(&mut self, slot: Slot) -> Task<Message> {
+    pub fn open_table_editor(&mut self, slot: Slot) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -527,7 +527,7 @@ impl App {
         None
     }
 
-    pub(crate) fn table_editor_event(&mut self, event: Event) -> Task<Message> {
+    pub fn table_editor_event(&mut self, event: Event) -> Task<Message> {
         let format = self.format();
         let Some(e) = self.table_editor.as_mut() else {
             return Task::none();

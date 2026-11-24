@@ -123,7 +123,7 @@ impl App {
     }
 
     /// Whether `surface` has its own window now: apart and open.
-    pub(crate) fn surface_wanted(&self, surface: Surface) -> bool {
+    pub fn surface_wanted(&self, surface: Surface) -> bool {
         self.is_apart(surface) && surface.spec().is_open(self)
     }
 

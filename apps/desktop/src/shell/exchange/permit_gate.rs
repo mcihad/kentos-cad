@@ -167,8 +167,8 @@ impl App {
     }
 
     /// The rule asked and answered now, on this thread (tests and pictures).
-    #[cfg(test)]
-    pub(crate) fn permit_gate_settle(&mut self) {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn permit_gate_settle(&mut self) {
         let generation = self.document.as_ref().map(|d| d.model.generation()).unwrap_or_default();
         let Some(facts) = self.permit_gate_facts() else {
             return;

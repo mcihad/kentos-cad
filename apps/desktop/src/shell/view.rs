@@ -834,7 +834,7 @@ pub(crate) fn rgba8(color: Color) -> Rgba8 {
 }
 
 /// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.
-pub(crate) fn hex_color(text: &str) -> Color {
+pub fn hex_color(text: &str) -> Color {
     let hex = text.trim_start_matches('#');
     if hex.len() == 6
         && let Ok(value) = u32::from_str_radix(hex, 16)

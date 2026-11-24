@@ -242,7 +242,7 @@ fn group<'a>(title: &'a str, rows: Vec<Element<'a, Message>>) -> Element<'a, Mes
 
 impl App {
     /// Opens the window with an empty search, its field focused.
-    pub(crate) fn open_shortcuts(&mut self) -> Task<Message> {
+    pub fn open_shortcuts(&mut self) -> Task<Message> {
         self.shortcuts_query.clear();
         self.dialog = Some(crate::app::Dialog::Shortcuts);
         iced::widget::operation::focus(SEARCH)

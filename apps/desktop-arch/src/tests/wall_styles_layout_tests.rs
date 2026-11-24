@@ -178,7 +178,7 @@ fn inside(a: Rectangle, b: Rectangle) -> bool {
 
 #[test]
 fn short_large_wall_styles_scrolls_the_right_form_and_left_list_without_hiding_actions() {
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     let _restore = RestoreTypography;
     for height in [650., 682.] {
         let size = Size::new(1100., height);
@@ -275,7 +275,7 @@ fn short_large_wall_styles_scrolls_the_right_form_and_left_list_without_hiding_a
 
 #[test]
 fn wide_standard_wall_styles_keeps_its_natural_size_and_cancel_keeps_the_model() {
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     let _restore = RestoreTypography;
     let size = Size::new(1440., 900.);
     let mut app = open(size, 13, false);
@@ -309,7 +309,7 @@ fn wide_standard_wall_styles_keeps_its_natural_size_and_cancel_keeps_the_model()
 
 #[test]
 fn width_keeps_decimal_input_focused_and_rejects_invalid_drafts_on_save() {
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     let _restore = RestoreTypography;
     let mut app = open(Size::new(1280., 800.), 14, false);
     let before = app.saved_wall_styles();

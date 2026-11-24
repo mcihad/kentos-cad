@@ -986,7 +986,7 @@ pub struct App {
     /// The UCSs Önceki gives back (ucs.rs, docs/adr/0261 §1).
     pub(crate) ucs_history: crate::ucs::UcsHistory,
     /// Kat görünümü (active_level.rs, docs/adr/0715): which levels the plan shows, the session's.
-    pub(crate) level_view: kentos_interaction::level_view::LevelView,
+    pub level_view: kentos_interaction::level_view::LevelView,
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
     pub(crate) last_template: Option<String>,
@@ -1031,11 +1031,11 @@ pub struct App {
     /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
     pub propose_window: Option<Box<crate::propose_window::Window>>,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
-    pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
+    pub scene3d_window: Option<Box<crate::scene3d_window::Window>>,
     /// IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12): none until a file is opened in it.
-    pub(crate) ifc_viewer: Option<Box<crate::ifc_viewer::IfcWindow>>,
+    pub ifc_viewer: Option<Box<crate::ifc_viewer::IfcWindow>>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
-    pub(crate) space_merging: Option<(kentos_commands::SpacesEdit, String)>,
+    pub space_merging: Option<(kentos_commands::SpacesEdit, String)>,
     /// The object a drawing tool has just written: its form opens (forms/mod.rs, docs/adr/0403 §4).
     pub(crate) form_on_create: Option<kentos_domain::Slot>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
@@ -1188,7 +1188,7 @@ pub struct App {
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
     pub(crate) sheet_data_key: Option<u64>,
     /// The window's notices in its corner (toasts.rs): a save that closed its window, a copy.
-    pub(crate) toasts: kentos_ui::widget::Toasts<Message>,
+    pub toasts: kentos_ui::widget::Toasts<Message>,
     /// The module this program works as (docs/adr/0801): KentOS Mimari, Harita or GIS; none in kentos-cad, every
     /// module at once.
     pub program: Option<kentos_launch::Module>,

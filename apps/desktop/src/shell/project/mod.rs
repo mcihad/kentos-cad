@@ -7,7 +7,7 @@
 //! not an undo step, and a new coordinate system is assigned, never a
 //! transformation of the coordinates (CLAUDE.md §5).
 
-pub(crate) mod arch;
+pub mod arch;
 mod area_map;
 
 /// docs/adr/5300: the EPSG extents the area map of a system (and the way to a second one) reads, for the tests.
@@ -25,7 +25,7 @@ pub(crate) mod ask_work;
 mod choices;
 mod content;
 mod heights;
-pub(crate) mod plan_notes;
+pub mod plan_notes;
 mod custom_crs;
 pub(crate) mod hand_over;
 mod scale;
@@ -79,7 +79,7 @@ fn message(event: Event) -> Message {
 pub use settings::Event as SettingsEvent;
 
 /// A Proje ayarları event as the app's message (grids.rs sends Izgaralar's).
-pub(crate) fn settings_message(e: SettingsEvent) -> Message {
+pub fn settings_message(e: SettingsEvent) -> Message {
     message(Event::Settings(e))
 }
 

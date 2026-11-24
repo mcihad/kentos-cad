@@ -47,7 +47,7 @@ use crate::underlay_model::Loaded;
 
 /// How the viewer keys an underlay's object, `altlik:<underlay id>:<its GlobalId>`, and how Altlık modeller is asked
 /// for one, `altlik:<underlay id>:<its index in the file>` ([`App::building3d_select`]).
-pub(crate) const UNDERLAY_OWNER: &str = "altlik:";
+pub const UNDERLAY_OWNER: &str = "altlik:";
 const STOREYS: &str = "Katlar";
 const ALL_STOREYS: &str = "Bütün katları göster";
 /// The application the drawing's model names in its header: nothing reads it back.
@@ -153,8 +153,8 @@ fn make(doc: &Document, underlays: &[Shown], stop: &AtomicBool) -> Option<Result
 }
 
 /// A building in the window.
-pub(crate) struct Building3d {
-    pub(crate) viewer: Viewer,
+pub struct Building3d {
+    pub viewer: Viewer,
     parts: Vec<Part>,
     /// What the status bar says of the drawing's model (its schema), before the findings.
     schema: Vec<(String, String)>,
@@ -168,7 +168,7 @@ pub(crate) struct Building3d {
     taken: u64,
     found: Option<u64>,
     /// The underlay models shown in it (docs/adr/8101).
-    pub(crate) underlays: Vec<Shown>,
+    pub underlays: Vec<Shown>,
 }
 
 impl std::fmt::Debug for Building3d {
@@ -189,14 +189,14 @@ impl Drop for Building3d {
 impl Building3d {
     /// How many of the drawing's objects have an element's body (a room and an opening are no body): what the IFC
     /// file holds.
-    #[cfg(test)]
-    pub(crate) fn bodies(&self) -> usize {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn bodies(&self) -> usize {
         self.with_body(|c| !c.is_volume())
     }
 
     /// How many of the drawing's objects of `class` have a body (rooms, the far zones).
-    #[cfg(test)]
-    pub(crate) fn with_body_of(&self, class: &str) -> usize {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn with_body_of(&self, class: &str) -> usize {
         let Some(v) = self.viewer.view() else { return 0 };
         let input = v.input();
         let mut objects: Vec<usize> =
@@ -207,7 +207,7 @@ impl Building3d {
     }
 
     /// How many of the drawing's objects of the categories `of` have a body (an object's bodies are one after another).
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     fn with_body(&self, of: impl Fn(Category) -> bool) -> usize {
         let Some(v) = self.viewer.view() else { return 0 };
         let input = v.input();
@@ -219,8 +219,8 @@ impl Building3d {
     }
 
     /// How many bodies the viewer has: the drawing's, its rooms', the underlays'.
-    #[cfg(test)]
-    pub(crate) fn count(&self) -> usize {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn count(&self) -> usize {
         self.viewer.view().map_or(0, |v| v.input().bodies.len())
     }
 
@@ -281,20 +281,20 @@ impl Building3d {
     }
 
     /// How many storeys the drawing's model has.
-    #[cfg(test)]
-    pub(crate) fn storeys_count(&self) -> usize {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn storeys_count(&self) -> usize {
         self.storeys().len()
     }
 
     /// The legend's swatches as the scene shows them now.
-    #[cfg(test)]
-    pub(crate) fn legend(&self) -> Vec<(&'static str, [f32; 4])> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn legend(&self) -> Vec<(&'static str, [f32; 4])> {
         self.viewer.view().map_or_else(Vec::new, |v| v.legend())
     }
 
     /// How many objects the findings painted are on.
-    #[cfg(test)]
-    pub(crate) fn found_shown(&self) -> usize {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn found_shown(&self) -> usize {
         self.viewer.view().map_or(0, |v| v.found().len())
     }
 
@@ -510,7 +510,7 @@ impl App {
     /// An object selected in the plan by its persistent id (none, or what the drawing has no object for, empties the
     /// selection, as a click on nothing in the plan does) and chosen in 3D; an underlay's object
     /// (`altlik:<underlay id>:<its index in the file>`) shown in Altlık modeller, the plan's selection kept.
-    pub(crate) fn building3d_select(&mut self, owner: Option<String>) {
+    pub fn building3d_select(&mut self, owner: Option<String>) {
         if let Some(rest) = owner.as_deref().and_then(|o| o.strip_prefix(UNDERLAY_OWNER))
             && let Some((id, object)) = rest.rsplit_once(':')
             && let Ok(object) = object.parse::<usize>()

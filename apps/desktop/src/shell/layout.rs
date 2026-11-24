@@ -34,7 +34,7 @@ pub const FILE_NAME: &str = "yerlesim.json";
 
 /// The layout file of `program` (docs/adr/0802): kentos-cad's `yerlesim.json`, a module's
 /// `yerlesim-mimari.json`, `yerlesim-harita.json`, `yerlesim-cbs.json`.
-pub(crate) fn file_name(program: Option<kentos_launch::Module>) -> String {
+pub fn file_name(program: Option<kentos_launch::Module>) -> String {
     program.map_or_else(
         || FILE_NAME.to_owned(),
         |m| format!("yerlesim-{}.json", m.id()),
@@ -68,7 +68,7 @@ impl Keeper {
     /// The layout `program` keeps in `folder` (docs/adr/0802: each module's program is an application of its
     /// own): kentos-cad's in `yerlesim.json`, a module's in `yerlesim-<modül>.json`. A module's program run for
     /// the first time starts from kentos-cad's sizes; it writes only its own file.
-    pub(crate) fn open_for(folder: &Path, program: Option<kentos_launch::Module>) -> Self {
+    pub fn open_for(folder: &Path, program: Option<kentos_launch::Module>) -> Self {
         let path = folder.join(file_name(program));
         let text = std::fs::read_to_string(&path)
             .ok()
@@ -157,13 +157,13 @@ impl Keeper {
     }
 
     /// When the kept layout is to be written.
-    pub(crate) fn due(&self) -> Option<Instant> {
+    pub fn due(&self) -> Option<Instant> {
         self.due
     }
 
     /// Writes the kept layout once it is due (`force`: now, the window
     /// closes). A file that cannot be written is passed over.
-    pub(crate) fn write(&mut self, now: Instant, force: bool) {
+    pub fn write(&mut self, now: Instant, force: bool) {
         let Some(due) = self.due else {
             return;
         };
@@ -362,7 +362,7 @@ impl App {
 
     /// The bottom panel's edge was dragged to `log` (its lists' height) or,
     /// `None`, double-clicked: the panel's height by the web's rule, kept so.
-    pub(crate) fn bottom_dragged(&mut self, log: Option<f32>, now: Instant) {
+    pub fn bottom_dragged(&mut self, log: Option<f32>, now: Instant) {
         let panel = log.map_or(BOTTOM_HEIGHT.reset, |log| {
             f64::from(log + Self::bottom_bar())
         });

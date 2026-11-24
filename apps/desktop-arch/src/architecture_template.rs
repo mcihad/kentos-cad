@@ -294,5 +294,5 @@ impl Package {
 }
 
 #[cfg(test)]
-#[path = "../tests/architecture_template_tests.rs"]
+#[path = "tests/architecture_template_tests.rs"]
 mod tests;

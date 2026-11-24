@@ -1275,5 +1275,5 @@ impl RoomModulesWindowApp for App {
 }
 
 #[cfg(test)]
-#[path = "../tests/room_modules_tests.rs"]
+#[path = "tests/room_modules_tests.rs"]
 mod tests;

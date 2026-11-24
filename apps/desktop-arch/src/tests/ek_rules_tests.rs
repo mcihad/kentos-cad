@@ -3,33 +3,11 @@
 //! standards package's rule.
 
 use crate::arch_ext::*;
-use super::player::AREA;
-use super::{Player, Trace, VARIANTS, scratch_file};
 use crate::app::{App, Message};
 use crate::arch::ArchState;
 
 /// One replay at a time: the trace's scratch file is shared by the tests that play it.
-static REPLAY: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-/// The 2+1 flat as KentOS Mimari draws it (the layer key on, Dış duvar 25).
-pub(crate) fn flat() -> App {
-    let _one = REPLAY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let traces = Trace::all().expect("the traces read");
-    let trace = traces.iter().find(|t| t.id == "acceptance-flat").expect("the 2+1 trace");
-    let variant = VARIANTS[0];
-    let (mut app, _) = App::boot(None);
-    app.memory.layer_keys = true;
-    let style = kentos_commands::builtin_wall_styles()
-        .into_iter()
-        .find(|s| s.id == crate::arch_start::FIRST_WALL_STYLE)
-        .expect("KentOS's exterior wall");
-    kentos_interaction::wall::take_style(&mut app.memory, &style);
-    let problems = Player::new(&mut app, trace, variant, AREA, scratch_file(trace, variant))
-        .expect("the trace starts")
-        .play(None);
-    assert!(problems.is_empty(), "{problems:#?}");
-    app
-}
+use crate::traces::flat;
 
 /// A KentOS command on the drawing, as the Denetim tab's writes run one; its answer must say it was done.
 fn run(app: &mut App, command: &str, input: serde_json::Value) {
@@ -242,7 +220,7 @@ fn an_independent_reading_of_the_flat_s_dxf_agrees_rule_by_rule() {
 /// `.run/gui-evidence/dijital-ek34-8064/`:
 ///
 /// ```text
-/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ek_rules_tests::screens -- --ignored --nocapture
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop-arch ek_rules_tests::screens -- --ignored --nocapture
 /// ```
 #[test]
 #[ignore = "pictures for the owner, run by hand"]

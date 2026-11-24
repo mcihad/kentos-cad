@@ -38,5 +38,5 @@ impl ArchStartApp for App {
 }
 
 #[cfg(test)]
-#[path = "../tests/arch_start_tests.rs"]
+#[path = "tests/arch_start_tests.rs"]
 mod tests;

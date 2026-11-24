@@ -15,6 +15,9 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
@@ -25,7 +28,7 @@ use crate::tools_screens::{Pointed, Scene, open_split};
 use crate::wall_scenes::{fit, opened};
 
 /// The level the stair climbs: Zemin kat of 3.06 m.
-pub(crate) fn on_level(app: &mut App) {
+pub fn on_level(app: &mut App) {
     let Some(doc) = app.document.as_mut() else {
         return;
     };

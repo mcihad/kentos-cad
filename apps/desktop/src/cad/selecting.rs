@@ -79,7 +79,7 @@ impl App {
     /// `view.zoomSelection` (Ctrl+Shift+F): the selection's box as large as
     /// it fits, 96 px in from the edges (the web's `zoomToSelection`,
     /// docs/adr/0056); nothing with no selection (the web's command is off).
-    pub(crate) fn zoom_selection(&mut self) {
+    pub fn zoom_selection(&mut self) {
         // Nothing of the drawing selected: a data layer's selected rows framed, when there are (docs/adr/9133).
         if self.selection.is_empty() {
             self.zoom_to_data_selection();

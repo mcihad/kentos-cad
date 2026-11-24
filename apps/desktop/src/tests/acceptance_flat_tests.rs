@@ -6,6 +6,9 @@
 //! the reopening. With `KENTOS_ACCEPTANCE_OUT` the drawing is saved there as `desktop.kcad` for the hosts'
 //! comparison (`acceptance_flat.py --compare`). The mouse-and-keyboard trace draws the same apartment
 //! (fixtures/interaction/v1/acceptance-flat.json); `perf::flat` measures it, copied.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::collections::BTreeMap;
 
@@ -71,7 +74,7 @@ fn bound(output: &Value, key: &Value, names: &mut BTreeMap<String, String>) {
 }
 
 /// The app with the scenario's empty project open and the agent link up; the folder its files go to.
-pub(crate) fn opened(dir_name: &str) -> (App, std::path::PathBuf) {
+pub fn opened(dir_name: &str) -> (App, std::path::PathBuf) {
     opened_with(SCENARIO, dir_name)
 }
 
@@ -95,7 +98,7 @@ pub(crate) fn opened_with(text: &str, dir_name: &str) -> (App, std::path::PathBu
 
 /// The scenario's commands in the open drawing, no checks: what the performance measures copy; its bound ids.
 #[cfg(unix)]
-pub(crate) fn drawn(app: &mut App) -> BTreeMap<String, String> {
+pub fn drawn(app: &mut App) -> BTreeMap<String, String> {
     drawn_with(app, SCENARIO)
 }
 

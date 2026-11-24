@@ -33,9 +33,14 @@
 //! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
 //! ```
 //!
+//! Duvar stilleri, Birleşimleri denetle and a style renamed are Mimari's windows: its package takes those pictures
+//! (wall_style_scenes.rs, docs/adr/9199 §4.11); the helpers that draw the walls stay here, in the core's test kit.
+//!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
-use crate::arch;
 use kentos_domain::Slot;
 use serde_json::json;
 
@@ -46,7 +51,7 @@ use crate::files_testing::make_cad;
 use crate::tools_scenes::{E, N, Objects, click, hover, open_edited, run, typed};
 use crate::tools_screens::Scene;
 
-pub(crate) fn fit(app: &mut App, w: f64, h: f64) {
+pub fn fit(app: &mut App, w: f64, h: f64) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E - 1.5,
@@ -59,7 +64,7 @@ pub(crate) fn fit(app: &mut App, w: f64, h: f64) {
 }
 
 /// A CAD drawing at 1:`scale`, of `objects`.
-pub(crate) fn opened(app: &mut App, objects: Objects, scale: f64) {
+pub fn opened(app: &mut App, objects: Objects, scale: f64) {
     open_edited(app, objects, |d| {
         d["settings"]["plotScale"] = json!(scale);
     });
@@ -75,7 +80,7 @@ pub(crate) fn wall_tool(app: &mut App, style: &str) {
 }
 
 /// A 7 × 5 m room of Dış duvar 25, closed with K, and an inner wall of İç duvar 15 across it.
-fn room(app: &mut App, scale: f64) {
+pub fn room(app: &mut App, scale: f64) {
     opened(app, Objects::new(), scale);
     fit(app, 7.0, 5.0);
     wall_tool(app, "Dış duvar 25");
@@ -141,11 +146,6 @@ fn props(app: &mut App) {
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
 }
 
-/// Duvar stilleri over the room, the project's Dış duvar 25 chosen.
-fn styles(app: &mut App) {
-    room(app, 50.0);
-    run(app, "arch.wallStyles");
-}
 
 /// Çizgiden duvar's Çiftler over two pairs of parallel lines, the walls to come from the command's plan.
 fn from_lines(app: &mut App) {
@@ -216,7 +216,7 @@ fn joins_detailed(app: &mut App) {
 }
 
 /// Two walls crossing and a corner too sharp to mitre: the cross cleans up, the corner is said with its mark.
-fn joins_cross(app: &mut App) {
+pub fn joins_cross(app: &mut App) {
     opened(app, Objects::new(), 50.0);
     fit(app, 8.0, 5.0);
     wall_between(app, "İç duvar 15", [0.0, 2.0], [6.0, 2.0]);
@@ -241,11 +241,6 @@ fn joins_tool(app: &mut App) {
     hover(app, [6.2, 4.2]);
 }
 
-/// The sharp corner's issue in Birleşimleri denetle.
-fn joins_check(app: &mut App) {
-    joins_cross(app);
-    run(app, "arch.wallJoinCheck");
-}
 
 /// The room's bottom wall selected: Öznitelikler's joins rows.
 fn joins_props(app: &mut App) {
@@ -684,28 +679,7 @@ fn dimensions_around_undone(app: &mut App) {
     run(app, "edit.undo");
 }
 
-/// docs/adr/0699: the room's style renamed in Duvar stilleri and saved; the wall selected shows the new name.
-fn style_renamed(app: &mut App) {
-    room(app, 50.0);
-    run(app, "arch.wallStyles");
-    let _ = app.update(Message::from(arch::Event::WallStyles(
-        crate::wall_styles::Event::Choose(Some("kentos-dis-duvar-25".into())),
-    )));
-    let _ = app.update(Message::from(arch::Event::WallStyles(
-        crate::wall_styles::Event::Name("Dış duvar 25 QA".into()),
-    )));
-    let _ = app.update(Message::from(arch::Event::WallStyles(
-        crate::wall_styles::Event::Save,
-    )));
-    app.selection.set([Slot(1)]);
-}
 
-/// One Geri al gives the old name back: the style table is in the step.
-fn style_rename_undone(app: &mut App) {
-    style_renamed(app);
-    run(app, "edit.undo");
-    app.selection.set([Slot(1)]);
-}
 
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
@@ -730,8 +704,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("olcu-butun-kenarlar", dimensions_around),
         ("olcu-butun-kenarlar-yazildi", dimensions_around_written),
         ("olcu-butun-kenarlar-geri-alindi", dimensions_around_undone),
-        ("duvar-stili-adi-kaydedildi", style_renamed),
-        ("duvar-stili-geri-alindi", style_rename_undone),
         ("mimari-serit-13", architecture_ribbon),
         ("mimari-serit-18", architecture_ribbon_large),
         ("mimari-duvar-baglam-18", architecture_wall_context),
@@ -751,7 +723,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-birlesim-x", joins_cross),
         ("duvar-duzenle-serit", edit_ribbon),
         ("duvar-birlesim-araci", joins_tool),
-        ("duvar-birlesim-denetle", joins_check),
         ("duvar-birlesim-oznitelikler", joins_props),
         ("duvar-bol", split),
         ("duvar-serit", ribbon),
@@ -760,7 +731,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-ayrintili", detailed),
         ("duvar-sematik", schematic),
         ("duvar-oznitelikler", props),
-        ("duvar-stilleri", styles),
         ("duvar-cizgiden", from_lines),
         ("duvar-katlar", levels),
     ]

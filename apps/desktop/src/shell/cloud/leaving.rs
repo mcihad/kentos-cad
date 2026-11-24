@@ -45,7 +45,7 @@ impl Then {
 impl App {
     /// Leaves for `then`: a database project's unsent work to its draft first,
     /// else the question when something would be lost, else at once.
-    pub(crate) fn leave(&mut self, then: Then) -> Task<Message> {
+    pub fn leave(&mut self, then: Then) -> Task<Message> {
         if self.cloud.leaving.is_some() {
             return Task::none();
         }

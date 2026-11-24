@@ -14,7 +14,7 @@
 //! Alanı düzenle closes the window and starts Kırpma çerçevesi (`tool.viewCrop`, docs/adr/0789 §2) on the chosen
 //! view: its area edited with grips on the model, one undo step each.
 //!
-//! Görünümü UCS'e döndür lays the UCS's x axis horizontal (AutoCAD's PLAN),
+//! Görünümü UCS'e döndür lays the UCS's x axis horizontal (the plan view of the UCS),
 //! Kuzey yukarı turns the view back; Görünümü döndür is the tool
 //! (`kentos_interaction::view_twist`).
 
@@ -163,7 +163,7 @@ impl App {
     }
 
     /// The open drawing's named views.
-    pub(crate) fn named_views(&self) -> &[NamedView] {
+    pub fn named_views(&self) -> &[NamedView] {
         self.document
             .as_ref()
             .map_or(&[], |d| d.model.settings().named_views.as_slice())
@@ -175,7 +175,7 @@ impl App {
     }
 
     /// `cad.views.edit` on the open drawing.
-    pub(crate) fn edit_views(&mut self, edit: ViewsOp) -> Option<ViewsEdited> {
+    pub fn edit_views(&mut self, edit: ViewsOp) -> Option<ViewsEdited> {
         if let Some(locked) = self.views_locked() {
             self.warn(locked);
             return None;
@@ -214,7 +214,7 @@ impl App {
     }
 
     /// Goes to the named view `name`: a navigation (Önceki görünüm comes back).
-    pub(crate) fn show_named_view(&mut self, name: &str) {
+    pub fn show_named_view(&mut self, name: &str) {
         let Some(v) = self.named_views().iter().find(|v| v.name == name).cloned() else {
             self.warn(format!("“{name}” adlı bir görünüm yok."));
             return;

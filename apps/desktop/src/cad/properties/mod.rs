@@ -25,7 +25,7 @@
 //! The rows are data (`rows`), drawn by KentOS UI's `PropertySheet`.
 
 pub(crate) mod rows;
-pub(crate) mod wall_parts;
+pub mod wall_parts;
 
 pub(crate) use crate::annotation_styles::Part;
 pub(crate) use rows::layer_path;

@@ -561,7 +561,7 @@ impl App {
     /// What the panel asked for: an edit of the drawing, through the
     /// product commands as the web's panel writes (docs/adr/0066), or a
     /// section toggled. The command's refusal and warnings are said.
-    pub(crate) fn properties_event(&mut self, event: Event) {
+    pub fn properties_event(&mut self, event: Event) {
         let event = match event {
             Event::Guarded(key, event) => {
                 if self.document.as_ref().is_none_or(|doc| self.properties_key(doc) != key) {

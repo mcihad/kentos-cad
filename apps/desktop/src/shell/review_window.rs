@@ -113,7 +113,7 @@ pub(crate) fn decision_words(d: &kentos_commands::ReviewDecision) -> String {
     format!("Kayıt: {whose} kararı · kaynak {} · {bound}", d.source)
 }
 
-pub(crate) fn iso_utc_now() -> String {
+pub fn iso_utc_now() -> String {
     let secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());

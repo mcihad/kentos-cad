@@ -123,7 +123,7 @@ pub fn ticks() -> impl Stream<Item = Message> {
     stream
 }
 impl App {
-    pub(crate) fn sheet_publish_running(&self) -> bool {
+    pub fn sheet_publish_running(&self) -> bool {
         matches!(&self.exchange,Some(Window::SheetPublish(s)) if s.running())
     }
     /// Called by generic Escape/close too; a running writer must hear cancellation before disposal.
@@ -231,7 +231,7 @@ impl App {
     }
     /// The window's events; a permit publication's gate is asked with each check and keeps Yayınla shut while it is
     /// (docs/adr/8065).
-    pub(crate) fn sheet_publish_event(&mut self, e: Event) -> Task<Message> {
+    pub fn sheet_publish_event(&mut self, e: Event) -> Task<Message> {
         let permit = matches!(&self.exchange, Some(Window::SheetPublish(s)) if s.permit.is_some());
         match e {
             Event::Gate(generation, answer) => {

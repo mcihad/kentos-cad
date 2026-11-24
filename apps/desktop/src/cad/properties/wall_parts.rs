@@ -71,7 +71,7 @@ pub(crate) fn space_words(s: &kentos_commands::SpaceFields) -> String {
 /// The spaces a slab may be bound to: those of its level (every one when it has none), by their persistent ids and
 /// words, the nearest to the slab's label point first, at most [`MOST_SPACES`]; the one it is bound to is always
 /// among them.
-pub(crate) fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, String)> {
+pub fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, String)> {
     let at = kentos_native_application::spaces::label_point(&s.parts);
     let bound = s.bound.as_ref().and_then(|b| b.space.clone());
     let mut found: Vec<(f64, String, String)> = doc
@@ -101,7 +101,7 @@ pub(crate) fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, Stri
 }
 
 /// A slab's bound as the row says it; a space's words when it is bound to one (`spaces`, from [`space_choices`]).
-pub(crate) fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String {
+pub fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String {
     match &s.bound {
         None => "Bağımsız kontur".into(),
         Some(b) => {
@@ -138,7 +138,7 @@ pub(crate) fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String 
 /// The operations a slab's Sınır row offers, each with its label and whether it is the slab's now: Bağımsız kontur
 /// (Ayır), bound to the walls' outer faces or a room's, read round the slab's label point, and bound to each space of
 /// `spaces` (from [`space_choices`]; the slab's offset kept).
-pub(crate) fn bound_choices(s: &SlabFields, spaces: &[(String, String)]) -> Vec<(String, bool, Option<SlabsOperation>)> {
+pub fn bound_choices(s: &SlabFields, spaces: &[(String, String)]) -> Vec<(String, bool, Option<SlabsOperation>)> {
     let at =
         kentos_native_application::spaces::label_point(&s.parts).map(|p| Vec2 { x: p.x, y: p.y });
     let offset = s.bound.as_ref().map(|b| b.offset).filter(|o| *o != 0.0);

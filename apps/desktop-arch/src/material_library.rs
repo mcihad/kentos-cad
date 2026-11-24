@@ -1,6 +1,5 @@
-//! Malzemeler › Kitaplık (docs/adr/0791): the material libraries outside the drawing, as Revit's Material Browser
-//! shows its libraries beside the project's materials and Archicad's Attribute Manager takes Building Materials from
-//! another file. KentOS gives its own (`kentos-temel`); an office keeps `.kmalzeme` files (`kentos.materials` 1) in its
+//! Malzemeler › Kitaplık (docs/adr/0791): the material libraries outside the drawing, shown beside the project's
+//! materials, their materials taken from another file. KentOS gives its own (`kentos-temel`); an office keeps `.kmalzeme` files (`kentos.materials` 1) in its
 //! folders, kept beside the recent files (`malzeme-kitapliklari.json`). A library's materials are shown with what the
 //! project has of each; Seçilenleri al takes the chosen through `cad.materials.edit` `import` (one undo step “Malzeme”),
 //! the project's kept or the library's put in their place as the user chose; Kitaplığa yaz writes the project's

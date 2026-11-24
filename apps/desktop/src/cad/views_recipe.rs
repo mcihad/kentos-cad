@@ -205,7 +205,7 @@ impl App {
     }
 
     /// The recipe of the view named `name`, or an empty draft.
-    pub(crate) fn recipe_draft(&self, name: &str) -> ViewRecipe {
+    pub fn recipe_draft(&self, name: &str) -> ViewRecipe {
         self.named_views()
             .iter()
             .find(|v| v.name == name)

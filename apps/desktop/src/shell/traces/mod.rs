@@ -49,10 +49,7 @@ mod keyboard;
 #[cfg(test)]
 #[path = "layer_keys_tests.rs"]
 mod layer_keys_tests;
-#[cfg(test)]
-#[path = "ek_rules_tests.rs"]
-pub(crate) mod ek_rules_tests;
-mod player;
+pub mod player;
 
 use std::path::{Path, PathBuf};
 
@@ -72,6 +69,30 @@ use player::AREA;
 /// The traces' folder, next to the sources.
 pub fn folder() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/interaction/v1")
+}
+
+/// The 2+1 flat as KentOS Mimari draws it: the acceptance trace played with the layer key on and KentOS's exterior wall
+/// 25, the style Mimari's tools start with (its package's arch_start.rs). The permit package's and the regulation
+/// rules' tests read it (docs/adr/9199 §4.11).
+#[cfg(any(test, feature = "testing"))]
+pub fn flat() -> App {
+    static REPLAY: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _one = REPLAY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let traces = Trace::all().expect("the traces read");
+    let trace = traces.iter().find(|t| t.id == "acceptance-flat").expect("the 2+1 trace");
+    let variant = VARIANTS[0];
+    let (mut app, _) = App::boot(None);
+    app.memory.layer_keys = true;
+    let style = kentos_commands::builtin_wall_styles()
+        .into_iter()
+        .find(|s| s.id == "kentos-dis-duvar-25")
+        .expect("KentOS's exterior wall");
+    kentos_interaction::wall::take_style(&mut app.memory, &style);
+    let problems = Player::new(&mut app, trace, variant, AREA, scratch_file(trace, variant))
+        .expect("the trace starts")
+        .play(None);
+    assert!(problems.is_empty(), "{problems:#?}");
+    app
 }
 
 /// A temporary file for a trace's saves.

@@ -6,7 +6,7 @@ use super::*;
 
 /// What a schedule's cell at `at` is (docs/adr/0733 §6): written to its row's objects (the words say which), or read
 /// only and why; none for another table.
-pub(crate) fn schedule_cell(
+pub fn schedule_cell(
     doc: &kentos_domain::Document,
     t: &kentos_commands::TableEntity,
     at: (usize, usize),

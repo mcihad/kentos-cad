@@ -8,6 +8,9 @@
 //! ```
 //!
 //! `KENTOS_SHOTS_ONLY` (comma separated) keeps only the named pictures.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::path::PathBuf;
 
@@ -18,14 +21,14 @@ use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, find_text, find_texts};
 
 /// One picture: its name and what brings the app to it.
-pub(crate) type Scene = (&'static str, fn(&mut App));
+pub type Scene = (&'static str, fn(&mut App));
 
 /// What a click on the window opens over a scene (a menu).
 pub(crate) type Pointing = fn(&mut Snapshot, &mut App);
 
 /// A picture that needs the pointer at the window itself: what brings the app
 /// to it, then what a click opens over it (a menu).
-pub(crate) type Pointed = (&'static str, fn(&mut App), Pointing);
+pub type Pointed = (&'static str, fn(&mut App), Pointing);
 
 /// Any picture: its name, what brings the app to it, and the click over it, if any.
 type Shot = (&'static str, fn(&mut App), Option<Pointing>);
@@ -34,7 +37,7 @@ type Shot = (&'static str, fn(&mut App), Option<Pointing>);
 /// small split button's arrow). A caption that is also the ribbon's (the layer
 /// box says “Parsel”) is looked for in the docked panels first: the right of
 /// the window, under the ribbon.
-pub(crate) fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
+pub fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
     let docked = find_texts(snapshot, app, caption)
         .into_iter()
         .find(|at| at.x > 900.0 && at.y > 150.0);
@@ -55,17 +58,17 @@ pub(crate) fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
 }
 
 /// A ribbon drop-down's menu opened, as its key tip opens it (ribbon_keys.rs): by its label.
-pub(crate) fn open_ribbon_menu(snapshot: &mut Snapshot, app: &mut App, label: &str) {
+pub fn open_ribbon_menu(snapshot: &mut Snapshot, app: &mut App, label: &str) {
     open_menu_id(snapshot, app, crate::ribbon_keys::menu_id(label));
 }
 
 /// A panel's ▾ menu of its seldom used commands opened, as its key tip opens it: by the panel's title.
-pub(crate) fn open_more(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
+pub fn open_more(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
     open_menu_id(snapshot, app, crate::ribbon_keys::more_id(panel));
 }
 
 /// A folded panel's menu opened (a narrow window), as its key tip opens it: by the panel's title.
-pub(crate) fn open_folded(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
+pub fn open_folded(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
     open_menu_id(snapshot, app, crate::ribbon_keys::folded_id(panel));
 }
 
@@ -97,7 +100,7 @@ fn open_menu_id(snapshot: &mut Snapshot, app: &mut App, id: iced::advanced::widg
 }
 
 /// A click (or a right click) on a caption of the window.
-pub(crate) fn press_caption(
+pub fn press_caption(
     snapshot: &mut Snapshot,
     app: &mut App,
     caption: &str,
@@ -116,6 +119,7 @@ pub(crate) fn press_caption(
     snapshot.input(app, App::view, &mut update, input);
 }
 
+#[cfg(test)]
 /// Pictures of menus the new commands are in (docs/adr/0141): the layer tree's, and Seç ▾.
 fn pointed_scenes() -> Vec<Pointed> {
     let mut all = crate::text_scenes::pointed();
@@ -157,15 +161,9 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::layer_type_scenes::pointed());
     all.extend(crate::arch_scenes::pointed());
     all.extend(crate::walkthrough_scenes::pointed());
-    all.extend(crate::arch_audit_scenes::pointed());
-    all.extend(crate::arch_audit_exception_scenes::pointed());
     all.extend(crate::recess_scenes::pointed());
     all.extend(crate::level_state_scenes::pointed());
     all.extend(crate::symbols_scenes::pointed());
-    all.extend(crate::slab_scenes::pointed());
-    all.extend(crate::ramp_scenes::pointed());
-    all.extend(crate::stair_scenes::pointed());
-    all.extend(crate::grid_scenes::pointed());
     all.extend(crate::casework_scenes::pointed());
     all.extend(crate::block_library_scenes::pointed());
     let menus: Vec<Pointed> = vec![
@@ -253,6 +251,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all
 }
 
+#[cfg(test)]
 /// The ribbon tabs the new tools sit in: a CAD project's Değiştir, a CBS
 /// project's Düzenle and Harita.
 fn ribbon_scenes() -> Vec<Scene> {
@@ -293,6 +292,7 @@ fn ribbon_scenes() -> Vec<Scene> {
     ]
 }
 
+#[cfg(test)]
 /// A local CAD project in millimetres: a 2 × 1.5 m parcel and a 1 × 1 m one,
 /// their layer labelled with `$alan`, the first selected; its label and
 /// Öznitelikler both read mm² (docs/adr/0165 §2, the 12 Ekim addendum).
@@ -368,6 +368,7 @@ fn mm_labels(app: &mut App) {
     );
 }
 
+#[cfg(test)]
 /// A local CAD project in millimetres whose layer Odalar holds four rooms, a salon of 3 m²
 /// (2 × 1.5 m), a kitchen of 1.5 m², a room of 1 m² and a closet of 0.5 m², each labelled with
 /// its name and `$alan` in mm²: the layer's id (docs/adr/0165 §2, the 13 Ekim addendum). Katman
@@ -452,6 +453,7 @@ fn mm_rooms(app: &mut App) -> String {
     layer
 }
 
+#[cfg(test)]
 /// Katman stili as the owner met it: Kategorili, `$alan`, Değerlerden sınıfla.
 fn mm_style_categories(app: &mut App) {
     use crate::style::layer_style::{Event, Field, Kind};
@@ -466,6 +468,7 @@ fn mm_style_categories(app: &mut App) {
     }
 }
 
+#[cfg(test)]
 /// Aralıklı, `$alan`, three classes along the blues, Sınıfla.
 fn mm_style_classes(app: &mut App) {
     use crate::style::layer_style::{Event, Field, Kind};
@@ -482,6 +485,7 @@ fn mm_style_classes(app: &mut App) {
     }
 }
 
+#[cfg(test)]
 /// Kurallar: larger than 1 200 000 mm² (the salon and the kitchen), and what the rule left.
 fn mm_style_rules(app: &mut App) {
     use crate::style::layer_style::{Event, Field, Kind, RuleEdit};
@@ -497,6 +501,7 @@ fn mm_style_rules(app: &mut App) {
     }
 }
 
+#[cfg(test)]
 /// The rooms drawn by the classes Katman stili made, the window closed: the salon in the darkest
 /// of three blues, the kitchen in the middle one, the room and the closet in the lightest.
 fn mm_style_drawn(app: &mut App) {
@@ -515,6 +520,7 @@ fn mm_style_drawn(app: &mut App) {
     }
 }
 
+#[cfg(test)]
 /// Every scene of the new tools: the ribbon's, then each tool's (the tool
 /// modules add theirs here as they are built).
 fn scenes() -> Vec<Scene> {
@@ -571,22 +577,10 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::walkthrough_scenes::scenes());
     all.extend(crate::quality_scenes::scenes());
     all.extend(crate::opening_scenes::scenes());
-    all.extend(crate::opening_type_scenes::scenes());
-    all.extend(crate::material_scenes::scenes());
-    all.extend(crate::material_library_scenes::scenes());
-    all.extend(crate::module_scenes::scenes());
     all.extend(crate::derived_elevation_scenes::scenes());
-    all.extend(crate::special_door_scenes::scenes());
-    all.extend(crate::multi_slide_scenes::scenes());
-    all.extend(crate::slide_more_scenes::scenes());
-    all.extend(crate::module_flat_scenes::scenes());
-    all.extend(crate::module_storey_scenes::scenes());
-    all.extend(crate::door_clash_scenes::scenes());
-    all.extend(crate::design_option_scenes::scenes());
     all.extend(crate::recess_scenes::scenes());
     all.extend(crate::level_state_scenes::scenes());
     all.extend(crate::symbols_scenes::scenes());
-    all.extend(crate::slab_scenes::scenes());
     all.extend(crate::building_parts_scenes::scenes());
     all.extend(crate::program_scenes::scenes());
     all.extend(crate::view_recipe_scenes::scenes());
@@ -594,15 +588,11 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::view_template_scenes::scenes());
     all.extend(crate::view_crop_scenes::scenes());
     all.extend(crate::navigator_scenes::scenes());
-    all.extend(crate::ramp_scenes::scenes());
-    all.extend(crate::stair_scenes::scenes());
-    all.extend(crate::grid_scenes::scenes());
     all.extend(crate::block_library_scenes::scenes());
     all.extend(crate::space_scenes::scenes());
     all.extend(crate::arch_scenes::scenes());
     all.extend(crate::tag_scenes::scenes());
     all.extend(crate::viewmark_scenes::scenes());
-    all.extend(crate::arch_project_scenes::scenes());
     all.extend(crate::xref_scenes::scenes());
     all.extend(crate::sheet_detail_scenes::scenes());
     all.extend(crate::plot_style_scenes::scenes());
@@ -630,9 +620,6 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::furniture_scenes::scenes());
     all.extend(crate::casework_scenes::scenes());
     all.extend(crate::temporary_scenes::scenes());
-    all.extend(crate::arch_audit_scenes::scenes());
-    all.extend(crate::arch_audit_exception_scenes::scenes());
-    all.extend(crate::schedule_extras_scenes::scenes());
     all.extend(crate::dimension_follow_scenes::scenes());
     all.extend(crate::dimension_option_scenes::scenes());
     all.extend(crate::dimension_mark_scenes::scenes());
@@ -674,21 +661,24 @@ fn wanted(name: &str) -> bool {
         .map_or(true, |only| only.split(',').any(|o| o.trim() == name))
 }
 
+#[cfg(test)]
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
+    take(scenes(), pointed_scenes());
+}
+
+/// Takes the pictures of `scenes` and `pointed` (the core's here, a module package's in its own `screens`) in both
+/// themes at 1440×900 and 1100×650, into `.run/shots/arac-*`; `KENTOS_SHOTS_ONLY` keeps the named ones.
+pub fn take(scenes: Vec<Scene>, pointed: Vec<Pointed>) {
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            let all: Vec<Shot> = scenes()
-                .into_iter()
-                .map(|(name, bring)| (name, bring, None))
-                .chain(
-                    pointed_scenes()
-                        .into_iter()
-                        .map(|(name, bring, point)| (name, bring, Some(point))),
-                )
+            let all: Vec<Shot> = scenes
+                .iter()
+                .map(|(name, bring)| (*name, *bring, None))
+                .chain(pointed.iter().map(|(name, bring, point)| (*name, *bring, Some(*point))))
                 .collect();
             for (name, bring, point) in all {
                 if !wanted(name) {

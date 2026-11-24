@@ -169,7 +169,7 @@ impl App {
     /// database project where this account lacks `project.edit` (the web's
     /// `treeLocked`). A file project and a local drawing save the tree with
     /// the file.
-    pub(crate) fn tree_locked(&self) -> Option<&'static str> {
+    pub fn tree_locked(&self) -> Option<&'static str> {
         let doc = self.document.as_ref()?;
         let source = doc.cloud_source()?;
         let (_, may_edit) = crate::cloud::access_of(&source.info);
@@ -180,7 +180,7 @@ impl App {
     /// the keyboard (layer_tree.rs). A second press soon after is a double
     /// click: a layer becomes the active one, a group opens or closes (the
     /// web's `onActivate`).
-    pub(crate) fn layer_pressed(&mut self, id: String) {
+    pub fn layer_pressed(&mut self, id: String) {
         let now = Instant::now();
         let double = self
             .last_layer_press

@@ -20,6 +20,7 @@ test = false
 
 [dependencies]
 kentos-desktop = { path = "../desktop" }
+kentos-desktop-arch = { path = "../desktop-arch" }
 kentos-desktop-map = { path = "../desktop-map" }
 kentos-desktop-road = { path = "../desktop-road" }
 

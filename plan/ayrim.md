@@ -130,4 +130,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 9 yapıldı (ADR 9199 §4.9): Mimari modül arayüzünün arkasında; ızgaralar, araç ayarları, altlık okunuşu
     çekirdekte; on bir yeni kanca. Taban: kabuk → Mimari 14 → 1, CAD → Mimari 2 → 0.
   - Adım 10 yapıldı (ADR 9199 §4.10): Mimari'nin `impl App`'leri uzantı trait'i (32 trait, `arch/ext.rs`).
-  - Sıradaki: Mimari kendi paketinde, sonra CBS; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 11 yapıldı (ADR 9199 §4.11): Mimari kendi paketinde (`apps/desktop-arch`); çekirdeğin sınama kiti `testing`
+    özelliğiyle açıldı; Mimari'de tek satır 3,7 s. Sınamalar: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar
+    36. Kabuk → Mimari 0.
+  - Sıradaki: CBS paketi; CAD çekirdeğinin kabuktan ayrılması.

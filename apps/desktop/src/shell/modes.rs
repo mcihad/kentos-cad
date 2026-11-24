@@ -39,7 +39,7 @@ pub(crate) type SelectionTab = (u64, u64, u64, u64, Option<&'static str>);
 impl App {
     /// The type the interface shows: the drawing's; without one (or without a
     /// drawing), a module's program's own (docs/adr/0801), kentos-cad's CBS.
-    pub(crate) fn work_mode(&self) -> Workspace {
+    pub fn work_mode(&self) -> Workspace {
         let own = self
             .document
             .as_ref()
@@ -127,7 +127,7 @@ impl App {
     }
 
     /// The contextual tab beside the others: the selection's, else the active layer's (docs/adr/9185).
-    pub(crate) fn context_tab(&self) -> Option<&'static Tab> {
+    pub fn context_tab(&self) -> Option<&'static Tab> {
         self.selection_tab().or_else(|| self.layer_tab())
     }
 
@@ -204,7 +204,7 @@ impl App {
     }
 
     /// The chosen tab: the chosen one while the mode keeps it, else Giriş.
-    pub(crate) fn regular_tab(&self) -> &'static str {
+    pub fn regular_tab(&self) -> &'static str {
         // An extension's tab while this program shows it (extensions/ribbon.rs).
         if let Some(tab) = self.extension_tab(self.tab) {
             return tab.id;

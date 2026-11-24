@@ -2,18 +2,15 @@
 // includes this file: docs/adr/8054 §7, no source file past 2 000 lines). Their paths are lib.rs's, this file
 // being in the same folder. A new test suite is declared here.
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/acceptance_flat_tests.rs"]
-mod acceptance_flat_tests;
+pub mod acceptance_flat_tests;
 #[cfg(test)]
 #[path = "tests/acceptance_gis_tests.rs"]
 mod acceptance_gis_tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/acceptance_tests.rs"]
-mod acceptance_tests;
-#[cfg(test)]
-#[path = "tests/architecture_ribbon_tests.rs"]
-mod architecture_ribbon_tests;
+pub mod acceptance_tests;
 #[cfg(test)]
 #[path = "tests/measure_probe_tests.rs"]
 mod measure_probe_tests;
@@ -41,9 +38,6 @@ mod text_outputs_tests;
 #[cfg(test)]
 #[path = "tests/address_scenes.rs"]
 mod address_scenes;
-#[cfg(test)]
-#[path = "tests/unsaved_close_tests.rs"]
-mod unsaved_close_tests;
 #[cfg(test)]
 #[path = "tests/option_contract_tests.rs"]
 mod option_contract_tests;
@@ -86,24 +80,15 @@ mod block_attr_scenes;
 #[cfg(test)]
 #[path = "tests/block_dynamic_scenes.rs"]
 mod block_dynamic_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/furniture_scenes.rs"]
-mod furniture_scenes;
+pub mod furniture_scenes;
 #[cfg(test)]
 #[path = "tests/casework_scenes.rs"]
 mod casework_scenes;
 #[cfg(test)]
 #[path = "tests/temporary_scenes.rs"]
 mod temporary_scenes;
-#[cfg(test)]
-#[path = "tests/arch_audit_scenes.rs"]
-mod arch_audit_scenes;
-#[cfg(test)]
-#[path = "tests/arch_audit_exception_scenes.rs"]
-mod arch_audit_exception_scenes;
-#[cfg(test)]
-#[path = "tests/schedule_extras_scenes.rs"]
-mod schedule_extras_scenes;
 #[cfg(test)]
 #[path = "tests/block_scenes.rs"]
 mod block_scenes;
@@ -261,21 +246,6 @@ mod form_fit_screens;
 #[path = "tests/scene3d_window_tests.rs"]
 mod scene3d_window_tests;
 #[cfg(test)]
-#[path = "tests/scene3d_building_tests.rs"]
-mod scene3d_building_tests;
-#[cfg(test)]
-#[path = "tests/scene3d_quality_tests.rs"]
-mod scene3d_quality_tests;
-#[cfg(test)]
-#[path = "tests/ifc_viewer_tests.rs"]
-mod ifc_viewer_tests;
-#[cfg(test)]
-#[path = "tests/performance_tests.rs"]
-mod performance_tests;
-#[cfg(test)]
-#[path = "tests/declared_readings_tests.rs"]
-mod declared_readings_tests;
-#[cfg(test)]
 #[path = "tests/room_emsal_tests.rs"]
 mod room_emsal_tests;
 #[cfg(test)]
@@ -398,45 +368,6 @@ mod compare_sections_tests;
 #[cfg(test)]
 #[path = "tests/dxf_attribute_names_tests.rs"]
 mod dxf_attribute_names_tests;
-#[cfg(test)]
-#[path = "tests/digital_rules_tests.rs"]
-mod digital_rules_tests;
-#[cfg(test)]
-#[path = "tests/deliveries_tests.rs"]
-mod deliveries_tests;
-#[cfg(test)]
-#[path = "tests/underlays_tests.rs"]
-mod underlays_tests;
-#[cfg(test)]
-#[path = "tests/underlay_check_tests.rs"]
-mod underlay_check_tests;
-#[cfg(test)]
-#[path = "tests/ifc_revisions_tests.rs"]
-mod ifc_revisions_tests;
-#[cfg(test)]
-#[path = "tests/package_review_tests.rs"]
-mod package_review_tests;
-#[cfg(test)]
-#[path = "tests/element_types_tests.rs"]
-mod element_types_tests;
-#[cfg(test)]
-#[path = "tests/use_class_tests.rs"]
-mod use_class_tests;
-#[cfg(test)]
-#[path = "tests/hospital_tests.rs"]
-mod hospital_tests;
-#[cfg(test)]
-#[path = "tests/hotel_room_tests.rs"]
-mod hotel_room_tests;
-#[cfg(test)]
-#[path = "tests/boiler_room_tests.rs"]
-mod boiler_room_tests;
-#[cfg(test)]
-#[path = "tests/delivered_model_tests.rs"]
-mod delivered_model_tests;
-#[cfg(test)]
-#[path = "tests/arch_ifc_tests.rs"]
-mod arch_ifc_tests;
 #[cfg(test)]
 #[path = "tests/quality_form_tests.rs"]
 mod quality_form_tests;
@@ -718,15 +649,12 @@ mod temporal_scenes;
 #[cfg(test)]
 #[path = "tests/text_scenes.rs"]
 mod text_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/tools_scenes.rs"]
-mod tools_scenes;
-#[cfg(test)]
+pub mod tools_scenes;
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/tools_screens.rs"]
-mod tools_screens;
-#[cfg(test)]
-#[path = "arch/arch_icons.rs"]
-mod arch_icons;
+pub mod tools_screens;
 #[cfg(test)]
 #[path = "tests/building_context_tests.rs"]
 mod building_context_tests;
@@ -743,81 +671,6 @@ mod paiy_area_tests;
 #[path = "tests/site_plan_tests.rs"]
 mod site_plan_tests;
 #[cfg(test)]
-#[path = "tests/regulation_audit_tests.rs"]
-mod regulation_audit_tests;
-#[cfg(test)]
-#[path = "tests/regulation_dates_tests.rs"]
-mod regulation_dates_tests;
-#[cfg(test)]
-#[path = "tests/emsal_limits_tests.rs"]
-mod emsal_limits_tests;
-#[cfg(test)]
-#[path = "tests/basement_list_tests.rs"]
-mod basement_list_tests;
-#[cfg(test)]
-#[path = "tests/under_stair_tests.rs"]
-mod under_stair_tests;
-#[cfg(test)]
-#[path = "tests/compartment_tests.rs"]
-mod compartment_tests;
-#[cfg(test)]
-#[path = "tests/resistance_tests.rs"]
-mod resistance_tests;
-#[cfg(test)]
-#[path = "tests/dated_sizes_tests.rs"]
-mod dated_sizes_tests;
-#[cfg(test)]
-#[path = "tests/plan_notes_tests.rs"]
-mod plan_notes_tests;
-#[cfg(test)]
-#[path = "tests/zone_tests.rs"]
-mod zone_tests;
-#[cfg(test)]
-#[path = "tests/cut_stone_tests.rs"]
-mod cut_stone_tests;
-#[cfg(test)]
-#[path = "tests/stone_wall_tests.rs"]
-mod stone_wall_tests;
-#[cfg(test)]
-#[path = "tests/plan_limits_tests.rs"]
-mod plan_limits_tests;
-#[cfg(test)]
-#[path = "tests/storey_link_tests.rs"]
-mod storey_link_tests;
-#[cfg(test)]
-#[path = "tests/shaft_tests.rs"]
-mod shaft_tests;
-#[cfg(test)]
-#[path = "tests/covering_reaction_tests.rs"]
-mod covering_reaction_tests;
-#[cfg(test)]
-#[path = "tests/roof_fire_tests.rs"]
-mod roof_fire_tests;
-#[cfg(test)]
-#[path = "tests/finish_reaction_tests.rs"]
-mod finish_reaction_tests;
-#[cfg(test)]
-#[path = "tests/wall_insulation_tests.rs"]
-mod wall_insulation_tests;
-#[cfg(test)]
-#[path = "tests/party_wall_tests.rs"]
-mod party_wall_tests;
-#[cfg(test)]
-#[path = "tests/projection_tests.rs"]
-mod projection_tests;
-#[cfg(test)]
-#[path = "tests/lodging_escape_tests.rs"]
-mod lodging_escape_tests;
-#[cfg(test)]
-#[path = "tests/roof_rules_tests.rs"]
-mod roof_rules_tests;
-#[cfg(test)]
-#[path = "tests/building_plan_notes_tests.rs"]
-mod building_plan_notes_tests;
-#[cfg(test)]
-#[path = "tests/double_door_tests.rs"]
-mod double_door_tests;
-#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]
@@ -826,9 +679,9 @@ mod fire_hazard_tests;
 #[cfg(test)]
 #[path = "tests/provisions_tests.rs"]
 mod provisions_tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/permit_set_tests.rs"]
-mod permit_set_tests;
+pub mod permit_set_tests;
 #[cfg(test)]
 #[path = "tests/roof_plan_set_tests.rs"]
 mod roof_plan_set_tests;
@@ -847,15 +700,12 @@ mod renovation_set_tests;
 #[cfg(test)]
 #[path = "tests/permit_scope_tests.rs"]
 mod permit_scope_tests;
-#[cfg(test)]
-#[path = "tests/permit_gate_tests.rs"]
-mod permit_gate_tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/permit_package_tests.rs"]
-mod permit_package_tests;
-#[cfg(test)]
+pub mod permit_package_tests;
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/bim_permit_tests.rs"]
-mod bim_permit_tests;
+pub mod bim_permit_tests;
 #[cfg(test)]
 #[path = "tests/wall_height_tests.rs"]
 mod wall_height_tests;
@@ -895,9 +745,9 @@ mod window_layers_tests;
 #[cfg(test)]
 #[path = "tests/wipeout_scenes.rs"]
 mod wipeout_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/wall_scenes.rs"]
-mod wall_scenes;
+pub mod wall_scenes;
 #[cfg(test)]
 #[path = "tests/bond_drag_scenes.rs"]
 mod bond_drag_scenes;
@@ -907,51 +757,18 @@ mod interior_scenes;
 #[cfg(test)]
 #[path = "tests/column_scenes.rs"]
 mod column_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/walkthrough_scenes.rs"]
-mod walkthrough_scenes;
+pub mod walkthrough_scenes;
 #[cfg(test)]
 #[path = "tests/quality_scenes.rs"]
 mod quality_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/opening_scenes.rs"]
-mod opening_scenes;
-#[cfg(test)]
-#[path = "tests/opening_type_scenes.rs"]
-mod opening_type_scenes;
-#[cfg(test)]
-#[path = "tests/material_scenes.rs"]
-mod material_scenes;
-#[cfg(test)]
-#[path = "tests/material_library_scenes.rs"]
-mod material_library_scenes;
-#[cfg(test)]
-#[path = "tests/module_scenes.rs"]
-mod module_scenes;
+pub mod opening_scenes;
 #[cfg(test)]
 #[path = "tests/derived_elevation_scenes.rs"]
 mod derived_elevation_scenes;
-#[cfg(test)]
-#[path = "tests/special_door_scenes.rs"]
-mod special_door_scenes;
-#[cfg(test)]
-#[path = "tests/multi_slide_scenes.rs"]
-mod multi_slide_scenes;
-#[cfg(test)]
-#[path = "tests/slide_more_scenes.rs"]
-mod slide_more_scenes;
-#[cfg(test)]
-#[path = "tests/module_flat_scenes.rs"]
-mod module_flat_scenes;
-#[cfg(test)]
-#[path = "tests/module_storey_scenes.rs"]
-mod module_storey_scenes;
-#[cfg(test)]
-#[path = "tests/door_clash_scenes.rs"]
-mod door_clash_scenes;
-#[cfg(test)]
-#[path = "tests/design_option_scenes.rs"]
-mod design_option_scenes;
 #[cfg(test)]
 #[path = "tests/recess_scenes.rs"]
 mod recess_scenes;
@@ -962,26 +779,14 @@ mod level_state_scenes;
 #[path = "tests/symbols_scenes.rs"]
 mod symbols_scenes;
 #[cfg(test)]
-#[path = "tests/ramp_scenes.rs"]
-mod ramp_scenes;
-#[cfg(test)]
-#[path = "tests/stair_scenes.rs"]
-mod stair_scenes;
-#[cfg(test)]
-#[path = "tests/grid_scenes.rs"]
-mod grid_scenes;
-#[cfg(test)]
 #[path = "tests/block_library_scenes.rs"]
 mod block_library_scenes;
 #[cfg(test)]
-#[path = "tests/slab_scenes.rs"]
-mod slab_scenes;
-#[cfg(test)]
 #[path = "tests/building_parts_scenes.rs"]
 mod building_parts_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/program_scenes.rs"]
-mod program_scenes;
+pub mod program_scenes;
 #[cfg(test)]
 #[path = "tests/view_recipe_scenes.rs"]
 mod view_recipe_scenes;
@@ -997,21 +802,18 @@ mod view_crop_scenes;
 #[cfg(test)]
 #[path = "tests/navigator_scenes.rs"]
 mod navigator_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/space_scenes.rs"]
-mod space_scenes;
-#[cfg(test)]
+pub mod space_scenes;
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/arch_scenes.rs"]
-mod arch_scenes;
+pub mod arch_scenes;
 #[cfg(test)]
 #[path = "tests/tag_scenes.rs"]
 mod tag_scenes;
 #[cfg(test)]
 #[path = "tests/viewmark_scenes.rs"]
 mod viewmark_scenes;
-#[cfg(test)]
-#[path = "tests/arch_project_scenes.rs"]
-mod arch_project_scenes;
 #[cfg(test)]
 #[path = "tests/xref_scenes.rs"]
 mod xref_scenes;

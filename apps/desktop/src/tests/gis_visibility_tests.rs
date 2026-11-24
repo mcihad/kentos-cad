@@ -7,12 +7,10 @@
 
 use kentos_commands::{Entity, EntityBase, RasterEntity, RasterFields, RasterSample, Workspace};
 use kentos_domain::Slot;
-use kentos_ui::widget::Menu;
 
 use crate::app::{App, Message};
 use crate::data_layers_tests::parcels;
-use crate::files_testing::{app_with_drawing, last_said};
-use crate::ribbon_search::Hit;
+use crate::files_testing::app_with_drawing;
 
 fn gis_app() -> App {
     let mut app = app_with_drawing();
@@ -85,23 +83,6 @@ fn raster_file_on(app: &mut App, layer: &str, file: Option<String>) {
         },
     });
     app.document.as_mut().expect("a drawing").model.add(e).expect("added");
-}
-
-/// The commands Menülerde ara finds for `text`.
-fn found(app: &mut App, text: &str) -> Vec<&'static str> {
-    app.search_typed(text.into());
-    app.hits()
-        .into_iter()
-        .filter_map(|h| match h {
-            Hit::Command(c) => Some(c.id),
-            _ => None,
-        })
-        .collect()
-}
-
-/// Whether a drawing menu (the right button's) would list the command: every one of them adds it this way.
-fn in_menus(app: &App, id: &'static str) -> bool {
-    !app.command_item(Menu::new(), id).is_empty()
 }
 
 #[test]
@@ -234,40 +215,6 @@ fn a_cad_project_left_for_a_cbs_project_brings_nothing_of_its_own_back() {
     assert!(!app.shows_aid("view.lineWeights"));
     assert!(app.offers("view.lineWeights") && app.ribbon_tabs().any(|t| t.id == "view" && t.panels.iter().any(|p| p.commands().contains(&"view.lineWeights"))));
     assert_eq!(kentos_sheet_ui::status::model_name(Some(app.work_mode())), "Harita");
-}
-
-#[test]
-fn the_buildings_ifc_is_out_of_reach_in_cbs_and_in_reach_in_a_buildings_cad_project() {
-    let mut app = gis_app();
-    for id in ["arch.ifcExport", "arch.ifcExportCut"] {
-        assert!(!app.offers(id) && !app.available(id), "{id}");
-        assert!(!in_menus(&app, id), "the right button's menus: {id}");
-    }
-    let ids = found(&mut app, "ifc");
-    assert!(!ids.iter().any(|id| id.starts_with("arch.ifc")), "{ids:?}");
-    // Run any way (a shortcut, the command line): refused, said where it is.
-    let _ = app.update(Message::Run("arch.ifcExport"));
-    let said = last_said(&app);
-    assert!(said.contains("bu CBS projesinde yok"), "{said}");
-    // The other way: a building's CAD project finds it, lists it and keeps Kalınlık and Model; no Ağ tab.
-    let mut cad = app_with_drawing();
-    let doc = cad.document.as_mut().expect("a drawing");
-    let mut s = doc.settings().clone();
-    s.workspace = Some(Workspace::Cad);
-    s.cad_work = Some(kentos_commands::CadWork::Architecture);
-    s.networks = serde_json::from_value(serde_json::json!([{
-        "id": "yollar", "name": "Yollar", "kind": "road", "edges": [{ "layer": "cizim" }],
-        "connect": "ends", "tolerance": 0.01, "direction": { "kind": "both" }
-    }]))
-    .expect("a network");
-    doc.model.set_settings(s);
-    assert!(cad.offers("arch.ifcExport") && in_menus(&cad, "arch.ifcExport"));
-    assert!(found(&mut cad, "ifc").contains(&"arch.ifcExport"));
-    assert!(cad.shows_aid("view.lineWeights"));
-    assert_eq!(kentos_sheet_ui::status::model_name(Some(cad.work_mode())), "Model");
-    cad.layer_pressed("cizim".into());
-    cad.layer_pressed("cizim".into());
-    assert_ne!(context(&cad), Some("ctx.network"), "the network's tab is CBS's");
 }
 
 /// A road network on Çizim, the sample's lines (docs/adr/0209 §2).

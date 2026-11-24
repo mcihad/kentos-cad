@@ -429,7 +429,7 @@ impl Catalog {
     /// The whole ribbon of a project type (CBS's when the type has none of
     /// its own), the contextual tabs left out: every CAD work's at once. The
     /// window shows `tabs_for`; the tests hold the whole one.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn tabs_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
         self.tabs_for(mode, None)
     }
@@ -520,7 +520,7 @@ impl Catalog {
 
     /// The contextual ribbon tabs of a project type, every CAD work's at once (the window shows
     /// `contextual_for_work`; the tests hold the whole one).
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn contextual_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
             .iter()

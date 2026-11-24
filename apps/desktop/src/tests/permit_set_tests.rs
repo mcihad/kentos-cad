@@ -1,6 +1,9 @@
 //! Ruhsat takımı (M37, docs/adr/8037): a two-storey building of four flats on a 400 m² parcel; its particulars given
 //! once, the set made in MO's order on the MO sheet, PAİY 57(10)'s table reading the drawing, and the set published as
 //! PDF/A-2 files named by the digital project regulation's EK-2.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -24,7 +27,7 @@ fn run(app: &mut App, name: &str, input: Value) -> Value {
 }
 
 /// A 15 × 6 m building of two storeys, each a flat, a stair hall and a flat; a 400 m² parcel of emsal 1.50, TAKS 0.40.
-pub(crate) fn building() -> App {
+pub fn building() -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(
         Some(Module::Architecture),

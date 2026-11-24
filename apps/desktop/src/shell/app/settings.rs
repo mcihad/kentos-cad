@@ -95,7 +95,7 @@ impl App {
 
     /// The quality the 3D views are drawn at (Uygulama ayarları › Grafik › 3B görünüm kalitesi, docs/adr/8120): 3B
     /// görünüm's building and road, and IFC modeli.
-    pub(crate) fn scene3d_quality(&self) -> kentos_model_view_ui::scene::Quality {
+    pub fn scene3d_quality(&self) -> kentos_model_view_ui::scene::Quality {
         use kentos_model_view_ui::scene::Quality;
         match self.settings.text("graphics.scene3dQuality").as_str() {
             "fast" => Quality::Fast,

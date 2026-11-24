@@ -34,9 +34,9 @@ const SURFACE: Surface = Surface::IfcViewer;
 
 /// The open viewer: its file, the read under way (its number and its stop), the file read, the plan's selection it
 /// last took and the Denetim findings it last painted.
-pub(crate) struct IfcWindow {
-    pub(crate) viewer: Viewer,
-    pub(crate) path: PathBuf,
+pub struct IfcWindow {
+    pub viewer: Viewer,
+    pub path: PathBuf,
     id: u64,
     stop: Arc<AtomicBool>,
     file: Option<(Arc<Vec<u8>>, Arc<Model>)>,
@@ -166,7 +166,7 @@ impl App {
 
     /// The model at `path` opened with `keys` (GlobalIds) chosen and painted once it is read: a review's finding shown on
     /// its objects (docs/adr/8104). A file already open is not read again.
-    pub(crate) fn open_ifc_model_showing(&mut self, path: PathBuf, keys: Vec<String>) -> Task<Message> {
+    pub fn open_ifc_model_showing(&mut self, path: PathBuf, keys: Vec<String>) -> Task<Message> {
         if let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.path == path && w.file.is_some()) {
             w.want = keys;
             Self::show_wanted(w);
@@ -197,7 +197,7 @@ impl App {
 
     /// The viewer closes: its read stops, its model and scene go (the GPU's copy with its window), and the main
     /// window's dialog when it was over the drawing.
-    pub(crate) fn ifc_viewer_gone(&mut self) {
+    pub fn ifc_viewer_gone(&mut self) {
         if let Some(w) = self.ifc_viewer.take() {
             w.stop.store(true, Ordering::Relaxed);
         }
@@ -282,7 +282,7 @@ impl App {
     /// the plan is chosen in the viewer when the file holds it. The objects of Denetim's findings (the rows chosen,
     /// else all it lists: what 3B görünüm paints) are painted as found when the file is the drawing's (its GlobalIds
     /// the drawing's ids, docs/adr/8074 §2).
-    pub(crate) fn follow_ifc_viewer(&mut self) {
+    pub fn follow_ifc_viewer(&mut self) {
         self.follow_ifc_viewer_found();
         let version = self.selection.version();
         let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.taken != version && w.viewer.stage == Stage::Shown) else { return };
@@ -434,10 +434,10 @@ pub(crate) fn viewer_control(
     })
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 impl App {
     /// The read under way done here and now, as its thread would give it (a test runs no task).
-    pub(crate) fn ifc_viewer_read_now(&mut self) {
+    pub fn ifc_viewer_read_now(&mut self) {
         let Some(w) = self.ifc_viewer.as_ref() else { return };
         let (id, path, stop) = (w.id, w.path.clone(), w.stop.clone());
         if let Some(result) = read(&path, &stop, &mut |_| {}) {
@@ -446,12 +446,12 @@ impl App {
     }
 
     /// The read under way's number: a test gives a late result with it.
-    pub(crate) fn ifc_viewer_id(&self) -> Option<u64> {
+    pub fn ifc_viewer_id(&self) -> Option<u64> {
         self.ifc_viewer.as_ref().map(|w| w.id)
     }
 
     /// A late result for read `id`, as its thread would give it.
-    pub(crate) fn ifc_viewer_late(&mut self, id: u64, path: &Path) {
+    pub fn ifc_viewer_late(&mut self, id: u64, path: &Path) {
         let stop = AtomicBool::new(false);
         if let Some(result) = read(path, &stop, &mut |_| {}) {
             let _ = self.ifc_viewer_event(Event::Done { id, result: result.map(Arc::new) });
@@ -459,7 +459,7 @@ impl App {
     }
 
     /// What a picture of IFC modeli shows: its own window while it is open beside the plan, else the main window.
-    pub(crate) fn ifc_viewer_shown(&self) -> Element<'_, Message> {
+    pub fn ifc_viewer_shown(&self) -> Element<'_, Message> {
         match self.windows.of(SURFACE) {
             Some(w) if self.surface_wanted(SURFACE) => self.window_view(w.id),
             _ => self.view(),

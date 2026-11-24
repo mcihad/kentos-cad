@@ -24,7 +24,7 @@ fn the_2p1_flat_goes_on_its_kinds_ek4_layers_and_its_dxf_keeps_them() {
     app.memory.layer_keys = true;
     let style = kentos_commands::builtin_wall_styles()
         .into_iter()
-        .find(|s| s.id == crate::arch_start::FIRST_WALL_STYLE)
+        .find(|s| s.id == "kentos-dis-duvar-25")
         .expect("KentOS's exterior wall");
     kentos_interaction::wall::take_style(&mut app.memory, &style);
     let problems = Player::new(&mut app, trace, variant, AREA, scratch_file(trace, variant))

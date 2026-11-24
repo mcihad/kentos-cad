@@ -1,7 +1,7 @@
-//! Etkin kat (docs/adr/0713): the level new walls, columns, stairs and ramps go on — Archicad's current story, a new
+//! Etkin kat (docs/adr/0713): the level new walls, columns, stairs and ramps go on — the current storey, a new
 //! element's home story. Each open drawing has its own (a tab set aside keeps it); a drawing opens on the level it
-//! was saved on, else its ground level (the one at elevation 0, else its first) (docs/adr/0720 §1–§2, Revit's last
-//! viewed view). Saving writes it into the file, no edit of the drawing. The status bar's Kat cell shows it while the
+//! was saved on, else its ground level (the one at elevation 0, else its first) (docs/adr/0720 §1–§2, the last
+//! viewed level). Saving writes it into the file, no edit of the drawing. The status bar's Kat cell shows it while the
 //! project has levels; its menu chooses another level, Üst kat / Alt kat (Ctrl+↑ / Ctrl+↓), Katsız (no level) or
 //! Katları düzenle. The tools write it in their commands' input (CMD-07) and see a change at once.
 //!
@@ -79,7 +79,7 @@ pub enum Chosen {
 
 /// The level in force for a drawing of `settings`: the one chosen while the drawing has it, else its ground level;
 /// none without levels or with Katsız.
-pub(crate) fn effective<'a>(chosen: &'a Chosen, settings: &'a ProjectSettings) -> Option<&'a str> {
+pub fn effective<'a>(chosen: &'a Chosen, settings: &'a ProjectSettings) -> Option<&'a str> {
     let levels = settings.arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
     if levels.is_empty() {
         return None;
@@ -97,13 +97,13 @@ pub(crate) fn effective<'a>(chosen: &'a Chosen, settings: &'a ProjectSettings) -
 
 impl App {
     /// Etkin kat for the open drawing, owned (the tools' context borrows the drawing mutably).
-    pub(crate) fn active_level(&self) -> Option<String> {
+    pub fn active_level(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
         effective(&self.active_level, doc.model.settings()).map(str::to_owned)
     }
 
     /// Kat chosen on the status bar's menu: a level by its id, or none (Katsız).
-    pub(crate) fn choose_level(&mut self, level: Option<String>) {
+    pub fn choose_level(&mut self, level: Option<String>) {
         self.active_level = match level {
             Some(id) => Chosen::Level(id),
             None => Chosen::Unassigned,
@@ -126,7 +126,7 @@ impl App {
         self.say(Level::Info, said);
     }
 
-    /// Üst kat / Alt kat (docs/adr/0720 §5; Archicad's Go Up/Down a Story, Ctrl+↑/↓): the level above or under the
+    /// Üst kat / Alt kat (docs/adr/0720 §5; one storey up or down, Ctrl+↑/↓): the level above or under the
     /// active one becomes Etkin kat; at the top or the bottom it stays and that is said.
     pub(crate) fn step_level(&mut self, up: bool) {
         let Some(doc) = &self.document else {
@@ -196,7 +196,7 @@ impl App {
 
     /// Kat görünümü chosen (docs/adr/0715): the plan shows it at once; what it hides or draws faint leaves the
     /// selection.
-    pub(crate) fn choose_level_view(&mut self, view: LevelView) {
+    pub fn choose_level_view(&mut self, view: LevelView) {
         self.level_view = view;
         self.sync_level_view();
         let active = self.active_level();

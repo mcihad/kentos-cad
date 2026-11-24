@@ -240,7 +240,7 @@ mod tests {
 
     fn app() -> App {
         let fixture: serde_json::Value = serde_json::from_str(include_str!(
-            "../../../../fixtures/commands/v1/cad.tags.check.json"
+            "../../../fixtures/commands/v1/cad.tags.check.json"
         ))
         .unwrap();
         let setup = &fixture["cases"]

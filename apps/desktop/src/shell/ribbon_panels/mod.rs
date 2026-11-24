@@ -59,7 +59,7 @@ pub(crate) const DRAW_COLORS: [(&str, &str); 8] = [
 
 /// The colours a dimension's lines take (the web's `LINE_COLORS`, docs/adr/0205
 /// §6): the drawing colours but ink, which is the object's own.
-pub(crate) fn line_colors() -> impl Iterator<Item = (&'static str, &'static str)> {
+pub fn line_colors() -> impl Iterator<Item = (&'static str, &'static str)> {
     DRAW_COLORS.iter().copied().filter(|(_, v)| *v != "ink")
 }
 

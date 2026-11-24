@@ -10,6 +10,9 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use kentos_domain::Slot;
 
@@ -22,7 +25,7 @@ use crate::wall_scenes::joined_room;
 
 /// The joined room with its openings: slots 6 (Kapı 90), 7 (İki kanatlı kapı 140), 8 and 9 (Pencere 120), 10 (Sürme
 /// kapı 160), 11 (Boşluk 100).
-pub(crate) fn room(app: &mut App, scale: f64) {
+pub fn room(app: &mut App, scale: f64) {
     joined_room(app, scale);
     app.command_expanded = true;
     run(app, "tool.door");

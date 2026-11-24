@@ -47,7 +47,7 @@ const WORDS: &[(&str, &str)] = &[
 
 /// One of the library's furniture and fixtures: its name, category and tags (folded for the search too).
 #[derive(Clone, Debug)]
-pub(crate) struct Fixture {
+pub struct Fixture {
     pub name: String,
     pub category: String,
     folded: Vec<String>,

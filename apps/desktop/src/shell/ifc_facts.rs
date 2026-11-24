@@ -4,7 +4,7 @@
 //! facts (arch_audit/standards.rs).
 
 use kentos_domain::Document;
-pub(crate) use kentos_native_application::ifc_facts::Planned;
+pub use kentos_native_application::ifc_facts::Planned;
 use serde_json::Value;
 
 /// The application the in-memory file names: the form reads no version.
@@ -15,13 +15,13 @@ const PACKAGE: &str = "dijital-proje";
 const FORM: &str = "dijital_proje.form";
 
 /// The model `cad.arch.ifc` would write now (the whole project's); none for a drawing without walls.
-pub(crate) fn plan(doc: &Document) -> Option<Planned> {
+pub fn plan(doc: &Document) -> Option<Planned> {
     kentos_native_application::ifc_facts::plan(doc, None, "", APPLICATION)
 }
 
 /// EK-9's form as the drawing's table rows under its header (`dijital_proje.form.tablo`), for the drawing now, the rule
 /// asked on this thread: what Ruhsat takımı writes again. A drawing without walls has its questions unanswered.
-pub(crate) fn form_rows(doc: &Document) -> Result<Vec<Vec<String>>, String> {
+pub fn form_rows(doc: &Document) -> Result<Vec<Vec<String>>, String> {
     form_rows_of(plan(doc), doc.form_answers().to_vec())
 }
 

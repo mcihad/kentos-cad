@@ -180,7 +180,7 @@ impl App {
         });
     }
 
-    pub(crate) fn tool_setting(&mut self, event: Commit) -> Task<Message> {
+    pub fn tool_setting(&mut self, event: Commit) -> Task<Message> {
         if self.session.tool_id() != event.tool || !self.session.is_running() {
             return Task::none();
         }

@@ -3,6 +3,9 @@
 //! answers the form; the five results show apart and the questions left to the author take Evet or Hayır with a note.
 //! The section building as drawn still lacks mandatory fields, so the package's errors stop the publication; declared as
 //! an author does (docs/adr/8076), its package holds and is published.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use crate::app::{App, Message};
 use crate::exchange::Window;
@@ -31,7 +34,7 @@ fn author(value: &str) -> Value {
 /// The section building as an author completes it for the permit's model (docs/adr/8076): the künye's digital
 /// delivery (EK-1, EK-2, EK-7), the rooms' finishes, the project's system (TUREF / TM36, Antalya heights), the parcel in
 /// the Vaziyet planı with ±0.00's elevation, the fire classes and exit roles, the building's fire protection class.
-pub(crate) fn declared_building() -> App {
+pub fn declared_building() -> App {
     let mut snap = section_snapshot();
     for (name, value) in [
         ("proje_kodu", "260123"),

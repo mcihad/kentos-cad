@@ -310,7 +310,7 @@ impl App {
     /// icon and key, its check where it has one; dimmed where it cannot run.
     /// A command a module's program does not offer is left out (docs/adr/0802):
     /// the drawing's menus, Yardım and the cloud cells list the program's own.
-    pub(crate) fn command_item(&self, menu: Menu<Message>, id: &'static str) -> Menu<Message> {
+    pub fn command_item(&self, menu: Menu<Message>, id: &'static str) -> Menu<Message> {
         let Some(command) = catalog().get(id).filter(|_| self.offers(id)) else {
             return menu;
         };

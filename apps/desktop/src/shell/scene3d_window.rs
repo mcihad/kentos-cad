@@ -119,7 +119,7 @@ pub struct Window {
     parts: Arc<Vec<road_scene::ScenePart>>,
     /// The building shown in the model viewer (scene3d_building.rs); none: the road project's scene, which the fields
     /// below draw.
-    pub(crate) building: Option<Building3d>,
+    pub building: Option<Building3d>,
     pub(crate) scene: Arc<Scene>,
     /// Whether the terrain is cut by the corridors (the ground they remove not drawn over them).
     pub(crate) cut: bool,
@@ -135,7 +135,7 @@ pub struct Window {
     pub(crate) legend: bool,
     /// The drawing's generation and revision the road's scene was made from (a building keeps its own).
     made: (u64, u64),
-    pub(crate) seen: Arc<Mutex<Seen>>,
+    pub seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
 }
 
@@ -174,7 +174,7 @@ fn msg(event: Event) -> Message {
     Message::Scene3d(event)
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 impl Window {
     /// The scene drawn: a building's viewer's, else the road's.
     fn drawn(&self) -> &Arc<Scene> {
@@ -185,7 +185,7 @@ impl Window {
     }
 
     /// The camera the scene is drawn with and its exaggeration: a building's viewer's (seen as it is), else the road's.
-    pub(crate) fn drawn_camera(&self) -> (Camera, Exaggeration) {
+    pub fn drawn_camera(&self) -> (Camera, Exaggeration) {
         match &self.building {
             Some(b) => (b.viewer.camera(), Exaggeration::NONE),
             None => (self.camera(), self.exaggeration()),
@@ -218,17 +218,17 @@ impl Window {
     }
 
     /// The object of the point last picked, as a test names it.
-    pub(crate) fn picked_owner(&self) -> Option<String> {
+    pub fn picked_owner(&self) -> Option<String> {
         self.drawn_picked().and_then(|p| p.owner.as_deref()).map(|k| self.named(k))
     }
 
     /// The scene's triangles, as its sources have them.
-    pub(crate) fn scene_triangles(&self) -> usize {
+    pub fn scene_triangles(&self) -> usize {
         self.drawn().triangles()
     }
 
     /// The middle of the `n`th triangle of a source mesh of `part` (its real height): a point the pictures click.
-    pub(crate) fn point_on(&self, part: u32, n: usize) -> Option<[f64; 3]> {
+    pub fn point_on(&self, part: u32, n: usize) -> Option<[f64; 3]> {
         let m = self.drawn().meshes().iter().find(|m| m.part == part)?;
         let t = m.triangles.get(n.min(m.triangles.len().checked_sub(1)?))?;
         let [a, b, c] = t.map(|k| m.vertices[k as usize]);
@@ -236,13 +236,13 @@ impl Window {
     }
 
     /// How many things the scene shows.
-    pub(crate) fn scene_sources(&self) -> usize {
+    pub fn scene_sources(&self) -> usize {
         self.drawn().sources()
     }
 
     /// The middle of the `n`th triangle of the `k`th source mesh of `part` and that mesh's object: a place a click
     /// meets it, unless something stands in front.
-    pub(crate) fn owner_on(&self, part: u32, k: usize, n: usize) -> Option<([f64; 3], String)> {
+    pub fn owner_on(&self, part: u32, k: usize, n: usize) -> Option<([f64; 3], String)> {
         let m = self.drawn().meshes().iter().filter(|m| m.part == part).nth(k)?;
         let t = m.triangles.get(n)?;
         let [a, b, c] = t.map(|i| m.vertices[i as usize]);
@@ -251,13 +251,13 @@ impl Window {
     }
 
     /// The parts of the source meshes of an object.
-    pub(crate) fn parts_of(&self, owner: &str) -> Vec<u32> {
+    pub fn parts_of(&self, owner: &str) -> Vec<u32> {
         let key = self.key_of(owner);
         self.drawn().meshes().iter().filter(|m| m.owner.as_deref() == Some(key.as_str())).map(|m| m.part).collect()
     }
 
     /// The parts its tiles carry.
-    pub(crate) fn scene_parts(&self) -> Vec<u32> {
+    pub fn scene_parts(&self) -> Vec<u32> {
         self.drawn().parts()
     }
 }
@@ -280,7 +280,7 @@ impl Window {
     }
 
     /// The vertical exaggeration as typed, about the scene's lowest point; 1 when it does not read or is not positive.
-    pub(crate) fn exaggeration(&self) -> Exaggeration {
+    pub fn exaggeration(&self) -> Exaggeration {
         let factor =
             self.exaggeration.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0);
         Exaggeration { factor, datum: self.scene.bounds().min[2] }

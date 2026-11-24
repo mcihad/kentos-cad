@@ -4,6 +4,9 @@
 //! tool from the ribbon's command, a selection, a typed value, the pointer)
 //! and stops where the picture is to be taken: mid-use with the preview, or
 //! after the confirm. Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use iced::Point;
 use kentos_render_wgpu::Vec2;
@@ -16,8 +19,8 @@ use crate::viewport::Event;
 
 const EMPTY: &str = include_str!("../../../../fixtures/interaction/v1/empty.kcad");
 /// Where the scenes' drawings lie: a TM zone's coordinates (Y, X).
-pub(crate) const E: f64 = 487_000.0;
-pub(crate) const N: f64 = 4_420_000.0;
+pub const E: f64 = 487_000.0;
+pub const N: f64 = 4_420_000.0;
 
 pub(crate) fn xy(p: [f64; 2]) -> Value {
     json!({ "x": E + p[0], "y": N + p[1] })
@@ -30,14 +33,14 @@ pub(crate) type Hole<'a> = (&'a [[f64; 2]], &'a [Option<f64>]);
 pub(crate) type Part<'a> = (&'a [[f64; 2]], &'a [&'a [[f64; 2]]]);
 
 /// One object of a scene: its kind's fields and its layer.
-pub(crate) struct Objects(pub(crate) Vec<Value>);
+pub struct Objects(pub(crate) Vec<Value>);
 
 impl Objects {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    pub(crate) fn push(&mut self, layer: &str, mut fields: Value) -> u32 {
+    pub fn push(&mut self, layer: &str, mut fields: Value) -> u32 {
         let id = self.0.len() as u32 + 1;
         fields["id"] = json!(id);
         fields["layerId"] = json!(layer);
@@ -51,7 +54,7 @@ impl Objects {
     }
 
     /// A block's insert: its point, scale, turn (radians) and mirror (docs/adr/0144).
-    pub(crate) fn insert(
+    pub fn insert(
         &mut self,
         layer: &str,
         block: &str,
@@ -276,7 +279,7 @@ impl Objects {
     }
 
     /// More fields of an object (a text's face, a dimension's look; docs/adr/0183).
-    pub(crate) fn fields(&mut self, id: u32, more: Value) {
+    pub fn fields(&mut self, id: u32, more: Value) {
         let e = &mut self.0[id as usize - 1];
         if let Value::Object(more) = more {
             for (key, value) in more {
@@ -313,7 +316,7 @@ impl Objects {
     }
 }
 
-pub(crate) fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
+pub fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
     json!({
         "id": id, "name": name, "type": "layer", "visible": true, "locked": false,
         "expanded": true,
@@ -324,7 +327,7 @@ pub(crate) fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
 
 /// Opens a new drawing of `objects` on the layers Çizim, Yol and Parsel, as
 /// the app would open a file: the view fits it.
-pub(crate) fn open(app: &mut App, objects: Objects) {
+pub fn open(app: &mut App, objects: Objects) {
     open_with_blocks(app, objects, json!([]));
 }
 
@@ -338,7 +341,7 @@ pub(crate) fn open_with_blocks(app: &mut App, objects: Objects, blocks: Value) {
 }
 
 /// `open` with the drawing's snapshot edited first (its settings, layers or blocks), as a file would carry them.
-pub(crate) fn open_edited(app: &mut App, objects: Objects, edit: impl FnOnce(&mut Value)) {
+pub fn open_edited(app: &mut App, objects: Objects, edit: impl FnOnce(&mut Value)) {
     let mut d: Value = serde_json::from_str(EMPTY).expect("the empty drawing reads");
     d["layers"] = json!([
         layer("cizim", "Çizim", "fg", 0.25),
@@ -362,19 +365,19 @@ pub(crate) fn at(app: &App, p: [f64; 2]) -> Point {
     Point::new(x as f32, y as f32)
 }
 
-pub(crate) fn hover(app: &mut App, p: [f64; 2]) {
+pub fn hover(app: &mut App, p: [f64; 2]) {
     let point = at(app, p);
     let _ = app.update(Message::Viewport(Event::Moved(point)));
 }
 
-pub(crate) fn click(app: &mut App, p: [f64; 2]) {
+pub fn click(app: &mut App, p: [f64; 2]) {
     let point = at(app, p);
     let _ = app.update(Message::Viewport(Event::Moved(point)));
     let _ = app.update(Message::Viewport(Event::Pressed(point)));
     let _ = app.update(Message::Viewport(Event::Released(point)));
 }
 
-pub(crate) fn run(app: &mut App, id: &'static str) {
+pub fn run(app: &mut App, id: &'static str) {
     let _ = app.update(Message::Run(id));
 }
 
@@ -386,7 +389,7 @@ pub(crate) fn method(app: &mut App, id: &'static str, option: &'static str) {
     });
 }
 
-pub(crate) fn typed(app: &mut App, text: &str) {
+pub fn typed(app: &mut App, text: &str) {
     let _ = app.submit_line(text);
 }
 
@@ -1137,7 +1140,7 @@ fn third_phase() -> Vec<Scene> {
             run(app, "tool.confirm");
             hover(app, [40.0, 30.0]);
         }),
-        // AutoCAD's TRIM and EXTEND options (docs/adr/0294).
+        // Buda and Uzat's options (docs/adr/0294).
         ("buda-uzanti-onizleme", |app| {
             open(app, short_walls());
             run(app, "tool.trim");

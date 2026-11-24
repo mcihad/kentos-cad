@@ -125,7 +125,7 @@ fn changed_revisions_refresh_the_review_without_applying_and_old_documents_canno
 #[test]
 fn the_narrow_preview_keeps_apply_and_cancel_visible_and_cancel_is_interactive() {
     use kentos_ui::theme::typography::{self, Typography};
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     for size in [13, 18] {
         for width in [1100., 1440.] {
             let mut app = app();

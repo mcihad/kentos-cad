@@ -128,9 +128,7 @@
       "shell/windows/mod.rs",
       "shell/works/sources.rs"
     ],
-    "shell->arch": [
-      "shell/module_profile.rs"
-    ],
+    "shell->arch": [],
     "shell->map": [],
     "shell->road": [],
     "cad->gis": [

@@ -205,7 +205,7 @@ pub(crate) fn number(n: f64) -> Value {
 /// holds and its rule takes; the default for the rest, and for everything
 /// when the text is not a JSON object. Fields the layout does not know are
 /// dropped: the web's toolbox's among them (docs/adr/0155).
-pub(crate) fn read_layout(text: Option<&str>) -> Map<String, Value> {
+pub fn read_layout(text: Option<&str>) -> Map<String, Value> {
     let stored = text.and_then(|t| serde_json::from_str::<Value>(&finite_numbers(t)).ok());
     let mut out = defaults();
     let Some(Value::Object(saved)) = stored else {

@@ -127,7 +127,7 @@ pub(super) fn view<'a>(
 
 /// The rows with what each sends, what does not hold and Plan notu ekle: the project's group and a building's own
 /// notes in Bina programı › Binalar (docs/adr/8163) show the same.
-pub(crate) fn table<'a>(
+pub fn table<'a>(
     rows: &'a [Note],
     on: impl Fn(usize, Edit) -> Message + Copy + 'a,
     on_add: Message,

@@ -10,7 +10,7 @@ use kentos_ui::widget::ribbon::{self, Group};
 
 #[test]
 fn architectural_tabs_fit_small_and_large_text_without_losing_named_access() {
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     typography::load();
     let mut app = app_with_drawing();
     make_cad(&mut app);
@@ -206,7 +206,7 @@ fn kentos_mimari_s_aids_have_no_map_s_lamps_or_their_options() {
 fn a_folded_architecture_group_opens_and_runs_its_named_tool() {
     use crate::catalog::Item;
     use kentos_ui::snapshot::{Input, Snapshot};
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     let mut app = app_with_drawing();
     make_cad(&mut app);
     let _ = app
@@ -269,7 +269,7 @@ fn a_folded_architecture_group_opens_and_runs_its_named_tool() {
 #[test]
 fn narrow_large_text_status_keeps_scale_visible_and_toggles_without_ending_the_tool() {
     use kentos_ui::snapshot::{Input, Snapshot};
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     let mut app = app_with_drawing();
     make_cad(&mut app);
     let _ = app
@@ -385,7 +385,7 @@ fn selected_architectural_context_names_stay_inside_the_narrow_tab_strip() {
             }
         }
     }
-    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _guard = crate::appearance::TYPOGRAPHY.lock();
     for (kind, slot) in [("Duvar", 1), ("Açıklık", 6), ("Mahal", 12)] {
         for width in [1100., 1440.] {
             let mut app = app_with_drawing();

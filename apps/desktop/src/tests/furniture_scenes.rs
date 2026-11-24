@@ -15,6 +15,9 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::f64::consts::{FRAC_PI_2, PI};
 
@@ -27,12 +30,12 @@ use crate::tools_screens::Scene;
 
 const LIBRARY: &str = include_str!("../../../../catalog/v1/blocks/kentos-temel.kblok");
 
-pub(crate) fn library() -> Value {
+pub fn library() -> Value {
     let file: Value = serde_json::from_str(LIBRARY).expect("the library");
     file["blocks"].clone()
 }
 
-pub(crate) fn id_of(name: &str) -> String {
+pub fn id_of(name: &str) -> String {
     library()
         .as_array()
         .expect("blocks")
@@ -43,11 +46,11 @@ pub(crate) fn id_of(name: &str) -> String {
         .to_owned()
 }
 
-pub(crate) fn xy(x: f64, y: f64) -> Value {
+pub fn xy(x: f64, y: f64) -> Value {
     json!({ "x": E + x, "y": N + y })
 }
 
-pub(crate) fn wall(o: &mut Objects, pts: &[(f64, f64)], width: f64, closed: bool) {
+pub fn wall(o: &mut Objects, pts: &[(f64, f64)], width: f64, closed: bool) {
     let mut fields = json!({
         "kind": "wall", "pts": pts.iter().map(|&(x, y)| xy(x, y)).collect::<Vec<_>>(),
         "width": width, "justify": "center",

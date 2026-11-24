@@ -259,6 +259,32 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
   `pub(crate)` oldu.
 - Sınama: çekirdek 2709, programlar 34.
 
+### §4.11 Adım 11: Mimari kendi paketinde
+
+- `apps/desktop-arch` (`kentos-desktop-arch`): Mimari'nin 30 modülü (iç içe `arch_audit`'in dördü, `quantities`, Bina
+  programının görünüşü) ve 80 sınama dosyası; program `main`'de, programlar arası sınamalar `ctor`'la Mimari'yi de
+  kaydeder. `module_profile::IN_CORE` yine boş; CBS profil eşleşmesiyle çekirdekte.
+- Sınamaların ağı: Mimari'nin sınamaları çekirdeğin sahne kitine dayanıyordu. Kit `kentos-desktop`'un `testing`
+  özelliğiyle açıldı (`files_testing` gibi):
+  - `tools_scenes`, `tools_screens` (resim koşucusu `take`; çekirdeğin listesi ve `screens`'i `cfg(test)`);
+  - duvar, program, mahal, mobilya, açıklık, gezinti ve mimari sahneleri; ruhsat ve kabul yardımcıları (14 modül);
+  - kitte yalnız çekirdeğin sınamalarının kullandığı yardımcıların uyarısı kapalı; kit iki bağımlılığı isteğe bağlı
+    alır (`miniz_oxide`, `parking_lot`); yazı ölçüsü kilidi `appearance::TYPOGRAPHY`'dir.
+- Çekirdekte kalan üç sahne dosyası bölündü: Mimari pencerelerine dokunan sahneler pakete (`wall_style_scenes`,
+  `program_window_scenes`, `quantities_scenes`); duvar, ev ve mahal çizen yardımcılar çekirdekte. Mimari'nin resimleri
+  kendi toplayıcısındadır (`arch_screens`).
+- Mimari'nin kaydına dayanan beş çekirdek sınaması taşındı:
+  - Mimari programının başlangıcı (ölçü katmanı, Duvara hizala) ile CBS'yi Mimari'yle karşılaştıran IFC sınaması pakete
+    (CBS henüz çekirdekte);
+  - modülleri karşılaştıran iki sınama (her programın yerleşimi, Mahal ayırıcı) programlara.
+  - 2+1 dairesinin izi (`traces::flat`) çekirdeğin kitinde; ruhsat paketi sınaması onu kullanır.
+- Bağımlılık tabanı: kabuk → Mimari 1 → 0; Mimari'nin paketi yalnız çekirdeğe bağlı. Kalan izlenen bağlar kabuk → CAD
+  77, kabuk → CBS 44, CAD → CBS 30, CBS → CAD 54.
+- Derleme: Mimari dosyasında tek satır Mimari'nin sınamalarını 3,7 s'de, çekirdekte tek satır çekirdeğinkileri 14,7
+  s'de derler (önce bütün masaüstü 17,4 s).
+- Sınama: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar 36. Toplam 3063, öncekiyle aynı; yok sayılan 762,
+  yeni `arch_screens` ile bir fazla.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):
@@ -280,7 +306,7 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
   ortak pencerelere çekirdekte kendi merkezleri verilir (durum, ileti, pencere türü; Harita'daki düzenin çekirdek içi
   benzeri), Yol'un merkezine bağları kalkar; `road_project_panel`'in `project_graph_window` bağı da çözülür.
 
-- Yol, Mimari ve CBS paketleri (en az bağlıdan); her biri aynı düzenle: ortak parçalar çekirdeğe, `ModuleParts`,
-  silinen türler, uzantı trait'leri, paket, sınamaların yeri.
+- CBS paketi (Harita, Yol ve Mimari ayrıldı): aynı düzenle ortak parçalar çekirdeğe, `ModuleParts`, silinen türler,
+  uzantı trait'leri, paket, sınamaların yeri. CBS ile CAD arasındaki bağ en büyüğüdür (CBS → CAD 54, CAD → CBS 30).
 - CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
 - Modül programlarının ayrı ikilileri ve paketlemesi: bir modülün programı yalnız kendi paketini kaydeder.

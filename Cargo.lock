@@ -2903,6 +2903,7 @@ dependencies = [
  "iced",
  "kentos-commands",
  "kentos-desktop",
+ "kentos-desktop-arch",
  "kentos-desktop-map",
  "kentos-desktop-road",
  "kentos-domain",
@@ -3067,6 +3068,42 @@ dependencies = [
  "tokio",
  "unicode-segmentation",
  "zune-jpeg 0.5.15",
+]
+
+[[package]]
+name = "kentos-desktop-arch"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iced",
+ "iced_runtime",
+ "kentos-commands",
+ "kentos-desktop",
+ "kentos-digital-project",
+ "kentos-domain",
+ "kentos-extensions",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-headless",
+ "kentos-ifc",
+ "kentos-interaction",
+ "kentos-kcad",
+ "kentos-launch",
+ "kentos-model-view",
+ "kentos-model-view-ui",
+ "kentos-native-application",
+ "kentos-plot",
+ "kentos-postgis",
+ "kentos-processing",
+ "kentos-project",
+ "kentos-render-wgpu",
+ "kentos-scene3d",
+ "kentos-sheet",
+ "kentos-sheet-ui",
+ "kentos-ui",
+ "rfd",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

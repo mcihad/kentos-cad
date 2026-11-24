@@ -10,6 +10,9 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
@@ -17,7 +20,7 @@ use crate::tools_screens::{Pointed, Scene, press_caption};
 use crate::wall_scenes::opened;
 
 /// The plan with room round it for the dimension rows.
-pub(crate) fn view(app: &mut App) {
+pub fn view(app: &mut App) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E - 3.5,
@@ -121,7 +124,7 @@ fn rooms_preview(app: &mut App) {
 }
 
 /// Enter: the rooms written.
-pub(crate) fn rooms(app: &mut App) {
+pub fn rooms(app: &mut App) {
     rooms_preview(app);
     typed(app, "");
     app.selection.clear();

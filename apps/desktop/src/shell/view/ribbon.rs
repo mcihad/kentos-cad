@@ -275,7 +275,7 @@ impl App {
     /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
     /// the window (large → small → icons → one button, DESIGN.md §7.3.1), its
     /// seldom used tools under the title's ▾ and its launcher (↘).
-    pub(crate) fn ribbon_group(
+    pub fn ribbon_group(
         &self,
         tab: &str,
         panel: &RibbonPanel,

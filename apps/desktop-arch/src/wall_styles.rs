@@ -1067,7 +1067,7 @@ impl WallStylesApp for App {
 }
 
 #[cfg(test)]
-#[path = "../tests/wall_styles_layout_tests.rs"]
+#[path = "tests/wall_styles_layout_tests.rs"]
 mod layout_tests;
 
 /// A row's small button: its icon, enabled or not.

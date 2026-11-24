@@ -959,7 +959,7 @@ impl App {
     }
 
     /// Closes the window on top and whatever it holds (the password, a request).
-    pub(crate) fn close_dialog(&mut self) {
+    pub fn close_dialog(&mut self) {
         use crate::app::Dialog;
         match self.dialog.take() {
             // A Yapay zekâ ajanı window over Uygulama ayarları goes first (assistant/settings.rs).

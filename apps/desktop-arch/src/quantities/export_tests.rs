@@ -8,7 +8,7 @@ use crate::table_write::{Outcome, write};
 fn csv_exports_selected_quantity_table_including_empty_table_workbooks_keep_all() {
     let app = app_with_drawing();
     let q: SpacesQuantified = serde_json::from_str(include_str!(
-        "../../../../../docs/baseline/2026-10-25-architecture-quantity-cache/workload-quantities-before.json"
+        "../../../../docs/baseline/2026-10-25-architecture-quantity-cache/workload-quantities-before.json"
     )).unwrap();
     assert_eq!((q.spaces.len(), q.walls.len(), q.openings.len()), (400, 200, 0));
     let dir = scratch("quantity-export");

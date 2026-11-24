@@ -27,8 +27,8 @@ mod atlas_export;
 pub(crate) mod permit_bim;
 pub(crate) mod permit_gate;
 pub(crate) mod permit_scope;
-pub(crate) mod permit_set;
-pub(crate) mod sheet_publish;
+pub mod permit_set;
+pub mod sheet_publish;
 #[cfg(test)]
 mod atlas_tests;
 #[cfg(test)]

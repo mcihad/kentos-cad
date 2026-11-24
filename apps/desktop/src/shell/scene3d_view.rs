@@ -286,10 +286,10 @@ impl App {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 impl App {
     /// What a picture of 3B görünüm shows: its own window while it is open beside the plan, else the main window.
-    pub(crate) fn scene3d_shown(&self) -> Element<'_, Message> {
+    pub fn scene3d_shown(&self) -> Element<'_, Message> {
         match self.windows.of(SURFACE) {
             Some(w) if self.surface_wanted(SURFACE) => self.window_view(w.id),
             _ => self.view(),

@@ -138,6 +138,7 @@ members = [
     "crates/model-view-ui",
     "apps/ui-showcase",
     "apps/desktop",
+    "apps/desktop-arch",
     "apps/desktop-map",
     "apps/desktop-road",
     "apps/kentos-cad",

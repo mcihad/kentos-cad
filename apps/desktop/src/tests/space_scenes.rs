@@ -17,8 +17,10 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
-use crate::arch;
 use kentos_domain::Slot;
 
 use kentos_ui::widget::docking;
@@ -61,7 +63,7 @@ fn on_level(app: &mut App) {
 }
 
 /// The room with its openings and its two spaces on Zemin kat: slots 12 (Z-01 Salon) and 13 (Z-02 Mutfak).
-pub(crate) fn spaces(app: &mut App) {
+pub fn spaces(app: &mut App) {
     crate::opening_scenes::room(app, 50.0);
     on_level(app);
     run(app, "tool.space");
@@ -139,18 +141,7 @@ fn split(app: &mut App) {
     hover(app, [2.0, 5.5]);
 }
 
-fn quantities(app: &mut App) {
-    spaces(app);
-    run(app, "arch.quantities");
-}
 
-fn quantities_walls(app: &mut App) {
-    spaces(app);
-    run(app, "arch.quantities");
-    let _ = app.update(Message::from(arch::Event::Quantities(
-        crate::quantities::Event::Tab(crate::quantities::Tab::Walls),
-    )));
-}
 
 /// The bottom outer wall deleted: the salon and the kitchen keep their last boundary, each said with a warning.
 fn lost(app: &mut App) {
@@ -182,7 +173,7 @@ fn shaft_tool(app: &mut App) {
 }
 
 /// The rooms and the shaft written: Z-01 Salon, Z-02 Mutfak round the shaft, S-01 Şaft crossed.
-fn shaft_written(app: &mut App) {
+pub fn shaft_written(app: &mut App) {
     with_shaft(app);
     run(app, "tool.space");
     typed(app, "N");
@@ -203,10 +194,6 @@ fn shaft_written(app: &mut App) {
     hover(app, [9.0, -1.0]);
 }
 
-fn shaft_quantities(app: &mut App) {
-    shaft_written(app);
-    run(app, "arch.quantities");
-}
 
 /// The shaft selected: its Boşluk row.
 fn shaft_props(app: &mut App) {
@@ -228,7 +215,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("saft-arac", shaft_tool),
         ("saft-yazildi", shaft_written),
-        ("saft-metraj", shaft_quantities),
         ("saft-oznitelikler", shaft_props),
         ("mahal-serit", ribbon),
         ("mahal-oda", written),
@@ -236,8 +222,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("mahal-brut", gross),
         ("mahal-oznitelikler", props),
         ("mahal-bol", split),
-        ("mahal-metraj", quantities),
-        ("mahal-metraj-duvar", quantities_walls),
         ("mahal-kayip", lost),
     ]
 }

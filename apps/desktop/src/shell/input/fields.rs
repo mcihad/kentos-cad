@@ -23,7 +23,7 @@ impl App {
     /// A key while the value field is open (ADR 0018, “Tuş ve fare anlamları”).
     pub(super) fn field_key(&mut self, press: KeyPress) -> Task<Message> {
         match press.named() {
-            // Space is a second Enter, as in AutoCAD.
+            // Space is a second Enter, as the command line's own (docs/adr/8018).
             Some(Named::Enter | Named::Space) => return self.submit_field(),
             Some(Named::Escape) => self.field = None,
             Some(Named::Backspace) => {
@@ -195,7 +195,7 @@ impl App {
             }
             Some(mode) => {
                 // A direction, locked or left empty: the tool's settings come next (docs/adr/8018). Any field left
-                // empty is passed over, nothing locked: Tab goes round the fields as AutoCAD's dynamic input does.
+                // empty is passed over, nothing locked: Tab goes round the fields of the input by the cursor.
                 let direction = matches!(mode, LockAsk::Angle | LockAsk::Deflection);
                 if !text.is_empty() && !self.lock_typed(mode, &text) {
                     return;
@@ -443,7 +443,7 @@ impl App {
             // A lock's field: its number locks it, and the point is placed
             // once its length and direction are both held; left empty, the
             // point the locks hold is placed, the cursor giving what is not
-            // locked (AutoCAD's Enter).
+            // locked (Enter with nothing typed).
             if text.is_empty() {
                 self.place_locked();
             } else if !self.lock_typed(mode, &text) {
@@ -474,7 +474,7 @@ impl App {
 
     /// Enter or Space in the command line with no suggestion chosen (the web's
     /// `CommandLine.submit`): a value for the running command, else a command's name.
-    pub(crate) fn submit_line(&mut self, text: &str) -> Task<Message> {
+    pub fn submit_line(&mut self, text: &str) -> Task<Message> {
         if text.is_empty() {
             return self.run("tool.confirm");
         }

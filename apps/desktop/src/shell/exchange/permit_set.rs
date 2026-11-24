@@ -120,7 +120,7 @@ pub const GROUPS: [(&str, &[&str]); 5] = [
 ];
 
 impl App {
-    pub(crate) fn permit_set_open(&mut self) -> Task<Message> {
+    pub fn permit_set_open(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -193,7 +193,7 @@ impl App {
         self.permit_scope_ask()
     }
 
-    pub(crate) fn permit_set_event(&mut self, e: Event) -> Task<Message> {
+    pub fn permit_set_event(&mut self, e: Event) -> Task<Message> {
         if matches!(e, Event::Close) {
             self.close_exchange();
             return Task::none();

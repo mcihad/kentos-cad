@@ -143,7 +143,7 @@ impl App {
     /// The project's plot scale set to `scale` (the ribbon's Ölçek, Ölçek
     /// yaz…): with the annotations that follow it one undo step “Çizim
     /// ölçeği”; when none follows, an edit of the project and no undo step.
-    pub(crate) fn set_plot_scale(&mut self, scale: f64) {
+    pub fn set_plot_scale(&mut self, scale: f64) {
         let Some(doc) = &mut self.document else {
             return;
         };

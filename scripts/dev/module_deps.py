@@ -30,7 +30,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "apps" / "desktop" / "src"
 # The modules that are packages of their own (docs/adr/9199): each its source folder.
-PACKAGES = {"map": ROOT / "apps" / "desktop-map" / "src", "road": ROOT / "apps" / "desktop-road" / "src"}
+PACKAGES = {
+    "arch": ROOT / "apps" / "desktop-arch" / "src",
+    "map": ROOT / "apps" / "desktop-map" / "src",
+    "road": ROOT / "apps" / "desktop-road" / "src",
+}
 BASELINE = Path(__file__).resolve().parent / "module_deps.baseline.json"
 
 MODULES = ("gis", "arch", "map", "road")

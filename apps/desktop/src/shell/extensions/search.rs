@@ -14,7 +14,7 @@ use crate::exchange::apply::fold_turkish;
 
 /// A button of an extension's tab: the tab, its panel and its place there.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ExtHit {
+pub struct ExtHit {
     pub(crate) tab: &'static str,
     pub(crate) panel: usize,
     pub(crate) item: usize,
