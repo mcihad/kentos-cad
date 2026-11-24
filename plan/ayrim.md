@@ -129,4 +129,5 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     tasarım denetimi Yol'da; şablonlar ve etkin kat çekirdekte.
   - Adım 9 yapıldı (ADR 9199 §4.9): Mimari modül arayüzünün arkasında; ızgaralar, araç ayarları, altlık okunuşu
     çekirdekte; on bir yeni kanca. Taban: kabuk → Mimari 14 → 1, CAD → Mimari 2 → 0.
+  - Adım 10 yapıldı (ADR 9199 §4.10): Mimari'nin `impl App`'leri uzantı trait'i (32 trait, `arch/ext.rs`).
   - Sıradaki: Mimari kendi paketinde, sonra CBS; CAD çekirdeğinin kabuktan ayrılması.

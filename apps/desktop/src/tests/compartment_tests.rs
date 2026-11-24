@@ -3,6 +3,7 @@
 //! (16–20), each drawn to its walls' faces. The wall at x = 12 is declared REI 90 and holds a 1.00 m door; the one at
 //! x = 16 is declared as each test says. The building is used as a büro (Ek-4: 8000 m²).
 
+use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 use crate::arch::ArchState;

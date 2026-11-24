@@ -2,6 +2,7 @@
 //! exceptions through `cad.arch.exceptions`, Kata ver through `cad.levels.assign`; each one undo step, the drawing
 //! checked again after it (docs/adr/0703, 0717, 0732).
 
+use crate::arch_ext::*;
 use kentos_commands::CallOp;
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -11,10 +12,22 @@ use crate::arch::ArchState;
 use super::STALE;
 use crate::app::App;
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchAuditWriteApp {
+    fn arch_audit_fix_call(&self) -> Option<(String, serde_json::Value, String)>;
+    fn arch_audit_fix(&mut self);
+    fn arch_audit_except(&mut self);
+    fn arch_audit_unexcept(&mut self);
+    fn arch_audit_prune(&mut self);
+    fn arch_audit_exceptions(&mut self, input: serde_json::Value, said: impl Fn(usize) -> String);
+    fn arch_audit_show_levelless(&mut self);
+    fn arch_audit_assign_level(&mut self, level: &str);
+}
+
+impl ArchAuditWriteApp for App {
     /// The chosen findings' fixes as one command call: the one fix's own, or a change set of them in the findings'
     /// order (one undo step, “Denetim düzeltmeleri”; docs/adr/0732 §5).
-    pub(super) fn arch_audit_fix_call(&self) -> Option<(String, serde_json::Value, String)> {
+    fn arch_audit_fix_call(&self) -> Option<(String, serde_json::Value, String)>{
         let fixes: Vec<&kentos_commands::ArchAuditFix> =
             self.arch_audit_chosen().into_iter().filter_map(|f| f.fix.as_ref()).collect();
         match fixes.as_slice() {
@@ -35,7 +48,7 @@ impl App {
     }
 
     /// Düzelt: the chosen findings' fixes, as one undo step; the drawing checked again.
-    pub(super) fn arch_audit_fix(&mut self) {
+    fn arch_audit_fix(&mut self){
         if self.arch_audit_stale() {
             self.warn(STALE);
             return;
@@ -88,7 +101,7 @@ impl App {
 
     /// İstisna yap's note given: the chosen findings that are no exceptions yet marked through `cad.arch.exceptions`,
     /// with the note when one is written; one undo step; the drawing checked again (docs/adr/0732 §3).
-    pub(super) fn arch_audit_except(&mut self) {
+    fn arch_audit_except(&mut self){
         let Some(note) = self.modules.arch_mut().arch_audit.note.take() else {
             return;
         };
@@ -127,7 +140,7 @@ impl App {
     }
 
     /// İstisnayı kaldır: the chosen findings' exceptions, lapsed or not, taken away; one undo step.
-    pub(super) fn arch_audit_unexcept(&mut self) {
+    fn arch_audit_unexcept(&mut self){
         let keys: Vec<String> = self
             .arch_audit_chosen()
             .into_iter()
@@ -143,7 +156,7 @@ impl App {
     }
 
     /// Eski istisnaları temizle: the exceptions whose finding the bar's check no longer finds dropped; one undo step.
-    pub(super) fn arch_audit_prune(&mut self) {
+    fn arch_audit_prune(&mut self){
         let input = serde_json::json!({ "operation": "prune", "audit": self.arch_audit_finding_input() });
         self.arch_audit_exceptions(input, |n| match n {
             0 => "Temizlenecek eski istisna yok.".to_owned(),
@@ -153,7 +166,7 @@ impl App {
 
     /// `cad.arch.exceptions` with `input`, its answer said by `said` from how many exceptions it changed; the drawing
     /// checked again.
-    fn arch_audit_exceptions(&mut self, input: serde_json::Value, said: impl Fn(usize) -> String) {
+    fn arch_audit_exceptions(&mut self, input: serde_json::Value, said: impl Fn(usize) -> String){
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -184,7 +197,7 @@ impl App {
 
     /// Kata ver ▾'s Seç ve göster: the objects without a level selected and the view on them, before any level is
     /// given (docs/adr/0717 §2).
-    pub(super) fn arch_audit_show_levelless(&mut self) {
+    fn arch_audit_show_levelless(&mut self){
         let uids = self.arch_audit_levelless();
         let Some(doc) = self.document.as_ref() else {
             return;
@@ -203,7 +216,7 @@ impl App {
 
     /// Kata ver ▾'s level: every object without a level given it through `cad.levels.assign`, one undo step; the
     /// objects stay selected so the step shows; the drawing checked again.
-    pub(super) fn arch_audit_assign_level(&mut self, level: &str) {
+    fn arch_audit_assign_level(&mut self, level: &str){
         if self.arch_audit_stale() {
             self.warn(STALE);
             return;

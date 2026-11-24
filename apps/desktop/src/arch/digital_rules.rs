@@ -292,14 +292,23 @@ fn value_words(d: &Decision) -> String {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait DigitalRulesApp {
+    fn open_digital_rules(&mut self);
+    fn digital_rules_event(&mut self, event: Event) -> Task<Message>;
+    fn digital_rules_view(&self) -> Element<'_, Message>;
+    fn digital_rules_chosen<'a>(&self, w: &'a Window) -> Option<Element<'a, Message>>;
+    fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl DigitalRulesApp for App {
     /// Dijital proje kuralları (`arch.digitalRules`): the base profile's rules, the architectural model's first.
-    pub(crate) fn open_digital_rules(&mut self) {
+    fn open_digital_rules(&mut self){
         self.modules.arch_mut().digital_rules = Some(Window::new());
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::DigitalRules));
     }
 
-    pub(crate) fn digital_rules_event(&mut self, event: Event) -> Task<Message> {
+    fn digital_rules_event(&mut self, event: Event) -> Task<Message>{
         if let Event::Close = event {
             self.modules.arch_mut().digital_rules = None;
             self.dialog = None;
@@ -335,7 +344,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn digital_rules_view(&self) -> Element<'_, Message> {
+    fn digital_rules_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().digital_rules else {
             return iced::widget::text("").into();
         };
@@ -416,7 +425,7 @@ impl App {
     }
 
     /// The chosen row's words, source and decisions under the table.
-    fn digital_rules_chosen<'a>(&self, w: &'a Window) -> Option<Element<'a, Message>> {
+    fn digital_rules_chosen<'a>(&self, w: &'a Window) -> Option<Element<'a, Message>>{
         let k = w.chosen?;
         let mut col = Column::new().spacing(4).width(Fill);
         match w.list {
@@ -466,7 +475,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().digital_rules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

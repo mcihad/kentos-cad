@@ -59,8 +59,24 @@ fn icon_of(form: ViewMarkForm) -> &'static str {
     }
 }
 
-impl App {
-    fn view_refs_read(&self) -> Option<ViewMarksReferenced> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ViewmarkRefsApp {
+    fn view_refs_read(&self) -> Option<ViewMarksReferenced>;
+    fn open_view_refs(&mut self);
+    fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot>;
+    fn view_refs_edit(&mut self, op: ViewMarksOperation);
+    fn view_refs_again(&mut self);
+    fn view_refs_event(&mut self, event: Event) -> Task<Message>;
+    fn view_refs_make_view(&mut self);
+    fn view_refs_view(&self) -> Element<'_, Message>;
+    fn view_refs_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl ViewmarkRefsApp for App {
+    fn view_refs_read(&self) -> Option<ViewMarksReferenced>{
         let doc = self.document.as_ref()?;
         Some(kentos_native_application::viewmarks::references_of(
             &doc.model,
@@ -68,7 +84,7 @@ impl App {
     }
 
     /// Başvurular (`arch.viewRefs`): the window, the selected mark chosen.
-    pub(crate) fn open_view_refs(&mut self) {
+    fn open_view_refs(&mut self){
         let Some(refs) = self.view_refs_read() else {
             self.output("Açık çizim yok.");
             return;
@@ -90,13 +106,13 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ViewRefs));
     }
 
-    fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot> {
+    fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot>{
         let doc = self.document.as_ref()?;
         doc.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)
     }
 
     /// `cad.viewmarks.edit` on the chosen mark, and the list again.
-    fn view_refs_edit(&mut self, op: ViewMarksOperation) {
+    fn view_refs_edit(&mut self, op: ViewMarksOperation){
         let Some(uid) = self
             .modules.arch()
             .view_refs
@@ -119,14 +135,14 @@ impl App {
         self.view_refs_again();
     }
 
-    fn view_refs_again(&mut self) {
+    fn view_refs_again(&mut self){
         let refs = self.view_refs_read();
         if let (Some(w), Some(refs)) = (self.modules.arch_mut().view_refs.as_mut(), refs) {
             w.refs = refs;
         }
     }
 
-    pub(crate) fn view_refs_event(&mut self, event: Event) -> Task<Message> {
+    fn view_refs_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Choose(k) => {
                 if let Some(w) = self.modules.arch_mut().view_refs.as_mut() {
@@ -181,7 +197,7 @@ impl App {
     }
 
     /// Görünüm oluştur: the chosen detail's circle kept as a named view (“Detay 1”, its number), the detail pointed at it.
-    fn view_refs_make_view(&mut self) {
+    fn view_refs_make_view(&mut self){
         let Some(mark) = self
             .modules.arch()
             .view_refs
@@ -236,7 +252,7 @@ impl App {
         );
     }
 
-    pub(crate) fn view_refs_view(&self) -> Element<'_, Message> {
+    fn view_refs_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().view_refs else {
             return iced::widget::text("").into();
         };
@@ -400,10 +416,10 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first mark's and target's.
-    pub(crate) fn view_refs_control(
+    fn view_refs_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().view_refs.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

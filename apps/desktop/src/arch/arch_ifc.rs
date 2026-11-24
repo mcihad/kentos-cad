@@ -6,6 +6,7 @@
 //! says, the others beside it, each named by EK-2 with its building code. The fire compartments the national
 //! regulation's package finds are written as zones of their rooms (docs/adr/8088).
 
+use crate::arch_ext::*;
 use std::path::PathBuf;
 
 use iced::Task;
@@ -19,9 +20,17 @@ use crate::app::{App, Message};
 const REGULATION: &str = "mimari-mevzuat";
 const MODULE: &str = "mimari_mevzuat.mimari";
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchIfcApp {
+    fn export_ifc_building(&mut self, view: IfcView) -> Task<Message>;
+    fn ifc_building_chosen(&mut self, path: Option<PathBuf>, view: IfcView) -> Task<Message>;
+    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>>;
+    fn offer_ifc_view(&mut self, path: PathBuf, title: String);
+}
+
+impl ArchIfcApp for App {
     /// IFC dışa aktar (bina) from Dosya › Dışa aktar: where to write the file; `view` its bodies whole or cut.
-    pub(crate) fn export_ifc_building(&mut self, view: IfcView) -> Task<Message> {
+    fn export_ifc_building(&mut self, view: IfcView) -> Task<Message>{
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -54,7 +63,7 @@ impl App {
 
     /// The file chosen: the building whole (`cad.arch.ifc`; the dialog asked before writing over), its bodies as `view`
     /// asks.
-    pub(crate) fn ifc_building_chosen(&mut self, path: Option<PathBuf>, view: IfcView) -> Task<Message> {
+    fn ifc_building_chosen(&mut self, path: Option<PathBuf>, view: IfcView) -> Task<Message>{
         let Some(mut path) = path else {
             return Task::none();
         };
@@ -166,7 +175,7 @@ impl App {
     /// The fire compartments as the national regulation's package finds them (catalog/standards/mimari-mevzuat,
     /// `kompartimanlar`; docs/adr/8088), for the file's zones. A package that does not answer, or a day its rules do not
     /// know, writes none and says why in the output.
-    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>> {
+    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>>{
         let facts = self.arch_audit_regulation_facts()?;
         match crate::standards::call(REGULATION, MODULE, "kompartimanlar", vec![facts]) {
             Ok(answer) => {
@@ -194,7 +203,7 @@ impl App {
     }
 
     /// The file written, with Görüntüle: it opens in IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
-    fn offer_ifc_view(&mut self, path: PathBuf, title: String) {
+    fn offer_ifc_view(&mut self, path: PathBuf, title: String){
         let open = Message::IfcViewer(crate::ifc_viewer::Event::Open(path.clone()));
         self.toast(kentos_ui::widget::Toast::success(title).body(path.display().to_string()).action("Görüntüle", open));
     }

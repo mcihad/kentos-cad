@@ -226,14 +226,36 @@ fn cut(text: &str, most: usize) -> String {
     format!("{}…", line.chars().take(most.saturating_sub(1)).collect::<String>())
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait DeliveriesWindowApp {
+    fn deliveries(&self) -> &[Delivery];
+    fn open_deliveries(&mut self);
+    fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>);
+    fn delivery_edit(&mut self, change: DeliveryChange) -> Result<DeliveryEdited, String>;
+    fn deliveries_event(&mut self, event: Event) -> Task<Message>;
+    fn deliveries_form(&mut self, event: Event);
+    fn deliveries_pick(&mut self) -> Task<Message>;
+    fn deliveries_save(&mut self);
+    fn deliveries_remove(&mut self);
+    fn deliveries_respond(&mut self);
+    fn deliveries_bind(&mut self);
+    fn deliveries_compare(&mut self) -> Task<Message>;
+    fn deliveries_view(&self) -> Element<'_, Message>;
+    fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message>;
+    fn chosen_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>;
+    fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+    fn compare_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>;
+    fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl DeliveriesWindowApp for App {
     /// The drawing's delivery record.
-    pub(crate) fn deliveries(&self) -> &[Delivery] {
+    fn deliveries(&self) -> &[Delivery]{
         self.document.as_ref().map_or(&[][..], |d| d.model.deliveries())
     }
 
     /// Teslim kaydı (`arch.deliveries`): the record, its last delivery chosen.
-    pub(crate) fn open_deliveries(&mut self) {
+    fn open_deliveries(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -250,14 +272,14 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Deliveries));
     }
 
-    fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>) {
+    fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>){
         if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
 
     /// `cad.delivery.edit` on the open drawing; its refusal's words.
-    fn delivery_edit(&mut self, change: DeliveryChange) -> Result<DeliveryEdited, String> {
+    fn delivery_edit(&mut self, change: DeliveryChange) -> Result<DeliveryEdited, String>{
         let Some(doc) = self.document.as_mut() else {
             return Err("Açık çizim yok.".into());
         };
@@ -271,7 +293,7 @@ impl App {
         }
     }
 
-    pub(crate) fn deliveries_event(&mut self, event: Event) -> Task<Message> {
+    fn deliveries_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Close => {
                 self.modules.arch_mut().deliveries = None;
@@ -289,7 +311,7 @@ impl App {
     }
 
     /// A choice or a box of the window.
-    fn deliveries_form(&mut self, event: Event) {
+    fn deliveries_form(&mut self, event: Event){
         let list = self.deliveries().to_vec();
         let Some(w) = self.modules.arch_mut().deliveries.as_mut() else {
             return;
@@ -366,7 +388,7 @@ impl App {
     }
 
     /// Klasör seç…: the publication folder of the package that went.
-    fn deliveries_pick(&mut self) -> Task<Message> {
+    fn deliveries_pick(&mut self) -> Task<Message>{
         if let crate::app::Picker::File(path) = &self.picker {
             return Task::done(msg(Event::Picked(Some(path.clone()))));
         }
@@ -383,7 +405,7 @@ impl App {
     }
 
     /// Teslimi kaydet: the new delivery written.
-    fn deliveries_save(&mut self) {
+    fn deliveries_save(&mut self){
         let Some(draft) = self.modules.arch().deliveries.as_ref().and_then(|w| w.draft.clone()) else {
             return;
         };
@@ -420,7 +442,7 @@ impl App {
     }
 
     /// Kaydı sil: the chosen record taken away (one undo step); its notes stay.
-    fn deliveries_remove(&mut self) {
+    fn deliveries_remove(&mut self){
         let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
             return;
         };
@@ -439,7 +461,7 @@ impl App {
     }
 
     /// Cevabı yaz: the authority's answer to the chosen delivery, in place of the one it has.
-    fn deliveries_respond(&mut self) {
+    fn deliveries_respond(&mut self){
         let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
@@ -466,7 +488,7 @@ impl App {
     }
 
     /// Seçilenlere bağla: a review note of the typed text bound to the objects selected, held in the answer.
-    fn deliveries_bind(&mut self) {
+    fn deliveries_bind(&mut self){
         let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
@@ -525,7 +547,7 @@ impl App {
 
     /// Öncekiyle karşılaştır: the chosen delivery's package beside the previous one's to the same authority, read off
     /// the window's thread.
-    fn deliveries_compare(&mut self) -> Task<Message> {
+    fn deliveries_compare(&mut self) -> Task<Message>{
         let list = self.deliveries();
         let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
             return Task::none();
@@ -553,7 +575,7 @@ impl App {
         })
     }
 
-    pub(crate) fn deliveries_view(&self) -> Element<'_, Message> {
+    fn deliveries_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().deliveries else {
             return space::horizontal().into();
         };
@@ -578,7 +600,7 @@ impl App {
     }
 
     /// The right side: the new delivery's form, the chosen delivery, or what to do on an empty record.
-    fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message> {
+    fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message>{
         let inner: Element<'a, Message> = if let Some(draft) = &w.draft {
             draft_view(draft)
         } else if let Some(d) = w.chosen.as_ref().and_then(|id| list.iter().find(|d| &d.id == id)) {
@@ -590,7 +612,7 @@ impl App {
     }
 
     /// The chosen delivery: its record, the answer's form and the comparison with the previous delivery.
-    fn chosen_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message> {
+    fn chosen_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>{
         let head = row![
             label::strong(format!("{}. teslim · Rev. {}", d.number, d.revision)),
             space::horizontal().width(Fill),
@@ -629,7 +651,7 @@ impl App {
     }
 
     /// İdarenin cevabı: Kabul or İade, its day, its reason, the notes that bind the reasons to objects, its receipt.
-    fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let a = &w.answer;
         let notes = self.document.as_ref().map(|doc| doc.model.settings().review_notes.as_slice()).unwrap_or_default();
         let mut checks = Column::new().spacing(4);
@@ -693,7 +715,7 @@ impl App {
     }
 
     /// Öncekiyle karşılaştır: the previous delivery to the same authority and the two packages side by side.
-    fn compare_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message> {
+    fn compare_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>{
         let mut out = Column::new().spacing(8);
         let Some(previous) = d.previous(list) else {
             return Form::new()
@@ -794,7 +816,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().deliveries.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

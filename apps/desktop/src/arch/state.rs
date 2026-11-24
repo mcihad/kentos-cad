@@ -3,6 +3,7 @@
 //! (`Message::Module`), its windows numbered as the shell's (`Dialog::Module`, [`dialog`]). A new window of the module
 //! is added here and in its own file; the shell stays as it is.
 
+use crate::arch_ext::*;
 use iced::{Element, Task};
 
 use crate::app::{App, Message};
@@ -237,9 +238,15 @@ impl ArchState for crate::module_parts::ModuleStates {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait StateApp {
+    fn arch_event(&mut self, event: Event) -> Task<Message>;
+    fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message>;
+}
+
+impl StateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    pub(crate) fn arch_event(&mut self, event: Event) -> Task<Message> {
+    fn arch_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::ArchAudit(event) => return self.arch_audit_event(event),
             Event::Program(event) => return self.program_event(event),
@@ -273,7 +280,7 @@ impl App {
     }
 
     /// A window of the module.
-    pub(crate) fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message> {
+    fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message>{
         match kind {
             ArchDialogKind::Program => self.program_view(),
             ArchDialogKind::SpaceMerge => self.space_merge_question(),

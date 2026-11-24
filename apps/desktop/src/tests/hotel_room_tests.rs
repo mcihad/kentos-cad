@@ -9,6 +9,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib hotel_room_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
 use crate::arch::ArchState;

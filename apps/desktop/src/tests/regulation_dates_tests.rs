@@ -3,6 +3,7 @@
 //! (RG 1.7.2026/33297, Geçici 3/11); without a date the outcome turns on is eksik veri. The Denetim tab says the rule
 //! set over its table and lists the standards package's findings with their state.
 
+use crate::arch_ext::*;
 use kentos_commands::{ArchAuditOutcome, ArchAuditState};
 use kentos_launch::Module;
 use serde_json::{Value, json};

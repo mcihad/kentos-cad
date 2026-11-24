@@ -246,15 +246,31 @@ impl Window {
     }
 }
 
-impl App {
-    fn saved_wall_styles(&self) -> Vec<WallStyleDef> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait WallStylesApp {
+    fn saved_wall_styles(&self) -> Vec<WallStyleDef>;
+    fn open_wall_styles(&mut self);
+    fn wall_styles_changed(&self) -> bool;
+    fn save_wall_styles(&mut self);
+    fn wall_styles_event(&mut self, event: Event) -> Task<Message>;
+    fn wall_styles_view(&self) -> Element<'_, Message>;
+    fn wall_style_form<'a>(
+        &'a self,
+        w: &'a Window,
+        s: &'a WallStyleDef,
+        format: &Format,
+    ) -> Element<'a, Message>;
+}
+
+impl WallStylesApp for App {
+    fn saved_wall_styles(&self) -> Vec<WallStyleDef>{
         self.document
             .as_ref()
             .map_or_else(Vec::new, |d| d.model.settings().wall_styles.clone())
     }
 
     /// Duvar stilleri (`arch.wallStyles`): the window.
-    pub(crate) fn open_wall_styles(&mut self) {
+    fn open_wall_styles(&mut self){
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
@@ -292,7 +308,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallStyles));
     }
 
-    fn wall_styles_changed(&self) -> bool {
+    fn wall_styles_changed(&self) -> bool{
         self.modules.arch()
             .wall_styles
             .as_ref()
@@ -303,7 +319,7 @@ impl App {
     }
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
-    fn save_wall_styles(&mut self) {
+    fn save_wall_styles(&mut self){
         let Some(w) = self.modules.arch().wall_styles.clone() else {
             return;
         };
@@ -402,7 +418,7 @@ impl App {
         self.dialog = None;
     }
 
-    pub(crate) fn wall_styles_event(&mut self, event: Event) -> Task<Message> {
+    fn wall_styles_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Save => {
                 self.save_wall_styles();
@@ -651,7 +667,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn wall_styles_view(&self) -> Element<'_, Message> {
+    fn wall_styles_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().wall_styles else {
             return iced::widget::text("").into();
         };
@@ -797,7 +813,7 @@ impl App {
         w: &'a Window,
         s: &'a WallStyleDef,
         format: &Format,
-    ) -> Element<'a, Message> {
+    ) -> Element<'a, Message>{
         let name =
             kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let fixed = kentos_commands::fixed_width(&s.components);

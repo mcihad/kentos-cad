@@ -88,9 +88,21 @@ fn level_name(app: &App, id: &str) -> String {
         .unwrap_or_else(|| id.to_owned())
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ProgramViewApp {
+    fn program_levels(&self) -> Vec<(String, String)>;
+    fn program_view(&self) -> Element<'_, Message>;
+    fn buildings_list<'a>(&self, w: &'a Window) -> Element<'a, Message>;
+    fn level_checks<'a>(&self, chosen: &[String], on: impl Fn(String) -> Message + 'a) -> Element<'a, Message>;
+    fn building_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+    fn unit_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+    fn status_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+    fn spaces_table<'a>(&'a self, c: &'a ProgramChecked) -> Element<'a, Message>;
+}
+
+impl ProgramViewApp for App {
     /// The project's levels: id and name, in its order.
-    pub(super) fn program_levels(&self) -> Vec<(String, String)> {
+    fn program_levels(&self) -> Vec<(String, String)>{
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().arch.as_ref())
@@ -98,7 +110,7 @@ impl App {
             .unwrap_or_default()
     }
 
-    pub(crate) fn program_view(&self) -> Element<'_, Message> {
+    fn program_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().program_window else {
             return space::horizontal().into();
         };
@@ -176,7 +188,7 @@ impl App {
     // ── Binalar ───────────────────────────────────────────────────────────────────────────────────────────────────
 
     /// The buildings: each one's name, code and how many levels it spans.
-    fn buildings_list<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+    fn buildings_list<'a>(&self, w: &'a Window) -> Element<'a, Message>{
         let mut t = Table::new([
             Col::new("Bina").width(Fill),
             Col::new("Kod").width(scaled(44.0)),
@@ -200,7 +212,7 @@ impl App {
     }
 
     /// The levels as boxes in rows of three, each toggling through `on`.
-    fn level_checks<'a>(&self, chosen: &[String], on: impl Fn(String) -> Message + 'a) -> Element<'a, Message> {
+    fn level_checks<'a>(&self, chosen: &[String], on: impl Fn(String) -> Message + 'a) -> Element<'a, Message>{
         let levels = self.program_levels();
         if levels.is_empty() {
             return label::caption("Projede kat yok: Proje ayarları › Mimari'de ekleyin.").into();
@@ -218,7 +230,7 @@ impl App {
 
     /// The chosen building: its name, code, use, ±0.00 and levels; the shared levels it spans and the building each
     /// counts in; its units; its wings in a table, the chosen wing's name and levels under it.
-    fn building_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn building_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let Some(b) = w.buildings.get(w.building) else {
             return steps(
                 "Programda bina yok",
@@ -391,7 +403,7 @@ impl App {
     // ── Bölümler ──────────────────────────────────────────────────────────────────────────────────────────────────
 
     /// The chosen unit: what it is, where it is, its kat irtifakı values, and, after Denetle, what was measured of it.
-    fn unit_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn unit_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let Some(r) = w.units.get(w.unit) else {
             return steps(
                 "Programda bölüm yok",
@@ -527,7 +539,7 @@ impl App {
     // ── Durum ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
     /// The check's answer: the totals, the shares, every room measured, the findings.
-    fn status_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn status_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let Some(c) = w.checked.as_deref() else {
             return steps(
                 "Henüz denetlenmedi",
@@ -568,7 +580,7 @@ impl App {
     }
 
     /// Every room measured: its number, name, unit, level, method, area against its brief, width, passage, doors.
-    fn spaces_table<'a>(&'a self, c: &'a ProgramChecked) -> Element<'a, Message> {
+    fn spaces_table<'a>(&'a self, c: &'a ProgramChecked) -> Element<'a, Message>{
         let unit_no = |id: &Option<String>| -> String {
             id.as_deref()
                 .map(|u| c.units.iter().find(|x| x.id == u).map_or_else(|| format!("{u}?"), |x| x.number.clone()))

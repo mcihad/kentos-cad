@@ -1,6 +1,7 @@
 //! The chosen fixes previewed on the drawing (docs/adr/0732 §5): run on a reading copy of it, nothing written; the
 //! objects they write outlined dashed as they would be, those they remove in the danger colour.
 
+use crate::arch_ext::*;
 use std::collections::BTreeSet;
 use crate::arch::ArchState;
 
@@ -12,11 +13,19 @@ use super::PREVIEW_LIMIT;
 use crate::app::App;
 use crate::bottom::BottomTab;
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchAuditPreviewApp {
+    fn arch_audit_preview(&self) -> Option<kentos_interaction::Preview>;
+    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke>;
+    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview>;
+    fn arch_audit_preview_made(&self) -> Option<kentos_interaction::Preview>;
+}
+
+impl ArchAuditPreviewApp for App {
     /// The chosen findings' fixes as they would draw (docs/adr/0732 §5), for the drawing's preview layer: none while
     /// the tab is not shown, the check is old or no chosen finding has a fix. Kept until the drawing or the choice
     /// changes.
-    pub(crate) fn arch_audit_preview(&self) -> Option<kentos_interaction::Preview> {
+    fn arch_audit_preview(&self) -> Option<kentos_interaction::Preview>{
         if !(self.command_expanded && self.bottom_tab == BottomTab::Audit) || self.arch_audit_stale() {
             return None;
         }
@@ -38,7 +47,7 @@ impl App {
 
     /// The chosen fixtures findings' use zones (docs/adr/8025): each its fixture's zone, outlined dashed in the danger
     /// colour.
-    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke> {
+    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke>{
         use kentos_commands::ArchAuditCheck;
         use kentos_interaction::{Stroke, Tone, Vec2};
         let Some(doc) = self.document.as_ref() else {
@@ -73,7 +82,7 @@ impl App {
     }
 
     /// The chosen findings' fixes as they would draw (docs/adr/0732 §5).
-    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview> {
+    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview>{
         let doc = self.document.as_ref()?;
         let keys = self
             .arch_audit_chosen()
@@ -101,7 +110,7 @@ impl App {
 
     /// The fixes run on a reading copy of the drawing (nothing written): the objects they write outlined dashed in
     /// the accent as they would be, those they remove in the danger colour as they are, and a tag that counts them.
-    fn arch_audit_preview_made(&self) -> Option<kentos_interaction::Preview> {
+    fn arch_audit_preview_made(&self) -> Option<kentos_interaction::Preview>{
         use kentos_geometry_core::geom::affine::IDENTITY;
         use kentos_interaction::{Preview, Tag, Tone as Ink};
         use kentos_native_application::{blocks, geometry, geometry_store, walls};

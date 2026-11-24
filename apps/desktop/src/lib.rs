@@ -162,6 +162,8 @@ mod works;
 mod arch;
 #[path = "arch/parts.rs"]
 mod arch_parts;
+#[path = "arch/ext.rs"]
+mod arch_ext;
 #[path = "gis/state.rs"]
 pub mod gis;
 

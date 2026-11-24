@@ -9,6 +9,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib storey_link_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};

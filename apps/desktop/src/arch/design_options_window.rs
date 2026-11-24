@@ -177,8 +177,27 @@ pub(crate) fn compared_words(c: &OptionsCompared) -> String {
     parts.join(" · ")
 }
 
-impl App {
-    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>) {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait DesignOptionsWindowApp {
+    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>);
+    fn design_options_read(&mut self, keep: Option<String>);
+    fn open_design_options(&mut self);
+    fn selected_option(&self) -> Option<(String, String)>;
+    fn design_options_chosen(&self) -> Option<(String, Option<String>)>;
+    fn design_options_preview(&mut self);
+    fn design_options_command(&mut self, operation: OptionsOperation) -> Option<OptionsEdited>;
+    fn design_options_selection(&self, set: Option<&str>) -> (Vec<String>, Vec<String>);
+    fn design_options_event(&mut self, event: Event) -> Task<Message>;
+    fn design_options_view(&self) -> Element<'_, Message>;
+    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+    fn design_options_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl DesignOptionsWindowApp for App {
+    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>){
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
@@ -188,7 +207,7 @@ impl App {
         }
     }
 
-    fn design_options_read(&mut self, keep: Option<String>) {
+    fn design_options_read(&mut self, keep: Option<String>){
         let (rows, combos) = self.design_options_rows();
         let (combo, combo_name, versus) = self
             .modules.arch()
@@ -232,7 +251,7 @@ impl App {
     }
 
     /// Tasarım seçenekleri (`arch.options`): the window, on the set of a selected object when it is in one.
-    pub(crate) fn open_design_options(&mut self) {
+    fn open_design_options(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -254,7 +273,7 @@ impl App {
     }
 
     /// The set and option the first selected object is in.
-    fn selected_option(&self) -> Option<(String, String)> {
+    fn selected_option(&self) -> Option<(String, String)>{
         let doc = self.document.as_ref()?;
         let sets = doc.model.arch_options();
         self.selection.ids().iter().find_map(|s| {
@@ -263,7 +282,7 @@ impl App {
         })
     }
 
-    fn design_options_chosen(&self) -> Option<(String, Option<String>)> {
+    fn design_options_chosen(&self) -> Option<(String, Option<String>)>{
         let w = self.modules.arch().design_options.as_ref()?;
         let set = w.rows.get(w.chosen)?;
         Some((
@@ -273,7 +292,7 @@ impl App {
     }
 
     /// The comparison of the two options picked, and the plan of Kabul et with the chosen one.
-    fn design_options_preview(&mut self) {
+    fn design_options_preview(&mut self){
         let Some(doc) = self.document.as_ref() else {
             return;
         };
@@ -350,7 +369,7 @@ impl App {
         }
     }
 
-    fn design_options_command(&mut self, operation: OptionsOperation) -> Option<OptionsEdited> {
+    fn design_options_command(&mut self, operation: OptionsOperation) -> Option<OptionsEdited>{
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::options_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -377,7 +396,7 @@ impl App {
     }
 
     /// The selection's objects: those in no option, and those of `set`'s options.
-    fn design_options_selection(&self, set: Option<&str>) -> (Vec<String>, Vec<String>) {
+    fn design_options_selection(&self, set: Option<&str>) -> (Vec<String>, Vec<String>){
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
@@ -396,7 +415,7 @@ impl App {
         (free, members)
     }
 
-    pub(crate) fn design_options_event(&mut self, event: Event) -> Task<Message> {
+    fn design_options_event(&mut self, event: Event) -> Task<Message>{
         let chosen = self.design_options_chosen();
         match event {
             Event::Choose(i) => {
@@ -669,7 +688,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn design_options_view(&self) -> Element<'_, Message> {
+    fn design_options_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().design_options else {
             return iced::widget::text("").into();
         };
@@ -821,7 +840,7 @@ impl App {
 
     /// Bileşimler: the project's combinations, each with what it shows, the one picked applied or deleted, a new one
     /// saved from the primaries.
-    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let mut list = Column::new().spacing(2);
         for (i, c) in w.combos.iter().enumerate() {
             let shown: Vec<String> = c
@@ -904,10 +923,10 @@ impl App {
             .into()
     }
 
-    pub(crate) fn design_options_control(
+    fn design_options_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().design_options.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -4,6 +4,7 @@
 //! "bir ve iki ailelik evler" row, 21,50 m'den az: 60; the second storey's floor of a two-storey house REI 30 (Ek-3/B
 //! 3-a). Zemin kat's walls are declared REI 60, the slab REI 60, the column as each test says; 1. kat's walls not.
 
+use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 use crate::arch::ArchState;

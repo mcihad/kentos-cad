@@ -11,10 +11,15 @@ use crate::app::App;
 /// 25 cm), drawn poşeli at 1:100. A built-in style: the project takes it with the first wall (docs/adr/0339 §3).
 pub(crate) const FIRST_WALL_STYLE: &str = "kentos-dis-duvar-25";
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchStartApp {
+    fn start_architecture_tools(&mut self);
+}
+
+impl ArchStartApp for App {
     /// The Mimari program's wall tools take [`FIRST_WALL_STYLE`] and its thickness, as choosing it under Stil does.
     /// Other programs keep "Yok" and 0.20 m.
-    pub(crate) fn start_architecture_tools(&mut self) {
+    fn start_architecture_tools(&mut self){
         if self.program != Some(kentos_launch::Module::Architecture) {
             return;
         }

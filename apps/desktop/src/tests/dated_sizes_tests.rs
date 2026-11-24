@@ -10,6 +10,7 @@
 //!   unit's, 1.00 m) keeps both.
 //! - **Sivas 28/1-c and 39/1 (10.11.2022):** 3.60 m without the 4.00 m, a toilet's door 0.80 m.
 
+use crate::arch_ext::*;
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};

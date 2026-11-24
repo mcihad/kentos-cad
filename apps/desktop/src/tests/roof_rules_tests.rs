@@ -14,6 +14,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_rules_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use serde_json::json;
 use crate::arch::ArchState;
 

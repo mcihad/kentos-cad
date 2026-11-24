@@ -27,6 +27,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use std::sync::Arc;
 use crate::arch::ArchState;

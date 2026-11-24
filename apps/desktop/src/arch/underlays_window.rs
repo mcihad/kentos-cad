@@ -19,6 +19,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::arch_ext::*;
 use std::path::PathBuf;
 use crate::arch::ArchState;
 
@@ -124,13 +125,30 @@ fn size_words(bytes: u64) -> String {
     }
 }
 
-impl App {
-    fn underlay_list(&self) -> Vec<ModelUnderlay> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait UnderlaysWindowApp {
+    fn underlay_list(&self) -> Vec<ModelUnderlay>;
+    fn open_underlays(&mut self);
+    fn underlays_said(&mut self, kind: Kind, words: impl Into<String>);
+    fn underlay_edit(&mut self, change: UnderlayChange) -> Result<kentos_commands::UnderlayEdited, (String, String)>;
+    fn underlay_add(&mut self, file: String, placement: UnderlayPlacement);
+    fn underlays_event(&mut self, event: Event) -> Task<Message>;
+    fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool;
+    fn underlays_view(&self) -> Element<'_, Message>;
+    fn underlay_status(&self, u: &ModelUnderlay) -> &'static str;
+    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window) -> Element<'a, Message>;
+    fn underlay_details<'a>(&'a self, w: &'a Window, list: &[ModelUnderlay]) -> Element<'a, Message>;
+    fn underlay_object<'a>(&'a self, w: &'a Window, u: &ModelUnderlay, l: &crate::underlays::Loaded) -> Element<'a, Message>;
+    fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl UnderlaysWindowApp for App {
+    fn underlay_list(&self) -> Vec<ModelUnderlay>{
         self.document.as_ref().map(|d| d.model.underlays().to_vec()).unwrap_or_default()
     }
 
     /// Altlık modeller (`arch.underlays`): the drawing's underlays, the first chosen.
-    pub(crate) fn open_underlays(&mut self) {
+    fn open_underlays(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -148,14 +166,14 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Underlays));
     }
 
-    fn underlays_said(&mut self, kind: Kind, words: impl Into<String>) {
+    fn underlays_said(&mut self, kind: Kind, words: impl Into<String>){
         if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
 
     /// `cad.underlay.edit` on the open drawing; its refusal's code and words.
-    fn underlay_edit(&mut self, change: UnderlayChange) -> Result<kentos_commands::UnderlayEdited, (String, String)> {
+    fn underlay_edit(&mut self, change: UnderlayChange) -> Result<kentos_commands::UnderlayEdited, (String, String)>{
         let Some(doc) = self.document.as_mut() else {
             return Err((String::new(), "Açık çizim yok.".into()));
         };
@@ -170,7 +188,7 @@ impl App {
     }
 
     /// A file added `placement`; a map conversion that cannot place it kept with its reason for Başlangıç noktasına.
-    fn underlay_add(&mut self, file: String, placement: UnderlayPlacement) {
+    fn underlay_add(&mut self, file: String, placement: UnderlayPlacement){
         let change = UnderlayChange::Add {
             id: None,
             file: file.clone(),
@@ -199,7 +217,7 @@ impl App {
         }
     }
 
-    pub(crate) fn underlays_event(&mut self, event: Event) -> Task<Message> {
+    fn underlays_event(&mut self, event: Event) -> Task<Message>{
         let list = self.underlay_list();
         let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else {
             return Task::none();
@@ -307,7 +325,7 @@ impl App {
     }
 
     /// The point picked for an underlay object (none: given up; the window comes back); false when it was another's.
-    pub(crate) fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool {
+    fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool{
         if !std::mem::take(&mut self.modules.arch_mut().underlay_picking) {
             return false;
         }
@@ -330,7 +348,7 @@ impl App {
         true
     }
 
-    pub(crate) fn underlays_view(&self) -> Element<'_, Message> {
+    fn underlays_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().underlays_window else {
             return space::horizontal().into();
         };
@@ -369,7 +387,7 @@ impl App {
         frame.scroll(body).footer(foot).width(1160.0).modal(msg(Event::Close))
     }
 
-    fn underlay_status(&self, u: &ModelUnderlay) -> &'static str {
+    fn underlay_status(&self, u: &ModelUnderlay) -> &'static str{
         match self.modules.arch().underlays.states.get(&u.id).map(|s| &s.1) {
             _ if !u.shown => "Gizli",
             Some(State::Ready(_)) => "Gösteriliyor",
@@ -378,7 +396,7 @@ impl App {
         }
     }
 
-    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window) -> Element<'a, Message> {
+    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window) -> Element<'a, Message>{
         let mut t = Table::new([
             Col::new("Ad").width(Fill),
             Col::new("Disiplin").width(scaled(80.0)),
@@ -401,7 +419,7 @@ impl App {
         t.into()
     }
 
-    fn underlay_details<'a>(&'a self, w: &'a Window, list: &[ModelUnderlay]) -> Element<'a, Message> {
+    fn underlay_details<'a>(&'a self, w: &'a Window, list: &[ModelUnderlay]) -> Element<'a, Message>{
         let Some(u) = w.chosen.as_ref().and_then(|id| list.iter().find(|u| &u.id == id)).cloned() else {
             return steps();
         };
@@ -497,7 +515,7 @@ impl App {
     }
 
     /// The object chosen in the plan or in 3B görünüm: its details as the file writes them.
-    fn underlay_object<'a>(&'a self, w: &'a Window, u: &ModelUnderlay, l: &crate::underlays::Loaded) -> Element<'a, Message> {
+    fn underlay_object<'a>(&'a self, w: &'a Window, u: &ModelUnderlay, l: &crate::underlays::Loaded) -> Element<'a, Message>{
         let mut form = Form::new()
             .label_width(scaled(LABELS))
             .section("Seçilen nesne")
@@ -533,7 +551,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().underlays_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

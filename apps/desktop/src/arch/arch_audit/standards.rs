@@ -47,7 +47,7 @@ const CODES: &str = "digital_";
 
 /// What both rules read: the drawing as it was when the check was asked, a reading copy (its objects shared, no undo
 /// history); its facts and its model are worked out from it on the rules' thread.
-struct Input {
+pub(crate) struct Input {
     copy: kentos_domain::Document,
     /// The form reads the last delivered model.
     delivered: bool,
@@ -165,21 +165,34 @@ fn regulation_facts(doc: &kentos_domain::Document) -> Option<Value> {
     serde_json::to_value(facts).ok()
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchAuditStandardsApp {
+    #[cfg(test)]
+    fn arch_audit_standards_facts(&self) -> Option<Value>;
+    fn arch_audit_regulation_facts(&self) -> Option<Value>;
+    fn arch_audit_standards_input(&self) -> Option<Input>;
+    fn arch_audit_standards_after_check(&mut self);
+    fn arch_audit_standards_task(&mut self) -> Task<Message>;
+    fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>);
+    #[cfg(test)]
+    fn arch_audit_standards_settle(&mut self);
+}
+
+impl ArchAuditStandardsApp for App {
     /// The facts the Dijital proje rule reads first: the CAD drawing's section alone (the permit gate measures its own,
     /// permit_gate.rs).
     #[cfg(test)]
-    pub(crate) fn arch_audit_standards_facts(&self) -> Option<Value> {
+    fn arch_audit_standards_facts(&self) -> Option<Value>{
         standards_facts(&self.document.as_ref()?.model)
     }
 
     /// The facts the national regulation's rule reads: the permit's particulars (the application date, the plan's
     /// storeys) and the building's.
-    pub(crate) fn arch_audit_regulation_facts(&self) -> Option<Value> {
+    fn arch_audit_regulation_facts(&self) -> Option<Value>{
         regulation_facts(&self.document.as_ref()?.model)
     }
 
-    fn arch_audit_standards_input(&self) -> Option<Input> {
+    fn arch_audit_standards_input(&self) -> Option<Input>{
         Some(Input {
             copy: self.document.as_ref()?.model.reading_copy(),
             delivered: self.modules.arch().arch_audit.delivered_model,
@@ -187,7 +200,7 @@ impl App {
     }
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
-    pub(super) fn arch_audit_standards_after_check(&mut self) {
+    fn arch_audit_standards_after_check(&mut self){
         let doc = self.document.as_ref().map(|d| &d.model);
         let panel = &mut self.modules.arch_mut().arch_audit;
         let whole = matches!(panel.scope, AuditScope::All);
@@ -202,7 +215,7 @@ impl App {
     }
 
     /// The rules' ask when a check made it due; their answer comes as [`Event::Standards`].
-    pub(super) fn arch_audit_standards_task(&mut self) -> Task<Message> {
+    fn arch_audit_standards_task(&mut self) -> Task<Message>{
         if !std::mem::take(&mut self.modules.arch_mut().arch_audit.standards_due) {
             return Task::none();
         }
@@ -227,7 +240,7 @@ impl App {
 
     /// The rules' answer: their findings in place of the last ones, for the ask still current. A package that gave no
     /// answer says why over the table, so a clean table is not taken for a pass.
-    pub(super) fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>) {
+    fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>){
         if generation != self.modules.arch().arch_audit.standards_generation {
             return;
         }
@@ -274,7 +287,7 @@ impl App {
 
     /// The rules' ask and answer now, on this thread: what the tab's task does (tests and pictures).
     #[cfg(test)]
-    pub(crate) fn arch_audit_standards_settle(&mut self) {
+    fn arch_audit_standards_settle(&mut self){
         let Some(input) = self.arch_audit_standards_input() else {
             return;
         };

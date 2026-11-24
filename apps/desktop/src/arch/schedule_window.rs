@@ -104,8 +104,23 @@ fn flip<T: PartialEq + Clone>(list: &mut Option<Vec<T>>, v: T) {
     *list = (!l.is_empty()).then_some(l);
 }
 
-impl App {
-    fn schedule_window_of(&self, uid: &str, export: bool) -> Option<Window> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ScheduleWindowApp {
+    fn schedule_window_of(&self, uid: &str, export: bool) -> Option<Window>;
+    fn schedule_input(w: &Window) -> SchedulesEdit;
+    fn schedule_preview(&self, w: &Window) -> Result<u32, String>;
+    fn schedule_event(&mut self, event: Event) -> Task<Message>;
+    fn schedule_apply(&mut self) -> Task<Message>;
+    fn schedule_write_ask(&mut self) -> Task<Message>;
+    fn schedule_written(&mut self, path: Option<PathBuf>);
+    fn schedule_unit_filter<'a>(&self, w: &Window, filter: Column<'a, Message>) -> Column<'a, Message>;
+    fn schedule_types(&self, of: ScheduleOf) -> Vec<String>;
+    fn schedule_view(&self) -> Element<'_, Message>;
+    fn schedule_export_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
+}
+
+impl ScheduleWindowApp for App {
+    fn schedule_window_of(&self, uid: &str, export: bool) -> Option<Window>{
         let doc = self.document.as_ref()?;
         let slot = kentos_domain::Uuid::parse_str(uid)
             .ok()
@@ -143,7 +158,7 @@ impl App {
         Some(w)
     }
 
-    fn schedule_input(w: &Window) -> SchedulesEdit {
+    fn schedule_input(w: &Window) -> SchedulesEdit{
         SchedulesEdit {
             uid: w.uid.clone(),
             operation: ScheduleOperation::Set(Box::new(ScheduleChange {
@@ -160,7 +175,7 @@ impl App {
     }
 
     /// How many data rows the change writes, from the command's plan.
-    fn schedule_preview(&self, w: &Window) -> Result<u32, String> {
+    fn schedule_preview(&self, w: &Window) -> Result<u32, String>{
         let doc = self.document.as_ref().ok_or_else(String::new)?;
         match kentos_native_application::schedules_edit::plan_in(
             &doc.model,
@@ -182,7 +197,7 @@ impl App {
         }
     }
 
-    pub(crate) fn schedule_event(&mut self, event: Event) -> Task<Message> {
+    fn schedule_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Open(ref uid) | Event::Export(ref uid) => {
                 let export = matches!(event, Event::Export(_));
@@ -313,7 +328,7 @@ impl App {
     }
 
     /// Tamam: the change as one `cad.schedules.edit` step.
-    fn schedule_apply(&mut self) -> Task<Message> {
+    fn schedule_apply(&mut self) -> Task<Message>{
         let Some(w) = self.modules.arch().schedule.clone() else {
             return Task::none();
         };
@@ -354,7 +369,7 @@ impl App {
     }
 
     /// Yaz…: the path asked (a trace gives it through `Picker::File`).
-    fn schedule_write_ask(&mut self) -> Task<Message> {
+    fn schedule_write_ask(&mut self) -> Task<Message>{
         let Some(w) = &self.modules.arch().schedule else {
             return Task::none();
         };
@@ -383,7 +398,7 @@ impl App {
         )
     }
 
-    fn schedule_written(&mut self, path: Option<PathBuf>) {
+    fn schedule_written(&mut self, path: Option<PathBuf>){
         let (Some(path), Some(w), Some(doc)) = (path, self.modules.arch().schedule.clone(), &self.document)
         else {
             return;
@@ -415,7 +430,7 @@ impl App {
     }
 
     /// A units schedule's filter (docs/adr/0795): the program's buildings, their wings and the kinds, each on or off.
-    fn schedule_unit_filter<'a>(&self, w: &Window, mut filter: Column<'a, Message>) -> Column<'a, Message> {
+    fn schedule_unit_filter<'a>(&self, w: &Window, mut filter: Column<'a, Message>) -> Column<'a, Message>{
         let program = self.document.as_ref().map(|d| d.model.program()).unwrap_or_default();
         if !program.buildings.is_empty() {
             filter = filter.push(label::caption("Bina (hiçbiri: hepsi)"));
@@ -445,7 +460,7 @@ impl App {
     }
 
     /// The types the drawing's objects of `of` have, in the natural order (Tür süzgeci's choices).
-    fn schedule_types(&self, of: ScheduleOf) -> Vec<String> {
+    fn schedule_types(&self, of: ScheduleOf) -> Vec<String>{
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -470,7 +485,7 @@ impl App {
         out
     }
 
-    pub(crate) fn schedule_view(&self) -> Element<'_, Message> {
+    fn schedule_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().schedule else {
             return label::body("").into();
         };
@@ -659,7 +674,7 @@ impl App {
             .modal(msg(Event::Cancel))
     }
 
-    fn schedule_export_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+    fn schedule_export_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
         let picked = FORMATS
             .iter()
             .position(|(f, _)| *f == w.format)

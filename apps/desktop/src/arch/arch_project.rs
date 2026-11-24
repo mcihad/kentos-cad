@@ -7,9 +7,15 @@ use kentos_native_application::ExecutionContext;
 
 use crate::app::App;
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchProjectApp {
+    fn phase_view(&self) -> PhaseView;
+    fn set_phase_view(&mut self, name: &str);
+}
+
+impl ArchProjectApp for App {
     /// The project's phase view.
-    pub(crate) fn phase_view(&self) -> PhaseView {
+    fn phase_view(&self) -> PhaseView{
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().arch.as_ref().and_then(|a| a.phase_view))
@@ -17,7 +23,7 @@ impl App {
     }
 
     /// Tadilat ▸ `name` (`arch.phase.all` …).
-    pub(crate) fn set_phase_view(&mut self, name: &str) {
+    fn set_phase_view(&mut self, name: &str){
         let Some(view) = PhaseView::ALL.into_iter().find(|v| v.name() == name) else {
             return;
         };

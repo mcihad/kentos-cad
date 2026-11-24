@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};

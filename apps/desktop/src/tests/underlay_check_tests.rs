@@ -14,6 +14,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib underlay_check_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use std::path::PathBuf;
 use crate::arch::ArchState;
 

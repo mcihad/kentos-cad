@@ -6,6 +6,7 @@
 //! the project's kept or the library's put in their place as the user chose; Kitaplığa yaz writes the project's
 //! materials to a file through `export`.
 
+use crate::arch_ext::*;
 use crate::arch;
 use std::path::{Path, PathBuf};
 use crate::arch::ArchState;
@@ -237,9 +238,22 @@ pub fn import_of(entry: &Entry, picked: &[bool], conflict: Conflict) -> Option<M
     })
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait MaterialLibraryApp {
+    fn material_library_read(&mut self);
+    fn material_library_preview(&mut self);
+    fn material_library_event(&mut self, event: Event) -> Task<Message>;
+    fn export_materials(&mut self, path: &Path);
+    fn material_library_view<'a>(
+        &'a self,
+        w: &'a crate::materials_window::Window,
+        tabs: Element<'a, Message>,
+    ) -> Element<'a, Message>;
+}
+
+impl MaterialLibraryApp for App {
     /// The libraries listed again, the chosen one's materials ticked afresh (the new ones) and the take previewed.
-    pub(crate) fn material_library_read(&mut self) {
+    fn material_library_read(&mut self){
         let entries = self.modules.arch_mut().material_libraries.entries();
         let project = self.document.as_ref().map(|d| d.model.materials().to_vec()).unwrap_or_default();
         let Some(w) = self.modules.arch_mut().materials.as_mut() else {
@@ -256,7 +270,7 @@ impl App {
     }
 
     /// What Seçilenleri al would do, nothing written.
-    fn material_library_preview(&mut self) {
+    fn material_library_preview(&mut self){
         let (Some(w), Some(doc)) = (self.modules.arch().materials.as_ref(), self.document.as_ref()) else {
             return;
         };
@@ -277,7 +291,7 @@ impl App {
         }
     }
 
-    pub(crate) fn material_library_event(&mut self, event: Event) -> Task<Message> {
+    fn material_library_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Tab(t) => {
                 if let Some(w) = self.modules.arch_mut().materials.as_mut() {
@@ -389,7 +403,7 @@ impl App {
     }
 
     /// Kitaplığa yaz…: the project's materials as a `.kmalzeme` file named after it.
-    pub(crate) fn export_materials(&mut self, path: &Path) {
+    fn export_materials(&mut self, path: &Path){
         let library = path
             .file_stem()
             .map_or_else(|| "Ofis malzemeleri".to_owned(), |s| s.to_string_lossy().into_owned());
@@ -409,11 +423,11 @@ impl App {
         }
     }
 
-    pub(crate) fn material_library_view<'a>(
+    fn material_library_view<'a>(
         &'a self,
         w: &'a crate::materials_window::Window,
         tabs: Element<'a, Message>,
-    ) -> Element<'a, Message> {
+    ) -> Element<'a, Message>{
         let project = self.document.as_ref().map(|d| d.model.materials()).unwrap_or(&[]);
         let mut list = Column::new().spacing(4);
         let mut group: Option<String> = None;

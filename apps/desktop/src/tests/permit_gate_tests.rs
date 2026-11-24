@@ -3,6 +3,7 @@
 //! section is stale or a model layer holds free drawing, says each with its object, and opens once they are mended; the
 //! Mimari audit lists the same and its Düzelt draws the section again.
 
+use crate::arch_ext::*;
 use crate::app::{App, Message};
 use crate::exchange::Window;
 use crate::exchange::permit_set::Event as Permit;

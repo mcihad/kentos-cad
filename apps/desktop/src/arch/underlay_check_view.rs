@@ -121,9 +121,17 @@ pub(crate) fn summary(c: &UnderlayChecked) -> String {
     )
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait UnderlayCheckViewApp {
+    fn underlay_check_start(&mut self) -> Task<Message>;
+    fn underlay_checked(&mut self, id: String, outcome: Outcome);
+    fn underlay_clash_chosen(&mut self, k: usize);
+    fn underlay_check_section<'a>(&'a self, w: &'a Window, u: &ModelUnderlay) -> Element<'a, Message>;
+}
+
+impl UnderlayCheckViewApp for App {
     /// Denetle: the chosen underlay checked off the window's thread with the tolerance typed.
-    pub(crate) fn underlay_check_start(&mut self) -> Task<Message> {
+    fn underlay_check_start(&mut self) -> Task<Message>{
         let Some(doc) = self.document.as_ref() else { return Task::none() };
         let mut model = doc.model.clone();
         let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return Task::none() };
@@ -174,7 +182,7 @@ impl App {
     }
 
     /// A check's answer came: kept while the window waits for it.
-    pub(crate) fn underlay_checked(&mut self, id: String, outcome: Outcome) {
+    fn underlay_checked(&mut self, id: String, outcome: Outcome){
         if let Some(w) = self.modules.arch_mut().underlays_window.as_mut()
             && w.check.outcome.as_ref().is_some_and(|(i, o)| *i == id && matches!(o, Outcome::Running))
         {
@@ -187,7 +195,7 @@ impl App {
     }
 
     /// A clash chosen: the drawing's object selected and shown, the file's object under Seçilen nesne.
-    pub(crate) fn underlay_clash_chosen(&mut self, k: usize) {
+    fn underlay_clash_chosen(&mut self, k: usize){
         let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return };
         let Some((id, Outcome::Done { checked, .. })) = w.check.outcome.clone() else { return };
         let Some(c) = checked.clashes.get(k) else { return };
@@ -209,7 +217,7 @@ impl App {
     }
 
     /// The Denetim section of the chosen underlay: the tolerance, Denetle, and the answer.
-    pub(crate) fn underlay_check_section<'a>(&'a self, w: &'a Window, u: &ModelUnderlay) -> Element<'a, Message> {
+    fn underlay_check_section<'a>(&'a self, w: &'a Window, u: &ModelUnderlay) -> Element<'a, Message>{
         let mut form = Form::new()
             .label_width(scaled(110.0))
             .section("Denetim")

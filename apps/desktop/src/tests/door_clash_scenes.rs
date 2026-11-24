@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use iced::Point;
 use kentos_render_wgpu::Vec2;

@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use kentos_commands::Entity;
 use kentos_domain::Slot;

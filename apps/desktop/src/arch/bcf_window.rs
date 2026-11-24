@@ -77,9 +77,21 @@ fn when(s: &str) -> String {
     s.replacen('T', " ", 1)
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait BcfWindowApp {
+    fn open_bcf_issues(&mut self);
+    fn bcf_read_now(&mut self);
+    fn bcf_select(&mut self);
+    fn bcf_event(&mut self, event: Event) -> Task<Message>;
+    fn bcf_view(&self) -> Element<'_, Message>;
+    fn bcf_table<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message>;
+    fn bcf_details<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message>;
+    fn bcf_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl BcfWindowApp for App {
     /// BCF sorunları (`arch.bcfIssues`).
-    pub(crate) fn open_bcf_issues(&mut self) {
+    fn open_bcf_issues(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -90,7 +102,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Bcf));
     }
 
-    fn bcf_read_now(&mut self) {
+    fn bcf_read_now(&mut self){
         let Some(w) = self.modules.arch().bcf_window.as_ref() else { return };
         let model = (!w.model.trim().is_empty()).then(|| w.model.trim().to_owned());
         let input = BcfRead { path: w.path.trim().to_owned(), model };
@@ -110,7 +122,7 @@ impl App {
     }
 
     /// The chosen topic's objects the drawing holds, selected and shown.
-    fn bcf_select(&mut self) {
+    fn bcf_select(&mut self){
         let Some(w) = self.modules.arch().bcf_window.as_ref() else { return };
         let Some(Ok(r)) = &w.read else { return };
         let Some(t) = w.chosen.and_then(|k| r.topics.get(k)) else { return };
@@ -135,7 +147,7 @@ impl App {
         }
     }
 
-    pub(crate) fn bcf_event(&mut self, event: Event) -> Task<Message> {
+    fn bcf_event(&mut self, event: Event) -> Task<Message>{
         let Some(w) = self.modules.arch_mut().bcf_window.as_mut() else { return Task::none() };
         match event {
             Event::Close => {
@@ -186,7 +198,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn bcf_view(&self) -> Element<'_, Message> {
+    fn bcf_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().bcf_window else {
             return space::horizontal().into();
         };
@@ -236,7 +248,7 @@ impl App {
         Frame::new(TITLE).push(label::caption(LEAD)).scroll(body).footer(foot).width(1160.0).modal(msg(Event::Close))
     }
 
-    fn bcf_table<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message> {
+    fn bcf_table<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message>{
         let mut t = Table::new([
             Col::new("Başlık").width(Fill),
             Col::new("Tür").width(scaled(70.0)),
@@ -260,7 +272,7 @@ impl App {
         t.into()
     }
 
-    fn bcf_details<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message> {
+    fn bcf_details<'a>(&'a self, w: &'a Window, r: &'a BcfReadOutput) -> Element<'a, Message>{
         let Some(t): Option<&BcfTopic> = w.chosen.and_then(|k| r.topics.get(k)) else {
             return label::caption("Soldan bir sorun seçin.").into();
         };
@@ -323,7 +335,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn bcf_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn bcf_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().bcf_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -49,8 +49,20 @@ fn icon_of(code: &str) -> &'static str {
     }
 }
 
-impl App {
-    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait TagsCheckApp {
+    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window>;
+    fn open_tags_check(&mut self);
+    fn tags_check_event(&mut self, event: Event) -> Task<Message>;
+    fn tags_check_view(&self) -> Element<'_, Message>;
+    fn tags_check_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl TagsCheckApp for App {
+    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window>{
         let doc = self.document.as_ref()?;
         let input = TagsCheck {
             missing_space_numbers: Some(missing_space_numbers),
@@ -66,7 +78,7 @@ impl App {
     }
 
     /// Etiketleri denetle (`arch.tagsCheck`): the window.
-    pub(crate) fn open_tags_check(&mut self) {
+    fn open_tags_check(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -75,7 +87,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::TagsCheck));
     }
 
-    pub(crate) fn tags_check_event(&mut self, event: Event) -> Task<Message> {
+    fn tags_check_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Show(i) => {
                 let Some(f) = self
@@ -117,7 +129,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn tags_check_view(&self) -> Element<'_, Message> {
+    fn tags_check_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().tags_check else {
             return iced::widget::text("").into();
         };
@@ -202,10 +214,10 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first finding's Göster.
-    pub(crate) fn tags_check_control(
+    fn tags_check_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().tags_check.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

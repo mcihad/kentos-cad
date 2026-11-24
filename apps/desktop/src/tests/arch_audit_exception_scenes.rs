@@ -8,6 +8,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use iced::keyboard::Modifiers;
 use serde_json::{Value, json};

@@ -2,6 +2,7 @@
 //! heights (28/1-c) and doors (39/1) read on the drawing; each finding names its article and says what it measured. The
 //! storeys and the doors are the standards package's, by the application date's version (docs/adr/8083).
 
+use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 use crate::arch::ArchState;

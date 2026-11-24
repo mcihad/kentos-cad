@@ -12,6 +12,7 @@
 //! - 22/1-j (docs/adr/8147): the common area's gym and meeting room in the basement under the ground, 60 m²; katlar
 //!   alanı before them the two flats' 60 m², 5 % of it 3 m² (under 1000 m²): 3 m² out, 57 m² in.
 
+use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 use crate::arch::ArchState;

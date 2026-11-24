@@ -9,6 +9,7 @@
 //! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
 //! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
+use crate::arch_ext::*;
 use crate::arch;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -293,9 +294,26 @@ fn change_of(w: &Window, m: &ArchMaterial) -> Option<Result<MaterialChange, Stri
     (!c.is_empty()).then_some(Ok(c))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait MaterialsWindowApp {
+    fn material_uses(&self) -> Vec<(ArchMaterial, Use)>;
+    fn material_targets(&self) -> Vec<(String, u32, String)>;
+    fn materials_read(&mut self, keep: Option<String>);
+    fn open_materials(&mut self);
+    fn materials_chosen(&self) -> Option<ArchMaterial>;
+    fn materials_preview(&mut self);
+    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool;
+    fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited>;
+    fn materials_unapplied(&self) -> bool;
+    fn materials_event(&mut self, event: Event) -> Task<Message>;
+    fn materials_view(&self) -> Element<'_, Message>;
+    fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message>;
+    fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl MaterialsWindowApp for App {
     /// The project's materials, each with what is bound to it.
-    fn material_uses(&self) -> Vec<(ArchMaterial, Use)> {
+    fn material_uses(&self) -> Vec<(ArchMaterial, Use)>{
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -325,7 +343,7 @@ impl App {
     }
 
     /// The wall style components Stile bağla offers.
-    fn material_targets(&self) -> Vec<(String, u32, String)> {
+    fn material_targets(&self) -> Vec<(String, u32, String)>{
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -347,7 +365,7 @@ impl App {
     }
 
     /// The window read again, the material `keep` (an id) chosen if it is still there.
-    pub(crate) fn materials_read(&mut self, keep: Option<String>) {
+    fn materials_read(&mut self, keep: Option<String>){
         let list = self.material_uses();
         let chosen = keep
             .and_then(|id| list.iter().position(|(m, _)| m.id == id))
@@ -374,7 +392,7 @@ impl App {
     }
 
     /// Malzemeler (`arch.materials`): the window.
-    pub(crate) fn open_materials(&mut self) {
+    fn open_materials(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -383,13 +401,13 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Materials));
     }
 
-    pub(crate) fn materials_chosen(&self) -> Option<ArchMaterial> {
+    fn materials_chosen(&self) -> Option<ArchMaterial>{
         let w = self.modules.arch().materials.as_ref()?;
         w.list.get(w.chosen).map(|(m, _)| m.clone())
     }
 
     /// The plan of the change typed: what it would do, nothing written.
-    fn materials_preview(&mut self) {
+    fn materials_preview(&mut self){
         let (Some(w), Some(m)) = (self.modules.arch().materials.as_ref(), self.materials_chosen()) else {
             return;
         };
@@ -429,7 +447,7 @@ impl App {
 
     /// `cad.arch.performance` over the drawing (docs/adr/8091): the material's strength and reaction class, one step
     /// “Yangın ve performans”; whether it was written, the refusal said.
-    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool{
         let Some(doc) = self.document.as_mut() else { return false };
         let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
         match kentos_native_application::arch_performance::execute(
@@ -446,7 +464,7 @@ impl App {
     }
 
     /// `cad.materials.edit` over the drawing; its answer, or none with the refusal said.
-    pub(crate) fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited> {
+    fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited>{
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::materials_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -470,7 +488,7 @@ impl App {
     }
 
     /// Whether the chosen material has a change Uygula has not written (docs/adr/8006).
-    pub(crate) fn materials_unapplied(&self) -> bool {
+    fn materials_unapplied(&self) -> bool{
         self.modules.arch().materials.as_ref().is_some_and(|w| {
             w.list
                 .get(w.chosen)
@@ -478,7 +496,7 @@ impl App {
         })
     }
 
-    pub(crate) fn materials_event(&mut self, event: Event) -> Task<Message> {
+    fn materials_event(&mut self, event: Event) -> Task<Message>{
         let edit = |app: &mut App, f: &dyn Fn(&mut Window)| {
             if let Some(w) = app.modules.arch_mut().materials.as_mut() {
                 f(w);
@@ -647,7 +665,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn materials_view(&self) -> Element<'_, Message> {
+    fn materials_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().materials else {
             return iced::widget::text("").into();
         };
@@ -713,7 +731,7 @@ impl App {
         iced::widget::stack![window, question].into()
     }
 
-    fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message> {
+    fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message>{
         let text = |placeholder: &str, value: &'a str, on: fn(String) -> Event| {
             kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
@@ -811,7 +829,7 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    pub(crate) fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().materials.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -54,16 +54,27 @@ impl std::fmt::Debug for Underlays {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait UnderlaysApp {
+    fn underlay_project(&self) -> Result<MapFrame, String>;
+    fn underlay_level(&self) -> (f64, f64);
+    fn follow_underlays(&mut self) -> Task<Message>;
+    fn underlay_read(&mut self, id: String, key: Key, read: Result<Arc<Loaded>, String>);
+    fn underlays_shown(&self) -> Vec<(ModelUnderlay, Arc<Loaded>)>;
+    fn underlay_plan_follow(&mut self);
+    fn underlay_object_at(&self, at: [f64; 2], reach: f64) -> Option<(String, usize)>;
+}
+
+impl UnderlaysApp for App {
     /// The project's system as its IFC files say it, an underlay is placed on; why it has none.
-    fn underlay_project(&self) -> Result<MapFrame, String> {
+    fn underlay_project(&self) -> Result<MapFrame, String>{
         let doc = self.document.as_ref().ok_or_else(|| "açık çizim yok".to_owned())?;
         kentos_native_application::arch_ifc::crs(&doc.model).map(|c| MapFrame::from(&c))
     }
 
     /// The level the plan shows: its floor and the plan's cut height over it (docs/adr/8012); the drawing's ±0.00 when
     /// it has no level.
-    pub(crate) fn underlay_level(&self) -> (f64, f64) {
+    fn underlay_level(&self) -> (f64, f64){
         let Some(doc) = self.document.as_ref() else { return (kentos_commands::PLAN_CUT_HEIGHT, 0.0) };
         let settings = doc.model.settings();
         let arch = settings.arch.as_ref();
@@ -76,7 +87,7 @@ impl App {
 
     /// The drawing's underlays read and drawn as they are now: a new or changed one read off the window's thread, one
     /// taken away let go, the plan at the active level given to the drawing area when it changed.
-    pub(crate) fn follow_underlays(&mut self) -> Task<Message> {
+    fn follow_underlays(&mut self) -> Task<Message>{
         let list: Vec<ModelUnderlay> =
             self.document.as_ref().map(|d| d.model.underlays().to_vec()).unwrap_or_default();
         if list.is_empty() && self.modules.arch().underlays.states.is_empty() && self.modules.arch().underlays.plan.is_none() {
@@ -107,7 +118,7 @@ impl App {
     }
 
     /// An underlay's read came: kept when the drawing still wants what it was read for.
-    pub(crate) fn underlay_read(&mut self, id: String, key: Key, read: Result<Arc<Loaded>, String>) {
+    fn underlay_read(&mut self, id: String, key: Key, read: Result<Arc<Loaded>, String>){
         if let Some((k, state)) = self.modules.arch_mut().underlays.states.get_mut(&id)
             && *k == key
         {
@@ -121,7 +132,7 @@ impl App {
     }
 
     /// The underlays read and shown, in the drawing's order, with their records.
-    pub(crate) fn underlays_shown(&self) -> Vec<(ModelUnderlay, Arc<Loaded>)> {
+    fn underlays_shown(&self) -> Vec<(ModelUnderlay, Arc<Loaded>)>{
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
         doc.model
             .underlays()
@@ -136,7 +147,7 @@ impl App {
 
     /// The plan at the active level, made again when the underlays drawn or the level changed, and given to the
     /// drawing area.
-    pub(crate) fn underlay_plan_follow(&mut self) {
+    fn underlay_plan_follow(&mut self){
         let shown = self.underlays_shown();
         let (cut, floor) = self.underlay_level();
         let key: Vec<(String, String, u64, u64)> =
@@ -156,7 +167,7 @@ impl App {
 
     /// The underlay object nearest `at` in the plan within `reach` drawing units: the underlay's id and the object's
     /// index.
-    pub(crate) fn underlay_object_at(&self, at: [f64; 2], reach: f64) -> Option<(String, usize)> {
+    fn underlay_object_at(&self, at: [f64; 2], reach: f64) -> Option<(String, usize)>{
         let shown = self.underlays_shown();
         let (cut, floor) = self.underlay_level();
         let mut best: Option<(f64, String, usize)> = None;

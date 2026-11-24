@@ -137,7 +137,7 @@ struct ContextEdit {
 
 #[derive(Clone, Debug)]
 #[allow(clippy::large_enum_variant)]
-enum ContextAction {
+pub(crate) enum ContextAction {
     Assign {
         slot: Slot,
         choices: Vec<(String, String, bool)>,
@@ -214,15 +214,55 @@ pub(crate) fn report_words(r: &OpeningTypeReport) -> String {
     parts.join(" · ")
 }
 
-impl App {
-    fn opening_types_format(&self) -> Option<Format> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OpeningTypesWindowApp {
+    fn opening_types_format(&self) -> Option<Format>;
+    fn opening_type_uses(&self) -> Vec<OpeningTypeUse>;
+    fn opening_types_read(&mut self, keep: Option<String>);
+    fn open_opening_types(&mut self);
+    fn selected_openings(&self) -> Vec<(String, Option<String>)>;
+    fn select_same_opening_type(&mut self);
+    fn opening_type_action(&mut self, operation: OpeningsOperation);
+    fn show_opening_context(&mut self, action: ContextAction);
+    fn assign_opening_type(&mut self, slot: Slot);
+    fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation);
+    fn preview_opening_push(&mut self, input: OpeningsEdit);
+    fn execute_opening_type_action(&mut self, input: OpeningsEdit);
+    fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>>;
+    fn opening_types_preview(&mut self);
+    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool;
+    fn opening_types_command(
+        &mut self,
+        operation: OpeningTypesOperation,
+    ) -> Option<OpeningTypesEdited>;
+    fn opening_types_chosen(&self) -> Option<OpeningType>;
+    fn opening_types_event(&mut self, event: Event) -> Task<Message>;
+    fn apply_opening_context(&mut self);
+    fn opening_types_unapplied(&self) -> bool;
+    fn import_opening_types(&mut self, path: &std::path::Path);
+    fn export_opening_types(&mut self, path: &std::path::Path);
+    fn opening_types_view(&self) -> Element<'_, Message>;
+    fn opening_type_form<'a>(
+        &'a self,
+        w: &'a Window,
+        t: &'a OpeningType,
+        f: &Format,
+    ) -> Element<'a, Message>;
+    fn opening_types_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl OpeningTypesWindowApp for App {
+    fn opening_types_format(&self) -> Option<Format>{
         self.document
             .as_ref()
             .map(|d| Format::of(d.model.settings()))
     }
 
     /// The project's types with their openings counted.
-    fn opening_type_uses(&self) -> Vec<OpeningTypeUse> {
+    fn opening_type_uses(&self) -> Vec<OpeningTypeUse>{
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -236,7 +276,7 @@ impl App {
     }
 
     /// The window read again, the type `keep` (an id) chosen if it is still there.
-    fn opening_types_read(&mut self, keep: Option<String>) {
+    fn opening_types_read(&mut self, keep: Option<String>){
         let uses = self.opening_type_uses();
         let chosen = keep
             .and_then(|id| uses.iter().position(|u| u.kind.id == id))
@@ -256,7 +296,7 @@ impl App {
     }
 
     /// Kapı ve pencere tipleri (`arch.openingTypes`): the window.
-    pub(crate) fn open_opening_types(&mut self) {
+    fn open_opening_types(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -271,7 +311,7 @@ impl App {
     }
 
     /// The selected openings: their ids and the type each follows or was made with.
-    fn selected_openings(&self) -> Vec<(String, Option<String>)> {
+    fn selected_openings(&self) -> Vec<(String, Option<String>)>{
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -289,7 +329,7 @@ impl App {
 
     /// Aynı tiptekileri seç (`arch.openingSameType`): every opening of the selected one's type, on the active level
     /// when one is set (independent units are docs/adr/0772's boundary), selected.
-    pub(crate) fn select_same_opening_type(&mut self) {
+    fn select_same_opening_type(&mut self){
         let Some(kind) = self.selected_openings().into_iter().find_map(|(_, s)| s) else {
             self.warn("Önce bir tipi izleyen açıklık seçin: aynı tiptekiler onun tipiyle seçilir.");
             return;
@@ -338,7 +378,7 @@ impl App {
     }
 
     /// Tipten ayır, Tipe uygula, Tipe döndür on the selected openings through `cad.openings.edit`, one undo step.
-    pub(crate) fn opening_type_action(&mut self, operation: OpeningsOperation) {
+    fn opening_type_action(&mut self, operation: OpeningsOperation){
         let Some(doc) = self.document.as_ref() else { return };
         let uids: Vec<String> = self.selection.ids().iter().filter_map(|&slot| {
             let Entity::Opening(opening) = doc.model.get(slot)? else { return None };
@@ -372,7 +412,7 @@ impl App {
         }
     }
 
-    fn show_opening_context(&mut self, action: ContextAction) {
+    fn show_opening_context(&mut self, action: ContextAction){
         let Some(doc) = self.document.as_ref() else { return };
         self.modules.arch_mut().opening_types = Some(Window {
             context: Some(ContextEdit { document: doc.session, revision: doc.model.revision(), action }),
@@ -381,7 +421,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::OpeningTypes));
     }
 
-    pub(crate) fn assign_opening_type(&mut self, slot: Slot) {
+    fn assign_opening_type(&mut self, slot: Slot){
         let Some(doc) = self.document.as_ref() else { return };
         let Some(Entity::Opening(opening)) = doc.model.get(slot) else { return };
         if opening.opening.form.is_recess() || doc.model.layers().is_locked(&opening.base.layer_id) {
@@ -400,12 +440,12 @@ impl App {
         self.show_opening_context(ContextAction::Assign { slot, choices, choice });
     }
 
-    pub(crate) fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation) {
+    fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation){
         let Some(uid) = self.document.as_ref().and_then(|doc| doc.model.uid(slot)) else { return };
         self.preview_opening_push(OpeningsEdit { uids: vec![uid.to_string()], operation, expected_revision: None });
     }
 
-    fn preview_opening_push(&mut self, mut input: OpeningsEdit) {
+    fn preview_opening_push(&mut self, mut input: OpeningsEdit){
         let Some(doc) = self.document.as_ref() else { return };
         let name = input.uids.first()
             .and_then(|id| Uuid::parse_str(id).ok())
@@ -430,7 +470,7 @@ impl App {
         }
     }
 
-    fn execute_opening_type_action(&mut self, input: OpeningsEdit) {
+    fn execute_opening_type_action(&mut self, input: OpeningsEdit){
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -461,7 +501,7 @@ impl App {
     }
 
     /// The change typed against the chosen type: none when nothing changed, else the change or why it cannot be read.
-    fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>> {
+    fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>>{
         let w = self.modules.arch().opening_types.as_ref()?;
         let f = self.opening_types_format()?;
         let t = &w.uses.get(w.chosen)?.kind;
@@ -637,7 +677,7 @@ impl App {
     }
 
     /// The plan of the change typed: what it would do, nothing written.
-    fn opening_types_preview(&mut self) {
+    fn opening_types_preview(&mut self){
         let preview = match self.opening_type_change() {
             None => None,
             Some(Err(why)) => Some(Err(why)),
@@ -680,7 +720,7 @@ impl App {
 
     /// `cad.arch.performance` over the drawing (docs/adr/8124): the type's fire resistance class, one step “Yangın ve
     /// performans”; whether it was written, the refusal said.
-    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool{
         let Some(doc) = self.document.as_mut() else { return false };
         let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
         match kentos_native_application::arch_performance::execute(
@@ -700,7 +740,7 @@ impl App {
     fn opening_types_command(
         &mut self,
         operation: OpeningTypesOperation,
-    ) -> Option<OpeningTypesEdited> {
+    ) -> Option<OpeningTypesEdited>{
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::opening_types_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -729,12 +769,12 @@ impl App {
         }
     }
 
-    fn opening_types_chosen(&self) -> Option<OpeningType> {
+    fn opening_types_chosen(&self) -> Option<OpeningType>{
         let w = self.modules.arch().opening_types.as_ref()?;
         w.uses.get(w.chosen).map(|u| u.kind.clone())
     }
 
-    pub(crate) fn opening_types_event(&mut self, event: Event) -> Task<Message> {
+    fn opening_types_event(&mut self, event: Event) -> Task<Message>{
         let format = self.opening_types_format();
         match event {
             Event::ContextChoice(i) => {
@@ -1004,7 +1044,7 @@ impl App {
         Task::none()
     }
 
-    fn apply_opening_context(&mut self) {
+    fn apply_opening_context(&mut self){
         let Some(context) = self.modules.arch().opening_types.as_ref().and_then(|w| w.context.clone()) else { return };
         if self.document.as_ref().is_none_or(|doc| {
             doc.session != context.document || doc.model.revision() != context.revision
@@ -1037,7 +1077,7 @@ impl App {
     }
 
     /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/8006).
-    fn opening_types_unapplied(&self) -> bool {
+    fn opening_types_unapplied(&self) -> bool{
         self.modules.arch().opening_types.as_ref().is_some_and(|w| {
             self.opening_type_change().is_some()
                 || w.uses.get(w.chosen).is_some_and(|u| {
@@ -1047,7 +1087,7 @@ impl App {
     }
 
     /// Kitaplıktan al…: an office library's types, a name the project has taken under a new one.
-    pub(crate) fn import_opening_types(&mut self, path: &std::path::Path) {
+    fn import_opening_types(&mut self, path: &std::path::Path){
         let library = match std::fs::read_to_string(path)
             .map_err(|e| e.to_string())
             .and_then(|t| {
@@ -1077,7 +1117,7 @@ impl App {
     }
 
     /// Kitaplığa yaz…: the project's types as a `kentos.opening-types` file.
-    pub(crate) fn export_opening_types(&mut self, path: &std::path::Path) {
+    fn export_opening_types(&mut self, path: &std::path::Path){
         let library = path
             .file_stem()
             .map_or_else(|| "Ofis".to_owned(), |s| s.to_string_lossy().into_owned());
@@ -1102,7 +1142,7 @@ impl App {
         }
     }
 
-    pub(crate) fn opening_types_view(&self) -> Element<'_, Message> {
+    fn opening_types_view(&self) -> Element<'_, Message>{
         let (Some(w), Some(f)) = (&self.modules.arch().opening_types, self.opening_types_format()) else {
             return iced::widget::text("").into();
         };
@@ -1200,7 +1240,7 @@ impl App {
         w: &'a Window,
         t: &'a OpeningType,
         f: &Format,
-    ) -> Element<'a, Message> {
+    ) -> Element<'a, Message>{
         let unit = f.length_unit_label();
         let name =
             kentos_ui::widget::text_field("Tipin adı", &w.name).on_input(|t| msg(Event::Name(t)));
@@ -1353,10 +1393,10 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    pub(crate) fn opening_types_control(
+    fn opening_types_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().opening_types.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

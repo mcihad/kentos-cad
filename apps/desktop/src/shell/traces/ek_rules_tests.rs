@@ -2,6 +2,7 @@
 //! (fixtures/interaction/v1/acceptance-flat.json) played as KentOS Mimari starts, then the Denetim tab's check with the
 //! standards package's rule.
 
+use crate::arch_ext::*;
 use super::player::AREA;
 use super::{Player, Trace, VARIANTS, scratch_file};
 use crate::app::{App, Message};

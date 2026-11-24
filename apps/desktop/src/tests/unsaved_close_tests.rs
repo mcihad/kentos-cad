@@ -2,6 +2,7 @@
 //! close at once when they do not; F1 closes on Esc over its search box; Çizimden seç steps a window aside and brings
 //! it back.
 
+use crate::arch_ext::*;
 use crate::arch;
 use kentos_commands::{CadWork, Workspace};
 use kentos_domain::Slot;

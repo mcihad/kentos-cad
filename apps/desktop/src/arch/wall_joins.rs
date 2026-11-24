@@ -43,9 +43,21 @@ fn msg(e: Event) -> Message {
     Message::from(arch::Event::WallJoins(e))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait WallJoinsApp {
+    fn wall_joins_read(&self) -> Option<Window>;
+    fn open_wall_joins(&mut self);
+    fn wall_joins_event(&mut self, event: Event) -> Task<Message>;
+    fn wall_joins_view(&self) -> Element<'_, Message>;
+    fn wall_joins_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl WallJoinsApp for App {
     /// The drawing's joins read again: the window's list, or none without a drawing.
-    fn wall_joins_read(&self) -> Option<Window> {
+    fn wall_joins_read(&self) -> Option<Window>{
         let doc = self.document.as_ref()?;
         let mut copy = doc.model.reading_copy();
         let result = kentos_native_application::walls_joins::plan(
@@ -62,7 +74,7 @@ impl App {
     }
 
     /// Birleşimleri denetle (`arch.wallJoinCheck`): the window.
-    pub(crate) fn open_wall_joins(&mut self) {
+    fn open_wall_joins(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -71,7 +83,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallJoins));
     }
 
-    pub(crate) fn wall_joins_event(&mut self, event: Event) -> Task<Message> {
+    fn wall_joins_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Show(i) => {
                 let Some(issue) = self
@@ -135,7 +147,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn wall_joins_view(&self) -> Element<'_, Message> {
+    fn wall_joins_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().wall_joins else {
             return iced::widget::text("").into();
         };
@@ -204,10 +216,10 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first issue's Göster and Öneriyi uygula.
-    pub(crate) fn wall_joins_control(
+    fn wall_joins_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().wall_joins.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

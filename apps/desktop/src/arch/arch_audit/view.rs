@@ -2,6 +2,7 @@
 //! ver ▾, İstisna yap…, Düzelt), the note when the check is old, İstisna yap's question and the table with each row's
 //! menu (docs/adr/0703, 0717, 0732 §5).
 
+use crate::arch_ext::*;
 use iced::widget::{Column, button, container, row, space};
 use iced::{Background, Center, Element, Fill, Length};
 use kentos_commands::ArchAuditCheck;
@@ -27,9 +28,19 @@ use crate::icons::from_web;
 /// its message.
 type Limit = (&'static str, String, Vec<(String, bool, Message)>);
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchAuditViewApp {
+    fn arch_audit_tab(&self) -> Element<'_, Message>;
+    fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message>;
+    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message>;
+    fn arch_audit_exceptions_button(&self) -> Element<'_, Message>;
+    fn arch_audit_limits(&self) -> Element<'_, Message>;
+    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>>;
+}
+
+impl ArchAuditViewApp for App {
     /// The Denetim tab: its bar, a note when the check is old, the table.
-    pub(crate) fn arch_audit_tab(&self) -> Element<'_, Message> {
+    fn arch_audit_tab(&self) -> Element<'_, Message>{
         let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width))
             .height(Length::Shrink);
         let stale = self.arch_audit_stale();
@@ -279,7 +290,7 @@ impl App {
     }
 
     /// İstisna yap's question: the note (optional), Tamam and Vazgeç; Enter gives it, Esc leaves it.
-    fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message> {
+    fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message>{
         let n = self
             .arch_audit_chosen()
             .iter()
@@ -322,7 +333,7 @@ impl App {
 
     /// The bar at `width`: Denetle, the group, Kapsam, İstisnalar ▾ and Eşikler ▾; the count, Kata ver ▾, İstisna yap…
     /// and Düzelt at its end. Narrow: the count and the buttons on a second line.
-    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
+    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message>{
         let audited = self.modules.arch().arch_audit.audited.as_ref();
         let count_of = |g: Option<ArchAuditCheck>| {
             audited.map(|a| {
@@ -500,7 +511,7 @@ impl App {
 
     /// İstisnalar ▾ (docs/adr/0732 §3): how the exceptions are listed, and Eski istisnaları temizle; how many there are
     /// on its face.
-    fn arch_audit_exceptions_button(&self) -> Element<'_, Message> {
+    fn arch_audit_exceptions_button(&self) -> Element<'_, Message>{
         let audited = self.modules.arch().arch_audit.audited.as_ref();
         let excepted = audited.map_or(0, |a| a.excepted);
         let stale = audited.map_or(0, |a| a.stale.len());
@@ -546,7 +557,7 @@ impl App {
 
     /// Eşikler ▾ (docs/adr/0703 §1, 0723 §4, 0724 §2, 0732 §4): each threshold and profile a submenu, its value beside
     /// it; the values in its tip.
-    fn arch_audit_limits(&self) -> Element<'_, Message> {
+    fn arch_audit_limits(&self) -> Element<'_, Message>{
         let format = self.format();
         let a = &self.modules.arch().arch_audit;
         let length = |v: f64| format.length(v);
@@ -681,7 +692,7 @@ impl App {
 
     /// Kata ver ▾ while the check found objects without a level (docs/adr/0717 §2): Seç ve göster, then the project's
     /// levels, Etkin kat marked; none otherwise.
-    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>> {
+    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>>{
         let count = self.arch_audit_levelless().len();
         if count == 0 {
             return None;

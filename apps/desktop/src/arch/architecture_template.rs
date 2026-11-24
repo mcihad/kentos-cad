@@ -30,11 +30,19 @@ pub enum Event {
         input: TemplatesApply,
     },
 }
-impl App {
-    pub(crate) fn apply_arch_template(&mut self) {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ArchitectureTemplateApp {
+    fn apply_arch_template(&mut self);
+    fn prepare_arch_template(&mut self, mode: TemplateSettingsMode, notice: Option<String>);
+    fn architecture_template_event(&mut self, event: Event);
+    fn architecture_template_view(&self) -> Element<'_, Message>;
+}
+
+impl ArchitectureTemplateApp for App {
+    fn apply_arch_template(&mut self){
         self.prepare_arch_template(TemplateSettingsMode::Keep, None);
     }
-    fn prepare_arch_template(&mut self, mode: TemplateSettingsMode, notice: Option<String>) {
+    fn prepare_arch_template(&mut self, mode: TemplateSettingsMode, notice: Option<String>){
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
@@ -59,7 +67,7 @@ impl App {
         });
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ArchTemplate));
     }
-    pub(crate) fn architecture_template_event(&mut self, event: Event) {
+    fn architecture_template_event(&mut self, event: Event){
         if self.dialog != Some(crate::arch::dialog(crate::arch::ArchDialogKind::ArchTemplate)) {
             return;
         }
@@ -124,7 +132,7 @@ impl App {
             }
         }
     }
-    pub(crate) fn architecture_template_view(&self) -> Element<'_, Message> {
+    fn architecture_template_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().arch_template else {
             return label::body("Önizleme yok.").into();
         };

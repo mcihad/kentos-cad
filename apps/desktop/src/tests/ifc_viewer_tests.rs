@@ -5,6 +5,7 @@
 //! with its reason; a stopped read and one a newer read replaced write nothing; the window closes with its model; the
 //! export offers Görüntüle. Denetim's chosen finding paints its objects in the viewer (docs/adr/8074 §2).
 
+use crate::arch_ext::*;
 use std::path::PathBuf;
 use crate::arch::ArchState;
 

@@ -15,6 +15,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use crate::arch;
 use serde_json::Value;
 use crate::arch::ArchState;

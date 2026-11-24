@@ -4,6 +4,7 @@
 //! 3D; the storeys and the rooms hide; an edit makes the model again and the view stays; two rooms of one storey that
 //! share ground are the Mimari audit's finding and red in 3D.
 
+use crate::arch_ext::*;
 use kentos_commands::Entity;
 use kentos_model_view::{Category, parts};
 use kentos_scene3d::Viewport;

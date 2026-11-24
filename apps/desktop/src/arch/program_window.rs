@@ -31,7 +31,7 @@ use crate::app::{App, Message};
 
 // The window's look: its parts, lists and forms (DESIGN.md §7.9).
 #[path = "program_view.rs"]
-mod view;
+pub(crate) mod view;
 use crate::exchange::words::Kind;
 use crate::traces::Control;
 
@@ -370,9 +370,20 @@ fn fresh_id(base: &str, taken: &[&str]) -> String {
         .unwrap_or_else(|| base.to_owned())
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ProgramWindowApp {
+    fn open_program(&mut self);
+    fn program_event(&mut self, event: Event) -> Task<Message>;
+    fn show_program_finding(&mut self, index: usize) -> Task<Message>;
+    fn save_program(&mut self) -> Task<Message>;
+    fn give_to_unit(&mut self, i: usize) -> Task<Message>;
+    fn check_program(&mut self) -> Task<Message>;
+    fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ProgramWindowApp for App {
     /// Bina programı: the window on the project's program.
-    pub(crate) fn open_program(&mut self) {
+    fn open_program(&mut self){
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -381,7 +392,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Program));
     }
 
-    pub(crate) fn program_event(&mut self, event: Event) -> Task<Message> {
+    fn program_event(&mut self, event: Event) -> Task<Message>{
         let Some(w) = self.modules.arch_mut().program_window.as_mut() else {
             return Task::none();
         };
@@ -739,7 +750,7 @@ impl App {
         Task::none()
     }
 
-    fn show_program_finding(&mut self, index: usize) -> Task<Message> {
+    fn show_program_finding(&mut self, index: usize) -> Task<Message>{
         let (Some(doc), Some(finding)) = (
             self.document.as_ref(),
             self.modules.arch().program_window.as_ref().and_then(|w| w.checked.as_ref())
@@ -769,7 +780,7 @@ impl App {
     }
 
     /// Kaydet: the program as typed through `cad.program.edit`; the window stays open on what was written.
-    fn save_program(&mut self) -> Task<Message> {
+    fn save_program(&mut self) -> Task<Message>{
         let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
@@ -801,7 +812,7 @@ impl App {
     }
 
     /// Seçilenleri ver: the selected spaces given to the group of row `i` (the program written first).
-    fn give_to_unit(&mut self, i: usize) -> Task<Message> {
+    fn give_to_unit(&mut self, i: usize) -> Task<Message>{
         let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
@@ -848,7 +859,7 @@ impl App {
     }
 
     /// Denetle: `cad.program.check` on the drawing's reading copy, on a thread of its own.
-    fn check_program(&mut self) -> Task<Message> {
+    fn check_program(&mut self) -> Task<Message>{
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -892,7 +903,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().program_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

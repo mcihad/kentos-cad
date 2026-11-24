@@ -10,6 +10,7 @@
 //!   underside binds. Lower than 1.80 m: 3.253 7 m² (out of the flat's net, 4/1-ğ-3); of it a space from 0.289 0 m on:
 //!   1.80 × 0.28/0.17 = 2.964 7 m², open into the room it stands in (to be closed, 31/6).
 
+use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 use crate::arch::ArchState;

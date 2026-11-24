@@ -10,6 +10,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib cut_stone_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S, BuildingStructure, StructuralSystem};
 use serde_json::{Value, json};
 use crate::arch::ArchState;

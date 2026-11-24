@@ -7,6 +7,7 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib declared_readings_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch_ext::*;
 use kentos_commands::{Entity, OpeningForm};
 use crate::arch::ArchState;
 

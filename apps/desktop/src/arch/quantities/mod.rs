@@ -100,7 +100,7 @@ fn msg(e: Event) -> Message {
 }
 
 /// A table: its heading, the columns that hold numbers, its rows as the window shows them and as a sheet's cells.
-struct Table {
+pub(crate) struct Table {
     name: &'static str,
     heading: Vec<&'static str>,
     numbers: Vec<bool>,
@@ -149,8 +149,33 @@ fn short(m: kentos_commands::SpaceMethod) -> &'static str {
     }
 }
 
-impl App {
-    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait QuantitiesApp {
+    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String>;
+    fn quantities_buildings(&self) -> Vec<(String, String)>;
+    fn quantities_levels(&self) -> Vec<(String, String)>;
+    fn open_quantities(&mut self);
+    fn space_merge(&mut self);
+    fn space_merge_confirmed(&mut self);
+    fn space_merge_question(&self) -> Element<'_, Message>;
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9];
+    fn quantities_sheets(
+        &self,
+        q: &SpacesQuantified,
+        tab: Tab,
+        format: WorkbookFormat,
+    ) -> Vec<WorkbookSheet>;
+    fn quantities_event(&mut self, event: Event) -> Task<Message>;
+    fn quantities_view(&self) -> Element<'_, Message>;
+    fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String;
+    fn quantities_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl QuantitiesApp for App {
+    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String>{
         let Some(doc) = self.document.as_ref() else {
             return Err("Açık çizim yok.".into());
         };
@@ -170,7 +195,7 @@ impl App {
 
     /// The program's buildings, by id and name, when it has several (docs/adr/8072 §4): each one's quantities are the
     /// storeys it counts, a shared one only in its building.
-    fn quantities_buildings(&self) -> Vec<(String, String)> {
+    fn quantities_buildings(&self) -> Vec<(String, String)>{
         let buildings: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -181,7 +206,7 @@ impl App {
     }
 
     /// The project's levels, by id and name.
-    fn quantities_levels(&self) -> Vec<(String, String)> {
+    fn quantities_levels(&self) -> Vec<(String, String)>{
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().arch.clone())
@@ -190,7 +215,7 @@ impl App {
     }
 
     /// Metraj (`arch.quantities`): the window.
-    pub(crate) fn open_quantities(&mut self) {
+    fn open_quantities(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -209,7 +234,7 @@ impl App {
     /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one. Nothing is written before the decision
     /// is said (docs/adr/0773 §4): whose id and number go on, whose numbers, finishes and tags go, the fixtures in it;
     /// Birleştir writes it.
-    pub(crate) fn space_merge(&mut self) {
+    fn space_merge(&mut self){
         const WHAT: &str = "Mahalleri birleştir";
         let ids = self.selection.ids().to_vec();
         let Some(doc) = self.document.as_mut() else {
@@ -248,7 +273,7 @@ impl App {
     }
 
     /// Birleştir: the merge said, written.
-    pub(crate) fn space_merge_confirmed(&mut self) {
+    fn space_merge_confirmed(&mut self){
         const WHAT: &str = "Mahalleri birleştir";
         let Some((input, _)) = self.space_merging.take() else {
             return;
@@ -275,7 +300,7 @@ impl App {
         }
     }
 
-    pub(crate) fn space_merge_question(&self) -> Element<'_, Message> {
+    fn space_merge_question(&self) -> Element<'_, Message>{
         let said = self.space_merging.as_ref().map(|(_, w)| w.clone()).unwrap_or_default();
         kentos_ui::widget::overlay::modal(
             kentos_ui::widget::Confirm::new(MERGE_TITLE, Message::DialogConfirmed, Message::DialogClosed)
@@ -286,7 +311,7 @@ impl App {
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9] {
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9]{
         let f = self
             .document
             .as_ref()
@@ -945,7 +970,7 @@ impl App {
         q: &SpacesQuantified,
         tab: Tab,
         format: WorkbookFormat,
-    ) -> Vec<WorkbookSheet> {
+    ) -> Vec<WorkbookSheet>{
         let exact = self.modules.arch().quantities.as_ref().is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
@@ -1004,7 +1029,7 @@ impl App {
             .collect()
     }
 
-    pub(crate) fn quantities_event(&mut self, event: Event) -> Task<Message> {
+    fn quantities_event(&mut self, event: Event) -> Task<Message>{
         let Some(w) = self.modules.arch().quantities.as_ref() else {
             return Task::none();
         };
@@ -1067,7 +1092,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn quantities_view(&self) -> Element<'_, Message> {
+    fn quantities_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().quantities else {
             return text("").into();
         };
@@ -1327,7 +1352,7 @@ impl App {
     }
 
     /// The rule the shown table's numbers come from: the command's own words.
-    fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String {
+    fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String{
         match tab {
             Tab::Spaces => q.spaces.first().map_or_else(
                 || "Alan: halkaların alanı, delikler düşülür; hacim: alan × iç yükseklik (bitmiş döşemeden tavana).".to_owned(),
@@ -1363,10 +1388,10 @@ impl App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    pub(crate) fn quantities_control(
+    fn quantities_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.arch().quantities.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -9,6 +9,7 @@
 //!
 //! Test code only.
 
+use crate::arch_ext::*;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 use kentos_commands::{

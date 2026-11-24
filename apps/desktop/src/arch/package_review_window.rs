@@ -176,9 +176,23 @@ fn topic_of(f: &ReviewFinding, author: &str) -> BcfTopicInput {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait PackageReviewWindowApp {
+    fn open_review_package(&mut self);
+    fn review_start(&mut self) -> Task<Message>;
+    fn review_show(&mut self) -> Task<Message>;
+    fn review_return(&mut self, path: PathBuf);
+    fn review_event(&mut self, event: Event) -> Task<Message>;
+    fn review_view(&self) -> Element<'_, Message>;
+    fn review_table<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>;
+    fn review_details<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>;
+    fn review_form<'a>(&'a self, r: &'a PackageReviewed) -> Element<'a, Message>;
+    fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl PackageReviewWindowApp for App {
     /// Gelen paketi incele (`arch.reviewPackage`).
-    pub(crate) fn open_review_package(&mut self) {
+    fn open_review_package(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -189,7 +203,7 @@ impl App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ReviewPackage));
     }
 
-    fn review_start(&mut self) -> Task<Message> {
+    fn review_start(&mut self) -> Task<Message>{
         let Some(doc) = self.document.as_ref() else { return Task::none() };
         let mut model = doc.model.clone();
         let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
@@ -251,7 +265,7 @@ impl App {
     }
 
     /// The chosen finding's objects shown in the IFC viewer, on the package's model.
-    fn review_show(&mut self) -> Task<Message> {
+    fn review_show(&mut self) -> Task<Message>{
         let Some(w) = self.modules.arch().review_window.as_ref() else { return Task::none() };
         let Some(Outcome::Done(r)) = &w.outcome else { return Task::none() };
         let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else { return Task::none() };
@@ -272,7 +286,7 @@ impl App {
     }
 
     /// The error findings written as a BCF file at `path` and in words beside it.
-    fn review_return(&mut self, path: PathBuf) {
+    fn review_return(&mut self, path: PathBuf){
         let Some(w) = self.modules.arch().review_window.as_ref() else { return };
         let Some(Outcome::Done(r)) = &w.outcome else { return };
         let errors: Vec<&ReviewFinding> = r.findings.iter().filter(|f| f.error).collect();
@@ -320,7 +334,7 @@ impl App {
         }
     }
 
-    pub(crate) fn review_event(&mut self, event: Event) -> Task<Message> {
+    fn review_event(&mut self, event: Event) -> Task<Message>{
         let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
         match event {
             Event::Close => {
@@ -396,7 +410,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn review_view(&self) -> Element<'_, Message> {
+    fn review_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.arch().review_window else {
             return space::horizontal().into();
         };
@@ -473,7 +487,7 @@ impl App {
         Frame::new(TITLE).push(label::caption(LEAD)).scroll(body).footer(foot).width(1160.0).modal(msg(Event::Close))
     }
 
-    fn review_table<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message> {
+    fn review_table<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>{
         let mut t = Table::new([
             Col::new("Katman").width(scaled(70.0)),
             Col::new("Bulgu").width(Fill),
@@ -495,7 +509,7 @@ impl App {
         t.into()
     }
 
-    fn review_details<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message> {
+    fn review_details<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>{
         let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else {
             return label::caption("Bir bulgu seçin.").into();
         };
@@ -518,7 +532,7 @@ impl App {
         scrollable(container(out).padding(iced::Padding::ZERO.right(14))).height(Fill).into()
     }
 
-    fn review_form<'a>(&'a self, r: &'a PackageReviewed) -> Element<'a, Message> {
+    fn review_form<'a>(&'a self, r: &'a PackageReviewed) -> Element<'a, Message>{
         let mut t = Table::new([
             Col::new("No").width(scaled(40.0)).align_right(),
             Col::new("Başlık").width(Fill),
@@ -545,7 +559,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
         if self.modules.arch().review_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

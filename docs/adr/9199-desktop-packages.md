@@ -250,6 +250,15 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Bağımlılık tabanı: kabuk → Mimari 14 → 1 (kayıt dosyası), CAD → Mimari 2 → 0.
 - Sınama: çekirdek 2709, Harita 191, Yol 129, programlar 34.
 
+### §4.10 Adım 10: Mimari'nin `App` yöntemleri uzantı trait'i
+
+- Mimari'nin `impl App` bloklu 32 dosyası 32 trait oldu (betikle, gövdeler değişmeden); adlar `arch/ext.rs`'te,
+  dosyalar ve sınamalar `use crate::arch_ext::*` ile alır. İç içe modüllerin (`arch_audit`'in dördü, Bina programının
+  görünüşü) adları klasörden gelir (`ArchAuditPreviewApp`), modülleri trait'e ulaşılsın diye `pub(crate)`.
+- Gövdesiz bildirimde `mut` desen olamaz (iki yöntem); trait'in açtığı üç tür (`Table`, `ContextAction`, `Input`)
+  `pub(crate)` oldu.
+- Sınama: çekirdek 2709, programlar 34.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

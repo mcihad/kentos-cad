@@ -3,6 +3,7 @@
 //! style's fire resistance class reaches its walls, taken away they are in the finding again; the IFC file writes what is
 //! declared and never an empty word; EK-9's 9th question is read from the model.
 
+use crate::arch_ext::*;
 use kentos_commands::Entity;
 use crate::arch::ArchState;
 
