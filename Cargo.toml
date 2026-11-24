@@ -394,10 +394,12 @@ lto = "thin"
 codegen-units = 4
 
 # The desktop's and the launcher's programs ship without their symbol tables (docs/adr/0802 §1: 39 of kentos-cad's
-# 255 MB). For a profile with names (perf, a symbolised backtrace, PGO): cargo build --release
-# --config 'profile.release.package.kentos-desktop.strip="none"' (a config profile comes before the manifest's; the
-# environment variable for a package's setting does not override it, docs/adr/8055 §3).
-[profile.release.package.kentos-desktop]
+# 255 MB). The setting is the package that links the program: kentos-cad's since the programs left the core
+# (docs/adr/9199 §4.2, §4.16; on the core's library it reached no program). For a profile with names (perf, a
+# symbolised backtrace, PGO): cargo build --release --config 'profile.release.package.kentos-cad.strip="none"' (a
+# config profile comes before the manifest's; the environment variable for a package's setting does not override it,
+# docs/adr/8055 §3).
+[profile.release.package.kentos-cad]
 strip = "symbols"
 
 [profile.release.package.kentos-launcher]

@@ -362,6 +362,17 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
   paketidir), hepsi bir arada program hepsini, modül programı yalnız kendininkini taşır; her adımda taban ve derleme
   süresi ölçüldü.
 
+### §4.16 Release derlemesi
+
+- Programın sembolsüz dağıtımı (ADR 0802 §1) çekirdeğin paketinde yazılıydı (`profile.release.package.kentos-desktop`);
+  program §4.2'de `kentos-cad` paketine geçti. Ayar programı bağlayan paketin olmalı:
+  `profile.release.package.kentos-cad`. PGO betiği (`scripts/perf/pgo.sh`) sembolleri de bu paketin ayarıyla açar.
+- `cargo build --release -p kentos-cad -p kentos-launcher -j 10`: 8 dk 16 s (bu Mac; ince LTO, 4 kod birimi).
+  `kentos-cad` 309 MB (417 sembol kaldı), `kentos-launcher` 18,5 MB (275). Ardından
+  `python3 scripts/desktop/module_links.py target/release` modül programlarının bağlantılarını koyar.
+- Pencere açmadan doğrulandı: `kentos-cad snapshot` boş ve Kesit binasıyla (Mimari şeridi, Katmanlar, Öznitelikler:
+  Mimari'nin paketi programda kayıtlı), `kentos-mimari --modul harita` reddi (2), launcher'ın Uygulamalar sayfası.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

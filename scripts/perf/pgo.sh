@@ -25,7 +25,7 @@ export CARGO_INCREMENTAL=0
 
 # Line tables map the samples back to the code; the symbols stay for llvm-profgen. A package's `strip` in Cargo.toml
 # is not overridden by an environment variable, a `--config` profile is (config files' profiles come first).
-PROFILING=(--config 'profile.release.debug="line-tables-only"' --config 'profile.release.package.kentos-desktop.strip="none"')
+PROFILING=(--config 'profile.release.debug="line-tables-only"' --config 'profile.release.package.kentos-cad.strip="none"')
 
 # The work: each drawing opened and drawn without a window, then each usage trace played.
 work() {
