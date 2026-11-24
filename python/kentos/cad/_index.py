@@ -216,6 +216,8 @@ COMMANDS: dict[str, Any] = {
     "cad.parcels.create": parcels.create,
     "cad.parcels.record": parcels.record,
     "cad.parcels.records": parcels.records,
+    "cad.parcels.report": parcels.report,
+    "cad.parcels.table": parcels.table,
     "cad.parcels.withdraw": parcels.withdraw,
     "cad.pipes.check": pipes.check,
     "cad.pipes.profile": pipes.profile,

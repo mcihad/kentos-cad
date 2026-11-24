@@ -1746,6 +1746,28 @@ ConvertFailName = Literal["keep", "clear"]
 """The names of :class:`ConvertFail`, for a plain string."""
 
 
+class CornerNamed(_StrEnum):
+    """Where a corner's name came from: the point standing on it, or a new number."""
+    POINT = "point"
+    NUMBER = "number"
+
+
+CornerNamedName = Literal["point", "number"]
+"""The names of :class:`CornerNamed`, for a plain string."""
+
+
+class CornerNames(_StrEnum):
+    """How the corners are named: by the point standing on each, a new number where none stands (`points`); or each by a
+    new number (`numbers`).
+    """
+    POINTS = "points"
+    NUMBERS = "numbers"
+
+
+CornerNamesName = Literal["points", "numbers"]
+"""The names of :class:`CornerNames`, for a plain string."""
+
+
 class CreateGeometry(_StrEnum):
     """What the table's rows are.
 
@@ -75252,6 +75274,74 @@ class ParcelRegister(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelReported(_Model):
+    """A parcel as listed: its object, its identity's parts as written (empty when missing), the heading the table gives
+    it, its rings, its area computed from the coordinates (square metres), its record's text as written and its value
+    when it reads, the difference (computed − recorded), the tolerance from the computed area, and the status:
+    `within`, `outside`, `noRecord` or `invalidRecord`.
+    Attributes:
+        area: Unit: area.
+        tolerance: Unit: area.
+        difference: Unit: area.
+        recorded: Unit: area.
+    """
+    uid: str
+    il: str
+    ilce: str
+    mahalle: str
+    ada: str
+    parsel: str
+    heading: str
+    rings: list[ReportRing]
+    area: float
+    tolerance: float
+    status: str
+    difference: float | None | Unset = UNSET
+    recorded: float | None | Unset = UNSET
+    recorded_text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["il"] = self.il
+        out["ilce"] = self.ilce
+        out["mahalle"] = self.mahalle
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["heading"] = self.heading
+        out["rings"] = [e0.to_json() for e0 in self.rings]
+        out["area"] = float(self.area)
+        out["tolerance"] = float(self.tolerance)
+        out["status"] = self.status
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.recorded is not UNSET:
+            out["recorded"] = None if self.recorded is None else float(self.recorded)
+        if self.recorded_text is not UNSET:
+            out["recordedText"] = self.recorded_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelReported:
+        return cls(
+            uid=data["uid"],
+            il=data["il"],
+            ilce=data["ilce"],
+            mahalle=data["mahalle"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            heading=data["heading"],
+            rings=[ReportRing.from_json(e0) for e0 in data["rings"]],
+            area=float(data["area"]),
+            tolerance=float(data["tolerance"]),
+            status=data["status"],
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            recorded=UNSET if "recorded" not in data else None if data["recorded"] is None else float(data["recorded"]),
+            recorded_text=data.get("recordedText", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelToRecord(_Model):
     """A parcel the document makes: the area that draws it, the area the document states, a plain decimal in square metres
     as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none), and the lengths it
@@ -75745,6 +75835,236 @@ class ParcelsRecordsListed(_Model):
             moved=data["moved"],
             drafts=[ParcelDraftRow.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
             over_limit=data.get("overLimit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsReport(_Model):
+    """Input of `cad.parcels.report` v1: the parcels (none: every area on the parcel layer `parsel`), how their corners are
+    named (none: `points`), a new number's prefix (none: no prefix; at most 12 letters) and first number (none: 1),
+    whether the edges' lengths are listed (none: yes), and the attribute that holds the recorded area (none or blank:
+    `Tapu alanı (m²)`; at most 120 letters).
+
+    Refusals: `invalid_input` (`prefix`, `field`), `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel`
+    (`uids[i]`: not an area).
+    Attributes:
+        start: Unit: count.
+    """
+    field: str | None | Unset = UNSET
+    lengths: bool | None | Unset = UNSET
+    names: CornerNames | CornerNamesName | None | Unset = UNSET
+    prefix: str | None | Unset = UNSET
+    start: int | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.lengths is not UNSET:
+            out["lengths"] = self.lengths
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else _enum_out(self.names)
+        if self.prefix is not UNSET:
+            out["prefix"] = self.prefix
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsReport:
+        return cls(
+            field=data.get("field", UNSET),
+            lengths=data.get("lengths", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else _enum_in(CornerNames, data["names"]),
+            prefix=data.get("prefix", UNSET),
+            start=data.get("start", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsReported(_Model):
+    """Output of `cad.parcels.report` v1: the project's coordinate system (none without one), the tolerance's rule, the
+    record's attribute, the parcels, their areas' sum, how many corner places there are and how many were named by a
+    point or numbered, and the table's words row by row (as `cad.parcels.table` writes them).
+    Attributes:
+        area: Unit: area.
+        places: Unit: count.
+        named: Unit: count.
+        numbered: Unit: count.
+        srid: Unit: epsg.
+    """
+    rule: str
+    field: str
+    parcels: list[ParcelReported]
+    area: float
+    places: int
+    named: int
+    numbered: int
+    cells: list[list[str]]
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["field"] = self.field
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        out["area"] = float(self.area)
+        out["places"] = self.places
+        out["named"] = self.named
+        out["numbered"] = self.numbered
+        out["cells"] = [list(e0) for e0 in self.cells]
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsReported:
+        return cls(
+            rule=data["rule"],
+            field=data["field"],
+            parcels=[ParcelReported.from_json(e0) for e0 in data["parcels"]],
+            area=float(data["area"]),
+            places=data["places"],
+            named=data["named"],
+            numbered=data["numbered"],
+            cells=[list(e0) for e0 in data["cells"]],
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsTable(_Model):
+    """Input of `cad.parcels.table` v1: the report's input, and the table's top left corner, its layer (none: the active
+    one), its words' height (metres; none: the project's table height at its plot scale) and the expected revision.
+
+    Refusals: as `cad.parcels.report`'s, `no_objects` (no parcel to write), `not_finite` (`at`), `invalid_table`
+    (`height`, or a table past a table's limits), `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
+    `revision_conflict`. Warning: `layer_hidden`.
+    Attributes:
+        at: Unit: length.
+        height: Unit: length.
+        start: Unit: count.
+    """
+    at: Vec2
+    expected_revision: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    lengths: bool | None | Unset = UNSET
+    names: CornerNames | CornerNamesName | None | Unset = UNSET
+    prefix: str | None | Unset = UNSET
+    start: int | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.lengths is not UNSET:
+            out["lengths"] = self.lengths
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else _enum_out(self.names)
+        if self.prefix is not UNSET:
+            out["prefix"] = self.prefix
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsTable:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            field=data.get("field", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            layer_id=data.get("layerId", UNSET),
+            lengths=data.get("lengths", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else _enum_in(CornerNames, data["names"]),
+            prefix=data.get("prefix", UNSET),
+            start=data.get("start", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsTablePlan(_Model):
+    """What `cad.parcels.table` would write: the table, how many parcels and rows it has and how many corners it numbers.
+    Attributes:
+        parcels: Unit: count.
+        rows: Unit: count.
+        numbered: Unit: count.
+    """
+    table: Entity
+    parcels: int
+    rows: int
+    numbered: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table.to_json()
+        out["parcels"] = self.parcels
+        out["rows"] = self.rows
+        out["numbered"] = self.numbered
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsTablePlan:
+        return cls(
+            table=Entity.from_json(data["table"]),
+            parcels=data["parcels"],
+            rows=data["rows"],
+            numbered=data["numbered"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsTabled(_Model):
+    """Output of `cad.parcels.table` v1: the table's persistent id, how many parcels and rows it has and how many corners
+    it numbered.
+    Attributes:
+        parcels: Unit: count.
+        rows: Unit: count.
+        numbered: Unit: count.
+    """
+    uid: str
+    parcels: int
+    rows: int
+    numbered: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["parcels"] = self.parcels
+        out["rows"] = self.rows
+        out["numbered"] = self.numbered
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsTabled:
+        return cls(
+            uid=data["uid"],
+            parcels=data["parcels"],
+            rows=data["rows"],
+            numbered=data["numbered"],
+            revision=data["revision"],
         )
 
 
@@ -91853,6 +92173,48 @@ class RepeatPlacement(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReportCorner(_Model):
+    """A corner as listed: its name and where the name came from, its place (x east, y north), and the edge from it to the
+    ring's next corner: the straight distance between the two (the chord), and for an arc its radius and its length
+    along the arc.
+    Attributes:
+        at: Unit: length.
+        length: Unit: m.
+        arc: Unit: m.
+        radius: Unit: m.
+    """
+    name: str
+    named: CornerNamed | CornerNamedName
+    at: Vec2
+    length: float
+    arc: float | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["named"] = _enum_out(self.named)
+        out["at"] = _vec2_out(self.at)
+        out["length"] = float(self.length)
+        if self.arc is not UNSET:
+            out["arc"] = None if self.arc is None else float(self.arc)
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReportCorner:
+        return cls(
+            name=data["name"],
+            named=_enum_in(CornerNamed, data["named"]),
+            at=Vec2.from_json(data["at"]),
+            length=float(data["length"]),
+            arc=UNSET if "arc" not in data else None if data["arc"] is None else float(data["arc"]),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReportDetail(_Model):
     """A bounded source sample for an aggregated CAD loss report.
     Attributes:
@@ -91922,6 +92284,39 @@ class ReportItem(_Model):
             lines=list(data["lines"]),
             details=[ReportDetail.from_json(e0) for e0 in data["details"]] if "details" in data else UNSET,
             severity=UNSET if "severity" not in data else None if data["severity"] is None else _enum_in(ReportSeverity, data["severity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReportRing(_Model):
+    """A ring as listed: its part (0: the first) and, for a hole, its number in the part (0: the first; none: the outer
+    ring), its corners clockwise from the northernmost, and the area it encloses (square metres, arcs included).
+    Attributes:
+        part: Unit: index.
+        area: Unit: area.
+        hole: Unit: index.
+    """
+    part: int
+    corners: list[ReportCorner]
+    area: float
+    hole: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["part"] = self.part
+        out["corners"] = [e0.to_json() for e0 in self.corners]
+        out["area"] = float(self.area)
+        if self.hole is not UNSET:
+            out["hole"] = self.hole
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReportRing:
+        return cls(
+            part=data["part"],
+            corners=[ReportCorner.from_json(e0) for e0 in data["corners"]],
+            area=float(data["area"]),
+            hole=data.get("hole", UNSET),
         )
 
 
@@ -148670,6 +149065,10 @@ __all__ = [
     "CopyOpeningsOperation",
     "CopyOptionsOperation",
     "CornerHatchOrigin",
+    "CornerNamed",
+    "CornerNamedName",
+    "CornerNames",
+    "CornerNamesName",
     "CornerPick",
     "CornersRectangleFrame",
     "CorrelationBlock",
@@ -150649,6 +151048,7 @@ __all__ = [
     "ParcelInGraph",
     "ParcelPlan",
     "ParcelRegister",
+    "ParcelReported",
     "ParcelToRecord",
     "ParcelsApprove",
     "ParcelsApproved",
@@ -150661,6 +151061,11 @@ __all__ = [
     "ParcelsRecorded",
     "ParcelsRecords",
     "ParcelsRecordsListed",
+    "ParcelsReport",
+    "ParcelsReported",
+    "ParcelsTable",
+    "ParcelsTablePlan",
+    "ParcelsTabled",
     "ParcelsWithdraw",
     "ParcelsWithdrawn",
     "ParkedInfo",
@@ -151292,8 +151697,10 @@ __all__ = [
     "ReplaceTextEdit",
     "ReplaceTypeOpeningsOperation",
     "ReplyReviewNoteOp",
+    "ReportCorner",
     "ReportDetail",
     "ReportItem",
+    "ReportRing",
     "ReportSeverity",
     "ReportSeverityName",
     "ReprojectSample",
