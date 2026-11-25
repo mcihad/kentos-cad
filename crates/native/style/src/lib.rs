@@ -44,6 +44,7 @@ pub mod designer;
 // Far levels of plain strokes and solid fills on the model screen (plan/render.md RM-10).
 // SVG symbols as vectors on the model screen (plan/render.md RM-11).
 pub mod svg_marks;
+pub mod vector_tiles;
 pub mod legend;
 pub mod line_types;
 pub mod phases;

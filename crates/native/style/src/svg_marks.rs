@@ -176,15 +176,15 @@ fn svg_of(b: &StyledBatch) -> Option<(&str, f64, f64)> {
 }
 
 /// A symbol's triangles by colour, in the SVG's own pixels (x right, y down), with its size.
-struct Meshes {
-    width: f64,
-    height: f64,
+pub(crate) struct Meshes {
+    pub(crate) width: f64,
+    pub(crate) height: f64,
     /// Height over width, as the marker shader's box has it (`fit` 1).
-    aspect: f64,
-    fills: Vec<([f64; 4], Vec<f64>)>,
+    pub(crate) aspect: f64,
+    pub(crate) fills: Vec<([f64; 4], Vec<f64>)>,
 }
 
-fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
+pub(crate) fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
     let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).ok()?;
     let size = tree.size();
     let (sw, sh) = (f64::from(size.width()), f64::from(size.height()));
@@ -343,6 +343,43 @@ fn inside(p: Vec2, r: &[Vec2]) -> bool {
 /// filled starts an area; its holes are the first rings inside it that are not filled. Each area is triangulated
 /// once, so nothing is covered twice (a translucent symbol would darken where it was).
 fn fill_rings(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
+    if !even_odd && let Some(tris) = nonzero(rings) {
+        return tris;
+    }
+    nested(rings, even_odd)
+}
+
+/// The rings' area by their winding (nonzero), resolved by the geometry core's overlay into areas whose rings do not
+/// cross themselves, then ear-clipped. A stroke's outline crosses itself where the stroke turns sharply (the inside of
+/// a join folds over), and ear clipping such a ring lost what lay past the crossing: a sprig's leaf tip and base came
+/// out holed (plan/render.md RM-11, docs/adr/9239). None when the overlay gives nothing for rings with an area.
+fn nonzero(rings: &[Vec<Vec2>]) -> Option<Vec<f64>> {
+    use kentos_geometry_core::geom::arrangement::{Rule, Source};
+    use kentos_geometry_core::geom::intersect::Edge;
+    let edges: Vec<Edge> = rings
+        .iter()
+        .flat_map(|r| (0..r.len()).map(move |i| (r[i], r[(i + 1) % r.len()])))
+        .filter(|(a, b)| a.x != b.x || a.y != b.y)
+        .map(|(a, b)| Edge::Seg { a, b })
+        .collect();
+    if edges.is_empty() {
+        return Some(Vec::new());
+    }
+    let areas = kentos_geometry_core::geom::overlay::overlay(&[Source { edges, points: None, cut: None }], Rule::Any);
+    if areas.is_empty() && rings.iter().any(|r| area(r).abs() > 0.0) {
+        return None;
+    }
+    let mut out = Vec::new();
+    for a in &areas {
+        let holes: Vec<Vec<Vec2>> = a.holes.iter().map(|h| h.pts.clone()).collect();
+        out.extend(triangulate(&a.outer.pts, &holes, Vec2::new(0.0, 0.0)));
+    }
+    Some(out)
+}
+
+/// The rings' area when they do not cross themselves: each ring's parent the smallest ring holding it, filled by the
+/// nesting's winding (or its depth, even-odd).
+fn nested(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
     let mut order: Vec<usize> = (0..rings.len()).filter(|&i| area(&rings[i]).abs() > 0.0).collect();
     order.sort_by(|&a, &b| area(&rings[b]).abs().total_cmp(&area(&rings[a]).abs()));
     // Each ring's parent: the smallest ring already placed that holds its first point.
@@ -583,6 +620,26 @@ mod tests {
         let blue = &m.fills[1].1;
         let area: f64 = blue.chunks(6).map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0).sum();
         assert!((area - 40.0).abs() < 0.5, "{area}");
+    }
+
+    /// plan/render.md RM-11: a stroke turning sharply is outlined by a ring that crosses itself (the join's inside folds
+    /// over); ear-clipped as it was, the leaf's tip and base came out holed.
+    #[test]
+    fn a_stroke_turning_sharply_is_filled_past_its_crossing() {
+        let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><path fill="none" stroke="#000000" stroke-width="5.56" stroke-linecap="round" stroke-linejoin="round" d="M50 91.67L50 36.11M50 36.11Q22.22 34.72 25 8.33Q47.22 9.72 50 36.11Z"/></svg>"##;
+        let m = mesh(svg, 100.0, 100.0).expect("parses");
+        let held = |p: [f64; 2]| {
+            m.fills[0].1.chunks(6).any(|t| {
+                let side = |a: usize, b: usize| (t[b] - t[a]) * (p[1] - t[a + 1]) - (t[b + 1] - t[a + 1]) * (p[0] - t[a]);
+                let s = [side(0, 2), side(2, 4), side(4, 0)];
+                s.iter().all(|&v| v >= 0.0) || s.iter().all(|&v| v <= 0.0)
+            })
+        };
+        // The leaf's tip and its base, where the stroke turns back on itself; the stem's middle; nothing beside it.
+        for p in [[25.0, 8.33], [26.0, 9.5], [50.0, 36.11], [48.5, 34.5], [50.0, 60.0]] {
+            assert!(held(p), "{p:?} is inked");
+        }
+        assert!(!held([60.0, 60.0]), "the ground beside the stem");
     }
 
     #[test]

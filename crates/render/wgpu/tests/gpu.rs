@@ -39,6 +39,8 @@ mod precision;
 mod scene3d;
 #[path = "gpu/on_gpu.rs"]
 mod on_gpu;
+#[path = "gpu/vector_tiles.rs"]
+mod vector_tiles;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -336,11 +338,17 @@ fn line_centre(rgba: &[u8], width: u32, y: u32) -> f64 {
 struct RedTiles;
 
 impl kentos_native_style::picture::ImageSource for RedTiles {
+    /// An SVG written into its image, read as the desktop reads it (a pattern tile's marks, `gpu/vector_tiles.rs`).
     fn picture(
         &self,
-        _: &kentos_native_style::batches::AtlasImage,
+        image: &kentos_native_style::batches::AtlasImage,
     ) -> Option<std::sync::Arc<kentos_render_wgpu::styled::Picture>> {
-        None
+        match image {
+            kentos_native_style::batches::AtlasImage::Svg { svg, .. } => {
+                kentos_native_style::svg::picture(svg, &|_, _, _, _| None).map(std::sync::Arc::new)
+            }
+            _ => None,
+        }
     }
 
     fn text(
@@ -520,6 +528,16 @@ fn glyphs_on_a_real_gpu() {
     glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
     glyphs::rings_and_lines_cover_their_areas(&gpu);
     glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
+}
+
+/// plan/render.md RM-11: a magnified pattern tile's SVG marks drawn from their triangles, on a real GPU.
+#[test]
+fn pattern_tiles_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    vector_tiles::a_magnified_tile_draws_its_marks_from_their_triangles(&mut Gpu::open());
 }
 
 /// plan/render.md RM-19 alone: a styled part's numbers on the GPU only, on a real GPU.

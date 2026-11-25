@@ -13,7 +13,7 @@ use std::hash::{Hash, Hasher};
 use std::ops::Range;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use kentos_native_style::batches::{BatchKind, FillPaintBatch, Picture, StyledBatch, StyledLayer};
+use kentos_native_style::batches::{BatchKind, FillPaintBatch, Picture, StyledBatch, StyledLayer, Unit};
 use wgpu::util::DeviceExt;
 
 use super::atlas::{Atlas, PAGE};
@@ -200,6 +200,8 @@ enum Pipe {
     /// A block definition's strokes and solid areas drawn per insert (docs/adr/1063 §2).
     StrokeInstanced,
     SolidInstanced,
+    /// A pattern tile's SVG marks from their triangles where its bitmap would be magnified (plan/render.md RM-11).
+    TileVector,
 }
 
 struct Pipelines {
@@ -215,6 +217,7 @@ struct Pipelines {
     cloud: wgpu::RenderPipeline,
     stroke_instanced: wgpu::RenderPipeline,
     solid_instanced: wgpu::RenderPipeline,
+    tile_vector: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -232,9 +235,21 @@ impl Pipelines {
             Pipe::Cloud => &self.cloud,
             Pipe::StrokeInstanced => &self.stroke_instanced,
             Pipe::SolidInstanced => &self.solid_instanced,
+            Pipe::TileVector => &self.tile_vector,
         }
     }
 }
+
+/// A pattern tile drawn from its SVG marks' triangles (`vector_tiles.wgsl`, plan/render.md RM-11): the tile's area as
+/// `tileFs` draws it, native only.
+const TILE_VECTOR: StyledPipelineSpec = StyledPipelineSpec {
+    name: "tile-vector",
+    vertex: "areaVs",
+    fragment: "tileVectorFs",
+    vertex_count: None,
+    blend: PREMULTIPLIED,
+    buffer: AREA_BUFFER,
+};
 
 const STRAIGHT: wgpu::BlendState = wgpu::BlendState {
     color: wgpu::BlendComponent {
@@ -759,6 +774,7 @@ impl StyledGpu {
             Pipelines {
                 stroke_instanced: instanced("stroke-instanced", "strokeVsInstanced", "strokeFs", STROKE_MESH_BUFFER),
                 solid_instanced: instanced("solid-instanced", "areaVsInstanced", "solidFs", AREA_BUFFER),
+                tile_vector: pipe(&TILE_VECTOR),
                 stroke: pipe(stroke),
                 solid: pipe(solid),
                 hatch: pipe(hatch),
@@ -832,12 +848,23 @@ impl StyledGpu {
                 ),
             };
             let mut block = self.block(b);
-            let (pattern_page, pattern_offset, pattern_count) =
-                patterns.insert(&super::uniform::batch_dashes(b));
+            // A pattern tile of SVG marks takes their program (plan/render.md RM-11) where a line takes its long dashes.
+            let vectors = match &b.kind {
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Tile { image, size, unit: Unit::World, .. },
+                } => kentos_native_style::vector_tiles::switch(image, *size)
+                    .zip(kentos_native_style::vector_tiles::program(image)),
+                _ => None,
+            };
+            let (pattern_page, pattern_offset, pattern_count) = match &vectors {
+                Some((_, program)) => patterns.insert(program),
+                None => patterns.insert(&super::uniform::batch_dashes(b)),
+            };
             if pattern_count > 0 {
                 block.u[2] = pattern_offset;
                 block.u[3] = pattern_count;
             }
+            let vectors = vectors.filter(|_| pattern_count > 0).map(|(switch, _)| switch);
             let offset = (i as u64 * self.align) as u32;
             blocks.extend_from_slice(&block.bytes());
             blocks.resize((i + 1) * self.align as usize, 0);
@@ -918,6 +945,7 @@ impl StyledGpu {
                 instanced,
                 block,
                 pattern_page,
+                vectors,
                 offset,
                 visible: false,
                 placed: None,
@@ -1121,7 +1149,7 @@ impl StyledGpu {
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
-                    if !g.visible {
+                    if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
                     let Some(image) = b.image() else {
@@ -1367,7 +1395,7 @@ impl StyledGpu {
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
-                    if !g.visible {
+                    if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
                     let Some(image) = b.image() else {
@@ -1758,9 +1786,13 @@ impl StyledGpu {
                 },
                 None => None,
             };
-            if current != Some(b.pipe) {
-                pass.set_pipeline(pipes.get(b.pipe));
-                current = Some(b.pipe);
+            // A pattern tile magnified past its bitmap draws from its marks' triangles (plan/render.md RM-11), the lens at
+            // its own scale.
+            let px_per_m = seen.map_or(f64::from(view.uniform.px_per_m), |(_, px_per_m, _)| px_per_m);
+            let pipe = if b.vector_tile(px_per_m) { Pipe::TileVector } else { b.pipe };
+            if current != Some(pipe) {
+                pass.set_pipeline(pipes.get(pipe));
+                current = Some(pipe);
             }
             if let Some(bind) = picture {
                 pass.set_bind_group(0, bind, &[]);
@@ -1868,7 +1900,7 @@ impl StyledGpu {
                     }
                     Pipe::Solid | Pipe::SolidInstanced => asked.contains("solid"),
                     Pipe::Hatch => asked.contains("hatch"),
-                    Pipe::Pattern | Pipe::Tile | Pipe::Gradient => asked.contains("pattern"),
+                    Pipe::Pattern | Pipe::Tile | Pipe::TileVector | Pipe::Gradient => asked.contains("pattern"),
                     Pipe::Marker => asked.contains("marker"),
                     Pipe::Image | Pipe::Raster | Pipe::Cloud => asked.contains("raster"),
                 }
@@ -2049,11 +2081,22 @@ struct GpuBatch {
     instanced: bool,
     block: StyleBlock,
     pattern_page: usize,
+    /// A pattern tile with its SVG marks' program in its page (plan/render.md RM-11): the scale past which it draws
+    /// from the program, not its bitmap (`vector_tiles::switch`).
+    vectors: Option<f64>,
     /// Its block's offset in the layer's uniform buffer.
     offset: u32,
     visible: bool,
     /// The atlas generation and rectangle last written into its block.
     placed: Option<(u64, [f32; 4])>,
+}
+
+impl GpuBatch {
+    /// Whether this pattern tile draws from its marks' program at `px_per_m` device pixels a metre: past the scale where
+    /// its bitmap would be magnified (`vector_tiles::switch`), as a symbol's vectors take over (`svg_marks`).
+    fn vector_tile(&self, px_per_m: f64) -> bool {
+        self.vectors.is_some_and(|s| s * px_per_m > kentos_native_style::svg_marks::VECTORS_FROM_PX)
+    }
 }
 
 /// A styled layer on the GPU.
