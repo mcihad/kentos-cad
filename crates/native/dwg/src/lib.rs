@@ -1,4 +1,4 @@
-//! DWG through OpenCADStudio's pinned OpenCADCodec (ADR 0586).
+//! DWG through the pinned DWG codec, acadrust (ADR 0586).
 //!
 //! Only bytes and KentOS contracts cross this boundary. A loss-reporting,
 //! in-memory DXF bridge reuses the unit/block/style rules of the existing
@@ -190,7 +190,7 @@ fn strict(stats: &acadrust::ReadStats) -> Result<(), Error> {
     Ok(())
 }
 
-/// A DGN line style's records (DgnLS; a DWG made from MicroStation drawings holds them).
+/// A DGN line style's records (DgnLS; a DWG made from DGN drawings holds them).
 const DGN_LINE_STYLES: [&str; 6] = [
     "LSDEFINITION",
     "LSSYMBOLCOMPONENT",
@@ -229,6 +229,144 @@ fn drop_unread(doc: &mut acadrust::CadDocument) -> usize {
         }
     }
     gone.len()
+}
+
+/// What the objects `drop_unread` takes out were, and what the DGN line styles among them draw (docs/adr/9229): the
+/// report said only "486 531 DWG nesnesi okunmadı" for the SİVAS AVM DWG, and nothing told whether anything drawn
+/// lost its look. They were all DGN line style records of 4 142 line types repeated by bound references, and the
+/// 32 923 objects drawn with those line types were all in block definitions nothing inserts.
+#[derive(Debug, Default, PartialEq)]
+struct Unread {
+    /// DGN line style records: definitions and components.
+    dgn: usize,
+    /// Proxy objects: another application's data, never drawn.
+    proxies: usize,
+    /// The line types the DGN line styles are defined for.
+    line_types: usize,
+    /// Objects drawn with those line types where the drawing shows them: model space, the layouts and the blocks they
+    /// insert, at any depth.
+    drawn: usize,
+    /// Objects drawn with them in block definitions nothing of the drawing inserts.
+    unused: usize,
+}
+
+impl Unread {
+    /// The report's notes: what, how many, why.
+    fn said(&self) -> Vec<(&'static str, usize, String)> {
+        let mut notes = Vec::new();
+        if self.dgn > 0 {
+            let mut drawn = if self.drawn == 0 {
+                "çizimde bu çizgi tipleriyle çizilen nesne yok".to_owned()
+            } else {
+                format!("bu çizgi tipleriyle çizilen {} nesne çizgi tipinin kesik deseniyle çizilir", self.drawn)
+            };
+            if self.unused > 0 {
+                drawn.push_str(&format!("; {} nesne hiç yerleştirilmemiş bloklarda", self.unused));
+            }
+            notes.push((
+                "DGN çizgi stili",
+                self.dgn,
+                format!("{} çizgi tipinin DGN çizgi stili kayıtları okunmadı; {drawn}", self.line_types),
+            ));
+        }
+        if self.proxies > 0 {
+            notes.push((
+                "Vekil nesne (ACAD_PROXY_OBJECT)",
+                self.proxies,
+                "okunmadı: başka bir uygulamanın çizilmeyen verisi".to_owned(),
+            ));
+        }
+        notes
+    }
+}
+
+/// [`Unread`] of a decoded drawing, before `drop_unread`. A DGN line style's definition hangs in the extension
+/// dictionary of the line type it styles; an object takes a line type of its own or, BYLAYER, its layer's.
+fn unread(doc: &acadrust::CadDocument) -> Unread {
+    use acadrust::entities::EntityType;
+    use acadrust::objects::{DgnLineStyleData, ObjectType};
+    use std::collections::{HashMap, HashSet};
+    let mut u = Unread::default();
+    let owners: HashMap<acadrust::Handle, acadrust::Handle> = doc
+        .objects
+        .iter()
+        .filter_map(|(h, o)| match o {
+            ObjectType::Dictionary(d) => Some((*h, d.owner)),
+            _ => None,
+        })
+        .collect();
+    let names: HashMap<acadrust::Handle, &str> = doc.line_types.iter().map(|l| (l.handle, l.name.as_str())).collect();
+    let mut styled: HashSet<String> = HashSet::new();
+    for o in doc.objects.values() {
+        let definition = match o {
+            ObjectType::DgnLineStyle(d) => {
+                u.dgn += 1;
+                matches!(d.data, DgnLineStyleData::Definition { .. }).then_some(d.owner)
+            }
+            ObjectType::Unknown { type_name, owner, .. } if DGN_LINE_STYLES.contains(&type_name.as_str()) => {
+                u.dgn += 1;
+                (type_name == "LSDEFINITION").then_some(*owner)
+            }
+            ObjectType::ProxyObject(_) => {
+                u.proxies += 1;
+                None
+            }
+            _ => None,
+        };
+        if let Some(name) = definition.and_then(|d| owners.get(&d)).and_then(|lt| names.get(lt)) {
+            styled.insert(name.to_uppercase());
+        }
+    }
+    u.line_types = styled.len();
+    if styled.is_empty() {
+        return u;
+    }
+    let layered: HashSet<String> = doc
+        .layers
+        .iter()
+        .filter(|l| styled.contains(&l.line_type.to_uppercase()))
+        .map(|l| l.name.to_uppercase())
+        .collect();
+    let uses = |e: &EntityType| {
+        let c = e.common();
+        let own = c.linetype.to_uppercase();
+        styled.contains(&own) || (own == "BYLAYER" && layered.contains(&c.layer.to_uppercase()))
+    };
+    let mut per: HashMap<String, usize> = HashMap::new();
+    let mut inserts: HashMap<String, Vec<String>> = HashMap::new();
+    for b in doc.block_records.iter() {
+        let key = b.name.to_uppercase();
+        for e in doc.entities_in_block(&b.name) {
+            if uses(e) {
+                *per.entry(key.clone()).or_default() += 1;
+            }
+            if let EntityType::Insert(i) = e {
+                inserts.entry(key.clone()).or_default().push(i.block_name.to_uppercase());
+            }
+        }
+    }
+    let mut reached: HashSet<String> = HashSet::new();
+    let mut open: Vec<String> = doc
+        .block_records
+        .iter()
+        .map(|b| b.name.to_uppercase())
+        .filter(|n| n == "*MODEL_SPACE" || n.starts_with("*PAPER_SPACE"))
+        .collect();
+    while let Some(b) = open.pop() {
+        if reached.insert(b.clone())
+            && let Some(inner) = inserts.get(&b)
+        {
+            open.extend(inner.iter().cloned());
+        }
+    }
+    for (block, n) in per {
+        if reached.contains(&block) {
+            u.drawn += n;
+        } else {
+            u.unused += n;
+        }
+    }
+    u
 }
 
 /// Whether a DWG registers KENTOS in its APPID table, KentOS's own export (docs/adr/1061 §5): decoded through the same
@@ -278,10 +416,11 @@ pub fn read_watched(
 pub struct Bridge {
     dxf: Vec<u8>,
     stats: acadrust::ReadStats,
-    dropped: usize,
     source: DwgVersion,
     /// The regions drawn by their boundaries (docs/adr/9227).
     regions: regions::Regions,
+    /// What the objects dropped as unread were and what they draw (docs/adr/9229).
+    unread: Unread,
 }
 
 /// [`read_watched`]'s first half: the DWG decoded, the objects KentOS does not read dropped and the rest written as
@@ -291,12 +430,14 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
     if !watch.step(0, 1000) {
         return Err(error("cancelled", STOPPED));
     }
-    let (dxf, stats, dropped, regions) = guarded(|| {
+    let (dxf, stats, unread, regions) = guarded(|| {
         let mut outcome = DwgReader::from_stream(Cursor::new(bytes))
             .read_with_stats()
             .map_err(|e| error("import_unreadable", format!("DWG okunamadı: {e}")))?;
         complete(&outcome.stats)?;
+        let unread = unread(&outcome.document);
         let dropped = drop_unread(&mut outcome.document);
+        debug_assert_eq!(dropped, unread.dgn + unread.proxies);
         // A region's shape is ACIS data the DXF text carries where the reader does not look: drawn by its boundary
         // (docs/adr/9227).
         let regions = regions::outlines(&mut outcome.document);
@@ -311,7 +452,7 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
                 entity.common_mut().line_weight = acadrust::LineWeight::ByLayer;
             }
         }
-        // OpenCADCodec's DXF bridge writes 40/41=0 even when a DWG uses
+        // The codec's DXF writer writes 40/41=0 even when a DWG uses
         // constant width 43. In DXF those explicit zeros override 43. Expand
         // the decoded constant to vertex widths in this temporary document;
         // all blocks/paper entities are included, source DWG bytes stay intact.
@@ -344,7 +485,7 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
                 ),
             ));
         }
-        Ok((dxf, outcome.stats, dropped, regions))
+        Ok((dxf, outcome.stats, unread, regions))
     })?;
     if !watch.step(400, 1000) {
         return Err(error("cancelled", STOPPED));
@@ -352,9 +493,9 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
     Ok(Bridge {
         dxf,
         stats,
-        dropped,
         source,
         regions,
+        unread,
     })
 }
 
@@ -367,11 +508,11 @@ pub fn read_bridge(
     let Bridge {
         dxf,
         stats,
-        dropped,
         source,
         regions,
+        unread,
     } = bridge;
-    let (dropped, source) = (*dropped, *source);
+    let source = *source;
     let mut phase = kentos_formats::watch::Steps(|done: u64, total: u64| {
         watch.step(400 + done.saturating_mul(600) / total.max(1), 1000)
     });
@@ -411,13 +552,13 @@ pub fn read_bridge(
             lines: Vec::new(),
         });
     }
-    if dropped > 0 {
+    for (what, count, reason) in unread.said() {
         result.report.notes.push(kentos_contracts::ReportItem {
             severity: None,
             details: Vec::new(),
-            what: "DWG nesnesi".into(),
-            count: dropped.min(u32::MAX as usize) as u32,
-            reason: "DGN çizgi stili bileşenleri ve vekil (proxy) nesneler okunmadı: KentOS onları çizmez; çizgiler çizgi tipinin kesik deseniyle çizilir.".into(),
+            what: what.into(),
+            count: count.min(u32::MAX as usize) as u32,
+            reason,
             lines: Vec::new(),
         });
     }
@@ -621,6 +762,73 @@ mod tests {
         assert_eq!(d.entries, vec![("Pafta".to_owned(), layout)]);
         assert_eq!(d.hard_owner_entries, vec!["Pafta".to_owned()]);
         assert_eq!(drop_unread(&mut doc), 0, "nothing more to drop");
+    }
+
+    /// What the dropped DGN line styles draw is said (docs/adr/9229): an object of model space drawn with one of their
+    /// line types and another by its layer's, one in a block nothing inserts; inserted, the block's object is drawn.
+    #[test]
+    fn dgn_line_styles_say_what_they_draw() {
+        use acadrust::entities::{EntityType, Insert, Line};
+        let mut doc = acadrust::CadDocument::new();
+        let (lt, dict, def, part, block) = (
+            Handle::new(0x9101),
+            Handle::new(0x9102),
+            Handle::new(0x9103),
+            Handle::new(0x9104),
+            Handle::new(0x9105),
+        );
+        let mut diamond = acadrust::tables::LineType::new("{ Diamond }");
+        diamond.handle = lt;
+        doc.line_types.add(diamond).expect("the line type");
+        let mut d = Dictionary::new();
+        (d.handle, d.owner, d.entries) = (dict, lt, vec![("DGNLSDEF".into(), def)]);
+        doc.objects.insert(dict, ObjectType::Dictionary(d));
+        let raw = |kind: &str, handle: Handle, owner: Handle| ObjectType::Unknown {
+            type_name: kind.into(),
+            handle,
+            owner,
+            raw_dxf_codes: None,
+            raw_dwg_data: Some(vec![0; 8]),
+            raw_dwg_handle_bits: 0,
+            raw_dwg_version: None,
+        };
+        doc.objects.insert(def, raw("LSDEFINITION", def, dict));
+        doc.objects.insert(part, raw("LSSTROKEPATTERNCOMPONENT", part, def));
+        let mut edge = acadrust::tables::Layer::new("SINIR");
+        edge.line_type = "{ Diamond }".into();
+        doc.layers.add(edge).expect("the layer");
+        let line = |line_type: &str, layer: &str| {
+            let mut l = Line::new();
+            (l.common.linetype, l.common.layer) = (line_type.into(), layer.into());
+            EntityType::Line(l)
+        };
+        for (line_type, layer) in [("{ Diamond }", "0"), ("BYLAYER", "SINIR"), ("CONTINUOUS", "0")] {
+            doc.add_entity(line(line_type, layer)).expect("a line");
+        }
+        let mut unused = acadrust::tables::BlockRecord::new("KULLANILMAYAN");
+        unused.handle = block;
+        doc.block_records.add(unused).expect("the block");
+        let mut inner = line("{ Diamond }", "0");
+        inner.common_mut().owner_handle = block;
+        doc.add_entity(inner).expect("the block's line");
+
+        let u = unread(&doc);
+        assert_eq!(u, Unread { dgn: 2, proxies: 0, line_types: 1, drawn: 2, unused: 1 });
+        let said = u.said();
+        assert_eq!(said.len(), 1);
+        assert_eq!(
+            (said[0].0, said[0].1, said[0].2.as_str()),
+            (
+                "DGN çizgi stili",
+                2,
+                "1 çizgi tipinin DGN çizgi stili kayıtları okunmadı; bu çizgi tipleriyle çizilen 2 nesne çizgi tipinin \
+                 kesik deseniyle çizilir; 1 nesne hiç yerleştirilmemiş bloklarda"
+            )
+        );
+        doc.add_entity(EntityType::Insert(Insert::new("KULLANILMAYAN", acadrust::types::Vector3::new(0.0, 0.0, 0.0))))
+            .expect("the insert");
+        assert_eq!((unread(&doc).drawn, unread(&doc).unused), (3, 0));
+        assert_eq!(drop_unread(&mut doc), 2, "the records it counted are the ones dropped");
     }
 
     /// The recovered records are said by their kinds; a DGN line style's is said not to be drawn.
