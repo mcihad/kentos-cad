@@ -10,7 +10,7 @@
 //! opaque service goes to the bottom, a clear one over the basemaps. Opened
 //! from a service layer's menu (Servis ayarları) it changes that layer.
 
-use iced::widget::{Column, button, column, container, row, scrollable};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     LayerNodeType, LayerServiceOperation, LayersService, ServiceKind, ServiceLayer,
@@ -74,6 +74,9 @@ pub const KINDS: [(Option<ServiceKind>, &str, &str, &str); 8] = [
 
 /// The opacities offered.
 const OPACITIES: [f64; 7] = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4];
+
+/// The list's and the page's height (at 12 px text): the presets' scroll was this high.
+const PAGE_HEIGHT: f32 = 430.0;
 
 /// The window's state.
 #[derive(Clone, Debug)]
@@ -654,15 +657,27 @@ impl App {
                 .style(style::button::table_row(w.kind == i, false)),
             );
         }
+        // The list and the page one height (DESIGN.md §7.9: a window of pages does not jump as one is chosen): the
+        // page scrolls in it. Each kind's page set the window's height before, and the window moved under the pointer.
+        let height = Length::Fixed(typography::scaled(PAGE_HEIGHT));
         let left = container(kinds)
             .style(style::container::field_box)
             .padding(4)
-            .width(Length::Fixed(typography::scaled(180.0)));
-        let right: Element<'_, Message> = if KINDS[w.kind].0.is_none() {
+            .width(Length::Fixed(typography::scaled(180.0)))
+            .height(height);
+        let page: Element<'_, Message> = if KINDS[w.kind].0.is_none() {
             self.presets_view()
         } else {
             self.service_form(w)
         };
+        let right = scrollable(container(page).padding(iced::Padding {
+            top: 0.0,
+            right: 14.0,
+            bottom: 0.0,
+            left: 0.0,
+        }))
+        .width(Fill)
+        .height(height);
         let line = match &w.said {
             Some((kind, t)) => words::text_line(*kind, t.clone()),
             None => words::text_line(
@@ -671,6 +686,9 @@ impl App {
                     None => "Bir altlığa tıklayın: en alttaki hazır altlığın yerini alır ya da en alta eklenir.".to_owned(),
                     Some(ServiceKind::Google) => {
                         "Google'ın karoları kullanıcının API anahtarıyla gelir (Map Tiles API); anahtarı bir Google bağlantısına girin.".to_owned()
+                    }
+                    Some(ServiceKind::Xyz) => {
+                        "Şablonu yazıp Bağlan'a basın: bir karo denenir, karo ayarları açılır.".to_owned()
                     }
                     Some(_) => "Adresi yazıp Bağlan'a basın: servisin katmanları listelenir.".to_owned(),
                 },
@@ -709,33 +727,53 @@ impl App {
         frame.modal(msg(Event::Cancel))
     }
 
-    /// The ready basemaps by group, each a button with its icon.
+    /// The ready basemaps by group, two cards a line, each its icon, its name and what it is (the catalog's note; the
+    /// whole of it in the card's tip). Tiles of a name alone before, under which nothing said what set OSM Standart
+    /// apart from OSM Topo.
     fn presets_view(&self) -> Element<'_, Message> {
         let c = presets::catalog();
-        let mut body = Column::new().spacing(10);
-        for g in &c.groups {
-            let mut line = iced::widget::Row::new().spacing(8);
-            for p in c.presets.iter().filter(|p| p.group == g.id) {
-                line = line.push(
-                    button(
-                        column![
-                            icon(from_web(Some(p.icon.as_str()))).size(28.0),
-                            label::body(p.name.clone()).center(),
-                        ]
-                        .spacing(6)
-                        .align_x(Center),
-                    )
-                    .width(Length::Fixed(typography::scaled(124.0)))
-                    .padding([10, 6])
+        let card = |p: &'static presets::Preset| -> Element<'_, Message> {
+            let face = row![
+                icon(from_web(Some(p.icon.as_str()))).size(24.0),
+                column![
+                    label::body(p.name.clone()),
+                    kentos_ui::widget::Elided::new(p.note.clone())
+                        .size(typography::caption())
+                        .font(typography::ui())
+                        .width(Fill),
+                ]
+                .spacing(2)
+                .width(Fill),
+            ]
+            .spacing(10)
+            .align_y(Center);
+            kentos_ui::widget::tip(
+                button(face)
+                    .width(Fill)
+                    .padding([8, 10])
                     .on_press(msg(Event::Preset(p.id.clone())))
                     .style(style::button::library_tile(false)),
-                );
+                kentos_ui::widget::Tip::new(p.name.clone()).body(p.note.clone()),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        let mut body = Column::new().spacing(14);
+        for g in &c.groups {
+            let mut group = Column::new().spacing(6).push(label::strong(g.name.clone()));
+            let all: Vec<&'static presets::Preset> = c.presets.iter().filter(|p| p.group == g.id).collect();
+            for pair in all.chunks(2) {
+                let mut line = iced::widget::Row::new().spacing(8);
+                for p in pair {
+                    line = line.push(container(card(p)).width(Fill));
+                }
+                if pair.len() == 1 {
+                    line = line.push(space::horizontal().width(Fill));
+                }
+                group = group.push(line);
             }
-            body = body.push(column![label::strong(g.name.clone()), line.wrap()].spacing(6));
+            body = body.push(group);
         }
-        scrollable(body)
-            .height(Length::Fixed(typography::scaled(430.0)))
-            .into()
+        body.into()
     }
 
     fn service_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
@@ -789,7 +827,8 @@ impl App {
                 .into(),
             ));
         }
-        form = form.push(labelled("Bağlantı", conn.into()));
+        // The connection the service is asked with: who asks, by its proof (API key, user, token).
+        form = form.push(labelled("Kimlik", conn.into()));
         if kind == ServiceKind::Google {
             form = form.push(
                 button(label::body("Harita türlerini göster"))
@@ -868,10 +907,12 @@ impl App {
                 "Şablonun yer tutucuları: {z}, {x}, {y} ya da {-y} (TMS), {s} (alt alanlar), {r} (yüksek çözünürlük), {quadkey}.",
             ));
         }
+        // Saydamlık is how much shows through: a layer drawn whole is %0 (the opacity kept is 1). It was the opacity
+        // under the name: a whole layer read “Saydamlık %100”, which says it does not show at all.
         let opacity = Select::new(
             OPACITIES
                 .iter()
-                .map(|o| Choice::new(format!("% {}", (o * 100.0).round()))),
+                .map(|o| Choice::new(format!("% {}", ((1.0 - o) * 100.0).round()))),
             OPACITIES.iter().position(|o| (o - w.opacity).abs() < 1e-9),
             |i| msg(Event::Opacity(i)),
         );

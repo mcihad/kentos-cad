@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use iced::futures::channel::mpsc;
-use iced::widget::{Column, button, column, row};
-use iced::{Center, Element, Task};
+use iced::widget::{Column, button, column, container, row, space};
+use iced::{Center, Element, Fill, Task};
 use kentos_interaction::Level;
 use kentos_postgis::connections::{self, DbConnection, Field, SSL_MODES};
 use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem, ServerFacts};
@@ -62,6 +62,8 @@ pub struct Editor {
     pub geometryless: bool,
     /// Adresten doldur's field, while it is open.
     pub paste: Option<String>,
+    /// Gelişmiş (SSL and what is listed) open: folded for a new connection, open for one that sets any of it.
+    pub advanced: bool,
     pub paste_problem: Option<String>,
     pub testing: bool,
     pub tested: Option<Result<ServerFacts, Diagnosis>>,
@@ -90,6 +92,7 @@ impl Editor {
             public_only: false,
             geometryless: false,
             paste: None,
+            advanced: false,
             paste_problem: None,
             testing: false,
             tested: None,
@@ -114,6 +117,7 @@ impl Editor {
             ssl: c.ssl,
             public_only: c.public_only,
             geometryless: c.geometryless,
+            advanced: c.ssl != connections::SslMode::Prefer || c.public_only || c.geometryless,
             ..Editor::new(then)
         }
     }
@@ -203,6 +207,8 @@ pub enum Event {
     Ssl(usize),
     PublicOnly,
     Geometryless,
+    /// Gelişmiş folded or opened.
+    Advanced,
     PasteToggle,
     Paste(String),
     PasteApply,
@@ -288,6 +294,12 @@ impl App {
             }
             Event::PublicOnly => self.with_editor(|e| e.public_only = !e.public_only),
             Event::Geometryless => self.with_editor(|e| e.geometryless = !e.geometryless),
+            // Folding changes no field: a try's answer stays.
+            Event::Advanced => {
+                if let Some(e) = &mut self.gis.db_editor {
+                    e.advanced = !e.advanced;
+                }
+            }
             Event::PasteToggle => {
                 if let Some(e) = &mut self.gis.db_editor {
                     e.paste = match e.paste.take() {
@@ -720,6 +732,15 @@ impl App {
                     .on_submit(msg(Event::Save))
                     .invalid(field.is_some_and(|f| e.problem(f).is_some()))
             };
+        // The server and its port on one line: each had its own line and a line of help under it, which the
+        // placeholder and the 5432 already in the field said.
+        let host_port = row![
+            container(input("db.belediye.local ya da 10.0.0.5", &e.host, Event::Host, Some(Field::Host))).width(Fill),
+            label::body("Bağlantı noktası"),
+            input("5432", &e.port, Event::Port, Some(Field::Port)).width(80.0),
+        ]
+        .spacing(8)
+        .align_y(Center);
         let mut form = Form::new()
             .label_width(130.0)
             .section("Bağlantı")
@@ -727,16 +748,9 @@ impl App {
             .required()
             .help("Listelerde bu adla görünür.")
             .error(e.problem(Field::Name))
-            .field("Sunucu", input("db.belediye.local ya da 10.0.0.5", &e.host, Event::Host, Some(Field::Host)))
+            .field("Sunucu", host_port)
             .required()
-            .help("Veritabanı sunucusunun adı ya da IP adresi.")
-            .error(e.problem(Field::Host))
-            .field(
-                "Bağlantı noktası",
-                input("5432", &e.port, Event::Port, Some(Field::Port)).width(110.0),
-            )
-            .help("PostgreSQL'de genellikle 5432.")
-            .error(e.problem(Field::Port))
+            .error(e.problem(Field::Host).or_else(|| e.problem(Field::Port)))
             .field("Veritabanı", input("Örneğin kent", &e.database, Event::Database, Some(Field::Database)))
             .required()
             .error(e.problem(Field::Database))
@@ -763,32 +777,36 @@ impl App {
                 Some(msg(Event::KeepPassword)),
             ))
             .row(label::caption(if e.keep_password {
-                "Parola yalnız sizin okuyabildiğiniz bir dosyada (veritabani-baglantilari.json) düz metin olarak saklanır; çizime hiç yazılmaz."
+                "Yalnız sizin okuyabildiğiniz bir dosyada düz metin saklanır; çizime yazılmaz."
             } else {
-                "Parola saklanmaz: bu oturumda yazdığınız kullanılır, bir dahaki açılışta sorulur. Çizime hiç yazılmaz."
+                "Saklanmazsa her açılışta sorulur; çizime yazılmaz."
             }))
-            .section("Güvenlik")
-            .field(
-                "SSL",
-                Select::new(
-                    SSL_MODES.iter().map(|m| Choice::new(m.label()).detail(m.libpq())),
-                    SSL_MODES.iter().position(|m| *m == e.ssl),
-                    |i| msg(Event::Ssl(i)),
+            // SSL and what is listed, folded: a new connection rarely needs them, and they made the window as tall
+            // as the screen with a section and a note of their own.
+            .foldable_section("Gelişmiş", e.advanced, msg(Event::Advanced));
+        if e.advanced {
+            form = form
+                .field(
+                    "SSL",
+                    Select::new(
+                        SSL_MODES.iter().map(|m| Choice::new(m.label()).detail(m.libpq())),
+                        SSL_MODES.iter().position(|m| *m == e.ssl),
+                        |i| msg(Event::Ssl(i)),
+                    )
+                    .searchable(false),
                 )
-                .searchable(false),
-            )
-            .help(e.ssl.note())
-            .section("Seçenekler")
-            .row(words::check(
-                e.public_only,
-                "Yalnız public şemasını listele",
-                Some(msg(Event::PublicOnly)),
-            ))
-            .row(words::check(
-                e.geometryless,
-                "Geometrisiz tabloları da listele",
-                Some(msg(Event::Geometryless)),
-            ));
+                .help(e.ssl.note())
+                .row(words::check(
+                    e.public_only,
+                    "Yalnız public şemasını listele",
+                    Some(msg(Event::PublicOnly)),
+                ))
+                .row(words::check(
+                    e.geometryless,
+                    "Geometrisiz tabloları da listele",
+                    Some(msg(Event::Geometryless)),
+                ));
+        }
         if let Some(why) = &e.save_problem {
             form = form.row(words::text_line(Line::Error, why.clone()));
         }
@@ -842,18 +860,18 @@ impl App {
                 Column::with_children(lines).spacing(4).into()
             }
             (Some(Err(d)), _) => words::text_line(Line::Error, d.message.clone()),
-            (None, _) => label::caption(
-                "Bağlantıyı dene, sunucuya bu bilgilerle bağlanıp PostgreSQL'in ve PostGIS'in sürümünü ve tabloların sayısını söyler; kaydetmez.",
-            )
-            .into(),
+            (None, _) => space::horizontal().into(),
         };
-        let test = row![
+        // Bağlantıyı dene at the footer's left, its answer beside it (DESIGN.md §7.9): it sat under the form with two
+        // lines saying what it does, which its tip says now.
+        let test = kentos_ui::widget::tip(
             words::secondary("Bağlantıyı dene", (!e.testing).then(|| msg(Event::Test))),
-            tested
-        ]
-        .spacing(12)
-        .align_y(Center);
-        let body = column![paste, form, test].spacing(14);
+            kentos_ui::widget::Tip::new("Bağlantıyı dene").body(
+                "Sunucuya bu bilgilerle bağlanır; PostgreSQL'in ve PostGIS'in sürümünü ve tabloların sayısını söyler. Kaydetmez.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        );
+        let body = column![paste, form].spacing(14);
         overlay::blocking(
             Dialog::new(if e.previous.is_some() {
                 "PostgreSQL bağlantısını düzenle"
@@ -861,6 +879,8 @@ impl App {
                 "Yeni PostgreSQL bağlantısı"
             })
             .scroll(body)
+            .aside(test)
+            .status(tested)
             .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
             .action(words::primary("Kaydet", Some(msg(Event::Save))))
             .width(620.0)

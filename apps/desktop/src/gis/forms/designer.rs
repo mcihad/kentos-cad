@@ -57,6 +57,16 @@ pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
+/// Ekle ▾'s name of a related item: the tool's name before, kept for the traces.
+pub(super) const RELATED_RECORDS: &str = "İlişkili kayıtlar";
+/// The toolbar's way to the form's own settings (no item chosen).
+pub(super) const FORM_SETTINGS: &str = "Form ayarları";
+/// A field's sections in the third column: the first open, the others folded until opened.
+pub(super) const SECTION_GENERAL: &str = "Genel";
+pub(super) const SECTION_VALUE: &str = "Değer";
+pub(super) const SECTION_RULES: &str = "Kurallar";
+pub(super) const SECTION_CHECKS: &str = "Denetimler";
+pub(super) const SECTION_MORE: &str = "Diğer";
 /// A field referring to the record's parent through a project relation (docs/adr/0440 §6).
 pub(super) const ADD_REFERENCE: &str = "Başvuru";
 /// A divider and an action (docs/adr/0441 §2, §6).
@@ -201,6 +211,9 @@ pub struct Window {
     /// Yeni alan in the fields' palette (docs/adr/9141): the name typed and the kind chosen (none: text).
     pub(crate) new_field: String,
     pub(crate) new_field_kind: Option<kentos_commands::LayerFieldKind>,
+    /// A field's sections in the third column (Genel, Değer, Kurallar, Denetimler, Diğer) folded or opened away from
+    /// their default: Genel open, the rest folded.
+    pub(crate) toggled_sections: std::collections::BTreeSet<&'static str>,
 }
 
 /// Which of an item's words a translation writes.
@@ -231,6 +244,10 @@ pub enum Event {
     ScenarioName(String),
     RemoveScenario(usize),
     Choose(String),
+    /// Form ayarları: no item chosen, the third column the form's own settings (its name, scope and switches).
+    FormSettings,
+    /// A field's section in the third column folded or opened (its name).
+    InspectorSection(&'static str),
     NewForm,
     NewName(String),
     NewLayer(String),
@@ -1168,7 +1185,8 @@ impl App {
             Control::Press(ADD_TAB) => Some(msg(Event::AddTab)),
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
-            Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
+            Control::Press(ADD_RELATED | RELATED_RECORDS) => Some(msg(Event::AddRelated)),
+            Control::Press(FORM_SETTINGS) => Some(msg(Event::FormSettings)),
             Control::Press(ADD_REFERENCE) => Some(msg(Event::AddReference)),
             Control::Press(ADD_DIVIDER) => Some(msg(Event::AddDivider)),
             Control::Press(SAVE_SECTION) => Some(msg(Event::SaveSection)),

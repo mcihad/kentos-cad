@@ -38,11 +38,17 @@ fn owners_look(app: &mut App) {
 fn form_fit_screens() {
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder");
-    let scenes: [Scene; 6] = [
+    let scenes: [Scene; 7] = [
         ("tasarim-ozellikler", |app| {
             buildings(app, true);
             run(app, "data.forms");
             designer(app, Event::SelectItem("aciklama".into()));
+        }),
+        // Form ayarları: the form's name, scope and switches in the third column, no item chosen.
+        ("tasarim-form-ayarlari", |app| {
+            buildings(app, true);
+            run(app, "data.forms");
+            designer(app, Event::FormSettings);
         }),
         ("tasarim-onizleme", |app| {
             buildings(app, true);

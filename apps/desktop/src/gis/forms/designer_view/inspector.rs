@@ -482,10 +482,6 @@ impl App {
             }
             FormItem::Field(f) => {
                 let layer = fields.iter().find(|l| l.key() == f.field);
-                let title = match layer {
-                    Some(l) => format!("{} · {}", l.label(), l.kind.label()),
-                    None => format!("{} · katmanda yok", f.field),
-                };
                 let fits: Vec<FormWidget> = layer.map_or_else(Vec::new, |l| {
                     FormWidget::ALL
                         .into_iter()
@@ -527,30 +523,44 @@ impl App {
                 })
                 .placeholder(unfit);
                 let layer_required = layer.is_some_and(|l| l.required);
-                col = col
-                    .push(label::strong(title))
-                    .push(self.field_links(f, fields))
-                    .push(words::field(
-                        "Etiket",
-                        input(
-                            layer.map_or("", |l| l.label()),
-                            f.label.as_deref().unwrap_or(""),
-                            Text::Label,
-                        ),
-                        None,
-                    ))
-                    .push(words::field("Öğe türü", widget, None));
+                // The field's name, its kind under it (DESIGN.md §13: no “A · B” title).
+                let head = column![
+                    label::strong(layer.map_or(f.field.clone(), |l| l.label().to_owned())),
+                    label::caption(match layer {
+                        Some(l) => format!("{} alanı", l.kind.label()),
+                        None => "Katmanda yok".to_owned(),
+                    })
+                    .style(muted),
+                ]
+                .spacing(1);
+                let label_field = words::field(
+                    "Etiket",
+                    input(
+                        layer.map_or("", |l| l.label()),
+                        f.label.as_deref().unwrap_or(""),
+                        Text::Label,
+                    ),
+                    None,
+                );
+                let help_field = words::field(
+                    "Yardım",
+                    input(
+                        "Alanın altında",
+                        f.help.as_deref().unwrap_or(""),
+                        Text::Help,
+                    ),
+                    None,
+                );
                 // A mirror has only its label, help, widget and visibility (docs/adr/0437).
                 if f.mirror {
                     return col
+                        .push(head)
+                        .push(label_field)
+                        .push(words::field("Öğe türü", widget, None))
                         .push(label::caption(
                             "Yansıma: alanın değeri burada salt okunur görünür; alanın kendi öğesi yazar.",
                         ).style(muted))
-                        .push(words::field(
-                            "Yardım",
-                            input("Alanın altında", f.help.as_deref().unwrap_or(""), Text::Help),
-                            None,
-                        ))
+                        .push(help_field)
                         .push(rule_row(
                             "Görünürlük",
                             Rule::Visible(id.clone()),
@@ -564,90 +574,100 @@ impl App {
                         })
                         .into();
                 }
+                // Five sections, Genel open and the rest folded until opened (twenty-odd controls one under another
+                // before): a folded one says how many of its settings are in use, and one with an error opens.
+                let toggled = self.gis.forms_window.as_ref().map(|w| &w.toggled_sections);
+                let errs = |paths: &[String]| paths.iter().any(|p| error_of(p).is_some());
+                let open = |name: &'static str, default: bool, error: bool| {
+                    error || (default != toggled.is_some_and(|t| t.contains(name)))
+                };
+                let heading =
+                    |name: &'static str, used: usize, open: bool| -> Element<'_, Message> {
+                        let title = if used > 0 && !open {
+                            format!("{name} ({used})")
+                        } else {
+                            name.to_owned()
+                        };
+                        kentos_ui::widget::Form::new()
+                            .foldable_section(title, open, msg(Event::InspectorSection(name)))
+                            .into()
+                    };
+                let values_used = [
+                    f.default.is_some(),
+                    f.default_expr.is_some(),
+                    f.calculate.is_some(),
+                    f.overridable,
+                    f.reuse_last,
+                    f.suggest,
+                    f.unique,
+                ]
+                .iter()
+                .filter(|b| **b)
+                .count();
+                let rules_used = [
+                    f.required || layer_required,
+                    f.read_only,
+                    f.visible_when.is_some(),
+                    f.required_when.is_some(),
+                    f.read_only_when.is_some(),
+                    f.choice_filter.is_some(),
+                ]
+                .iter()
+                .filter(|b| **b)
+                .count();
+                let general_open = open(SECTION_GENERAL, true, error_of("lookup").is_some());
+                let value_open = open(
+                    SECTION_VALUE,
+                    false,
+                    error_of("default").is_some()
+                        || errs(&[
+                            Rule::Default(id.clone()).path(),
+                            Rule::Calculate(id.clone()).path(),
+                        ]),
+                );
+                let rules_open = open(
+                    SECTION_RULES,
+                    false,
+                    errs(&[
+                        Rule::Visible(id.clone()).path(),
+                        Rule::Required(id.clone()).path(),
+                        Rule::ReadOnly(id.clone()).path(),
+                        Rule::ChoiceFilter(id.clone()).path(),
+                    ]),
+                );
+                let check_paths: Vec<String> = (0..f.checks.len())
+                    .map(|i| Rule::Check(id.clone(), i).path())
+                    .collect();
+                let checks_open = open(SECTION_CHECKS, false, errs(&check_paths));
+                let more_open = open(SECTION_MORE, false, false);
+
                 col = col
-                    .push(words::secondary(
-                        "Yansımasını ekle",
-                        Some(msg(Event::AddMirror)),
-                    ))
-                    .push(self.lookup_rows(&id, f, error_of("lookup")));
-                // A searched list starts after a few letters (docs/adr/0439 §6).
-                if f.widget == Some(FormWidget::Search) {
-                    col = col.push(words::field(
-                        "Aramaya başlama",
-                        row![
-                            kentos_ui::widget::text_field(
-                                "1",
-                                &f.min_search.map(|n| n.to_string()).unwrap_or_default()
-                            )
-                            .on_input(|t| msg(Event::MinSearch(t)))
-                            .width(70),
-                            label::caption("harften sonra").style(muted),
-                        ]
-                        .spacing(6)
-                        .align_y(Center),
-                        None,
-                    ));
-                }
-                col = col
-                    .push(
-                        row![
-                            words::check(
-                                f.required || layer_required,
-                                "Zorunlu",
-                                (!layer_required).then(|| msg(Event::Required(!f.required))),
-                            ),
-                            words::check(
-                                f.read_only,
-                                "Salt okunur",
-                                Some(msg(Event::ReadOnly(!f.read_only)))
-                            ),
-                        ]
-                        .spacing(16),
-                    )
-                    .extend(
-                        required_scope_words(f.required, layer_required)
-                            .map(|w| label::caption(w).style(muted).into()),
-                    )
-                    .push(
-                        row![
-                            words::check(f.unique, "Tekil", Some(msg(Event::Unique(!f.unique)))),
-                            words::check(
-                                f.suggest,
-                                "Öneri",
-                                (layer.is_some_and(|l| {
-                                    l.kind == kentos_commands::LayerFieldKind::Text
-                                        && l.values.as_ref().is_none_or(|v| v.is_empty())
-                                }) && f.lookup.is_none()
-                                    || f.suggest)
-                                    .then(|| msg(Event::Suggest(!f.suggest))),
-                            ),
-                            words::check(
-                                f.reuse_last,
-                                "Son değeri kullan",
-                                (f.calculate.is_none() || f.reuse_last)
-                                    .then(|| msg(Event::ReuseLast(!f.reuse_last))),
-                            ),
-                        ]
-                        .spacing(16),
-                    )
-                    // Kept out of the recorder's examples (docs/adr/0443 §2).
-                    .push(kentos_ui::widget::tip(
-                        words::check(f.redact, "Örneklerde gizle", Some(msg(Event::Redact(!f.redact)))),
-                        kentos_ui::widget::Tip::new("Örneklerde gizle").body(
-                            "Komut geçmişinin Python'unda ve tekrar oynatma girdisinde değeri ‹gizli› yazılır",
-                        ),
-                        iced::widget::tooltip::Position::Top,
-                    ))
-                    .push(words::field(
-                        "Yardım",
-                        input(
-                            "Alanın altında",
-                            f.help.as_deref().unwrap_or(""),
-                            Text::Help,
-                        ),
-                        None,
-                    ))
-                    .push(words::field(
+                    .push(head)
+                    .push(heading(SECTION_GENERAL, 0, general_open));
+                if general_open {
+                    col = col
+                        .push(label_field)
+                        .push(words::field("Öğe türü", widget, None))
+                        .push(self.lookup_rows(&id, f, error_of("lookup")));
+                    // A searched list starts after a few letters (docs/adr/0439 §6).
+                    if f.widget == Some(FormWidget::Search) {
+                        col = col.push(words::field(
+                            "Aramaya başlama",
+                            row![
+                                kentos_ui::widget::text_field(
+                                    "1",
+                                    &f.min_search.map(|n| n.to_string()).unwrap_or_default()
+                                )
+                                .on_input(|t| msg(Event::MinSearch(t)))
+                                .width(70),
+                                label::caption("harften sonra").style(muted),
+                            ]
+                            .spacing(6)
+                            .align_y(Center),
+                            None,
+                        ));
+                    }
+                    col = col.push(help_field).push(words::field(
                         "Yer tutucu",
                         input(
                             "Boşken",
@@ -655,104 +675,200 @@ impl App {
                             Text::Placeholder,
                         ),
                         None,
-                    ))
-                    .push(words::field(
-                        "Varsayılan",
-                        input(
-                            "Yeni kayıtta",
-                            f.default.as_deref().unwrap_or(""),
-                            Text::Default,
-                        ),
-                        error_of("default"),
-                    ))
-                    .push(rule_in(
-                        "Varsayılan ifade",
-                        Rule::Default(id.clone()),
-                        f.default_expr.as_deref().unwrap_or(""),
-                        "Yok: @kullanici, @tarih, $alan …",
-                    ))
-                    .push(rule_in(
-                        "Hesap",
-                        Rule::Calculate(id.clone()),
-                        f.calculate.as_deref().unwrap_or(""),
-                        "Yok: değeri elle yazılır",
-                    ))
-                    .push(words::check(
-                        f.overridable,
-                        "Değiştirilebilir: hesap boş alanı doldurur, yazılan değer kalır",
-                        (f.calculate.is_some() || f.overridable)
-                            .then(|| msg(Event::Overridable(!f.overridable))),
-                    ))
-                    .push(rule_row(
-                        "Görünürlük",
-                        Rule::Visible(id.clone()),
-                        f.visible_when.as_deref().unwrap_or(""),
-                    ))
-                    .push(rule_row(
-                        "Zorunluluk",
-                        Rule::Required(id.clone()),
-                        f.required_when.as_deref().unwrap_or(""),
-                    ))
-                    .push(rule_row(
-                        "Salt okunurluk",
-                        Rule::ReadOnly(id.clone()),
-                        f.read_only_when.as_deref().unwrap_or(""),
-                    ));
-                if layer.is_some_and(|l| l.values.as_ref().is_some_and(|v| !v.is_empty())) {
-                    col = col.push(rule_in(
-                        "Seçenek süzgeci",
-                        Rule::ChoiceFilter(id.clone()),
-                        f.choice_filter.as_deref().unwrap_or(""),
-                        "Yok: bütün değerler (@secenek her biri)",
                     ));
                 }
-                col = col.push(label::strong("Denetimler"));
-                for (i, c) in f.checks.iter().enumerate() {
-                    // When it is asked (docs/adr/0438 §2, docs/adr/0760 §1).
-                    use kentos_commands::CheckMoment;
-                    let moments = [
-                        None,
-                        Some(CheckMoment::Leave),
-                        Some(CheckMoment::Save),
-                        Some(CheckMoment::Submit),
-                    ];
-                    let at = moments.iter().position(|m| *m == c.on);
-                    let when = Select::new(
-                        [
-                            Choice::new("Değer değişince"),
-                            Choice::new("Alandan çıkınca"),
-                            Choice::new("Kaydederken"),
-                            Choice::new("İş akışında ilerlerken"),
-                        ],
-                        at,
-                        move |k| msg(Event::CheckMoment(i, moments[k])),
-                    );
+
+                col = col.push(heading(SECTION_VALUE, values_used, value_open));
+                if value_open {
                     col = col
-                        .push(rule_row("Kural", Rule::Check(id.clone(), i), &c.rule))
-                        .push(words::field("Ne zaman", when, None))
+                        .push(words::field(
+                            "Varsayılan",
+                            input(
+                                "Yeni kayıtta",
+                                f.default.as_deref().unwrap_or(""),
+                                Text::Default,
+                            ),
+                            error_of("default"),
+                        ))
+                        .push(rule_in(
+                            "Varsayılan ifade",
+                            Rule::Default(id.clone()),
+                            f.default_expr.as_deref().unwrap_or(""),
+                            "Yok: @kullanici, @tarih, $alan …",
+                        ))
+                        .push(rule_in(
+                            "Hesap",
+                            Rule::Calculate(id.clone()),
+                            f.calculate.as_deref().unwrap_or(""),
+                            "Yok: değeri elle yazılır",
+                        ))
+                        .push(words::check(
+                            f.overridable,
+                            "Değiştirilebilir: hesap boş alanı doldurur, yazılan değer kalır",
+                            (f.calculate.is_some() || f.overridable)
+                                .then(|| msg(Event::Overridable(!f.overridable))),
+                        ))
+                        .push(words::check(
+                            f.reuse_last,
+                            "Son değeri kullan: yeni kayıt bir öncekinin değeriyle başlar",
+                            (f.calculate.is_none() || f.reuse_last)
+                                .then(|| msg(Event::ReuseLast(!f.reuse_last))),
+                        ))
+                        .push(words::check(
+                            f.suggest,
+                            "Öneri: yazarken katmandaki değerler önerilir",
+                            (layer.is_some_and(|l| {
+                                l.kind == kentos_commands::LayerFieldKind::Text
+                                    && l.values.as_ref().is_none_or(|v| v.is_empty())
+                            }) && f.lookup.is_none()
+                                || f.suggest)
+                                .then(|| msg(Event::Suggest(!f.suggest))),
+                        ))
+                        .push(words::check(
+                            f.unique,
+                            "Tekil: aynı değer iki kayıtta olamaz",
+                            Some(msg(Event::Unique(!f.unique))),
+                        ));
+                }
+
+                col = col.push(heading(SECTION_RULES, rules_used, rules_open));
+                if rules_open {
+                    col = col
                         .push(
                             row![
-                                container(input(
-                                    "Tutmazsa söylenen",
-                                    &c.message,
-                                    Text::CheckMessage(i)
-                                ))
-                                .width(Fill),
                                 words::check(
-                                    c.warning,
-                                    "Uyarı",
-                                    Some(msg(Event::CheckWarning(i, !c.warning)))
+                                    f.required || layer_required,
+                                    "Zorunlu",
+                                    (!layer_required).then(|| msg(Event::Required(!f.required))),
                                 ),
-                                button(icon(Icon::Close).size(12.0))
-                                    .on_press(msg(Event::RemoveCheck(i)))
-                                    .padding(kentos_ui::theme::metrics::icon(12.0))
-                                    .style(style::button::tool(false)),
+                                words::check(
+                                    f.read_only,
+                                    "Salt okunur",
+                                    Some(msg(Event::ReadOnly(!f.read_only)))
+                                ),
                             ]
-                            .spacing(4)
-                            .align_y(Center),
-                        );
+                            .spacing(16),
+                        )
+                        .extend(
+                            required_scope_words(f.required, layer_required)
+                                .map(|w| label::caption(w).style(muted).into()),
+                        )
+                        .push(rule_row(
+                            "Görünürlük",
+                            Rule::Visible(id.clone()),
+                            f.visible_when.as_deref().unwrap_or(""),
+                        ))
+                        .push(rule_row(
+                            "Zorunluluk",
+                            Rule::Required(id.clone()),
+                            f.required_when.as_deref().unwrap_or(""),
+                        ))
+                        .push(rule_row(
+                            "Salt okunurluk",
+                            Rule::ReadOnly(id.clone()),
+                            f.read_only_when.as_deref().unwrap_or(""),
+                        ));
+                    if layer.is_some_and(|l| l.values.as_ref().is_some_and(|v| !v.is_empty())) {
+                        col = col.push(rule_in(
+                            "Seçenek süzgeci",
+                            Rule::ChoiceFilter(id.clone()),
+                            f.choice_filter.as_deref().unwrap_or(""),
+                            "Yok: bütün değerler (@secenek her biri)",
+                        ));
+                    }
+                    // Alt türlerde göster (docs/adr/0426): the visibility rule by the layer's subtypes.
+                    if let Some(row) = self.kinds_row(item) {
+                        col = col.push(row);
+                    }
                 }
-                col = col.push(words::secondary("Denetim ekle", Some(msg(Event::AddCheck))));
+
+                col = col.push(heading(SECTION_CHECKS, f.checks.len(), checks_open));
+                if checks_open {
+                    if f.checks.is_empty() {
+                        col = col.push(
+                            label::caption("Denetim yok. Bir denetim, değer kurala uymazsa ne söyleneceğini yazar.")
+                                .style(muted),
+                        );
+                    }
+                    for (i, c) in f.checks.iter().enumerate() {
+                        // When it is asked (docs/adr/0438 §2, docs/adr/0760 §1).
+                        use kentos_commands::CheckMoment;
+                        let moments = [
+                            None,
+                            Some(CheckMoment::Leave),
+                            Some(CheckMoment::Save),
+                            Some(CheckMoment::Submit),
+                        ];
+                        let at = moments.iter().position(|m| *m == c.on);
+                        let when = Select::new(
+                            [
+                                Choice::new("Değer değişince"),
+                                Choice::new("Alandan çıkınca"),
+                                Choice::new("Kaydederken"),
+                                Choice::new("İş akışında ilerlerken"),
+                            ],
+                            at,
+                            move |k| msg(Event::CheckMoment(i, moments[k])),
+                        );
+                        col = col
+                            .push(rule_row("Kural", Rule::Check(id.clone(), i), &c.rule))
+                            .push(words::field("Ne zaman", when, None))
+                            .push(
+                                row![
+                                    container(input(
+                                        "Tutmazsa söylenen",
+                                        &c.message,
+                                        Text::CheckMessage(i)
+                                    ))
+                                    .width(Fill),
+                                    words::check(
+                                        c.warning,
+                                        "Uyarı",
+                                        Some(msg(Event::CheckWarning(i, !c.warning)))
+                                    ),
+                                    button(icon(Icon::Close).size(12.0))
+                                        .on_press(msg(Event::RemoveCheck(i)))
+                                        .padding(kentos_ui::theme::metrics::icon(12.0))
+                                        .style(style::button::tool(false)),
+                                ]
+                                .spacing(4)
+                                .align_y(Center),
+                            );
+                    }
+                    col = col.push(words::secondary("Denetim ekle", Some(msg(Event::AddCheck))));
+                }
+
+                col = col.push(heading(SECTION_MORE, usize::from(f.redact), more_open));
+                if more_open {
+                    col = col
+                        // Kept out of the recorder's examples (docs/adr/0443 §2).
+                        .push(words::check(
+                            f.redact,
+                            "Örneklerde gizle: komut geçmişinde değeri ‹gizli› yazılır",
+                            Some(msg(Event::Redact(!f.redact))),
+                        ))
+                        .push(
+                            column![
+                                words::secondary("Yansımasını ekle", Some(msg(Event::AddMirror))),
+                                label::caption("Alanı formun başka bir yerinde bir kez daha, salt okunur gösterir.")
+                                    .style(muted),
+                            ]
+                            .spacing(4),
+                        )
+                        // The item into the section library and its review comments (docs/adr/0441 §1, §5).
+                        .push(self.section_save_row())
+                        .push(self.comments_box(Some(&id)))
+                        .push(self.field_links(f, fields));
+                }
+                return scrollable(col.padding(iced::Padding {
+                    top: 0.0,
+                    right: 16.0,
+                    bottom: 0.0,
+                    left: 4.0,
+                }))
+                .id(PROPERTIES_SCROLL)
+                .height(Fill)
+                .into();
             }
         }
         // Alt türlerde göster (docs/adr/0426): the visibility rule by the layer's subtypes.
@@ -1300,7 +1416,9 @@ mod required_tests {
     fn zorunlu_says_where_it_holds() {
         use super::required_scope_words as words;
         assert_eq!(words(false, false), None);
-        assert!(words(true, false).is_some_and(|w| w.starts_with("Yalnız bu formla girişte zorunlu")));
+        assert!(
+            words(true, false).is_some_and(|w| w.starts_with("Yalnız bu formla girişte zorunlu"))
+        );
         assert!(words(true, true).is_some_and(|w| w.starts_with("Katman alanı zorunlu")));
         assert!(words(false, true).is_some_and(|w| w.starts_with("Katman alanı zorunlu")));
     }
