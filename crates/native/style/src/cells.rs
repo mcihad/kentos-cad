@@ -32,6 +32,8 @@ use crate::batches::{BatchKind, FillPaintBatch, StyledBatch, StyledLayer};
 pub const LEAST_ITEMS: usize = 512;
 /// Items a cell holds on average.
 const ITEMS_A_CELL: usize = 64;
+/// An instanced batch with fewer placements is drawn whole.
+const LEAST_PLACEMENTS: usize = 8;
 /// Cells across a part, at most (a grid of 64 × 64 at most).
 const MOST_CELLS_ACROSS: usize = 64;
 /// Draws a part takes at most for a view: nearer ranges are joined past it (each draw costs the CPU a few µs).
@@ -236,6 +238,10 @@ pub fn add(layer: &mut StyledLayer) {
     let mut cells: Vec<Option<Arc<Cells>>> = vec![None; layer.batches.len()];
     let has_low = layer.low.len() == layer.data.len();
     for (i, b) in layer.batches.iter().enumerate() {
+        if let Some(part) = placements(b, &layer.data) {
+            cells[i] = Some(Arc::new(Cells { parts: vec![part] }));
+            continue;
+        }
         let Some((floats, keep)) = item_layout(b) else {
             continue;
         };
@@ -273,6 +279,58 @@ pub fn add(layer: &mut StyledLayer) {
     }
 }
 
+/// The cells of an instanced batch's placements (a block's inserts, a symbol's vectors in its markers' places), in their
+/// order: two overlapping inserts show which is on top. A placement's box is its definition's box carried by its
+/// placing; its part's range is the placements' numbers (from the batch's first). A placement draws its whole
+/// definition, so its cells hold [`ITEMS_A_CELL`] of the definition's items (a segment, a triangle), one placement at
+/// least, and a batch whose placements draw fewer than [`LEAST_ITEMS`] items in all is drawn whole: the NCZ's symbols
+/// drawn by their vectors are 7 batches of a few hundred placements, 64 890 triangles near the ground. None too for
+/// fewer than [`LEAST_PLACEMENTS`], or a definition the renderer does not place (`Placed`: strokes, solid fills).
+fn placements(b: &StyledBatch, data: &[f32]) -> Option<CellPart> {
+    let inst = b.instances.as_ref()?;
+    let count = inst.count as usize;
+    let per = crate::batches::INSTANCE_FLOATS;
+    // A segment's six numbers, a triangle's three corners.
+    let items = (inst.definition() / 6).max(1);
+    if count < LEAST_PLACEMENTS || count * items < LEAST_ITEMS {
+        return None;
+    }
+    let numbers = data.get(b.range.clone())?;
+    let (definition, placed) = (numbers.get(..inst.definition())?, numbers.get(inst.mesh..inst.mesh + count * per)?);
+    let points: Vec<(f32, f32)> = match &b.kind {
+        BatchKind::Stroke { .. } => definition.as_chunks::<6>().0.iter().flat_map(|v| [(v[0], v[1]), (v[2], v[3])]).collect(),
+        BatchKind::Fill { paint: FillPaintBatch::Solid { .. } } => {
+            definition.as_chunks::<2>().0.iter().map(|v| (v[0], v[1])).collect()
+        }
+        _ => return None,
+    };
+    let d = points.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
+        let (x, y) = (f64::from(x), f64::from(y));
+        [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+    });
+    if !d.iter().all(|v| v.is_finite()) {
+        return None;
+    }
+    // Each placement's box: its definition's corners by its linear part (x axis, y axis) and translation.
+    let boxes: Vec<[f64; 4]> = placed
+        .chunks_exact(per)
+        .map(|x| {
+            let x: [f64; 6] = std::array::from_fn(|i| f64::from(x[i]));
+            [(d[0], d[1]), (d[2], d[1]), (d[0], d[3]), (d[2], d[3])].iter().fold(
+                [f64::MAX, f64::MAX, f64::MIN, f64::MIN],
+                |b, &(px, py)| {
+                    let (qx, qy) = (x[0] * px + x[2] * py + x[4], x[1] * px + x[3] * py + x[5]);
+                    [b[0].min(qx), b[1].min(qy), b[2].max(qx), b[3].max(qy)]
+                },
+            )
+        })
+        .collect();
+    let per_cell = (ITEMS_A_CELL / items).max(1);
+    let (mut part, order) = grid(&boxes, b.origin, inst.mesh..inst.mesh + count * per, per, per_cell)?;
+    part.order = Some(order.iter().map(|&i| i as u32).collect());
+    Some(part)
+}
+
 /// One part's items sorted by the cell of a grid over them, stably, or kept in their order (`keep`); its cells.
 fn sort(
     kind: &BatchKind,
@@ -283,8 +341,35 @@ fn sort(
     origin: [f64; 2],
     range: Range<usize>,
 ) -> Option<CellPart> {
-    let n = data.len() / floats;
     let boxes: Vec<[f64; 4]> = data.chunks(floats).map(|v| item_box(kind, v)).collect();
+    let (mut part, order) = grid(&boxes, origin, range, floats, ITEMS_A_CELL)?;
+    if keep {
+        part.order = Some(order.iter().map(|&i| i as u32).collect());
+    } else {
+        let permute = |values: &mut [f32]| {
+            let old = values.to_vec();
+            for (to, &from) in order.iter().enumerate() {
+                values[to * floats..(to + 1) * floats].copy_from_slice(&old[from * floats..(from + 1) * floats]);
+            }
+        };
+        permute(data);
+        if let Some(low) = low {
+            permute(low);
+        }
+    }
+    Some(part)
+}
+
+/// The cells of a grid over items of these boxes (from the batch's tile): about `per_cell` items a cell, the cells as
+/// square as the part allows; each cell's items in their order (`order`, the items by cell).
+fn grid(
+    boxes: &[[f64; 4]],
+    origin: [f64; 2],
+    range: Range<usize>,
+    floats: usize,
+    per_cell: usize,
+) -> Option<(CellPart, Vec<usize>)> {
+    let n = boxes.len();
     let all = boxes.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, i| {
         [b[0].min(i[0]), b[1].min(i[1]), b[2].max(i[2]), b[3].max(i[3])]
     });
@@ -292,8 +377,7 @@ fn sort(
         return None;
     }
     let (w, h) = ((all[2] - all[0]).max(1e-6), (all[3] - all[1]).max(1e-6));
-    // About ITEMS_A_CELL items a cell, the cells as square as the part allows.
-    let cells = (n / ITEMS_A_CELL).max(1) as f64;
+    let cells = (n / per_cell.max(1)).max(1) as f64;
     let nx = ((cells * w / h).sqrt().round() as usize).clamp(1, MOST_CELLS_ACROSS);
     let ny = ((cells * h / w).sqrt().round() as usize).clamp(1, MOST_CELLS_ACROSS);
     if nx * ny < 2 {
@@ -321,18 +405,6 @@ fn sort(
         order[next[k] as usize] = item;
         next[k] += 1;
     }
-    let permute = |values: &mut [f32]| {
-        let old = values.to_vec();
-        for (to, &from) in order.iter().enumerate() {
-            values[to * floats..(to + 1) * floats].copy_from_slice(&old[from * floats..(from + 1) * floats]);
-        }
-    };
-    if !keep {
-        permute(data);
-        if let Some(low) = low {
-            permute(low);
-        }
-    }
     // Each cell's box, and how far past its own cell an item reaches.
     let mut cell_boxes = vec![[f32::MAX, f32::MAX, f32::MIN, f32::MIN]; nx * ny];
     let mut spill = [0usize; 2];
@@ -356,7 +428,7 @@ fn sort(
             *c = [c[0] - pad(c[0]), c[1] - pad(c[1]), c[2] + pad(c[2]), c[3] + pad(c[3])];
         }
     }
-    Some(CellPart {
+    let part = CellPart {
         range,
         floats,
         corner: [all[0] + origin[0], all[1] + origin[1]],
@@ -366,8 +438,9 @@ fn sort(
         starts,
         boxes: cell_boxes,
         spill,
-        order: keep.then(|| order.iter().map(|&i| i as u32).collect()),
-    })
+        order: None,
+    };
+    Some((part, order))
 }
 
 #[cfg(test)]
@@ -601,6 +674,89 @@ mod tests {
         }
         // A view over most of it draws it whole, in one range.
         assert_eq!(part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0), vec![0..n as u32]);
+    }
+
+    /// A block's 5 000 inserts of a 4 m square (rotated, in blocks of 500 m as a drawing lays them) over 10 km.
+    fn inserts() -> StyledLayer {
+        let square = [[0.0, 0.0, 4.0, 0.0], [4.0, 0.0, 4.0, 4.0], [4.0, 4.0, 0.0, 4.0], [0.0, 4.0, 0.0, 0.0]];
+        let mut data: Vec<f32> = square.iter().flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0]).collect();
+        let mesh = data.len();
+        let mut seed = 5u64;
+        let mut next = || {
+            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            (seed >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let mut places: Vec<(f64, f64, f64)> = (0..5_000).map(|_| (next() * 10_000.0, next() * 10_000.0, next() * 6.0)).collect();
+        places.sort_by_key(|&(x, y, _)| ((y / 500.0) as u32, (x / 500.0) as u32));
+        for (x, y, turn) in places {
+            let (s, c) = turn.sin_cos();
+            data.extend([c, s, -s, c, x, y, 1.0, 0.0].map(|v| v as f32));
+        }
+        let mut layer = stroke(data, None);
+        layer.batches[0].instances =
+            Some(crate::batches::Instances { mesh, count: 5_000, scale: 1.0, proxy: None, mark: None });
+        layer
+    }
+
+    #[test]
+    fn an_instanced_batch_keeps_its_placements_order_and_a_view_draws_those_it_meets() {
+        let mut layer = inserts();
+        let before = layer.data.clone();
+        add(&mut layer);
+        assert_eq!(layer.data, before, "the placements where they were");
+        let part = &layer.cells[0].as_ref().expect("cells").parts[0];
+        let mesh = 24;
+        assert_eq!((part.range.clone(), part.floats), (mesh..mesh + 5_000 * 8, 8));
+        assert!(part.order.is_some(), "in their order");
+        let reach = 1.0;
+        for view in [[2_000.0, 3_000.0, 2_400.0, 3_300.0], [9_000.0, 9_500.0, 11_000.0, 12_000.0]] {
+            let ranges = part.ranges_in(view, reach);
+            let drawn: usize = ranges.iter().map(|r| r.len()).sum();
+            let mut met = 0;
+            for (n, x) in before[mesh..].chunks(8).enumerate() {
+                // The placed square's corners, from the layers' origin.
+                let corners = [(0.0f32, 0.0f32), (4.0, 0.0), (0.0, 4.0), (4.0, 4.0)]
+                    .map(|(px, py)| (f64::from(x[0] * px + x[2] * py + x[4]) + 100.0, f64::from(x[1] * px + x[3] * py + x[5]) + 200.0));
+                let (x0, x1) = corners.iter().fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.0), b.1.max(c.0)));
+                let (y0, y1) = corners.iter().fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.1), b.1.max(c.1)));
+                if x1 >= view[0] - reach && x0 <= view[2] + reach && y1 >= view[1] - reach && y0 <= view[3] + reach {
+                    met += 1;
+                    assert!(ranges.iter().any(|r| r.contains(&(n as u32))), "{view:?}: insert {n} meets it");
+                }
+            }
+            assert!(met > 0 && drawn < 5_000 / 10, "{view:?}: {drawn} of 5 000 drawn for {met} met");
+        }
+    }
+
+    /// A symbol of 200 segments (a ring) placed 120 times: few placements, each drawing much. Its cells hold a placement
+    /// or so each, and a near view draws the few it meets; 4 placements are drawn whole.
+    #[test]
+    fn a_heavy_definitions_few_placements_have_cells() {
+        let ring: Vec<f32> = (0..200)
+            .flat_map(|k| {
+                let (a, b) = (k as f64 / 200.0 * std::f64::consts::TAU, (k + 1) as f64 / 200.0 * std::f64::consts::TAU);
+                [3.0 * a.cos(), 3.0 * a.sin(), 3.0 * b.cos(), 3.0 * b.sin(), 0.0, 3.0].map(|v| v as f32)
+            })
+            .collect();
+        let place = |count: usize| {
+            let mut data = ring.clone();
+            for k in 0..count {
+                let (x, y) = ((k % 12) as f32 * 800.0, (k / 12) as f32 * 800.0);
+                data.extend([1.0, 0.0, 0.0, 1.0, x, y, 1.0, 0.0]);
+            }
+            let mut layer = stroke(data, None);
+            layer.batches[0].instances =
+                Some(crate::batches::Instances { mesh: ring.len(), count: count as u32, scale: 1.0, proxy: None, mark: None });
+            add(&mut layer);
+            layer
+        };
+        let layer = place(120);
+        let part = &layer.cells[0].as_ref().expect("cells for 120 placements of 200 segments").parts[0];
+        assert!(part.nx * part.ny >= 64, "{} × {} cells", part.nx, part.ny);
+        // Round the fourth placement of the second row (2 400, 800 from the batch's tile; its origin is 100, 200).
+        let ranges = part.ranges_in([2_490.0, 990.0, 2_510.0, 1_010.0], 1.0);
+        assert_eq!(ranges, vec![15..16], "the one placement the view meets");
+        assert!(place(4).cells.is_empty(), "four placements are drawn whole");
     }
 
 }

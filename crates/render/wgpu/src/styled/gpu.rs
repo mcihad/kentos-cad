@@ -315,7 +315,9 @@ fn parts_add(
             } else {
                 u64::from(p.vertices) / per
             };
-            (definition * u64::from(p.count), if g.proxied { "örnekli vekil" } else { "örnekli" })
+            // The placements the view draws (docs/adr/9244), or all.
+            let placed = g.placed_shown.as_ref().map_or(u64::from(p.count), |r| r.iter().map(|r| u64::from(r.len() as u32)).sum());
+            (definition * placed, if g.proxied { "örnekli vekil" } else { "örnekli" })
         }
         None => (drawn, ""),
     };
@@ -364,8 +366,8 @@ fn forced_level() -> Option<usize> {
     *LEVEL.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").ok().and_then(|v| v.parse().ok()))
 }
 
-/// Instances (strokes, marks) the draws were given since this was last read: a measurement's count of what reached
-/// the GPU (plan/render.md F3).
+/// Instances (strokes, marks, a block's placements) the draws were given since this was last read: a measurement's
+/// count of what reached the GPU (plan/render.md F3).
 pub static DRAWN_INSTANCES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Floats per stroke segment, fill vertex and marker (the contract's strides).
@@ -952,6 +954,7 @@ impl StyledGpu {
                 pattern_page,
                 vectors,
                 shown: None,
+                placed_shown: None,
                 offset,
                 visible: false,
                 placed: None,
@@ -1162,6 +1165,7 @@ impl StyledGpu {
                     // Every batch takes its own cells, shown or not: the list follows the batches one for one.
                     let own = cells.next().flatten();
                     g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
+                    g.placed_shown = if g.visible { placed_in(b, own, box_, px_per_m, frame.dpr) } else { None };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1412,6 +1416,7 @@ impl StyledGpu {
                     // Every batch takes its own cells, shown or not: the list follows the batches one for one.
                     let own = cells.next().flatten();
                     g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
+                    g.placed_shown = if g.visible { placed_in(b, own, box_, px_per_m, frame.dpr) } else { None };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1831,27 +1836,36 @@ impl StyledGpu {
             };
             let lod = source.and_then(|s| s.lod.as_ref());
             // A batch with cells draws the cells its view meets (plan/render.md RM-08): the lens its own.
+            let cells = layer.source.layer.cells.get(i).and_then(|c| c.as_deref());
             let shown = match (seen, source) {
-                (Some((box_, px_per_m, dpr)), Some(s)) => {
-                    culled(s, layer.source.layer.cells.get(i).and_then(|c| c.as_deref()), level, box_, px_per_m, dpr)
-                }
+                (Some((box_, px_per_m, dpr)), Some(s)) => culled(s, cells, level, box_, px_per_m, dpr),
                 _ => b.shown.clone(),
             };
             if let Some(placed) = &b.own {
                 pass.set_vertex_buffer(0, placed.mesh.slice(..));
                 pass.set_vertex_buffer(1, placed.instances.slice(..));
                 let floats = if matches!(b.pipe, Pipe::StrokeInstanced) { STROKE_FLOATS } else { AREA_FLOATS };
-                match (lod, placed.proxy.clone().filter(|_| proxied)) {
-                    (_, Some(proxy)) => pass.draw(proxy, 0..placed.count),
-                    (Some(lod), None) => {
-                        for r in lod.ranges(level) {
-                            let (a, z) = ((r.start / floats) as u32 * placed.per_item, (r.end / floats) as u32 * placed.per_item);
-                            if z > a {
-                                pass.draw(a..z, 0..placed.count);
-                            }
-                        }
+                // The placements the view meets, in their order (docs/adr/9244): the lens its own.
+                let placements = match (seen, source) {
+                    (Some((box_, px_per_m, dpr)), Some(s)) => placed_in(s, cells, box_, px_per_m, dpr),
+                    _ => b.placed_shown.clone(),
+                }
+                .unwrap_or_else(|| std::iter::once(0..placed.count).collect());
+                let definition: Vec<Range<u32>> = match (lod, placed.proxy.clone().filter(|_| proxied)) {
+                    (_, Some(proxy)) => std::iter::once(proxy).collect(),
+                    (Some(lod), None) => lod
+                        .ranges(level)
+                        .into_iter()
+                        .map(|r| (r.start / floats) as u32 * placed.per_item..(r.end / floats) as u32 * placed.per_item)
+                        .filter(|r| r.end > r.start)
+                        .collect(),
+                    (None, None) => std::iter::once(0..placed.vertices).collect(),
+                };
+                for d in &definition {
+                    for p in &placements {
+                        DRAWN_INSTANCES.fetch_add(u64::from(p.end - p.start), std::sync::atomic::Ordering::Relaxed);
+                        pass.draw(d.clone(), p.clone());
                     }
-                    (None, None) => pass.draw(0..placed.vertices, 0..placed.count),
                 }
             } else {
                 // A run of far hatches drawn as one (docs/adr/1066 §2): their areas one after another in the buffer.
@@ -2132,6 +2146,9 @@ struct GpuBatch {
     /// The numbers this frame's view draws (from the batch's first), when the batch has cells (plan/render.md RM-08):
     /// its level's ranges cut to the cells the view meets. None: its level's ranges whole.
     shown: Option<Vec<Range<usize>>>,
+    /// An instanced batch's placements this frame's view draws, when they have cells (docs/adr/9244): runs in their
+    /// order. None: all of them.
+    placed_shown: Option<Vec<Range<u32>>>,
     /// Its block's offset in the layer's uniform buffer.
     offset: u32,
     visible: bool,
@@ -2151,18 +2168,11 @@ fn culled(
     dpr: f64,
 ) -> Option<Vec<Range<usize>>> {
     let cells = cells?;
-    let to_m = |v: f64, unit: Unit| match unit {
-        Unit::World => v,
-        Unit::Px => v * dpr / px_per_m,
-    };
-    // Every frame meets cells at the view's edge, so the reach takes what a line's quad spreads past its width too
-    // (stroke.wgsl: half its blur, a pixel's smoothing, its thinnest half pixel): a cell just outside the view whose
-    // items' edges reach into it is drawn. Far out, the batch's own reach (its width and a unit) is under a pixel.
-    let blur = match &b.kind {
-        BatchKind::Stroke { blur, unit, .. } => 0.5 * to_m(*blur, *unit),
-        _ => 0.0,
-    };
-    let reach = to_m(b.reach, b.reach_unit) + blur + 2.0 / px_per_m.max(1e-12);
+    // An instanced batch's cells are its placements' (`placed_in`); its definition is drawn whole for each.
+    if b.instances.is_some() {
+        return None;
+    }
+    let reach = cell_reach(b, px_per_m, dpr);
     let ranges: Vec<Range<usize>> = match &b.lod {
         Some(lod) => lod.ranges(level).into_iter().filter(|r| !r.is_empty()).collect(),
         None => std::iter::once(0..b.range.len()).collect(),
@@ -2177,6 +2187,36 @@ fn culled(
         }
     }
     Some(out)
+}
+
+/// How far past its cells' boxes a batch's items draw, metres: the batch's reach, and what a line's quad spreads past
+/// its width (stroke.wgsl: half its blur, a pixel's smoothing, its thinnest half pixel). Every frame meets cells at the
+/// view's edge, so a cell just outside the view whose items' edges reach into it is drawn. Far out, the batch's own
+/// reach (its width and a unit) is under a pixel.
+fn cell_reach(b: &StyledBatch, px_per_m: f64, dpr: f64) -> f64 {
+    let to_m = |v: f64, unit: Unit| match unit {
+        Unit::World => v,
+        Unit::Px => v * dpr / px_per_m,
+    };
+    let blur = match &b.kind {
+        BatchKind::Stroke { blur, unit, .. } => 0.5 * to_m(*blur, *unit),
+        _ => 0.0,
+    };
+    to_m(b.reach, b.reach_unit) + blur + 2.0 / px_per_m.max(1e-12)
+}
+
+/// The placements a view (`view` from the layers' origin) draws of an instanced batch whose placements have cells
+/// (cells.rs, docs/adr/9244): runs in their order. None: all of them.
+fn placed_in(
+    b: &StyledBatch,
+    cells: Option<&kentos_native_style::cells::Cells>,
+    view: [f64; 4],
+    px_per_m: f64,
+    dpr: f64,
+) -> Option<Vec<Range<u32>>> {
+    let inst = b.instances.as_ref()?;
+    let part = cells?.parts.iter().find(|p| p.range.start == inst.mesh)?;
+    Some(part.ranges_in(view, cell_reach(b, px_per_m, dpr)))
 }
 
 impl GpuBatch {

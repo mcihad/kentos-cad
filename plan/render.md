@@ -150,7 +150,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Harness'ın karesi 12,7 ms'lik bir taban taşıyor: bütün pencerenin ekran dışı çizimi ve geri okuması. GPU
       zaman damgası değil.
     - GPU sınamasında üst üste binen iki renkli daireler: her görünümde birebir aynı resim.
-  - [ ] Örnekli toplu çizimler (blok yerleştirmeleri, vektör SVG simgeleri) yerleştirme başına ayıklanır.
+  - [x] Adım 4 ([ADR 9244](../docs/adr/9244-placements-culled-in-their-order.md)): örnekli toplu çizimin
+    yerleştirmeleri sıralarını koruyarak ayıklanıyor. Göz, tanımın 64 öğesi kadar iş tutuyor; az yerleştirmeli ağır
+    simgeler de ayıklanıyor. NCZ'de simgelerin vektörden çizildiği yakın karede örnekli iş 64 890 → 21 258 üçgen.
+    GPU sınamasında üst üste binen 20 000 dönük yerleştirme: 632 ve 325 çizildi, resim birebir aynı.
   - [ ] Gerçek GPU süresi için zaman damgası sorgusu (RM-01'in eksiği).
 - [~] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
