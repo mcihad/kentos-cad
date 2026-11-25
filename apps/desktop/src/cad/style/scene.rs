@@ -994,7 +994,7 @@ impl StyledCache {
                     ordered: plan.ordered.clone(),
                 });
                 entry.parts.clear();
-                entry.parts.insert(0, new_part(layer, &entities, framed));
+                entry.parts.insert(0, new_part(layer, &entities, framed, masks_by_markers(plan.node)));
                 entry.reads_index = true;
                 entry.run = plan.run;
             }
@@ -1045,7 +1045,7 @@ impl StyledCache {
                 if entities.is_empty() && split {
                     entry.parts.remove(&key);
                 } else {
-                    entry.parts.insert(key, new_part(layer, entities, framed));
+                    entry.parts.insert(key, new_part(layer, entities, framed, masks_by_markers(plan.node)));
                 }
             }
         }
@@ -1371,14 +1371,23 @@ fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
 
 /// A built part of a layer, under a new id (the GPU uploads what it has not seen); `framed`: its
 /// renderer is drawn over the construction lines' box (Ters alan, docs/adr/0213 §3).
-fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool) -> Part {
+fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool, mask: bool) -> Part {
+    let id = NEXT_LAYER.fetch_add(1, Ordering::Relaxed);
     Part {
-        part: Arc::new(StyledLayerPart::on_gpu(
-            NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
-            layer,
-        )),
+        // A mask's source keeps its numbers: the mask reads its markers' boxes on the CPU (docs/adr/0226 §3); every
+        // other part lets them go once the GPU has them (plan/render.md RM-19).
+        part: Arc::new(if mask {
+            StyledLayerPart::new(id, layer)
+        } else {
+            StyledLayerPart::on_gpu(id, layer)
+        }),
         construction: framed || entities.iter().any(|e| construction(e)),
     }
+}
+
+/// Whether the layer's markers cut other layers (a mask by its markers' boxes, docs/adr/0226 §3).
+fn masks_by_markers(node: &LayerNode) -> bool {
+    node.compose.as_ref().and_then(|c| c.mask.as_ref()).is_some_and(|m| m.markers)
 }
 
 /// A layer's objects in its drawing order (docs/adr/0260 §5): by their order,
