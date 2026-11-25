@@ -528,6 +528,7 @@ fn glyphs_on_a_real_gpu() {
     glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
     glyphs::rings_and_lines_cover_their_areas(&gpu);
     glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
+    glyphs::a_glyph_past_its_field_is_read_from_its_outline(&gpu);
 }
 
 /// plan/render.md RM-11: a magnified pattern tile's SVG marks drawn from their triangles, on a real GPU.

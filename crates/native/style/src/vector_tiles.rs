@@ -186,30 +186,7 @@ pub fn program(image: &AtlasImage) -> Option<Vec<f64>> {
         let heads = out.len();
         out.resize(heads + fills.len() * COLOUR, 0.0);
         for (c, (rgba, tris)) in fills.iter().enumerate() {
-            let mut lists: Vec<Vec<u32>> = vec![Vec::new(); nx * ny];
-            let cell = |x: f64, y: f64| -> [f64; 4] {
-                let (x0, y0) = (bbox[0] + bx * x / nx as f64, bbox[1] + by * y / ny as f64);
-                [
-                    x0,
-                    y0,
-                    bbox[0] + bx * (x + 1.0) / nx as f64,
-                    bbox[1] + by * (y + 1.0) / ny as f64,
-                ]
-            };
-            for (n, t) in tris.iter().enumerate() {
-                let (tx0, tx1) = (t[0].min(t[2]).min(t[4]), t[0].max(t[2]).max(t[4]));
-                let (ty0, ty1) = (t[1].min(t[3]).min(t[5]), t[1].max(t[3]).max(t[5]));
-                let col = |v: f64, lo: f64, span: f64, count: usize| {
-                    (((v - lo) / span * count as f64).floor().max(0.0) as usize).min(count - 1)
-                };
-                for y in col(ty0, bbox[1], by, ny)..=col(ty1, bbox[1], by, ny) {
-                    for x in col(tx0, bbox[0], bx, nx)..=col(tx1, bbox[0], bx, nx) {
-                        if meets(t, cell(x as f64, y as f64)) {
-                            lists[y * nx + x].push(n as u32);
-                        }
-                    }
-                }
-            }
+            let lists = bin_triangles(tris, bbox, nx, ny);
             let bins = out.len();
             let mut at = 0usize;
             for l in &lists {
@@ -253,6 +230,37 @@ pub fn program(image: &AtlasImage) -> Option<Vec<f64>> {
     // A tile's height in its widths (`aspect`) is not needed: the shader takes the tile's ground size from the batch.
     let _ = aspect;
     Some(out)
+}
+
+/// Each bin's triangles (their numbers) for a grid of `nx` × `ny` bins over `bbox` (`[x0, y0, x1, y1]`), rows from
+/// `y0`: every bin lists the triangles that meet it. A glyph's vectors bin their triangles the same way (docs/adr/9239).
+pub fn bin_triangles(tris: &[[f64; 6]], bbox: [f64; 4], nx: usize, ny: usize) -> Vec<Vec<u32>> {
+    let (bx, by) = ((bbox[2] - bbox[0]).max(1e-9), (bbox[3] - bbox[1]).max(1e-9));
+    let mut lists: Vec<Vec<u32>> = vec![Vec::new(); nx * ny];
+    let cell = |x: f64, y: f64| -> [f64; 4] {
+        let (x0, y0) = (bbox[0] + bx * x / nx as f64, bbox[1] + by * y / ny as f64);
+        [
+            x0,
+            y0,
+            bbox[0] + bx * (x + 1.0) / nx as f64,
+            bbox[1] + by * (y + 1.0) / ny as f64,
+        ]
+    };
+    let col = |v: f64, lo: f64, span: f64, count: usize| {
+        (((v - lo) / span * count as f64).floor().max(0.0) as usize).min(count - 1)
+    };
+    for (n, t) in tris.iter().enumerate() {
+        let (tx0, tx1) = (t[0].min(t[2]).min(t[4]), t[0].max(t[2]).max(t[4]));
+        let (ty0, ty1) = (t[1].min(t[3]).min(t[5]), t[1].max(t[3]).max(t[5]));
+        for y in col(ty0, bbox[1], by, ny)..=col(ty1, bbox[1], by, ny) {
+            for x in col(tx0, bbox[0], bx, nx)..=col(tx1, bbox[0], bx, nx) {
+                if meets(t, cell(x as f64, y as f64)) {
+                    lists[y * nx + x].push(n as u32);
+                }
+            }
+        }
+    }
+    lists
 }
 
 /// Whether a triangle (its inside on the left, SVG pixels) meets a box `[x0, y0, x1, y1]`, edges included.

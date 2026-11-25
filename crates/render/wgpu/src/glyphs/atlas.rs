@@ -62,6 +62,8 @@ pub struct Slot {
     pub uv: [f32; 4],
     /// The field's box from the glyph's origin in ems, y up: left, bottom, width, height.
     pub em: [f32; 4],
+    /// Where its outline's program starts among the atlas's programs, plus one (`vector`); 0 without one.
+    pub program: u32,
 }
 
 /// A glyph looked up.
@@ -96,6 +98,8 @@ pub struct GlyphAtlas {
     uploads: Vec<PageUpload>,
     /// A glyph was left for later since the last [`GlyphAtlas::take_pending`].
     pending: bool,
+    /// The glyphs' outlines as programs, one after another (`vector`).
+    programs: Vec<f32>,
 }
 
 impl Default for GlyphAtlas {
@@ -115,6 +119,7 @@ impl GlyphAtlas {
             shelf: (0, 0, 0),
             uploads: Vec::new(),
             pending: false,
+            programs: Vec::new(),
         }
     }
 
@@ -149,10 +154,25 @@ impl GlyphAtlas {
             self.pending = true;
             return Lookup::Later;
         }
-        let field = self.face(key.font).and_then(|face| sdf::field(face, GlyphId(key.glyph)));
-        let slot = field.and_then(|f| self.place(f));
+        let (field, program) = match self.face(key.font) {
+            Some(face) => (sdf::field(face, GlyphId(key.glyph)), super::vector::program(face, GlyphId(key.glyph))),
+            None => (None, None),
+        };
+        // The glyph's outline beside its field, for when it is shown past the field's size (docs/adr/9240).
+        let slot = field.and_then(|f| self.place(f)).map(|mut slot| {
+            if let Some(p) = program {
+                slot.program = self.programs.len() as u32 + 1;
+                self.programs.extend(p);
+            }
+            slot
+        });
         self.slots.insert(key, slot);
         slot.map_or(Lookup::Blank, Lookup::Ready)
+    }
+
+    /// The glyphs' outlines' programs, one after another (a slot's `program` less one is where its starts).
+    pub fn programs(&self) -> &[f32] {
+        &self.programs
     }
 
     /// Whether a glyph was left for later since the last call.
@@ -199,6 +219,7 @@ impl GlyphAtlas {
             page,
             uv: [x as f32 / side, y as f32 / side, f.width as f32 / side, f.height as f32 / side],
             em: [f.left / EM_PX, f.bottom / EM_PX, f.width as f32 / EM_PX, f.height as f32 / EM_PX],
+            program: 0,
         };
         self.uploads.push(PageUpload { page, x, y, width: f.width, height: f.height, data: f.data });
         Some(slot)

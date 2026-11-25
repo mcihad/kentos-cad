@@ -47,12 +47,16 @@ struct Instance {
     halo_px: f32,
     /// The page (low 16 bits), the pixel unit ([`PX_UNIT`]) and turning with the view ([`TURNS`]).
     flags: u32,
+    /// Where its outline's program starts among the atlas's programs, plus one; 0 without one (docs/adr/9240).
+    program: u32,
 }
 
-const ATTRIBUTES: [wgpu::VertexAttribute; 9] = wgpu::vertex_attr_array![
+const ATTRIBUTES: [wgpu::VertexAttribute; 10] = wgpu::vertex_attr_array![
     0 => Float32x4, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32x4,
-    5 => Unorm8x4, 6 => Unorm8x4, 7 => Float32, 8 => Uint32
+    5 => Unorm8x4, 6 => Unorm8x4, 7 => Float32, 8 => Uint32, 9 => Uint32
 ];
+/// Numbers the programs' buffer first holds (it doubles as the atlas's programs grow).
+const PROGRAMS_FIRST: usize = 16_384;
 const PX_UNIT: u32 = 1 << 16;
 const TURNS: u32 = 1 << 17;
 /// A flat quad's instance: its colour over the unit square, no field sampled.
@@ -77,10 +81,13 @@ const PREMULTIPLIED: wgpu::BlendState = wgpu::BlendState {
     },
 };
 
-/// The shader with the field's constants written before it.
+/// The shader with the field's and the outlines' constants written before it.
 fn source() -> String {
     format!(
-        "const EM_PX: f32 = {EM_PX:?};\nconst SPREAD_PX: f32 = {SPREAD_PX:?};\n{}",
+        "const EM_PX: f32 = {EM_PX:?};\nconst SPREAD_PX: f32 = {SPREAD_PX:?};\nconst VECTOR_EM_PX: f32 = {:?};\n\
+         const HALO_EM: f32 = {:?};\n{}",
+        super::vector::VECTOR_EM_PX,
+        super::vector::HALO_EM as f32,
         include_str!("glyphs.wgsl")
     )
 }
@@ -98,7 +105,11 @@ pub struct GlyphGpu {
     texture: wgpu::Texture,
     view: wgpu::TextureView,
     layers: u32,
-    /// Bumped when the texture is made again for more pages: the layers' bind groups follow it.
+    /// The glyphs' outlines' programs (docs/adr/9240): the buffer, the numbers it holds room for and those written.
+    programs: wgpu::Buffer,
+    programs_room: usize,
+    programs_written: usize,
+    /// Bumped when the texture or the programs' buffer is made again: the layers' bind groups follow it.
     generation: u64,
 }
 
@@ -128,6 +139,16 @@ impl GlyphLayer {
     pub fn bytes(&self) -> u64 {
         self.instances.as_ref().map_or(0, wgpu::Buffer::size)
     }
+}
+
+/// The buffer of the glyphs' outlines' programs, room for `numbers`.
+fn programs_buffer(device: &wgpu::Device, numbers: usize) -> wgpu::Buffer {
+    device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("kentos.glyphs.programs"),
+        size: (numbers.max(1) * 4) as u64,
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    })
 }
 
 fn pages_texture(device: &wgpu::Device, side: u32, layers: u32) -> (wgpu::Texture, wgpu::TextureView) {
@@ -215,6 +236,16 @@ impl GlyphGpu {
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: wgpu::BufferSize::new(4),
+                    },
+                    count: None,
+                },
             ],
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -231,6 +262,7 @@ impl GlyphGpu {
             ..wgpu::SamplerDescriptor::default()
         });
         let (texture, view) = pages_texture(device, atlas.page_side(), 1);
+        let programs = programs_buffer(device, PROGRAMS_FIRST);
         GlyphGpu {
             atlas,
             format,
@@ -243,6 +275,9 @@ impl GlyphGpu {
             texture,
             view,
             layers: 1,
+            programs,
+            programs_room: PROGRAMS_FIRST,
+            programs_written: 0,
             generation: 0,
         }
     }
@@ -305,6 +340,7 @@ impl GlyphGpu {
                 wgpu::BindGroupEntry { binding: 0, resource: frame.as_entire_binding() },
                 wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&self.view) },
                 wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: self.programs.as_entire_binding() },
             ],
         })
     }
@@ -355,6 +391,7 @@ impl GlyphGpu {
                     halo: [0; 4],
                     halo_px: 0.0,
                     flags: SOLID | unit | if q.triangle { TRIANGLE } else { 0 },
+                    program: 0,
                 }
             };
             instances.extend(text.under.iter().map(quad));
@@ -379,6 +416,7 @@ impl GlyphGpu {
                     halo,
                     halo_px: text.halo_px,
                     flags: slot.page | unit,
+                    program: slot.program,
                 });
             }
             instances.extend(text.over.iter().map(quad));
@@ -411,6 +449,19 @@ impl GlyphGpu {
     /// The fields laid since the last upload into the texture; the texture made again, from the pages kept on the
     /// CPU, when a page more is needed.
     fn upload(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        // The outlines' programs made since: written after those already there, or all into a buffer made larger.
+        let programs = self.atlas.programs();
+        if programs.len() > self.programs_room {
+            self.programs_room = programs.len().next_power_of_two();
+            self.programs = programs_buffer(device, self.programs_room);
+            self.programs_written = 0;
+            self.generation += 1;
+        }
+        if programs.len() > self.programs_written {
+            let new = &programs[self.programs_written..];
+            queue.write_buffer(&self.programs, (self.programs_written * 4) as u64, bytemuck::cast_slice(new));
+            self.programs_written = programs.len();
+        }
         let pages = self.atlas.page_count();
         let uploads = self.atlas.take_uploads();
         if pages > self.layers {
@@ -478,9 +529,10 @@ mod tests {
     #[test]
     fn the_instance_is_as_the_shader_reads_it() {
         assert_eq!(std::mem::size_of::<FrameUniform>(), std::mem::size_of::<StyledFrameUniform>());
-        assert_eq!(std::mem::size_of::<Instance>(), 88);
+        // 88 bytes, then the outline's program (docs/adr/9240).
+        assert_eq!(std::mem::size_of::<Instance>(), 92);
         let last = ATTRIBUTES.last().expect("attributes");
-        assert_eq!(last.offset + last.format.size(), 88);
+        assert_eq!(last.offset + last.format.size(), 92);
     }
 
     /// The shader parses and validates with the field's constants written before it.
