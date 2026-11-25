@@ -175,10 +175,10 @@ impl Thumbs {
         .ok()
         .map(|p| {
             Arc::new(Built {
-                part: Arc::new(StyledLayerPart {
-                    id: NEXT_PART.fetch_add(1, Ordering::Relaxed),
-                    layer: p.layer,
-                }),
+                part: Arc::new(StyledLayerPart::new(
+                    NEXT_PART.fetch_add(1, Ordering::Relaxed),
+                    p.layer,
+                )),
                 px_per_mm: p.px_per_mm,
                 pending: AtomicBool::new(false),
             })

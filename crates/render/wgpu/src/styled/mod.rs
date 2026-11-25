@@ -36,7 +36,7 @@ pub mod service_tiles;
 pub mod shader;
 pub mod uniform;
 
-pub use gpu::{StyledFrame, StyledGpu, StyledLayerPart, StyledScene, ViewStyled};
+pub use gpu::{Numbers, StyledFrame, StyledGpu, StyledLayerPart, StyledScene, ViewStyled};
 pub use picture::{Bitmap, ImageSource, NoImages, Picture, TextOutline};
 pub use points::{CloudNode, CloudTrees};
 pub use service_tiles::{ServiceImage, ServiceTile, ServiceView, Transform, VectorTile};

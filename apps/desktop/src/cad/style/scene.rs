@@ -91,6 +91,10 @@ struct Dirty {
     parts: HashSet<u64>,
 }
 
+/// A styled build this long passed through enough memory that what it freed is given back to the system (a city plan's
+/// NCZ: about 440 MB above what it keeps).
+const GIVE_BACK_AFTER: Duration = Duration::from_millis(250);
+
 /// The styled layers as last built, and what they were built from.
 #[derive(Default)]
 pub struct StyledCache {
@@ -158,6 +162,21 @@ impl StyledCache {
     /// layers they filter are built again at the next scene.
     pub fn filters_at(&mut self, version: u64) {
         self.filters_now = version;
+    }
+
+    /// The styled layers' numbers held now, bytes: their vertex data, its float32 residuals, their batches (a
+    /// measurement's, `perf::memory`).
+    #[cfg(test)]
+    pub fn held_bytes(&self) -> [usize; 3] {
+        let mut held = [0; 3];
+        for part in &self.scene.layers {
+            if let Some(numbers) = part.numbers().as_ref() {
+                held[0] += numbers.data.capacity() * 4;
+                held[1] += numbers.low.capacity() * 4;
+            }
+            held[2] += std::mem::size_of_val(part.batches());
+        }
+        held
     }
 
     /// The layer parts built now, every layer's (docs/adr/1062's edit scope).
@@ -1011,7 +1030,7 @@ impl StyledCache {
         for plan in &plans {
             let id = &plan.node.id;
             let left = self.layers.get(id).map_or(0, |l| {
-                l.parts.values().map(|p| p.part.layer.dropped).sum::<u64>()
+                l.parts.values().map(|p| p.part.dropped()).sum::<u64>()
             });
             if left > 0 && self.dropped_said.insert(id.clone()) {
                 self.dropped.push((plan.node.name.clone(), left));
@@ -1037,14 +1056,14 @@ impl StyledCache {
                 let base = parts.len();
                 let list = crate::data_view::service().parts(&node.id);
                 for (i, part) in list.iter().enumerate() {
-                    order.extend((0..part.layer.batches.len()).map(|b| ((base + i) as u32, b as u32)));
+                    order.extend((0..part.batches().len()).map(|b| ((base + i) as u32, b as u32)));
                 }
                 parts.extend(list);
                 // Its unsaved rows over its table's (docs/adr/9103 §5): the layer's objects in the drawing.
                 if let Some(layer) = self.layers.get(&node.id) {
                     for p in layer.parts.values() {
                         let at = parts.len() as u32;
-                        order.extend((0..p.part.layer.batches.len()).map(|b| (at, b as u32)));
+                        order.extend((0..p.part.batches().len()).map(|b| (at, b as u32)));
                         parts.push(p.part.clone());
                     }
                 }
@@ -1067,7 +1086,7 @@ impl StyledCache {
             let list: Vec<&Arc<StyledLayerPart>> = layer.parts.values().map(|p| &p.part).collect();
             if list.len() > 1 {
                 split_any = true;
-                let layers: Vec<&StyledLayer> = list.iter().map(|p| &p.layer).collect();
+                let layers: Vec<&[_]> = list.iter().map(|p| p.batches()).collect();
                 order.extend(
                     merged_order(&layers)
                         .into_iter()
@@ -1075,7 +1094,7 @@ impl StyledCache {
                 );
             } else {
                 for part in &list {
-                    order.extend((0..part.layer.batches.len()).map(|b| (base as u32, b as u32)));
+                    order.extend((0..part.batches().len()).map(|b| (base as u32, b as u32)));
                 }
             }
             parts.extend(list.into_iter().cloned());
@@ -1108,7 +1127,12 @@ impl StyledCache {
         self.look = Some(look.clone());
         self.library = library.version();
         if count > 0 {
-            self.last_build = Some((started.elapsed(), count));
+            let took = started.elapsed();
+            self.last_build = Some((took, count));
+            // A large build's passing numbers given back to the system (plan/render.md RM-19).
+            if took >= GIVE_BACK_AFTER {
+                crate::give_back::soon();
+            }
         }
         self.scene.clone()
     }
@@ -1164,9 +1188,9 @@ impl StyledCache {
         {
             return part.clone();
         }
-        let part = Arc::new(StyledLayerPart {
-            id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
-            layer: StyledLayer {
+        let part = Arc::new(StyledLayerPart::new(
+            NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
+            StyledLayer {
                 low: Vec::new(),
                 data: Vec::new(),
                 batches: vec![StyledBatch {
@@ -1200,7 +1224,7 @@ impl StyledCache {
                 }],
                 ..StyledLayer::default()
             },
-        });
+        ));
         self.services
             .insert(node.id.clone(), (key, opacity.to_bits(), part.clone()));
         part
@@ -1322,10 +1346,10 @@ fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
 /// renderer is drawn over the construction lines' box (Ters alan, docs/adr/0213 §3).
 fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool) -> Part {
     Part {
-        part: Arc::new(StyledLayerPart {
-            id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
+        part: Arc::new(StyledLayerPart::on_gpu(
+            NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
             layer,
-        }),
+        )),
         construction: framed || entities.iter().any(|e| construction(e)),
     }
 }

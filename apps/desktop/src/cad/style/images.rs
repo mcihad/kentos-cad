@@ -191,8 +191,8 @@ impl Images {
     }
 
     /// Hands in the pictures a layer's build made (heat maps, docs/adr/0213 §2.6), each once.
-    pub fn put_made(&self, layer: &kentos_native_style::batches::StyledLayer) {
-        for p in &layer.pictures {
+    pub fn put_made(&self, pictures: &[kentos_native_style::batches::Picture]) {
+        for p in pictures {
             if !self.has_bitmap(&p.key) {
                 self.put_bitmap(
                     p.key.clone(),

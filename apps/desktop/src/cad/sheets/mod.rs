@@ -1015,7 +1015,7 @@ impl SheetPainter<'_> {
             .collect();
         // The pictures its builds made (heat maps, docs/adr/0213 §2.6).
         for layer in &layers {
-            self.images.put_made(layer);
+            self.images.put_made(&layer.pictures);
         }
         let Some(rgba) = paint(pw, ph, &view, &layers, self.images) else {
             return false;

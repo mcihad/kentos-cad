@@ -308,6 +308,17 @@ for raw in open(sys.argv[1], encoding="utf-8"):
     elif word == "cpu":
         sync()
         cpu(rest.strip())
+    elif word == "memory":
+        # The app's resident memory now, of it the heap, and its peak since it started (Linux), under the name given
+        # (plan/render.md RM-19).
+        sync()
+        status = {}
+        for entry in open(f"/proc/{app_pid()}/status"):
+            name, _, value = entry.partition(":")
+            if name in ("VmRSS", "VmHWM", "RssAnon"):
+                status[name] = int(value.split()[0]) / 1024
+        print(f"BELLEK {rest.strip()}: yerleşik {status['VmRSS']:.0f} MB (yığın {status['RssAnon']:.0f} MB), "
+              f"tepe {status['VmHWM']:.0f} MB", flush=True)
     else:
         raise SystemExit(f"unknown line: {line}")
     print("ok:", line.strip(), flush=True)

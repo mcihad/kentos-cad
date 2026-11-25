@@ -332,7 +332,7 @@ fn a_data_layers_lines_keep_their_paper_width_on_the_model_screen() {
         let _ = read_with(&view, &app, &layer, false, hold);
         let mut strokes = Vec::new();
         for part in view.parts(&layer.id) {
-            for b in &part.layer.batches {
+            for b in part.batches() {
                 if let kentos_native_style::batches::BatchKind::Stroke { unit, width, .. } = &b.kind {
                     strokes.push((*unit, *width));
                 }

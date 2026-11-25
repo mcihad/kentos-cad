@@ -454,6 +454,11 @@ impl App {
                 Ok(None) => None,
                 Err(e) => Some(Err(e)),
             };
+            // What the reading freed (the file's objects before they were the document's) given back to the system
+            // before the app takes the drawing (plan/render.md RM-19): this thread's arena kept it, and the first
+            // frame's build came on top of it (a city plan's NCZ, opened by the test app: 2 772 MB at the peak before,
+            // 1 996 MB after).
+            crate::give_back::now();
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                 &mut out,
                 Message::Opening(Event::Done { id, result }),

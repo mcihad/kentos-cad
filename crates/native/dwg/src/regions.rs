@@ -334,7 +334,8 @@ fn spline_points(doc: &SatDocument, curve: &SatIntCurve<'_>, edge: &SatEdge<'_>)
         (edge.start_param(), edge.end_param())
     };
     let (a, b) = (t0.min(t1).max(lo), t0.max(t1).min(hi));
-    if !(b > a) {
+    // Nothing left of the span, or a parameter that is not a number.
+    if b.partial_cmp(&a) != Some(std::cmp::Ordering::Greater) {
         return None;
     }
     let n = (ctrl.len() * 8).clamp(32, 1024);

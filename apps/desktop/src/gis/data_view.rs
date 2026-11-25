@@ -254,10 +254,10 @@ fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
         },
     )
     .ok()?;
-    Some(Arc::new(StyledLayerPart {
-        id: NEXT_PART.fetch_add(1, Ordering::Relaxed),
+    Some(Arc::new(StyledLayerPart::new(
+        NEXT_PART.fetch_add(1, Ordering::Relaxed),
         layer,
-    }))
+    )))
 }
 
 /// A read's objects in a document of their own: the layer as a layer of objects, the project's settings and styles.

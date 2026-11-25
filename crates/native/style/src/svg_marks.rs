@@ -135,16 +135,22 @@ pub fn add(layer: &mut StyledLayer) {
 /// The boxes a symbol's markers had (a mask's shapes, docs/adr/0226 §3), from its first colour's instances: each box's
 /// middle (from the batch's tile, metres), its width and height (metres) and its turn (radians, counter-clockwise),
 /// as the marker shader placed it. Nothing for a batch that is not a symbol's first colour.
-pub fn boxes<'a>(layer: &'a StyledLayer, b: &'a StyledBatch) -> impl Iterator<Item = ([f64; 2], [f64; 2], f64)> + 'a {
+///
+/// `data` and `low` are the layer's numbers (`StyledLayer::data`, `low`), wherever they are held.
+pub fn boxes<'a>(
+    data: &'a [f32],
+    low: &'a [f32],
+    b: &'a StyledBatch,
+) -> impl Iterator<Item = ([f64; 2], [f64; 2], f64)> + 'a {
     let found = b.instances.as_ref().and_then(|i| Some((i.mesh, i.mark.filter(|m| m.boxes)?)));
     let (start, mark) = match found {
         Some((mesh, mark)) => (b.range.start + mesh, Some(mark)),
         None => (b.range.end, None),
     };
-    let numbers = layer.data.get(start..b.range.end).unwrap_or(&[]);
+    let numbers = data.get(start..b.range.end).unwrap_or(&[]);
     numbers.as_chunks::<INSTANCE_FLOATS>().0.iter().enumerate().filter_map(move |(n, x)| {
         let mark = mark?;
-        let low = |i: usize| f64::from(layer.low.get(start + n * INSTANCE_FLOATS + i).copied().unwrap_or(0.0));
+        let low = |i: usize| f64::from(low.get(start + n * INSTANCE_FLOATS + i).copied().unwrap_or(0.0));
         let (wc, ws) = (f64::from(x[0]), f64::from(x[1]));
         let w = wc.hypot(ws);
         let h = w * mark.aspect;
@@ -499,7 +505,7 @@ mod tests {
             assert!((a[0] - b[0]).hypot(a[1] - b[1]) < 1e-4, "{corners:?} != {want:?}");
         }
         // A mask's box: the image's middle, its size and its turn, as the shader placed the marker's box.
-        let got: Vec<_> = boxes(&layer, b).collect();
+        let got: Vec<_> = boxes(&layer.data, &layer.low, b).collect();
         let middle = shader_place(m64, [0.25, -0.5], [1.0, 2.0], 0.5, 0.5, 0.5);
         assert_eq!(got.len(), 1);
         let (at, size, turn) = got[0];
@@ -526,8 +532,8 @@ mod tests {
             let y = f64::from(layer.data[t + 1]) + f64::from(layer.low[t + 1]);
             assert!((x - 40_000.001_25).abs() < 1e-6 && (y - 29_999.999_25).abs() < 1e-6, "{x} {y}");
         }
-        assert_eq!(boxes(&layer, &layer.batches[1]).count(), 1);
-        assert_eq!(boxes(&layer, &layer.batches[2]).count(), 0);
+        assert_eq!(boxes(&layer.data, &layer.low, &layer.batches[1]).count(), 1);
+        assert_eq!(boxes(&layer.data, &layer.low, &layer.batches[2]).count(), 0);
         // Built in parts, the symbol keeps its marks' place after the lines.
         let mut line = layer.clone();
         line.batches.truncate(1);
@@ -542,7 +548,7 @@ mod tests {
         };
         line.batches[0].instances = None;
         line.batches[0].key = 1;
-        let order = crate::batches::merged_order(&[&layer, &line]);
+        let order = crate::batches::merged_order(&[&layer.batches, &line.batches]);
         assert_eq!(order, vec![(1, 0), (0, 0), (0, 1), (0, 2)], "the line, then the symbol's bitmap and colours");
     }
 

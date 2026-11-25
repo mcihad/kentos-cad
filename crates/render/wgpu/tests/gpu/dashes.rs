@@ -80,10 +80,7 @@ pub(super) fn remote_cumulative_phase_matches_local_reference(gpu: &mut Gpu) {
         )
         .unwrap();
         gpu.styled = Some(StyledScene {
-            layers: vec![Arc::new(StyledLayerPart {
-                id: 9191 + case as u64,
-                layer,
-            })],
+            layers: vec![Arc::new(StyledLayerPart::new(9191 + case as u64, layer))],
             ..Default::default()
         });
         let camera = Camera {
@@ -201,7 +198,7 @@ pub(super) fn full_patterns_match_independent_samples(gpu: &mut Gpu) {
             }
             let id = 1000 + case as u64 * 2 + u64::from(hatch);
             let scene = StyledScene {
-                layers: vec![Arc::new(StyledLayerPart { id, layer })],
+                layers: vec![Arc::new(StyledLayerPart::new(id, layer))],
                 ..Default::default()
             };
             let cpu = kentos_native_style::cpu::paint(
@@ -214,7 +211,7 @@ pub(super) fn full_patterns_match_independent_samples(gpu: &mut Gpu) {
                     dpr: 1.,
                     scale: 100.,
                 },
-                &[&scene.layers[0].layer],
+                &[&scene.layers[0].to_layer()],
                 &kentos_native_style::picture::NoImages,
             )
             .unwrap();
@@ -414,10 +411,7 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
         let n = layer.batches.len();
         let bytes = (layer.data.len() + layer.low.len()) * std::mem::size_of::<f32>();
         gpu.styled = Some(StyledScene {
-            layers: vec![Arc::new(StyledLayerPart {
-                id: 88_000 + case as u64,
-                layer,
-            })],
+            layers: vec![Arc::new(StyledLayerPart::new(88_000 + case as u64, layer))],
             ..Default::default()
         });
         for samples in [1, 4] {
@@ -500,7 +494,7 @@ pub(super) fn round_dots_match_the_disc(gpu: &mut Gpu) {
         let cpu = kentos_native_style::cpu::paint(w as u32, h as u32, &view, &[&layer], &kentos_native_style::picture::NoImages)
             .unwrap();
         gpu.styled = Some(StyledScene {
-            layers: vec![Arc::new(StyledLayerPart { id: 1124 + case as u64, layer })],
+            layers: vec![Arc::new(StyledLayerPart::new(1124 + case as u64, layer))],
             ..Default::default()
         });
         let camera = Camera { width: w as f64, height: h as f64, scale: zoom, ..Default::default() };

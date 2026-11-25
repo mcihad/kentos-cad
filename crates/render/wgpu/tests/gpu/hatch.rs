@@ -44,14 +44,14 @@ fn hatch(id: u64, width: f64) -> StyledScene {
         instances: None,
     };
     StyledScene {
-        layers: vec![Arc::new(StyledLayerPart {
+        layers: vec![Arc::new(StyledLayerPart::new(
             id,
-            layer: StyledLayer {
+            StyledLayer {
                 data,
                 batches: vec![batch],
                 ..Default::default()
             },
-        })],
+        ))],
         ..Default::default()
     }
 }

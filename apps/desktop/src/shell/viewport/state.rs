@@ -34,12 +34,43 @@ impl Viewport {
             moved_at: None,
             fresh: false,
             other: None,
+            lost_seen: std::cell::Cell::new(0),
             passive: false,
             theme: None,
             themed: RefCell::new(None),
             time: crate::split_view::ViewTime::Follow,
             wall_view: None,
         }
+    }
+
+    /// What the built scene and styled layers hold, bytes: the styled layers' vertex data, residuals and batches
+    /// (the view's and the deep view's), and the plain scene's fills, segments and markers (`perf::memory`).
+    #[cfg(test)]
+    pub(crate) fn built_bytes(&self) -> [usize; 6] {
+        let [a, b, c] = self.styled.borrow().held_bytes();
+        let [d, e, f] = self.deep_styled.borrow().held_bytes();
+        fn bytes<T>(v: &Vec<T>) -> usize {
+            v.capacity() * std::mem::size_of::<T>()
+        }
+        let mut plain = [0; 3];
+        if let Some(cached) = self.scene.borrow().as_ref() {
+            for part in [&cached.fixed, &cached.curves, &cached.construction] {
+                plain[0] += bytes(&part.fills);
+                plain[1] += bytes(&part.segments);
+                plain[2] += bytes(&part.markers);
+            }
+        }
+        [a + d, b + e, c + f, plain[0], plain[1], plain[2]]
+    }
+
+    /// Forgets the scene and the styled layers built: a measurement's way to see what they hold (`perf::memory`).
+    #[cfg(test)]
+    pub(crate) fn forget_built(&self) {
+        *self.scene.borrow_mut() = None;
+        *self.styled.borrow_mut() = crate::style::scene::StyledCache::default();
+        *self.deep_styled.borrow_mut() = crate::style::scene::StyledCache::default();
+        *self.highlight.borrow_mut() = highlight::Highlighted::default();
+        *self.grid.borrow_mut() = None;
     }
 
     /// The grid for the view now: the one built while it still covers the
@@ -519,6 +550,19 @@ impl Viewport {
                 &|layer| doc.model.editing(layer),
             );
         }
+        // The renderer met a part whose numbers were on the GPU only, in buffers it no longer had (plan/render.md
+        // RM-19): it drew nothing for it, and the styled layers are built again, once for the frame that said so.
+        let lost = {
+            let status = self.status.lock().unwrap_or_else(PoisonError::into_inner);
+            status.stats.parts_lost.then_some(status.stats.frames)
+        };
+        if let Some(frame) = lost
+            && self.lost_seen.get() != frame
+        {
+            self.lost_seen.set(frame);
+            *self.styled.borrow_mut() = Default::default();
+            *self.deep_styled.borrow_mut() = Default::default();
+        }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
         let cache = self.styled_in_use();
         cache.borrow_mut().filters_at(s.spatial.filters_version());
@@ -546,8 +590,8 @@ impl Viewport {
         // key, the ones no longer drawn let go.
         let mut made = std::collections::HashSet::new();
         for part in &scene.layers {
-            s.styles.images.put_made(&part.layer);
-            made.extend(part.layer.pictures.iter().map(|p| p.key.as_str()));
+            s.styles.images.put_made(part.pictures());
+            made.extend(part.pictures().iter().map(|p| p.key.as_str()));
         }
         s.styles.images.keep_made(&made);
         // The pictures the scene draws, decoded once each (docs/adr/0192 §3); its rasters'
@@ -557,7 +601,7 @@ impl Viewport {
         // Its point clouds' files for the point cloud service (docs/adr/0207 §6).
         let mut clouds = std::collections::HashSet::new();
         for part in &scene.layers {
-            for b in &part.layer.batches {
+            for b in part.batches() {
                 use kentos_native_style::batches::{BatchKind, FillPaintBatch};
                 match &b.kind {
                     BatchKind::Fill {

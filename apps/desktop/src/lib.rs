@@ -179,6 +179,9 @@ mod clip_frames;
 mod doc_tabs;
 #[path = "shell/document.rs"]
 pub mod document;
+// Memory a large job freed, given back to the system (plan/render.md RM-19).
+#[path = "shell/give_back.rs"]
+pub(crate) mod give_back;
 #[path = "cad/draw_order.rs"]
 mod draw_order;
 #[path = "cad/drawing_exchange.rs"]

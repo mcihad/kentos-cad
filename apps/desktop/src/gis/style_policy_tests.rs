@@ -77,7 +77,7 @@ fn drawn(app: &App, layer: &str, hold: bool) -> (f64, usize) {
     let _ = read_with(&view, app, &node, false, hold);
     let (mut low, mut high, mut symbols) = (f64::INFINITY, f64::NEG_INFINITY, 0);
     for part in view.parts(layer) {
-        for b in &part.layer.batches {
+        for b in part.batches() {
             if matches!(b.kind, kentos_native_style::batches::BatchKind::Stroke { .. }) {
                 low = low.min(b.origin[1] + b.bounds[1]);
                 high = high.max(b.origin[1] + b.bounds[3]);

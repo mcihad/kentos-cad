@@ -321,7 +321,7 @@ pub(super) fn composition_timing(gpu: &mut Gpu) {
     let mut scene = |parts: Parts| {
         let made = layers(parts).map(|layer| {
             id += 1;
-            Arc::new(StyledLayerPart { id, layer })
+            Arc::new(StyledLayerPart::new(id, layer))
         });
         let mut compose = Vec::new();
         if parts.relief {

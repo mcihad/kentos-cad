@@ -287,7 +287,7 @@ fn a_large_layer_is_built_in_runs_of_places_and_a_small_one_whole() {
     assert!(scene.order.is_some(), "the parts have their order");
     // A layer below the threshold draws its batches in turn: the first entries are yol's.
     let order = scene.order.as_ref().expect("order");
-    let yol = scene.layers[0].layer.batches.len();
+    let yol = scene.layers[0].batches().len();
     assert!(
         order[..yol]
             .iter()
@@ -299,7 +299,7 @@ fn a_large_layer_is_built_in_runs_of_places_and_a_small_one_whole() {
         scene
             .layers
             .iter()
-            .map(|l| l.layer.batches.len())
+            .map(|l| l.batches().len())
             .sum::<usize>(),
         "every batch once"
     );
@@ -492,7 +492,7 @@ fn parts_draw_whole(n: usize) {
         if l == 0 {
             continue;
         }
-        let part = &scene.layers[l as usize].layer;
+        let part = scene.layers[l as usize].to_layer();
         let batch = &part.batches[b as usize];
         let data = &part.data[batch.range.clone()];
         match drawn.last_mut() {
@@ -900,7 +900,7 @@ fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
         scene
             .layers
             .iter()
-            .flat_map(|p| &p.layer.batches)
+            .flat_map(|p| p.batches())
             .filter(|b| matches!(b.kind, BatchKind::Stroke { .. }))
             .map(|b| b.range.len())
             .sum()
@@ -946,10 +946,12 @@ fn drawn_of(scene: &StyledScene) -> Vec<(u64, Vec<u32>)> {
         .layers
         .iter()
         .flat_map(|part| {
-            part.layer
+            let layer = part.to_layer();
+            layer
                 .batches
                 .iter()
-                .map(|b| (b.key, part.layer.data[b.range.clone()].iter().map(|v| v.to_bits()).collect()))
+                .map(|b| (b.key, layer.data[b.range.clone()].iter().map(|v| v.to_bits()).collect()))
+                .collect::<Vec<_>>()
         })
         .collect()
 }

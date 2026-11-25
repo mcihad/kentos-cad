@@ -204,7 +204,7 @@ pub(super) fn layer_composition_and_effects_match_the_reference(gpu: &mut Gpu) {
     let mut id = 1000u64;
     let mut part = |layer: StyledLayer| {
         id += 1;
-        Arc::new(StyledLayerPart { id, layer })
+        Arc::new(StyledLayerPart::new(id, layer))
     };
     // The view draws into its own targets (a kept picture), so the frame composes.
     let keep = gpu.keep;

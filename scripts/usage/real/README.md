@@ -66,6 +66,7 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 | `glide X1 Y1 X2 Y2 N MS` | İmleci bir doğru boyunca N adımda, adımlar arası MS ile götürür (duvar boyunca gezdirilen araç) |
 | `settle MS` | Uygulama boşa çıkana dek bekler (çeyrek saniyede bir çekirdeğin onda birinden az iş), en çok MS |
 | `cpu AD` … `cpu AD end` | İki işaret arasında uygulamanın işlemci ve duvar saati süresini yazar ([ADR 8051](../../../docs/adr/8051-large-project-fluency.md)) |
+| `memory AD` | Uygulamanın o anki yerleşik belleğini, bunun yığın payını ve açılıştan beri tepesini `AD` adıyla yazar ([plan/render.md](../../../plan/render.md) RM-19) |
 
 **Yazım kuralları:**
 - Noktalar ekran pikselidir. Çizimdeki bir noktanın pikseli, görünüm bilinen bir duruma getirilince (Home) ölçülür. Ölçek ve

@@ -127,7 +127,7 @@ fn fills(app: &mut App) -> Vec<([f64; 4], usize)> {
     let scene = app.viewport.styled_scene(doc, &palette, styling);
     let mut out = Vec::new();
     for part in &scene.layers {
-        for b in &part.layer.batches {
+        for b in part.batches() {
             if let BatchKind::Fill {
                 paint: FillPaintBatch::Solid { color },
             } = &b.kind
