@@ -126,6 +126,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Tuval kendi dokularına üçlü tamponla çizer. Her doku, çizildiği kamerayla damgalanır.
   - Yeni kare hazır değilse son doku, damgadaki kameradan şimdiki kameraya dönüştürülerek gösterilir.
   - Bugünkü beş yeniden kullanma yolu kalkar.
+  - **Yeniden değerlendirme (25 Kasım, F3'ten sonra):**
+    - Yakın görünümün payı artık küçük: NCZ'de 5–8 ms (ADR 9243).
+    - Uzak karenin bedeli GPU'da, üçte ikisi 4× MSAA (RM-10'un ölçümü). wgpu'da kuyruk tek: ayrı bir iş parçacığı bu
+      süreyi düşürmez, arayüzün karesi de tuvalin komutlarının arkasında bekler.
+    - Ara resim (son dokunun yeni kameraya dönüştürülmesi), tekerlek dönerken son keskin resmi ölçeklemekle aynı şey.
+      Sahip bunu 7 Kasım'da bir ayarın arkasına koydu ve varsayılanını kapalı yaptı (ADR 1068). Ayar kapalıyken her kare
+      keskin çiziliyor.
+    - **Sonuç:** ara resim sahibin kararına bağlı; resmi değiştirmeyen hız RM-10'da aranır (çizgi koşularını tek
+      örnekli biriktirmek, kaydırma yolu çözülürse).
 
 ### F3 — Döşeme, ayıklama, LOD
 
@@ -215,8 +224,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - **Bedeli:** her katmanın çizgi koşusu bir bindirme. Koşular birleştirilip makaslanmazsa bindirmeler kazancı yer.
       Ölçü (aynı sınama): 4× hedefe tam ekran bir karıştırma ~0,4 ms; boş 4× kare 2,95 ms. Koşu başına geçiş kesme,
       temizleme ve bindirme ~1–1,5 ms.
-    - **Engel:** bileşik kare yolu (ADR 0226) kaydırmada resmi taşıyan yolun (ADR 1067) önüne geçiyor. Büyük koşular için
-      açmak kaydırma karelerinin yeniden kullanımını kapatır; bu ödünleşim ölçülmeden yapılmadı.
+    - **Engel:** bileşik kare yolu (ADR 0226) kaydırmada resmi taşıyan yolun (ADR 1067) önüne geçiyor. Büyük koşular
+      için açmak kaydırma karelerinin yeniden kullanımını kapatır; bu ödünleşim ölçülmeden yapılmadı.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
@@ -255,9 +264,21 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       “… 200.000 işaret çizilmedi: bir çizgi boyunca en çok 1.000.000 işaret çizilir. Simgenin Aralık değerini
       büyütün.”
     - Gerçek GPU'da 1 000 000 işaret ~110 MB tutuyor (40 MB'ı CPU'da kalan sayılar).
-- [ ] **RM-12 — Veri katmanları aynı döşemelere geçer.**
+- [~] **RM-12 — Veri katmanları aynı döşemelere geçer.**
   - PostGIS ve GeoPackage döşeme başına sorgulanır.
   - Sadeleştirme sunucuda yapılır, sonuç önbellekte tutulur.
+  - **25 Kasım, durum:** veri yönetimi işi bunu görünüm başına yaptı (VY-03,
+    [ADR 9101](../docs/adr/9101-data-layers.md) §6):
+    - okuma görünümü ve her yanda yarısını kapsıyor;
+    - geometri yarım piksele sadeleştiriliyor;
+    - satırlar parça parça ve kendi iş parçacığında geliyor;
+    - kapsam içinde kaydırma bir şey okumuyor.
+  - Veri katmanlarının toplu çizimleri model ekranında çözülüyor (`look.hold_weights`), yani RM-08'in gözleri ve
+    ayıklaması (ADR 9241–9244) onlara da uygulanıyor. Yazı işaretleri de vektörden çiziliyor (ADR 9245).
+  - [ ] 1 M parsellik ölçüm (`perf_parseller`, kentos-portal-db). Bağlantı parola istiyor; parola depoda yok ve
+    oturumda elle taşınmadı.
+  - [ ] Yarım piksellik kaynak sadeleştirmesi resmi değiştiriyor mu? Tam okumayla karşılaştırılmalı (ADR 9222'nin
+    ölçütü).
 
 ### F4 — Bütün çizim içeriği motorda
 
