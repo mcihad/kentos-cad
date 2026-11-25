@@ -36,6 +36,7 @@
 pub use kentos_style_library::{file, library, object_template};
 
 pub mod batches;
+pub mod cells;
 pub mod bitmap;
 pub mod classify;
 pub mod color;

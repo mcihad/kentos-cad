@@ -134,6 +134,18 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     kutudan başlayıp dört katına büyüyor; bulunan kenar kutunun içindeyse cevap o. Cevap ve eşitlik aynı; 600 000
     çizgide uzak görünümde tık 6,18 → 0,005 ms (AVM'de bu sorgu 37 ms'ydi).
   - Topluluklar karo karo kuruluyor ve görünüm dışındakiler zaten atlanıyor (`in_view`).
+  - [x] Adım 2 ([ADR 9241](../docs/adr/9241-batches-drawn-by-the-cells-a-view-meets.md)): büyük toplu çizim, görünümün
+    değdiği gözlerden çiziliyor. Model ekranında 512'den çok öğeli çizgi ve dolgu bölümleri gözlere göre kararlı
+    sıralanıyor (göz başına 64 öğe, en çok 64 × 64). Aynı rengin katları her sırada aynı pikseli veriyor. Görünüm
+    değdiği gözleri çiziyor; erime bulanıklığın yarısı ve iki piksel eklendi.
+    - NCZ yakın görünüm (8 px/m, UHD 770): 5,51 M → 265 bin öğe, tekerlek karesi GPU p50 74,1 → 18,8 ms.
+    - GPU sınamasında yakın görünümler birebir aynı. Bütün çizimde 1 000 piksel en çok 2/255 farklı: sıra 8 bitlik
+      yuvarlamayı değiştiriyor.
+    - Gerçek pencerede açılış ve yakınlar en çok 2/255. 16 çentikteki 19/255 ızgaradan geliyor (RM-15'teki açık
+      madde).
+  - [ ] İşaretler sırayı koruyarak ayıklanır. Yakın görünümde kalan 265 bin öğenin 176 bini işaret; sıralanamazlar
+    (üst üste binen iki işaretin hangisinin üstte olduğu görünür). Görünen gözlerin öğe sayıları her karede artan
+    sırayla birleştirilir, gölgelendirici örneği bu listeden okur.
 - [~] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
   - [x] Adım 1 ([ADR 9223](../docs/adr/9223-screen-curves-round-at-every-zoom.md)): ekranın daire, yay, elips ve bombeli
@@ -259,7 +271,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F5 — CAD görünümü
 
-- [x] **RM-15 — Çizgi ve dolgu gösterimi.** Tamam (25 Kasım): köşeler bir kez, WIPEOUT maskeleri, desen dolguları vektör.
+- [~] **RM-15 — Çizgi ve dolgu gösterimi.** Köşeler bir kez, WIPEOUT maskeleri, desen dolguları vektör (25 Kasım).
+  Açık: ızgara çizgisinin parça birleşimi.
   - Çizgi kalınlığı ekranda en az 1 piksel ve kenar yumuşatmalı; çizgi tipleri ve taramalar gölgelendiricide: stilli
     yolda zaten öyleymiş (ADR 0793, 1122).
   - [x] Adım 1 ([ADR 9226](../docs/adr/9226-line-joins-drawn-once.md)): köşeler bir kez çizilir. Her segment köşenin
@@ -268,6 +281,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Maskeler: DWG ve DXF'in WIPEOUT'u ADR 0310'un maskesi olarak alınıyor (RM-22 1. adım,
     [ADR 9227](../docs/adr/9227-dwg-regions-wipeouts-and-images.md)).
   - [x] Desen dolguları vektör (RM-11'in açığı, [ADR 9239](../docs/adr/9239-pattern-marks-drawn-from-their-triangles.md)).
+  - [ ] Izgara çizgisinin parçaları bir kez boyanır (RM-08'in doğrulamasında bulundu, ADR 9241 §3).
+    - Düz sahnenin çizgileri 128 m'lik parçalara bölünüyor (`MAX_SEGMENT_LENGTH`). Birleştikleri piksel iki kez
+      boyanıyor: ızgara çizgisinde 16–20/255 koyu bir nokta.
+    - Izgara yeniden kurulunca noktalar yer değiştiriyor. Bu yüzden görünümde noktalı, hayalet bir dik ve yatay çizgi
+      beliriyor, sonra kayboluyor.
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.

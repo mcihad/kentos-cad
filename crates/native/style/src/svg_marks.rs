@@ -526,6 +526,7 @@ mod tests {
             dropped: 0,
             markers_left: 0,
             waves_left: 0,
+            cells: Vec::new(),
         }
     }
 

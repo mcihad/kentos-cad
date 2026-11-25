@@ -8,6 +8,8 @@
 //!   late for, in and then out, and the frames after each until the picture stops changing: what the hand waits for;
 //! - **tümü**: show everything (a middle double click), and the box it shows: whether the origin is in it;
 //! - **seçim**: a click on the drawing's middle, and the view's share of its frame (the interface built again);
+//! - **yakın**: the view at [`NEAR_PX_PER_M`] at the drawing's middle (a neighbourhood: where one works), the wheel
+//!   four notches in and out twice, and the items each frame drew (plan/render.md RM-08);
 //! - **bellek**: resident memory after the open and the highest.
 //!
 //! The files never come into the repository; the report goes to `KENTOS_PERF_OUT`
@@ -33,6 +35,8 @@ use crate::app::{App, Message};
 
 /// Wheel notches a fast hand turns between two frames of a slow drawing.
 const BURST: usize = 14;
+/// Logical px a metre of the near phase: some 180 m across a 1 440 px area.
+const NEAR_PX_PER_M: f64 = 8.0;
 /// How long the picture is watched after a burst, at most.
 const WATCH: Duration = Duration::from_secs(4);
 /// A picture unchanged this long is the last one: longer than the labels' settle after a move (150 ms).
@@ -141,6 +145,7 @@ fn measure(file: &Path) -> Value {
     let inward = burst(&mut app, &mut h, 1.0);
     let outward = burst(&mut app, &mut h, -1.0);
     let selection = select(&mut app, &mut h);
+    let close = near(&mut app, &mut h, &fit);
     let (end, peak) = memory();
     json!({
         "file": file.file_name().map(|n| n.to_string_lossy().into_owned()),
@@ -153,9 +158,35 @@ fn measure(file: &Path) -> Value {
         "frames": frames,
         "burst": { "in": inward, "out": outward },
         "select": selection,
+        "near": close,
         "memory": { "residentBootMb": boot, "residentOpenMb": resident, "residentEndMb": end, "peakMb": peak },
         "onGpu": h.on_gpu(),
     })
+}
+
+/// Close to the ground (plan/render.md RM-08): the view at [`NEAR_PX_PER_M`] at the opened view's middle, settled,
+/// then the wheel four notches in and four out, twice; the frames and the styled items they drew.
+fn near(app: &mut App, h: &mut Harness, fit: &kentos_render_wgpu::Bounds) -> Value {
+    app.viewport.camera.center =
+        kentos_render_wgpu::Vec2::new((fit.min_x + fit.max_x) / 2.0, (fit.min_y + fit.max_y) / 2.0);
+    app.viewport.camera.scale = NEAR_PX_PER_M;
+    h.frame(app, &[moved(app.viewport.bounds.center())]);
+    for _ in 0..3 {
+        h.frame(app, &[]);
+    }
+    let settled = scene_stats(app);
+    let mut frames = Vec::new();
+    let mut items = Vec::new();
+    for _ in 0..2 {
+        for lines in [1.0, -1.0] {
+            for _ in 0..4 {
+                frames.push(h.frame(app, &[wheel(lines)]));
+                items.push(app.viewport.status().stats.styled_items);
+            }
+        }
+    }
+    let mean = items.iter().sum::<u64>() as f64 / items.len().max(1) as f64;
+    json!({ "settled": settled, "wheel": stats(&frames), "itemsMean": mean, "itemsMax": items.iter().max() })
 }
 
 /// The drawing area's last frame as the renderer counted it: pieces, triangles, marks, draw calls and the bytes the

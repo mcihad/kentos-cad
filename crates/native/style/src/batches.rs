@@ -584,6 +584,9 @@ pub struct StyledLayer {
     /// RM-11).
     pub markers_left: u64,
     pub waves_left: u64,
+    /// Each batch's items by cell, a large one's (`cells`, plan/render.md RM-08): a view draws the cells it meets.
+    /// Empty, or by batch.
+    pub cells: Vec<Option<std::sync::Arc<crate::cells::Cells>>>,
 }
 
 /// What the colours and images come from.
@@ -1447,6 +1450,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         dropped: out.dropped,
         markers_left: out.markers_left,
         waves_left: out.waves_left,
+        cells: Vec::new(),
     };
     // The model screen draws every edge and fill triangle at every distance, as paper and the PDF do: its far levels
     // moved what they drew by up to half a pixel and are gone (docs/adr/9222).
@@ -1454,6 +1458,9 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         // Ground-sized SVG symbols as vectors (svg_marks.rs, docs/adr/9208): a bitmap magnified close up turned their
         // slanted edges into steps.
         crate::svg_marks::add(&mut layer);
+        // A large batch's items by cell, last, once its batches are what they will be (cells.rs, plan/render.md RM-08):
+        // a view near the ground drew a whole city's segments.
+        crate::cells::add(&mut layer);
     }
     Ok(layer)
 }

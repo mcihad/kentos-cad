@@ -41,6 +41,8 @@ mod scene3d;
 mod on_gpu;
 #[path = "gpu/vector_tiles.rs"]
 mod vector_tiles;
+#[path = "gpu/cells.rs"]
+mod cells;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -529,6 +531,16 @@ fn glyphs_on_a_real_gpu() {
     glyphs::rings_and_lines_cover_their_areas(&gpu);
     glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
     glyphs::a_glyph_past_its_field_is_read_from_its_outline(&gpu);
+}
+
+/// plan/render.md RM-08: a large batch drawn by the cells a view meets, on a real GPU.
+#[test]
+fn cells_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    cells::a_view_draws_its_cells_as_the_batch_drawn_whole(&mut Gpu::open());
 }
 
 /// plan/render.md RM-11: a magnified pattern tile's SVG marks drawn from their triangles, on a real GPU.

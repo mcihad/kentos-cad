@@ -299,8 +299,7 @@ fn write_segments(lists: &[Vec<Value>]) {
         }
         let now = &lists[list];
         list += 1;
-        let mut k = 0;
-        for line in lines.by_ref() {
+        for (k, line) in lines.by_ref().enumerate() {
             let body = line.trim();
             if body.starts_with(']') {
                 assert_eq!(k, now.len(), "list {list}: its numbers");
@@ -319,7 +318,6 @@ fn write_segments(lists: &[Vec<Value>]) {
                 out.push_str(&format!("{indent}{}{comma}\n", value as i64));
                 changed += 1;
             }
-            k += 1;
         }
     }
     assert_eq!(list, lists.len(), "every list");
