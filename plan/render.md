@@ -129,9 +129,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F3 — Döşeme, ayıklama, LOD
 
-- [ ] **RM-08 — Dünya döşemeleri ve görünüm ayıklaması.** Çizim sırası korunur.
-  - En uzak görünümde tıklamanın isabet sorgusu (RM-06'dan) en yakını önce arayacak. Bugün aday kutusu nesnelerin
-    sekizde birini geçince bütün nesneler belge sırasıyla geziliyor: 601 619 nesnede 37 ms.
+- [~] **RM-08 — Dünya döşemeleri ve görünüm ayıklaması.** Çizim sırası korunur.
+  - [x] Adım 1 ([ADR 9234](../docs/adr/9234-nearest-first-pick.md)): tıklamanın isabeti en yakından aranıyor. Küçük bir
+    kutudan başlayıp dört katına büyüyor; bulunan kenar kutunun içindeyse cevap o. Cevap ve eşitlik aynı; 600 000
+    çizgide uzak görünümde tık 6,18 → 0,005 ms (AVM'de bu sorgu 37 ms'ydi).
+  - Topluluklar karo karo kuruluyor ve görünüm dışındakiler zaten atlanıyor (`in_view`).
 - [~] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
   - [x] Adım 1 ([ADR 9223](../docs/adr/9223-screen-curves-round-at-every-zoom.md)): ekranın daire, yay, elips ve bombeli

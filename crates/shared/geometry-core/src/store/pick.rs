@@ -82,10 +82,35 @@ impl Store {
     /// smallest area containing it (building before parcel before block).
     /// Layers with `pickInterior: false` are edge-pick only (`PickIndex.hit`).
     /// The first of [`Store::hits`], found without sorting them.
+    ///
+    /// Nearest first (plan/render.md RM-08, docs/adr/9234): the objects in a small box round `p` first, the box four
+    /// times wider each round up to the reach. An edge found no farther than the box's half width is the answer:
+    /// every object as near or nearer has its box within that distance, so it was in the small box, in the
+    /// document's order, ties as before. A far view's click met a reach over an eighth of the drawing and scored
+    /// every object (601 619 in the SİVAS AVM DWG, 37 ms).
     pub fn hit(&self, p: Vec2, tol: f64) -> Option<f64> {
+        let reach = tol * 1.5;
+        let mut r = reach / 64.0;
+        loop {
+            // NaN too: the whole reach at once.
+            let last = !(r < reach);
+            let within = if last { reach } else { r };
+            let (edge, area) = self.hit_within(p, tol, within);
+            match edge {
+                Some((id, d)) if last || d <= within => return Some(id),
+                None if last => return area.map(|(id, _)| id),
+                _ => r *= 4.0,
+            }
+        }
+    }
+
+    /// [`Store::hit`]'s answer among the objects whose boxes come within `within` of `p`: the nearest edge in reach
+    /// and the smallest area around `p`, each with its distance or its size.
+    #[allow(clippy::type_complexity)]
+    fn hit_within(&self, p: Vec2, tol: f64, within: f64) -> (Option<(f64, f64)>, Option<(f64, f64)>) {
         let mut edge: Option<(f64, f64)> = None;
         let mut area: Option<(f64, f64)> = None;
-        for it in self.near(p, tol * 1.5).into_iter().filter(|it| self.pickable(it)) {
+        for it in self.near(p, within).into_iter().filter(|it| self.pickable(it)) {
             let s = self.score(it, p, tol);
             if let Some(d) = s.edge
                 && edge.is_none_or(|(_, best)| d < best)
@@ -98,7 +123,7 @@ impl Store {
                 area = Some((it.id, a));
             }
         }
-        edge.or(area).map(|(id, _)| id)
+        (edge, area)
     }
 
     /// Every object a click at `p` could mean, the most specific first
@@ -607,5 +632,44 @@ mod tests {
                 assert_eq!(s.hits(p, 0.25).first().copied(), s.hit(p, 0.25), "{p:?}");
             }
         }
+    }
+
+    /// Nearest first is the same answer (docs/adr/9234): a dense drawing of a big tree (lines on a grid, two lines
+    /// lying on each other, nested areas, points), clicked over a grid at a near and a far view's reach, gives the pick
+    /// the whole reach's candidates give, ties to the document's order included.
+    #[test]
+    fn the_nearest_first_pick_is_the_whole_reach_s_pick() {
+        let mut items = Vec::new();
+        let mut id = 1;
+        for i in 0..40 {
+            for j in 0..40 {
+                let (x, y) = (f64::from(i) * 5.0, f64::from(j) * 5.0);
+                items.push(line(id, (x, y), (x + 3.0, y + 1.0)));
+                id += 1;
+                if (i + j) % 7 == 0 {
+                    items.push(point(id, x + 1.0, y + 2.5));
+                    id += 1;
+                }
+            }
+        }
+        // Two lines on each other: the earlier is picked.
+        items.push(line(id, (100.5, 50.5), (104.5, 50.5)));
+        items.push(line(id + 1, (100.5, 50.5), (104.5, 50.5)));
+        items.push(square(id + 2, -50.0, -50.0, 300.0));
+        items.push(square(id + 3, 60.0, 60.0, 30.0));
+        let s = store(&items);
+        let whole = |p: Vec2, tol: f64| {
+            let (edge, area) = s.hit_within(p, tol, tol * 1.5);
+            edge.or(area).map(|(id, _)| id)
+        };
+        for tol in [0.3, 2.0, 40.0] {
+            for i in 0..50 {
+                for j in 0..50 {
+                    let p = Vec2::new(-10.0 + f64::from(i) * 4.37, -10.0 + f64::from(j) * 4.37);
+                    assert_eq!(s.hit(p, tol), whole(p, tol), "{p:?} at {tol}");
+                }
+            }
+        }
+        assert_eq!(s.hit(Vec2::new(104.0, 50.55), 0.3), Some(f64::from(id)));
     }
 }
