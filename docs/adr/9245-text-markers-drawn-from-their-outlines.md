@@ -34,8 +34,13 @@ NCZ'de yere ölçülü yazı işaretleri var. Gerçek pencere ölçümü bunu g�
 - dolgu sarım kuralıyla.
 
 SVG, simgeninkiyle aynı yoldan üçgenlenir (`svg_marks::mesh`): dolgu ve hale ayrı renk toplu çizimleri. Yazı tipleri
-çözmeye `DecodeOptions::text_outlines` ile gelir. Masaüstünde bu, stilin görüntüleri (`Images`);
-`StyledCache::text_from` ile bütün katman parçalarına geçirilir.
+çözmeye `DecodeOptions::text_outlines` ile gelir. Masaüstünde bu, stilin görüntüleri (`Images`):
+
+- çizimin katmanlarına `StyledCache::text_from` ile, bütün katman parçalarına;
+- veri katmanlarına `DataView::text_from` ile, her okumanın işine ve oradan `LayerTables::text` ile çözmeye. GIS'te
+  yazı işaretinin asıl kullanıldığı yer veri katmanları.
+
+Pafta ve PDF yolları yazı tipi vermez (`None`): kâğıtta işaret büyümez.
 
 ### §2.2 Kutu ve geçiş yükseklikten
 
@@ -83,7 +88,9 @@ Eşik binde bir. Büyütülmüş bitmap bu eşiği aşıyor, vektör sıfır.
 
 - native stil, render-wgpu (GPU dahil) ve plot sınamaları geçti. plot'un `bands` sınaması bundan önce de kırmızıydı
   (`bound_in_gis`).
-- Masaüstünde 310 sınama geçti.
+- Masaüstünde 310 sınama geçti; veri katmanı, veri görünümü ve pafta sınamaları dahil 178'i yeniden koşuldu.
+- Veri katmanı yolu yalnız bir `Option`'ı iletiyor: derleyici denetliyor. Yazı işaretli bir veri katmanı stilini
+  kuran bir sınama yok.
 
 **Sınama düzeni:** aynı ikilideki GPU sınamaları artık sırayla koşuyor (`ONE_AT_A_TIME`). Ölçüm sayacı
 (`DRAWN_INSTANCES`) sürecin geneli: yan yana koşan bir sınama öbürünün çizimlerini de sayıyordu.
@@ -93,7 +100,9 @@ Eşik binde bir. Büyütülmüş bitmap bu eşiği aşıyor, vektör sıfır.
 - `crates/native/style/src/svg_marks.rs`: `text_of`, `text_svg`, yükseklikten kutu ve geçiş.
 - `crates/native/style/src/batches.rs`: `DecodeOptions::text_outlines`, `legible`.
 - `apps/desktop/src/cad/style/scene.rs`: `StyledCache::text_from`.
-- `apps/desktop/src/shell/viewport/state.rs`: stilin görüntüleri yazı tipi olarak verilir.
+- `apps/desktop/src/gis/data_view.rs`: `DataView::text_from`, okumanın işi yazı tiplerini taşır.
+- `crates/native/plot/src/layers.rs`: `LayerTables::text`.
+- `apps/desktop/src/shell/viewport/state.rs`: stilin görüntüleri iki yola da yazı tipi olarak verilir.
 - Sınamalar:
   - `svg_marks.rs`: `a_text_marker_is_written_as_its_bitmap_paints_it`, `a_text_marker_is_drawn_one_way_or_none`;
   - `crates/render/wgpu/tests/gpu/text_marks.rs`.

@@ -468,6 +468,7 @@ impl SheetMaps {
                 kentos_plot::layers::LayerTables {
                     names: &names,
                     styles: &styles,
+                    text: None,
                 },
             )
             .unwrap_or_default();

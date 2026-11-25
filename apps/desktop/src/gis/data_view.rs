@@ -99,6 +99,8 @@ pub struct DataView {
     notices: Mutex<Vec<String>>,
     fresh: Mutex<bool>,
     told: Condvar,
+    /// The faces ground-sized text markers are drawn as vectors with (docs/adr/9245): the style's images.
+    text: Mutex<Option<Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>>>,
 }
 
 static SERVICE: OnceLock<DataView> = OnceLock::new();
@@ -124,7 +126,13 @@ impl DataView {
             notices: Mutex::new(Vec::new()),
             fresh: Mutex::new(false),
             told: Condvar::new(),
+            text: Mutex::new(None),
         }
+    }
+
+    /// The faces the reads draw ground-sized text markers with as vectors (docs/adr/9245): the style's images.
+    pub fn text_from(&self, source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>) {
+        *self.text.lock().unwrap_or_else(PoisonError::into_inner) = Some(source);
     }
 }
 
@@ -214,6 +222,8 @@ struct Job {
     to: Sender<Said>,
     /// The project's styles, for the document of the read's objects; none: neither labels nor a snap keep them.
     labels: Option<ProjectStyles>,
+    /// The faces for text markers drawn as vectors (`DataView::text_from`).
+    text: Option<Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>>,
 }
 
 /// A part of the rows drawn: their objects in a store of their own through the style engine.
@@ -251,6 +261,7 @@ fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
         kentos_plot::layers::LayerTables {
             names: &names,
             styles: &styles,
+            text: job.text.as_deref().map(|t| t as &dyn kentos_native_style::picture::ImageSource),
         },
     )
     .ok()?;
@@ -630,6 +641,7 @@ impl DataView {
                 cancel: read.cancel.clone(),
                 to: self.to.clone(),
                 labels: (labelled(node) || editing(&node.id)).then(|| styles.clone()),
+                text: self.text.lock().unwrap_or_else(PoisonError::into_inner).clone(),
             };
             l.going = Some(read);
             let _ = std::thread::Builder::new()

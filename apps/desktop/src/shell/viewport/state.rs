@@ -537,6 +537,7 @@ impl Viewport {
             .filter(|n| n.data.is_some())
             .collect();
         if !data_nodes.is_empty() || crate::data_view::in_use() {
+            crate::data_view::service().text_from(s.styles.images.clone());
             crate::data_view::service().want(
                 &data_nodes,
                 doc.model.settings(),
