@@ -239,6 +239,7 @@ pub fn preview(
             library,
             view: Default::default(),
             hold_weights: false,
+            text_outlines: None,
         },
     )?;
     Ok(Preview {

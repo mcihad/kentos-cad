@@ -144,7 +144,52 @@ fn median(mut v: Vec<f64>) -> f64 {
     v[v.len() / 2]
 }
 
+/// One fill over the whole view: two triangles, every pixel of the target blended once (what laying a picture over
+/// the target costs).
+fn cover(alpha: f64) -> StyledLayer {
+    let data: Vec<f32> = [[-10.0, -10.0], [SIDE + 10.0, -10.0], [SIDE + 10.0, SIDE + 10.0], [-10.0, -10.0], [SIDE + 10.0, SIDE + 10.0], [-10.0, SIDE + 10.0]]
+        .iter()
+        .flat_map(|p| [p[0] as f32, p[1] as f32])
+        .collect();
+    let batch = StyledBatch {
+        range: 0..data.len(),
+        kind: BatchKind::Fill { paint: kentos_native_style::batches::FillPaintBatch::Solid { color: [0.2, 0.4, 0.6, alpha] } },
+        level: 0.0,
+        key: 1,
+        bounds: [-10.0, -10.0, SIDE + 10.0, SIDE + 10.0],
+        origin: [0.0, 0.0],
+        reach: 0.0,
+        reach_unit: Unit::World,
+        min_scale: None,
+        max_scale: None,
+        group: 0,
+        effect: None,
+        weight_cap: 0.0,
+        line_type_loss: None,
+        lod: None,
+        instances: None,
+    };
+    StyledLayer { data, batches: vec![batch], ..Default::default() }
+}
+
 pub(super) fn a_far_city_by_variant(gpu: &mut Gpu) {
+    let camera0 = Camera {
+        center: Vec2::new(SIDE / 2.0, SIDE / 2.0),
+        width: 1440.0,
+        height: 900.0,
+        scale: 1440.0 / SIDE / 1.05,
+        ..Default::default()
+    };
+    for (name, layers, samples) in [("boş, 4×", 0usize, 4u32), ("tam ekran dolgu ×1, 4×", 1, 4), ("tam ekran dolgu ×10, 4×", 10, 4)] {
+        let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
+        settings.samples = samples;
+        let parts: Vec<Arc<StyledLayerPart>> =
+            (0..layers).map(|k| Arc::new(StyledLayerPart::new(80_000 + k as u64, cover(0.3)))).collect();
+        let scene = StyledScene { layers: parts, ..Default::default() };
+        let ms = frames_ms(gpu, scene, &camera0, &settings, 30);
+        eprintln!("ÖRTÜ {name}: kare medyan {:.2} ms", median(ms));
+    }
+
     let camera = Camera {
         center: Vec2::new(SIDE / 2.0, SIDE / 2.0),
         width: 1440.0,

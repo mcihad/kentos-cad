@@ -51,6 +51,7 @@ fn caps(hold: bool, plot_scale: f64) -> Vec<f64> {
             library: &library,
             view: Default::default(),
             hold_weights: hold,
+            text_outlines: None,
         },
     )
     .expect("decodes");

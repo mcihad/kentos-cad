@@ -33,6 +33,8 @@ mod joins;
 mod plain_joins;
 #[path = "gpu/far_cost.rs"]
 mod far_cost;
+#[path = "gpu/text_marks.rs"]
+mod text_marks;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -53,7 +55,13 @@ const E: f64 = 487_012.346;
 const N: f64 = 4_420_187.521;
 const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
 
+/// One GPU test at a time in this binary: the measurements' counters (`styled::gpu::DRAWN_INSTANCES`) are the process's,
+/// and a test running beside another counted its draws too.
+static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 struct Gpu {
+    /// Held while the test runs (`ONE_AT_A_TIME`).
+    _turn: std::sync::MutexGuard<'static, ()>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     renderer: Renderer,
@@ -66,6 +74,7 @@ struct Gpu {
 
 impl Gpu {
     fn open() -> Self {
+        let turn = ONE_AT_A_TIME.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::from_env().unwrap_or(wgpu::Backends::PRIMARY),
             flags: wgpu::InstanceFlags::empty(),
@@ -97,6 +106,7 @@ impl Gpu {
         .expect("a device");
         let renderer = Renderer::new(&device, FORMAT).expect("the pipelines build");
         Self {
+            _turn: turn,
             device,
             queue,
             renderer,
@@ -359,12 +369,13 @@ impl kentos_native_style::picture::ImageSource for RedTiles {
 
     fn text(
         &self,
-        _: &str,
+        text: &str,
         _: Option<&str>,
         _: f64,
         _: bool,
     ) -> Option<std::sync::Arc<kentos_render_wgpu::styled::TextOutline>> {
-        None
+        // The bundled face's letters (docs/adr/9245's test).
+        text_marks::letters(text)
     }
 }
 impl kentos_render_wgpu::styled::ImageSource for RedTiles {
@@ -586,6 +597,16 @@ fn far_city_cost_on_a_real_gpu() {
         return;
     }
     far_cost::a_far_city_by_variant(&mut Gpu::open());
+}
+
+/// docs/adr/9245: a ground-sized text marker drawn from its outline past the switch, its bitmap below, on a real GPU.
+#[test]
+fn text_markers_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    text_marks::a_magnified_text_marker_draws_its_outline(&mut Gpu::open());
 }
 
 /// docs/adr/9242: a seen-through plain line's corners and cut pieces drawn once, on a real GPU.

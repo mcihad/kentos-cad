@@ -348,6 +348,7 @@ pub fn build_whole(
                     library,
                     view: look.view_colors,
                     hold_weights: look.hold_weights,
+                    text_outlines: None,
                 },
             )
         })

@@ -139,6 +139,7 @@ pub fn vector_tile(
             library: EMPTY.get_or_init(StyleLibrary::default),
             view: look.view,
             hold_weights: false,
+            text_outlines: None,
         },
     )
     .unwrap_or_else(|_| StyledLayer::default());
