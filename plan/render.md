@@ -202,6 +202,18 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     sayının hedefleri yedekte. Release ölçümü (24 Kasım): tekerlek karesi NCZ'de 47–55 ms, sivas.kcad'de 42 ms;
     yazılar GPU'dayken (RM-13) NCZ 40 ms.
   - **Sıradaki:** düzeyleri 2 kat aralıkla sıklaştırmak ve parsel dolgularının uzak düzeyi.
+  - **Uzak karenin bedeli ölçüldü (25 Kasım, `tests/gpu/far_cost.rs`, UHD 770).** 1 M piksel altı çizgi parçası, geri
+    okumasız 30 kare:
+    - 4× MSAA 51,6 ms, 1× 17,9 ms: bedelin üçte ikisi MSAA.
+    - Opak, kesikli ya da 100 000'lik toplu çizim farksız.
+    - Dörtgenin payını çizgiden 1 px'ten 0,55 px'e indirmek (alan −%37) yalnız %6 kazandırdı. MSAA'nın bedeli ilkel
+      başına, alan başına değil.
+    - NCZ'nin açılış karesinin öğelerinin %77'si çizgi, %20'si işaret, %4'ü dolgu.
+    - **Resmi değiştirmeyen bir yol:** çizgiler ve işaretler kenarı gölgelendiricide yumuşatıyor ve dokundukları
+      pikselin dört örneğini de kaplıyor. Bir koşunun bunları tek örnekli bir dokuya biriktirilip MSAA hedefine
+      bindirilse, karıştırma doğrusal olduğu için sonuç aynı olur (8 bitlik ara yuvarlama dışında).
+    - **Bedeli:** her katmanın çizgi koşusu bir bindirme. Koşular birleştirilip makaslanmazsa bindirmeler kazancı yer.
+      Yapılmadı.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.

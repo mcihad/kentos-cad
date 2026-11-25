@@ -31,6 +31,8 @@ mod weights;
 mod joins;
 #[path = "gpu/plain_joins.rs"]
 mod plain_joins;
+#[path = "gpu/far_cost.rs"]
+mod far_cost;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -573,6 +575,17 @@ fn joins_on_a_real_gpu() {
         return;
     }
     joins::seen_through_corners_are_drawn_once(&mut Gpu::open());
+}
+
+/// A measurement, run by hand: what a far view of a million short lines costs the GPU, by variant.
+#[test]
+#[ignore = "a measurement: KENTOS_GPU_TESTS=1 cargo test --release --test gpu far_city -- --ignored --nocapture"]
+fn far_city_cost_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    far_cost::a_far_city_by_variant(&mut Gpu::open());
 }
 
 /// docs/adr/9242: a seen-through plain line's corners and cut pieces drawn once, on a real GPU.
