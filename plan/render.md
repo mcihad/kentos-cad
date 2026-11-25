@@ -380,7 +380,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       vardı.
     - GPU ve CPU ikizi paya ±2/255 içinde.
     - ADR 9246'nın eşitlik sınamasındaki 4 ve 5 adımlık pikseller de bu basamaktı; eşik yeniden 3 adım.
-    - 15 altın görüntü yeniden yazıldı. Taramaların kesikleri eski kuralında.
+    - 15 altın görüntü yeniden yazıldı. Taramaların kesikleri de aynı akşam aynı paya geçti (ADR 9249 §4).
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.

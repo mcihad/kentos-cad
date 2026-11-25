@@ -19,21 +19,23 @@ fn dashCover(s: f32, k: f32, totalRaw: f32, onShare: f32, offsetRaw: f32) -> f32
   }
   let t = fmod(s + offsetRaw * k, total);
   var acc = 0.0;
-  var a = 0.0;
-  var found = false;
+  var spot = 0.0;
+  var span = 0.0;
   for (var i = 0u; i < count; i++) {
     let l = dashPage[start + i] * k;
-    if ((i & 1u) == 0u && i + 1u < count && l < 1.0 && dashPage[start + i + 1u] > 0.0) {
-      let e = abs(t - (acc + 0.5 * l));
-      a = max(a, clamp(1.0 - min(e, total - e), 0.0, 1.0));
-    }
-    if (!found && t < acc + l) {
-      found = true;
-      if ((i & 1u) == 0u) { a = max(a, clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0)); }
+    if ((i & 1u) == 0u) {
+      if (i + 1u < count && l < 1.0 && dashPage[start + i + 1u] > 0.0) {
+        let e = abs(t - (acc + 0.5 * l));
+        spot = max(spot, clamp(1.0 - min(e, total - e), 0.0, 1.0));
+      } else if (l > 0.0) {
+        // A dash's share of the pixel's span (`dashSpan`, docs/adr/9249).
+        let u = t - acc;
+        span += dashSpan(u, l) + dashSpan(u - total, l) + dashSpan(u + total, l);
+      }
     }
     acc += l;
   }
-  return a;
+  return max(spot, min(span, 1.0));
 }
 // One element of the pattern: the uniform's eight for a short recipe, the page for a long one.
 fn dashLen(i: u32) -> f32 {
@@ -42,11 +44,6 @@ fn dashLen(i: u32) -> f32 {
     return d[i];
   }
   return dashPage[st.flags.z + i];
-}
-// A dash's ink over a pixel (docs/adr/9249): the pixel's span [u - 1/2, u + 1/2] against the dash's [0, l], half the
-// ramp outside the dash and half inside, as the line's sides and its butt ends are smoothed.
-fn dashSpan(u: f32, l: f32) -> f32 {
-  return max(clamp(u + 0.5, 0.0, 1.0) + clamp(l - u + 0.5, 0.0, 1.0) - 1.0, 0.0);
 }
 // A stroke's dashes without its dots, which are `dotCover`'s (ADR 1124): the segment that does not own a dot adds
 // no pixel of it. Hatches keep `dashCover` and its one-pixel dot. Under four pixels the mean, as `dashCover`. A dash

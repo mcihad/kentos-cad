@@ -38,7 +38,7 @@ Uçlar ve kesikler pikselin aralığıyla kesiştirilir, yanlar gibi.
   - Pikselden kısa kesiğin “bir piksel boyar” kuralı ([ADR 0186](0186-hatch-extras.md) §3) aynı.
   - Sıfır boylu noktalar ([ADR 1124](1124-line-type-dots-print-round.md)) aynı.
 - **CPU ikizi** (`cpu.rs`) aynısını yapar.
-- **Taramalar** (`dashCover`) kendi kurallarında kaldı.
+- **Taramalar** (`dashCover`) ilk adımda kendi kurallarında kaldı; aynı akşam onlar da aynı paya geçti (§4).
 
 ## §3 Kanıt
 
@@ -78,11 +78,24 @@ tek tek uç piksellerini gösteriyor.
 **Paketler:** render-wgpu'nun bütün sınamaları (GPU dahil), stil çekirdeği, masaüstünde 320 render sınaması ve
 Mimari'nin render uygunluk sınaması geçti.
 
+## §4 Taramaların kesikleri (aynı akşam)
+
+Taramanın kesikli çizgileri (`dashCover`: kısa desenler paylaşılan `common.wgsl`'de, uzunlar yerel `dashes.wgsl`'de)
+aynı yarım basamağı taşıyordu. Onlar da pikselin aralığının payına geçti. Pikselden kısa kesiğin ve sıfır boylu
+kesiğin bir piksel boyama kuralı taramada aynı (ADR 0186 §3). CPU ikizinde iki kip tek işlevde (`dash_spans`).
+
+- `tests/gpu/ends.rs`'e kesikli bir tarama çizgisi eklendi: GPU ve CPU paya ±2/255 içinde. Eski kodda kırılıyor:
+  boşluktaki bir piksel 0, olması gereken pay 51.
+- Altın görüntülerden yalnız `taramalar` değişti (261 piksel, 8'inin yakınında eşi yok; izin 16) ve yeniden yazıldı.
+- render-wgpu'nun bütün sınamaları, stil çekirdeği, masaüstünde 324 render sınaması ve Mimari'nin uygunluk sınaması
+  geçti.
+
 ## Uygulama
 
 - `shaders/wgsl/styled/stroke.wgsl`: `strokeFs`'in uçları.
-- `crates/render/wgpu/src/styled/dashes.wgsl`: `dashSpan`, `strokeDash`.
-- `crates/native/style/src/cpu.rs`: `strokes`, `stroke_dash`.
+- `shaders/wgsl/styled/common.wgsl`: `dashSpan`, `dashCover` (kısa desenler).
+- `crates/render/wgpu/src/styled/dashes.wgsl`: `strokeDash`, `dashCover` (uzun desenler).
+- `crates/native/style/src/cpu.rs`: `strokes`, `dash_spans`.
 - `fixtures/render/golden/*.png`.
 - Sınamalar:
   - `tests/gpu/ends.rs`;

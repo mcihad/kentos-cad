@@ -59,8 +59,15 @@ fn corner(i: u32) -> vec2f {
   return c[i];
 }
 
+// A dash's ink over a pixel (docs/adr/9249): the pixel's span [u - 1/2, u + 1/2] against the dash's [0, l], half the
+// ramp outside the dash and half inside, as a line's sides and its butt ends are smoothed.
+fn dashSpan(u: f32, l: f32) -> f32 {
+  return max(clamp(u + 0.5, 0.0, 1.0) + clamp(l - u + 0.5, 0.0, 1.0) - 1.0, 0.0);
+}
 // Dash coverage: s in device px, pattern (raw units) scaled by k; total/on/offset as for WebGL2.
 // A drawn dash shorter than a pixel followed by a gap is a dot: it inks a pixel wherever it falls (docs/adr/0186 §3).
+// A longer one gives the pixel the share of it the pixel spans, with the dashes of the periods on either side
+// (docs/adr/9249).
 fn dashCover(s: f32, k: f32, totalRaw: f32, onShare: f32, offsetRaw: f32) -> f32 {
   let total = totalRaw * k;
   if (total <= 0.0) { return 1.0; }
@@ -74,20 +81,21 @@ fn dashCover(s: f32, k: f32, totalRaw: f32, onShare: f32, offsetRaw: f32) -> f32
   }
   let t = fmod(s + offsetRaw * k, total);
   var acc = 0.0;
-  var a = 0.0;
-  var found = false;
+  var spot = 0.0;
+  var span = 0.0;
   for (var i = 0u; i < 8u; i++) {
     let l = d[i] * k;
-    if ((i & 1u) == 0u && l < 1.0 && d[i + 1u] > 0.0) {
-      let e = abs(t - (acc + 0.5 * l));
-      a = max(a, clamp(1.0 - min(e, total - e), 0.0, 1.0));
-    }
-    if (!found && t < acc + l) {
-      found = true;
-      if ((i & 1u) == 0u) { a = max(a, clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0)); }
+    if ((i & 1u) == 0u) {
+      if (l < 1.0 && d[i + 1u] > 0.0) {
+        let e = abs(t - (acc + 0.5 * l));
+        spot = max(spot, clamp(1.0 - min(e, total - e), 0.0, 1.0));
+      } else if (l > 0.0) {
+        let u = t - acc;
+        span += dashSpan(u, l) + dashSpan(u - total, l) + dashSpan(u + total, l);
+      }
     }
     acc += l;
   }
-  return a;
+  return max(spot, min(span, 1.0));
 }
 

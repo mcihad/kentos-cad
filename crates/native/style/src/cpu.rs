@@ -264,43 +264,24 @@ fn dash_cover_of(d: &[f64], s: f64, k: f64, (total_raw, on_share, offset_raw): (
         return (on_share + dots / total).min(1.0);
     }
     let t = fmod(s + offset_raw * k, total);
-    if !with_dots {
-        return stroke_dash(d, t, k, total);
-    }
-    let mut acc = 0.0;
-    let mut a: f64 = 0.0;
-    let mut found = false;
-    for (i, raw) in d.iter().enumerate() {
-        let l = raw * k;
-        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
-            let e = (t - (acc + 0.5 * l)).abs();
-            a = a.max(clamp01(1.0 - e.min(total - e)));
-        }
-        if !found && t < acc + l {
-            found = true;
-            if i % 2 == 0 {
-                a = a.max(clamp01((t - acc).min(acc + l - t) + 0.5));
-            }
-        }
-        acc += l;
-    }
-    a
+    dash_spans(d, t, k, total, with_dots)
 }
 
-/// `strokeDash` past its mean (`t` along the pattern, `total` its length, picture pixels; docs/adr/9249): a dash under a
-/// pixel before a gap inks the pixel it falls on, a longer one gives the pixel the share of it the pixel spans, with
-/// the dashes of the periods on either side; zero-length dashes are `dot_cover`'s.
-fn stroke_dash(d: &[f64], t: f64, k: f64, total: f64) -> f64 {
+/// `dashCover` and `strokeDash` past their mean (`t` along the pattern, `total` its length, picture pixels;
+/// docs/adr/9249): a dash under a pixel before a gap inks the pixel it falls on, a longer one gives the pixel the share
+/// of it the pixel spans, with the dashes of the periods on either side. A stroke's zero-length dashes (`with_dots`
+/// false) are `dot_cover`'s.
+fn dash_spans(d: &[f64], t: f64, k: f64, total: f64, with_dots: bool) -> f64 {
     // The pixel's span [u - 1/2, u + 1/2] against the dash's [0, l]: half the ramp outside, half inside.
     let span = |u: f64, l: f64| (clamp01(u + 0.5) + clamp01(l - u + 0.5) - 1.0).max(0.0);
     let (mut acc, mut spot, mut over) = (0.0, 0.0f64, 0.0);
     for (i, raw) in d.iter().enumerate() {
         let l = raw * k;
-        if i % 2 == 0 && *raw != 0.0 {
-            if l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
+        if i % 2 == 0 {
+            if l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) && (with_dots || *raw != 0.0) {
                 let e = (t - (acc + 0.5 * l)).abs();
                 spot = spot.max(clamp01(1.0 - e.min(total - e)));
-            } else {
+            } else if l > 0.0 {
                 let u = t - acc;
                 over += span(u, l) + span(u - total, l) + span(u + total, l);
             }

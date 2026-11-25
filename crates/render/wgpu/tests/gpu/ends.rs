@@ -1,12 +1,12 @@
-//! A stroke's butt ends and its dashes' edges are smoothed across them as its sides are (docs/adr/9249): a pixel's ink
-//! is the share of the pixel's span the line, or the dash, covers, half the ramp outside the edge and half inside. On a
-//! real GPU and on the CPU twin, against the share itself. Before, a butt end's ramp lay wholly outside the end (the
-//! line an eighth of a pixel long, a half step at the end) and a dash's wholly inside (each dash an eighth short at
-//! either end, a half step at each edge).
+//! A stroke's butt ends and its dashes' edges, and a hatch's dashes, are smoothed across them as a line's sides are
+//! (docs/adr/9249): a pixel's ink is the share of the pixel's span the line, or the dash, covers, half the ramp outside
+//! the edge and half inside. On a real GPU and on the CPU twin, against the share itself. Before, a butt end's ramp lay
+//! wholly outside the end (the line an eighth of a pixel long, a half step at the end) and a dash's wholly inside (each
+//! dash an eighth short at either end, a half step at each edge).
 use std::ops::Range;
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8};
 
@@ -49,23 +49,54 @@ fn batch(range: Range<usize>, dash: Option<Vec<f64>>, offset: f64) -> StyledBatc
     }
 }
 
+/// A hatch of one line along y = 0 over the picture's band, dashed (its dashes run along the world's x).
+fn hatch(dash: Vec<f64>, offset: f64) -> StyledLayer {
+    let mut b = batch(0..12, None, 0.0);
+    b.kind = BatchKind::Fill {
+        paint: FillPaintBatch::Hatch {
+            color: [1.0; 4],
+            angle: 0.0,
+            spacing: 1024.0,
+            width: 5.0,
+            offset: 0.0,
+            dash: Some(dash),
+            dash_offset: offset,
+            stagger: 0.0,
+            unit: Unit::World,
+        },
+    };
+    b.reach = 0.0;
+    StyledLayer {
+        data: vec![-128.0, -4.0, 128.0, -4.0, 128.0, 4.0, -128.0, -4.0, 128.0, 4.0, -128.0, 4.0],
+        batches: vec![b],
+        ..Default::default()
+    }
+}
+
 pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
     let previous = gpu.styled.take();
     // A world unit a pixel; the ends and the dashes' edges off the pixels' middles.
     let (x0, x1) = (-100.3, 97.7);
     let pattern = vec![7.3, 4.6];
     let offset = 0.2;
-    for (case, dash) in [None, Some(pattern)].into_iter().enumerate() {
-        let layer = StyledLayer {
-            data: vec![x0 as f32, 0.0, x1 as f32, 0.0, 0.0, 3.0],
-            batches: vec![batch(0..6, dash.clone(), offset)],
-            ..Default::default()
+    // A solid stroke, a dashed one and a dashed hatch line: a hatch's dashes start at the world's x = 0.
+    for (case, dash) in [None, Some(pattern.clone()), Some(pattern)].into_iter().enumerate() {
+        let hatched = case == 2;
+        let layer = if hatched {
+            hatch(dash.clone().expect("a pattern"), offset)
+        } else {
+            StyledLayer {
+                data: vec![x0 as f32, 0.0, x1 as f32, 0.0, 0.0, 3.0],
+                batches: vec![batch(0..6, dash.clone(), offset)],
+                ..Default::default()
+            }
         };
+        let start = if hatched { 0.0 } else { x0 };
         let expected = |c: f64| match &dash {
             None => share(c, x0, x1),
             Some(p) => {
                 let total: f64 = p.iter().sum();
-                let t = (c - x0 + offset).rem_euclid(total);
+                let t = (c - start + offset).rem_euclid(total);
                 let mut acc = 0.0;
                 let mut ink = 0.0;
                 for (i, l) in p.iter().enumerate() {
@@ -102,8 +133,9 @@ pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
         let (mut checked, mut on_edges) = (0, 0);
         for x in 0..W {
             let c = x as f64 + 0.5 - W as f64 / 2.0;
-            // The dashed case's own edges: away from the line's ends, where both would ramp.
-            if dash.is_some() && (c < x0 + 3.0 || c > x1 - 3.0) {
+            // The dashed stroke's own edges: away from the line's ends, where both would ramp; the hatch's away from
+            // its band's.
+            if (case == 1 && (c < x0 + 3.0 || c > x1 - 3.0)) || (hatched && !(2..W - 2).contains(&x)) {
                 continue;
             }
             let want = 255.0 * expected(c);
