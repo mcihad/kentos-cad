@@ -76,7 +76,7 @@ pub fn core_wall(e: &Entity) -> Option<CoreWall> {
     Some(CoreWall {
         pts,
         bulges,
-        spec: wall,
+        spec: *wall,
     })
 }
 

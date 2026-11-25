@@ -795,7 +795,7 @@ fn a_dimension_draws_its_lines_as_its_look_names_them() {
                 mask: None,
                 za: None,
                 zb: None,
-                look,
+                look: Box::new(look),
             },
             attrs: &[],
             how: [MODE_DIMENSION, 0, -1, 0],

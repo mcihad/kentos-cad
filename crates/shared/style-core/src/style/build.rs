@@ -1329,7 +1329,7 @@ pub fn raster_key(shape: &Shape, moment: Option<f64>) -> Option<String> {
     };
     // A GeoPackage tile table read from its file (docs/adr/0627 §3): its own key, what opens it after `#` (two
     // rasters of one table and window but of other sizes read apart).
-    if let (Some(Json::Obj(t)), Some(f)) = (tiles, file) {
+    if let (Some(Json::Obj(t)), Some(f)) = (tiles.as_deref(), file) {
         let mut open = t.clone();
         open.extend([
             ("width".to_owned(), Json::Num(*width)),

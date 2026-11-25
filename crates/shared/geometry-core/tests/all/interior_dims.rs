@@ -18,7 +18,7 @@ fn wall(pts: &[(f64, f64)], spec: &str) -> Shape {
     Shape::Wall {
         pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
         bulges: None,
-        wall: spec,
+        wall: Box::new(spec),
     }
 }
 

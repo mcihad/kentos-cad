@@ -80,7 +80,7 @@ fn every_wall_draws_as_the_reference_says() {
         let shape = Shape::Wall {
             pts: pts.clone(),
             bulges: bulges.clone(),
-            wall: spec.clone(),
+            wall: Box::new(spec.clone()),
         };
         num(
             name,

@@ -56,6 +56,16 @@ pub(super) struct TableKept {
     pub(super) parts: Vec<(usize, Part)>,
 }
 
+/// An object read plainly (no block pieces, no veil, no table's box) that showed no text: its stamp, the last ask that
+/// met it and how many (empty) parts it gave. A city plan's 342 522 lines and areas kept 150 MB as `Kept`s of empty
+/// parts, each with its own empty buffers (plan/render.md RM-19); this is 24 bytes.
+#[derive(Clone, Copy, Debug)]
+struct Blank {
+    stamp: u64,
+    round: u64,
+    parts: u32,
+}
+
 /// The parts kept by object, between asks of one view.
 #[derive(Default)]
 pub struct LabelMemo {
@@ -63,6 +73,8 @@ pub struct LabelMemo {
     cells: Option<[u64; 4]>,
     round: u64,
     kept: HashMap<u64, Kept>,
+    /// The objects that showed no text, kept apart (`Blank`).
+    blank: HashMap<u64, Blank>,
     taken: usize,
     made: usize,
     /// The blocks of the tables read again that were taken as kept, in the last ask.
@@ -70,6 +82,22 @@ pub struct LabelMemo {
 }
 
 impl LabelMemo {
+    /// What it holds (a measurement's, plan/render.md RM-19): its objects, their parts, their records' numbers, their
+    /// outlines and the outlines' points.
+    #[doc(hidden)]
+    pub fn held(&self) -> [usize; 5] {
+        let mut held = [self.kept.len() + self.blank.len(), 0, 0, 0, 0];
+        for k in self.kept.values() {
+            held[1] += k.parts.len();
+            for p in &k.parts {
+                held[2] += p.records.len();
+                held[3] += p.outlines.len();
+                held[4] += p.outlines.iter().map(Vec::len).sum::<usize>();
+            }
+        }
+        held
+    }
+
     /// An ask begins: what it reads with (`rule`: the sizes' rule, `scaled`: whether the scale decides something
     /// under it); another reading than the last forgets every object.
     pub(super) fn begin(
@@ -97,6 +125,7 @@ impl LabelMemo {
         };
         if self.reading != Some(reading) {
             self.kept.clear();
+            self.blank.clear();
             self.reading = Some(reading);
         }
         self.cells = cells.map(|b| [b.min_x, b.min_y, b.max_x, b.max_y].map(f64::to_bits));
@@ -118,6 +147,15 @@ impl LabelMemo {
             .then_some(self.cells)
             .flatten();
         let key = it.id.to_bits();
+        let plain = it.expanded.is_none() && it.veiled.is_none() && cells.is_none();
+        if plain
+            && let Some(b) = self.blank.get_mut(&key)
+            && b.stamp == it.stamp
+        {
+            b.round = self.round;
+            self.taken += 1;
+            return vec![empty_part(); b.parts as usize];
+        }
         if let Some(k) = self.kept.get_mut(&key)
             && k.stamp == it.stamp
             && k.cells == cells
@@ -143,6 +181,19 @@ impl LabelMemo {
             .filter(|p| olds.contains(&p.records.as_ptr()))
             .count();
         self.made += 1;
+        if plain && table.is_none() && parts.iter().all(|p| p.records.is_empty() && p.outlines.is_empty()) {
+            self.kept.remove(&key);
+            self.blank.insert(
+                key,
+                Blank {
+                    stamp: it.stamp,
+                    round: self.round,
+                    parts: u32::try_from(parts.len()).unwrap_or(u32::MAX),
+                },
+            );
+            return parts;
+        }
+        self.blank.remove(&key);
         self.kept.insert(
             key,
             Kept {
@@ -162,6 +213,7 @@ impl LabelMemo {
     pub(super) fn end(&mut self) {
         let round = self.round;
         self.kept.retain(|_, k| k.round == round);
+        self.blank.retain(|_, b| b.round == round);
     }
 
     /// How many objects the last ask took as kept and how many it read.
@@ -177,8 +229,15 @@ impl LabelMemo {
     /// Forgets every object (the next ask reads them all).
     pub fn clear(&mut self) {
         self.kept.clear();
+        self.blank.clear();
         self.reading = None;
     }
+}
+
+/// The part of an object that shows no text: one for all of them, its empty buffers shared.
+fn empty_part() -> Part {
+    static EMPTY: std::sync::LazyLock<Part> = std::sync::LazyLock::new(Part::default);
+    EMPTY.clone()
 }
 
 /// The same `Arc`, or both none. A kept one is held by the memo, so its address is never another's.

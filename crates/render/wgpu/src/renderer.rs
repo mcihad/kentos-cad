@@ -621,6 +621,7 @@ impl Renderer {
         state.stats.styled_items = styled.items();
         state.stats.resident_bytes += bytes;
         state.stats.parts_lost = styled.lost;
+        state.stats.parked_bytes = styled.parked_bytes();
         // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
         state.compose = None;
         if let Some(targets) = &state.targets

@@ -872,7 +872,7 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     let hatch = |ring: &Vec<Vec2>, holes: &Option<Vec<Vec<Vec2>>>, pattern: HatchPattern| Shape::Hatch {
         ring: ring.clone(),
         holes: holes.clone(),
-        pattern,
+        pattern: Box::new(pattern),
         assoc: None,
         boundary: None,
     };

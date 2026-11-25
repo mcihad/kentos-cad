@@ -178,9 +178,9 @@ pub fn table_geom(s: &Shape) -> Option<TableGeom<'_>> {
             grid: grid.as_deref(),
             frame: *frame,
             face,
-            source: source.as_ref(),
+            source: source.as_deref(),
             styles: styles.as_deref().unwrap_or(&[]),
-            breaks: breaks.as_ref(),
+            breaks: breaks.as_deref(),
         }),
         _ => None,
     }
@@ -472,10 +472,10 @@ impl TableGeom<'_> {
             header: self.header.then_some(true),
             grid: self.grid.map(str::to_owned),
             frame: self.frame,
-            source: self.source.cloned(),
+            source: self.source.cloned().map(Box::new),
             styles: (!self.styles.is_empty()).then(|| self.styles.to_vec()),
-            breaks: self.breaks.copied(),
-            face: self.face.clone(),
+            breaks: self.breaks.copied().map(Box::new),
+            face: Box::new(self.face.clone()),
         })
     }
 

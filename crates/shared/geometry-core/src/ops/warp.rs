@@ -821,7 +821,7 @@ fn common<M: Map + ?Sized>(
                     let mut pattern = pattern.clone();
                     pattern.angle = (((atan2(d.y, d.x) * 180.0 / PI) % 180.0) + 180.0) % 180.0;
                     pattern.spacing *= det(&j).abs().sqrt();
-                    pattern
+                    *pattern
                 }
             };
             // Its own origin goes with it (docs/adr/0331 §2).
@@ -844,12 +844,12 @@ fn common<M: Map + ?Sized>(
                     Some(hs) => Some(hs.iter().map(map).collect::<Result<Vec<_>, _>>()?),
                     None => None,
                 },
-                pattern,
+                pattern: Box::new(pattern),
                 assoc: match assoc {
-                    Some(a) => Some(HatchAssoc {
+                    Some(a) => Some(Box::new(HatchAssoc {
                         seed: m.at(a.seed)?,
-                        ..a.clone()
-                    }),
+                        ..*a.clone()
+                    })),
                     None => None,
                 },
             })

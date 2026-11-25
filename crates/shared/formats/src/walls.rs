@@ -146,7 +146,7 @@ pub fn core_wall(w: &WallFields) -> Shape {
     Shape::Wall {
         pts: w.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect(),
         bulges: w.bulges.clone(),
-        wall: spec(w),
+        wall: Box::new(spec(w)),
     }
 }
 

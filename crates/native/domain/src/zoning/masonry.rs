@@ -92,7 +92,7 @@ pub(super) fn walls(doc: &Document, traditional: &dyn Fn(Option<&str>) -> bool) 
         out.storeys.entry(e.own_level().map(str::to_owned)).or_default().walls.push(Wall {
             pts,
             bulges,
-            spec,
+            spec: *spec,
             exterior: exterior.contains(&uid),
             stone,
         });

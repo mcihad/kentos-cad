@@ -935,7 +935,7 @@ fn column_pieces_at(
         let mut hatch = piece(Shape::Hatch {
             ring: ring.clone(),
             holes: None,
-            pattern,
+            pattern: Box::new(pattern),
             assoc: None,
             boundary: None,
         });
@@ -949,7 +949,7 @@ fn column_pieces_at(
         let mut hatch = piece(Shape::Hatch {
             ring,
             holes: None,
-            pattern,
+            pattern: Box::new(pattern),
             assoc: None,
             boundary: None,
         });
@@ -960,7 +960,7 @@ fn column_pieces_at(
         out.push(piece(Shape::Hatch {
             ring,
             holes: None,
-            pattern: HatchPattern::user("solid", 0.0, 1.0),
+            pattern: Box::new(HatchPattern::user("solid", 0.0, 1.0)),
             assoc: None,
             boundary: None,
         }));

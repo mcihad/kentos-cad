@@ -478,14 +478,14 @@ pub enum Shape {
         za: Option<f64>,
         zb: Option<f64>,
         /// Its style, arrowheads, sizes, value's place and writing (docs/adr/0183 §3).
-        look: crate::geom::dimension::Look,
+        look: Box<crate::geom::dimension::Look>,
     },
     Hatch {
         ring: Vec<Vec2>,
         holes: Option<Vec<Vec<Vec2>>>,
-        pattern: HatchPattern,
+        pattern: Box<HatchPattern>,
         /// The objects its region follows (docs/adr/0186 §6).
-        assoc: Option<HatchAssoc>,
+        assoc: Option<Box<HatchAssoc>>,
         /// Its boundary exact, the ring and holes drawn from it (docs/adr/0328 §1).
         boundary: Option<Vec<HatchLoop>>,
     },
@@ -559,12 +559,12 @@ pub enum Shape {
         grid: Option<String>,
         /// Its frame's width, metres: the outline drawn as a band (docs/adr/0184 §2).
         frame: Option<f64>,
-        source: Option<crate::api::json::Json>,
+        source: Option<Box<crate::api::json::Json>>,
         /// Its cells' styles (docs/adr/0327 §1).
         styles: Option<Vec<CellLook>>,
         /// Its parts (docs/adr/1030 §7); none: one part.
-        breaks: Option<TableBreaks>,
-        face: crate::text::face::Face,
+        breaks: Option<Box<TableBreaks>>,
+        face: Box<crate::text::face::Face>,
     },
     /// A picture (docs/adr/0192): its frame from `p`, its lower left corner,
     /// `width` along and `height` up, turned `rotation` radians about `p`,
@@ -598,12 +598,12 @@ pub enum Shape {
         /// An address read by ranges (docs/adr/0207 §1).
         url: Option<String>,
         srid: f64,
-        style: crate::api::json::Json,
+        style: Box<crate::api::json::Json>,
         opacity: Option<f64>,
         /// A NetCDF variable and its slice (the contract's JSON; docs/adr/0243 §6).
-        dataset: Option<crate::api::json::Json>,
+        dataset: Option<Box<crate::api::json::Json>>,
         /// A GeoPackage tile table it shows from `file` (the contract's JSON; docs/adr/0627 §3).
-        tiles: Option<crate::api::json::Json>,
+        tiles: Option<Box<crate::api::json::Json>>,
     },
     /// A point cloud (docs/adr/0207 §3): its files' bounds together
     /// (`[x₁, y₁, z₁, x₂, y₂, z₂]`), its points, its files (the contract's
@@ -625,7 +625,7 @@ pub enum Shape {
     Wall {
         pts: Vec<Vec2>,
         bulges: Option<Vec<f64>>,
-        wall: crate::geom::wall::Spec,
+        wall: Box<crate::geom::wall::Spec>,
     },
     /// A door, window or bare opening in a wall (docs/adr/0341): its place along its wall, its width and its jambs'
     /// four points (its own geometry); the store draws, picks and snaps it by its symbol (`geom::opening::symbol`) and
@@ -634,7 +634,7 @@ pub enum Shape {
         at: f64,
         width: f64,
         place: Vec<Vec2>,
-        opening: crate::geom::opening::Spec,
+        opening: Box<crate::geom::opening::Spec>,
     },
     /// A space (docs/adr/0342): its boundary's parts, each an outer ring and holes, and what its label and its
     /// following need; the store draws it by its rings and label (`geom::space::pieces`).
@@ -706,17 +706,17 @@ crate::json_tagged!(Shape, "kind",
     // A NURBS curve's tangents are the typed hosts' (docs/adr/0259): the JSON API reads it without them.
     Nurbs => "nurbs" { degree, ctrl, knots, weights, closed, periodic, fit, fit_tolerance => "fitTolerance"; tangents },
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, flow => "layout", path & face: crate::text::face::Face },
-    Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
+    Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: Box<crate::geom::dimension::Look> },
     Hatch => "hatch" { ring, holes, pattern, assoc, boundary },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params, clip },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
-    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles, breaks & face: crate::text::face::Face },
+    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles, breaks & face: Box<crate::text::face::Face> },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset, tiles },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
     Record => "record" {},
-    Wall => "wall" { pts, bulges & wall: crate::geom::wall::Spec },
-    Opening => "opening" { at, width, place & opening: crate::geom::opening::Spec },
+    Wall => "wall" { pts, bulges & wall: Box<crate::geom::wall::Spec> },
+    Opening => "opening" { at, width, place & opening: Box<crate::geom::opening::Spec> },
     Space => "space" { parts & space: crate::geom::space::Spec },
     Grid => "grid" { pts, bulges & grid: crate::geom::arch::GridSpec },
     Column => "column" { at & column: crate::geom::arch::ColumnSpec },
@@ -895,7 +895,7 @@ pub fn dimension_geom(s: &Shape) -> Option<DimensionGeom> {
             c: *c,
             za: *za,
             zb: *zb,
-            look: look.clone(),
+            look: *look.clone(),
         }),
         _ => None,
     }

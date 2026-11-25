@@ -460,7 +460,7 @@ impl Audit<'_> {
                     entity: e,
                     pts,
                     bulges,
-                    spec: wall,
+                    spec: *wall,
                     level: w.wall.arch.level.clone(),
                 })
             })

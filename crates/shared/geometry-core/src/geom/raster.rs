@@ -226,7 +226,7 @@ mod tests {
             file: Some("a.tif".into()),
             url: None,
             srid: 5256.0,
-            style: crate::api::json::Json::Null,
+            style: Box::new(crate::api::json::Json::Null),
             opacity: None,
             dataset: None,
             tiles: None,

@@ -369,7 +369,7 @@ fn a_wall_face_place_follows_a_new_width() {
                 kentos_geometry_core::Vec2::new(0.0, 4.0),
             ],
             bulges: None,
-            wall: spec,
+            wall: Box::new(spec),
         })
     };
     let before = wall(0.2);

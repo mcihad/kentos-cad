@@ -44,4 +44,7 @@ pub struct FrameStats {
     /// The frame met a styled part whose numbers were on the GPU only, in buffers the view no longer had
     /// (`StyledLayerPart::on_gpu`): drawn as nothing; the app builds its styled layers again (plan/render.md RM-19).
     pub parts_lost: bool,
+    /// Of `resident_bytes`, the styled layers' kept for parts the app holds but the frame did not draw (a hidden layer,
+    /// the drawing under the deep view; `StyledLayerPart::on_gpu`).
+    pub parked_bytes: u64,
 }

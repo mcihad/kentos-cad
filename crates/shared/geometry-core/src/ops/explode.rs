@@ -193,7 +193,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                 pieces.push(Entity::new(Shape::Hatch {
                     ring: strip.to_vec(),
                     holes: None,
-                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    pattern: Box::new(HatchPattern::user("solid", 0.0, *height)),
                     assoc: None,
                     boundary: None,
                 }));
@@ -217,7 +217,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                     box_width: None,
                     line_spacing: None,
                     runs: None,
-                    face: f,
+                    face: *f,
                     path: None,
                 }));
             }
@@ -350,7 +350,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                 pieces.push(Entity::new(Shape::Hatch {
                     ring: ring.clone(),
                     holes: None,
-                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    pattern: Box::new(HatchPattern::user("solid", 0.0, *height)),
                     assoc: None,
                     boundary: None,
                 }));
@@ -466,7 +466,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                 pieces.push(Entity::new(Shape::Hatch {
                     ring: ring.clone(),
                     holes: None,
-                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    pattern: Box::new(HatchPattern::user("solid", 0.0, *height)),
                     assoc: None,
                     boundary: None,
                 }));

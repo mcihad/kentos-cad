@@ -425,12 +425,12 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                     carried(pattern, turn, s, is_reflection(m))
                 }
                 // A solid fill has no lines: its angle and spacing are unread and stay (docs/adr/0291).
-                "solid" => pattern.clone(),
+                "solid" => (**pattern).clone(),
                 _ => {
                     let rad = (pattern.angle * PI) / 180.0;
                     let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
                     let angle = ((((atan2(dir.y, dir.x) * 180.0) / PI) % 180.0) + 180.0) % 180.0;
-                    let mut pattern = pattern.clone();
+                    let mut pattern = (**pattern).clone();
                     pattern.angle = angle;
                     pattern.spacing *= s;
                     pattern
@@ -450,11 +450,13 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                         .map(|h| h.iter().map(|&p| apply(m, p)).collect())
                         .collect()
                 }),
-                pattern,
+                pattern: Box::new(pattern),
                 // The point clicked inside moves with it (docs/adr/0186 §6).
-                assoc: assoc.as_ref().map(|a| HatchAssoc {
-                    seed: apply(m, a.seed),
-                    ..a.clone()
+                assoc: assoc.as_ref().map(|a| {
+                    Box::new(HatchAssoc {
+                        seed: apply(m, a.seed),
+                        ..(**a).clone()
+                    })
                 }),
             }
         }
@@ -643,10 +645,12 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 frame: frame.map(|f| f * s),
                 source: source.clone(),
                 styles: styles.clone(),
-                breaks: breaks.map(|b| crate::entity::TableBreaks {
-                    height: b.height * s,
-                    gap: b.gap.map(|g| g * s),
-                    once: b.once,
+                breaks: breaks.as_deref().map(|b| {
+                    Box::new(crate::entity::TableBreaks {
+                        height: b.height * s,
+                        gap: b.gap.map(|g| g * s),
+                        once: b.once,
+                    })
                 }),
                 face: face.clone(),
             }
@@ -670,7 +674,7 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             Shape::Wall {
                 pts,
                 bulges: bulges.filter(|b| crate::geom::bulge::has_bulges(Some(b))),
-                wall: crate::geom::wall::scaled(wall, s),
+                wall: Box::new(crate::geom::wall::scaled(wall, s)),
             }
         }
         // Its rings and its seed map (docs/adr/0342 §3); a mirror turns its rings over, the document orients them.

@@ -49,7 +49,7 @@ pub fn wall_line(e: &Entity) -> Option<WallLine> {
     };
     Some(WallLine {
         path: opening::wall_path(&pts, bulges.as_deref(), wall.closed)?,
-        spec: wall,
+        spec: *wall,
     })
 }
 

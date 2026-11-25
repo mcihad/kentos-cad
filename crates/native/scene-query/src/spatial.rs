@@ -1422,6 +1422,43 @@ impl Spatial {
         &self.store
     }
 
+    /// What the main view's labels keep between asks, in words (a measurement's, plan/render.md RM-19).
+    #[doc(hidden)]
+    pub fn label_memory_report(&self) -> String {
+        let kept = self.kept.borrow();
+        let memo = self.label_memo.borrow().held();
+        let typed = self.label_typed.borrow();
+        let spots: usize = typed.typed.values().map(|(_, s)| s.len()).sum();
+        let floats: usize = typed.typed.values().map(|(r, _)| r.len()).sum();
+        format!(
+            "son etiketler {} sayı; yerler {}; nesne belleği {} nesne, {} parça, {} sayı, {} çerçeve, {} nokta; \
+             yazılmış {} parça, {} sayı, {} yer ({} bayt her biri); unicode {}",
+            kept.0.len(),
+            self.prior.borrow().len(),
+            memo[0],
+            memo[1],
+            memo[2],
+            memo[3],
+            memo[4],
+            typed.typed.len(),
+            floats,
+            spots,
+            std::mem::size_of::<(LabelSpot, Grow)>(),
+            self.unicode_memo.borrow().entries.len(),
+        )
+    }
+
+    /// Forgets what the main view's labels kept between asks (their records, places, typed parts and texts by object):
+    /// a measurement's way to see what they hold (plan/render.md RM-19). The next ask builds them again.
+    #[doc(hidden)]
+    pub fn forget_label_memory(&self) {
+        *self.kept.borrow_mut() = Default::default();
+        *self.prior.borrow_mut() = Default::default();
+        *self.label_memo.borrow_mut() = Default::default();
+        *self.label_typed.borrow_mut() = Default::default();
+        *self.unicode_memo.borrow_mut() = Default::default();
+    }
+
     /// Geometry for transient highlighting; the persistent source is always borrowed unless this annotation differs.
     pub fn represented<'a>(&self, entity: &'a Entity) -> Option<std::borrow::Cow<'a, Entity>> {
         use std::borrow::Cow;
@@ -2168,7 +2205,7 @@ impl Spatial {
                         unit,
                         prefix,
                         mask: r[8] == 1.0,
-                        look,
+                        look: *look,
                     }
                 } else {
                     return None;
