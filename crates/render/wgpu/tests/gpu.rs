@@ -37,6 +37,8 @@ mod far_cost;
 mod text_marks;
 #[path = "gpu/single.rs"]
 mod single;
+#[path = "gpu/ends.rs"]
+mod ends;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -609,6 +611,16 @@ fn single_runs_on_a_real_gpu() {
         return;
     }
     single::a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(&mut Gpu::open());
+}
+
+/// docs/adr/9249: a stroke's butt ends and its dashes' edges smoothed as its sides, on a real GPU and its CPU twin.
+#[test]
+fn smooth_ends_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    ends::butt_ends_and_dash_edges_smooth_as_the_sides(&mut Gpu::open());
 }
 
 /// docs/adr/9245: a ground-sized text marker drawn from its outline past the switch, its bitmap below, on a real GPU.

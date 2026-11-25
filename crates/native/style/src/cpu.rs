@@ -264,12 +264,15 @@ fn dash_cover_of(d: &[f64], s: f64, k: f64, (total_raw, on_share, offset_raw): (
         return (on_share + dots / total).min(1.0);
     }
     let t = fmod(s + offset_raw * k, total);
+    if !with_dots {
+        return stroke_dash(d, t, k, total);
+    }
     let mut acc = 0.0;
     let mut a: f64 = 0.0;
     let mut found = false;
     for (i, raw) in d.iter().enumerate() {
         let l = raw * k;
-        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) && (with_dots || *raw != 0.0) {
+        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
             let e = (t - (acc + 0.5 * l)).abs();
             a = a.max(clamp01(1.0 - e.min(total - e)));
         }
@@ -282,6 +285,29 @@ fn dash_cover_of(d: &[f64], s: f64, k: f64, (total_raw, on_share, offset_raw): (
         acc += l;
     }
     a
+}
+
+/// `strokeDash` past its mean (`t` along the pattern, `total` its length, picture pixels; docs/adr/9249): a dash under a
+/// pixel before a gap inks the pixel it falls on, a longer one gives the pixel the share of it the pixel spans, with
+/// the dashes of the periods on either side; zero-length dashes are `dot_cover`'s.
+fn stroke_dash(d: &[f64], t: f64, k: f64, total: f64) -> f64 {
+    // The pixel's span [u - 1/2, u + 1/2] against the dash's [0, l]: half the ramp outside, half inside.
+    let span = |u: f64, l: f64| (clamp01(u + 0.5) + clamp01(l - u + 0.5) - 1.0).max(0.0);
+    let (mut acc, mut spot, mut over) = (0.0, 0.0f64, 0.0);
+    for (i, raw) in d.iter().enumerate() {
+        let l = raw * k;
+        if i % 2 == 0 && *raw != 0.0 {
+            if l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
+                let e = (t - (acc + 0.5 * l)).abs();
+                spot = spot.max(clamp01(1.0 - e.min(total - e)));
+            } else {
+                let u = t - acc;
+                over += span(u, l) + span(u - total, l) + span(u + total, l);
+            }
+        }
+        acc += l;
+    }
+    spot.max(over.min(1.0))
 }
 
 /// `dotCover` (ADR 1124): a zero-length dash before a gap is a round dot of the line's weight, `half_w` its radius,
@@ -468,14 +494,22 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
             if x < -ext || x > len + ext || y > ext {
                 return;
             }
-            let mut cov = if x < 0.0 {
-                let cap = if ends & 1 != 0 { st.flags[1] } else { 1 };
-                cap_cover(-x, y, cap)
-            } else if x > len {
-                let cap = if ends & 2 != 0 { st.flags[1] } else { 1 };
-                cap_cover(x - len, y, cap)
+            // A path's butt end smoothed across it as the sides are (docs/adr/9249).
+            let start_cap = if ends & 1 != 0 { st.flags[1] } else { 1 };
+            let end_cap = if ends & 2 != 0 { st.flags[1] } else { 1 };
+            let mut along = 1.0;
+            if start_cap == 0 {
+                along = cover(x);
+            }
+            if end_cap == 0 {
+                along += cover(len - x) - 1.0;
+            }
+            let mut cov = if x < 0.0 && start_cap != 0 {
+                cap_cover(-x, y, start_cap)
+            } else if x > len && end_cap != 0 {
+                cap_cover(x - len, y, end_cap)
             } else {
-                cover(half_w - y)
+                cover(half_w - y) * f64::max(along, 0.0)
             };
             cov *= dash_cover_of(dashes, s0 + x, k, (st.a[1], st.a[2], st.a[3]), false);
             // Its dots round, the line's weight across (ADR 1124), over the pixel `dash_cover` gives them.

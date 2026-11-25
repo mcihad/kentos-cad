@@ -67,11 +67,13 @@ Bir sınır tam piksel ortasından geçince o kıl pikseli öbür yana atıyor. 
 | Yakın | 89 776 | 2 588 | 6 | 0 | 1 |
 | Uzakça, yalnız tek örnekte 0,5 px pay | 97 075 | 6 302 | 109 | 10 | 45 (en çok 45) |
 
-- **4 ve 5 adımlık birer piksel yuvarlamanın kuyruğu.** Örnekli resim her karıştırmayı 8 bite yuvarlıyor. Çok çizginin
-  bindiği koyu pikselde bu zincir uzuyor. Kesikler kaldırılınca yakın durumdaki piksel aynı yerde 4 adımda kalıyor.
-- **Sınamanın yeni eşiği:**
-  - en çok 8 adım;
-  - 4 adım ve üstü on binde birden az;
+- **4 ve 5 adımlık birer piksel.** Önce yuvarlamanın kuyruğu sandım: örnekli resim her karıştırmayı 8 bite
+  yuvarlıyor ve kesikler kaldırılınca yakın durumdaki piksel aynı yerde 4 adımda kalıyordu.
+  - **Düzeltme ([ADR 9249](9249-stroke-ends-smoothed-as-their-sides.md)):** yuvarlama değildi. Sınamanın çizgilerinin
+    hepsi düz uçlu. Düz uçta kaplama yarımdan tama sıçrıyordu; köşeler değişince kayan noktanın bir kılı pikseli
+    öbür yana attı.
+  - Uçlar yumuşayınca iki piksel de kayboldu; en çok fark yeniden 3 adım.
+- **Sınamanın eşiği:** bu ADR'de en çok 8 adıma gevşetilmişti. ADR 9249'la yeniden en çok 3 adım.
   - 3 adım binde birden az;
   - 2 adım onda birden az.
 

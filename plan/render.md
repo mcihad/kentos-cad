@@ -359,13 +359,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - GPU'da kapsüllerin birleşiminden en çok 0,6/255. NCZ açılışında 36 347 piksel açıldı, hepsi ızgarada.
     - Ayrıca: tarama deseninin noktaları düz yolda hiç çizilmiyordu (sıfır uzunluklu parça atılıyordu), artık
       çiziliyor.
-  - [ ] **Açık: uçların yarım basamağı** (ADR 9247'de bulundu). Stilli çizginin yanları simetrik bir piksellik rampayla
-    yumuşuyor, uçlar tek yanlı:
-    - düz uçta rampa dışarıda, kenarda 0,5'ten 1'e sıçrıyor; uç sekizde bir piksel uzun;
-    - kesik ucunda rampa içeride, kenarda 0,5'ten 0'a iniyor; kesik her ucunda sekizde bir piksel kısa.
-
-    Paylaşılan WGSL'de, web'de ve CPU ikizinde aynı. Düzeltmek resmi değiştirir: GPU ve CPU birlikte, altın
-    görüntüler yeniden.
+  - [x] **Uçların yarım basamağı** (ADR 9247'de bulundu;
+    [ADR 9249](../docs/adr/9249-stroke-ends-smoothed-as-their-sides.md)). Düz uç ve kesik ucu artık yanlar gibi: pikselin
+    aralığının payı, rampanın yarısı içeride, yarısı dışarıda.
+    - Önceden düz uç sekizde bir piksel uzun, kesik her ucunda sekizde bir piksel kısaydı; kenarda yarım basamak
+      vardı.
+    - GPU ve CPU ikizi paya ±2/255 içinde.
+    - ADR 9246'nın eşitlik sınamasındaki 4 ve 5 adımlık pikseller de bu basamaktı; eşik yeniden 3 adım.
+    - 15 altın görüntü yeniden yazıldı. Taramaların kesikleri eski kuralında.
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.
