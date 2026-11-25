@@ -55,8 +55,58 @@ fn same(actual: &Value, expected: &Value, abs: f64, rel: f64, path: &str) -> Res
     }
 }
 
+/// A number as the reference wrote it: whole numbers without a fraction, others in their shortest form.
+fn js_number(v: f64) -> String {
+    if v == 0.0 {
+        "0".to_string()
+    } else if v.fract() == 0.0 && v.abs() < 1e21 {
+        format!("{v:.0}")
+    } else {
+        format!("{v}")
+    }
+}
+
+fn js_text(v: &Value) -> String {
+    match v {
+        Value::Number(n) => js_number(n.as_f64().unwrap_or(f64::NAN)),
+        Value::Array(a) => format!("[{}]", a.iter().map(js_text).collect::<Vec<_>>().join(",")),
+        other => serde_json::to_string(other).unwrap(),
+    }
+}
+
+/// `KENTOS_WRITE_CALLS=1`: a case the core now answers otherwise has its `expect` written anew in place, the rest of
+/// the file byte for byte (one case a line). Only for a decision of the Rust core's own, said in an ADR: the robust
+/// slice of docs/adr/0008 (the fill triangulation of polygons whose rings cross or touch, docs/adr/9228).
+fn rewrite_expects(path: &std::path::Path, answers: &[(String, String, Value)]) {
+    let text = std::fs::read_to_string(path).expect("fixture file");
+    let mut out = String::with_capacity(text.len());
+    let mut written = 0;
+    for line in text.split_inclusive('\n') {
+        let found = answers.iter().find(|(f, name, _)| {
+            let (name, f) = (serde_json::to_string(name).unwrap(), serde_json::to_string(f).unwrap());
+            let head = format!("{{\"name\":{name},\"fn\":{f},");
+            line.trim_start().starts_with(&head)
+        });
+        match found.and_then(|(_, _, got)| line.rfind("\"expect\":").map(|at| (at, got))) {
+            Some((at, got)) => {
+                let tail = &line[at..];
+                let end = tail.rfind('}').expect("a case ends its line");
+                out.push_str(&line[..at]);
+                out.push_str(&format!("\"expect\":{}", js_text(got)));
+                out.push_str(&tail[end..]);
+                written += 1;
+            }
+            None => out.push_str(line),
+        }
+    }
+    assert_eq!(written, answers.len(), "{}: every answer written", path.display());
+    std::fs::write(path, out).expect("fixture written");
+    println!("{}: {written} case(s) written", path.display());
+}
+
 #[test]
 fn every_call_fixture_matches_the_typescript_reference() {
+    let writing = std::env::var_os("KENTOS_WRITE_CALLS").is_some();
     let mut files: Vec<PathBuf> = std::fs::read_dir(dir())
         .expect("fixture directory")
         .filter_map(|e| e.ok().map(|e| e.path()))
@@ -84,6 +134,7 @@ fn every_call_fixture_matches_the_typescript_reference() {
         assert_eq!(file["crs"]["unit"], "metre");
         let abs = file["tolerance"]["abs"].as_f64().unwrap();
         let rel = file["tolerance"]["rel"].as_f64().unwrap();
+        let mut answers = Vec::new();
         for c in file["cases"].as_array().expect("cases") {
             count += 1;
             let label = format!(
@@ -103,11 +154,19 @@ fn every_call_fixture_matches_the_typescript_reference() {
             match got {
                 Ok(v) => {
                     if let Err(e) = same(&v, &c["expect"], abs, rel, &label) {
-                        failures.push(e);
+                        if writing {
+                            let (f, name) = (c["fn"].as_str().unwrap(), c["name"].as_str().unwrap());
+                            answers.push((f.to_string(), name.to_string(), v));
+                        } else {
+                            failures.push(e);
+                        }
                     }
                 }
                 Err(e) => failures.push(format!("{label}: {e}")),
             }
+        }
+        if !answers.is_empty() {
+            rewrite_expects(path, &answers);
         }
     }
     assert!(

@@ -20,7 +20,7 @@ use std::sync::Arc;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
 use kentos_geometry_core::jsmath::{atan2, cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
-use kentos_geometry_core::triangulate::triangulate_many;
+use kentos_geometry_core::triangulate::fill_into;
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
 use super::resolve::Scale;
@@ -579,36 +579,19 @@ impl BatchSink {
         self.entries.len() - 1
     }
 
-    /// Triangulates the queued fills in one call, appending each fill's
-    /// triangles (x, y relative to its tile) to its batch in queue order; a
-    /// fan's triangles are its first point's, counter-clockwise as the ear
-    /// clipper's are.
+    /// Triangulates the queued fills, appending each fill's triangles (x, y
+    /// relative to its tile) to its batch in queue order; a fan's triangles
+    /// are its first point's, counter-clockwise as the ear clipper's are. A
+    /// fill whose rings cross is resolved where they cross (`fill_into`,
+    /// docs/adr/9228).
     fn triangulate(&mut self) {
         if self.fills.is_empty() {
             return;
         }
-        let mut pts = Vec::new();
-        let mut ring_sizes = Vec::new();
-        let mut poly_rings = Vec::with_capacity(self.fills.len());
-        let mut ends = Vec::with_capacity(self.fills.len());
-        for (_, rings, fan) in &self.fills {
-            if *fan {
-                continue;
-            }
-            poly_rings.push(rings.len());
-            for r in rings {
-                ring_sizes.push(r.len());
-                pts.extend_from_slice(r);
-            }
-            ends.push(pts.len());
-        }
-        let idx = if poly_rings.is_empty() {
-            Vec::new()
-        } else {
-            triangulate_many(&pts, &ring_sizes, &poly_rings)
-        };
         let fills = std::mem::take(&mut self.fills);
-        let (mut t, mut poly) = (0, 0);
+        let mut pts = Vec::new();
+        let mut ranges = Vec::new();
+        let mut corners = Vec::new();
         for (entry, rings, fan) in &fills {
             let (ox, oy) = (self.entries[*entry].base.x, self.entries[*entry].base.y);
             let data = &mut self.entries[*entry].data;
@@ -632,20 +615,16 @@ impl BatchSink {
                 }
                 continue;
             }
-            // This polygon's triangles: the next ones whose corners are its points.
-            let end = ends.get(poly).copied().unwrap_or(0);
-            poly += 1;
-            while t + 3 <= idx.len() && (idx[t] as usize) < end {
-                let [a, b, c] = [idx[t] as usize, idx[t + 1] as usize, idx[t + 2] as usize];
-                data.extend([
-                    pts[a].x - ox,
-                    pts[a].y - oy,
-                    pts[b].x - ox,
-                    pts[b].y - oy,
-                    pts[c].x - ox,
-                    pts[c].y - oy,
-                ]);
-                t += 3;
+            pts.clear();
+            ranges.clear();
+            for r in rings {
+                ranges.push(pts.len()..pts.len() + r.len());
+                pts.extend_from_slice(r);
+            }
+            corners.clear();
+            fill_into(&pts, &ranges, &mut corners);
+            for p in &corners {
+                data.extend([p.x - ox, p.y - oy]);
             }
         }
     }
@@ -1148,16 +1127,14 @@ impl BatchSink {
             return;
         }
         let mut pts = Vec::new();
-        let mut sizes = Vec::with_capacity(rings.len());
+        let mut ranges = Vec::with_capacity(rings.len());
         for r in rings {
-            sizes.push(r.len());
+            ranges.push(pts.len()..pts.len() + r.len());
             pts.extend_from_slice(r);
         }
-        let idx = triangulate_many(&pts, &sizes, &[rings.len()]);
-        let tris: Vec<[Vec2; 3]> = idx
-            .as_chunks::<3>().0.iter()
-            .map(|t| [pts[t[0] as usize], pts[t[1] as usize], pts[t[2] as usize]])
-            .collect();
+        let mut corners = Vec::new();
+        fill_into(&pts, &ranges, &mut corners);
+        let tris: Vec<[Vec2; 3]> = corners.as_chunks::<3>().0.to_vec();
         if tris.is_empty() {
             return;
         }

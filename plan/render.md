@@ -347,7 +347,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - **WIPEOUT:** ADR 0310'un maskesi; çizim sırası sorusunu ADR 0310 §2'nin bantları zaten çözüyor. AVM'de 4.
     - **IMAGE:** dosyası çizimde olmayan görüntü yerini gösteren çerçeve olur, rapor dosyayı adlandırır. AVM'de 3.
     - **Boş ATTRIB:** “alınmadı” değil bilgi notu (196).
-  - [ ] Adım 2: çok delikli taramalarda üçgen boşluklar (AVM'nin alan paftaları, iki derlemede de).
+  - [x] Adım 2 ([ADR 9228](../docs/adr/9228-fills-filled-round.md)): dolgu, alanını boşluksuz doldurur. AVM'nin
+    eksik dolan 17 taraması (%19,6–95,5) şimdi %100.
+    - **Köprü:** başka bir deliğin köprüsü üstünden kuruluyordu. Artık yalnız deliğe bakan kenarı sayıyor ve deliği
+      tutan köşeye kuruluyor.
+    - **Değen delikler:** earcut taşındı; kırpıcının üçgenleri alanı kaplamazsa onunkiler alınıyor.
+    - **Kesişen halkalar:** çekirdeğin örtüşme motoruyla “dış halka eksi deliklerin birleşimi” olarak çözülüyor.
+    - Geçerli çokgenin üçgenleri aynı; 15 altın görüntü piksel piksel aynı.
   - [ ] Adım 3: “486 531 DWG nesnesi okunmadı” (DGN çizgi stili bileşenleri, vekil nesneler): görünen bir kayıp var mı?
 - [x] **RM-23 — Birim** ([ADR 9210](../docs/adr/9210-cad-unit-from-the-survey-grid.md)).
   - Sayıları Türkiye'nin ölçme ızgarasında duran CAD dosyası, ister milimetre bildirsin ister bildirmesin, Aç'ta
