@@ -87,6 +87,9 @@ fn scene(id: u64, layer: &StyledLayer) -> StyledScene {
 pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
     let previous = gpu.styled.take();
     let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
+    // The cells' pictures against the batches drawn whole, on the same samples: a stretch drawn one sample a pixel
+    // (docs/adr/9246) rounds otherwise, and the culled draw falls under its threshold.
+    settings.single_runs = false;
     let whole = layer();
     let mut sorted = whole.clone();
     kentos_native_style::cells::add(&mut sorted);

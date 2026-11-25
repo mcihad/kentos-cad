@@ -689,7 +689,12 @@ impl StyledGpu {
 
     /// The pipelines for `samples` per pixel, made the first time that count draws.
     fn pipelines(&mut self, device: &wgpu::Device, samples: u32) -> &Pipelines {
-        let (module, layout, format) = (&self.module, &self.layout, self.format);
+        let (module, layout) = (&self.module, &self.layout);
+        // The one-sample float picture's set (docs/adr/9246), or the target's at its samples.
+        let (count, format) = match samples {
+            FLOAT_PICTURE => (1, FLOAT_PICTURE_FORMAT),
+            n => (n, self.format),
+        };
         self.pipelines.entry(samples).or_insert_with(|| {
             let pipe = |spec: &StyledPipelineSpec| {
                 let mut buffers = vec![spec.buffer.clone()];
@@ -715,7 +720,7 @@ impl StyledGpu {
                     },
                     depth_stencil: None,
                     multisample: wgpu::MultisampleState {
-                        count: samples,
+                        count,
                         ..wgpu::MultisampleState::default()
                     },
                     fragment: Some(wgpu::FragmentState {
@@ -761,7 +766,7 @@ impl StyledGpu {
                     },
                     depth_stencil: None,
                     multisample: wgpu::MultisampleState {
-                        count: samples,
+                        count,
                         ..wgpu::MultisampleState::default()
                     },
                     fragment: Some(wgpu::FragmentState {
@@ -2156,6 +2161,54 @@ struct GpuBatch {
     placed: Option<(u64, [f32; 4])>,
 }
 
+/// The pipeline set (`samples` 0) that draws into the one-sample float picture (docs/adr/9246): a stretch of strokes
+/// and marks gathered there in half floats and laid over, so a stroke alone over the drawing gives the pixel it gives on
+/// the picture's samples (an 8-bit picture between rounded its premultiplied colour and its alpha apart).
+pub const FLOAT_PICTURE: u32 = 0;
+/// The one-sample float picture's format.
+pub const FLOAT_PICTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba16Float;
+
+/// Items a stretch of strokes and marks draws at least to be drawn one sample a pixel and laid over (docs/adr/9246): a
+/// lay-over costs about a millisecond on an integrated GPU (a pass broken, a picture cleared and laid over), a million
+/// strokes some thirty less than on four samples.
+pub const SINGLE_FROM: u64 = 100_000;
+
+/// `KENTOS_DIAG_NO_SINGLE` (a measurement's, docs/adr/9246): every stretch drawn on the picture's samples.
+fn no_single_asked() -> bool {
+    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ASKED.get_or_init(|| std::env::var_os("KENTOS_DIAG_NO_SINGLE").is_some())
+}
+
+/// Whether a batch gives every sample of a pixel it draws the same colour (docs/adr/9246): a line, a marker or a block's
+/// lines, whose edges their shaders smooth and whose quads reach a pixel past them (each sample of a pixel they draw
+/// inside the quad), and no effect of its own. Drawn one sample a pixel and laid over, it is the same picture; a fill's
+/// edge is smoothed by the samples themselves.
+fn whole_pixels(g: &GpuBatch, b: &StyledBatch) -> bool {
+    matches!(g.pipe, Pipe::Stroke | Pipe::Marker | Pipe::StrokeInstanced) && (b.group == 0 || b.effect.is_none())
+}
+
+/// The items a drawn batch's draws take: its shown or level ranges' items, an instanced batch's definition times its
+/// placements drawn.
+fn work(g: &GpuBatch, b: &StyledBatch) -> u64 {
+    if let Some(p) = &g.own {
+        let placements: u64 = g
+            .placed_shown
+            .as_ref()
+            .map_or(u64::from(p.count), |r| r.iter().map(|r| u64::from(r.end - r.start)).sum());
+        return u64::from(p.vertices / p.per_item.max(1)) * placements;
+    }
+    let floats = match b.kind {
+        BatchKind::Stroke { .. } => STROKE_FLOATS,
+        BatchKind::Marker { .. } => MARKER_FLOATS,
+        _ => AREA_FLOATS,
+    };
+    match (&g.shown, &b.lod) {
+        (Some(shown), _) => shown.iter().map(|r| (r.len() / floats) as u64).sum(),
+        (None, Some(lod)) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
+        _ => u64::from(g.count),
+    }
+}
+
 /// The numbers a view (`view` from the layers' origin, `px_per_m` device px a metre) draws of a batch with cells
 /// (cells.rs, plan/render.md RM-08), from the batch's first: its level's ranges, each cut to the cells the view meets.
 /// None for a batch without cells: its level's ranges whole.
@@ -2562,6 +2615,47 @@ impl ViewStyled {
             u.viewport,
             self.twist,
         )
+    }
+
+    /// The stretches of the draw order (`seq`, by index) of drawn strokes and marks between batches of other kinds,
+    /// each drawing at least [`SINGLE_FROM`] items (docs/adr/9246): those a frame drawn whole draws one sample a pixel
+    /// and lays over the picture. A batch not drawn leaves a stretch whole. `KENTOS_DIAG_NO_SINGLE` (a measurement's)
+    /// gives none.
+    pub(crate) fn single_runs(&self) -> Vec<Range<usize>> {
+        if no_single_asked() {
+            return Vec::new();
+        }
+        let mut out = Vec::new();
+        let (mut start, mut items) = (None::<usize>, 0u64);
+        let mut close = |end: usize, start: &mut Option<usize>, items: &mut u64| {
+            if let Some(s) = start.take()
+                && *items >= SINGLE_FROM
+            {
+                out.push(s..end);
+            }
+            *items = 0;
+        };
+        for (k, &(l, b)) in self.seq.iter().enumerate() {
+            let pair = self
+                .layers
+                .get(l as usize)
+                .and_then(|layer| Some((layer.batches.get(b as usize)?, layer.source.layer.batches.get(b as usize)?)));
+            let Some((g, source)) = pair else {
+                close(k, &mut start, &mut items);
+                continue;
+            };
+            if !(g.visible && (g.count > 0 || !g.quads.is_empty() || !g.vector.is_empty())) {
+                continue;
+            }
+            if whole_pixels(g, source) {
+                start.get_or_insert(k);
+                items += work(g, source);
+            } else {
+                close(k, &mut start, &mut items);
+            }
+        }
+        close(self.seq.len(), &mut start, &mut items);
+        out
     }
 
     /// The vertices (fills) and instances (strokes, marks) of the batches drawn in the last frame: the styled layers'

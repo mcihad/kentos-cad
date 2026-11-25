@@ -199,15 +199,18 @@ pub(super) fn a_far_city_by_variant(gpu: &mut Gpu) {
     };
     let n: usize = std::env::var("KENTOS_FAR_ITEMS").ok().and_then(|v| v.parse().ok()).unwrap_or(1_000_000);
     let mut id = 70_000u64;
-    for (name, per, dash, alpha, samples) in [
-        ("düz, saydam, 4×", 8_000, false, 0.6, 4),
-        ("düz, saydam, 1×", 8_000, false, 0.6, 1),
-        ("düz, opak, 4×", 8_000, false, 1.0, 4),
-        ("kesikli, saydam, 4×", 8_000, true, 0.6, 4),
-        ("düz, saydam, 4×, toplu 100 000", 100_000, false, 0.6, 4),
+    for (name, per, dash, alpha, samples, single) in [
+        ("düz, saydam, 4×, örneklerde", 8_000, false, 0.6, 4, false),
+        ("düz, saydam, 4×, tek örnekli koşu", 8_000, false, 0.6, 4, true),
+        ("düz, saydam, 1×", 8_000, false, 0.6, 1, false),
+        ("düz, opak, 4×, örneklerde", 8_000, false, 1.0, 4, false),
+        ("kesikli, saydam, 4×, örneklerde", 8_000, true, 0.6, 4, false),
+        ("kesikli, saydam, 4×, tek örnekli koşu", 8_000, true, 0.6, 4, true),
+        ("düz, saydam, 4×, toplu 100 000, örneklerde", 100_000, false, 0.6, 4, false),
     ] {
         let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
         settings.samples = samples;
+        settings.single_runs = single;
         id += 1;
         let layer = city(n, per, dash, alpha);
         let scene = StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, layer))], ..Default::default() };

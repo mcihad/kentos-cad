@@ -35,6 +35,8 @@ mod plain_joins;
 mod far_cost;
 #[path = "gpu/text_marks.rs"]
 mod text_marks;
+#[path = "gpu/single.rs"]
+mod single;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -597,6 +599,16 @@ fn far_city_cost_on_a_real_gpu() {
         return;
     }
     far_cost::a_far_city_by_variant(&mut Gpu::open());
+}
+
+/// docs/adr/9246: a long stretch of strokes and marks drawn one sample a pixel and laid over, on a real GPU.
+#[test]
+fn single_runs_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    single::a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(&mut Gpu::open());
 }
 
 /// docs/adr/9245: a ground-sized text marker drawn from its outline past the switch, its bitmap below, on a real GPU.
