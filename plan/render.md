@@ -241,6 +241,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - 1 M çizgi: tek örnekli koşu 18,8 → 15,4 ms, 1× 17,9 → 14,7 ms.
     - Hata ayıklama derlemesinde uzak tekerlek p50: NCZ 65,0 → 60,4 ms (1×: 61,8 → 56,9), sivas.kcad 80,7 → 76,4 ms
       (1×: 63,4 → 59,5).
+  - [x] **Tek örnekli görünümde dar dörtgen** ([ADR 9250](../docs/adr/9250-one-sample-views-draw-a-narrow-stroke-quad.md)).
+    Uzak karenin süresi çizgilerde (türler tek tek çıkarılarak ölçüldü: sivas.kcad 1×'te 59,7 ms'nin 42'si). Tek
+    örnekli görünüm yalnız piksel ortasını saydığı için dörtgen kaplamadan 0,05 px öteye uzanıyor; çok örnekli hedefler
+    0,75'te.
+    - 1 M çizgi 1×'te 14,7 → 12,4 ms.
+    - Sahibin ayarında (1×) uzak tekerlek p50: NCZ 56,9 → 49,8 ms, sivas.kcad 59,7 → 51,5 ms (hata ayıklama).
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.

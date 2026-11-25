@@ -696,6 +696,11 @@ impl StyledGpu {
             n => (n, self.format),
         };
         self.pipelines.entry(samples).or_insert_with(|| {
+            // A view of one sample a pixel draws a stroke's quad a twentieth of a pixel past its smoothing (docs/adr/9250):
+            // nothing of it is drawn on samples, so no other quad has to match it. The picture's samples and the
+            // stretches laid over them keep three quarters (docs/adr/9247).
+            let margin: &[(&str, f64)] =
+                if samples == 1 { &[("strokeMargin", super::shader::ONE_SAMPLE_VIEW_MARGIN)] } else { &[] };
             // A pipeline of a spec; a stroke's quad drawn as a strip of four corners (docs/adr/9247).
             // The strip's stage reads the low halves, as the stroke's precise stage does (the stroke's spec always has
             // one, so `corners` holds); a spec without them keeps its own list.
@@ -713,7 +718,10 @@ impl StyledGpu {
                     vertex: wgpu::VertexState {
                         module,
                         entry_point: Some(vertex),
-                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                        compilation_options: wgpu::PipelineCompilationOptions {
+                            constants: if strip.is_some() { margin } else { &[] },
+                            ..wgpu::PipelineCompilationOptions::default()
+                        },
                         buffers: &buffers,
                     },
                     primitive: wgpu::PrimitiveState {
@@ -764,7 +772,10 @@ impl StyledGpu {
                     vertex: wgpu::VertexState {
                         module,
                         entry_point: Some(vertex),
-                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                        compilation_options: wgpu::PipelineCompilationOptions {
+                            constants: if vertex == "strokeVsInstanced" { margin } else { &[] },
+                            ..wgpu::PipelineCompilationOptions::default()
+                        },
                         buffers: &[mesh, INSTANCE_BUFFER],
                     },
                     primitive: wgpu::PrimitiveState {
