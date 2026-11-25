@@ -141,6 +141,8 @@ Ortak durumlar: `scripts/fixtures/layer_data_command_cases.py` bağımsız Pytho
 - **Hangi sütunlar okunur:** yalnız stilin (sınıflandırıcı, etiketler, süzgeç) adını andığı alanlar.
 - **Sadeleştirme:** geometri yarım piksele sadeleştirilir; PostGIS'te sunucuda yapılır (ADR 9100 §6). Coğrafi
   sistemde (EPSG:4326, 4258, 4269) eşik dereceye çevrilir.
+  - **Değişti ([ADR 9248](9248-data-layers-read-whole.md), 25 Kasım):** model ekranı geometriyi tam okur. Yarım piksel
+    gerçek ayrıntıyı siliyordu (1:6 645'te parselin 0,5 m'lik çıkıntısı).
 - **Sistem:** tablonun sistemi projeninkinden başkaysa kutu tablonun sistemine çevrilip istenir. Gelen geometri nokta
   nokta projenin sistemine çevrilir (`TableSystem`).
 - **Parçalar:** satırlar 4096'lık parçalarla gelir. Her 8192 satır geçici nesnelere çevrilir ve kendi deposunda çizim
@@ -190,7 +192,8 @@ eklenir. Sonra ilk tablonun kutusuna yaklaşılır. Alan olarak alınmayan sütu
    değiştirilirken okunur.
 2. **SQL sorgusundan yapılan katman bağlı kopya olarak kaldı.** Sürücü sözleşmesi tablo okuyor; sorgunun kendisini
    okumak ayrı bir iş (§10). Kapandı: VY-16, [ADR 9113](9113-query-layers.md).
-3. **Okumanın sınırları:** görünümün yarısı kadar pay, çeyrek oktav basamak, yarım piksel sadeleştirme.
+3. **Okumanın sınırları:** görünümün yarısı kadar pay, çeyrek oktav basamak, yarım piksel sadeleştirme. Sadeleştirme
+   [ADR 9248](9248-data-layers-read-whole.md) ile kalktı.
 4. **Yeni okuma görünüm durunca başlar.** Eski parçalar yeni okuma bitene kadar durur.
 5. **Yalnız stilin andığı sütunlar okunur.** Alan JSON'da adıyla geçiyorsa okunur; birkaç fazla sütun, değeri olmadan
    çizilen bir sınıftan ucuzdur.

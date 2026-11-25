@@ -281,7 +281,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Gerçek GPU'da 1 000 000 işaret ~110 MB tutuyor (40 MB'ı CPU'da kalan sayılar).
 - [~] **RM-12 — Veri katmanları aynı döşemelere geçer.**
   - PostGIS ve GeoPackage döşeme başına sorgulanır.
-  - Sadeleştirme sunucuda yapılır, sonuç önbellekte tutulur.
+  - Sadeleştirme sunucuda yapılır, sonuç önbellekte tutulur. (Kalktı: ADR 9248, model ekranı tam okur.)
   - **25 Kasım, durum:** veri yönetimi işi bunu görünüm başına yaptı (VY-03,
     [ADR 9101](../docs/adr/9101-data-layers.md) §6):
     - okuma görünümü ve her yanda yarısını kapsıyor;
@@ -292,8 +292,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     ayıklaması (ADR 9241–9244) onlara da uygulanıyor. Yazı işaretleri de vektörden çiziliyor (ADR 9245).
   - [ ] 1 M parsellik ölçüm (`perf_parseller`, kentos-portal-db). Bağlantı parola istiyor; parola depoda yok ve
     oturumda elle taşınmadı.
-  - [ ] Yarım piksellik kaynak sadeleştirmesi resmi değiştiriyor mu? Tam okumayla karşılaştırılmalı (ADR 9222'nin
-    ölçütü).
+  - [x] Yarım piksellik kaynak sadeleştirmesi resmi değiştiriyor mu? **Evet**, kalktı
+    ([ADR 9248](../docs/adr/9248-data-layers-read-whole.md)).
+    - İller (Türkiye, 1:6,3 milyon): 2 184 piksel farklı, 71'i 64 adımın üstünde.
+    - Sentetik parseller (1:6 645): 37 360 piksel farklı; 0,5 m'lik gerçek çıkıntı siliniyordu.
+    - Uzakta, veri ekranı doldurduğunda fark yok.
+    - Bedeli: sentetik parselde 2,5 kat çizgi parçası ve %40 uzun okuma; illerde %3,4 parça.
 
 ### F4 — Bütün çizim içeriği motorda
 

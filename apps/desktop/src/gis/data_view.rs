@@ -2,14 +2,14 @@
 //! for the view, never kept in the drawing. Each frame the drawing area says what it shows ([`want`]); a layer whose
 //! last read does not cover the view (a pan past its margin, a zoom past a step, its style or the colours changed) is
 //! read again on a thread of its own, the earlier read stopped. The rows come a part at a time
-//! ([`kentos_data::Source::features`]: the box, the columns the look reads, the geometry simplified for the screen),
+//! ([`kentos_data::Source::features`]: the box, the columns the look reads, the geometry whole),
 //! become objects of the layer in a store of their own and go through the style engine as the drawing's layers do
 //! (`kentos_plot::layers::build_whole`): a categorized, graduated or rule-based look draws them alike. Each part is drawn
 //! as it comes; the scene takes the layer's parts ([`parts`]) in the layer tree's order.
 //!
-//! The read covers the view and half of it again on every side, so a pan within it reads nothing; the geometry is
-//! simplified to half a pixel; a new read starts once the view stops moving. The earlier parts stay drawn until the new
-//! read is whole.
+//! The read covers the view and half of it again on every side, so a pan within it reads nothing; the geometry is not
+//! simplified for the view (docs/adr/9248); a new read starts once the view stops moving. The earlier parts stay drawn
+//! until the new read is whole.
 //!
 //! A layer whose labels are on, or that is being edited, keeps a whole read's objects, up to [`LABEL_ROWS`], in a document
 //! of their own ([`take_labels`](DataView::take_labels)): the label engine places them as it places the drawing's, and
@@ -53,9 +53,10 @@ struct Key {
     /// The rows left out: an edit session's taken and deleted ones (docs/adr/9103 §5), drawn by the drawing's objects
     /// or not at all.
     hidden: Arc<BTreeSet<i64>>,
-    /// Being edited: read whole (not simplified) and kept for the snap.
+    /// Being edited: its objects kept for the snap.
     exact: bool,
-    /// The view's scale in quarter octaves: a zoom past a step reads again (the geometry's simplification follows it).
+    /// The view's scale in quarter octaves: a zoom past a step reads again, so a closer view holds its own cover's rows
+    /// and keeps its labels under [`LABEL_ROWS`] (the geometry is read whole at every step, docs/adr/9248).
     step: i64,
 }
 
@@ -215,7 +216,6 @@ struct Job {
     key: Key,
     cover: [f64; 4],
     columns: Vec<String>,
-    px_per_m: f64,
     settings: ProjectSettings,
     library: Arc<StyleLibrary>,
     cancel: Cancel,
@@ -338,10 +338,6 @@ fn run(job: Job) {
         },
         None => job.cover,
     };
-    // Half a pixel, in the table's units (a degree is about 111 km).
-    let metres = 0.5 / job.px_per_m.max(1e-9);
-    let geographic = matches!(srid, Some(4326) | Some(4258) | Some(4269));
-    let tolerance = if geographic { metres / 111_320.0 } else { metres };
     // The layer filter's part the source answers itself (docs/adr/9109): fewer rows read; the drawing still asks the
     // filter of those it draws.
     let condition = job.key.node.filter.as_ref().and_then(|f| {
@@ -356,7 +352,9 @@ fn run(job: Job) {
         condition,
         columns: Some(job.columns.clone()),
         geometry: data.geometry.is_some(),
-        simplify: (!job.key.exact).then_some(tolerance),
+        // The geometry whole, not simplified for the view (docs/adr/9248): half a pixel's simplification erased what
+        // the table holds below it (a parcel's half-metre jog at 1:6 645, the provinces' bends at 1:6.3 M).
+        simplify: None,
         chunk: CHUNK,
         ..Request::default()
     };
@@ -635,7 +633,6 @@ impl DataView {
                 key,
                 cover,
                 columns: columns_of(node),
-                px_per_m,
                 settings: settings.clone(),
                 library: Arc::clone(&library),
                 cancel: read.cancel.clone(),
