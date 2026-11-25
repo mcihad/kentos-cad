@@ -143,9 +143,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       yuvarlamayı değiştiriyor.
     - Gerçek pencerede açılış ve yakınlar en çok 2/255. 16 çentikteki 19/255 ızgaradan geliyor (RM-15'teki açık
       madde).
-  - [ ] İşaretler sırayı koruyarak ayıklanır. Yakın görünümde kalan 265 bin öğenin 176 bini işaret; sıralanamazlar
-    (üst üste binen iki işaretin hangisinin üstte olduğu görünür). Görünen gözlerin öğe sayıları her karede artan
-    sırayla birleştirilir, gölgelendirici örneği bu listeden okur.
+  - [x] Adım 3 ([ADR 9243](../docs/adr/9243-markers-culled-in-their-order.md)): işaretler sıralarını koruyarak
+    ayıklanıyor. Sayıları yerinde kalıyor; gözler öğelerinin sıra numaralarını tutuyor. Görünen gözlerin öğeleri her
+    karede bir bit dizisinden, toplu çizimin sırasında koşular olarak çiziliyor.
+    - NCZ yakın görünüm: 264 735 → 87 207 öğe. Çizimin payı p50 6,1 → 5,2 ms, p95 13,3 → 7,8 ms.
+    - Harness'ın karesi 12,7 ms'lik bir taban taşıyor: bütün pencerenin ekran dışı çizimi ve geri okuması. GPU
+      zaman damgası değil.
+    - GPU sınamasında üst üste binen iki renkli daireler: her görünümde birebir aynı resim.
+  - [ ] Örnekli toplu çizimler (blok yerleştirmeleri, vektör SVG simgeleri) yerleştirme başına ayıklanır.
+  - [ ] Gerçek GPU süresi için zaman damgası sorgusu (RM-01'in eksiği).
 - [~] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
   - [x] Adım 1 ([ADR 9223](../docs/adr/9223-screen-curves-round-at-every-zoom.md)): ekranın daire, yay, elips ve bombeli

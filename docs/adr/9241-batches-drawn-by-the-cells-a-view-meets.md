@@ -122,12 +122,16 @@ yuvarlıyor.
 **Görünüm kenarı:** 32 × 32 dik çizgi, 0,1 px/m. Görünümün sol kenarı, ilk göz sütununun son çizgilerinin 3 m (0,3 px)
 sağında. Resim birebir aynı. Payı kaldırınca 96 piksel 27 adıma kadar farklı çıktı.
 
-**NCZ, yakın görünüm** (`perf::files`'ın `near` evresi, 8 px/m, hata ayıklama derlemesi, UHD 770, GPU zaman damgaları):
+**NCZ, yakın görünüm** (`perf::files`'ın `near` evresi, 8 px/m, hata ayıklama derlemesi, UHD 770):
 
-| | Çizilen öğe | Tekerlek karesi GPU p50 | p95 |
-|---|---|---|---|
-| Gözsüz | 5 510 082 | 74,1 ms | 77,8 ms |
-| Gözlü | 264 735 | 18,8 ms | 27,0 ms |
+| | Çizilen öğe | Tekerlek karesi p50 | p95 | Çizimin payı p50 |
+|---|---|---|---|---|
+| Gözsüz | 5 510 082 | 74,1 ms | 77,8 ms | 61,4 ms |
+| Gözlü | 264 735 | 18,8 ms | 27,0 ms | 6,1 ms |
+
+Kare süresi GPU zaman damgası değil; harness'ın `renderer.screenshot` süresi. Bütün pencere ekran dışında çiziliyor ve
+görüntü CPU'ya okunuyor. Neredeyse boş bir çizimde bu taban 12,7 ms (p50); “çizimin payı” onu çıkarır
+([ADR 9243](9243-markers-culled-in-their-order.md) §3).
 
 - Uzak tekerlek değişmedi (p50 ~95 ms). Açılış süresi ve en yüksek bellek de değişmedi.
 - Kalan yakın öğelerin çoğu işaret: 176 bin, sıralanmıyor (§2.1).

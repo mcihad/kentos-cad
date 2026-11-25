@@ -13,8 +13,12 @@
 //! **The picture does not change.** A batch is one style: its items have one colour, and over one another the same
 //! colour gives the same pixel in any order, whatever share of it each covers (two layers of alphas a and b leave
 //! `c·a + c·b − c·a·b` over `d·(1−a)(1−b)` either way). A paint read from the ground (a hatch, a gradient, a pattern, a
-//! picture) gives one colour a pixel too. Markers are left as they are: a batch's markers are one symbol, but a
-//! picture's colours differ across it, and which of two overlapping markers is on top would show.
+//! picture) gives one colour a pixel too.
+//!
+//! **Markers keep their order.** A batch's markers are one symbol, but a picture's colours differ across it, and which
+//! of two overlapping markers is on top would show. Their numbers stay where they are; their cells keep the items they
+//! hold, each cell's in their order (`CellPart::order`), and a view draws the runs of the items its cells hold, in the
+//! batch's order (the NCZ: a neighbourhood's 886 markers in 170 runs, of 222 664).
 
 use std::ops::Range;
 use std::sync::Arc;
@@ -32,6 +36,11 @@ const ITEMS_A_CELL: usize = 64;
 const MOST_CELLS_ACROSS: usize = 64;
 /// Draws a part takes at most for a view: nearer ranges are joined past it (each draw costs the CPU a few µs).
 pub const MOST_RANGES: usize = 8;
+/// Draws a part that keeps its order takes at most: its cells' items lie in runs through the whole part (a city's
+/// markers in the document's order), and joining runs far apart draws much of it.
+pub const MOST_RUNS: usize = 32;
+/// Ranges fewer items apart are one draw: the few items between cost the GPU less than another draw costs the CPU.
+const JOIN_GAP: u32 = 16;
 
 /// A batch's parts' cells.
 #[derive(Clone, Debug, PartialEq)]
@@ -57,12 +66,16 @@ pub struct CellPart {
     pub boxes: Vec<[f32; 4]>,
     /// How far an item reaches past its cell's box, most, cells across and up: the cells a view looks at past its own.
     pub spill: [usize; 2],
+    /// A part that keeps its order (a batch's markers): each cell's items (from the part's first) in their order, cell
+    /// k's at `order[starts[k]..starts[k + 1]]`. None: the items are sorted by cell, cell k's are
+    /// `starts[k]..starts[k + 1]`.
+    pub order: Option<Vec<u32>>,
 }
 
 impl CellPart {
     /// The item ranges (from the part's first item) whose cells' boxes meet `view` (from the layers' origin) grown by
     /// `reach`, in their order, those next to one another joined; at most [`MOST_RANGES`], the nearest joined over the
-    /// gap between them.
+    /// gap between them. A part that keeps its order gives the runs of the items those cells hold.
     pub fn ranges_in(&self, view: [f64; 4], reach: f64) -> Vec<Range<u32>> {
         let [x0, y0, x1, y1] = [view[0] - reach, view[1] - reach, view[2] + reach, view[3] + reach];
         let col = |x: f64, count: usize, at: f64, size: f64| -> i64 {
@@ -97,23 +110,96 @@ impl CellPart {
                 }
             }
         }
-        // Too many draws: the two ranges with the least between them are joined, again and again.
-        while out.len() > MOST_RANGES {
-            let k = (0..out.len() - 1).min_by_key(|&k| out[k + 1].start - out[k].end).unwrap_or(0);
-            out[k].end = out[k + 1].end;
-            out.remove(k + 1);
-        }
-        out
+        let most = match &self.order {
+            Some(order) => {
+                out = runs(order, &out, self.starts.last().map_or(0, |&n| n as usize));
+                MOST_RUNS
+            }
+            None => MOST_RANGES,
+        };
+        fewer(out, most)
     }
 }
 
-/// Numbers an item of a batch takes, for a batch whose items may be sorted: a stroke's segment, a fill's triangle.
-fn item_floats(b: &StyledBatch) -> Option<usize> {
+/// `ranges` (in order, apart) joined where fewer than [`JOIN_GAP`] items lie between them, then over their smallest gaps
+/// until `most` are left: in one pass, the gaps to join found by their size.
+fn fewer(ranges: Vec<Range<u32>>, most: usize) -> Vec<Range<u32>> {
+    let most = most.max(1);
+    let gaps: Vec<u32> = ranges.windows(2).map(|w| w[1].start - w[0].end).collect();
+    let near = gaps.iter().filter(|&&g| g < JOIN_GAP).count();
+    // The gaps joined: those under JOIN_GAP, and the smallest of the rest while more than `most` ranges would be left.
+    let over = (ranges.len() - near).saturating_sub(most);
+    let mut sizes: Vec<u32> = gaps.iter().copied().filter(|&g| g >= JOIN_GAP).collect();
+    let limit = match over {
+        0 => None,
+        _ => {
+            let (_, &mut nth, _) = sizes.select_nth_unstable(over - 1);
+            Some(nth)
+        }
+    };
+    // Gaps under the limit are joined, those at it while some of the `over` are left.
+    let mut at_limit = limit.map_or(0, |l| over - sizes.iter().filter(|&&g| g < l).count());
+    let mut out: Vec<Range<u32>> = Vec::with_capacity(ranges.len().min(most + 1));
+    for (k, r) in ranges.into_iter().enumerate() {
+        let join = k > 0 && {
+            let g = gaps[k - 1];
+            match limit {
+                _ if g < JOIN_GAP => true,
+                Some(l) if g < l => true,
+                Some(l) if g == l && at_limit > 0 => {
+                    at_limit -= 1;
+                    true
+                }
+                _ => false,
+            }
+        };
+        match out.last_mut() {
+            Some(last) if join => last.end = r.end,
+            _ => out.push(r),
+        }
+    }
+    out
+}
+
+/// The items of the cells `cells` names (ranges of `order`, the part's items by cell), as runs of the part's own order:
+/// the whole part when they are most of it. `n` is the part's item count.
+fn runs(order: &[u32], cells: &[Range<u32>], n: usize) -> Vec<Range<u32>> {
+    let held: usize = cells.iter().map(|r| r.len()).sum();
+    if held == 0 {
+        return Vec::new();
+    }
+    if held * 2 > n {
+        return std::iter::once(0..n as u32).collect();
+    }
+    let mut met = vec![0u64; n.div_ceil(64)];
+    for r in cells {
+        for &item in &order[r.start as usize..r.end as usize] {
+            met[item as usize / 64] |= 1 << (item % 64);
+        }
+    }
+    let mut out: Vec<Range<u32>> = Vec::new();
+    for (w, &word) in met.iter().enumerate() {
+        let mut bits = word;
+        while bits != 0 {
+            let at = (w * 64) as u32 + bits.trailing_zeros();
+            match out.last_mut() {
+                Some(last) if last.end == at => last.end = at + 1,
+                _ => out.push(at..at + 1),
+            }
+            bits &= bits - 1;
+        }
+    }
+    out
+}
+
+/// Numbers an item of a batch takes, for a batch whose items cells may hold, and whether it keeps its order: a
+/// stroke's segment, a fill's triangle (sorted by cell), a marker's place (in its order).
+fn item_layout(b: &StyledBatch) -> Option<(usize, bool)> {
     if b.instances.is_some() {
         return None;
     }
     match &b.kind {
-        BatchKind::Stroke { .. } => Some(6),
+        BatchKind::Stroke { .. } => Some((6, false)),
         BatchKind::Fill {
             paint:
                 FillPaintBatch::Solid { .. }
@@ -121,16 +207,19 @@ fn item_floats(b: &StyledBatch) -> Option<usize> {
                 | FillPaintBatch::Gradient { .. }
                 | FillPaintBatch::Pattern { .. }
                 | FillPaintBatch::Tile { .. },
-        } => Some(6),
+        } => Some((6, false)),
+        BatchKind::Marker { .. } => Some((5, true)),
         _ => None,
     }
 }
 
-/// An item's box (from its batch's tile): a segment's ends, a triangle's corners.
+/// An item's box (from its batch's tile): a segment's ends, a triangle's corners, a marker's place (the batch's reach
+/// is its symbol's extent).
 fn item_box(kind: &BatchKind, v: &[f32]) -> [f64; 4] {
     let p = |i: usize| (f64::from(v[i]), f64::from(v[i + 1]));
     let points: &[(f64, f64)] = &match kind {
         BatchKind::Stroke { .. } => [p(0), p(2), p(2)],
+        BatchKind::Marker { .. } => [p(0), p(0), p(0)],
         _ => [p(0), p(2), p(4)],
     };
     points.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
@@ -147,7 +236,7 @@ pub fn add(layer: &mut StyledLayer) {
     let mut cells: Vec<Option<Arc<Cells>>> = vec![None; layer.batches.len()];
     let has_low = layer.low.len() == layer.data.len();
     for (i, b) in layer.batches.iter().enumerate() {
-        let Some(floats) = item_floats(b) else {
+        let Some((floats, keep)) = item_layout(b) else {
             continue;
         };
         let parts: Vec<Range<usize>> = match &b.lod {
@@ -171,7 +260,7 @@ pub fn add(layer: &mut StyledLayer) {
             }
             let at = b.range.start + r.start;
             let (data, low) = (&mut layer.data[at..at + r.len()], has_low.then(|| &mut layer.low[at..at + r.len()]));
-            if let Some(part) = sort(&b.kind, data, low, floats, b.origin, r) {
+            if let Some(part) = sort(&b.kind, data, low, floats, keep, b.origin, r) {
                 out.push(part);
             }
         }
@@ -184,12 +273,13 @@ pub fn add(layer: &mut StyledLayer) {
     }
 }
 
-/// One part's items sorted by the cell of a grid over them, stably; its cells.
+/// One part's items sorted by the cell of a grid over them, stably, or kept in their order (`keep`); its cells.
 fn sort(
     kind: &BatchKind,
     data: &mut [f32],
     low: Option<&mut [f32]>,
     floats: usize,
+    keep: bool,
     origin: [f64; 2],
     range: Range<usize>,
 ) -> Option<CellPart> {
@@ -237,9 +327,11 @@ fn sort(
             values[to * floats..(to + 1) * floats].copy_from_slice(&old[from * floats..(from + 1) * floats]);
         }
     };
-    permute(data);
-    if let Some(low) = low {
-        permute(low);
+    if !keep {
+        permute(data);
+        if let Some(low) = low {
+            permute(low);
+        }
     }
     // Each cell's box, and how far past its own cell an item reaches.
     let mut cell_boxes = vec![[f32::MAX, f32::MAX, f32::MIN, f32::MIN]; nx * ny];
@@ -274,6 +366,7 @@ fn sort(
         starts,
         boxes: cell_boxes,
         spill,
+        order: keep.then(|| order.iter().map(|&i| i as u32).collect()),
     })
 }
 
@@ -418,13 +511,31 @@ mod tests {
     }
 
     #[test]
-    fn small_batches_and_markers_stay_as_they_are() {
+    fn small_batches_stay_as_they_are() {
         let data = segments(400, 100.0);
         let mut layer = stroke(data.clone(), None);
         add(&mut layer);
         assert_eq!(layer.data, data);
         assert!(layer.cells.is_empty());
-        let mut layer = stroke(segments(20_000, 10_000.0), None);
+    }
+
+    /// `n` markers' places over a square `side` metres (x, y, turn, width, height), deterministic: in a drawing's order
+    /// (`blocks`: block by block of 500 m, as a city is drawn a neighbourhood after another), or scattered.
+    fn markers(n: usize, side: f64, blocks: bool) -> StyledLayer {
+        let mut seed = 99u64;
+        let mut next = || {
+            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            (seed >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let mut places: Vec<(f64, f64)> = (0..n).map(|_| (next() * side, next() * side)).collect();
+        if blocks {
+            places.sort_by_key(|&(x, y)| ((y / 500.0) as u32, (x / 500.0) as u32));
+        }
+        let mut data = Vec::with_capacity(n * 5);
+        for (i, (x, y)) in places.into_iter().enumerate() {
+            data.extend([x as f32, y as f32, i as f32, 1.0, 1.0]);
+        }
+        let mut layer = stroke(data, None);
         layer.batches[0].kind = BatchKind::Marker {
             unit: Unit::World,
             look: crate::batches::MarkerLook::Shape {
@@ -440,8 +551,56 @@ mod tests {
             extent: [1.0, 1.0],
             vectors: false,
         };
+        layer
+    }
+
+    #[test]
+    fn a_marker_batch_keeps_its_order_and_a_view_draws_the_runs_it_meets() {
+        for blocks in [true, false] {
+            a_marker_view(blocks);
+        }
+    }
+
+    /// In a drawing's order a near view draws a few runs; scattered, its runs lie all through the batch and are joined
+    /// past [`MOST_RUNS`]: every met item is still drawn, never more than the whole.
+    fn a_marker_view(blocks: bool) {
+        let mut layer = markers(20_000, 10_000.0, blocks);
         let before = layer.data.clone();
         add(&mut layer);
-        assert_eq!(layer.data, before, "a marker batch keeps its order");
+        assert_eq!(layer.data, before, "a marker batch keeps its numbers where they were");
+        let part = &layer.cells[0].as_ref().expect("cells").parts[0];
+        let order = part.order.as_ref().expect("the cells hold the items in their order");
+        let n = before.len() / 5;
+        let mut seen: Vec<u32> = order.clone();
+        seen.sort_unstable();
+        assert_eq!(seen, (0..n as u32).collect::<Vec<_>>(), "every item in one cell");
+        for k in 0..part.nx * part.ny {
+            let held = &order[part.starts[k] as usize..part.starts[k + 1] as usize];
+            assert!(held.windows(2).all(|w| w[0] < w[1]), "cell {k}: its items in their order");
+        }
+        let reach = 2.0;
+        for view in [[2_000.0, 3_000.0, 2_400.0, 3_300.0], [-50.0, -50.0, 150.0, 150.0], [9_000.0, 9_500.0, 11_000.0, 12_000.0]] {
+            let ranges = part.ranges_in(view, reach);
+            assert!(ranges.len() <= MOST_RUNS);
+            assert!(ranges.windows(2).all(|w| w[0].end < w[1].start), "{view:?}: runs apart, in order");
+            let drawn: usize = ranges.iter().map(|r| r.len()).sum();
+            let mut met = 0;
+            for item in 0..n {
+                let v = &before[item * 5..item * 5 + 5];
+                let (x, y) = (f64::from(v[0]) + 100.0, f64::from(v[1]) + 200.0);
+                if x >= view[0] - reach && x <= view[2] + reach && y >= view[1] - reach && y <= view[3] + reach {
+                    met += 1;
+                    assert!(ranges.iter().any(|r| r.contains(&(item as u32))), "{view:?}: item {item} meets it");
+                }
+            }
+            eprintln!("markers {}: {view:?} met {met}, drawn {drawn} in {} runs", if blocks { "in blocks" } else { "scattered" }, ranges.len());
+            if blocks {
+                assert!(drawn < n / 20, "{view:?}: {drawn} of {n} drawn for {met} met");
+            }
+            assert!(drawn <= n);
+        }
+        // A view over most of it draws it whole, in one range.
+        assert_eq!(part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0), vec![0..n as u32]);
     }
+
 }
