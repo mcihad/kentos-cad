@@ -122,6 +122,11 @@ Kaydırma, yakın görünüm ve bellek değişmedi. sivas.kcad ve NCZ'nin uzak k
 | 8 çentik | 161 305 | 154 211 | 6 990 | 104 |
 | 16 ve 20 çentik | 0 | | | |
 
+> **Düzeltme (25 Kasım akşamı, [ADR 9247](9247-stroke-quads-as-strips-with-a-narrower-margin.md) §4):** bu tablo,
+> koşuyu 1× hedefte de çizen ara bir ikiliyle alındı. Oturum sahibin ayarlarıyla açılıyor ve sahibin ayarında
+> `graphics.msaa` 1. İşlenen kod 1×'te koşu çizmez; orada resim koşulu da koşusuz da birebir aynı (0 piksel).
+> 4× ayarlı bir kopyayla aynı karşılaştırma aynı büyüklükte farklar veriyor: açılış 64 524, 8 çentik 161 694 piksel.
+
 **Paketler:** render-wgpu'nun bütün sınamaları (GPU dahil), masaüstünde 320 sınama (birleştirme, maske, efekt,
 kararlılık dahil) ve Mimari'nin 6 render uygunluk sınaması geçti.
 
