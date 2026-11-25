@@ -254,7 +254,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F5 — CAD görünümü
 
-- [~] **RM-15 — Çizgi ve dolgu gösterimi.**
+- [x] **RM-15 — Çizgi ve dolgu gösterimi.** Tamam (25 Kasım): köşeler bir kez, WIPEOUT maskeleri, desen dolguları vektör.
   - Çizgi kalınlığı ekranda en az 1 piksel ve kenar yumuşatmalı; çizgi tipleri ve taramalar gölgelendiricide: stilli
     yolda zaten öyleymiş (ADR 0793, 1122).
   - [x] Adım 1 ([ADR 9226](../docs/adr/9226-line-joins-drawn-once.md)): köşeler bir kez çizilir. Her segment köşenin
