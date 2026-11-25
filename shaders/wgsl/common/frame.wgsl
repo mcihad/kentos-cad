@@ -12,7 +12,7 @@
 // data lies from the origin. Absolute world coordinates never reach the GPU
 // (CLAUDE.md §4.9).
 
-const LAYOUT_VERSION: u32 = 2u;
+const LAYOUT_VERSION: u32 = 3u;
 
 struct Frame {
     // Camera centre relative to the scene origin (world units), high and low parts.

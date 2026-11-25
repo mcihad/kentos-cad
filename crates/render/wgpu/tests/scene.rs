@@ -684,3 +684,79 @@ fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
     assert!(!fill_at(&plain, 1.0), "without the box as before");
     assert!(part.segments.len() > plain.segments.len());
 }
+
+/// docs/adr/9242: a ring's long sides cut into pieces meet straight on (1024), its corners at their turn (a left turn
+/// a quarter round, 1536), the closing corner too: each draws its side of the joint, so a seen-through line is drawn
+/// once there.
+#[test]
+fn a_rings_pieces_and_corners_carry_their_joins() {
+    use kentos_render_wgpu::layout::join_code;
+    let mut doc = sample();
+    let Some(Entity::Polygon(mut square)) = doc.entities.iter().find(|e| matches!(e, Entity::Polygon(_))).cloned()
+    else {
+        panic!("a polygon");
+    };
+    let (x, y) = (486_000.0, 4_415_000.0);
+    square.pts = [(x, y), (x + 1_000.0, y), (x + 1_000.0, y + 1_000.0), (x, y + 1_000.0)]
+        .map(|(x, y)| kentos_contracts::Vec2 { x, y })
+        .to_vec();
+    square.bulges = None;
+    square.holes = None;
+    doc.entities = vec![Entity::Polygon(square)];
+    let fixed = scene::build_fixed(&doc, &palette(), origin(&doc));
+    let per_side = (1_000.0 / MAX_SEGMENT_LENGTH).ceil() as usize;
+    assert_eq!(fixed.segments.len(), 4 * per_side);
+    let left = join_code([1.0, 0.0], [0.0, 1.0]);
+    assert_eq!((left, join_code([1.0, 0.0], [1.0, 0.0]), join_code([0.0, 1.0], [1.0, 0.0])), (1536, 1024, 512));
+    assert_eq!(join_code([1.0, 0.0], [-1.0, 0.0]), 0, "a turn back on itself has no join");
+    for (k, s) in fixed.segments.iter().enumerate() {
+        let at = k % per_side;
+        let want = (if at == 0 { left } else { 1024 }, if at + 1 == per_side { left } else { 1024 });
+        assert_eq!((s.joins & 2047, (s.joins >> 11) & 2047), want, "piece {k}");
+    }
+}
+
+/// docs/adr/9242: plain lines (an underlay's plan) that follow one another end to start meet at their corner, a run
+/// returning to its start there too, past a line of no length; a line that meets nothing keeps its round ends (0).
+#[test]
+fn plain_lines_that_follow_one_another_meet() {
+    let p = |x: f64, y: f64| Vec2::new(x, y);
+    let codes = |lines: &[[Vec2; 2]]| -> Vec<(u32, u32)> {
+        let part = scene::build_lines(p(0.0, 0.0), &[(lines, Rgba8::rgb(1, 2, 3))]);
+        part.segments.iter().map(|s| (s.joins & 2047, (s.joins >> 11) & 2047)).collect()
+    };
+    // Up a corner, then a line apart.
+    let apart = [[p(0., 0.), p(10., 0.)], [p(10., 0.), p(10., 10.)], [p(20., 0.), p(30., 0.)]];
+    assert_eq!(codes(&apart), vec![(0, 1536), (1536, 0), (0, 0)]);
+    // A square's four lines back to their start, one of no length in between: four corners.
+    let square = [
+        [p(0., 0.), p(10., 0.)],
+        [p(10., 0.), p(10., 0.)],
+        [p(10., 0.), p(10., 10.)],
+        [p(10., 10.), p(0., 10.)],
+        [p(0., 10.), p(0., 0.)],
+    ];
+    assert_eq!(codes(&square), vec![(1536, 1536); 4]);
+    // Broken by a point that is no number: nothing meets across it.
+    let broken = [[p(0., 0.), p(10., 0.)], [p(10., 0.), p(f64::NAN, 0.)], [p(f64::NAN, 0.), p(10., 10.)], [p(10., 10.), p(0., 10.)]];
+    assert_eq!(codes(&broken), vec![(0, 0), (0, 0)]);
+}
+
+/// A hatch pattern's dots (dashes of no length) are drawn as the shortest of lines: a round dot as wide as a line. The
+/// plain scene dropped them, as `segment` drops a segment of no length (found with docs/adr/9242).
+#[test]
+fn a_hatch_patterns_dots_are_drawn() {
+    let mut doc = sample();
+    let Some(Entity::Hatch(mut hatch)) = doc.entities.iter().find(|e| matches!(e, Entity::Hatch(_))).cloned() else {
+        panic!("a hatch");
+    };
+    hatch.pattern.kind = kentos_contracts::HatchPatternType::Pattern;
+    hatch.pattern.scale = Some(1.0);
+    hatch.pattern.lines =
+        Some(vec![kentos_contracts::PatternLine { angle: 0.0, origin: [0.0, 0.0], offset: [0.0, 1.0], dashes: vec![0.0, -1.0] }]);
+    doc.entities = vec![Entity::Hatch(hatch)];
+    let fixed = scene::build_fixed(&doc, &palette(), origin(&doc));
+    let dots = segments(&fixed).iter().filter(|(a, b)| a == b).count();
+    // A dot a metre over 10 × 10 m less the 2 × 2 m hole: some hundred.
+    assert!((80..=121).contains(&dots), "{dots} dots");
+}

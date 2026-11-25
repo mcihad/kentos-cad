@@ -334,6 +334,7 @@ fn attribute_offset(pipeline: &str, name: &str) -> Option<usize> {
         ("line", "b_hi") => offset_of!(SegmentInstance, b_hi),
         ("line", "b_lo") => offset_of!(SegmentInstance, b_lo),
         ("line", "color") => offset_of!(SegmentInstance, color),
+        ("line", "joins") => offset_of!(SegmentInstance, joins),
         ("marker", "hi") => offset_of!(MarkerInstance, hi),
         ("marker", "lo") => offset_of!(MarkerInstance, lo),
         ("marker", "color") => offset_of!(MarkerInstance, color),
@@ -468,7 +469,8 @@ fn the_pipelines_and_their_vertex_layouts_agree_with_the_contract_and_the_wgsl()
             spec.vertex
         );
     }
-    assert_eq!(layout::LINE.buffers[0].array_stride, 36);
+    // A segment's ends and colour, and its joins (version 3, docs/adr/9242).
+    assert_eq!(layout::LINE.buffers[0].array_stride, 40);
 }
 
 /// The composition shader of a view's own targets (AA-02, `targets`) and the

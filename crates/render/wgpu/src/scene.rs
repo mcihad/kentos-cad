@@ -54,7 +54,7 @@ use kentos_geometry_core::text::Font;
 use kentos_geometry_core::triangulate::triangulate_into;
 
 use crate::color::{Palette, Rgba8};
-use crate::layout::{FillVertex, MarkerInstance, SegmentInstance, marker_shape};
+use crate::layout::{FillVertex, MarkerInstance, SegmentInstance, join_code, joins, marker_shape};
 use crate::precision::{MAX_SEGMENT_LENGTH, MAX_SEGMENT_PIECES, split_offset};
 use crate::{Bounds, Vec2};
 
@@ -347,13 +347,22 @@ pub fn build_grid(
 
 /// Plain lines in groups, each group in its colour, bottom first: an underlay model's plan at a level (docs/adr/8101),
 /// its cut lines over the edges seen under the cut. One layer per group; the lines are the caller's, in world units.
+/// Lines that follow one another end to start are one path: their corners are drawn once (docs/adr/9242), where a
+/// seen-through plan's corners were dark dots.
 pub fn build_lines(origin: Vec2, groups: &[(&[[Vec2; 2]], Rgba8)]) -> ScenePart {
     let mut b = Builder::new(origin);
     for (lines, color) in groups {
         let start = b.start();
+        let mut chain: Vec<Vec2> = Vec::new();
         for [p, q] in lines.iter() {
-            b.segment(*p, *q, *color);
+            if chain.last() != Some(p) {
+                b.path(&chain, false, *color);
+                chain.clear();
+                chain.push(*p);
+            }
+            chain.push(*q);
         }
+        b.path(&chain, false, *color);
         b.finish(start);
     }
     b.into_part(0.0, BTreeMap::new())
@@ -1000,6 +1009,10 @@ fn finite(p: Vec2) -> bool {
     p.x.is_finite() && p.y.is_finite()
 }
 
+/// The join code of two pieces of one straight segment (`layout::join_code` of no turn): each draws its side of
+/// their joint, which is square to the line.
+const STRAIGHT_ON: u32 = 1024;
+
 /// Appends a part's arrays, layer by layer.
 struct Builder {
     origin: Vec2,
@@ -1065,24 +1078,33 @@ impl Builder {
         }
     }
 
-    /// A straight segment, split where it crosses a deep view's box: the piece
-    /// in it has its ends near the view (`geom::deep`).
+    /// A straight segment, its ends round, split where it crosses a deep view's box: the piece in it has its ends near
+    /// the view (`geom::deep`).
     fn segment(&mut self, a: Vec2, b: Vec2, color: Rgba8) {
+        self.joined(a, b, color, [0, 0]);
+    }
+
+    /// [`Builder::segment`] whose start and end meet the path's segments before and after it at these join codes
+    /// (`layout::join_code`; 0 a round end). The pieces it is split and cut into meet straight on (docs/adr/9242):
+    /// each draws its side of their joint, so a seen-through line is not drawn twice where they meet.
+    fn joined(&mut self, a: Vec2, b: Vec2, color: Rgba8, [start, end]: [u32; 2]) {
         if !(finite(a) && finite(b)) || a == b {
             return;
         }
         match self.deep.and_then(|d| split_at_box(&[a, b], false, &d)) {
             Some(points) => {
-                for w in points.windows(2) {
-                    self.cut(w[0], w[1], color);
+                let last = points.len().saturating_sub(2);
+                for (k, w) in points.windows(2).enumerate() {
+                    let codes = [if k == 0 { start } else { STRAIGHT_ON }, if k == last { end } else { STRAIGHT_ON }];
+                    self.cut(w[0], w[1], color, codes);
                 }
             }
-            None => self.cut(a, b, color),
+            None => self.cut(a, b, color, [start, end]),
         }
     }
 
-    /// A straight segment, cut into pieces no longer than `MAX_SEGMENT_LENGTH`.
-    fn cut(&mut self, a: Vec2, b: Vec2, color: Rgba8) {
+    /// A straight segment, cut into pieces no longer than `MAX_SEGMENT_LENGTH` that meet straight on.
+    fn cut(&mut self, a: Vec2, b: Vec2, color: Rgba8, [start, end]: [u32; 2]) {
         if a == b {
             return;
         }
@@ -1100,12 +1122,13 @@ impl Builder {
                 let t = i as f64 / pieces as f64;
                 Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
             };
-            self.piece(from, to, color);
+            let codes = joins(if i == 1 { start } else { STRAIGHT_ON }, if i == pieces { end } else { STRAIGHT_ON });
+            self.piece(from, to, color, codes);
             from = to;
         }
     }
 
-    fn piece(&mut self, a: Vec2, b: Vec2, color: Rgba8) {
+    fn piece(&mut self, a: Vec2, b: Vec2, color: Rgba8, joins: u32) {
         let (a_hi, a_lo) = split_offset(a, self.origin);
         let (b_hi, b_lo) = split_offset(b, self.origin);
         let parts = [a_hi, a_lo, b_hi, b_lo];
@@ -1116,20 +1139,43 @@ impl Builder {
                 b_hi,
                 b_lo,
                 color: color.0,
+                joins,
             });
         }
     }
 
-    /// A path through `pts`; `closed` joins the last point back to the first.
-    fn path(&mut self, pts: &[Vec2], closed: bool, color: Rgba8) {
-        for pair in pts.windows(2) {
-            self.segment(pair[0], pair[1], color);
+    /// A dot: a segment of no length, round, as wide as the lines (a hatch pattern's dots).
+    fn dot(&mut self, p: Vec2, color: Rgba8) {
+        if finite(p) {
+            self.piece(p, p, color, 0);
         }
+    }
+
+    /// A path through `pts`; `closed` joins the last point back to the first. Where one segment ends where the next
+    /// begins they meet at a join (docs/adr/9242), drawn once; a path whose last point is its first meets there too.
+    fn path(&mut self, pts: &[Vec2], closed: bool, color: Rgba8) {
+        let mut drawn: Vec<(Vec2, Vec2)> = pts.windows(2).map(|w| (w[0], w[1])).collect();
         if closed
             && pts.len() > 2
             && let (Some(&last), Some(&first)) = (pts.last(), pts.first())
         {
-            self.segment(last, first, color);
+            drawn.push((last, first));
+        }
+        // The segments `segment` draws: finite, of some length.
+        drawn.retain(|&(a, b)| finite(a) && finite(b) && a != b);
+        let n = drawn.len();
+        let way = |(a, b): (Vec2, Vec2)| [b.x - a.x, b.y - a.y];
+        for k in 0..n {
+            let (a, b) = drawn[k];
+            let before = match k {
+                0 if n > 1 => Some(drawn[n - 1]),
+                0 => None,
+                _ => Some(drawn[k - 1]),
+            };
+            let after = if k + 1 < n { Some(drawn[k + 1]) } else if n > 1 { Some(drawn[0]) } else { None };
+            let start = before.filter(|s| s.1 == a).map_or(0, |s| join_code(way(s), way((a, b))));
+            let end = after.filter(|s| s.0 == b).map_or(0, |s| join_code(way((a, b)), way(s)));
+            self.joined(a, b, color, [start, end]);
         }
     }
 
@@ -1218,7 +1264,7 @@ impl Builder {
                     self.segment(p, q, color);
                 }
                 for p in cut.dots {
-                    self.segment(p, p, color);
+                    self.dot(p, color);
                 }
             }
             HatchPatternType::Lines | HatchPatternType::Cross => {
