@@ -79,6 +79,11 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
 
 /// `n` square parcels on `parsel`, then ten two-bend roads on `yol`, in that document order.
 fn drawing(n: usize, renderer: Option<Value>) -> Document {
+    drawing_with(n, renderer, |_| {})
+}
+
+/// As `drawing`, its snapshot changed by `edit` before it opens.
+fn drawing_with(n: usize, renderer: Option<Value>, edit: impl FnOnce(&mut DocumentSnapshotV1)) -> Document {
     let mut entities = Vec::with_capacity(n + 10);
     let base = |id: u32, layer: &str| EntityBase {
         look: Default::default(),
@@ -223,6 +228,8 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         styles: ProjectStyles::default(),
         blocks: Vec::new(),
     };
+    let mut snapshot = snapshot;
+    edit(&mut snapshot);
     Document::new(snapshot, None).expect("opens")
 }
 
@@ -462,6 +469,30 @@ fn the_markers_a_layer_left_out_are_said_once() {
     // Said once: the next scene of the same layer says nothing.
     scene_of(&mut cache, &doc, &mut spatial, &library);
     assert!(cache.take_dropped().is_empty());
+}
+
+/// plan/render.md RM-19: a layer whose markers cut another (a mask by its markers' boxes, docs/adr/0226 §3) keeps its
+/// parts' numbers for the mask to read on the CPU; every other layer's parts let them go once the GPU has them.
+#[test]
+fn a_mask_s_source_keeps_its_numbers_and_the_rest_let_them_go() {
+    let library = kentos_native_style::system::library();
+    let doc = drawing_with(1, None, |s| {
+        s.layers[0].compose = Some(kentos_commands::LayerCompose {
+            mask: Some(kentos_commands::LayerMask {
+                labels: false,
+                markers: true,
+                size: 1.0,
+                targets: vec!["yol".into()],
+            }),
+            ..Default::default()
+        });
+    });
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let scene = scene_of(&mut cache, &doc, &mut spatial, &library);
+    assert_eq!(scene.layers.len(), 2, "yol beneath, parsel over it");
+    assert!(scene.layers[0].lets_numbers_go(), "yol lets its numbers go");
+    assert!(!scene.layers[1].lets_numbers_go(), "parsel cuts yol with its markers: it keeps them");
 }
 
 #[test]

@@ -26,8 +26,7 @@ use super::uniform::{STYLE_BYTES, StyleBlock, StyledFrameUniform, style_block};
 /// Its numbers (`StyledLayer::data`, `low`) are held apart from its batches (plan/render.md RM-19): a part made
 /// [`on_gpu`](Self::on_gpu) lets them go once the GPU has them, so a large drawing's styled layers are not held twice,
 /// on the CPU and on the GPU (the 453 534 objects of a city plan's NCZ held 644 MB of them on the CPU besides the GPU's
-/// copy). A part whose batches are read on the CPU while drawing (a marker's box for a mask, a symbol drawn by its
-/// vectors) keeps them.
+/// copy). A part a mask reads its markers' boxes from (docs/adr/0226 §3) is made [`new`](Self::new) and keeps them.
 #[derive(Debug)]
 pub struct StyledLayerPart {
     /// Unique per build: a layer the view has not drawn under this id is uploaded.
@@ -53,15 +52,16 @@ impl StyledLayerPart {
         Self::made(id, layer, false)
     }
 
-    /// A part whose numbers live on the GPU once a view uploaded them: the CPU lets them go then, unless a batch reads
-    /// them on the CPU while drawing (a marker's box for a mask, a symbol drawn by its vectors). A view keeps the
+    /// A part whose numbers live on the GPU once a view uploaded them: the CPU lets them go then. A view keeps the
     /// buffers of such a part for as long as anyone else holds the part; one that has not got them says so
     /// (`FrameStats::parts_lost`) and the part is built again.
+    ///
+    /// Only a mask reads a part's numbers on the CPU while drawing (its source's markers' boxes, docs/adr/0226 §3): the
+    /// app makes a mask's source [`new`](Self::new). Until 25 November every part with a marker kept them, a million
+    /// markers 40 MB besides the GPU's copy (plan/render.md RM-19); a view meeting a mask's source without them (the
+    /// mask set after the part was built) says so as above.
     pub fn on_gpu(id: u64, layer: StyledLayer) -> Self {
-        let read = layer.batches.iter().any(|b| {
-            matches!(b.kind, BatchKind::Marker { .. }) || b.instances.as_ref().is_some_and(|i| i.mark.is_some())
-        });
-        Self::made(id, layer, !read)
+        Self::made(id, layer, true)
     }
 
     fn made(id: u64, mut layer: StyledLayer, let_go: bool) -> Self {
@@ -103,6 +103,11 @@ impl StyledLayerPart {
     /// Its numbers, while the CPU has them.
     pub fn numbers(&self) -> MutexGuard<'_, Option<Numbers>> {
         self.numbers.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// Whether the GPU lets its numbers go once a view has them (made [`on_gpu`](Self::on_gpu)).
+    pub fn lets_numbers_go(&self) -> bool {
+        self.let_go
     }
 
     /// Whether its numbers are on the GPU only: a view without its buffers cannot draw it.
@@ -1110,6 +1115,9 @@ impl StyledGpu {
         view.under = scene.under;
         view.order = scene.order.clone();
         view.compose = scene.compose.clone();
+        // A mask's source without its numbers (the mask set after its part was built to let them go): its markers'
+        // boxes cannot be read, so the part is built again, as one whose buffers are gone (plan/render.md RM-19).
+        view.lost |= view.masks_lack_numbers();
         // The draw order as pairs, whether the scene gave one or not (the composer splits it into runs).
         view.seq = match &view.order {
             Some(order) => order.as_ref().clone(),
@@ -2489,6 +2497,23 @@ impl ViewStyled {
     /// Whether it holds the only copy of numbers a part the app still holds has (`StyledLayerPart::on_gpu`): a view
     /// left undrawn keeps its buffers then (the drawing area under a sheet), for the app has nothing to upload them
     /// from again.
+    /// Whether a mask's source layer has markers whose boxes it cannot read: its numbers were let go.
+    fn masks_lack_numbers(&self) -> bool {
+        let reads = |b: &StyledBatch| {
+            matches!(b.kind, BatchKind::Marker { .. }) || b.instances.as_ref().and_then(|i| i.mark).is_some_and(|m| m.boxes)
+        };
+        self.compose
+            .iter()
+            .flat_map(|(_, draw)| draw.masks.iter().filter_map(|m| m.markers.clone()))
+            .any(|r| {
+                self.layers
+                    .get(r.start as usize..(r.end as usize).min(self.layers.len()))
+                    .unwrap_or(&[])
+                    .iter()
+                    .any(|l| l.source.numbers().is_none() && l.source.batches().iter().any(reads))
+            })
+    }
+
     pub fn holds_only_copies(&self) -> bool {
         self.layers
             .iter()

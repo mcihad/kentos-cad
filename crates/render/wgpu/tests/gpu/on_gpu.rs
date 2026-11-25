@@ -146,13 +146,38 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
     }
     assert!(gpu.renderer.stats(1).is_none(), "nothing keeps the undrawn view");
 
-    // A part the CPU reads while drawing (a marker's box for a mask) keeps its numbers, as does one made `new`.
+    // A marker part lets its numbers go too; a part made `new` (a mask's source, docs/adr/0226 §3) keeps them.
     let marks = Arc::new(StyledLayerPart::on_gpu(95_002, mark()));
     let kept = Arc::new(StyledLayerPart::new(95_003, line()));
     let _ = draw(gpu, scene(&[&marks, &kept]));
-    assert!(marks.numbers().is_some(), "a marker part keeps its numbers");
+    assert!(marks.numbers().is_none(), "a marker part lets its numbers go");
     assert!(kept.numbers().is_some(), "a part made new keeps its numbers");
-    assert!(!marks.on_gpu_only() && !kept.on_gpu_only());
+    assert!(marks.on_gpu_only() && !kept.on_gpu_only());
+    assert!(!gpu.renderer.stats(1).expect("the view").parts_lost);
+
+    // A mask whose source's markers let their numbers go (the mask set after the part was built): it cannot read their
+    // boxes, and the view says it lost the part, to be built again (plan/render.md RM-19).
+    let masked = |source: &Arc<StyledLayerPart>| {
+        let mut styled = scene(&[source, &kept]);
+        styled.compose = vec![(
+            1..2,
+            Arc::new(kentos_render_wgpu::compose::LayerComposeDraw {
+                opacity: 1.0,
+                blend: 0,
+                masks: vec![kentos_render_wgpu::compose::MaskSource {
+                    markers: Some(0..1),
+                    labels: Arc::new(Vec::new()),
+                    grow: 0.0,
+                }],
+            }),
+        )];
+        styled
+    };
+    let _ = draw(gpu, masked(&marks));
+    assert!(gpu.renderer.stats(1).expect("the view").parts_lost, "a mask's source without its numbers");
+    let source = Arc::new(StyledLayerPart::new(95_004, mark()));
+    let _ = draw(gpu, masked(&source));
+    assert!(!gpu.renderer.stats(1).expect("the view").parts_lost, "a mask's source made new");
 
     let _ = draw(gpu, StyledScene::default());
     gpu.styled = previous;

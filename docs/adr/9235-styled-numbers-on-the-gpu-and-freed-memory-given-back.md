@@ -163,3 +163,32 @@ Masaüstündeki `give_back` modülü glibc'nin `malloc_trim` çağrısını yapa
 
 - `crates/native/dwg/src/regions.rs`;
 - `crates/render/wgpu/src/scene.rs`.
+
+## 25 Kasım eki: işaretli katmanlar da sayılarını bırakır
+
+**Bulgu.** `on_gpu`, içinde işaret olan her parçanın sayılarını CPU'da tutuyordu. Gerekçe, maskelerin işaret kutularını
+CPU'dan okumasıydı (ADR 0226 §3). Oysa kutuları okuyan yalnız maskedir ve maske kaynağı az bulunur.
+[ADR 9238](9238-markers-along-a-path-counted-past-their-limit.md)'den sonra bir yol 1 000 000 işaret taşıyabildiği için
+bu kopya 40 MB'a varabiliyordu.
+
+**Karar:**
+
+- `on_gpu` her parçanın sayılarını, GPU onları aldıktan sonra bırakır.
+- Masaüstü, işaretleriyle başka katmanı kesen bir maske kaynağının parçalarını `new` ile kurar; o parça sayılarını
+  tutar (`scene.rs`, `masks_by_markers`).
+- Maske ayarı parça kurulduktan sonra açılırsa, görünüm sayısı bırakılmış kaynağı fark eder ve `FrameStats::parts_lost`
+  der (`ViewStyled::masks_lack_numbers`). Parça, tamponu kaybolmuş gibi yeniden kurulur, bu sefer `new` ile.
+
+**Ölçüm** (`perf::memory::file_parts`, hata ayıklama, gerçek GPU; iki adet 60 km'lik çizgi, 1 060 001 işaret):
+
+| | Önce | Sonra |
+|---|---|---|
+| CPU'da tutulan stilli sayılar | 40 MB | 0 |
+| Rust yığını | 90 MB | 50 MB |
+| Açık çizimde yerleşik | 436 MB | 396 MB |
+
+**Sınamalar:**
+
+- `numbers_on_the_gpu_only`: işaretli parça sayılarını bırakıyor. Sayısı bırakılmış kaynağı okuyan maske kayıp
+  bildiriyor; `new` ile kurulmuş kaynak bildirmiyor.
+- Masaüstü: `a_mask_s_source_keeps_its_numbers_and_the_rest_let_them_go`.

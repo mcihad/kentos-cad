@@ -354,10 +354,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Okumanın tepesi artık en büyüğü değil: 2. adımla nesne dizisi ve belgenin kopyaları üçte birine indi.
   - Kalan tepe ilk karede: stilli sayılar yüklenene kadar CPU'da duruyor. Parçaları kuruldukça yüklemek RM-07'ye
     kaldı.
-  - [ ] İşaretli katmanların sayıları, bir maske okumasa da CPU'da kalıyor (maskeler işaret kutularını oradan okuyor,
-    ADR 0226 §3). 1 000 000 işaret için 40 MB ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)
-    §3). Sayılar yalnız maske kaynağı olan katmanlarda kalmalı; sonradan maske kaynağı olan katman, kaybolan parça
-    yolundan (`parts_lost`) yeniden kurulur.
+  - [x] İşaretli katmanlar da sayılarını bırakıyor; yalnız işaretleriyle maske olan katman tutuyor
+    ([ADR 9235](../docs/adr/9235-styled-numbers-on-the-gpu-and-freed-memory-given-back.md) 25 Kasım eki). Maske sonradan
+    açılırsa görünüm kaybı söylüyor ve parça yeniden kuruluyor. 1 060 001 işaretli çizimde CPU'daki stilli sayılar
+    40 MB → 0, açık çizim 436 → 396 MB.
 
 ### F7 — DWG ve DXF alımı
 
