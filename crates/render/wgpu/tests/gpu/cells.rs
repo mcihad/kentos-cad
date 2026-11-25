@@ -4,7 +4,7 @@
 //! of the batch overlap a pixel (a far view) it may land a step or two apart.
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, Instances, MarkerLook, StyledBatch, StyledLayer, Unit};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8, Vec2};
 
@@ -143,8 +143,77 @@ pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
         }
         an_edge_cell_whose_lines_reach_the_view_is_drawn(gpu, &mut settings);
         markers_keep_their_order(gpu, &mut settings);
+        placements_keep_their_order(gpu, &mut settings);
     }
     gpu.styled = previous;
+}
+
+/// A block's 20 000 inserts over 2 km, in blocks of 250 m as a drawing lays them, each turned: a 6 m square and its
+/// diagonal, half-transparent, 0.6 m wide; where two inserts overlap their order shows.
+fn inserts() -> StyledLayer {
+    let square = [[0.0, 0.0, 6.0, 0.0], [6.0, 0.0, 6.0, 6.0], [6.0, 6.0, 0.0, 6.0], [0.0, 6.0, 0.0, 0.0], [0.0, 0.0, 6.0, 6.0]];
+    let mut data: Vec<f32> = square.iter().flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0]).collect();
+    let mesh = data.len();
+    let mut seed = 23u64;
+    let mut places: Vec<(f64, f64, f64)> = (0..20_000)
+        .map(|_| (scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 6.0))
+        .collect();
+    places.sort_by_key(|&(x, y, _)| ((y / 250.0) as u32, (x / 250.0) as u32));
+    for (x, y, turn) in places {
+        let (s, c) = turn.sin_cos();
+        data.extend([c, s, -s, c, x, y, 1.0, 0.0].map(|v| v as f32));
+    }
+    let stroke = BatchKind::Stroke {
+        color: [0.2, 0.5, 0.3, 0.6],
+        width: 0.6,
+        unit: Unit::World,
+        dash: None,
+        dash_offset: 0.0,
+        cap: Cap::Butt,
+        blur: 0.0,
+    };
+    let mut b = batch(stroke, 0..data.len(), 6);
+    b.bounds = [-10.0, -10.0, 2_010.0, 2_010.0];
+    b.reach = 1.6;
+    b.instances = Some(Instances { mesh, count: 20_000, scale: 1.0, proxy: None, mark: None });
+    StyledLayer { data, batches: vec![b], ..Default::default() }
+}
+
+/// An instanced batch's placements keep their order (cells.rs, docs/adr/9244): a view draws the runs of those its
+/// cells hold, so the picture is every insert drawn, near the ground and far out.
+fn placements_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
+    use std::sync::atomic::Ordering;
+    use kentos_render_wgpu::styled::gpu::DRAWN_INSTANCES;
+    let whole = inserts();
+    let mut kept = whole.clone();
+    kentos_native_style::cells::add(&mut kept);
+    assert_eq!(kept.data, whole.data, "the placements where they were");
+    let px = 256u32;
+    for (case, (centre, scale)) in [((700.0, 1_300.0), 4.0), ((1_650.0, 300.0), 12.0), ((1_000.0, 1_000.0), 0.12)].into_iter().enumerate() {
+        let camera = Camera {
+            center: Vec2::new(centre.0, centre.1),
+            width: f64::from(px),
+            height: f64::from(px),
+            scale,
+            ..Default::default()
+        };
+        let id = 63_000 + case as u64 * 10 + u64::from(settings.samples) * 100;
+        gpu.styled = Some(scene(id, &whole));
+        DRAWN_INSTANCES.swap(0, Ordering::Relaxed);
+        let a = gpu.draw(&[], &camera, settings, px, px);
+        let all = DRAWN_INSTANCES.swap(0, Ordering::Relaxed);
+        gpu.styled = Some(scene(id + 1, &kept));
+        let b = gpu.draw(&[], &camera, settings, px, px);
+        let drawn = DRAWN_INSTANCES.swap(0, Ordering::Relaxed);
+        let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
+        eprintln!("cells inserts case {case}, {} samples: placements {all} -> {drawn}, {differ} px differ", settings.samples);
+        assert_eq!(differ, 0, "case {case}: {differ} pixels differ");
+        if case < 2 {
+            assert!(drawn * 10 < all, "case {case}: {drawn} of {all} placements drawn");
+        } else {
+            assert_eq!(drawn, all, "far out every insert is drawn");
+        }
+    }
 }
 
 /// 20 000 circles 6 m wide over 2 km, filled and outlined in two half-transparent colours, block by block of 250 m as a
