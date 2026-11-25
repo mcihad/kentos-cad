@@ -3,8 +3,25 @@ use super::entity::Parsed;
 use super::lexer::Lexer;
 use std::collections::HashMap;
 
-pub fn mapping(bytes: &[u8]) -> Result<HashMap<u64, u64>, String> {
+/// What the drawing's objects say, read in one pass over the file.
+#[derive(Debug, Default)]
+pub struct Objects {
+    /// SORTENTSTABLE: source handle → sort key.
+    pub order: HashMap<u64, u64>,
+    /// Whether its wipeouts show their frames (WIPEOUTVARIABLES' 70; none: no such object).
+    pub wipeout_frames: Option<bool>,
+    /// Each IMAGEDEF's file (its 1) by its handle (docs/adr/9227).
+    pub images: HashMap<u64, String>,
+}
+
+/// The drawing's objects (see [`Objects`]).
+pub fn mapping(bytes: &[u8]) -> Result<Objects, String> {
     let mut lex = Lexer::new(bytes);
+    let mut in_wipeouts = false;
+    let mut frames = None;
+    let mut in_image = false;
+    let mut image: Option<u64> = None;
+    let mut images = HashMap::new();
     let mut in_table = false;
     let mut subclass = false;
     let mut entity = None;
@@ -19,7 +36,19 @@ pub fn mapping(bytes: &[u8]) -> Result<HashMap<u64, u64>, String> {
             enabled = p.text().trim().parse::<u32>().unwrap_or(16) & 16 != 0;
             sort_var = false;
         }
+        if in_wipeouts && p.code == 70 {
+            frames = Some(p.text().trim().parse::<i64>().unwrap_or(1) != 0);
+        }
+        if in_image && p.code == 5 {
+            image = u64::from_str_radix(p.text().trim(), 16).ok();
+        }
+        if in_image && p.code == 1 && let Some(h) = image.take() {
+            images.insert(h, p.text().trim().to_string());
+        }
         if p.code == 0 {
+            in_wipeouts = p.text().eq_ignore_ascii_case("WIPEOUTVARIABLES");
+            in_image = p.text().eq_ignore_ascii_case("IMAGEDEF");
+            image = None;
             in_table = p.text().eq_ignore_ascii_case("SORTENTSTABLE");
             subclass = false;
             entity = None;
@@ -39,7 +68,7 @@ pub fn mapping(bytes: &[u8]) -> Result<HashMap<u64, u64>, String> {
     if !enabled {
         out.clear();
     }
-    Ok(out)
+    Ok(Objects { order: out, wipeout_frames: frames, images })
 }
 
 pub fn reorder(entities: &mut [Parsed], map: &HashMap<u64, u64>) {

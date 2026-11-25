@@ -891,10 +891,14 @@ fn read_once(
     if !saw_section {
         return Err("Dosyada DXF bölümü yok; bir ASCII DXF dosyası seçin.".into());
     }
-    let order = ordering::mapping(bytes)?;
+    let objects = ordering::mapping(bytes)?;
+    let order = objects.order;
     let mut lib = std::mem::take(&mut rd.lib);
     for block in lib.blocks.values_mut() { ordering::reorder(&mut block.entities, &order); }
     let mut em = Emitter::new(&lib, out, opts.explode_blocks);
+    // Without WIPEOUTVARIABLES the frames show, the format's default (docs/adr/9227).
+    em.wipeout_frames = objects.wipeout_frames.unwrap_or(true);
+    em.images = objects.images;
     em.project_font = opts
         .drawing_font
         .unwrap_or(kentos_contracts::DrawingFont::Barlow);
