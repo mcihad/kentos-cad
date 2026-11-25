@@ -3156,3 +3156,145 @@ fn an_aligned_text_s_baseline_is_where_another_program_draws_it() {
     assert_eq!(ys[2].0, 0.0);
     assert_eq!(ys[3], (0.0, 2.5), "SHX: as the file says");
 }
+
+/// A WIPEOUT is a mask (docs/adr/0310, 9227): an area of the drawing's background, its frame as the drawing's
+/// WIPEOUTVARIABLES say. Its clip in the DXF reference's image space, a point (x, y) at
+/// `insert + (x + ½)·U + (½ − y)·V`: the SİVAS AVM DWG's grid boxes, U and V turned 41.2° and millions of units long,
+/// the clip near a corner of the unit square, are rectangles of 17.15 × 5 m in their block (millimetres there). A
+/// rectangular clip gives two corners.
+#[test]
+fn a_wipeout_is_a_mask_where_its_clip_says() {
+    let g = |code: i32, value: &str| (code, value.to_string());
+    let mut entities = vec![
+        g(0, "WIPEOUT"),
+        g(5, "934323"),
+        g(8, "A_ANNO_GRID_BOX_TXT"),
+        g(100, "AcDbEntity"),
+        g(100, "AcDbWipeout"),
+        g(90, "0"),
+        g(10, "7443.174011286348"),
+        g(20, "-13502.374265313614"),
+        g(30, "0.0"),
+        g(11, "3550849.9940145127"),
+        g(21, "3109326.9238783014"),
+        g(31, "0.0"),
+        g(12, "-3109326.9238783014"),
+        g(22, "3550849.9940145127"),
+        g(32, "0.0"),
+        g(13, "1.0"),
+        g(23, "1.0"),
+        g(70, "7"),
+        g(71, "2"),
+        g(91, "5"),
+    ];
+    for (x, y) in [
+        ("-0.5", "0.4976061783798207"),
+        ("-0.4993017872360454", "0.49680881970827984"),
+        ("-0.49656804399121646", "0.49920264132838754"),
+        ("-0.4972662567552838", "0.5"),
+        ("-0.5", "0.4976061783798207"),
+    ] {
+        entities.extend([g(14, x), g(24, y)]);
+    }
+    entities.extend([
+        g(0, "WIPEOUT"),
+        g(5, "A1"),
+        g(8, "0"),
+        g(100, "AcDbEntity"),
+        g(100, "AcDbWipeout"),
+        g(10, "100"),
+        g(20, "200"),
+        g(30, "0"),
+        g(11, "4"),
+        g(21, "0"),
+        g(31, "0"),
+        g(12, "0"),
+        g(22, "2"),
+        g(32, "0"),
+        g(13, "1"),
+        g(23, "1"),
+        g(71, "1"),
+        g(91, "2"),
+        g(14, "-0.5"),
+        g(24, "-0.5"),
+        g(14, "0.5"),
+        g(24, "0.5"),
+    ]);
+    let objects = vec![g(0, "WIPEOUTVARIABLES"), g(5, "11D5D6"), g(100, "AcDbWipeoutVariables"), g(70, "0")];
+    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]), &options).expect("read");
+    let masks: Vec<_> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Polygon(p) => Some(p),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(masks.len(), 2, "{:?}", r.report.skipped);
+    for m in &masks {
+        assert_eq!(m.base.look.wipeout, Some(kentos_contracts::look::Wipeout { frame: false }), "frames off");
+    }
+    // The grid box: a rectangle from (0, 0) to (17 150.286, −5 002.273), its first point (0, −5 002.273).
+    let grid = &masks[0].pts;
+    let want = [(0.0, -5002.273), (0.0, 0.0), (17150.286, 0.0), (17150.286, -5002.273)];
+    assert_eq!(grid.len(), 4, "the closing point dropped");
+    for (p, (x, y)) in grid.iter().zip(want) {
+        assert!((p.x - x).abs() < 1e-3 && (p.y - y).abs() < 1e-3, "{p:?} ≠ ({x}, {y})");
+    }
+    // The rectangle: two corners of the unit square, U 4 and V 2 from (100, 200).
+    let rect: Vec<(f64, f64)> = masks[1].pts.iter().map(|p| (p.x, p.y)).collect();
+    assert_eq!(rect, vec![(100.0, 202.0), (104.0, 202.0), (104.0, 200.0), (100.0, 200.0)]);
+    assert!(skipped(&r, "WIPEOUT").is_none());
+    // No WIPEOUTVARIABLES: the format's default, the frame drawn.
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
+    let Some(Entity::Polygon(p)) = r.entities.first() else { panic!("{:?}", r.entities) };
+    assert_eq!(p.base.look.wipeout, Some(kentos_contracts::look::Wipeout { frame: true }));
+}
+
+/// An IMAGE's file is not in the drawing (docs/adr/9227): the SİVAS AVM DWG's logo, 2 409 × 3 435 pixels of 1.7118
+/// units, comes as its frame, a closed line where it was, and the report names its file (its IMAGEDEF's 1).
+#[test]
+fn an_image_is_its_frame_and_its_file_is_named() {
+    let g = |code: i32, value: &str| (code, value.to_string());
+    let entities = vec![
+        g(0, "IMAGE"),
+        g(5, "92E9D8"),
+        g(8, "A_SHET"),
+        g(100, "AcDbEntity"),
+        g(100, "AcDbRasterImage"),
+        g(10, "1000"),
+        g(20, "2000"),
+        g(30, "0"),
+        g(11, "1.7117828025000665"),
+        g(21, "0"),
+        g(31, "0"),
+        g(12, "0"),
+        g(22, "1.7117828025000665"),
+        g(32, "0"),
+        g(13, "2409"),
+        g(23, "3435"),
+        g(340, "146B6"),
+        g(70, "7"),
+        g(280, "0"),
+        g(71, "1"),
+        g(91, "2"),
+        g(14, "-0.5"),
+        g(24, "-0.5"),
+        g(14, "2408.5"),
+        g(24, "3434.5"),
+    ];
+    let objects = vec![g(0, "IMAGEDEF"), g(5, "146B6"), g(100, "AcDbRasterImageDef"), g(1, "DDS LOGO.jpg")];
+    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]), &options).expect("read");
+    let [Entity::Polyline(frame)] = r.entities.as_slice() else { panic!("{:?}", r.entities) };
+    assert!(frame.closed);
+    let (w, h) = (2409.0 * 1.7117828025000665, 3435.0 * 1.7117828025000665);
+    let want = [(1000.0, 2000.0 + h), (1000.0 + w, 2000.0 + h), (1000.0 + w, 2000.0), (1000.0, 2000.0)];
+    for (p, (x, y)) in frame.pts.iter().zip(want) {
+        assert!((p.x - x).abs() < 1e-6 && (p.y - y).abs() < 1e-6, "{p:?} ≠ ({x}, {y})");
+    }
+    let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
+    assert!(note.reason.contains("“DDS LOGO.jpg”"), "{}", note.reason);
+    assert!(skipped(&r, "IMAGE").is_none());
+}

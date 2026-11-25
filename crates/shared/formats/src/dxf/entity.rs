@@ -212,6 +212,18 @@ pub enum Kind {
         own_style: super::leaders::DimStyle,
     },
     MLeader(Box<super::leaders::MLeader>),
+    /// A WIPEOUT (docs/adr/9227): its clip boundary in world coordinates. In the DXF reference's image space a point
+    /// (x, y) of the boundary is `insert + (x + ½)·U + (H − y − ½)·V`, H the image's height in pixels (1 for a
+    /// wipeout).
+    Wipeout {
+        ring: Vec<P3>,
+    },
+    /// An IMAGE (docs/adr/9227): its clip boundary in world coordinates (the image's whole rectangle when it is not
+    /// clipped) and its IMAGEDEF's handle (340), which names its file.
+    Image {
+        ring: Vec<P3>,
+        def: Option<u64>,
+    },
     Unsupported(String),
 }
 
@@ -652,6 +664,42 @@ pub fn parse(
             own_style: super::leaders::own_style(all),
         },
         "MULTILEADER" | "MLEADER" => Kind::MLeader(Box::new(super::leaders::mleader(list, dec)?)),
+        "WIPEOUT" | "IMAGE" => {
+            let insert = g.point_or_zero(10)?;
+            let (u, v) = (g.point_or_zero(11)?, g.point_or_zero(12)?);
+            let (width, height) = (g.num_or(13, 1.0)?, g.num_or(23, 1.0)?);
+            let mut clip: Vec<P3> = points(list, 14)?;
+            // An image not clipped (280 = 0) shows its whole rectangle; a wipeout is always its clip.
+            if name == "IMAGE" && (g.int(280) == 0 || clip.is_empty()) {
+                clip = vec![[-0.5, -0.5, 0.0], [width - 0.5, height - 0.5, 0.0]];
+            }
+            // A rectangular clip (71 = 1, or two points) gives two opposite corners.
+            if clip.len() == 2 {
+                let (a, b) = (clip[0], clip[1]);
+                clip = vec![a, [b[0], a[1], 0.0], b, [a[0], b[1], 0.0]];
+            }
+            let ring = clip
+                .iter()
+                .map(|c| {
+                    let (s, t) = (c[0] + 0.5, height - c[1] - 0.5);
+                    [
+                        insert[0] + s * u[0] + t * v[0],
+                        insert[1] + s * u[1] + t * v[1],
+                        insert[2] + s * u[2] + t * v[2],
+                    ]
+                })
+                .collect();
+            if name == "IMAGE" {
+                let def = list
+                    .iter()
+                    .find(|p| p.code == 340)
+                    .and_then(|p| u64::from_str_radix(p.text().trim(), 16).ok())
+                    .filter(|h| *h != 0);
+                Kind::Image { ring, def }
+            } else {
+                Kind::Wipeout { ring }
+            }
+        }
         other => Kind::Unsupported(other.to_string()),
     };
     Ok(Parsed {

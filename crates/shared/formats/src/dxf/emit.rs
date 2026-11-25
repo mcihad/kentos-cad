@@ -594,6 +594,13 @@ pub struct Emitter<'l> {
     /// The objects of the object being emitted that took their looks as they were read, up to this place: an
     /// exploded insert's (docs/adr/8053 §13).
     looked_upto: usize,
+    /// The insert chain's length whose objects take their handles (holes, ties): 0 in model space, an opened
+    /// insert's children's while it is opened (docs/adr/9227).
+    scope: usize,
+    /// Whether the drawing's wipeouts show their frames (WIPEOUTVARIABLES, docs/adr/9227).
+    pub wipeout_frames: bool,
+    /// Each IMAGEDEF's file by its handle (docs/adr/9227).
+    pub images: HashMap<u64, String>,
 }
 
 impl<'l> Emitter<'l> {
@@ -605,6 +612,9 @@ impl<'l> Emitter<'l> {
             explode,
             defining: false,
             looked_upto: 0,
+            scope: 0,
+            wipeout_frames: true,
+            images: HashMap::new(),
             pending: notes::Pending::default(),
             project_font: kentos_contracts::DrawingFont::Barlow,
             text_used: Vec::new(),
@@ -1312,7 +1322,8 @@ impl<'l> Emitter<'l> {
         }
         // Holes and the polygons they belong to are linked by handle, in model space or in a
         // kept block's own objects (as KentOS writes them).
-        let own = ctx.chain.is_empty() || (ctx.definition && ctx.chain.len() == 1);
+        // An opened insert's own objects too (docs/adr/9227): their holes go back into their polygons in each placing.
+        let own = ctx.chain.len() == self.scope || (ctx.definition && ctx.chain.len() == 1);
         if own && end == start + 1 {
             if let Some(h) = e.handle {
                 self.out.handles.insert(h, start);
@@ -1327,15 +1338,24 @@ impl<'l> Emitter<'l> {
     /// ("adalı alan") once every object is read. A hole whose polygon is
     /// missing (not in the file, or not a polygon) stays a polygon of its own.
     pub fn merge_holes(&mut self) {
+        self.merge_holes_from(0);
+    }
+
+    /// [`Emitter::merge_holes`] among the objects from `from` on: an opened insert's own (docs/adr/9227), its holes
+    /// and their polygons both in that placing. The objects before it stay where they are.
+    fn merge_holes_from(&mut self, from: usize) {
+        if self.out.holes.is_empty() {
+            return;
+        }
         // A definition's objects are not counted (its inserts are).
         let counted = !self.defining;
         let out = &mut self.out;
-        let mut gone = vec![false; out.entities.len()];
+        let mut gone = vec![false; out.entities.len().saturating_sub(from)];
         for (hole, owner) in std::mem::take(&mut out.holes) {
             let Some(&o) = out.handles.get(&owner) else {
                 continue;
             };
-            if o == hole || gone[o] || gone[hole] {
+            if o == hole || o < from || hole < from || gone[o - from] || gone[hole - from] {
                 continue;
             }
             let ring = match &out.entities[hole] {
@@ -1348,7 +1368,7 @@ impl<'l> Emitter<'l> {
             };
             if let Entity::Polygon(p) = &mut out.entities[o] {
                 p.holes.get_or_insert_with(Vec::new).push(ring);
-                gone[hole] = true;
+                gone[hole - from] = true;
             }
         }
         if !gone.contains(&true) {
@@ -1356,41 +1376,38 @@ impl<'l> Emitter<'l> {
         }
         // The objects after it move up: the handles and the ties follow them (docs/adr/0333 §2).
         let mut moved = Vec::with_capacity(gone.len());
-        let mut kept = 0usize;
+        let mut kept = from;
         for &g in &gone {
             moved.push((!g).then_some(kept));
             kept += usize::from(!g);
         }
-        out.handles.retain(|_, at| match moved[*at] {
+        let place = |at: usize| if at < from { Some(at) } else { moved[at - from] };
+        out.handles.retain(|_, at| match place(*at) {
             Some(n) => {
                 *at = n;
                 true
             }
             None => false,
         });
-        out.ties.retain_mut(|t| match moved[t.hatch] {
+        out.ties.retain_mut(|t| match place(t.hatch) {
             Some(n) => {
                 t.hatch = n;
                 true
             }
             None => false,
         });
-        let mut i = 0;
         let (per_layer, report) = (&mut out.per_layer, &mut out.report);
-        out.entities.retain(|e| {
-            let keep = !gone[i];
-            i += 1;
-            if !keep
-                && counted
-                && let Entity::Polygon(p) = e
-            {
+        let tail: Vec<Entity> = out.entities.drain(from..).collect();
+        for (e, g) in tail.into_iter().zip(gone) {
+            if !g {
+                out.entities.push(e);
+            } else if counted && let Entity::Polygon(p) = &e {
                 if let Some(n) = per_layer.get_mut(&p.base.layer_id) {
                     *n -= 1;
                 }
                 report.uncount("polygon");
             }
-            keep
-        });
+        }
     }
 
     /// Ties each associative hatch of model space to its objects (docs/adr/0333 §2), once every object is read and
@@ -2006,11 +2023,78 @@ impl<'l> Emitter<'l> {
                     Entity::Xline(c)
                 });
             }
+            // A WIPEOUT is a mask (docs/adr/0310, 9227): an area of the drawing's background over what is drawn
+            // before it, its frame drawn as the drawing's WIPEOUTVARIABLES say.
+            Kind::Wipeout { ring } => {
+                let mut ring: Vec<P3> = ring.iter().map(|p| ctx.full.point(*p)).collect();
+                ring.dedup();
+                if ring.len() > 1 && ring.first() == ring.last() {
+                    ring.pop();
+                }
+                if ring.len() < 3 || !ring.iter().all(|p| p.iter().all(|v| v.is_finite())) {
+                    return self.skip("Maske (WIPEOUT)", "sınırının üç köşesi yok", e.line);
+                }
+                let mut base = b();
+                base.look.wipeout = Some(kentos_contracts::look::Wipeout { frame: self.wipeout_frames });
+                self.push(Entity::Polygon(PathEntity {
+                    space_separator: None,
+                    ms: None,
+                    base,
+                    pts: ring.into_iter().map(xy).collect(),
+                    bulges: None,
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                    closed: false,
+                    widths: None,
+                }));
+                self.note(
+                    "Maske (WIPEOUT)",
+                    "çizimin zemin rengiyle dolan maske alanı olarak alındı; kendinden önce çizileni örter",
+                    e.line,
+                );
+            }
+            // An IMAGE's file is not in the drawing (docs/adr/9227): its frame where the image was, a closed line, and
+            // the file named, as a CAD program shows an image whose file it cannot find.
+            Kind::Image { ring, def } => {
+                let mut ring: Vec<P3> = ring.iter().map(|p| ctx.full.point(*p)).collect();
+                ring.dedup();
+                if ring.len() > 1 && ring.first() == ring.last() {
+                    ring.pop();
+                }
+                let Some(file) = def.and_then(|h| self.images.get(&h).cloned()).filter(|f| !f.trim().is_empty()) else {
+                    return self.skip("IMAGE", "raster görüntünün dosyası adlandırılmamış; görüntü alınmadı", e.line);
+                };
+                if ring.len() < 3 || !ring.iter().all(|p| p.iter().all(|v| v.is_finite())) {
+                    return self.skip(
+                        "IMAGE",
+                        &format!("raster görüntünün (“{file}”) dosyası çizimin içinde değil ve boyu yok; çerçevesi de alınamadı"),
+                        e.line,
+                    );
+                }
+                self.push(Entity::Polyline(PathEntity {
+                    space_separator: None,
+                    ms: None,
+                    base: b(),
+                    pts: ring.into_iter().map(xy).collect(),
+                    bulges: None,
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                    closed: true,
+                    widths: None,
+                }));
+                self.note(
+                    "Görüntü (IMAGE)",
+                    &format!("“{file}” dosyası çizimin içinde değil; görüntünün yerini gösteren çerçevesi alındı. Dosyayı Altlık ile ekleyin"),
+                    e.line,
+                );
+            }
             Kind::Leader { .. } => self.leader(ctx, b(), e),
             Kind::MLeader(m) => self.mleader(ctx, m, b(), e),
             Kind::Unsupported(name) => {
                 let reason = match name.as_str() {
-                    "IMAGE" | "WIPEOUT" | "OLE2FRAME" | "OLEFRAME" | "PDFUNDERLAY"
+                    "OLE2FRAME" | "OLEFRAME" | "PDFUNDERLAY"
                     | "DWFUNDERLAY" | "DGNUNDERLAY" => {
                         "raster görüntü ve gömülü/altlık nesneleri alınmaz"
                     }
@@ -2569,6 +2653,10 @@ impl<'l> Emitter<'l> {
     ) {
         let words = text_codes(&caret_decode(text));
         if words.trim().is_empty() {
+            // An attribute with no value draws nothing and loses nothing (docs/adr/9227): said, not counted lost.
+            if e.name == "ATTRIB" {
+                return self.note("Blok özniteliği (ATTRIB)", "değeri boş; çizilecek yazısı yok", e.line);
+            }
             return self.skip(&e.name, "boş yazı", e.line);
         }
         let t = Text {
@@ -3073,9 +3161,20 @@ impl<'l> Emitter<'l> {
                 in_dimension: ctx.in_dimension,
                 definition: ctx.definition,
             };
+            // The placing's own handles: a ring KentOS's data (or a region's boundary, docs/adr/9227) names as a hole
+            // of a polygon of the same block goes back into it here, the handles being the block's, the same in each
+            // placing.
+            let first = self.out.entities.len();
+            let handles = std::mem::take(&mut self.out.handles);
+            let holes = std::mem::take(&mut self.out.holes);
+            let scope = std::mem::replace(&mut self.scope, child.chain.len());
             for child_entity in &block.entities {
                 self.emit(child_entity, &child);
             }
+            self.merge_holes_from(first);
+            self.scope = scope;
+            self.out.handles = handles;
+            self.out.holes = holes;
         }
         self.looked_upto = self.out.entities.len();
         if ctx.chain.is_empty() && self.explode {

@@ -13,6 +13,8 @@ use acadrust::{DwgReader, DwgWriter, DxfReader, DxfVersion, DxfWriter};
 use kentos_contracts::{DwgVersion, DxfReadOptions, ImportResult};
 use kentos_formats::watch::{Quiet, STOPPED, Watch};
 
+pub mod regions;
+
 pub const PROVIDER: &str = "OpenCADStudio / acadrust";
 pub const REVISION: &str = "93449222904e9df1ba14e275b6b764df93227b33";
 /// An explicit input limit, not an estimate of decompressed memory.
@@ -278,6 +280,8 @@ pub struct Bridge {
     stats: acadrust::ReadStats,
     dropped: usize,
     source: DwgVersion,
+    /// The regions drawn by their boundaries (docs/adr/9227).
+    regions: regions::Regions,
 }
 
 /// [`read_watched`]'s first half: the DWG decoded, the objects KentOS does not read dropped and the rest written as
@@ -287,12 +291,15 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
     if !watch.step(0, 1000) {
         return Err(error("cancelled", STOPPED));
     }
-    let (dxf, stats, dropped) = guarded(|| {
+    let (dxf, stats, dropped, regions) = guarded(|| {
         let mut outcome = DwgReader::from_stream(Cursor::new(bytes))
             .read_with_stats()
             .map_err(|e| error("import_unreadable", format!("DWG okunamadı: {e}")))?;
         complete(&outcome.stats)?;
         let dropped = drop_unread(&mut outcome.document);
+        // A region's shape is ACIS data the DXF text carries where the reader does not look: drawn by its boundary
+        // (docs/adr/9227).
+        let regions = regions::outlines(&mut outcome.document);
         // The codec looks an owner's extension dictionary up by walking every object, and a map walks its whole
         // capacity: the SİVAS AVM DWG's 486 531 DGN line style records dropped above left its map at 904 536 places for
         // 21 280 objects, and its DXF took 11.3 s to write. Shrunk, 4.9 s; the text is the same byte for byte.
@@ -337,7 +344,7 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
                 ),
             ));
         }
-        Ok((dxf, outcome.stats, dropped))
+        Ok((dxf, outcome.stats, dropped, regions))
     })?;
     if !watch.step(400, 1000) {
         return Err(error("cancelled", STOPPED));
@@ -347,6 +354,7 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
         stats,
         dropped,
         source,
+        regions,
     })
 }
 
@@ -361,6 +369,7 @@ pub fn read_bridge(
         stats,
         dropped,
         source,
+        regions,
     } = bridge;
     let (dropped, source) = (*dropped, *source);
     let mut phase = kentos_formats::watch::Steps(|done: u64, total: u64| {
@@ -409,6 +418,41 @@ pub fn read_bridge(
             what: "DWG nesnesi".into(),
             count: dropped.min(u32::MAX as usize) as u32,
             reason: "DGN çizgi stili bileşenleri ve vekil (proxy) nesneler okunmadı: KentOS onları çizmez; çizgiler çizgi tipinin kesik deseniyle çizilir.".into(),
+            lines: Vec::new(),
+        });
+    }
+    if regions.taken > 0 {
+        let mut reason = String::from(
+            "sınırlarıyla kapalı alan olarak alındı (bölge kenarlarıyla çizilir)",
+        );
+        if regions.holes > 0 {
+            reason.push_str(&format!("; {} iç sınır alanın deliği oldu", regions.holes));
+        }
+        if regions.by_points > 0 {
+            reason.push_str(&format!("; {} elips ve spline kenarı üzerindeki noktalarla", regions.by_points));
+        }
+        if regions.chords > 0 {
+            reason.push_str(&format!("; tanınmayan {} eğri kenarı kirişiyle", regions.chords));
+        }
+        if regions.flat > 0 {
+            reason.push_str(&format!("; alanı olmayan {} sınır alınmadı", regions.flat));
+        }
+        result.report.notes.push(kentos_contracts::ReportItem {
+            severity: None,
+            details: Vec::new(),
+            what: "Bölge (REGION)".into(),
+            count: regions.taken.min(u32::MAX as usize) as u32,
+            reason,
+            lines: Vec::new(),
+        });
+    }
+    for (why, n) in &regions.left {
+        result.report.notes.push(kentos_contracts::ReportItem {
+            severity: None,
+            details: Vec::new(),
+            what: "Bölge (REGION)".into(),
+            count: (*n).min(u32::MAX as usize) as u32,
+            reason: format!("sınırı çıkarılamadı: {why}; bölge alınmadı"),
             lines: Vec::new(),
         });
     }

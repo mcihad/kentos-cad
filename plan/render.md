@@ -241,7 +241,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Adım 1 ([ADR 9226](../docs/adr/9226-line-joins-drawn-once.md)): köşeler bir kez çizilir. Her segment köşenin
     açıortayına kadar kendi tarafını çiziyor; yarı saydam çizginin köşelerindeki düğümler ve kısa kirişli dairenin
     opaklaşması gitti. GPU'da her piksel kapsüllerin analitik birleşimine 3 düzey içinde eşit.
-  - [ ] Maskeler (WIPEOUT, RM-22 ile).
+  - [x] Maskeler: DWG ve DXF'in WIPEOUT'u ADR 0310'un maskesi olarak alınıyor (RM-22 1. adım,
+    [ADR 9227](../docs/adr/9227-dwg-regions-wipeouts-and-images.md)).
   - [ ] Desen dolguları vektör (RM-11'in açığı).
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
@@ -338,11 +339,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       hepsini taşıyor; köprü yalnız 70. gruba 32 bitini ekliyor, tür okumasını etkilemiyor.
     - **AVM'nin görünmezleri:** 6 328 LWPOLYLINE ile 513 LINE “0” katmanında; ATTDEF ve ATTRIB mülk no ile oda alanı
       katmanlarında (A_ANNO_TXT_PRPRTY_NO, A_ANNO_TXT_RM_AREA). Bilinçli gizlenmiş yardımcı nesnelere benziyorlar.
-  - [ ] WIPEOUT maskesi: “paper” renginde dolgu olabilir. Ama katman içinde dolgular çizgilerden önce çizildiği için
-    çizim sırası kararı ister (RM-15).
-  - WIPEOUT, IMAGE ve REGION;
-  - okunamayan tarama sınırları;
-  - boş ATTRIB'ler.
+  - [x] Adım 1 ([ADR 9227](../docs/adr/9227-dwg-regions-wipeouts-and-images.md)): bölge, maske, görüntü, boş öznitelik.
+    “Alınmadı” 8 051 → 7 815; kalanların hepsi görünmez işaretli (7 810), alanı olmayan 3 tarama ve iki köşesi olmayan
+    2 çoklu çizgi.
+    - **REGION:** her düzlemsel yüz alan, öbür döngüleri delikleri. AVM'de 33 bölge 264 delikle; caminin 20 bölgesinin
+      spline kenarları kirişle değil noktalarla. acadrust'ın SAB dönüşüm kayması kendi okuyucumuzla aşıldı.
+    - **WIPEOUT:** ADR 0310'un maskesi; çizim sırası sorusunu ADR 0310 §2'nin bantları zaten çözüyor. AVM'de 4.
+    - **IMAGE:** dosyası çizimde olmayan görüntü yerini gösteren çerçeve olur, rapor dosyayı adlandırır. AVM'de 3.
+    - **Boş ATTRIB:** “alınmadı” değil bilgi notu (196).
+  - [ ] Adım 2: çok delikli taramalarda üçgen boşluklar (AVM'nin alan paftaları, iki derlemede de).
+  - [ ] Adım 3: “486 531 DWG nesnesi okunmadı” (DGN çizgi stili bileşenleri, vekil nesneler): görünen bir kayıp var mı?
 - [x] **RM-23 — Birim** ([ADR 9210](../docs/adr/9210-cad-unit-from-the-survey-grid.md)).
   - Sayıları Türkiye'nin ölçme ızgarasında duran CAD dosyası, ister milimetre bildirsin ister bildirmesin, Aç'ta
     metre okunuyor ve birim soruluyor (metre seçili).
