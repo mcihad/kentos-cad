@@ -112,6 +112,9 @@ pub(crate) enum Tex {
     Column(u8, u8),
     /// A blurred group's picture, a pixel a texel: (level, which).
     Wide(u8, u8),
+    /// A stretch of strokes and marks drawn one sample a pixel (docs/adr/9246): their edges are smoothed in their
+    /// shaders and every sample of a pixel they draw gets the same colour, so laid over the drawing they are the same.
+    Single,
     /// A 1 × 1 stand-in for an unused binding.
     None,
 }
@@ -145,6 +148,9 @@ pub(crate) enum Into {
 pub(crate) enum Pass {
     /// The styled batches of a stretch of the draw order into the picture or the layer.
     Batches { seq: Range<usize>, into: Into },
+    /// A stretch of strokes and marks into the one-sample picture, cleared first (docs/adr/9246); a `Layer` pass lays
+    /// it over next.
+    Single { seq: Range<usize> },
     /// The layer's picture cleared.
     LayerClear,
     /// An effect group's batches into its picture, cleared first.
@@ -553,6 +559,8 @@ pub(crate) struct ComposeTargets {
     group: Option<Drawn>,
     backdrop: Option<(wgpu::Texture, wgpu::TextureView)>,
     mask: Option<(wgpu::Texture, wgpu::TextureView)>,
+    /// The one-sample picture of a stretch of strokes and marks (docs/adr/9246).
+    single: Option<(wgpu::Texture, wgpu::TextureView)>,
     /// The maps by (form: 0 a pixel a texel, 1 row-packed, 2 column-packed; level; which).
     maps: HashMap<(u8, u8, u8), (wgpu::Texture, wgpu::TextureView)>,
     /// The passes' numbers and the masks' boxes, grown as needed.
@@ -572,6 +580,7 @@ impl ComposeTargets {
             group: None,
             backdrop: None,
             mask: None,
+            single: None,
             maps: HashMap::new(),
             params: None,
             boxes: None,
@@ -640,6 +649,17 @@ impl ComposeTargets {
                 ));
                 self.bytes += self.pixels() * self.texel();
             }
+            Tex::Single if self.single.is_none() => {
+                // Half floats (docs/adr/9246): the stretch's colour and alpha kept unrounded until laid over.
+                self.single = Some(plain(
+                    device,
+                    "kentos.compose.single",
+                    crate::styled::gpu::FLOAT_PICTURE_FORMAT,
+                    size,
+                    wgpu::TextureUsages::RENDER_ATTACHMENT,
+                ));
+                self.bytes += self.pixels() * 8;
+            }
             Tex::Mask if self.mask.is_none() => {
                 self.mask = Some(plain(
                     device,
@@ -685,6 +705,7 @@ impl ComposeTargets {
             Tex::Group => self.group.as_ref().map_or(none, |d| &d.resolve),
             Tex::Backdrop => self.backdrop.as_ref().map_or(none, |(_, v)| v),
             Tex::Mask => self.mask.as_ref().map_or(none, |(_, v)| v),
+            Tex::Single => self.single.as_ref().map_or(none, |(_, v)| v),
             Tex::Wide(l, w) => self.maps.get(&(0, l, w)).map_or(none, |(_, v)| v),
             Tex::Packed(l, w) => self.maps.get(&(1, l, w)).map_or(none, |(_, v)| v),
             Tex::Column(l, w) => self.maps.get(&(2, l, w)).map_or(none, |(_, v)| v),
@@ -841,6 +862,21 @@ impl<'a> Planner<'a> {
     pub fn layer_clear(&mut self) {
         self.targets.need(self.device, Tex::Layer);
         self.passes.push(Pass::LayerClear);
+    }
+
+    /// A stretch of strokes and marks drawn one sample a pixel and laid over the picture (docs/adr/9246): the same
+    /// picture for a far smaller price, a multisampled target costing every primitive several times.
+    pub fn single(&mut self, seq: Range<usize>) {
+        if seq.is_empty() {
+            return;
+        }
+        self.targets.need(self.device, Tex::Single);
+        self.passes.push(Pass::Single { seq });
+        let (bind, offset) = self.slot(
+            numbers([1.0, 0.0, 0.0, 0.0]),
+            [Tex::Single, Tex::None, Tex::None, Tex::None, Tex::None, Tex::None],
+        );
+        self.passes.push(Pass::Layer { blend: false, bind, offset });
     }
 
     /// Lengths in the effect's unit as device pixels.
@@ -1255,6 +1291,8 @@ fn numbers(a: [f32; 4]) -> Numbers {
 /// batches of a stretch drawn into a pass.
 pub(crate) trait DrawBatches {
     fn draw_batches(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>);
+    /// The same stretch into a one-sample picture (docs/adr/9246).
+    fn draw_single(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>);
 }
 
 /// A pass over the drawing's picture, as the renderer opens it.
@@ -1447,6 +1485,18 @@ impl Composer {
         p: &Pass,
     ) {
         match p {
+            Pass::Single { seq } => {
+                if let Some((_, view)) = &targets.single {
+                    let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: Some("kentos.compose.single"),
+                        color_attachments: &[Some(cleared(view))],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+                    batches.draw_single(&mut pass, seq.clone());
+                }
+            }
             Pass::Group { seq } => {
                 if let Some(group) = &targets.group {
                     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {

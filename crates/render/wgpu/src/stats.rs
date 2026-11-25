@@ -47,4 +47,6 @@ pub struct FrameStats {
     /// Of `resident_bytes`, the styled layers' kept for parts the app holds but the frame did not draw (a hidden layer,
     /// the drawing under the deep view; `StyledLayerPart::on_gpu`).
     pub parked_bytes: u64,
+    /// Stretches of strokes and marks the frame drew one sample a pixel and laid over (docs/adr/9246).
+    pub single_runs: u32,
 }

@@ -358,6 +358,7 @@ impl Renderer {
             ([state.placed[2], state.placed[3]], frame.scale_factor)
         };
         state.clear = settings.background.to_f32();
+        state.single_runs = settings.single_runs;
         if own {
             let size = [size_px[0].max(1.0) as u32, size_px[1].max(1.0) as u32];
             let current = state
@@ -604,6 +605,10 @@ impl Renderer {
             samples,
             images,
         );
+        // Read only from here: the state's own methods are asked below (`shift`, `zoom_plan`).
+        let Some(styled) = state.styled.as_ref() else {
+            return pending;
+        };
         let (drawn, bytes) = styled.counts();
         let mut key = DefaultHasher::new();
         styled.key(&mut key);
@@ -622,10 +627,22 @@ impl Renderer {
         state.stats.resident_bytes += bytes;
         state.stats.parts_lost = styled.lost;
         state.stats.parked_bytes = styled.parked_bytes();
-        // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
+        // Composed layers and effect groups (docs/adr/0226), and a frame drawn whole's long stretches of strokes and
+        // marks drawn one sample a pixel and laid over (docs/adr/9246): planned now, recorded in render. A frame that
+        // moves or scales the kept picture draws its strips on the picture's samples, as before.
         state.compose = None;
+        state.single_only = false;
+        state.stats.single_runs = 0;
+        let effects = needs_compose(styled);
+        let moved = !effects && (state.shift().is_some() || state.zoom_plan().is_some());
+        // On one sample a pixel the stretch has nothing to save: it would only be laid over once more.
+        let multisampled = state.targets.as_ref().is_some_and(|t| t.samples > 1);
+        let singles = if moved || !state.single_runs || !multisampled { Vec::new() } else { styled.single_runs() };
+        if !singles.is_empty() {
+            gpu.ensure(device, crate::styled::gpu::FLOAT_PICTURE);
+        }
         if let Some(targets) = &state.targets
-            && needs_compose(styled)
+            && (effects || !singles.is_empty())
         {
             let composer = self
                 .composer
@@ -642,8 +659,10 @@ impl Renderer {
             if let Some(ct) = state.compose_targets.as_mut() {
                 let (_, px_per_m, dpr, _, _) = styled.frame_facts();
                 let mut planner = Planner::new(composer, ct, device, px_per_m, dpr);
-                plan_composed(&mut planner, styled);
+                plan_composed(&mut planner, styled, &singles);
                 state.compose = Some(planner.finish(queue));
+                state.single_only = !effects;
+                state.stats.single_runs = singles.len() as u32;
                 state.stats.target_bytes += ct.bytes;
             }
         }
@@ -953,8 +972,14 @@ impl Renderer {
             if state.keep {
                 targets.keep(key);
             }
-            targets.hold(None);
-            targets.set_sharp(None);
+            if state.single_only {
+                // The plain picture, its strokes laid over one sample a pixel (docs/adr/9246): a pan moves it.
+                targets.hold(state.held_now());
+                targets.set_sharp(state.sharp_now());
+            } else {
+                targets.hold(None);
+                targets.set_sharp(None);
+            }
             targets.set_source(None);
             targets.set_wide_at(None);
         } else if let Some(shift) = state.shift().filter(|_| !(state.keep && targets.holds(key))) {
@@ -1170,6 +1195,10 @@ impl DrawBatches for Batches<'_> {
     fn draw_batches(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>) {
         self.gpu.draw_seq(pass, self.view, self.samples, seq);
     }
+
+    fn draw_single(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>) {
+        self.gpu.draw_seq(pass, self.view, crate::styled::gpu::FLOAT_PICTURE, seq);
+    }
 }
 
 /// Whether a frame composes (docs/adr/0226): a composed layer, or an effect group drawn.
@@ -1185,7 +1214,7 @@ fn needs_compose(view: &ViewStyled) -> bool {
 /// plain stretches straight into the picture, each composed layer's stretch
 /// into its own picture and laid over or mixed in, each effect group's into
 /// its own with its effects.
-fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
+fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled, singles: &[Range<usize>]) {
     let seq = &view.seq;
     let composed_of = |l: u32| view.compose.iter().position(|(r, _)| r.contains(&l));
     let mut i = 0;
@@ -1196,7 +1225,7 @@ fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
             i += 1;
         }
         let Some(c) = c else {
-            runs(planner, view, start..i, ComposeInto::Picture);
+            runs(planner, view, start..i, ComposeInto::Picture, singles);
             continue;
         };
         let drawn = (start..i).any(|k| {
@@ -1207,7 +1236,7 @@ fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
             continue;
         }
         planner.layer_clear();
-        runs(planner, view, start..i, ComposeInto::Layer);
+        runs(planner, view, start..i, ComposeInto::Layer, singles);
         let draw = &view.compose[c].1;
         let (centre, px_per_m, dpr, size, twist) = view.frame_facts();
         let (ts, tc) = twist.sin_cos();
@@ -1243,7 +1272,7 @@ fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
 }
 
 /// A stretch split into its plain runs and its effect groups' runs.
-fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into: ComposeInto) {
+fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into: ComposeInto, singles: &[Range<usize>]) {
     let seq = &view.seq;
     let facts = |k: usize| view.batch_facts(seq[k].0, seq[k].1);
     let mut k = range.start;
@@ -1254,7 +1283,7 @@ fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into:
                 while k < range.end && facts(k).is_none_or(|(_, _, e)| e.is_none()) {
                     k += 1;
                 }
-                planner.batches(start..k, into);
+                plain(planner, start..k, into, singles);
             }
             Some((level, effect)) => {
                 // One symbol layer's group: the same level and the same effects, part after part.
@@ -1269,6 +1298,30 @@ fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into:
                 }
             }
         }
+    }
+}
+
+/// A plain stretch into its place: into the picture, its parts in a one-sample stretch (docs/adr/9246) drawn so and
+/// laid over, the rest on the picture's samples; into a composed layer, as it is.
+fn plain(planner: &mut Planner<'_>, range: Range<usize>, into: ComposeInto, singles: &[Range<usize>]) {
+    if into != ComposeInto::Picture {
+        planner.batches(range, into);
+        return;
+    }
+    let mut at = range.start;
+    for s in singles {
+        let (a, z) = (s.start.max(range.start), s.end.min(range.end));
+        if a >= z {
+            continue;
+        }
+        if a > at {
+            planner.batches(at..a, into);
+        }
+        planner.single(a..z);
+        at = z;
+    }
+    if at < range.end {
+        planner.batches(at..range.end, into);
     }
 }
 
@@ -1401,6 +1454,11 @@ struct View {
     /// The composing pictures and this frame's composed passes (docs/adr/0226).
     compose_targets: Option<ComposeTargets>,
     compose: Option<ComposeFrame>,
+    /// This frame composes only for its one-sample stretches (docs/adr/9246): its picture is the plain one, kept to be
+    /// moved by a pan as a plain frame's is.
+    single_only: bool,
+    /// The settings ask for the one-sample stretches (`RenderSettings::single_runs`).
+    single_runs: bool,
     /// The view is being panned (`FrameInput::moving`), and what its picture shows but for the camera's place: the
     /// plain parts' (`prepare`), then with the styled layers' (`prepare_styled`); none when a moved picture would not
     /// be its picture at another place (docs/adr/1067 §2).
@@ -1525,6 +1583,8 @@ impl View {
             lens: None,
             compose_targets: None,
             compose: None,
+            single_only: false,
+            single_runs: true,
             moving: false,
             plain_content: 0,
             content: None,

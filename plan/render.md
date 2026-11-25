@@ -226,6 +226,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       temizleme ve bindirme ~1–1,5 ms.
     - **Engel:** bileşik kare yolu (ADR 0226) kaydırmada resmi taşıyan yolun (ADR 1067) önüne geçiyor. Büyük koşular
       için açmak kaydırma karelerinin yeniden kullanımını kapatır; bu ödünleşim ölçülmeden yapılmadı.
+  - [x] **Yapıldı** ([ADR 9246](../docs/adr/9246-strokes-drawn-one-sample-a-pixel-and-laid-over.md)): engel, koşuları
+    yalnız bütün çizilen karelerde açarak aşıldı. Kaydırmada taşınan resim de tekerlekte ölçeklenen resim de eskisi
+    gibi; yalnız koşu için birleşen kare içeriğini düz bir kare gibi tutuyor.
+    - Koşu yarım kayan noktalı bir resimde toplanıyor ve bir kez yuvarlanıyor. Kalan farklar örneklerin karıştırma
+      başına yuvarlaması: çoğu 1/255, en çok 3–4.
+    - 1 M çizgi 50,9 → 18,8 ms. release'te uzak tekerlek: sivas.kcad 101,6 → 75,2 ms, NCZ 90,2 → 59,5 ms, Suşehri
+      20,6 → 15,0 ms.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
@@ -591,3 +598,5 @@ harness'ın ekran görüntüsünü de içeriyor: boş bir çizimde (`minimal.kca
 - **Uzak görünüm** sivas.kcad ve NCZ'de değil. 24 Kasım'da 39,3 ve 40,1 ms'ydi. Fark, kalite kararlarının bedeli: uzak
   düzeyler ve hareketteki tek örnek kalktı (ADR 9222), eğriler çeyrek piksele çekildi (ADR 9223).
 - **Resmi değiştirmeyen kalan yol:** RM-10'daki tek örnekli çizgi koşuları; ölçülen tavanı uzak karenin üçte biri.
+- **Sonra (ADR 9246, `docs/perf/files-desktop-rm10-tek-2026-11-25.json`):** uzak tekerlek p50 / p95 sivas.kcad
+  75,2 / 79,0 ms, NCZ 59,5 / 70,8 ms, AVM 19,5 / 33,9 ms, Suşehri 15,0 / 16,5 ms.

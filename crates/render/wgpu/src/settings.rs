@@ -28,6 +28,11 @@ pub struct RenderSettings {
     /// Draw at the host's full resolution; off, one pixel per logical pixel,
     /// scaled up when composed (a quarter of the pixels on a 2× screen).
     pub hi_dpi: bool,
+    /// A frame drawn whole draws its long stretches of strokes and marks one
+    /// sample a pixel and lays them over the multisampled picture: the same
+    /// picture, the samples' cost per primitive saved (docs/adr/9246). Off,
+    /// on the picture's samples (a measurement's comparison).
+    pub single_runs: bool,
 }
 
 impl RenderSettings {
@@ -46,6 +51,7 @@ impl RenderSettings {
             curve_segment_budget: Self::DEFAULT_CURVE_SEGMENT_BUDGET,
             samples: 1,
             hi_dpi: true,
+            single_runs: true,
         }
     }
 }
