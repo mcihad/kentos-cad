@@ -271,8 +271,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F5 — CAD görünümü
 
-- [~] **RM-15 — Çizgi ve dolgu gösterimi.** Köşeler bir kez, WIPEOUT maskeleri, desen dolguları vektör (25 Kasım).
-  Açık: ızgara çizgisinin parça birleşimi.
+- [x] **RM-15 — Çizgi ve dolgu gösterimi.** Tamam (25 Kasım): köşeler bir kez, WIPEOUT maskeleri, desen dolguları
+  vektör, düz çizginin parçaları ve köşeleri bir kez.
   - Çizgi kalınlığı ekranda en az 1 piksel ve kenar yumuşatmalı; çizgi tipleri ve taramalar gölgelendiricide: stilli
     yolda zaten öyleymiş (ADR 0793, 1122).
   - [x] Adım 1 ([ADR 9226](../docs/adr/9226-line-joins-drawn-once.md)): köşeler bir kez çizilir. Her segment köşenin
@@ -281,11 +281,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Maskeler: DWG ve DXF'in WIPEOUT'u ADR 0310'un maskesi olarak alınıyor (RM-22 1. adım,
     [ADR 9227](../docs/adr/9227-dwg-regions-wipeouts-and-images.md)).
   - [x] Desen dolguları vektör (RM-11'in açığı, [ADR 9239](../docs/adr/9239-pattern-marks-drawn-from-their-triangles.md)).
-  - [ ] Izgara çizgisinin parçaları bir kez boyanır (RM-08'in doğrulamasında bulundu, ADR 9241 §3).
-    - Düz sahnenin çizgileri 128 m'lik parçalara bölünüyor (`MAX_SEGMENT_LENGTH`). Birleştikleri piksel iki kez
-      boyanıyor: ızgara çizgisinde 16–20/255 koyu bir nokta.
-    - Izgara yeniden kurulunca noktalar yer değiştiriyor. Bu yüzden görünümde noktalı, hayalet bir dik ve yatay çizgi
-      beliriyor, sonra kayboluyor.
+  - [x] Düz çizginin parçaları ve köşeleri bir kez boyanır ([ADR 9242](../docs/adr/9242-plain-line-joins-drawn-once.md);
+    RM-08'in doğrulamasında bulundu).
+    - Düz yol uzun kenarı 128 m'lik parçalara bölüyor, çizgi gölgelendiricisi her ucu yuvarlak çiziyordu. Birleşimde
+      ~2 px iki kez boyanıyordu. Uzakta ızgara boncuk boncuktu, yakında noktalı hayalet çizgiler kayıyordu;
+      %45'lik altlık planının her köşesi koyuydu.
+    - Örnek birleşim kodlarını taşıyor (`cad2d` düzeni 3). Her parça açıortayın kendi tarafını çiziyor, stilli
+      çizgide olduğu gibi (ADR 9226).
+    - GPU'da kapsüllerin birleşiminden en çok 0,6/255. NCZ açılışında 36 347 piksel açıldı, hepsi ızgarada.
+    - Ayrıca: tarama deseninin noktaları düz yolda hiç çizilmiyordu (sıfır uzunluklu parça atılıyordu), artık
+      çiziliyor.
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.

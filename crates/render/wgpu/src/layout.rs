@@ -11,7 +11,7 @@ use bytemuck::{Pod, Zeroable};
 
 /// Version of the binding, vertex and uniform layout (the JSON's `version`,
 /// the WGSL's `LAYOUT_VERSION`).
-pub const LAYOUT_VERSION: u32 = 2;
+pub const LAYOUT_VERSION: u32 = 3;
 
 /// The frame uniform (group 0, binding 0; WGSL `Frame`).
 #[repr(C)]
@@ -58,6 +58,24 @@ pub struct SegmentInstance {
     pub b_lo: [f32; 2],
     /// sRGB, straight alpha.
     pub color: [u8; 4],
+    /// Its joins (docs/adr/9242): the start's code in bits 0–10, the end's in bits 11–21 ([`join_code`]). Where a
+    /// segment meets the one before or after, each draws its own side of the joint's bisector, so a seen-through line
+    /// is not drawn twice there; 0 draws the end round, as every end was.
+    pub joins: u32,
+}
+
+/// A join's code (docs/adr/9226, 9242): the turn from one segment's direction to the next one's, 1024 steps a half
+/// turn, counter-clockwise above 1024 (straight on); 0 where none can be told (a turn back on itself).
+pub fn join_code(from: [f64; 2], to: [f64; 2]) -> u32 {
+    const STEPS: f64 = 1024.0;
+    let turn = (from[0] * to[1] - from[1] * to[0]).atan2(from[0] * to[0] + from[1] * to[1]);
+    let steps = (turn / std::f64::consts::PI * STEPS).round();
+    if steps.is_finite() && steps.abs() < STEPS { (steps + STEPS) as u32 } else { 0 }
+}
+
+/// A segment's [`SegmentInstance::joins`] from its start's and its end's codes.
+pub fn joins(start: u32, end: u32) -> u32 {
+    (start & 2047) | ((end & 2047) << 11)
 }
 
 /// A point mark (pipeline `marker`, step mode instance).
@@ -86,8 +104,8 @@ pub mod marker_shape {
 pub const FILL_ATTRIBUTES: [wgpu::VertexAttribute; 3] =
     wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Unorm8x4];
 
-pub const SEGMENT_ATTRIBUTES: [wgpu::VertexAttribute; 5] = wgpu::vertex_attr_array![
-    0 => Float32x2, 1 => Float32x2, 2 => Float32x2, 3 => Float32x2, 4 => Unorm8x4
+pub const SEGMENT_ATTRIBUTES: [wgpu::VertexAttribute; 6] = wgpu::vertex_attr_array![
+    0 => Float32x2, 1 => Float32x2, 2 => Float32x2, 3 => Float32x2, 4 => Unorm8x4, 5 => Uint32
 ];
 
 pub const MARKER_ATTRIBUTES: [wgpu::VertexAttribute; 5] = wgpu::vertex_attr_array![

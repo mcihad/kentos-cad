@@ -29,6 +29,8 @@ mod hatch;
 mod weights;
 #[path = "gpu/joins.rs"]
 mod joins;
+#[path = "gpu/plain_joins.rs"]
+mod plain_joins;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -571,6 +573,16 @@ fn joins_on_a_real_gpu() {
         return;
     }
     joins::seen_through_corners_are_drawn_once(&mut Gpu::open());
+}
+
+/// docs/adr/9242: a seen-through plain line's corners and cut pieces drawn once, on a real GPU.
+#[test]
+fn plain_joins_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    plain_joins::seen_through_joints_are_drawn_once(&mut Gpu::open());
 }
 
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.
