@@ -354,7 +354,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - **Değen delikler:** earcut taşındı; kırpıcının üçgenleri alanı kaplamazsa onunkiler alınıyor.
     - **Kesişen halkalar:** çekirdeğin örtüşme motoruyla “dış halka eksi deliklerin birleşimi” olarak çözülüyor.
     - Geçerli çokgenin üçgenleri aynı; 15 altın görüntü piksel piksel aynı.
-  - [ ] Adım 3: “486 531 DWG nesnesi okunmadı” (DGN çizgi stili bileşenleri, vekil nesneler): görünen bir kayıp var mı?
+  - [x] Adım 3 ([ADR 9229](../docs/adr/9229-dgn-line-styles-said-by-what-they-draw.md)): “486 531 DWG nesnesi
+    okunmadı”nın hepsi DGN çizgi stili kaydı (4 142 çizgi tipinin, bağlanan dış referanslardan çoğalmış). Bu tiplerle
+    çizilen 32 923 nesnenin hepsi yerleştirilmeyen bloklarda: görünen kayıp yok. Rapor artık bunu sayısıyla söylüyor.
+    10 DWG örneğinin hiçbirinde vekil çizim nesnesi yok.
+  - [ ] Adım 4: okunamayan tarama sınırları (YILTAŞ'ların ikisinde 130'ar).
+  - [ ] Adım 5: görüş doğrultusuna dik çember ve yaylar çizgi gibi görünür; atılmak yerine izdüşümleri alınmalı
+    (TEKNOKENT'te 28).
+  - [ ] Adım 6: OLE nesnesi (OLE2FRAME) yerini gösteren çerçeveyle; boş yazı “alınmadı” değil bilgi notu (TEKNOKENT'te
+    303).
 - [x] **RM-23 — Birim** ([ADR 9210](../docs/adr/9210-cad-unit-from-the-survey-grid.md)).
   - Sayıları Türkiye'nin ölçme ızgarasında duran CAD dosyası, ister milimetre bildirsin ister bildirmesin, Aç'ta
     metre okunuyor ve birim soruluyor (metre seçili).
