@@ -1,24 +1,27 @@
 //! Immutable, deduplicated long-pattern pages. Uploaded with a changed layer,
 //! never rebuilt for camera movement. Short recipes keep the inline uniform path.
-use kentos_native_style::batches::{BatchKind, StyledLayer, Unit};
+use kentos_native_style::batches::{BatchKind, StyledBatch, Unit};
 use std::borrow::Cow;
 use std::collections::HashMap;
 
 /// Only the immutable GPU upload copy changes: CPU/export retain the complete
 /// source distance. Fold hi+lo in f64 before the vertex shader multiplies it by
 /// px/m; its bounded phase then fits f32 independently of the path's length.
-pub(super) fn upload_values(layer: &StyledLayer) -> (Cow<'_, [f32]>, Cow<'_, [f32]>) {
-    let mut high = Cow::Borrowed(layer.data.as_slice());
-    let mut low = if layer.low.len() == layer.data.len() {
-        Cow::Borrowed(layer.low.as_slice())
+pub(super) fn upload_values<'a>(
+    batches: &[StyledBatch],
+    numbers: &'a super::gpu::Numbers,
+) -> (Cow<'a, [f32]>, Cow<'a, [f32]>) {
+    let mut high = Cow::Borrowed(numbers.data.as_slice());
+    let mut low = if numbers.low.len() == numbers.data.len() {
+        Cow::Borrowed(numbers.low.as_slice())
     } else {
         Cow::Owned(
-            (0..layer.data.len())
-                .map(|i| layer.low.get(i).copied().unwrap_or(0.))
+            (0..numbers.data.len())
+                .map(|i| numbers.low.get(i).copied().unwrap_or(0.))
                 .collect::<Vec<_>>(),
         )
     };
-    for batch in &layer.batches {
+    for batch in batches {
         if !matches!(
             &batch.kind,
             BatchKind::Stroke {
@@ -35,13 +38,13 @@ pub(super) fn upload_values(layer: &StyledLayer) -> (Cow<'_, [f32]>, Cow<'_, [f3
         if !period.is_finite() || period <= 0. {
             continue;
         }
-        let Some(values) = layer.data.get(batch.range.clone()) else {
+        let Some(values) = numbers.data.get(batch.range.clone()) else {
             continue;
         };
         for (i, segment) in values.as_chunks::<6>().0.iter().enumerate() {
             let at = batch.range.start + i * 6 + 4;
             let distance =
-                f64::from(segment[4]) + f64::from(layer.low.get(at).copied().unwrap_or(0.));
+                f64::from(segment[4]) + f64::from(numbers.low.get(at).copied().unwrap_or(0.));
             if !distance.is_finite() || distance.abs() < period {
                 continue;
             }
@@ -129,27 +132,26 @@ mod tests {
             lod: None,
             instances: None,
         };
-        let mut layer = StyledLayer {
+        let batches = vec![
+            batch(stroke(Unit::World), 0..6),
+            batch(stroke(Unit::Px), 6..12),
+            batch(
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Solid { color: [1.; 4] },
+                },
+                12..18,
+            ),
+        ];
+        let mut layer = super::super::gpu::Numbers {
             data: vec![1.; 18],
             low: vec![0.; 18],
-            batches: vec![
-                batch(stroke(Unit::World), 0..6),
-                batch(stroke(Unit::Px), 6..12),
-                batch(
-                    BatchKind::Fill {
-                        paint: FillPaintBatch::Solid { color: [1.; 4] },
-                    },
-                    12..18,
-                ),
-            ],
-            ..Default::default()
         };
         layer.data[4] = 1_000_000_000.;
         layer.low[4] = 0.125;
         layer.data[10] = 1_000_000_000.;
         layer.low[10] = 0.125;
         let (before, below) = (layer.data.clone(), layer.low.clone());
-        let (high, low) = upload_values(&layer);
+        let (high, low) = upload_values(&batches, &layer);
         assert_eq!(high[4], 0.375);
         assert_eq!(low[4], 0.);
         for i in (0..18).filter(|&i| i != 4) {
@@ -161,7 +163,7 @@ mod tests {
         drop((high, low));
         layer.data[4] = 0.;
         layer.low[4] = 0.;
-        let (high, low) = upload_values(&layer);
+        let (high, low) = upload_values(&batches, &layer);
         assert!(matches!(high, Cow::Borrowed(_)));
         assert!(matches!(low, Cow::Borrowed(_)));
     }

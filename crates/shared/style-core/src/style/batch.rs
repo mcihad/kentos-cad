@@ -158,6 +158,15 @@ impl Entry {
     fn grow(&mut self, x: f64, y: f64) {
         grow_box(&mut self.bounds, x, y);
     }
+
+    /// Whether it has enough to draw: a batch of it comes out of `BatchSink::finish`.
+    fn drawn(&self) -> bool {
+        match self.kind {
+            _ if self.inst.is_some() => !self.data.is_empty(),
+            Kind::Stroke | Kind::Fill => self.data.len() + self.lods.iter().map(Vec::len).sum::<usize>() >= 6,
+            Kind::Marker => self.data.len() >= 5,
+        }
+    }
 }
 
 fn grow_box(b: &mut [f64; 4], x: f64, y: f64) {
@@ -645,19 +654,28 @@ impl BatchSink {
                 .then(a.sub.cmp(&b.sub))
         });
         let mut json = String::from("[");
-        let mut data: Vec<f32> = Vec::new();
-        let mut low = Vec::new();
+        // The numbers' exact count first (plan/render.md RM-19): grown a batch at a time, the layer's float32 numbers
+        // and their residuals took up to twice their size (a city plan's NCZ: 322 MB reserved for each), and each
+        // batch's own numbers stayed until the end, besides them.
+        let total: usize = order
+            .iter()
+            .map(|&i| &self.entries[i])
+            .filter(|e| e.drawn())
+            .map(|e| match &e.inst {
+                Some((def, j)) => {
+                    let d = &def.batches[*j];
+                    d.data.len() + d.lods.iter().map(Vec::len).sum::<usize>() + d.proxy.len() + e.data.len()
+                }
+                None => e.data.len() + e.lods.iter().map(Vec::len).sum::<usize>(),
+            })
+            .sum();
+        let mut data: Vec<f32> = Vec::with_capacity(total);
+        let mut low = Vec::with_capacity(if self.position_low { total } else { 0 });
         let mut ground = Vec::new();
         let mut placed = 0u32;
         for i in order {
             let e = &self.entries[i];
-            let lods: usize = e.lods.iter().map(Vec::len).sum();
-            let enough = match e.kind {
-                _ if e.inst.is_some() => !e.data.is_empty(),
-                Kind::Stroke | Kind::Fill => e.data.len() + lods >= 6,
-                Kind::Marker => e.data.len() >= 5,
-            };
-            if !enough {
+            if !e.drawn() {
                 continue;
             }
             if json.len() > 1 {
@@ -768,6 +786,10 @@ impl BatchSink {
                 ground.push(placed);
             }
             placed += 1;
+            // Its numbers are the layer's now.
+            let e = &mut self.entries[i];
+            e.data = Vec::new();
+            e.lods = Vec::new();
         }
         json.push(']');
         Batches {

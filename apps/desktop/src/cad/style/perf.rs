@@ -286,7 +286,7 @@ fn look(doc: &Document, screen_scale: f64) -> Look {
 fn frame_cpu(scene: &StyledScene, view: [f64; 4], px_per_m: f64) -> usize {
     let mut shown = 0;
     for part in &scene.layers {
-        for b in &part.layer.batches {
+        for b in part.batches() {
             if b.in_scale(1000.0) && b.in_view(view, px_per_m, 1.0) && b.legible(px_per_m, 1.0) {
                 shown += 1;
             }
@@ -332,8 +332,8 @@ fn perf() {
             1,
         );
         let full = ms(t);
-        let batches: usize = styled.layers.iter().map(|l| l.layer.batches.len()).sum();
-        let floats: usize = styled.layers.iter().map(|l| l.layer.data.len()).sum();
+        let batches: usize = styled.layers.iter().map(|l| l.batches().len()).sum();
+        let floats: usize = styled.layers.iter().map(|l| l.numbers().as_ref().map_or(0, |n| n.data.len())).sum();
 
         // One object moved: its layer alone is built again.
         let mut doc2 = doc.clone();
@@ -432,7 +432,7 @@ fn perf() {
             ms(t),
             s.layers
                 .iter()
-                .map(|l| l.layer.batches.len())
+                .map(|l| l.batches().len())
                 .sum::<usize>()
         );
     }

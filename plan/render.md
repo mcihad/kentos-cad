@@ -316,7 +316,18 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] KA_KORUNMA_ALANI (sınır boyunca iri noktalar, çizgi tipi 31): sahibin kararı (24 Kasım) düz çizgi kalsın;
     anlamı belli olunca eşlenir. Çizgi tipi 4 (demiryolu kuşağı ile rezerv yapı ortak) ve 22 (jeolojik formasyon)
     bilerek düz.
-- [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
+- [~] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
+  - Ölçüm aracı: `perf::memory::file_parts` (açılış uygulamanın yaptığı gibi; sonra parçaları tek tek bırakır;
+    `heap-count` ile Rust yığını, `KENTOS_PERF_STAGES=1` ile aşamalar). Gerçek pencerede sürücünün `memory` komutu.
+  - [x] 1. adım: stilli katmanların sayıları GPU'da yaşar, açılışın bıraktığı bellek geri verilir
+    ([ADR 9235](../docs/adr/9235-styled-numbers-on-the-gpu-and-freed-memory-given-back.md)). NCZ, hata ayıklama:
+    - açılışın tepesi 2 878 → 1 996 MB;
+    - Rust yığını 1 870 → 1 274 MB;
+    - gerçek pencerede (lavapipe) yerleşik 3 647 → 2 595 MB, tepe 4 389 → 3 327 MB; resim aynı.
+  - [ ] 2. adım: belgenin nesne tipi küçülür. 1 264 bayt: en büyük türlerin boyu, satır içindeki 512 baytlık
+    `ArchInfo` dahil. Belge 706 MB.
+  - [ ] 3. adım: geometri deposunun `Shape`'i küçülür (`Item` 472 bayt). Depo 450 MB.
+  - [ ] 4. adım: okumanın tepesi. Okuyucunun nesne dizisi ile belgenin kopyaları yan yana durmaz.
 
 ### F7 — DWG ve DXF alımı
 

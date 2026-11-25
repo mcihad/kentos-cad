@@ -61,15 +61,15 @@ fn scene(id: u64, data: Vec<f32>, alpha: f64) -> StyledScene {
         instances: None,
     };
     StyledScene {
-        layers: vec![Arc::new(StyledLayerPart {
+        layers: vec![Arc::new(StyledLayerPart::new(
             id,
-            layer: StyledLayer {
+            StyledLayer {
                 low: Vec::new(),
                 data,
                 batches: vec![batch],
                 ..Default::default()
             },
-        })],
+        ))],
         ..Default::default()
     }
 }

@@ -105,7 +105,7 @@ pub(super) fn one(p: &Parts) -> Value {
 }
 
 /// The task's messages, each as it came, on a thread of its own (as Iced's runtime runs a blocking task).
-fn drive(task: iced::Task<Message>) -> mpsc::Receiver<(Instant, Message)> {
+pub(super) fn drive(task: iced::Task<Message>) -> mpsc::Receiver<(Instant, Message)> {
     let (tx, rx) = mpsc::channel();
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         std::thread::spawn(move || {
@@ -121,7 +121,7 @@ fn drive(task: iced::Task<Message>) -> mpsc::Receiver<(Instant, Message)> {
     rx
 }
 
-fn is_done(m: &Message) -> bool {
+pub(super) fn is_done(m: &Message) -> bool {
     matches!(m, Message::Opening(crate::opening::Event::Done { .. }))
 }
 

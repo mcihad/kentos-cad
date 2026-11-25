@@ -143,10 +143,10 @@ pub fn vector_tile(
     )
     .unwrap_or_else(|_| StyledLayer::default());
     (
-        Arc::new(StyledLayerPart {
-            id: NEXT_TILE.fetch_add(1, Ordering::Relaxed),
+        Arc::new(StyledLayerPart::new(
+            NEXT_TILE.fetch_add(1, Ordering::Relaxed),
             layer,
-        }),
+        )),
         out.labels,
     )
 }

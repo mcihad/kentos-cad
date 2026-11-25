@@ -433,7 +433,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             .collect();
         for size in 1..=3 {
             let parts: Vec<StyledLayer> = list.chunks(size).map(build).collect();
-            let refs: Vec<&StyledLayer> = parts.iter().collect();
+            let refs: Vec<&[_]> = parts.iter().map(|p| p.batches.as_slice()).collect();
             let mut got: Vec<(u64, Vec<f32>)> = Vec::new();
             for (p, b) in merged_order(&refs) {
                 let batch = &parts[p].batches[b];

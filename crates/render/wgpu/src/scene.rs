@@ -294,7 +294,7 @@ fn grid_steps(from: f64, to: f64, minor: f64) -> Option<(f64, u32)> {
     let first = (from / minor).floor() * minor;
     let count = ((to - first) / minor).floor() + 1.0;
     let precise = minor > (first.abs() + to.abs()) * f64::EPSILON * 4.0;
-    (count.is_finite() && count >= 0.0 && count <= MOST_GRID_LINES && precise).then_some((first, count as u32))
+    ((0.0..=MOST_GRID_LINES).contains(&count) && precise).then_some((first, count as u32))
 }
 
 /// Grid lines across `area` (absolute world coordinates), on round world

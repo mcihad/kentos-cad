@@ -620,6 +620,7 @@ impl Renderer {
         state.stats.draw_calls += drawn;
         state.stats.styled_items = styled.items();
         state.stats.resident_bytes += bytes;
+        state.stats.parts_lost = styled.lost;
         // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
         state.compose = None;
         if let Some(targets) = &state.targets
@@ -1131,7 +1132,8 @@ impl Renderer {
     pub fn trim(&mut self) {
         self.views.retain(|_, view| {
             view.idle += 1;
-            view.idle <= KEEP_IDLE_FRAMES
+            // Its styled layers' buffers may be the only copy of their numbers the app has (plan/render.md RM-19).
+            view.idle <= KEEP_IDLE_FRAMES || view.styled.as_ref().is_some_and(ViewStyled::holds_only_copies)
         });
     }
 

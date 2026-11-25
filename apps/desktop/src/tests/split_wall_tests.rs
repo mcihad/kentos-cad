@@ -74,7 +74,7 @@ fn fills(app: &mut App, view: Option<usize>) -> (usize, usize) {
     let scene = viewport.styled_scene(doc, &palette, styling);
     let (mut solid, mut hatch) = (0, 0);
     for part in &scene.layers {
-        for b in &part.layer.batches {
+        for b in part.batches() {
             match &b.kind {
                 BatchKind::Fill {
                     paint: FillPaintBatch::Solid { .. },

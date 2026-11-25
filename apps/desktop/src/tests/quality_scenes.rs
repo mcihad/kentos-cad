@@ -238,7 +238,7 @@ mod tests {
         assert!(px_per_m > 25.0 * held, "zoomed far past 1:100: {px_per_m}");
         let (mut widths, mut wide) = (0, 0.0_f64);
         for part in &scene.layers {
-            for b in &part.layer.batches {
+            for b in part.batches() {
                 let width = match &b.kind {
                     BatchKind::Stroke { width, unit: Unit::World, .. } => *width,
                     BatchKind::Fill { paint: FillPaintBatch::Hatch { width, unit: Unit::World, .. } } => *width,

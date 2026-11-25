@@ -11,9 +11,9 @@
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::Range;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use kentos_native_style::batches::{BatchKind, FillPaintBatch, StyledLayer};
+use kentos_native_style::batches::{BatchKind, FillPaintBatch, Picture, StyledBatch, StyledLayer};
 use wgpu::util::DeviceExt;
 
 use super::atlas::{Atlas, PAGE};
@@ -22,11 +22,101 @@ use super::shader;
 use super::uniform::{STYLE_BYTES, StyleBlock, StyledFrameUniform, style_block};
 
 /// A styled layer to draw, with the id the renderer keeps its buffers by.
+///
+/// Its numbers (`StyledLayer::data`, `low`) are held apart from its batches (plan/render.md RM-19): a part made
+/// [`on_gpu`](Self::on_gpu) lets them go once the GPU has them, so a large drawing's styled layers are not held twice,
+/// on the CPU and on the GPU (the 453 534 objects of a city plan's NCZ held 644 MB of them on the CPU besides the GPU's
+/// copy). A part whose batches are read on the CPU while drawing (a marker's box for a mask, a symbol drawn by its
+/// vectors) keeps them.
 #[derive(Debug)]
 pub struct StyledLayerPart {
     /// Unique per build: a layer the view has not drawn under this id is uploaded.
     pub id: u64,
-    pub layer: StyledLayer,
+    /// Its batches, pictures and counts; its numbers are in `numbers`.
+    layer: StyledLayer,
+    numbers: Mutex<Option<Numbers>>,
+    /// Whether the GPU lets its numbers go once it has them.
+    let_go: bool,
+}
+
+/// A styled layer's numbers: its batches' float32 values and their residuals (`StyledLayer::data`, `low`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Numbers {
+    pub data: Vec<f32>,
+    /// Indexed exactly like `data`; empty means zero.
+    pub low: Vec<f32>,
+}
+
+impl StyledLayerPart {
+    /// A part whose numbers stay on the CPU for as long as it lives.
+    pub fn new(id: u64, layer: StyledLayer) -> Self {
+        Self::made(id, layer, false)
+    }
+
+    /// A part whose numbers live on the GPU once a view uploaded them: the CPU lets them go then, unless a batch reads
+    /// them on the CPU while drawing (a marker's box for a mask, a symbol drawn by its vectors). A view keeps the
+    /// buffers of such a part for as long as anyone else holds the part; one that has not got them says so
+    /// (`FrameStats::parts_lost`) and the part is built again.
+    pub fn on_gpu(id: u64, layer: StyledLayer) -> Self {
+        let read = layer.batches.iter().any(|b| {
+            matches!(b.kind, BatchKind::Marker { .. }) || b.instances.as_ref().is_some_and(|i| i.mark.is_some())
+        });
+        Self::made(id, layer, !read)
+    }
+
+    fn made(id: u64, mut layer: StyledLayer, let_go: bool) -> Self {
+        let numbers = Numbers {
+            data: std::mem::take(&mut layer.data),
+            low: std::mem::take(&mut layer.low),
+        };
+        Self {
+            id,
+            layer,
+            numbers: Mutex::new(Some(numbers)),
+            let_go,
+        }
+    }
+
+    pub fn batches(&self) -> &[StyledBatch] {
+        &self.layer.batches
+    }
+
+    /// The pictures its build made (a heat map's, docs/adr/0213 §2.6).
+    pub fn pictures(&self) -> &[Picture] {
+        &self.layer.pictures
+    }
+
+    /// Dots of Nokta yoğunluğu left out over the layer's limit (docs/adr/0213 §2.4).
+    pub fn dropped(&self) -> u64 {
+        self.layer.dropped
+    }
+
+    /// Its numbers, while the CPU has them.
+    pub fn numbers(&self) -> MutexGuard<'_, Option<Numbers>> {
+        self.numbers.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// Whether its numbers are on the GPU only: a view without its buffers cannot draw it.
+    pub fn on_gpu_only(&self) -> bool {
+        self.let_go && self.numbers().is_none()
+    }
+
+    /// The whole layer, with its numbers while the CPU has them (a test's, a measurement's).
+    pub fn to_layer(&self) -> StyledLayer {
+        let numbers = self.numbers().clone().unwrap_or_default();
+        StyledLayer {
+            data: numbers.data,
+            low: numbers.low,
+            ..self.layer.clone()
+        }
+    }
+
+    /// After a view uploaded it: a part made `on_gpu` lets its numbers go.
+    fn uploaded(&self) {
+        if self.let_go {
+            *self.numbers() = None;
+        }
+    }
 }
 
 /// The styled layers of a view, bottom first, and how many of the view's
@@ -696,6 +786,12 @@ impl StyledGpu {
     /// A layer's buffers.
     fn upload(&self, device: &wgpu::Device, part: &Arc<StyledLayerPart>) -> GpuLayer {
         let layer = &part.layer;
+        let held = part.numbers();
+        // A part whose numbers are on the GPU only, met by a view without its buffers: drawn as nothing, and the view
+        // says it lost the part (`ViewStyled::lost`) so the app builds it again (plan/render.md RM-19).
+        let none = Numbers::default();
+        let numbers = held.as_ref().unwrap_or(&none);
+        let lost = held.is_none();
         let mut patterns = super::dashes::DashPages::default();
         let mut batches = Vec::with_capacity(layer.batches.len());
         let mut blocks: Vec<u8> = Vec::with_capacity(layer.batches.len() * self.align as usize);
@@ -782,7 +878,7 @@ impl StyledGpu {
             let placed = b
                 .instances
                 .as_ref()
-                .and_then(|inst| self.placed(device, layer, b, inst));
+                .and_then(|inst| self.placed(device, numbers, b, inst));
             if let Some(p) = &placed {
                 own_bytes += p.bytes;
             }
@@ -805,7 +901,7 @@ impl StyledGpu {
                 pipe,
                 bytes: (range.start as u64 * 4)..(range.end as u64 * 4),
                 // An instanced batch no instanced pipeline draws is drawn as nothing, never as its raw numbers.
-                count: if unplaced {
+                count: if unplaced || lost {
                     0
                 } else {
                     (range.len() / floats) as u32
@@ -818,7 +914,7 @@ impl StyledGpu {
                 placed: None,
             });
         }
-        let (uploaded, lows) = super::dashes::upload_values(layer);
+        let (uploaded, lows) = super::dashes::upload_values(&layer.batches, numbers);
         let vertex = (!uploaded.is_empty()).then(|| {
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("kentos.styled.data"),
@@ -863,6 +959,12 @@ impl StyledGpu {
                 ],
             })
         }).collect();
+        let bytes = (numbers.data.len() * 8 + blocks.len() + pattern_bytes) as u64 + own_bytes;
+        drop((uploaded, lows));
+        drop(held);
+        if !lost {
+            part.uploaded();
+        }
         GpuLayer {
             id: part.id,
             source: part.clone(),
@@ -871,7 +973,8 @@ impl StyledGpu {
             styles,
             bind,
             batches,
-            bytes: (layer.data.len() * 8 + blocks.len() + pattern_bytes) as u64 + own_bytes,
+            bytes,
+            lost,
         }
     }
 
@@ -881,7 +984,7 @@ impl StyledGpu {
     fn placed(
         &self,
         device: &wgpu::Device,
-        layer: &kentos_native_style::batches::StyledLayer,
+        layer: &Numbers,
         b: &kentos_native_style::StyledBatch,
         inst: &kentos_native_style::batches::Instances,
     ) -> Option<Placed> {
@@ -950,14 +1053,23 @@ impl StyledGpu {
         images: &dyn ImageSource,
     ) -> bool {
         self.ensure(device, samples);
-        // Layers by id: kept ones stay, new ones are uploaded.
+        // Layers by id: kept ones stay (parked ones too), new ones are uploaded.
         let mut kept: HashMap<u64, GpuLayer> = view.layers.drain(..).map(|l| (l.id, l)).collect();
+        kept.extend(view.parked.drain());
+        view.lost = false;
         for part in &scene.layers {
             let layer = kept
                 .remove(&part.id)
                 .unwrap_or_else(|| self.upload(device, part));
+            view.lost |= layer.lost;
             view.layers.push(layer);
         }
+        // A layer whose numbers are on the GPU only stays while the app still holds its part undrawn: its buffers are
+        // the only copy of its numbers. The rest go with their buffers.
+        view.parked = kept
+            .into_iter()
+            .filter(|(_, l)| !l.lost && l.source.on_gpu_only() && Arc::strong_count(&l.source) > 1)
+            .collect();
         view.under = scene.under;
         view.order = scene.order.clone();
         view.compose = scene.compose.clone();
@@ -1945,6 +2057,8 @@ pub struct GpuLayer {
     bind: Vec<wgpu::BindGroup>,
     batches: Vec<GpuBatch>,
     bytes: u64,
+    /// Met without its numbers (they were on the GPU only, in buffers this view no longer had): drawn as nothing.
+    lost: bool,
 }
 
 /// A view's styled state: its frame uniform and its layers on the GPU.
@@ -1956,6 +2070,12 @@ pub struct ViewStyled {
     /// The view's twist, radians, as the last prepared frame has it (docs/adr/0285 §2).
     twist: f64,
     pub(crate) layers: Vec<GpuLayer>,
+    /// Layers whose numbers are on the GPU only, not in the last frame's scene but still held by the app (a hidden
+    /// layer, the drawing under the deep view): their buffers are their only numbers, kept until the app lets go.
+    parked: HashMap<u64, GpuLayer>,
+    /// The last frame met a part whose numbers were on the GPU only, in buffers this view no longer had: the app
+    /// builds it again (`FrameStats::parts_lost`).
+    pub(crate) lost: bool,
     /// How many of the view's plain parts draw beneath the styled layers.
     pub under: usize,
     /// The scene's draw order, when it has one (`StyledScene::order`).
@@ -2000,6 +2120,8 @@ impl ViewStyled {
             uniform: StyledFrameUniform::default(),
             twist: 0.0,
             layers: Vec::new(),
+            parked: HashMap::new(),
+            lost: false,
             under: 0,
             order: None,
             seq: Vec::new(),
@@ -2156,7 +2278,12 @@ impl ViewStyled {
             .get(layers.start as usize..layers.end as usize)
             .unwrap_or(&[])
         {
-            let data = &layer.source.layer.data;
+            // A part with markers keeps its numbers on the CPU (`StyledLayerPart::on_gpu`).
+            let held = layer.source.numbers();
+            let Some(numbers) = held.as_ref() else {
+                continue;
+            };
+            let (data, lows) = (&numbers.data, &numbers.low);
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
                 // A symbol drawn by its vectors gives the boxes its markers had (docs/adr/9208).
                 if b.instances.as_ref().is_some_and(|i| i.mark.is_some()) {
@@ -2164,7 +2291,7 @@ impl ViewStyled {
                         continue;
                     }
                     let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
-                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(&layer.source.layer, b) {
+                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(data, lows, b) {
                         let (w, h) = (size[0] * px_per_m, size[1] * px_per_m);
                         let (dx, dy) = ((middle[0] - tile[0]) * px_per_m, (middle[1] - tile[1]) * px_per_m);
                         let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
@@ -2217,8 +2344,8 @@ impl ViewStyled {
                     let (sa, ca) = (f64::from(m[2]) - twist).sin_cos();
                     let turned = [ca * q[0] - sa * q[1], sa * q[0] + ca * q[1]];
                     let (dx, dy) = (
-                        (f64::from(m[0]) + f64::from(layer.source.layer.low.get(b.range.start + at * 5).copied().unwrap_or(0.0)) - tile[0]) * px_per_m,
-                        (f64::from(m[1]) + f64::from(layer.source.layer.low.get(b.range.start + at * 5 + 1).copied().unwrap_or(0.0)) - tile[1]) * px_per_m,
+                        (f64::from(m[0]) + f64::from(lows.get(b.range.start + at * 5).copied().unwrap_or(0.0)) - tile[0]) * px_per_m,
+                        (f64::from(m[1]) + f64::from(lows.get(b.range.start + at * 5 + 1).copied().unwrap_or(0.0)) - tile[1]) * px_per_m,
                     );
                     let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
                     let x = vw / 2.0 + u + turned[0];
@@ -2298,6 +2425,17 @@ impl ViewStyled {
             .flat_map(|l| l.batches.iter())
             .filter(|b| b.visible && b.count > 0)
             .count() as u32;
-        (drawn, self.layers.iter().map(|l| l.bytes).sum())
+        let held = self.layers.iter().chain(self.parked.values()).map(|l| l.bytes).sum();
+        (drawn, held)
+    }
+
+    /// Whether it holds the only copy of numbers a part the app still holds has (`StyledLayerPart::on_gpu`): a view
+    /// left undrawn keeps its buffers then (the drawing area under a sheet), for the app has nothing to upload them
+    /// from again.
+    pub fn holds_only_copies(&self) -> bool {
+        self.layers
+            .iter()
+            .chain(self.parked.values())
+            .any(|l| !l.lost && l.source.on_gpu_only() && Arc::strong_count(&l.source) > 1)
     }
 }

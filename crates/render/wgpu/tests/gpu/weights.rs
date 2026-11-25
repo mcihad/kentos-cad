@@ -33,15 +33,15 @@ fn batch(id: u64, kind: BatchKind, data: &[f32], cap: f64) -> StyledScene {
         instances: None,
     };
     StyledScene {
-        layers: vec![Arc::new(StyledLayerPart {
+        layers: vec![Arc::new(StyledLayerPart::new(
             id,
-            layer: StyledLayer {
+            StyledLayer {
                 low: Vec::new(),
                 data: data.to_vec(),
                 batches: vec![batch],
                 ..Default::default()
             },
-        })],
+        ))],
         ..Default::default()
     }
 }

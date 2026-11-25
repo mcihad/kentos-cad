@@ -153,6 +153,9 @@ testing = ["dep:miniz_oxide", "dep:parking_lot"]
 # The e-signature's software test card and in-process test server for demos and the real-window acceptance
 # (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 and KENTOS_IMZA_DENEME_SUNUCU=1 pick them. Never in a release build.
 esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]
+# `perf::memory` counts the Rust heap live at each step (plan/render.md RM-19): a counting allocator for the test
+# binary, apart from a GPU driver's own allocations. A measurement's; never in a build that ships.
+heap-count = []
 
 [dev-dependencies]
 # The drivers' conformance dataset: the same rows in a PostGIS table and a GeoPackage (gis/layer_classes_source_tests.rs).

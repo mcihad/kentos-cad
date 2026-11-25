@@ -41,4 +41,7 @@ pub struct FrameStats {
     pub picture_zoomed_wide: bool,
     /// The drawing's text's glyphs drawn on the GPU (docs/adr/9212 §5).
     pub glyphs: u64,
+    /// The frame met a styled part whose numbers were on the GPU only, in buffers the view no longer had
+    /// (`StyledLayerPart::on_gpu`): drawn as nothing; the app builds its styled layers again (plan/render.md RM-19).
+    pub parts_lost: bool,
 }

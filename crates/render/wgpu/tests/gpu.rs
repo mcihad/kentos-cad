@@ -37,6 +37,8 @@ mod glyphs;
 mod precision;
 #[path = "gpu/scene3d.rs"]
 mod scene3d;
+#[path = "gpu/on_gpu.rs"]
+mod on_gpu;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -412,7 +414,7 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
         ..StyledLayer::default()
     };
     gpu.styled = Some(StyledScene {
-        layers: vec![std::sync::Arc::new(StyledLayerPart { id: 7, layer })],
+        layers: vec![std::sync::Arc::new(StyledLayerPart::new(7, layer))],
         under: 0,
         order: None,
         compose: Vec::new(),
@@ -518,6 +520,16 @@ fn glyphs_on_a_real_gpu() {
     glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
     glyphs::rings_and_lines_cover_their_areas(&gpu);
     glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
+}
+
+/// plan/render.md RM-19 alone: a styled part's numbers on the GPU only, on a real GPU.
+#[test]
+fn numbers_on_the_gpu_only() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    on_gpu::styled_numbers_live_on_the_gpu(&mut Gpu::open());
 }
 
 /// docs/adr/9226 alone: a seen-through polyline's corners drawn once, on a real GPU.

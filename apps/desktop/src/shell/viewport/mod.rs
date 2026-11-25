@@ -376,6 +376,9 @@ pub struct Viewport {
     /// A view of a split area that is not the active one, its place among them (split_view.rs, docs/adr/0285 §3,
     /// 0637 §1): its events come as `Message::OtherViewport`.
     pub(crate) other: Option<usize>,
+    /// The renderer's frame that last said it lost styled parts whose numbers were on the GPU only (`parts_lost`,
+    /// plan/render.md RM-19): the styled layers were built again for it, once.
+    lost_seen: std::cell::Cell<u64>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): drawn, but the pointer goes through it to the view under.
     pub(crate) passive: bool,
     /// The view's theme (docs/adr/0523 §1): a layer state of the project it shows the drawing with, the drawing

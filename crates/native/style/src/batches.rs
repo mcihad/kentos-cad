@@ -483,6 +483,8 @@ pub struct Proxy {
 
 /// The most logical pixels a definition's strokes span for its proxy to be drawn (the core's, docs/adr/1065 §2).
 pub use kentos_style_core::style::batch::BLOCK_PROXY_PX;
+/// A picture a build made (a heat map's, docs/adr/0213 §2.6): what `StyledLayer::pictures` holds.
+pub use kentos_style_core::style::batch::Picture;
 
 impl Instances {
     /// Whether a view at `px_per_m` logical px a metre draws the proxy instead of the definition.
@@ -1699,21 +1701,23 @@ fn kind_rank(b: &StyledBatch) -> u8 {
 /// batch's place in the whole layer is its level, its kind and where its key
 /// is first met (the first part that has it, and its place there), and the
 /// parts of one batch draw one after another, as its objects do.
-pub fn merged_order(parts: &[&StyledLayer]) -> Vec<(usize, usize)> {
+///
+/// `parts` are the parts' batches (`StyledLayer::batches`).
+pub fn merged_order(parts: &[&[StyledBatch]]) -> Vec<(usize, usize)> {
     let mut first: std::collections::HashMap<u64, (usize, usize)> =
         std::collections::HashMap::new();
-    for (p, layer) in parts.iter().enumerate() {
-        for (b, batch) in layer.batches.iter().enumerate() {
+    for (p, batches) in parts.iter().enumerate() {
+        for (b, batch) in batches.iter().enumerate() {
             first.entry(batch.key).or_insert((p, b));
         }
     }
     let mut all: Vec<(usize, usize)> = parts
         .iter()
         .enumerate()
-        .flat_map(|(p, layer)| (0..layer.batches.len()).map(move |b| (p, b)))
+        .flat_map(|(p, batches)| (0..batches.len()).map(move |b| (p, b)))
         .collect();
     all.sort_by(|&(pa, ba), &(pb, bb)| {
-        let (a, b) = (&parts[pa].batches[ba], &parts[pb].batches[bb]);
+        let (a, b) = (&parts[pa][ba], &parts[pb][bb]);
         a.level
             .total_cmp(&b.level)
             .then(a.group.cmp(&b.group))

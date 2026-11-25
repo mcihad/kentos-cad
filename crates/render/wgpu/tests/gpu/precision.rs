@@ -90,9 +90,9 @@ fn scene(center: Vec2, kind: usize, id: u64) -> StyledScene {
         .collect();
     let len = data.len();
     StyledScene {
-        layers: vec![Arc::new(StyledLayerPart {
+        layers: vec![Arc::new(StyledLayerPart::new(
             id,
-            layer: StyledLayer {
+            StyledLayer {
                 data,
                 low,
                 batches: vec![StyledBatch {
@@ -120,7 +120,7 @@ fn scene(center: Vec2, kind: usize, id: u64) -> StyledScene {
                 }],
                 ..Default::default()
             },
-        })],
+        ))],
         ..Default::default()
     }
 }

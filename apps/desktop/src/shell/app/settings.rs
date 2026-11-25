@@ -296,5 +296,7 @@ impl App {
         self.take_level_state();
         // A linked file that changed or went is said, never loaded silently (docs/adr/0348 §5, 0349 §2).
         self.xrefs_check_opened();
+        // What its open freed (its reading's thread, the drawing left) given back to the system (plan/render.md RM-19).
+        crate::give_back::soon();
     }
 }
