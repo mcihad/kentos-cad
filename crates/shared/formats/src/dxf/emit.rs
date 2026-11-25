@@ -3597,7 +3597,29 @@ impl<'l> Emitter<'l> {
         // Each ring's path exact (docs/adr/0328 §1), in drawing coordinates; none where it cannot be.
         let mut loops: Vec<Option<CoreLoop>> = Vec::new();
         let mut curved = false;
-        for path in &h.paths {
+        // A path's ring, its exact path with it (none for a ring of several paths).
+        let mut take = |ring: Vec<Vec2>, path: Option<&Path>| {
+            let mut ring = ring;
+            if ring.len() > 1 && ring.first() == ring.last() {
+                ring.pop();
+            }
+            if ring.len() >= 3 && ring.iter().all(|p| finite(*p)) {
+                rings.push(ring);
+                let at = |p: CoreVec2| {
+                    let q = m.apply(Vec2 { x: p.x, y: p.y });
+                    finite(q).then(|| CoreVec2::new(q.x, q.y))
+                };
+                loops.push(path.and_then(path_loop).and_then(|l| {
+                    hatch_boundary::mapped(&[l], &at, [m.a, m.b, m.c, m.d])
+                        .and_then(|mut v| v.pop())
+                        .filter(|l| hatch_boundary::problem(std::slice::from_ref(l)).is_none())
+                }));
+            }
+        };
+        // Paths flagged not closed (92 bit 32) whose ends do not meet: pieces of a boundary that closes only with
+        // others (docs/adr/9230).
+        let mut pieces: Vec<(usize, Vec<Vec2>)> = Vec::new();
+        for (k, path) in h.paths.iter().enumerate() {
             let Boundary {
                 pts: ring,
                 curved: arcs,
@@ -3609,21 +3631,15 @@ impl<'l> Emitter<'l> {
             }
             let mut ring: Vec<Vec2> = ring.into_iter().map(|p| m.apply(p)).collect();
             ring.dedup();
-            if ring.len() > 1 && ring.first() == ring.last() {
-                ring.pop();
+            let open = h.path_flags.get(k).is_some_and(|f| f & 32 != 0);
+            if open && ring.len() >= 2 && ring.first() != ring.last() && ring.iter().all(|p| finite(*p)) {
+                pieces.push((k, ring));
+                continue;
             }
-            if ring.len() >= 3 && ring.iter().all(|p| finite(*p)) {
-                rings.push(ring);
-                let at = |p: CoreVec2| {
-                    let q = m.apply(Vec2 { x: p.x, y: p.y });
-                    finite(q).then(|| CoreVec2::new(q.x, q.y))
-                };
-                loops.push(path_loop(path).and_then(|l| {
-                    hatch_boundary::mapped(&[l], &at, [m.a, m.b, m.c, m.d])
-                        .and_then(|mut v| v.pop())
-                        .filter(|l| hatch_boundary::problem(std::slice::from_ref(l)).is_none())
-                }));
-            }
+            take(ring, Some(path));
+        }
+        for (one, ring) in stitch(pieces) {
+            take(ring, one.and_then(|k| h.paths.get(k)));
         }
         if rings.is_empty() {
             return self.skip("Tarama (HATCH)", "sınırı okunamadı ya da alanı yok", e.line);
@@ -3947,6 +3963,56 @@ struct Boundary {
     curved: bool,
     /// A spline edge could not be evaluated: its control points stand in for it.
     rough: bool,
+}
+
+/// The pieces of a hatch's boundary (paths flagged not closed, 92 bit 32) joined end to end into rings
+/// (docs/adr/9230): a piece goes on where one of its ends meets the chain's end, within a millionth of the pieces'
+/// size, and the chain grows at both of its ends until it closes or nothing more meets it. A column hatched within
+/// four paths of one line each was no ring at all and was left out (the YILTAŞ DWGs' 130 column hatches). A piece
+/// nothing meets comes back with its path's index: it stays the ring its path always made, closed by its last edge.
+fn stitch(mut pieces: Vec<(usize, Vec<Vec2>)>) -> Vec<(Option<usize>, Vec<Vec2>)> {
+    let (mut lo, mut hi) = (v(f64::INFINITY, f64::INFINITY), v(f64::NEG_INFINITY, f64::NEG_INFINITY));
+    for p in pieces.iter().flat_map(|(_, r)| r) {
+        lo = v(lo.x.min(p.x), lo.y.min(p.y));
+        hi = v(hi.x.max(p.x), hi.y.max(p.y));
+    }
+    let tol = 1e-6 * (hi.x - lo.x).max(hi.y - lo.y);
+    let near = |a: Vec2, b: Vec2| (a.x - b.x).abs() <= tol && (a.y - b.y).abs() <= tol;
+    let mut out = Vec::new();
+    while !pieces.is_empty() {
+        let (k, mut chain) = pieces.remove(0);
+        let (mut joined, mut turned) = (false, false);
+        loop {
+            let end = chain[chain.len() - 1];
+            if chain.len() > 2 && near(chain[0], end) {
+                break;
+            }
+            match pieces.iter().position(|(_, p)| near(p[0], end) || near(p[p.len() - 1], end)) {
+                Some(i) => {
+                    let (_, mut next) = pieces.remove(i);
+                    if !near(next[0], end) {
+                        next.reverse();
+                    }
+                    chain.extend(next.into_iter().skip(1));
+                    joined = true;
+                }
+                None if !turned => {
+                    chain.reverse();
+                    turned = true;
+                }
+                None => break,
+            }
+        }
+        if turned {
+            chain.reverse();
+        }
+        // A closed chain's last point is its first, met within the tolerance.
+        if joined && chain.len() > 3 && near(chain[0], chain[chain.len() - 1]) {
+            chain.pop();
+        }
+        out.push(((!joined).then_some(k), chain));
+    }
+    out
 }
 
 /// A boundary path's points: a polyline path exactly as the app samples its

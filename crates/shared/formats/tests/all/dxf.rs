@@ -3298,3 +3298,50 @@ fn an_image_is_its_frame_and_its_file_is_named() {
     assert!(note.reason.contains("“DDS LOGO.jpg”"), "{}", note.reason);
     assert!(skipped(&r, "IMAGE").is_none());
 }
+
+/// A hatch whose boundary is pieces that close only together (docs/adr/9230): paths flagged not closed (92 bit 32),
+/// as the YILTAŞ DWGs' 130 column hatches are, four paths of one line each round a square, one of them the other way
+/// round. Before, each path was a ring of two points and the hatch was left out ("sınırı okunamadı").
+#[test]
+fn a_boundary_of_pieces_is_joined_into_its_ring() {
+    let g = |code: i32, value: &str| (code, value.to_string());
+    let mut e = vec![
+        g(0, "HATCH"),
+        g(5, "C61473"),
+        g(8, "KOLON TARAMA"),
+        g(100, "AcDbEntity"),
+        g(100, "AcDbHatch"),
+        g(10, "0"),
+        g(20, "0"),
+        g(30, "0"),
+        g(210, "0"),
+        g(220, "0"),
+        g(230, "1"),
+        g(2, "ANSI31"),
+        g(70, "0"),
+        g(71, "0"),
+        g(91, "4"),
+    ];
+    let sides = [((0.0, 4.0), (5.0, 4.0)), ((5.0, 4.0), (5.0, 0.0)), ((0.0, 0.0), (5.0, 0.0)), ((0.0, 0.0), (0.0, 4.0))];
+    for (a, b) in sides {
+        e.extend([g(92, "33"), g(93, "1"), g(72, "1")]);
+        for (code, value) in [(10, a.0), (20, a.1), (11, b.0), (21, b.1)] {
+            e.push(g(code, &value.to_string()));
+        }
+        e.push(g(97, "0"));
+    }
+    e.extend([g(75, "1"), g(76, "1"), g(52, "0"), g(41, "1"), g(77, "0"), g(78, "0"), g(98, "0")]);
+    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let r = dxf::read(&dxf_of(&[("ENTITIES", e)]), &options).expect("read");
+    let hatches: Vec<_> = r.entities.iter().filter_map(|x| match x {
+        Entity::Hatch(h) => Some(h),
+        _ => None,
+    }).collect();
+    assert_eq!(hatches.len(), 1, "{:?}", r.report.skipped);
+    let mut ring: Vec<(f64, f64)> = hatches[0].ring.iter().map(|p| (p.x, p.y)).collect();
+    ring.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    assert_eq!(ring, vec![(0.0, 0.0), (0.0, 4.0), (5.0, 0.0), (5.0, 4.0)]);
+    assert!(hatches[0].holes.is_none());
+    assert!(r.report.skipped.iter().all(|s| !s.what.contains("HATCH")), "{:?}", r.report.skipped);
+}
+

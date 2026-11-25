@@ -358,7 +358,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     okunmadı”nın hepsi DGN çizgi stili kaydı (4 142 çizgi tipinin, bağlanan dış referanslardan çoğalmış). Bu tiplerle
     çizilen 32 923 nesnenin hepsi yerleştirilmeyen bloklarda: görünen kayıp yok. Rapor artık bunu sayısıyla söylüyor.
     10 DWG örneğinin hiçbirinde vekil çizim nesnesi yok.
-  - [ ] Adım 4: okunamayan tarama sınırları (YILTAŞ'ların ikisinde 130'ar).
+  - [x] Adım 4 ([ADR 9230](../docs/adr/9230-hatch-boundaries-of-pieces.md)): okunamayan tarama sınırları. YILTAŞ'ların
+    130 taraması dört “kapalı değil” bayraklı tek doğrulu yoldan oluşuyor; okuyucu artık parçaları uç uca ekleyip
+    halka yapıyor. 118'i dosyada kapalı bir katmanda (kolonlar), 12'si görünür (dış merdiven dikmeleri).
   - [ ] Adım 5: görüş doğrultusuna dik çember ve yaylar çizgi gibi görünür; atılmak yerine izdüşümleri alınmalı
     (TEKNOKENT'te 28).
   - [ ] Adım 6: OLE nesnesi (OLE2FRAME) yerini gösteren çerçeveyle; boş yazı “alınmadı” değil bilgi notu (TEKNOKENT'te
