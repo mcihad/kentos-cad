@@ -338,6 +338,11 @@ pub trait Sink {
     }
     /// `angle`: radians, the direction the marker faces (0 = east).
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64);
+    /// Markers a path's placement left out over its limit (`place::MAX_MARKERS_PER_PATH`, plan/render.md RM-11):
+    /// counted, so they are said, never dropped unseen.
+    fn markers_left_out(&mut self, _n: u64) {}
+    /// Waves a path left out over its limit (`place::MAX_WAVES_PER_PATH`), as [`Self::markers_left_out`].
+    fn waves_left_out(&mut self, _n: u64) {}
     /// The primitives that follow belong to the effect group of a symbol
     /// layer at `level` with these effects (docs/adr/0226 §2); None ends it.
     fn effects(&mut self, _spec: Option<&EffectSpec>, _level: f64) {}

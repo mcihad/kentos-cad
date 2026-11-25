@@ -22,8 +22,8 @@ use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use serde_json::{Value, json};
 
 use super::scene::{
-    Look, PART_PLACES, PARTS_FROM, SMALL_PART_PLACES, SMALL_PARTS_FROM, SMALL_SPAN, StyledCache,
-    construction_clip,
+    LeftOut, Look, PART_PLACES, PARTS_FROM, SMALL_PART_PLACES, SMALL_PARTS_FROM, SMALL_SPAN,
+    StyledCache, construction_clip,
 };
 use crate::document::Document;
 
@@ -435,6 +435,33 @@ fn a_layer_that_reads_its_objects_places_stays_one_run() {
         "parsel is one run: $sıra counts the whole layer"
     );
     assert!(scene.order.is_none(), "no layer in parts");
+}
+
+/// plan/render.md RM-11: the markers a path left out over its limit are said once for the layer, never dropped unseen.
+#[test]
+fn the_markers_a_layer_left_out_are_said_once() {
+    let library = kentos_native_style::system::library();
+    // A dot every 0.05 mm round a 25 m parcel: 2 000 000 places, the limit's 1 000 000 drawn.
+    let renderer = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [{
+        "id": "t", "type": "markerLine", "unit": "m", "placement": "interval", "interval": 0.00005,
+        "marker": { "type": "marker", "layers": [
+            { "id": "d", "type": "shape", "shape": "circle", "size": 0.01, "fill": "fg" }
+        ] }
+    }] } } });
+    let doc = drawing(1, Some(renderer));
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let scene = scene_of(&mut cache, &doc, &mut spatial, &library);
+    let said = cache.take_dropped();
+    assert_eq!(said.len(), 1, "{said:?}");
+    let (name, kind, left) = &said[0];
+    assert_eq!((name.as_str(), *kind), ("parsel", LeftOut::Markers));
+    let carried: u64 = scene.layers.iter().map(|l| l.markers_left()).sum();
+    assert_eq!(carried, *left, "the scene's parts carry the count");
+    assert!((999_990..=1_000_010).contains(left), "{left}");
+    // Said once: the next scene of the same layer says nothing.
+    scene_of(&mut cache, &doc, &mut spatial, &library);
+    assert!(cache.take_dropped().is_empty());
 }
 
 #[test]

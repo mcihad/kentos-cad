@@ -580,6 +580,10 @@ pub struct StyledLayer {
     pub pictures: Vec<kentos_style_core::style::batch::Picture>,
     /// Dots of Nokta yoğunluğu left out over the layer's limit (docs/adr/0213 §2.4).
     pub dropped: u64,
+    /// Markers and waves left out over a path's limit (`MAX_MARKERS_PER_PATH`, `MAX_WAVES_PER_PATH`; plan/render.md
+    /// RM-11).
+    pub markers_left: u64,
+    pub waves_left: u64,
 }
 
 /// What the colours and images come from.
@@ -1441,6 +1445,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         batches,
         pictures: out.pictures,
         dropped: out.dropped,
+        markers_left: out.markers_left,
+        waves_left: out.waves_left,
     };
     // The model screen draws every edge and fill triangle at every distance, as paper and the PDF do: its far levels
     // moved what they drew by up to half a pixel and are gone (docs/adr/9222).

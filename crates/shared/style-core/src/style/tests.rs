@@ -17,8 +17,10 @@ use super::build::{
 };
 use super::compile::{Env, Geom, to_drawn, to_world};
 use super::model::Unit;
+use super::batch::Batches;
 use super::place::{
-    MAX_MARKERS_PER_PATH, PlaceGroup, WaveSpec, interior_point, place_along, wave_paths,
+    MAX_MARKERS_PER_PATH, MAX_WAVES_PER_PATH, PlaceGroup, WaveSpec, interior_point, place_along,
+    place_along_counted, wave_paths, wave_paths_counted,
 };
 use super::prim::PrimUnit;
 
@@ -268,6 +270,68 @@ fn keeps_codes_clear_of_sharp_corners_only() {
     );
 }
 
+/// plan/render.md RM-11: a path's markers past the old 50 000 are drawn; past the limit each one is drawn or counted,
+/// none left out unseen.
+#[test]
+fn a_long_line_keeps_every_marker_and_counts_those_past_the_limit() {
+    // A 60 km line of 1 m ticks: 60 001 places. The old limit drew 50 000 and lost the last 10 km.
+    let (placed, left) =
+        place_along_counted(&[v(0.0, 0.0), v(60_000.0, 0.0)], false, "interval", 1.0, 0.0, None, 0.0);
+    assert_eq!((placed.len(), left), (60_001, 0));
+    assert!(close(placed[60_000].at.x, 60_000.0));
+    // Past the limit: the first places drawn, the rest counted.
+    let (placed, left) =
+        place_along_counted(&[v(0.0, 0.0), v(1_500_000.0, 0.0)], false, "interval", 1.0, 0.0, None, 0.0);
+    assert_eq!(placed.len(), MAX_MARKERS_PER_PATH);
+    assert_eq!(placed.len() as u64 + left, 1_500_001);
+    assert!(close(placed[MAX_MARKERS_PER_PATH - 1].at.x, 999_999.0));
+    // Groups of three on a ring of 400 000 places: 1 200 000 markers, the limit's worth drawn.
+    let group = Some(PlaceGroup {
+        count: 3.0,
+        spacing: 0.1,
+    });
+    let (placed, left) = place_along_counted(&square(100_000.0), true, "interval", 1.0, 0.0, group, 0.0);
+    assert_eq!((placed.len(), left), (MAX_MARKERS_PER_PATH, 200_000));
+}
+
+/// As markers, waves past their limit are counted (RM-11): 120 000 fit, 50 000 drawn.
+#[test]
+fn waves_past_their_limit_are_counted() {
+    let path = [v(0.0, 0.0), v(600_000.0, 0.0)];
+    let (pieces, left) = wave_paths_counted(&path, false, &wave("sine", 5.0, 5.0, false, None));
+    assert_eq!((pieces.len(), left), (MAX_WAVES_PER_PATH, 70_000));
+    let (_, left) = wave_paths_counted(&[v(0.0, 0.0), v(20.0, 0.0)], false, &wave("sine", 5.0, 5.0, true, None));
+    assert_eq!(left, 0);
+}
+
+/// A layer's build says what its paths left out (RM-11): every marker of every style, and the waves.
+#[test]
+fn a_layer_build_says_the_markers_and_waves_its_paths_left_out() {
+    let ticks = r##"{"type":"line","layers":[{"id":"t","type":"markerLine","unit":"m","placement":"interval","interval":1,
+        "marker":{"type":"marker","layers":[
+            {"id":"a","type":"shape","shape":"circle","size":0.5,"fill":"#FF0000"},
+            {"id":"b","type":"shape","shape":"square","size":0.3,"fill":"#0000FF"}]}}]}"##;
+    let waves = r##"{"type":"line","layers":[{"id":"w","type":"simpleLine","color":"#0000FF","width":0.3,
+        "wave":{"shape":"sine","length":5,"amplitude":1,"connect":false}}]}"##;
+    let p = format!(
+        r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{ticks}}},{{"line":{waves}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+    );
+    let out = build_out(
+        &p,
+        &[
+            line((0.0, 0.0), (1_000_100.0, 0.0), &[], [MODE_SET, 0, 0, 0]),
+            line((0.0, 0.0), (600_000.0, 0.0), &[], [MODE_SET, 1, 0, 0]),
+        ],
+        v(0.0, 0.0),
+        &[],
+    );
+    // 1 000 101 places, the limit's drawn: 101 left of each of the two markers.
+    assert_eq!(out.markers_left, 202);
+    // Waves of 5 mm on paper, 5 m at 1:1000: 120 000 fit, 50 000 drawn.
+    assert_eq!(out.waves_left, 70_000);
+    assert_eq!(out.dropped, 0);
+}
+
 fn wave(
     shape: &str,
     length: f64,
@@ -393,6 +457,15 @@ fn build_banded(
     origin: Vec2,
     bands: &[i32],
 ) -> (Vec<Json>, Vec<f32>) {
+    let out = build_out(program, objects, origin, bands);
+    let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
+        panic!("not an array: {}", out.json);
+    };
+    (batches, out.data)
+}
+
+/// As `build_banded`, the build's whole answer.
+fn build_out(program: &str, objects: &[Obj], origin: Vec2, bands: &[i32]) -> Batches {
     let program = Program::read(program).expect("program");
     let mut store = Store::new();
     let mut ids = Vec::new();
@@ -433,11 +506,7 @@ fn build_banded(
         pieces: &[],
         bands,
     };
-    let out = build_layer(&store, &program, &objects, None, origin, 1000.0, false).expect("build");
-    let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
-        panic!("not an array: {}", out.json);
-    };
-    (batches, out.data)
+    build_layer(&store, &program, &objects, None, origin, 1000.0, false).expect("build")
 }
 
 fn text(v: &Json) -> &str {

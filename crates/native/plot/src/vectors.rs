@@ -952,6 +952,8 @@ mod tests {
             batches: vec![batch.clone()],
             pictures: Vec::new(),
             dropped: 0,
+            markers_left: 0,
+            waves_left: 0,
         };
         let shapes = fill_paths(&layer, &batch, &paint, &o).expect("a vector form");
         let lines: usize = shapes.iter().map(|s| s.parts.len()).sum();

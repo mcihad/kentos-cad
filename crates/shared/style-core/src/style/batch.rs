@@ -209,6 +209,9 @@ pub struct BatchSink {
     hide_strokes: bool,
     pictures: Vec<Picture>,
     dropped: u64,
+    /// Markers and waves the paths' limits left out (plan/render.md RM-11).
+    markers_left: u64,
+    waves_left: u64,
     /// The effect group what follows belongs to (0 none) and its effects;
     /// the groups made, by their key (docs/adr/0226 §2).
     group: u32,
@@ -265,8 +268,8 @@ impl<T: PartialEq + Clone> Recent<T> {
 
 /// The batches of a layer: a JSON array describing them and their numbers
 /// one after another (`from`, `len` in each description); the pictures the
-/// build made (a heat map's, docs/adr/0213 §2.6), and the dots left out
-/// over the layer's limit (§2.4).
+/// build made (a heat map's, docs/adr/0213 §2.6), the dots left out
+/// over the layer's limit (§2.4) and the markers and waves left out over a path's (plan/render.md RM-11).
 pub struct Batches {
     pub json: String,
     pub data: Vec<f32>,
@@ -274,6 +277,8 @@ pub struct Batches {
     pub low: Vec<f32>,
     pub pictures: Vec<Picture>,
     pub dropped: u64,
+    pub markers_left: u64,
+    pub waves_left: u64,
     /// The batches (by their place in `json`) whose stroke or hatch width is measured on the ground, not paper mm
     /// (docs/adr/0793 §1): the model screen never holds it to its paper width.
     pub ground: Vec<u32>,
@@ -310,6 +315,8 @@ impl BatchSink {
             hide_strokes: false,
             pictures: Vec::new(),
             dropped: 0,
+            markers_left: 0,
+            waves_left: 0,
             group: 0,
             group_json: String::new(),
             groups: HashMap::new(),
@@ -798,6 +805,8 @@ impl BatchSink {
             low,
             pictures: self.pictures,
             dropped: self.dropped,
+            markers_left: self.markers_left,
+            waves_left: self.waves_left,
             ground,
         }
     }
@@ -1082,6 +1091,18 @@ impl Sink for BatchSink {
             },
         };
         self.place_marker(style, at, angle);
+    }
+
+    fn markers_left_out(&mut self, n: u64) {
+        self.markers_left = self.markers_left.saturating_add(n);
+    }
+
+    fn waves_left_out(&mut self, n: u64) {
+        // A definition whose waves were cut is drawn by each insert, each counting its own.
+        if self.recording {
+            self.refused = true;
+        }
+        self.waves_left = self.waves_left.saturating_add(n);
     }
 
     fn effects(&mut self, spec: Option<&EffectSpec>, level: f64) {

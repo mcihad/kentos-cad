@@ -726,9 +726,9 @@ impl Viewport {
         }
     }
 
-    /// The layers whose Nokta yoğunluğu left dots out since last asked, each once (docs/adr/0213 §2.4):
-    /// name and count.
-    pub fn take_dropped(&self) -> Vec<(String, u64)> {
+    /// The layers that left dots, markers or waves out over a limit since last asked, each once a kind
+    /// (docs/adr/0213 §2.4, plan/render.md RM-11): name, what and how many.
+    pub fn take_dropped(&self) -> Vec<(String, crate::style::scene::LeftOut, u64)> {
         self.styled_in_use()
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())

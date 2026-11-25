@@ -70,6 +70,9 @@ pub use color::StylePalette;
 pub use kentos_scene_query::geometry::shape as entity_shape;
 /// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
 pub use kentos_style_core::style::build::{Deep, View, raster_key};
+/// The limits over which a layer build counts what it left out, to be said (docs/adr/0213 §2.4, plan/render.md RM-11).
+pub use kentos_style_core::style::build::MOST_DOTS;
+pub use kentos_style_core::style::place::{MAX_MARKERS_PER_PATH, MAX_WAVES_PER_PATH};
 /// The extensions' functions a style may call (docs/adr/8057 §8): what the host registers.
 pub use kentos_style_core::style::externals;
 pub use library::{Item, ItemKind, Source, StyleLibrary};

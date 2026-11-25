@@ -22,8 +22,15 @@ pub(crate) fn positive(x: f64) -> bool {
     x > 0.0
 }
 
-/// No path gets more markers than this (a tiny interval would hang the page).
-pub const MAX_MARKERS_PER_PATH: usize = 50_000;
+/// No path gets more markers than this: a tiny interval would hang the page. A path's markers past it are counted
+/// (`place_along_counted`) and said, never left out unseen (plan/render.md RM-11). It was 50 000: a 60 km line of
+/// 1 m ticks lost its last 10 km.
+pub const MAX_MARKERS_PER_PATH: usize = 1_000_000;
+
+/// No path gets more waves than this. A wave is 16 strokes (96 numbers), a marker 5: 50 000 waves hold about as many
+/// numbers as [`MAX_MARKERS_PER_PATH`] markers, so either limit keeps a path's build near 40 MB. Waves past it are
+/// counted (`wave_paths_counted`) and said, as markers are; the path's ends past the drawn waves stay a plain line.
+pub const MAX_WAVES_PER_PATH: usize = 50_000;
 
 const SHARP_TURN: f64 = PI / 6.0;
 
@@ -142,9 +149,22 @@ pub fn place_along(
     group: Option<PlaceGroup>,
     clear: f64,
 ) -> Vec<Placed> {
+    place_along_counted(pts, closed, placement, interval, offset_along, group, clear).0
+}
+
+/// [`place_along`], and how many markers its limit left out ([`MAX_MARKERS_PER_PATH`]).
+pub fn place_along_counted(
+    pts: &[Vec2],
+    closed: bool,
+    placement: &str,
+    interval: f64,
+    offset_along: f64,
+    group: Option<PlaceGroup>,
+    clear: f64,
+) -> (Vec<Placed>, u64) {
     let n = pts.len();
     if n < 2 {
-        return if n == 1 {
+        let placed = if n == 1 {
             vec![Placed {
                 at: pts[0],
                 angle: 0.0,
@@ -152,18 +172,21 @@ pub fn place_along(
         } else {
             Vec::new()
         };
+        return (placed, 0);
     }
     let (segs, total) = segments(pts, closed);
     if segs.is_empty() {
-        return Vec::new();
+        return (Vec::new(), 0);
     }
+    // Places the limit left out.
+    let mut left: u64 = 0;
     let at = |s: f64| point_on(&segs[find(&segs, s)], s);
     // Where along the path each place is (vertices keep their bisector unless grouped).
     let mut places: Vec<(f64, Option<Placed>)> = Vec::new();
     match placement {
         "interval" => {
             if !positive(interval) {
-                return Vec::new();
+                return (Vec::new(), 0);
             }
             let first = wrap(offset_along, interval);
             let end = if closed { total - 1e-9 } else { total + 1e-9 };
@@ -173,6 +196,11 @@ pub fn place_along(
                     places.push((js_max(0.0, s), None));
                 }
                 s += interval;
+            }
+            if s <= end {
+                // The rest of the path's places, counted, not made.
+                let from = js_max(s, 0.0);
+                left += (js_floor((end - from) / interval) + 1.0) as u64;
             }
             if clear > 0.0 {
                 let corners = sharp_corners(&segs, closed);
@@ -254,16 +282,28 @@ pub fn place_along(
     let count = group.map_or(1.0, |g| js_max(1.0, js_floor(g.count)));
     let spacing = group.map_or(f64::NAN, |g| g.spacing);
     if count == 1.0 || !positive(spacing) {
-        return places
+        let placed = places
             .into_iter()
             .map(|(s, placed)| placed.unwrap_or_else(|| at(s)))
             .collect();
+        return (placed, left);
     }
+    // The interval's places left out would each have been a group.
+    left = left.saturating_mul(count as u64);
     let mut out = Vec::new();
     let half = ((count - 1.0) * spacing) / 2.0;
-    for &(ps, _) in &places {
+    for (k, &(ps, _)) in places.iter().enumerate() {
+        if out.len() >= MAX_MARKERS_PER_PATH {
+            // The rest counted, not made: whole groups (those past an open path's ends among them).
+            left = left.saturating_add(((places.len() - k) as u64).saturating_mul(count as u64));
+            break;
+        }
         let mut i = 0.0;
-        while i < count && out.len() < MAX_MARKERS_PER_PATH {
+        while i < count {
+            if out.len() >= MAX_MARKERS_PER_PATH {
+                left = left.saturating_add((count - i) as u64);
+                break;
+            }
             let mut s = ps - half + i * spacing;
             i += 1.0;
             if closed {
@@ -274,7 +314,7 @@ pub fn place_along(
             out.push(at(js_min(total, js_max(0.0, s))));
         }
     }
-    out
+    (out, left)
 }
 
 // ── Waves ──────────────────────────────────────────────────────────────
@@ -355,12 +395,17 @@ impl Walker {
 /// line between them is left out. Waves that would pass an open path's end
 /// are cut short there.
 pub fn wave_paths(pts: &[Vec2], closed: bool, w: &WaveSpec) -> Vec<Vec<Vec2>> {
+    wave_paths_counted(pts, closed, w).0
+}
+
+/// [`wave_paths`], and how many waves its limit left out ([`MAX_WAVES_PER_PATH`]).
+pub fn wave_paths_counted(pts: &[Vec2], closed: bool, w: &WaveSpec) -> (Vec<Vec<Vec2>>, u64) {
     if !positive(w.length) || pts.len() < 2 {
-        return vec![pts.to_vec()];
+        return (vec![pts.to_vec()], 0);
     }
     let spacing = js_max(w.length, w.spacing);
     let Some(along) = Walker::new(pts, closed) else {
-        return Vec::new();
+        return (Vec::new(), 0);
     };
     let total = along.total;
     // Anchored: waves from `offset_along` on, as many as fit (a closed path wraps the start into its first repeat).
@@ -374,10 +419,12 @@ pub fn wave_paths(pts: &[Vec2], closed: bool, w: &WaveSpec) -> Vec<Vec<Vec2>> {
     } else {
         js_floor((total + 1e-9) / spacing)
     };
-    let count = js_min(MAX_MARKERS_PER_PATH as f64, fit);
+    let count = js_min(MAX_WAVES_PER_PATH as f64, fit);
+    // The waves that fit past the limit (none when the fit is not a number).
+    let left = if fit > count { (fit - count) as u64 } else { 0 };
     // As the TypeScript compared: a NaN count draws no wave rather than the plain path.
     if count < 1.0 {
-        return vec![pts.to_vec()];
+        return (vec![pts.to_vec()], 0);
     }
     let mut out = Vec::new();
     let mut current: Vec<Vec2> = Vec::new();
@@ -443,7 +490,7 @@ pub fn wave_paths(pts: &[Vec2], closed: bool, w: &WaveSpec) -> Vec<Vec<Vec2>> {
     if current.len() > 1 {
         out.push(current);
     }
-    out
+    (out, left)
 }
 
 // ── Inside point ───────────────────────────────────────────────────────

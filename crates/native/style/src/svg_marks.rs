@@ -428,6 +428,8 @@ mod tests {
             low: Vec::new(),
             pictures: Vec::new(),
             dropped: 0,
+            markers_left: 0,
+            waves_left: 0,
         }
     }
 

@@ -28,6 +28,8 @@ fn batches() -> Batches {
         data: vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0],
         pictures: Vec::new(),
         dropped: 0,
+        markers_left: 0,
+        waves_left: 0,
         // The second stroke is a symbol's metres.
         ground: vec![1],
     }
