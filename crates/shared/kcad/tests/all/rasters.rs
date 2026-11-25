@@ -83,7 +83,7 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster,
+        raster: Box::new(raster),
     })
 }
 

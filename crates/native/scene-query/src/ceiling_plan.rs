@@ -143,7 +143,7 @@ pub fn hidden(doc: &Document, level: Option<&str>, range: CeilingRange) -> Vec<u
     let coverings: Vec<_> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Slab(s) if is_ceiling(&s.slab) => Some(&s.slab),
+            Entity::Slab(s) if is_ceiling(&s.slab) => Some(&*s.slab),
             _ => None,
         })
         .collect();

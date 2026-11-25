@@ -1300,7 +1300,7 @@ fn drawn_print(e: &Entity) -> Option<u64> {
         fields: _,
         breaks,
         table_style,
-    } = t;
+    } = &**t;
     if table_style.is_some() {
         return None;
     }

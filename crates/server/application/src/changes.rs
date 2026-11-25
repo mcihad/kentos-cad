@@ -763,7 +763,7 @@ async fn check_dimension_rows(
             EntityId::parse(&entity.opening.host),
             EntityId::parse(&record.id),
         ) {
-            by_host.entry(host).or_default().push((uid, entity.opening));
+            by_host.entry(host).or_default().push((uid, *entity.opening));
         }
     }
     let p = |point: kentos_contracts::Vec2| Vec2::new(point.x, point.y);

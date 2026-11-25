@@ -400,7 +400,7 @@ fn objects() -> Vec<Entity> {
                 vec![tm(20.0, 20.0), tm(25.0, 20.0), tm(25.0, 25.0)],
                 vec![tm(5.0, 5.0), tm(10.0, 5.0), tm(10.0, 10.0), tm(5.0, 10.0)],
             ]),
-            pattern: HatchPattern::user(HatchPatternType::Cross, 30.0, 2.0),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Cross, 30.0, 2.0)),
             assoc: None,
             annotative: None,
         }),
@@ -409,7 +409,7 @@ fn objects() -> Vec<Entity> {
             base: base("yapi"),
             ring: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             holes: None,
-            pattern: HatchPattern::user(HatchPatternType::Lines, 37.5, 0.75),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Lines, 37.5, 0.75)),
             assoc: None,
             annotative: None,
         }),
@@ -418,7 +418,7 @@ fn objects() -> Vec<Entity> {
             base: base("yapi"),
             ring: vec![tm(70.0, 0.0), tm(80.0, 0.0), tm(75.0, 8.0)],
             holes: None,
-            pattern: HatchPattern::user(HatchPatternType::Solid, 12.0, 3.0),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Solid, 12.0, 3.0)),
             assoc: None,
             annotative: None,
         }),
@@ -427,7 +427,7 @@ fn objects() -> Vec<Entity> {
             base: base("yapi"),
             ring: vec![tm(90.0, 0.0), tm(100.0, 0.0), tm(95.0, 8.0)],
             holes: None,
-            pattern: HatchPattern::user(HatchPatternType::Lines, 0.0, 1.0),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Lines, 0.0, 1.0)),
             assoc: None,
             annotative: None,
         }),
@@ -440,7 +440,7 @@ fn objects() -> Vec<Entity> {
 /// A dimension of every style at TM coordinates (one without a style, two linear, with and without an angle).
 fn dimensions() -> Vec<Entity> {
     let dim = |id: u32, style, a, b, offset, angle, c, text: Option<&str>| {
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             annotative: None,
             text_shift: None,
             breaks: Vec::new(),
@@ -466,7 +466,7 @@ fn dimensions() -> Vec<Entity> {
             refs: None,
             look: Default::default(),
             level: None,
-        })
+        }))
     };
     vec![
         dim(
@@ -3084,7 +3084,7 @@ fn tables_read_back_as_they_were() {
             .iter()
             .filter_map(|e| match e {
                 Entity::Table(t) => {
-                    let mut t = t.clone();
+                    let mut t = (**t).clone();
                     t.base.id = 0;
                     t.base.layer_id.clear();
                     t.base.line_weight = None;
@@ -3882,7 +3882,7 @@ fn a_hatch_boundary_goes_out_and_comes_back_exact() {
         base: base("yapi"),
         ring: vec![p(0.0, 0.0), p(12.0, 0.0), p(12.0, 8.0), p(0.0, 8.0)],
         holes: None,
-        pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
+        pattern: Box::new(HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0)),
         assoc: None,
         boundary: Some(boundary.clone()),
         annotative: None,
@@ -3965,7 +3965,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
     };
     let wall = Entity::Wall(WallEntity {
         base: base("yapi"),
-        wall: WallFields {
+        wall: Box::new(WallFields {
             pts: vec![o, v(o.x + 6.0, o.y), v(o.x + 6.0, o.y + 4.0)],
             bulges: None,
             closed: false,
@@ -3981,7 +3981,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             joins: Default::default(),
             cleanup: true,
             curtain: None,
-        },
+        }),
     });
     // With KentOS's data the wall goes as its pieces' block and comes back as itself (docs/adr/0347 §2).
     let mut whole = input(vec![wall.clone()]);
@@ -4035,7 +4035,7 @@ fn walls_with_a_renovation_state_go_on_their_state_layers() {
         let o = tm(0.0, y);
         Entity::Wall(WallEntity {
             base: b,
-            wall: WallFields {
+            wall: Box::new(WallFields {
                 pts: vec![o, v(o.x + 6.0, o.y)],
                 bulges: None,
                 closed: false,
@@ -4069,7 +4069,7 @@ fn walls_with_a_renovation_state_go_on_their_state_layers() {
                 joins: Default::default(),
                 cleanup: true,
                 curtain: None,
-            },
+            }),
         })
     };
     let mut i = input(vec![
@@ -4146,7 +4146,7 @@ fn an_ek4_walls_hatches_go_on_its_t_layer() {
     let wall = |layer: &str| {
         Entity::Wall(WallEntity {
             base: base(layer),
-            wall: WallFields {
+            wall: Box::new(WallFields {
                 pts: vec![o, v(o.x + 6.0, o.y)],
                 bulges: None,
                 closed: false,
@@ -4177,7 +4177,7 @@ fn an_ek4_walls_hatches_go_on_its_t_layer() {
                 joins: Default::default(),
                 cleanup: true,
                 curtain: None,
-            },
+            }),
         })
     };
     let mut i = input(vec![wall("mm-duva-tugla")]);
@@ -4255,7 +4255,7 @@ fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
                 bold,
                 font,
                 ..Default::default()
-            },
+            }.into(),
             path: None,
         })
     };

@@ -87,7 +87,7 @@ fn tie(app: &mut App) {
             Slot(2),
             Entity::Hatch(kentos_commands::HatchEntity {
                 boundary: None,
-                assoc: Some(tied),
+                assoc: Some(Box::new(tied)),
                 ..h
             }),
         );
@@ -102,10 +102,10 @@ fn tie(app: &mut App) {
             };
             let _ = doc.update(
                 Slot(slot),
-                Entity::Dimension(kentos_commands::DimensionEntity {
+                Entity::Dimension(Box::new(kentos_commands::DimensionEntity {
                     refs: Some(Box::new(refs)),
-                    ..d
-                }),
+                    ..*d
+                })),
             );
         }
     }

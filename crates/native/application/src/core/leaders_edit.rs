@@ -210,7 +210,7 @@ fn check(doc: &Document, input: &LeadersEdit) -> Result<Checked, Stop> {
                 let last = *l.pts.last().unwrap_or(&next.pts[0]);
                 l.pts = next.pts;
                 l.pts.push(last);
-                l.tip = next.tip;
+                l.tip = next.tip.map(Box::new);
             } else {
                 l.arms.remove(k - 1);
             }
@@ -305,7 +305,7 @@ fn check(doc: &Document, input: &LeadersEdit) -> Result<Checked, Stop> {
                 let n = l.pts.len().saturating_sub(1).max(1);
                 first.arms.push(LeaderArm {
                     pts: l.pts[..n].to_vec(),
-                    tip: l.tip.clone(),
+                    tip: l.tip.as_deref().cloned(),
                 });
                 first.arms.extend(l.arms.iter().cloned());
                 first.blocks.extend(l.blocks.iter().copied());
@@ -473,7 +473,7 @@ fn check(doc: &Document, input: &LeadersEdit) -> Result<Checked, Stop> {
                 if let (Some(p), Some(first)) = (point, l.pts.first_mut()) {
                     *first = p;
                 }
-                l.tip = r;
+                l.tip = r.map(Box::new);
             } else {
                 let a = &mut l.arms[k - 1];
                 if let (Some(p), Some(first)) = (point, a.pts.first_mut()) {

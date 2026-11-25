@@ -924,7 +924,7 @@ pub mod read {
                         label_pins: Vec::new(),
                         attachments: Vec::new(),
                     },
-                    raster: RasterFields {
+                    raster: Box::new(RasterFields {
                         affine,
                         width: w.width,
                         height: w.height,
@@ -948,7 +948,7 @@ pub mod read {
                             x: w.x,
                             y: w.y,
                         }),
-                    },
+                    }),
                 }))
             }
         };
@@ -1664,7 +1664,7 @@ pub mod write {
             table,
             mode,
             identifier: input.identifier.clone(),
-            raster: f.clone(),
+            raster: *f.clone(),
             srid: f.srid,
             kind,
             levels: lv,

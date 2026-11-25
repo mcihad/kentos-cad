@@ -51,7 +51,7 @@ fn tables(app: &App) -> Vec<kentos_commands::TableEntity> {
                 .entities()
                 .filter_map(|e| {
                     if let Entity::Table(t) = e {
-                        Some(t.clone())
+                        Some((**t).clone())
                     } else {
                         None
                     }

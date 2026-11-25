@@ -38,7 +38,7 @@ fn uid(doc: &Document, slot: u32) -> String {
 fn slab(doc: &Document, uid: &str) -> SlabFields {
     let slot = doc.slot_of(Uuid::parse_str(uid).unwrap()).unwrap();
     match doc.get(slot) {
-        Some(Entity::Slab(s)) => s.slab.clone(),
+        Some(Entity::Slab(s)) => *s.slab.clone(),
         other => panic!("{other:?}"),
     }
 }

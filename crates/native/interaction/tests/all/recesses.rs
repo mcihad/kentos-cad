@@ -24,7 +24,7 @@ fn newest(b: &Bench) -> OpeningFields {
     let Entity::Opening(o) = b.newest() else {
         panic!("an opening")
     };
-    o.opening.clone()
+    *o.opening.clone()
 }
 
 fn row(b: &Bench, key: &str) -> Option<String> {

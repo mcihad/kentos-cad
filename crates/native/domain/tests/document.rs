@@ -220,7 +220,7 @@ fn a_hatch_keeps_its_islands_when_it_changes() {
         base: base("a"),
         ring,
         holes: Some(vec![island.clone()]),
-        pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
+        pattern: Box::new(HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0)),
         assoc: None,
         annotative: None,
     });

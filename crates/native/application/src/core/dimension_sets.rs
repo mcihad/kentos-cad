@@ -874,7 +874,7 @@ fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<Dimensi
         set: existing.then_some(set.id),
         entities: members
             .iter()
-            .map(|m| Entity::Dimension(m.dimension.clone()))
+            .map(|m| Entity::Dimension(Box::new(m.dimension.clone())))
             .collect(),
         spans: members.iter().map(|m| m.segment.clone()).collect(),
         uids: members

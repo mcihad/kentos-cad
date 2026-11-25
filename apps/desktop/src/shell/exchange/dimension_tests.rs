@@ -19,7 +19,7 @@ fn dimensions(app: &App) -> Vec<DimensionEntity> {
     model
         .entities()
         .filter_map(|e| match e {
-            Entity::Dimension(d) => Some(d.clone()),
+            Entity::Dimension(d) => Some((**d).clone()),
             _ => None,
         })
         .collect()

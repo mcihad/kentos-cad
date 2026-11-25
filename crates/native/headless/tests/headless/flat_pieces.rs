@@ -56,7 +56,7 @@ fn checked(s: &Session, dice: &mut Dice, level: Option<&str>, at: &str) -> usize
             fewer += usize::from(kentos_domain::wall_pieces::walls_round(doc, seed, level).is_some());
         }
         if let Entity::Table(t) = e {
-            assert_eq!(doc.table_worked_out(t), *t, "{at}: table {} as its working out leaves it", t.base.id);
+            assert_eq!(doc.table_worked_out(t), *(*t), "{at}: table {} as its working out leaves it", t.base.id);
         }
     }
     assert!(slabs > 0, "{at}: the flats' slabs");

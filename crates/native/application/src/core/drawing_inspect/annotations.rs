@@ -295,7 +295,7 @@ fn own_findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding>
                         "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; not o zaman özgün fontla çizilir.")),
                 }
             }
-            let arms = std::iter::once((l.tip.as_ref(), l.pts.first()))
+            let arms = std::iter::once((l.tip.as_deref(), l.pts.first()))
                 .chain(l.arms.iter().map(|a| (a.tip.as_ref(), a.pts.first())));
             let mut sources = Vec::new();
             let mut broken = Vec::new();

@@ -378,7 +378,7 @@ impl Document {
         }
         t.clip_to(n, m);
         let font = Font::from_id(DrawingFont::id_of(self.settings().drawing_font));
-        let fitted = core(&Entity::Table(t.clone()))
+        let fitted = core(&Entity::Table(Box::new(t.clone())))
             .and_then(|e| {
                 kentos_geometry_core::geom::table::table_geom(&e.shape)
                     .map(|g| kentos_geometry_core::geom::table::fit_widths(&g, font, LEAST * h))
@@ -411,13 +411,13 @@ impl Document {
                 continue;
             }
             let next = self.table_worked_out(t);
-            if next == *t || next.problem().is_some() {
+            if next == **t || next.problem().is_some() {
                 continue;
             }
             ops.push(Op::Update {
                 after: Stored {
                     uid: current.uid,
-                    entity: Arc::new(Entity::Table(next)),
+                    entity: Arc::new(Entity::Table(Box::new(next))),
                 },
                 before: current,
             });
@@ -489,7 +489,7 @@ impl Document {
                 Some((_, Some(n))) => placed_as(n, t),
                 None => {
                     let next = self.table_worked_out(t);
-                    let kept = next == *t || next.problem().is_some();
+                    let kept = next == **t || next.problem().is_some();
                     if schedule {
                         alike.push((Arc::clone(&current.entity), (!kept).then(|| next.clone())));
                     }
@@ -502,7 +502,7 @@ impl Document {
             let op = Op::Update {
                 after: Stored {
                     uid: current.uid,
-                    entity: Arc::new(Entity::Table(next)),
+                    entity: Arc::new(Entity::Table(Box::new(next))),
                 },
                 before: current,
             };

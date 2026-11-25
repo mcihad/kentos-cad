@@ -777,7 +777,7 @@ impl App {
                     match kentos_interaction::hatch_options::rechosen(&h.pattern, choice, plot) {
                         Some(pattern) => {
                             let mut h = h.clone();
-                            h.pattern = pattern;
+                            h.pattern = Box::new(pattern);
                             properties::set_geometry(model, slot, &Entity::Hatch(h))
                         }
                         None => Vec::new(),
@@ -837,7 +837,7 @@ impl App {
                     model
                         .get(slot)
                         .and_then(kentos_domain::space_follow::separator_path)
-                        .and_then(|p| p.space_separator.clone())
+                        .and_then(|p| p.space_separator.as_deref().cloned())
                         .unwrap_or_default()
                 });
                 properties::set_space_separator(model, slot, arch)

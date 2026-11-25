@@ -132,6 +132,13 @@ impl<'a> From<&'a RasterFields> for Beside<'a> {
     }
 }
 
+/// A raster object's fields as it holds them (`RasterEntity::raster`, boxed: plan/render.md RM-19).
+impl<'a> From<&'a Box<RasterFields>> for Beside<'a> {
+    fn from(r: &'a Box<RasterFields>) -> Beside<'a> {
+        Beside::from(&**r)
+    }
+}
+
 impl Beside<'_> {
     /// The file's stem as the result names take it: its name without its
     /// folder, query and known extension.

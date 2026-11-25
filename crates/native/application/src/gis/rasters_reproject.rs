@@ -479,7 +479,7 @@ fn check(doc: &Document, input: &RastersReproject) -> Result<Planned, Stop> {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: w.grid.affine,
             width: w.grid.width,
             height: w.grid.height,
@@ -494,7 +494,7 @@ fn check(doc: &Document, input: &RastersReproject) -> Result<Planned, Stop> {
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     });
     let out = RastersReprojected {
         uid: None,

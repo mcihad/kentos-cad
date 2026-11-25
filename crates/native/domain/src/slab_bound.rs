@@ -280,9 +280,9 @@ impl Document {
                 continue;
             };
             let followed = self.slab_bound_again(&s.slab);
-            if followed != s.slab {
+            if followed != *s.slab {
                 let mut e = s.clone();
-                e.slab = followed;
+                e.slab = Box::new(followed);
                 out.push(Op::Update {
                     after: Stored {
                         uid: current.uid,

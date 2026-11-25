@@ -872,7 +872,7 @@ impl<'l> Emitter<'l> {
         }
         for e in &mut self.out.entities[start..] {
             if let Entity::Text(t) = e {
-                t.face = face.clone();
+                t.face = face.clone().into();
             }
         }
     }
@@ -1496,7 +1496,7 @@ impl<'l> Emitter<'l> {
                 seed,
             };
             if let Some(Entity::Hatch(h)) = out.entities.get_mut(t.hatch) {
-                h.assoc = Some(assoc);
+                h.assoc = Some(Box::new(assoc));
             }
         }
     }
@@ -1861,7 +1861,7 @@ impl<'l> Emitter<'l> {
                     && let Some(json) = e.meta.as_ref().and_then(|m| m.table.as_deref())
                 {
                     match self.table_of(e, ctx, &layer, json, &placed) {
-                        Ok(t) => return self.push(Entity::Table(t)),
+                        Ok(t) => return self.push(Entity::Table(Box::new(t))),
                         Err(why) => self.note("Tablo", why, e.line),
                     }
                 }
@@ -1953,7 +1953,7 @@ impl<'l> Emitter<'l> {
                         Some(mut d) => {
                             // Its look as KentOS wrote it, its style the reader's (docs/adr/0183 §7).
                             d.look = self.kentos_look(style, meta);
-                            self.push(Entity::Dimension(d))
+                            self.push(Entity::Dimension(Box::new(d)))
                         }
                         None => {
                             self.note(
@@ -1987,7 +1987,7 @@ impl<'l> Emitter<'l> {
                     dimension::Foreign::Taken(mut d) if flat => {
                         // Its look from its DIMSTYLE and its own changes (docs/adr/0183 §7).
                         d.look = self.look_of_vars(named, (**overrides).clone());
-                        self.push(Entity::Dimension(*d))
+                        self.push(Entity::Dimension(Box::new(*d)))
                     }
                     dimension::Foreign::Taken(_) => {
                         self.anonymous_block(ctx, e, &layer, block, what);
@@ -2062,15 +2062,17 @@ impl<'l> Emitter<'l> {
                 if ring.len() > 1 && ring.first() == ring.last() {
                     ring.pop();
                 }
-                let Some(file) = def.and_then(|h| self.images.get(&h).cloned()).filter(|f| !f.trim().is_empty()) else {
-                    return self.skip("IMAGE", "raster görüntünün dosyası adlandırılmamış; görüntü alınmadı", e.line);
-                };
+                // An image whose file is not named still shows where it was (plan/render.md RM-19's tests: it was left
+                // out, frame and all).
+                let file = def.and_then(|h| self.images.get(&h).cloned()).filter(|f| !f.trim().is_empty());
                 if ring.len() < 3 || !ring.iter().all(|p| p.iter().all(|v| v.is_finite())) {
-                    return self.skip(
-                        "IMAGE",
-                        &format!("raster görüntünün (“{file}”) dosyası çizimin içinde değil ve boyu yok; çerçevesi de alınamadı"),
-                        e.line,
-                    );
+                    let said = match &file {
+                        Some(file) => format!(
+                            "raster görüntünün (“{file}”) dosyası çizimin içinde değil ve boyu yok; çerçevesi de alınamadı"
+                        ),
+                        None => "raster görüntünün dosyası adlandırılmamış ve boyu yok; alınmadı".to_owned(),
+                    };
+                    return self.skip("IMAGE", &said, e.line);
                 }
                 self.push(Entity::Polyline(PathEntity {
                     space_separator: None,
@@ -2084,11 +2086,13 @@ impl<'l> Emitter<'l> {
                     closed: true,
                     widths: None,
                 }));
-                self.note(
-                    "Görüntü (IMAGE)",
-                    &format!("“{file}” dosyası çizimin içinde değil; görüntünün yerini gösteren çerçevesi alındı. Dosyayı Altlık ile ekleyin"),
-                    e.line,
-                );
+                let said = match &file {
+                    Some(file) => format!(
+                        "“{file}” dosyası çizimin içinde değil; görüntünün yerini gösteren çerçevesi alındı. Dosyayı Altlık ile ekleyin"
+                    ),
+                    None => "raster görüntünün dosyası adlandırılmamış; yerini gösteren çerçevesi alındı".to_owned(),
+                };
+                self.note("Görüntü (IMAGE)", &said, e.line);
             }
             Kind::OleFrame { a, b: c } => {
                 // An embedded document (a table, a picture, a text): its content is another program's data, its frame
@@ -2994,7 +2998,7 @@ impl<'l> Emitter<'l> {
             paragraph: Paragraph {
                 box_width: paragraph.box_width.map(|w| w * along),
                 ..paragraph
-            },
+            }.into(),
             face: Default::default(),
             path: None,
         }));
@@ -3781,7 +3785,7 @@ impl<'l> Emitter<'l> {
                 base: b.clone(),
                 ring: rings[i].clone(),
                 holes: (!holes.is_empty()).then_some(holes),
-                pattern: pattern.clone(),
+                pattern: Box::new(pattern.clone()),
                 assoc: None,
                 boundary,
                 annotative: None,

@@ -208,9 +208,10 @@ pub struct AreaPart {
 pub struct PathEntity {
     /// Explicit virtual room boundary; absent keeps an ordinary path. Only a
     /// single planar, widthless polyline may carry the architectural role.
+    // Boxed: else 512 bytes on every path (plan/render.md RM-19).
     #[serde(rename = "spaceSeparator", default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub space_separator: Option<crate::ArchInfo>,
+    pub space_separator: Option<Box<crate::ArchInfo>>,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
@@ -389,16 +390,16 @@ pub struct TextEntity {
     /// A multi-line text's box, line spacing and letter formats (docs/adr/0182).
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub paragraph: Paragraph,
+    pub paragraph: crate::Lean<Paragraph>,
     /// The style it follows and the face it is drawn in (docs/adr/0183 §2).
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub face: crate::TextFace,
+    pub face: crate::Lean<crate::TextFace>,
     /// The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
     /// in its own frame; absent: a straight text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub path: Option<TextPath>,
+    pub path: Option<Box<TextPath>>,
     /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
     /// at others (docs/adr/0323); absent: one height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -631,6 +632,9 @@ pub struct Paragraph {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextField>>", optional))]
     pub fields: Vec<crate::TextField>,
 }
+
+// The default on most texts (`Lean`, plan/render.md RM-19).
+crate::lean_default!(Paragraph);
 
 /// The explicitly selected, frozen text-layout profile (ADR 0914).
 /// Absence preserves legacy layout; loading a file never upgrades it.
@@ -1115,7 +1119,7 @@ pub struct InsertEntity {
     /// 131).
     #[serde(default, skip_serializing_if = "crate::ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<crate::ArchInfo>", optional))]
-    pub arch: crate::ArchInfo,
+    pub arch: crate::Lean<crate::ArchInfo>,
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many
@@ -1698,11 +1702,11 @@ pub struct HatchEntity {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Option<Vec<Vec<Vec2>>>,
-    pub pattern: crate::HatchPattern,
+    pub pattern: Box<crate::HatchPattern>,
     /// The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub assoc: Option<crate::HatchAssoc>,
+    pub assoc: Option<Box<crate::HatchAssoc>>,
     /// Its boundary as its source holds it (docs/adr/0328 §1): the outer loop, then the holes', lines, arcs,
     /// ellipses' arcs and NURBS curves exact; `ring` and `holes` are drawn from it (arcs and curves as chords). None:
     /// the ring and holes are all it has.
@@ -1772,7 +1776,7 @@ pub struct LeaderEntity {
     /// The place on an object its first arm's tip follows (docs/adr/0326 §3); absent: a free tip.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub tip: Option<crate::SubRef>,
+    pub tip: Option<Box<crate::SubRef>>,
     /// Its content blocks (docs/adr/0326 §2): inserts standing in a row at its landing's end, by persistent id; a
     /// leader with blocks has no note.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1965,14 +1969,14 @@ pub enum Entity {
     Xline(ConstructionEntity),
     Ray(ConstructionEntity),
     Text(TextEntity),
-    Dimension(DimensionEntity),
+    Dimension(Box<DimensionEntity>),
     Hatch(HatchEntity),
     /// A block placed in the drawing (docs/adr/0144).
     Insert(InsertEntity),
     /// An arrow with a note (docs/adr/0146).
     Leader(LeaderEntity),
     /// Rows and columns of cells (docs/adr/0184).
-    Table(crate::TableEntity),
+    Table(Box<crate::TableEntity>),
     /// A picture (docs/adr/0192).
     Image(crate::ImageEntity),
     /// An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).
@@ -2249,7 +2253,7 @@ impl Entity {
             Entity::Railing(x) => Some(&x.railing.arch),
             Entity::Stair(x) => Some(&x.stair.arch),
             Entity::Ramp(x) => Some(&x.ramp.arch),
-            Entity::Polyline(p) => p.space_separator.as_ref(),
+            Entity::Polyline(p) => p.space_separator.as_deref(),
             _ => None,
         }
     }
@@ -2268,7 +2272,7 @@ impl Entity {
             Entity::Railing(x) => Some(&mut x.railing.arch),
             Entity::Stair(x) => Some(&mut x.stair.arch),
             Entity::Ramp(x) => Some(&mut x.ramp.arch),
-            Entity::Polyline(p) => p.space_separator.as_mut(),
+            Entity::Polyline(p) => p.space_separator.as_deref_mut(),
             _ => None,
         }
     }

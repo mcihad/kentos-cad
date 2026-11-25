@@ -149,15 +149,15 @@ fn hatches_of(
                 base: base.clone(),
                 ring: first.outer.pts.clone(),
                 holes: None,
-                pattern: pattern.clone(),
-                assoc: Some(HatchAssoc {
+                pattern: Box::new(pattern.clone()),
+                assoc: Some(Box::new(HatchAssoc {
                     outer: Some(EntityId(uid.into_bytes())),
                     gap: None,
                     bounds: Vec::new(),
                     islands: Vec::new(),
                     cutouts: Vec::new(),
                     seed,
-                }),
+                })),
                 boundary: None,
                 annotative: None,
             };

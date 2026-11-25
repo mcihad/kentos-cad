@@ -52,14 +52,14 @@ fn drawing() -> Document {
     };
     let tied = Entity::Hatch(kentos_commands::HatchEntity {
         boundary: None,
-        assoc: Some(HatchAssoc {
+        assoc: Some(Box::new(HatchAssoc {
             gap: None,
             outer: Some(id(&doc, 1)),
             bounds: Vec::new(),
             islands: Vec::new(),
             cutouts: Vec::new(),
             seed: Vec2 { x: 5.0, y: 5.0 },
-        }),
+        })),
         ..h
     });
     assert!(doc.update(Slot(7), tied));

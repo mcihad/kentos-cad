@@ -369,7 +369,7 @@ impl Fields {
                     box_width: self.box_width,
                     line_spacing: self.line_spacing,
                     runs: self.runs.unwrap_or_default(),
-                },
+                }.into(),
                 face: TextFace {
                     overrides: Vec::new(),
                     text_style: self.text_style,
@@ -377,10 +377,10 @@ impl Fields {
                     bold: self.bold.unwrap_or(false),
                     italic: self.italic.unwrap_or(false),
                     oblique: self.oblique,
-                },
-                path: self.path,
+                }.into(),
+                path: self.path.map(Box::new),
             }),
-            "dimension" => Entity::Dimension(DimensionEntity {
+            "dimension" => Entity::Dimension(Box::new(DimensionEntity {
                 annotative: None,
                 text_shift: None,
                 breaks: Vec::new(),
@@ -426,14 +426,14 @@ impl Fields {
                     text_color: self.text_color,
                 },
                 level: None,
-            }),
+            })),
             "hatch" => Entity::Hatch(HatchEntity {
                 base,
                 ring: need(self.ring, "ring")?,
                 holes: islands(self.holes)?,
-                pattern: need(self.pattern, "pattern")?,
+                pattern: Box::new(need(self.pattern, "pattern")?),
                 // Written without it (docs/adr/0186 §6), and said.
-                assoc: self.assoc,
+                assoc: self.assoc.map(Box::new),
                 boundary: self.boundary,
                 annotative: None,
             }),
@@ -473,7 +473,7 @@ impl Fields {
                 arrow_size: self.arrow_size,
                 mask: self.mask.unwrap_or(false),
             }),
-            "table" => Entity::Table(TableEntity {
+            "table" => Entity::Table(Box::new(TableEntity {
                 styles: Vec::new(),
                 formulas: Vec::new(),
                 fields: Vec::new(),
@@ -500,7 +500,7 @@ impl Fields {
                 source: self.source,
                 breaks: self.breaks,
                 table_style: self.table_style,
-            }),
+            })),
             other => {
                 return Err(E::unknown_variant(
                     other,

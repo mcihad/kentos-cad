@@ -97,7 +97,7 @@ fn inspector_probe() {
             let (x, y) = ((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
             let doc = app.document.as_mut().expect("a drawing");
             let layer = doc.model.layers().active().to_owned();
-            let dimension = Entity::Dimension(kentos_commands::DimensionEntity {
+            let dimension = Entity::Dimension(Box::new(kentos_commands::DimensionEntity {
                 annotative: None,
                 text_shift: None,
                 breaks: Vec::new(),
@@ -127,7 +127,7 @@ fn inspector_probe() {
                 refs: None,
                 look: Default::default(),
                 level: None,
-            });
+            }));
             doc.model.add(dimension).expect("a slot")
         }
     };

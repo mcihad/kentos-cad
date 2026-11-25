@@ -145,3 +145,8 @@ Değeri boş öznitelik “alınmadı” sayılmaz: “Blok özniteliği (ATTRIB
 - `crates/shared/formats/src/dxf/ordering.rs`: `Objects`: WIPEOUTVARIABLES ve IMAGEDEF dosya adları.
 - `crates/shared/formats/src/dxf/mod.rs`: maskenin çerçevesi, görüntülerin dosyaları.
 - `crates/shared/formats/tests/all/dxf.rs`: sınamalar.
+
+## Ek (25 Kasım, [ADR 9236](9236-an-object-as-large-as-it-is.md) §4)
+
+Dosya adı olmayan bir IMAGE de boyu varsa çerçevesiyle alınır, rapor dosyasının adlandırılmadığını söyler. Önce
+çerçevesiyle birlikte dışarıda kalıyordu. Boyu olmayan yine alınmaz.

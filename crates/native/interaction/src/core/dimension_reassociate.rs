@@ -158,11 +158,11 @@ impl DimensionReassociate {
         }
         self.picking = Some(Picking {
             uid: edge::uid(cx.doc, slot),
-            was: d.clone(),
+            was: *d.clone(),
             points,
             at: 0,
             bindings: Vec::new(),
-            shown: d.clone(),
+            shown: *d.clone(),
         });
         cx.selection.set_hover(None);
     }
@@ -214,7 +214,7 @@ impl DimensionReassociate {
             let said = if out.changed == 0 {
                 format!("{LABEL}: ölçü değişmedi.")
             } else {
-                let value = dimension_layout(&Entity::Dimension(picking.shown.clone()))
+                let value = dimension_layout(&Entity::Dimension(Box::new(picking.shown.clone())))
                     .map(|l| {
                         cx.format()
                             .dimension_in(l.prefix, l.unit, l.value, &picking.shown.look)
@@ -358,7 +358,7 @@ impl Tool for DimensionReassociate {
             None => picking.shown.clone(),
         };
         // The dimension as it would be, dashed; its points named.
-        if let Some(layout) = dimension_layout(&Entity::Dimension(shown.clone())) {
+        if let Some(layout) = dimension_layout(&Entity::Dimension(Box::new(shown.clone()))) {
             for [a, b] in &layout.lines {
                 out.strokes
                     .push(Stroke::dashed(vec![*a, *b], false, [6.0, 4.0]).tone(Tone::Accent));

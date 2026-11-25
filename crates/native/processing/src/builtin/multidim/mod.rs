@@ -348,7 +348,7 @@ pub fn run_calc(r: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feed
                 style.max = None;
                 Entity::Raster(RasterEntity {
                     base: base(&r.layer("layer").id, BTreeMap::new(), None),
-                    raster: RasterFields {
+                    raster: Box::new(RasterFields {
                         file: Some(path.clone()),
                         asset: None,
                         url: None,
@@ -364,8 +364,8 @@ pub fn run_calc(r: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feed
                         }),
                         georef: None,
                         tiles: None,
-                        ..raster.raster.clone()
-                    },
+                        ..*raster.raster.clone()
+                    }),
                 })
             })
             .into_iter()

@@ -48,7 +48,7 @@ fn derive(doc: &mut Document, m: Uuid, at: (f64, f64)) -> BuildingSectionsEdited
 
 fn fields(doc: &Document, m: Uuid) -> kentos_commands::ViewMarkFields {
     match doc.slot_of(m).and_then(|s| doc.get(s)) {
-        Some(Entity::ViewMark(v)) => v.mark.clone(),
+        Some(Entity::ViewMark(v)) => *v.mark.clone(),
         other => panic!("{other:?}"),
     }
 }
@@ -461,7 +461,7 @@ fn a_drawing_without_elevation_marks_gets_four_around_the_building_and_their_fac
         doc.entities()
             .filter_map(|e| match e {
                 Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => {
-                    Some(v.mark.clone())
+                    Some((*v.mark).clone())
                 }
                 _ => None,
             })

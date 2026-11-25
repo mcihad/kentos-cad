@@ -189,7 +189,7 @@ impl Prepared {
             }
         }
         f.georef = Some(Box::new(record));
-        f
+        *f
     }
 }
 
@@ -1072,7 +1072,7 @@ fn write_execute(
         cx.doc.set_styles(styles);
     }
     let mut next = p.before.clone();
-    next.raster = raster.clone();
+    next.raster = Box::new(raster.clone());
     let slot = p.slot;
     let _ = cx.doc.transact("Raster oturt", |doc| -> Result<(), ()> {
         doc.update(slot, Entity::Raster(next));

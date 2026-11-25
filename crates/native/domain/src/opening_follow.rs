@@ -179,7 +179,7 @@ impl Document {
             .tied_to(uid)
             .filter_map(|slot| match &*self.store.get(slot)?.entity {
                 Entity::Opening(o) if Uuid::parse_str(&o.opening.host).ok() == Some(uid) => {
-                    Some((slot, o.opening.clone()))
+                    Some((slot, (*o.opening).clone()))
                 }
                 _ => None,
             })
@@ -325,9 +325,9 @@ impl Document {
             let Entity::Opening(o) = &*current.entity else {
                 continue;
             };
-            if o.opening != fields {
+            if *o.opening != fields {
                 let mut e = o.clone();
-                e.opening = fields;
+                e.opening = Box::new(fields);
                 let op = updated(current, Entity::Opening(e));
                 self.apply_op(&op);
                 out.push(op);

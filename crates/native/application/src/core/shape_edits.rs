@@ -621,7 +621,7 @@ fn readable_of(doc: &Document, ids: &[String]) -> Result<Prepared, Stop> {
                     align: placed
                         .align
                         .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
-                    path: Some(contract_curve(placed.curve)),
+                    path: Some(Box::new(contract_curve(placed.curve))),
                     ..(*t).clone()
                 }
             } else {

@@ -95,7 +95,7 @@ fn split_note(t: &TextEntity) -> (TextEntity, Option<TextEntity>) {
     }
     let first = TextEntity {
         text: letters[a..b].iter().collect(),
-        paragraph: Paragraph::default(),
+        paragraph: Paragraph::default().into(),
         ..t.clone()
     };
     let from = b + 1;
@@ -117,8 +117,9 @@ fn split_note(t: &TextEntity) -> (TextEntity, Option<TextEntity>) {
                 text: letters[from..].iter().collect(),
                 paragraph: Paragraph {
                     runs,
-                    ..t.paragraph.clone()
-                },
+                    ..(*t.paragraph).clone()
+                }
+                .into(),
                 ..t.clone()
             }
         });

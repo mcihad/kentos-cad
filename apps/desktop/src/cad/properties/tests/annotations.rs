@@ -645,7 +645,7 @@ pub(super) fn dimension(
 
 pub(super) fn dimension_of(app: &App, slot: u32) -> DimensionEntity {
     match entity(app, slot) {
-        Entity::Dimension(d) => d,
+        Entity::Dimension(d) => *d,
         other => panic!("a dimension: {other:?}"),
     }
 }
@@ -662,10 +662,10 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     // A quarter arc of radius 10 about (E, N + 40), east to north, 3 m out.
     let arc = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             c: Some(Wire { x: E, y: N + 40.0 }),
             ..dimension(ArcLength, [10.0, 40.0], [0.0, 50.0])
-        }),
+        })),
     );
     select(&mut app, &[arc]);
     assert_eq!(value(&app, "Geometri", "Zemin"), "Kapalı");
@@ -674,18 +674,18 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     // Two ordinates, the Y's and the X's.
     let oy = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             angle: Some(0.0),
             ..dimension(Ordinate, [0.0, 60.0], [5.0, 70.0])
-        }),
+        })),
     );
     let ox = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             angle: Some(90.0),
             mask: true,
             ..dimension(Ordinate, [0.0, 80.0], [-10.0, 85.0])
-        }),
+        })),
     );
     select(&mut app, &[oy, ox]);
     assert_eq!(value(&app, "Ölçü", "Zemin"), "Çeşitli");
@@ -717,19 +717,19 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     // Two slopes: one first elevation, two second ones.
     let s1 = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             za: Some(100.0),
             zb: Some(99.0),
             ..dimension(Slope, [0.0, 100.0], [40.0, 100.0])
-        }),
+        })),
     );
     let s2 = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             za: Some(100.0),
             zb: Some(98.0),
             ..dimension(Slope, [0.0, 110.0], [40.0, 110.0])
-        }),
+        })),
     );
     select(&mut app, &[s1, s2]);
     assert_eq!(value(&app, "Ölçü", "Birinci kot"), "100.000 m");
@@ -800,7 +800,7 @@ fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
     let mut app = objects();
     let d1 = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             look: kentos_commands::DimensionLook {
                 dim_line_color: Some("#E5484D".into()),
                 ext_weight: Some(0.35),
@@ -808,18 +808,18 @@ fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
                 ..Default::default()
             },
             ..dimension(Aligned, [0.0, 0.0], [10.0, 0.0])
-        }),
+        })),
     );
     let d2 = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             look: kentos_commands::DimensionLook {
                 dim_line_color: Some("#e5484d".into()),
                 text_color: Some("#123456".into()),
                 ..Default::default()
             },
             ..dimension(Aligned, [0.0, 20.0], [10.0, 20.0])
-        }),
+        })),
     );
     select(&mut app, &[d1, d2]);
     let shown = |app: &App| {

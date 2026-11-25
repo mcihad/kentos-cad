@@ -373,10 +373,10 @@ fn plain_of(base: &EntityBase, pieces: Vec<kentos_geometry_core::block::Piece>) 
                 base: b,
                 ring: back(&ring),
                 holes: holes.map(|hs| hs.iter().map(|h| back(h)).collect()),
-                pattern: serde_json::from_str(&kentos_geometry_core::api::json::to_string(
+                pattern: Box::new(serde_json::from_str(&kentos_geometry_core::api::json::to_string(
                     &pattern,
                 ))
-                .unwrap_or_else(|_| HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0)),
+                .unwrap_or_else(|_| HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0))),
                 assoc: None,
                 boundary: None,
                 annotative: None,
@@ -505,14 +505,14 @@ mod tests {
                 .into_iter()
                 .map(|(x, y)| Vec2 { x, y })
                 .collect();
-            Entity::Opening(OpeningEntity { base: base(id), opening: f })
+            Entity::Opening(OpeningEntity { base: base(id), opening: Box::new(f) })
         };
         // Plain alone: its faces and its two end caps.
         let alone = plain_pieces(&base(1), &wall, View::default()).unwrap().len();
         let entities = vec![
             Entity::Wall(WallEntity {
                 base: base(1),
-                wall,
+                wall: Box::new(wall),
             }),
             opening(2, 1.5, 0.6, OpeningForm::Niche, Some(0.1), None),
             opening(3, 3.0, 0.2, OpeningForm::Flue, Some(0.2), None),
@@ -579,7 +579,7 @@ mod tests {
             let (s0, s1) = (at - width / 2.0, at + width / 2.0);
             Entity::Opening(OpeningEntity {
                 base: base(id),
-                opening: OpeningFields {
+                opening: Box::new(OpeningFields {
                     host: uid.clone(),
                     at,
                     anchor: Default::default(),
@@ -609,13 +609,13 @@ mod tests {
                     phase: None,
                     exit: None,
                     fire_rating: None,
-                },
+                }),
             })
         };
         let entities = vec![
             Entity::Wall(WallEntity {
                 base: base(1),
-                wall,
+                wall: Box::new(wall),
             }),
             opening(2, 1.5, 0.9, OpeningForm::Door),
             opening(3, 4.0, 1.2, OpeningForm::Window),

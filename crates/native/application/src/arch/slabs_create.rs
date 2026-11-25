@@ -198,6 +198,6 @@ fn entity(input: &SlabsCreate, slab: SlabFields, attrs: Attrs) -> Entity {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        slab,
+        slab: Box::new(slab),
     })
 }

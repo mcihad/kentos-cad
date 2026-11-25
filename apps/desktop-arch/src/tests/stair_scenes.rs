@@ -244,7 +244,7 @@ mod tests {
             .model
             .entities()
             .filter_map(|e| match e {
-                Entity::Stair(s) => Some((Slot(e.base().id), s.stair.clone())),
+                Entity::Stair(s) => Some((Slot(e.base().id), (*s.stair).clone())),
                 _ => None,
             })
             .collect()

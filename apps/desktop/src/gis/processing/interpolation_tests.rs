@@ -68,7 +68,7 @@ fn rasters_on(app: &App, layer: &str) -> Vec<kentos_commands::RasterFields> {
         .model
         .entities()
         .filter_map(|e| match e {
-            Entity::Raster(r) if r.base.layer_id == layer => Some(r.raster.clone()),
+            Entity::Raster(r) if r.base.layer_id == layer => Some((*r.raster).clone()),
             _ => None,
         })
         .collect()

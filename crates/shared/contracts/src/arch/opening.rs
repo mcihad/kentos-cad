@@ -412,7 +412,7 @@ pub struct OpeningEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub opening: OpeningFields,
+    pub opening: Box<OpeningFields>,
 }
 
 fn one() -> u8 {

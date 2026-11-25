@@ -60,7 +60,7 @@ fn bind(doc: &mut Document, wall: Slot, dim: Slot, bindings: &[(DimensionPoint, 
 
 fn dimension(doc: &Document, slot: Slot) -> kentos_commands::DimensionEntity {
     match doc.get(slot) {
-        Some(Entity::Dimension(d)) => d.clone(),
+        Some(Entity::Dimension(d)) => *d.clone(),
         other => panic!("not a dimension: {other:?}"),
     }
 }
@@ -270,13 +270,13 @@ fn an_edit_without_references_keeps_them_and_a_moved_point_goes_free() {
             CommandResult::Completed { .. }
         ));
     };
-    write(&mut doc, Entity::Dimension(masked));
+    write(&mut doc, Entity::Dimension(Box::new(masked)));
     let d = dimension(&doc, dim);
     assert!(d.mask);
     assert_eq!(d.refs.as_ref().unwrap().each().count(), 2);
     let mut dragged = d.clone();
     dragged.b = Vec2 { x: 8.0, y: 0.0 };
-    write(&mut doc, Entity::Dimension(dragged));
+    write(&mut doc, Entity::Dimension(Box::new(dragged)));
     let refs = dimension(&doc, dim).refs.unwrap();
     assert!(refs.a.is_some() && refs.b.is_none());
 }

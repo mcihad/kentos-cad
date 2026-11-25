@@ -220,7 +220,7 @@ fn measure(floors: usize, total: usize) {
             operation: EditOperation::Grip,
             changes: vec![EntityEdit::Update {
                 uid: uid.to_owned(),
-                geometry: EntityGeometry::Wall(fields),
+                geometry: EntityGeometry::Wall(*fields),
             }],
             expected_revision: None,
         }

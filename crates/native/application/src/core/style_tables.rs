@@ -161,7 +161,7 @@ pub fn save_table_styles(doc: &mut Document, next: Vec<kentos_commands::TableSty
             locked += 1;
             continue;
         }
-        updates.push((Slot(t.base.id), Entity::Table(kentos_commands::TableEntity { table_style: None, ..t.clone() })));
+        updates.push((Slot(t.base.id), Entity::Table(Box::new(kentos_commands::TableEntity { table_style: None, ..(**t).clone() }))));
     }
     let changed = updates.len();
     if changed > 0 {
@@ -300,13 +300,13 @@ pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
                     old,
                     now,
                     &TextLook {
-                        face: t.face.clone(),
+                        face: t.face.clone().into_inner(),
                         width_factor: t.width_factor,
                         height: t.height,
                     },
                     scale,
                 );
-                t.face = look.face;
+                t.face = look.face.into();
                 t.width_factor = look.width_factor;
                 t.height = look.height;
             }

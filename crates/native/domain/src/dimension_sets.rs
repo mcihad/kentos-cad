@@ -913,7 +913,7 @@ impl Document {
                     claimed.insert(found.uid).then_some(*found)
                 });
             let like = old.and_then(stored);
-            let mut d = like.cloned().unwrap_or_else(|| DimensionEntity {
+            let mut d = like.cloned().unwrap_or_else(|| Box::new(DimensionEntity {
                 base: base(&set.layer_id),
                 a: v(span.a.at),
                 b: v(span.b.at),
@@ -932,7 +932,7 @@ impl Document {
                 look: look.clone(),
                 annotative: None,
                 level: None,
-            });
+            }));
             if appearance_changed && like.is_some() {
                 d.look = set.look.clone();
                 d.height = set.height;
@@ -957,7 +957,7 @@ impl Document {
             out.push(PlannedDimensionSetMember {
                 segment,
                 uid: old.filter(|_| like.is_some()).map(|m| m.uid),
-                dimension: d,
+                dimension: *d,
                 shift: None,
                 notes: Default::default(),
             });
@@ -1003,7 +1003,7 @@ impl Document {
                     planned.dimension.base.id = before.slot().0;
                     let after = Stored {
                         uid: before.uid,
-                        entity: Arc::new(Entity::Dimension(planned.dimension)),
+                        entity: Arc::new(Entity::Dimension(Box::new(planned.dimension))),
                     };
                     if before.entity != after.entity {
                         ops.push(Op::Update { before, after });
@@ -1017,7 +1017,7 @@ impl Document {
                     planned.dimension.base.id = slot.0;
                     ops.push(Op::Add(Stored {
                         uid,
-                        entity: Arc::new(Entity::Dimension(planned.dimension)),
+                        entity: Arc::new(Entity::Dimension(Box::new(planned.dimension))),
                     }));
                     EntityId(uid.into_bytes())
                 }
@@ -1341,21 +1341,21 @@ impl Document {
                     if let (Entity::Wall(b), Entity::Wall(a)) = (&*before.entity, &*after.entity) {
                         walls
                             .entry(EntityId(after.uid.into_bytes()))
-                            .and_modify(|(_, last)| *last = a.wall.clone())
-                            .or_insert_with(|| (b.wall.clone(), a.wall.clone()));
+                            .and_modify(|(_, last)| *last = *a.wall.clone())
+                            .or_insert_with(|| (*b.wall.clone(), *a.wall.clone()));
                     }
                     boxes.extend(crate::dimension_spans::reach_box(&before.entity));
                     boxes.extend(crate::dimension_spans::reach_box(&after.entity));
                 }
                 Op::Add(s) => {
                     if let Entity::Wall(w) = &*s.entity {
-                        made.push((EntityId(s.uid.into_bytes()), w.wall.clone()));
+                        made.push((EntityId(s.uid.into_bytes()), *w.wall.clone()));
                     }
                     boxes.extend(crate::dimension_spans::reach_box(&s.entity));
                 }
                 Op::Remove(s) => {
                     if let Entity::Wall(w) = &*s.entity {
-                        gone.push((EntityId(s.uid.into_bytes()), w.wall.clone()));
+                        gone.push((EntityId(s.uid.into_bytes()), *w.wall.clone()));
                     }
                     boxes.extend(crate::dimension_spans::reach_box(&s.entity));
                 }

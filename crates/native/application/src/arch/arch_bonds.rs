@@ -1310,7 +1310,7 @@ fn settle_columns(view: &mut View<'_>, set: &ConstraintSet) {
         let grid = |id: &str| -> Option<kentos_commands::GridFields> {
             let s = view.doc.slot_of(Uuid::parse_str(id).ok()?)?;
             match view.entity(s)? {
-                Entity::Grid(g) => Some(g.grid),
+                Entity::Grid(g) => Some(*g.grid),
                 _ => None,
             }
         };

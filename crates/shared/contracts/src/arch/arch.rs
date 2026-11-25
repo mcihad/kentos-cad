@@ -645,6 +645,9 @@ pub struct ArchInfo {
     pub element_type: Option<crate::TypeLink>,
 }
 
+// Empty on nearly every block reference and path (`Lean`, plan/render.md RM-19).
+crate::lean_default!(ArchInfo);
+
 impl ArchInfo {
     pub fn is_empty(&self) -> bool {
         self == &ArchInfo::default()
@@ -667,7 +670,7 @@ pub struct WallEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub wall: WallFields,
+    pub wall: Box<WallFields>,
 }
 
 /// A wall's own fields: what a command writes and an edit's geometry carries (`EntityGeometry::Wall`).

@@ -326,7 +326,7 @@ mod tests {
         assert_eq!(model.program().unit("d2").and_then(|u| u.name.clone()).as_deref(), Some("Dubleks"));
         assert_eq!(cells(&app)[2][1], "Dubleks");
         let said = crate::tables::editor::schedule_cell(model, &match model.get(s) {
-            Some(Entity::Table(t)) => t.clone(),
+            Some(Entity::Table(t)) => *t.clone(),
             _ => panic!("the schedule"),
         }, (2, 1));
         assert!(matches!(&said, Some(Ok(w)) if w.contains("Bina programına yazılır: 2 Dubleks")), "{said:?}");

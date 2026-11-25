@@ -79,7 +79,7 @@ fn holes(doc: &Document) -> Vec<Hole> {
     let walls: std::collections::HashMap<String, kentos_commands::WallFields> = doc
         .entities_with_uids()
         .filter_map(|(u, e)| match e {
-            Entity::Wall(w) => Some((u.to_string(), w.wall.clone())),
+            Entity::Wall(w) => Some((u.to_string(), (*w.wall).clone())),
             _ => None,
         })
         .collect();

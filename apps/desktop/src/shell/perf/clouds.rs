@@ -276,7 +276,7 @@ fn drawing(cloud: PointCloudFields) -> DocumentSnapshotV2 {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        cloud,
+        cloud: Box::new(cloud),
     }));
     doc.uids.push(EntityId([
         0x01, 0x92, 0xf5, 0xa0, 0x7c, 0x3e, 0x70, 0x00, 0x80, 0, 0, 0, 0, 0, 0, 1,

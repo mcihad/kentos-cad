@@ -196,7 +196,7 @@ pub(crate) fn grid_named(doc: &Document, uid: &str, path: &str) -> Result<GridFi
             format!("“{uid}” kimlikli nesne çizimde yok. Var olan bir aksın kimliğini verin."),
             path,
         )),
-        Some(Entity::Grid(g)) => Ok(g.grid.clone()),
+        Some(Entity::Grid(g)) => Ok(*g.grid.clone()),
         Some(_) => Err(fail(
             codes::NOT_A_GRID,
             "Nesne aks değil; kolon yalnız iki aksın kesişimine bağlanır.".into(),
@@ -357,7 +357,7 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
         ));
     }
     if let Some(s) = &input.series {
@@ -417,7 +417,7 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
             made.push((
                 "series".into(),
                 None,
-                Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+                Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
             ));
         }
     }
@@ -565,7 +565,7 @@ fn system_made(
         made.push((
             "system".into(),
             None,
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
         ));
         let id = Uuid::now_v7();
         grid_ids.push(id);
@@ -621,7 +621,7 @@ fn system_made(
             made.push((
                 "system.columns".into(),
                 None,
-                Box::new(move |base| Entity::Column(ColumnEntity { base, column })),
+                Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(column) })),
             ));
             ids.push(Uuid::now_v7());
         }
@@ -794,7 +794,7 @@ fn radial_made(
         made.push((
             "radial".into(),
             None,
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
         ));
         let id = Uuid::now_v7();
         grid_ids.push(id);
@@ -839,7 +839,7 @@ fn radial_made(
             made.push((
                 "radial.columns".into(),
                 None,
-                Box::new(move |base| Entity::Column(ColumnEntity { base, column })),
+                Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(column) })),
             ));
             ids.push(Uuid::now_v7());
         }
@@ -920,7 +920,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Column(ColumnEntity { base, column: c })),
+            Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(c) })),
         ));
     }
     if let Some(x) = &input.crossings {
@@ -977,7 +977,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
                     made.push((
                         "crossings".into(),
                         None,
-                        Box::new(move |base| Entity::Column(ColumnEntity { base, column: c })),
+                        Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(c) })),
                     ));
                 }
             }
@@ -1095,7 +1095,7 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Stair(StairEntity { base, stair: s })),
+            Box::new(move |base| Entity::Stair(StairEntity { base, stair: Box::new(s) })),
         ));
     }
     finish(
@@ -1355,7 +1355,7 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Ramp(RampEntity { base, ramp: r })),
+            Box::new(move |base| Entity::Ramp(RampEntity { base, ramp: Box::new(r) })),
         ));
     }
     finish(
@@ -1473,7 +1473,7 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Beam(kentos_commands::BeamEntity { base, beam: b })),
+            Box::new(move |base| Entity::Beam(kentos_commands::BeamEntity { base, beam: Box::new(b) })),
         ));
     }
     finish(
@@ -1528,7 +1528,7 @@ fn railings_check(doc: &Document, input: &RailingsCreate) -> Result<Checked, Sto
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Railing(kentos_commands::RailingEntity { base, railing: r })),
+            Box::new(move |base| Entity::Railing(kentos_commands::RailingEntity { base, railing: Box::new(r) })),
         ));
     }
     finish(
@@ -1596,7 +1596,7 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Roof(kentos_commands::RoofEntity { base, roof: r })),
+            Box::new(move |base| Entity::Roof(kentos_commands::RoofEntity { base, roof: Box::new(r) })),
         ));
     }
     finish(

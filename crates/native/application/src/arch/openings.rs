@@ -466,5 +466,5 @@ pub(crate) fn clear_of_others(
 
 /// An opening as the document stores it, given its base.
 pub(crate) fn entity(base: kentos_commands::EntityBase, opening: OpeningFields) -> Entity {
-    Entity::Opening(OpeningEntity { base, opening })
+    Entity::Opening(OpeningEntity { base, opening: Box::new(opening) })
 }

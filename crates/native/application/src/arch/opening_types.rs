@@ -362,14 +362,14 @@ pub(crate) fn follow(
             });
         }
         let mut out = e.clone();
-        out.opening = placed;
+        out.opening = Box::new(placed);
         next.push((slot, out, uid));
     }
     // Clear of the wall's other openings, one at a time: with skip the one in the way stays behind.
     loop {
         let changed: Vec<(Slot, &OpeningFields, String)> = next
             .iter()
-            .map(|(s, e, uid)| (*s, &e.opening, uid.clone()))
+            .map(|(s, e, uid)| (*s, &*e.opening, uid.clone()))
             .collect();
         match openings::clear_of_others(doc, &changed, &[]) {
             Ok(()) => break,

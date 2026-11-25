@@ -939,7 +939,7 @@ pub fn shape(entity: &Entity) -> Shape {
             runs: core_runs(&t.paragraph.runs),
             flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
-            path: t.path.as_ref().map(core_curve),
+            path: t.path.as_deref().map(core_curve),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -962,7 +962,7 @@ pub fn shape(entity: &Entity) -> Shape {
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
             pattern: core_pattern(&h.pattern),
-            assoc: h.assoc.as_ref().map(core_assoc),
+            assoc: h.assoc.as_deref().map(core_assoc),
             boundary: h
                 .boundary
                 .as_deref()
@@ -1301,8 +1301,8 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 box_width,
                 line_spacing,
                 runs: contract_runs(runs),
-            };
-            e.path = path.map(contract_curve);
+            }.into();
+            e.path = path.map(contract_curve).map(Box::new);
         }
         (
             Entity::Dimension(e),
@@ -1348,9 +1348,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.ring = back(ring);
             e.holes = holes.map(|hs| hs.into_iter().map(back).collect());
             if let Some(p) = contract_pattern(pattern) {
-                e.pattern = p;
+                *e.pattern = p;
             }
-            e.assoc = assoc.and_then(contract_assoc);
+            e.assoc = assoc.and_then(contract_assoc).map(Box::new);
             // The exact boundary the core carried (docs/adr/0328 §1); none when it dropped it.
             e.boundary = boundary
                 .as_deref()
@@ -1429,9 +1429,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.frame = frame;
         }
         (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
-        (Entity::Raster(e), s @ Shape::Raster { .. }) => e.raster = contract_raster(s)?,
-        (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => e.cloud = contract_cloud(s)?,
-        (Entity::Wall(e), s @ Shape::Wall { .. }) => e.wall = kentos_formats::walls::contract_wall(&s)?,
+        (Entity::Raster(e), s @ Shape::Raster { .. }) => *e.raster = contract_raster(s)?,
+        (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => *e.cloud = contract_cloud(s)?,
+        (Entity::Wall(e), s @ Shape::Wall { .. }) => *e.wall = kentos_formats::walls::contract_wall(&s)?,
         // An opening's place along its wall, its width and its jambs (docs/adr/0341 §1); the rest is its own.
         // A space's rings and seed (docs/adr/0342 §3); the rest is its own.
         (Entity::Space(e), Shape::Space { parts, space }) => {
@@ -1766,7 +1766,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             text,
             height,
             rotation,
-            path,
+            path: path.map(Box::new),
             align,
             width_factor: width_factor.filter(|w| *w != 1.0),
             mask,
@@ -1781,8 +1781,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 box_width,
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
                 runs,
-            },
-            face,
+            }.into(),
+            face: face.into(),
         }),
         EntityGeometry::Dimension {
             annotative,
@@ -1802,7 +1802,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             refs,
             look,
             level,
-        } => Entity::Dimension(DimensionEntity {
+        } => Entity::Dimension(Box::new(DimensionEntity {
             annotative,
             text_shift,
             breaks,
@@ -1821,7 +1821,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             refs,
             look,
             level,
-        }),
+        })),
         EntityGeometry::Hatch {
             ring,
             holes,
@@ -1839,8 +1839,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 base,
                 ring,
                 holes,
-                pattern,
-                assoc,
+                pattern: Box::new(pattern),
+                assoc: assoc.map(Box::new),
                 boundary,
                 annotative,
             })
@@ -1913,7 +1913,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             frame,
             face,
             source,
-        } => Entity::Table(TableEntity {
+        } => Entity::Table(Box::new(TableEntity {
             styles: styles.unwrap_or_default(),
             formulas: formulas.unwrap_or_default(),
             fields: fields.unwrap_or_default(),
@@ -1934,13 +1934,13 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             breaks: None,
             // Absent: none here; an edit keeps the table's (edit.rs, docs/adr/1127 §3).
             table_style: table_style.flatten(),
-        }),
+        })),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
-        EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
+        EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster: Box::new(raster) }),
         EntityGeometry::PointCloud(cloud) => {
-            Entity::PointCloud(kentos_commands::PointCloudEntity { base, cloud })
+            Entity::PointCloud(kentos_commands::PointCloudEntity { base, cloud: Box::new(cloud) })
         }
-        EntityGeometry::Wall(wall) => Entity::Wall(kentos_commands::WallEntity { base, wall }),
+        EntityGeometry::Wall(wall) => Entity::Wall(kentos_commands::WallEntity { base, wall: Box::new(wall) }),
     }
 }
 

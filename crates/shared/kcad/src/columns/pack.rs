@@ -519,26 +519,27 @@ impl Packer {
                     self.text(&serde_json::to_string(&paragraph.fields).unwrap_or_default());
                 }
             }
-            Entity::Dimension(DimensionEntity {
-                annotative,
-                text_shift,
-                breaks,
-                base: _,
-                a,
-                b,
-                offset,
-                height,
-                text,
-                style,
-                angle,
-                c,
-                mask,
-                za,
-                zb,
-                refs,
-                look,
-                level,
-            }) => {
+            Entity::Dimension(dimension) => {
+                let DimensionEntity {
+                    annotative,
+                    text_shift,
+                    breaks,
+                    base: _,
+                    a,
+                    b,
+                    offset,
+                    height,
+                    text,
+                    style,
+                    angle,
+                    c,
+                    mask,
+                    za,
+                    zb,
+                    refs,
+                    look,
+                    level,
+                } = &**dimension;
                 self.point(a);
                 self.point(b);
                 self.out.floats.extend([*offset, *height]);
@@ -767,7 +768,7 @@ impl Packer {
                     lines,
                     gradient,
                     origin,
-                } = pattern;
+                } = &**pattern;
                 self.points(ring);
                 let at = HATCH_PATTERNS.iter().position(|x| x == kind).unwrap_or(0);
                 self.int(count(at));
@@ -937,24 +938,24 @@ impl Packer {
             }
             Entity::Raster(RasterEntity {
                 base: _,
-                raster:
-                    RasterFields {
-                        affine,
-                        width,
-                        height,
-                        bands,
-                        sample,
-                        asset,
-                        file,
-                        url,
-                        srid,
-                        style,
-                        opacity,
-                        dataset,
-                        georef,
-                        tiles,
-                    },
+                raster,
             }) => {
+                let RasterFields {
+                    affine,
+                    width,
+                    height,
+                    bands,
+                    sample,
+                    asset,
+                    file,
+                    url,
+                    srid,
+                    style,
+                    opacity,
+                    dataset,
+                    georef,
+                    tiles,
+                } = &**raster;
                 let place = RASTER_SAMPLES.iter().position(|s| s == sample).unwrap_or(0);
                 self.out
                     .ints
@@ -1133,16 +1134,16 @@ impl Packer {
             }
             Entity::PointCloud(kentos_contracts::PointCloudEntity {
                 base: _,
-                cloud:
-                    kentos_contracts::PointCloudFields {
-                        sources,
-                        bounds,
-                        count: points,
-                        srid,
-                        style,
-                        opacity,
-                    },
+                cloud,
             }) => {
+                let kentos_contracts::PointCloudFields {
+                    sources,
+                    bounds,
+                    count: points,
+                    srid,
+                    style,
+                    opacity,
+                } = &**cloud;
                 let render = kentos_contracts::CloudRender::ALL
                     .iter()
                     .position(|r| *r == style.render)
@@ -1258,30 +1259,31 @@ impl Packer {
                 // Its arms, tip, blocks and style (docs/adr/0326), as one JSON object of those it has.
                 if !arms.is_empty() || tip.is_some() || !blocks.is_empty() || leader_style.is_some() {
                     flags |= OPT[5];
-                    self.text(&multileader_json(arms, tip.as_ref(), blocks, leader_style.as_deref()));
+                    self.text(&multileader_json(arms, tip.as_deref(), blocks, leader_style.as_deref()));
                 }
             }
-            Entity::Table(TableEntity {
-                styles,
-                formulas,
-                fields,
-                base: _,
-                p,
-                rotation,
-                height,
-                rows,
-                columns,
-                cells,
-                merges,
-                aligns,
-                header,
-                grid,
-                frame,
-                face,
-                source,
-                breaks,
-                table_style,
-            }) => {
+            Entity::Table(table) => {
+                let TableEntity {
+                    styles,
+                    formulas,
+                    fields,
+                    base: _,
+                    p,
+                    rotation,
+                    height,
+                    rows,
+                    columns,
+                    cells,
+                    merges,
+                    aligns,
+                    header,
+                    grid,
+                    frame,
+                    face,
+                    source,
+                    breaks,
+                    table_style,
+                } = &**table;
                 self.point(p);
                 self.out.floats.extend([*rotation, *height]);
                 self.numbers(rows);

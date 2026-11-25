@@ -305,7 +305,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             for (at, slot, o) in &list {
                 let mut f = o.opening.clone();
                 f.at = to.unwrap_or(f.at) + by.unwrap_or(0.0);
-                next.push((*at, *slot, o, f, true));
+                next.push((*at, *slot, o, *f, true));
             }
         }
         OpeningsOperation::Distance {
@@ -364,7 +364,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                         &path,
                     ));
                 }
-                next.push((*at, *slot, o, f, true));
+                next.push((*at, *slot, o, *f, true));
             }
         }
         OpeningsOperation::Flip { what } => {
@@ -376,7 +376,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 if matches!(what, OpeningFlip::Hand | OpeningFlip::Both) {
                     f.hand = f.hand.other();
                 }
-                next.push((*at, *slot, o, f, false));
+                next.push((*at, *slot, o, *f, false));
             }
         }
         OpeningsOperation::Rehost { to, point } => {
@@ -408,7 +408,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     }
                 }
                 f.broken = None;
-                next.push((*at, *slot, o, f, true));
+                next.push((*at, *slot, o, *f, true));
             }
         }
         OpeningsOperation::ReplaceType { from, to, level } => {
@@ -438,7 +438,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                         f.overrides.clear();
                     }
                 }
-                next.push((*at, *slot, o, f, false));
+                next.push((*at, *slot, o, *f, false));
             }
             if !any {
                 return Err(fail(
@@ -456,7 +456,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 typed(&o.opening, *at)?;
                 let mut f = o.opening.clone();
                 crate::opening_types_edit::detach_fields(&mut f);
-                next.push((*at, *slot, o, f, false));
+                next.push((*at, *slot, o, *f, false));
             }
         }
         OpeningsOperation::Refresh => {
@@ -466,7 +466,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 let t = crate::opening_types::find_project(doc, &id, &format!("uids[{at}]"))?;
                 let mut f = o.opening.clone();
                 f.take_type(&t);
-                next.push((*at, *slot, o, f, false));
+                next.push((*at, *slot, o, *f, false));
             }
         }
         OpeningsOperation::Reset { fields } => {
@@ -481,7 +481,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     f.overrides.retain(|k| !fields.contains(k));
                 }
                 f.take_type(&t);
-                next.push((*at, *slot, o, f, false));
+                next.push((*at, *slot, o, *f, false));
             }
         }
         OpeningsOperation::Push { fields } => {
@@ -583,7 +583,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 } else {
                     format!("{prefix}{room}")
                 });
-                next.push((at, slot, o, f, false));
+                next.push((at, slot, o, *f, false));
             }
             next.sort_by_key(|(at, ..)| *at);
         }
@@ -615,7 +615,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 let mut f = o.opening.clone();
                 let number = u64::from(*start) + n as u64;
                 f.number = Some(format!("{prefix}{number}"));
-                next.push((at, slot, o, f, false));
+                next.push((at, slot, o, *f, false));
             }
             next.sort_by_key(|(at, ..)| *at);
         }
@@ -671,7 +671,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     e.base.label = None;
                     e.base.label_pins.clear();
                     e.base.attachments.clear();
-                    e.opening = f;
+                    e.opening = Box::new(f);
                     work.added.push((e, path));
                 }
             }
@@ -693,18 +693,18 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             None => opening_follow::placed_on(&f, None, false),
         };
         let mut e = o.clone();
-        e.opening = f;
+        e.opening = Box::new(f);
         work.updates.push((slot, e, path));
     }
     let changed: Vec<(Slot, &OpeningFields, String)> = work
         .updates
         .iter()
-        .map(|(s, e, p)| (*s, &e.opening, p.clone()))
+        .map(|(s, e, p)| (*s, &*e.opening, p.clone()))
         .collect();
     let new: Vec<(&OpeningFields, String)> = work
         .added
         .iter()
-        .map(|(e, p)| (&e.opening, p.clone()))
+        .map(|(e, p)| (&*e.opening, p.clone()))
         .collect();
     openings::clear_of_others(doc, &changed, &new)?;
     checks::revision(doc, input.expected_revision.as_deref())?;

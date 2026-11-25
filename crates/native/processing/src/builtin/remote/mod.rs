@@ -130,7 +130,7 @@ fn raster_entity(
     };
     Ok(Entity::Raster(RasterEntity {
         base: base(layer, attrs, None),
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: grid.affine,
             width: grid.width,
             height: grid.height,
@@ -145,7 +145,7 @@ fn raster_entity(
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     }))
 }
 

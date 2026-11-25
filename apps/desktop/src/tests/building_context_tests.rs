@@ -781,7 +781,7 @@ fn refreshing_plan_dimensions_preserves_manual_work_and_reads_the_new_jambs() {
         let Some(Entity::Dimension(d)) = doc.slot_of(Uuid::from_bytes(id.0)).and_then(|s| doc.get(s)) else {
             panic!("dimension {id} was lost");
         };
-        d.clone()
+        *d.clone()
     };
     let length = |d: &DimensionEntity| (d.b.x - d.a.x).hypot(d.b.y - d.a.y);
     // If the wall or openings row already measures the whole side, the overall row suppresses the duplicate.
@@ -799,7 +799,7 @@ fn refreshing_plan_dimensions_preserves_manual_work_and_reads_the_new_jambs() {
     manual.a = Vec2 { x: 7.0, y: 0.0 };
     manual.b = Vec2 { x: 9.0, y: 0.0 };
     manual.text = Some("Elle eklenen ölçü".into());
-    let manual_slot = doc.add_many(vec![Entity::Dimension(manual)], "Elle ölçü").unwrap()[0];
+    let manual_slot = doc.add_many(vec![Entity::Dimension(Box::new(manual))], "Elle ölçü").unwrap()[0];
     let manual_uid = EntityId(*doc.uid(manual_slot).unwrap().as_bytes());
     let manual = dimension(doc, manual_uid);
     let shift = TextShift { along: 0.25, across: 0.10 };

@@ -340,7 +340,7 @@ impl Form {
     /// The raster fitted, when the drawing has it.
     fn fields(&self, model: &Model) -> Option<RasterFields> {
         match model.get(self.raster?) {
-            Some(Entity::Raster(r)) => Some(r.raster.clone()),
+            Some(Entity::Raster(r)) => Some(*r.raster.clone()),
             _ => None,
         }
     }

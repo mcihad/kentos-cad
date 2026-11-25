@@ -124,7 +124,7 @@ impl CoveringTool {
             }
             let here = s.space.arch.level == level;
             if found.as_ref().is_none_or(|(h, _, _)| here && !h) {
-                found = Some((here, uid.to_string(), s.space.clone()));
+                found = Some((here, uid.to_string(), *s.space.clone()));
             }
         }
         found.map(|(_, u, s)| (u, s))

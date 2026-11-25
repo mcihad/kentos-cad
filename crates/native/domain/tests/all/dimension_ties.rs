@@ -67,7 +67,7 @@ fn dimension(doc: &Document, wall: Slot) -> Entity {
 
 fn dim(doc: &Document, slot: Slot) -> kentos_domain::contracts::DimensionEntity {
     match doc.get(slot) {
-        Some(Entity::Dimension(d)) => d.clone(),
+        Some(Entity::Dimension(d)) => *d.clone(),
         other => panic!("not a dimension: {other:?}"),
     }
 }
@@ -149,14 +149,14 @@ fn a_dimension_moved_by_itself_lets_the_moved_point_go() {
     let d = doc.add(dimension(&doc, w)).expect("slot");
     let mut own = dim(&doc, d);
     own.b = Vec2 { x: 8.0, y: 0.0 };
-    assert!(doc.update(d, Entity::Dimension(own)));
+    assert!(doc.update(d, Entity::Dimension(Box::new(own))));
     let refs = dim(&doc, d).refs.unwrap();
     assert!(refs.b.is_none());
     assert!(refs.a.unwrap().live());
     // Both points moved: no reference is left, the field goes.
     let mut both = dim(&doc, d);
     both.a = Vec2 { x: 1.0, y: 0.0 };
-    assert!(doc.update(d, Entity::Dimension(both)));
+    assert!(doc.update(d, Entity::Dimension(Box::new(both))));
     assert!(dim(&doc, d).refs.is_none());
 }
 
@@ -288,7 +288,7 @@ fn an_explicit_rebind_to_a_new_block_piece_uses_the_new_geometry_in_one_step() {
                     reference.uid = EntityId(*doc.uid(insert).unwrap().as_bytes());
                     reference.path = vec![0];
                 }
-                assert!(doc.update(d, Entity::Dimension(bound)));
+                assert!(doc.update(d, Entity::Dimension(Box::new(bound))));
                 Ok(insert)
             })
             .unwrap();

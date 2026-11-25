@@ -668,7 +668,7 @@ pub struct SlabEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub slab: SlabFields,
+    pub slab: Box<SlabFields>,
 }
 
 /// A text's problem as a slab's material: blank, edged with spaces, a control character, too long.

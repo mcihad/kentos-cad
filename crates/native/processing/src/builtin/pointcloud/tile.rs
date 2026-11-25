@@ -245,14 +245,14 @@ fn go(
                 label_pins: Vec::new(),
                 attachments: Vec::new(),
             },
-            cloud: PointCloudFields {
+            cloud: Box::new(PointCloudFields {
                 sources,
                 bounds,
                 count: total,
                 srid: cloud.cloud.srid,
                 style: cloud.cloud.style.clone(),
                 opacity: None,
-            },
+            }),
         })
     });
     let mut result = written(

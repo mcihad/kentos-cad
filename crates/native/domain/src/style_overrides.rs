@@ -20,7 +20,7 @@ use crate::store::Stored;
 
 fn text_look(t: &TextEntity) -> TextLook {
     TextLook {
-        face: t.face.clone(),
+        face: t.face.clone().into_inner(),
         width_factor: t.width_factor,
         height: t.height,
     }
@@ -84,9 +84,9 @@ impl Document {
                     if own == d.look.overrides {
                         continue;
                     }
-                    let mut d: DimensionEntity = d.clone();
+                    let mut d: DimensionEntity = *d.clone();
                     d.look.overrides = own;
-                    Entity::Dimension(d)
+                    Entity::Dimension(Box::new(d))
                 }
                 (Entity::Text(t), was) => {
                     let style = t

@@ -211,7 +211,7 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
     };
     let dimension = |slot: Slot, path: &str| -> Result<DimensionEntity, Stop> {
         match doc.get(slot) {
-            Some(Entity::Dimension(d)) => Ok(d.clone()),
+            Some(Entity::Dimension(d)) => Ok(*d.clone()),
             _ => Err(fail(
                 codes::NOT_A_DIMENSION,
                 "Verilen nesne bir ölçü değil; bu düzenleme yalnız ölçüleri değiştirir.".into(),
@@ -411,11 +411,11 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
 /// Where the objects' edges cross a straight dimension's three lines: its breaks, by line and fraction (none on an
 /// extension line within its gap from the measured point), at most [`MOST`].
 fn crossings(d: &DimensionEntity, own: Slot, edges: &[(Slot, Vec<Edge>)]) -> Vec<DimensionBreak> {
-    let e = core_entity(&Entity::Dimension(DimensionEntity {
+    let e = core_entity(&Entity::Dimension(Box::new(DimensionEntity {
         breaks: Vec::new(),
         text_shift: None,
         ..d.clone()
-    }));
+    })));
     let Some(l) = dimension_geom(&e.shape).and_then(|g| layout_dimension(&g)) else {
         return Vec::new();
     };
@@ -478,7 +478,7 @@ pub fn plan_in(doc: &Document, input: &DimensionsEdit) -> CommandResult<Dimensio
     match check(doc, input) {
         Ok(c) => CommandResult::Completed {
             output: DimensionsEditPlan {
-                dimensions: c.changed.into_iter().map(|(_, _, d)| Entity::Dimension(d)).collect(),
+                dimensions: c.changed.into_iter().map(|(_, _, d)| Entity::Dimension(Box::new(d))).collect(),
                 revision: doc.revision().to_string(),
             },
             warnings: c.warnings,
@@ -508,7 +508,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: DimensionsEdit) -> Comman
         doc.update_many(
             c.changed
                 .into_iter()
-                .map(|(s, _, d)| (s, Entity::Dimension(d)))
+                .map(|(s, _, d)| (s, Entity::Dimension(Box::new(d))))
                 .collect(),
             label(&input.edit),
         );

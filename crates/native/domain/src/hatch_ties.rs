@@ -220,14 +220,14 @@ impl Document {
                     .map(|h| h.iter().map(point).collect())
                     .collect()
             }),
-            assoc: Some(HatchAssoc {
+            assoc: Some(Box::new(HatchAssoc {
                 gap: a.gap,
                 outer: outer_id,
                 bounds: bounds.into_iter().map(|(id, _)| id).collect(),
                 islands,
                 cutouts,
                 seed: moved_seed.unwrap_or(a.seed),
-            }),
+            })),
             boundary,
             ..h.clone()
         })

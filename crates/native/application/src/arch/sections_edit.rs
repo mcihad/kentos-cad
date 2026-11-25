@@ -87,7 +87,7 @@ pub(crate) fn mark_of(
             path,
         ));
     }
-    Ok((u, v.mark.clone()))
+    Ok((u, *v.mark.clone()))
 }
 
 /// Why a mark's drawing cannot be framed: a section's line under a millimetre, an elevation of an empty model.
@@ -555,7 +555,7 @@ pub fn derive_facades(doc: &mut Document, layer: &str) -> Result<(usize, Vec<Str
     let elevations = |doc: &Document| -> Vec<(kentos_domain::Uuid, kentos_commands::ViewMarkFields)> {
         doc.entities_with_uids()
             .filter_map(|(u, e)| match e {
-                Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => Some((u, v.mark.clone())),
+                Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => Some((u, (*v.mark).clone())),
                 _ => None,
             })
             .collect()

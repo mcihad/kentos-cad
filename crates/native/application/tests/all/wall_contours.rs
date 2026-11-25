@@ -328,7 +328,7 @@ fn adjacent_room_axes_share_one_wall_and_preserve_sources_history_units_and_join
                         })
                         .sum::<f64>();
                     assert!((length - 25.).abs() < 1e-8, "{length}");
-                    let specs: Vec<_> = fields.iter().map(kentos_formats::walls::spec).collect();
+                    let specs: Vec<_> = fields.iter().map(|f| kentos_formats::walls::spec(f)).collect();
                     let inputs: Vec<_> = paths
                         .iter()
                         .zip(&specs)

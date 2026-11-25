@@ -426,7 +426,7 @@ fn extraction_at(doc: &Document, uid: &str, path: &str) -> Result<(Slot, Uuid, T
         ));
     };
     match doc.get(slot) {
-        Some(Entity::Table(t)) if matches!(t.source, Some(TableSource::Extraction(_))) => Ok((slot, u, t.clone())),
+        Some(Entity::Table(t)) if matches!(t.source, Some(TableSource::Extraction(_))) => Ok((slot, u, *t.clone())),
         Some(Entity::Table(_)) => Err(fail(
             codes::NOT_AN_EXTRACTION,
             "Tablonun veri çıkarımı tarifi yok; Veri çıkarımı ile yazılmış bir tablonun kimliğini verin.".into(),
@@ -693,7 +693,7 @@ pub mod table {
         match check(doc, input) {
             Ok((t, e, warnings)) => CommandResult::Completed {
                 output: ExtractTablePlan {
-                    table: Entity::Table(t),
+                    table: Entity::Table(Box::new(t)),
                     rows: u32::try_from(e.rows.len()).unwrap_or(u32::MAX),
                     occurrences: u32::try_from(e.occurrences).unwrap_or(u32::MAX),
                     notes: notes_of(&e),
@@ -726,7 +726,7 @@ pub mod table {
             Ok(checked) => checked,
             Err(stop) => return stop.into(),
         };
-        let slot = match cx.doc.add_many(vec![Entity::Table(t)], STEP) {
+        let slot = match cx.doc.add_many(vec![Entity::Table(Box::new(t))], STEP) {
             Ok(slots) => slots.first().copied(),
             Err(full) => {
                 return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();

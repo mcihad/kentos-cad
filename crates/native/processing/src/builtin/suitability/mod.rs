@@ -77,7 +77,7 @@ pub fn run_raster(
             .then(|| {
                 Entity::Raster(RasterEntity {
                     base: base(&r.layer("layer").id, BTreeMap::new(), None),
-                    raster: RasterFields {
+                    raster: Box::new(RasterFields {
                         affine: grid.affine,
                         width: grid.width,
                         height: grid.height,
@@ -92,7 +92,7 @@ pub fn run_raster(
                         dataset: None,
                         georef: None,
                         tiles: None,
-                    },
+                    }),
                 })
             })
             .into_iter()

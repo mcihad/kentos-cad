@@ -1223,7 +1223,7 @@ impl ScheduleTool {
                     {
                         self.empty_units = Some(cx.doc.units_schedule_empty_note(filter.as_ref(), *by_level));
                     }
-                    self.table = Some(t);
+                    self.table = Some(*t);
                 }
             }
             Err(why) => self.problem = Some(why),
@@ -1237,7 +1237,7 @@ impl ScheduleTool {
         };
         let mut t = t.clone();
         t.p = points::wire(h);
-        let entity = Entity::Table(t.clone());
+        let entity = Entity::Table(Box::new(t.clone()));
         let Some(layout) = layout_of(
             &shape(&entity),
             drawing_font(cx.doc.settings().drawing_font),

@@ -483,7 +483,7 @@ impl Document {
             }
             next.refs = (!next_refs.is_empty()).then_some(next_refs);
             if next != *d {
-                out.push(updated(current, next));
+                out.push(updated(current, *next));
             }
         }
         for op in &out {
@@ -788,7 +788,7 @@ fn updated(before: Stored, after: DimensionEntity) -> Op {
     Op::Update {
         after: Stored {
             uid: before.uid,
-            entity: Arc::new(Entity::Dimension(after)),
+            entity: Arc::new(Entity::Dimension(Box::new(after))),
         },
         before,
     }

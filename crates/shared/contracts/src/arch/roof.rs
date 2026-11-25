@@ -541,7 +541,7 @@ pub struct RoofEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub roof: RoofFields,
+    pub roof: Box<RoofFields>,
 }
 
 #[cfg(test)]

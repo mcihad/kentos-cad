@@ -208,7 +208,7 @@ pub struct ViewMarkEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub mark: ViewMarkFields,
+    pub mark: Box<ViewMarkFields>,
 }
 
 type Problem = Option<(String, String)>;

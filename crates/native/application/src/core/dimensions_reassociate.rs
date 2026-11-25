@@ -220,7 +220,7 @@ fn check(doc: &Document, input: &DimensionsReassociate) -> Result<Checked, Stop>
         .count() as u32;
     Ok(Checked {
         slot,
-        dimension: next,
+        dimension: *next,
         changed,
     })
 }
@@ -236,7 +236,7 @@ fn point_and_ref<'a>(d: &'a DimensionEntity, name: &str) -> (Option<Vec2>, Optio
 
 /// The dimension's measured value and its unit, as the core lays it out.
 fn measured(d: &DimensionEntity) -> (f64, String) {
-    let e = core_entity(&Entity::Dimension(d.clone()));
+    let e = core_entity(&Entity::Dimension(Box::new(d.clone())));
     dimension_geom(&e.shape)
         .and_then(|g| layout_dimension(&g))
         .map_or((f64::NAN, "length".into()), |l| (l.value, l.unit.into()))
@@ -263,7 +263,7 @@ pub fn plan(
             let (value, unit) = measured(&c.dimension);
             CommandResult::Completed {
                 output: DimensionsReassociatePlan {
-                    dimension: Entity::Dimension(c.dimension),
+                    dimension: Entity::Dimension(Box::new(c.dimension)),
                     changed: c.changed,
                     value,
                     unit,
@@ -303,7 +303,7 @@ fn write_execute(
     let (value, unit) = measured(&c.dimension);
     let doc = &mut *cx.doc;
     if c.changed > 0 {
-        doc.update_many(vec![(c.slot, Entity::Dimension(c.dimension))], LABEL);
+        doc.update_many(vec![(c.slot, Entity::Dimension(Box::new(c.dimension)))], LABEL);
     }
     CommandResult::Completed {
         output: DimensionsReassociated {

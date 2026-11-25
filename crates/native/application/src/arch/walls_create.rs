@@ -187,6 +187,6 @@ fn entity(
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        wall,
+        wall: Box::new(wall),
     })
 }

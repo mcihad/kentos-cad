@@ -105,7 +105,7 @@ mod tests {
     }
 
     fn table(doc: &Document) -> TableEntity {
-        doc.entities().find_map(|e| if let Entity::Table(t) = e { Some(t.clone()) } else { None }).expect("a table")
+        *(doc.entities().find_map(|e| if let Entity::Table(t) = e { Some(t.clone()) } else { None }).expect("a table"))
     }
 
     /// The entities' index of the first of a kind in the JSON.

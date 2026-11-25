@@ -509,14 +509,14 @@ impl App {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             mask: t.mask,
-            face: t.face.clone(),
+            face: t.face.clone().into_inner(),
             content: Content::with_text(&t.text),
             text: t.text.clone(),
             runs: core_runs(&t.paragraph.runs).unwrap_or_default(),
             flow: kentos_native_application::geometry::core_layout(t.paragraph.layout.as_deref()),
             path: t
                 .path
-                .as_ref()
+                .as_deref()
                 .map(kentos_native_application::geometry::core_curve),
             editing: Some(slot),
             menu: None,
