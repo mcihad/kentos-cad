@@ -299,6 +299,65 @@ impl<'a> Nurbs<'a> {
         Some(out)
     }
 
+    /// The curve as points ([`Self::tessellate`]'s form): within `tol` of it in and near `b`, within [`TOLERANCE`] away
+    /// from it, and never coarser than [`Self::tessellate`] at [`TOLERANCE`] (docs/adr/9233). A piece is near `b` when
+    /// the box of its five probes, grown by how far they stray from its chord, meets it. The deep view's curve
+    /// (plan/render.md RM-09): a NURBS kept its 0.1 mm chords at every zoom, a hundred pixels at 10⁶ px/m.
+    pub fn tessellate_in_box(&self, b: &crate::geometry::Bounds, tol: f64) -> Vec<Vec2> {
+        if !self.valid() || !(tol > 0.0) {
+            return Vec::new();
+        }
+        let near_tol = js_min(tol, TOLERANCE);
+        let breaks = self.breaks();
+        let Some(&first) = breaks.first() else {
+            return Vec::new();
+        };
+        let mut out = vec![self.point(first)];
+        let min = if self.degree >= 2 { 2 } else { 0 };
+        for w in breaks.windows(2) {
+            let p0 = out[out.len() - 1];
+            let p1 = self.point(w[1]);
+            self.refine_in_box(b, near_tol, [w[0], w[1]], [p0, p1], 0, min, &mut out);
+        }
+        out
+    }
+
+    /// [`Self::refine`]'s halving, its tolerance `near_tol` where the piece is near `b`, [`TOLERANCE`] elsewhere.
+    #[allow(clippy::too_many_arguments)]
+    fn refine_in_box(
+        &self,
+        b: &crate::geometry::Bounds,
+        near_tol: f64,
+        [u0, u1]: [f64; 2],
+        [p0, p1]: [Vec2; 2],
+        depth: u32,
+        min: u32,
+        out: &mut Vec<Vec2>,
+    ) {
+        let um = 0.5 * (u0 + u1);
+        let pm = self.point(um);
+        let q1 = self.point(0.5 * (u0 + um));
+        let q3 = self.point(0.5 * (um + u1));
+        let far = js_max(
+            js_max(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
+            chord_distance(q3, p0, p1),
+        );
+        let (mut lo, mut hi) = (p0, p0);
+        for p in [p1, pm, q1, q3] {
+            lo = Vec2::new(js_min(lo.x, p.x), js_min(lo.y, p.y));
+            hi = Vec2::new(js_max(hi.x, p.x), js_max(hi.y, p.y));
+        }
+        let near =
+            !(hi.x + far < b.min_x || lo.x - far > b.max_x || hi.y + far < b.min_y || lo.y - far > b.max_y);
+        let tol = if near { near_tol } else { TOLERANCE };
+        if depth < DEPTH && (depth < min || far > tol) {
+            self.refine_in_box(b, near_tol, [u0, um], [p0, pm], depth + 1, min, out);
+            self.refine_in_box(b, near_tol, [um, u1], [pm, p1], depth + 1, min, out);
+        } else {
+            out.push(p1);
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn refine(
         &self,
@@ -683,6 +742,34 @@ mod tests {
             vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
             vec![1.0, FRAC_1_SQRT_2, 1.0],
         )
+    }
+
+    /// The deep view's NURBS (docs/adr/9233): a rational quarter circle in and near a box round to its tolerance,
+    /// every point on the circle, coarse away from it; over everything at the drawing's tolerance, its own points.
+    #[test]
+    fn a_curve_in_a_box_is_round_to_the_box_s_tolerance() {
+        let (c, k, w) = quarter();
+        let n = Nurbs { degree: 2, ctrl: &c, knots: &k, weights: Some(&w) };
+        let h = std::f64::consts::FRAC_1_SQRT_2;
+        let b = crate::geometry::Bounds { min_x: h - 1e-3, min_y: h - 1e-3, max_x: h + 1e-3, max_y: h + 1e-3 };
+        let pts = n.tessellate_in_box(&b, 1e-9);
+        for p in &pts {
+            assert!(((p.x * p.x + p.y * p.y).sqrt() - 1.0).abs() < 1e-14, "{p:?}");
+        }
+        // A chord in the box strays from the circle by at most the tolerance: its sagitta 1 − cos(half its angle).
+        let mut inside = 0;
+        for s in pts.windows(2) {
+            let m = Vec2::new(0.5 * (s[0].x + s[1].x), 0.5 * (s[0].y + s[1].y));
+            if m.x >= b.min_x && m.x <= b.max_x && m.y >= b.min_y && m.y <= b.max_y {
+                inside += 1;
+                assert!(1.0 - (m.x * m.x + m.y * m.y).sqrt() <= 1e-9 + 1e-15, "{s:?}");
+            }
+        }
+        assert!(inside > 0 && pts.len() < 200, "{inside} chords in the box, {} points", pts.len());
+        // Coarser than the drawing nowhere: over everything at its tolerance, the same points.
+        let all = crate::geometry::Bounds { min_x: -1e9, min_y: -1e9, max_x: 1e9, max_y: 1e9 };
+        assert_eq!(n.tessellate_in_box(&all, TOLERANCE), n.tessellate(TOLERANCE));
+        assert_eq!(n.tessellate_in_box(&all, 0.01), n.tessellate(TOLERANCE));
     }
 
     #[test]

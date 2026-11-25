@@ -146,7 +146,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     5 000 px/m'de ~24 piksel). Aynı halkalar odaların alanlarını besliyor; adımı inceltmek oda alanlarını ve 8 ortak
     fikstürün (eğri duvarlı) beklenen değerlerini değiştirir. Mimari'nin bir kararı: bombeli dolgu halkası
     (taramanın sınırı) ya da üreticilerle birlikte fikstürlerin yenilenmesi.
-  - [ ] Spline ve NURBS kutuda ve ekranda toleransla.
+  - [x] Adım 3 ([ADR 9233](../docs/adr/9233-nurbs-and-splines-round-in-the-deep-view.md)): spline ve NURBS derin
+    görünümün kutusunda ve ekranda toleransla. NURBS sabit 0,1 mm'de kalıyordu (10⁶ px/m'de 100 piksel); spline açıklık
+    başına 16 adımda (500 px/m'de 3 piksel). Hiçbir yerde bugünkünden kaba değil.
   - [ ] GPU'da analitik eğriler (belleği kiriş sayısından kurtarır; RM-15 ile).
 - [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
   [ADR 9207](../docs/adr/9207-far-levels-of-strokes-and-fills.md).

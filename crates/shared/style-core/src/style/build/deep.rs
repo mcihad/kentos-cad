@@ -9,6 +9,8 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::geom::deep::{arc_in_box, bulge_path_in_box, ellipse_in_box, split_at_box};
 use kentos_geometry_core::geom::ellipse::{ellipse_sweep, is_full_ellipse, minor_axis};
+use kentos_geometry_core::geom::nurbs;
+use kentos_geometry_core::geom::spline::catmull_rom_in_box;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::TAU;
 
@@ -17,7 +19,8 @@ use crate::style::compile::Geom;
 
 /// A circle's, an arc's or an ellipse's geometry in a deep view (`geom::deep`): round to the view's tolerance in and
 /// near its box, as coarse as the drawing draws it away from the box (72 steps a turn), its crossings of the box's
-/// edge points of it; every point on the curve. None for any other shape, which is drawn as it is (or `refined`)
+/// edge points of it; every point on the curve. A NURBS and a spline likewise, never coarser than the drawing draws
+/// them, and open as it draws them (docs/adr/9233). None for any other shape, which is drawn as it is (or `refined`)
 /// and split (`split`).
 pub(super) fn curve(s: &Shape, d: &Deep) -> Option<Vec<Geom>> {
     let (b, tol) = (&d.bounds, d.tolerance);
@@ -37,6 +40,13 @@ pub(super) fn curve(s: &Shape, d: &Deep) -> Option<Vec<Geom>> {
                 pts.pop();
             }
             Some(vec![Geom::Line(vec![(pts, full)])])
+        }
+        Shape::Nurbs { .. } => {
+            let pts = nurbs::of(s)?.tessellate_in_box(b, tol);
+            (pts.len() >= 2).then(|| vec![Geom::Line(vec![(pts, false)])])
+        }
+        Shape::Spline { ref pts, closed } => {
+            Some(vec![Geom::Line(vec![(catmull_rom_in_box(pts, closed, 16.0, b, tol), false)])])
         }
         _ => None,
     }
@@ -126,6 +136,7 @@ pub(super) fn split(g: Geom, b: &Bounds) -> Geom {
 mod tests {
     use super::*;
     use crate::style::build::{LayerObjects, MODE_SET, Program, View, build_layer_with};
+    use kentos_geometry_core::jsmath::{js_hypot, js_max};
     use kentos_geometry_core::geom::deep::COARSE_STEP;
     use kentos_geometry_core::api::json::Json;
     use kentos_geometry_core::store::Store;
@@ -265,7 +276,7 @@ mod tests {
         };
         assert!(pts.len() > 36, "{}", pts.len());
         assert_eq!(pts[0], v(-19.5, -20.0));
-        assert!(pts.iter().all(|p| p.x == -19.5 || ((p.x + 19.5).hypot(p.y) - 20.0).abs() < 1e-9));
+        assert!(pts.iter().all(|p| p.x == -19.5 || (js_hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9));
         // A straight area, and a wide polyline (its band follows its vertices): drawn as they are.
         let straight = Shape::Polygon { pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(0.0, 1.0)], bulges: Some(vec![0.0; 3]), holes: None, parts: None };
         assert!(refined(&straight, &d).is_none());
@@ -305,9 +316,9 @@ mod tests {
         let worst = (0..ring.len())
             .map(|i| {
                 let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-                r - ((a.x + b.x) / 2.0 - c.x).hypot((a.y + b.y) / 2.0 - c.y)
+                r - js_hypot((a.x + b.x) / 2.0 - c.x, (a.y + b.y) / 2.0 - c.y)
             })
-            .fold(0.0, f64::max);
+            .fold(0.0, js_max);
         assert!(worst <= tol * 1.000_001, "{worst}");
         // 2 acos(1 − tol / r) a chord: about 466 a turn for 22 m at half a millimetre.
         assert!((460..=470).contains(&ring.len()), "{}", ring.len());
