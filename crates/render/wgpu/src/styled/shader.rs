@@ -46,6 +46,13 @@ pub fn shared_source() -> String {
     out
 }
 
+/// How far a stroke's quad reaches past its edge's smoothing, device pixels (docs/adr/9247): three quarters of a pixel
+/// unless a pipeline sets it.
+const STROKE_MARGIN: &str = "override strokeMargin: f32 = 0.75;\n";
+/// `strokeMargin` on a view of one sample a pixel (docs/adr/9250): only a pixel's middle decides whether it is drawn,
+/// and a middle with any ink lies within the smoothing; the twentieth is the rounding's room.
+pub const ONE_SAMPLE_VIEW_MARGIN: f64 = 0.05;
+
 /// Native long-pattern extension, preserving the paused browser's v10 source
 /// and its bindings. Short recipes still call the original inline function.
 pub fn source() -> String {
@@ -57,14 +64,16 @@ pub fn source() -> String {
             "a = max(a * strokeDash(i.s0 + x), dotCover(i.s0 + x, x, y, i.len, (i.ends & 2u) != 0u, i.halfW));",
             1,
         )
-        // A stroke's quad three quarters of a pixel past its edge's smoothing, not a whole one (docs/adr/9247): no sample
-        // of any pattern lies farther than half a diagonal (0.71 px) from its pixel's middle, so a drawn pixel still
-        // covers all its samples on every sample count, and every view draws the same quad. The joins' test keeps `ext`.
+        // A stroke's quad `strokeMargin` past its edge's smoothing (docs/adr/9247, 9250). Three quarters of a pixel on the
+        // picture's samples and the one-sample stretches laid over them: no sample of any pattern lies farther than half
+        // a diagonal (0.71 px) from its pixel's middle, so a drawn pixel covers all its samples, and both draw the same
+        // quad. A view of one sample a pixel counts only its pixels' middles: a twentieth. The joins' test keeps `ext`.
         .replacen(
             "  let along = mix(-ext, len + ext, c.x);\n  let across = mix(-ext, ext, c.y);",
-            "  let quad = halfW + 0.5 * blur + 0.75;\n  let along = mix(-quad, len + quad, c.x);\n  let across = mix(-quad, quad, c.y);",
+            "  let quad = halfW + 0.5 * blur + strokeMargin;\n  let along = mix(-quad, len + quad, c.x);\n  let across = mix(-quad, quad, c.y);",
             1,
         );
+    source.push_str(STROKE_MARGIN);
     source.push_str(include_str!("dashes.wgsl"));
     // Instanced blocks (docs/adr/1063 §2), native only as the long patterns are.
     source.push_str(include_str!("instances.wgsl"));
@@ -79,12 +88,14 @@ pub fn source() -> String {
 mod tests {
     use super::*;
 
-    /// docs/adr/9247: the native source's stroke quad reaches three quarters of a pixel past its smoothing (a shared
-    /// source changed under the patch would leave the quad as it was, silently), and its strip's vertex stage is there.
+    /// docs/adr/9247, 9250: the native source's stroke quad reaches its margin past its smoothing (a shared source
+    /// changed under the patch would leave the quad as it was, silently), three quarters of a pixel unless a pipeline
+    /// sets it, and its strip's vertex stage is there.
     #[test]
-    fn the_stroke_quad_reaches_three_quarters_of_a_pixel_past_its_smoothing() {
+    fn the_stroke_quad_reaches_its_margin_past_its_smoothing() {
         let native = source();
-        assert!(native.contains("let quad = halfW + 0.5 * blur + 0.75;"), "the corners' patch applies");
+        assert!(native.contains("let quad = halfW + 0.5 * blur + strokeMargin;"), "the corners' patch applies");
+        assert!(native.contains("override strokeMargin: f32 = 0.75;"));
         assert!(!native.contains("let along = mix(-ext, len + ext, c.x);"));
         assert!(native.contains("fn strokeVsStrip("));
     }
