@@ -174,7 +174,7 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
         if *change!=allowed {return vec!["Bu mimari alan mahal ayırıcıda yok.".into()];}
         if let Some(level)=change.level {info.level=level;}
         if let Some(phase)=change.phase {info.phase=phase;}
-        return set_space_separator(doc,slot,Some(info));
+        return set_space_separator(doc,slot,Some(*info));
     }
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
@@ -785,7 +785,7 @@ pub fn change_dimensions(
     let changes: Vec<(Slot, Entity)> = slots
         .iter()
         .filter_map(|&slot| match doc.get(slot) {
-            Some(Entity::Dimension(d)) => Some((slot, Entity::Dimension(change(d)?))),
+            Some(Entity::Dimension(d)) => Some((slot, Entity::Dimension(Box::new(change(d)?)))),
             _ => None,
         })
         .collect();
@@ -831,7 +831,7 @@ pub fn apply_text_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) ->
             Entity::Text(t) if !same(&t.face) => {
                 let look = look_of(&t.face, t.width_factor, t.height);
                 let mut t = t.clone();
-                t.face = look.face;
+                t.face = look.face.into();
                 t.width_factor = look.width_factor;
                 t.height = look.height;
                 Some((slot, Entity::Text(t)))
@@ -902,14 +902,14 @@ pub fn restore_styles(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
                 let look = kentos_commands::apply_text_style(
                     Some(style),
                     &kentos_commands::TextLook {
-                        face: t.face.clone(),
+                        face: t.face.clone().into_inner(),
                         width_factor: t.width_factor,
                         height: t.height,
                     },
                     scale,
                 );
                 let mut t = t.clone();
-                t.face = look.face;
+                t.face = look.face.into();
                 t.width_factor = look.width_factor;
                 t.height = look.height;
                 Some((slot, Entity::Text(t)))

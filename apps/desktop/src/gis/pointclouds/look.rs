@@ -211,7 +211,7 @@ impl App {
         self.gis.clouds.look = Some(State {
             slot,
             style: fields.style.clone(),
-            original: fields,
+            original: *fields,
             texts,
             sample: None,
             preview: None,
@@ -375,7 +375,7 @@ impl App {
                 return;
             }
         };
-        cloud.cloud = fields;
+        cloud.cloud = Box::new(fields);
         let _ = kentos_interaction::properties::set_geometry(
             &mut doc.model,
             s.slot,

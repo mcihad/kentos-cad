@@ -773,7 +773,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
         let fields = walls::build(doc, &given, &format!("walls[{k}]"), &mut added)?;
         let entity = Entity::Wall(WallEntity {
             base: base(&layer),
-            wall: fields,
+            wall: Box::new(fields),
         });
         lines_of_walls.push(opening_follow::wall_line(&entity));
         work.walls.push((Uuid::now_v7(), entity));
@@ -840,7 +840,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
             Uuid::now_v7(),
             Entity::Column(ColumnEntity {
                 base: base(&found[*k].2.base().layer_id),
-                column: c.clone(),
+                column: Box::new(c.clone()),
             }),
         ));
     }

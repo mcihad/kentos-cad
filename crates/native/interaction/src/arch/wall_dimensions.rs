@@ -1155,7 +1155,7 @@ pub(crate) fn append_followers(
                         .align
                         .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
                     mask: t.mask,
-                    face: t.face.clone(),
+                    face: t.face.clone().into_inner(),
                     width_factor: t.width_factor.unwrap_or(1.),
                 });
             }

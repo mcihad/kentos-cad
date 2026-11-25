@@ -50,7 +50,7 @@ fn check(doc:&Document,input:&SpacesSeparators)->Result<Work,Stop> {
                 };
                 add_warnings(more);
                 let Entity::Polyline(mut p)=output.entity else {return Err(fail("Ayırıcı çoklu çizgi olmalı.",&at));};
-                p.space_separator=Some(arch);role_valid(&p,&at)?;
+                p.space_separator=Some(Box::new(arch));role_valid(&p,&at)?;
                 entities.push(Entity::Polyline(p));
             }
             None
@@ -66,7 +66,7 @@ fn check(doc:&Document,input:&SpacesSeparators)->Result<Work,Stop> {
                 let mut p=p.clone();
                 p.space_separator=match &input.operation {
                     SpaceSeparatorOperation::Set {arch,..}=> {
-                        let arch=arch.clone().unwrap_or_default();spaces::level_known(doc,&arch,"operation.arch.level")?;Some(arch)
+                        let arch=arch.clone().unwrap_or_default();spaces::level_known(doc,&arch,"operation.arch.level")?;Some(Box::new(arch))
                     }
                     _=>None,
                 };

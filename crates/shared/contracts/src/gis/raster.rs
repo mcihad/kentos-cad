@@ -533,7 +533,7 @@ pub struct RasterEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub raster: RasterFields,
+    pub raster: Box<RasterFields>,
 }
 
 /// What places and shows a raster: the raster object's own fields, and its

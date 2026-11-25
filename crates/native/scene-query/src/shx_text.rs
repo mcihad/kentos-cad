@@ -195,7 +195,7 @@ pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> O
     else {
         return None;
     };
-    base.face = crate::geometry::contract_face(face.clone());
+    base.face = crate::geometry::contract_face(face.clone()).into();
     let template = kentos_commands::Entity::Text(base);
     let kentos_commands::Entity::Text(mut t) = crate::geometry::with_shape(&template, shape.clone())? else {
         return None;
@@ -274,7 +274,7 @@ pub fn words_in(
     else {
         return None;
     };
-    t.face = face.clone();
+    t.face = face.clone().into();
     style_of(settings, &t)?;
     Some(t)
 }

@@ -276,7 +276,7 @@ mod qa {
             unreachable!()
         };
         let worked = doc.table_worked_out(&table);
-        doc.add(kentos_commands::Entity::Table(worked)).unwrap();
+        doc.add(kentos_commands::Entity::Table(Box::new(worked))).unwrap();
         let path = std::env::temp_dir().join("kentos-cad-adv13-block-attributes.kcad");
         crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
@@ -370,7 +370,7 @@ mod qa {
         let mut field_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
         let kentos_commands::Entity::Table(table) = table else { unreachable!() };
         let table = field_doc.table_worked_out(&table);
-        field_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        field_doc.add(kentos_commands::Entity::Table(Box::new(table))).unwrap();
         let path = std::env::temp_dir().join("kentos-cad-adv13-field-row.kcad");
         crate::document::write(&field_doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
@@ -393,7 +393,7 @@ mod qa {
         let mut formula_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
         let kentos_commands::Entity::Table(table) = table else { unreachable!() };
         let table = formula_doc.table_worked_out(&table);
-        formula_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        formula_doc.add(kentos_commands::Entity::Table(Box::new(table))).unwrap();
         let path = std::env::temp_dir().join("kentos-cad-adv13-formula-row.kcad");
         crate::document::write(&formula_doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());

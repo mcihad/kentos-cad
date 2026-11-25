@@ -9,7 +9,7 @@ use super::*;
 /// side), so the title, the headings and the area rows' words fit.
 fn fit_merged(doc: &Document, t: &mut TableEntity) {
     let font = drawing_font(doc.settings().drawing_font);
-    let entity = Entity::Table(t.clone());
+    let entity = Entity::Table(Box::new(t.clone()));
     let s = shape(&entity);
     let Some(g) = table_geom(&s) else { return };
     let typeface = g.face.font_or(font);
@@ -149,7 +149,7 @@ pub fn plan_in(doc: &Document, input: &ParcelsTable) -> CommandResult<ParcelsTab
                 parcels: count(worked.report.parcels.len()),
                 rows: count(t.cells.len()),
                 numbered: worked.report.numbered,
-                table: Entity::Table(t),
+                table: Entity::Table(Box::new(t)),
                 revision: doc.revision().to_string(),
             },
             warnings,
@@ -174,7 +174,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: ParcelsTable) -> CommandResult<Pa
         Err(stop) => return stop.into(),
     };
     let rows = count(t.cells.len());
-    let slot = match cx.doc.add_many(vec![Entity::Table(t)], STEP) {
+    let slot = match cx.doc.add_many(vec![Entity::Table(Box::new(t))], STEP) {
         Ok(slots) => slots.first().copied(),
         Err(full) => {
             return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();

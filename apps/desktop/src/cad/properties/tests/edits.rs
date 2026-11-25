@@ -237,10 +237,10 @@ fn cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic() {
         doc.set_settings(settings);
         let id = add(&mut app, Entity::Space(SpaceEntity {
             base: base("parsel"),
-            space: SpaceFields { parts: vec![SpacePart {
+            space: Box::new(SpaceFields { parts: vec![SpacePart {
                 outer: SpaceRing {pts:vec![Wire{x:0.,y:0.},Wire{x:4.,y:0.},Wire{x:4.,y:3.},Wire{x:0.,y:3.}],..Default::default()},
                 ..Default::default()
-            }], ..Default::default() },
+            }], ..Default::default() }),
         }));
         (app, id)
     };

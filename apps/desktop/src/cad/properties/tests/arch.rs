@@ -183,11 +183,11 @@ fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
     }
     let kot = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             za: Some(2.0),
             offset: 0.0,
             ..dimension(Elevation, [0.0, 0.0], [2.0, 2.0])
-        }),
+        })),
     );
     select(&mut app, &[kot]);
     assert_eq!(value(&app, "Geometri", "Kot"), "2.000 m");

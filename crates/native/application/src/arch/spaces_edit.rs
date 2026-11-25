@@ -207,7 +207,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 spaces::valid(&f, &path)?;
                 spaces::level_known(doc, &f.arch, "operation.level")?;
                 let mut e = (*s).clone();
-                e.space = f;
+                e.space = Box::new(f);
                 work.updates.push((*slot, e));
             }
         }
@@ -440,7 +440,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                     return Err(spaces::not_found(&f, &format!("uids[{at}]")));
                 }
                 let mut e = (*s).clone();
-                e.space = f;
+                e.space = Box::new(f);
                 work.updates.push((*slot, e));
             }
         }

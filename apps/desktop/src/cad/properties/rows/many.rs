@@ -284,7 +284,7 @@ pub(super) fn many_sections(
     let dims: Vec<&kentos_commands::DimensionEntity> = objects
         .iter()
         .filter_map(|e| match e {
-            Entity::Dimension(d) => Some(d),
+            Entity::Dimension(d) => Some(&**d),
             _ => None,
         })
         .collect();

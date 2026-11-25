@@ -1582,7 +1582,7 @@ pub fn findings(
                     if v.mark.form == kentos_commands::ViewMarkForm::Section
                         && doc.block(crate::sections::block_id(u)).is_some() =>
                 {
-                    Some((Slot(e.base().id), v.mark.clone()))
+                    Some((Slot(e.base().id), (*v.mark).clone()))
                 }
                 _ => None,
             })

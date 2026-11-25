@@ -67,7 +67,7 @@ impl Document {
                 continue;
             };
             let next = match &*current.entity {
-                Entity::Dimension(d) => settled(d, levels).map(Entity::Dimension),
+                Entity::Dimension(d) => settled(d, levels).map(|d| Entity::Dimension(Box::new(d))),
                 Entity::Ramp(r) => ramp_settled(r, levels).map(Entity::Ramp),
                 Entity::Stair(st) => stair_settled(st, levels).map(Entity::Stair),
                 _ => None,

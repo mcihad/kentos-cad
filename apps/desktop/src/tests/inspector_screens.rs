@@ -84,7 +84,7 @@ fn dimension(layer: &str) -> Entity {
 
 /// A dimension `dy` above the first, its text `height` high and `text`.
 fn dimension_at(layer: &str, dy: f64, height: f64, text: Option<&str>) -> Entity {
-    Entity::Dimension(DimensionEntity {
+    Entity::Dimension(Box::new(DimensionEntity {
         annotative: None,
         text_shift: None,
         breaks: Vec::new(),
@@ -117,7 +117,7 @@ fn dimension_at(layer: &str, dy: f64, height: f64, text: Option<&str>) -> Entity
         refs: None,
         look: Default::default(),
         level: None,
-    })
+    }))
 }
 
 /// Öznitelikler given three quarters of the dock, Genel closed: the rows to look at in view.

@@ -142,7 +142,7 @@ impl Document {
             .iter()
             .filter(move |o| o.holds(p))
             .filter_map(|o| match self.store.get(o.slot).map(|s| &*s.entity) {
-                Some(Entity::Slab(s)) => Some(&s.slab),
+                Some(Entity::Slab(s)) => Some(&*s.slab),
                 _ => None,
             })
     }
@@ -158,7 +158,7 @@ impl Document {
             .iter()
             .filter(move |o| o.holds(p))
             .filter_map(|o| match self.store.get(o.slot).map(|s| &*s.entity) {
-                Some(Entity::Beam(b)) => Some(&b.beam),
+                Some(Entity::Beam(b)) => Some(&*b.beam),
                 _ => None,
             })
     }
@@ -197,7 +197,7 @@ mod tests {
         let p = V::new(at.x, at.y);
         doc.entities()
             .filter_map(|e| match e {
-                Entity::Slab(s) if s.slab.covering.is_none() => Some(&s.slab),
+                Entity::Slab(s) if s.slab.covering.is_none() => Some(&*s.slab),
                 _ => None,
             })
             .filter(|s| {
@@ -218,7 +218,7 @@ mod tests {
         let p = V::new(at.x, at.y);
         doc.entities()
             .filter_map(|e| match e {
-                Entity::Beam(b) => Some(&b.beam),
+                Entity::Beam(b) => Some(&*b.beam),
                 _ => None,
             })
             .filter(|b| match kentos_formats::arch_elements::core_beam(b) {

@@ -223,6 +223,6 @@ fn entity(input: &SpacesCreate, space: SpaceFields, attrs: Attrs) -> Entity {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        space,
+        space: Box::new(space),
     })
 }

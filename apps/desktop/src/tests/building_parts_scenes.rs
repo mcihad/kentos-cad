@@ -267,7 +267,7 @@ mod tests {
     fn slab(app: &App, k: usize) -> kentos_commands::SlabFields {
         let model = &app.document.as_ref().expect("a drawing").model;
         match model.get(slot_of(app, "slab", k)) {
-            Some(Entity::Slab(s)) => s.slab.clone(),
+            Some(Entity::Slab(s)) => *s.slab.clone(),
             _ => panic!("a slab"),
         }
     }

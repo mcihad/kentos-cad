@@ -161,7 +161,7 @@ impl Document {
         let uid = crate::identity::Uuid::parse_str(host).ok()?;
         let slot = self.store.slot_of(uid)?;
         match &*self.store.get(slot)?.entity {
-            Entity::Wall(w) => Some(w.wall.clone()),
+            Entity::Wall(w) => Some(*w.wall.clone()),
             _ => None,
         }
     }

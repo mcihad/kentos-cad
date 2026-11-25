@@ -151,7 +151,7 @@ pub struct GridEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub grid: GridFields,
+    pub grid: Box<GridFields>,
 }
 
 /// A column's outline.
@@ -467,7 +467,7 @@ pub struct ColumnEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub column: ColumnFields,
+    pub column: Box<ColumnFields>,
 }
 
 /// A stair's own fields (docs/adr/0343 §1).
@@ -547,7 +547,7 @@ pub struct StairEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub stair: StairFields,
+    pub stair: Box<StairFields>,
 }
 
 /// A ramp's own fields (docs/adr/0343 §1).
@@ -607,7 +607,7 @@ pub struct RampEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub ramp: RampFields,
+    pub ramp: Box<RampFields>,
 }
 
 type Problem = Option<(String, String)>;

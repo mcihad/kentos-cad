@@ -141,7 +141,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     b.offset += *distance;
                 }
                 slabs::valid(&f, &format!("uids[{at}]"))?;
-                out.push((*slot, *at, f));
+                out.push((*slot, *at, *f));
             }
         }
         SlabsOperation::Bind { seed, boundary, space, offset } => {
@@ -172,7 +172,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                 f.parts = slabs::moved(&parts, d, "operation.offset")?;
                 f.bound = Some(slabs::bound_of(*seed, *boundary, space.as_ref(), d));
                 slabs::valid(&f, &format!("uids[{at}]"))?;
-                out.push((*slot, *at, slabs::with_bound_uids(doc, f)));
+                out.push((*slot, *at, slabs::with_bound_uids(doc, *f)));
             }
         }
         SlabsOperation::Detach => {
@@ -189,7 +189,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     return Err(fail(codes::SLAB_BOUND, "Konturu ayırmadan önce bağlı kenarların kilidini açın.".into(), &format!("uids[{at}]")));
                 }
                 f.bound = None;
-                out.push((*slot, *at, f));
+                out.push((*slot, *at, *f));
             }
         }
         SlabsOperation::BindEdge(link) => {
@@ -220,7 +220,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     edges.links.sort_by_key(|l| l.edge);
                 }
                 slabs::valid(&f, &field)?;
-                out.push((*slot, *at, edge_result(doc, f, &field)?));
+                out.push((*slot, *at, edge_result(doc, *f, &field)?));
             }
         }
         SlabsOperation::UnbindEdge { edge } => {
@@ -242,7 +242,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                 } else {
                     edges.reference = f.parts[0].clone();
                 }
-                out.push((*slot, *at, f));
+                out.push((*slot, *at, *f));
             }
         }
         SlabsOperation::Subtract { parts, seed, boundary } | SlabsOperation::Add { parts, seed, boundary } => {
@@ -291,12 +291,12 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     }
                     let mut cut_parts = slabs::parts_of(&after);
                     edges.reference.holes = std::mem::take(&mut cut_parts[0].holes);
-                    f = edge_result(doc, f, &format!("uids[{at}]"))?;
+                    *f = edge_result(doc, *f, &format!("uids[{at}]"))?;
                 } else {
                     f.parts = slabs::parts_of(&after);
                 }
                 slabs::valid(&f, &format!("uids[{at}]"))?;
-                out.push((*slot, *at, f));
+                out.push((*slot, *at, *f));
             }
         }
     }
@@ -324,7 +324,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             } else {
                 f
             };
-            e.slab = doc.slab_with_runs(&f);
+            e.slab = Box::new(doc.slab_with_runs(&f));
             (slot, e)
         })
         .collect())

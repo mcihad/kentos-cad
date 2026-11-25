@@ -29,6 +29,9 @@
 
 #[path = "gis/address.rs"]
 pub mod address;
+// A value most objects leave at its default, held apart (plan/render.md RM-19).
+#[path = "core/lean.rs"]
+pub mod lean;
 #[path = "core/annotation.rs"]
 pub mod annotation;
 #[path = "core/particulars.rs"]
@@ -366,6 +369,7 @@ pub mod units;
 pub mod variables;
 
 pub use address::*;
+pub use lean::{Lean, LeanDefault};
 pub use annotation::*;
 pub use annotation_scale::*;
 pub use annotative::*;

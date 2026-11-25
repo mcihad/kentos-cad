@@ -56,7 +56,7 @@ impl ParcelTablePlace {
         match parcels_table::plan_in(cx.doc, &self.at(Vec2::new(0.0, 0.0))) {
             CommandResult::Completed { output, .. } => {
                 if let Entity::Table(t) = output.table {
-                    self.table = Some(t);
+                    self.table = Some(*t);
                 }
             }
             CommandResult::Failed { error }
@@ -75,7 +75,7 @@ impl ParcelTablePlace {
         };
         let mut t = t.clone();
         t.p = points::wire(h);
-        let entity = Entity::Table(t.clone());
+        let entity = Entity::Table(Box::new(t.clone()));
         let Some(layout) = layout_of(
             &shape(&entity),
             drawing_font(cx.doc.settings().drawing_font),

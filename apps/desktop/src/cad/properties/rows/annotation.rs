@@ -584,7 +584,7 @@ pub(super) fn multileader_rows(
     };
     let slot = Slot(l.base.id);
     rows.push(Row::figure("Kollar", (l.arms.len() + 1).to_string()));
-    let tips = std::iter::once(l.tip.as_ref()).chain(l.arms.iter().map(|a| a.tip.as_ref()));
+    let tips = std::iter::once(l.tip.as_deref()).chain(l.arms.iter().map(|a| a.tip.as_ref()));
     for (k, t) in tips.enumerate() {
         let Some(t) = t else { continue };
         let of = model.slot_of(kentos_domain::Uuid::from_bytes(t.uid.0)).and_then(|s| model.get(s));

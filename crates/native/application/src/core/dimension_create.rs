@@ -849,7 +849,7 @@ impl Edges {
                 };
                 let (d, g) = found
                     .ok_or_else(|| refuse(codes::NOT_STRAIGHT, NO_BASE.into(), "measure.base"))?;
-                Edges::Base(Box::new((d, g)))
+                Edges::Base(Box::new((*d, g)))
             }
             _ => Edges::None,
         })

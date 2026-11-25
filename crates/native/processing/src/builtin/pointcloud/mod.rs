@@ -400,14 +400,14 @@ pub fn cloud_object(
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        cloud: PointCloudFields {
+        cloud: Box::new(PointCloudFields {
             sources: vec![source],
             bounds,
             count,
             srid,
             style,
             opacity: None,
-        },
+        }),
     })
 }
 

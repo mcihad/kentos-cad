@@ -324,8 +324,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - açılışın tepesi 2 878 → 1 996 MB;
     - Rust yığını 1 870 → 1 274 MB;
     - gerçek pencerede (lavapipe) yerleşik 3 647 → 2 595 MB, tepe 4 389 → 3 327 MB; resim aynı.
-  - [ ] 2. adım: belgenin nesne tipi küçülür. 1 264 bayt: en büyük türlerin boyu, satır içindeki 512 baytlık
-    `ArchInfo` dahil. Belge 706 MB.
+  - [x] 2. adım: belgenin nesne tipi küçülür ([ADR 9236](../docs/adr/9236-an-object-as-large-as-it-is.md)).
+    `Entity` 1 264 → 480 bayt: `Lean<T>` (varsayılanı yok sayılan değer), Mimari ve CBS alanları kutuda, tablo ve
+    ölçü varyantları kutuda. Biçim, TypeScript ve şema aynı. NCZ, hata ayıklama:
+    - belge 706 → 341 MB;
+    - açılışın tepesi 1 996 → 1 712 MB;
+    - gerçek pencerede yerleşik 2 780 → 2 549 MB, tepe 3 507 → 2 946 MB; resim aynı.
   - [ ] 3. adım: geometri deposunun `Shape`'i küçülür (`Item` 472 bayt). Depo 450 MB.
   - [ ] 4. adım: okumanın tepesi. Okuyucunun nesne dizisi ile belgenin kopyaları yan yana durmaz.
 

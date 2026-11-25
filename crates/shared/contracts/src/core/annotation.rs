@@ -121,6 +121,9 @@ pub struct TextFace {
     pub overrides: Vec<String>,
 }
 
+// The default on most texts (`Lean`, plan/render.md RM-19).
+crate::lean_default!(TextFace);
+
 /// A dimension's fields a style sets, by their names on the wire (docs/adr/0322 §5): its look's and its height.
 pub const DIMENSION_OVERRIDES: [&str; 20] = [
     "arrow",

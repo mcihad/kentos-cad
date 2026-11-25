@@ -215,7 +215,7 @@ mod tests {
         let slabs: Vec<&kentos_commands::SlabFields> = doc
             .entities()
             .filter_map(|e| match e {
-                Entity::Slab(s) => Some(&s.slab),
+                Entity::Slab(s) => Some(&*s.slab),
                 _ => None,
             })
             .collect();

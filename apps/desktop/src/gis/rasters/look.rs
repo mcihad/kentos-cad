@@ -240,7 +240,7 @@ impl App {
                 .edges
                 .clone()
                 .unwrap_or_else(|| kentos_formats::raster::style::MESH_EDGES.to_owned()),
-            original: fields,
+            original: *fields,
             texts,
             stats: None,
             has_palette,
@@ -405,7 +405,7 @@ impl App {
                 return;
             }
         };
-        raster.raster = fields;
+        raster.raster = Box::new(fields);
         let _ = kentos_interaction::properties::set_geometry(
             &mut doc.model,
             s.slot,

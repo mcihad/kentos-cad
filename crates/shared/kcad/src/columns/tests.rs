@@ -69,7 +69,7 @@ fn unpacking_gives_back_the_objects_and_refuses_what_does_not_hold_together() {
             base: base("b"),
             ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
             holes: Some(vec![vec![Vec2 { x: 1.0, y: 1.0 }; 3]]),
-            pattern: HatchPattern::user(HatchPatternType::Cross, 45.0, 2.0),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Cross, 45.0, 2.0)),
             assoc: None,
             annotative: None,
         }),
@@ -79,7 +79,7 @@ fn unpacking_gives_back_the_objects_and_refuses_what_does_not_hold_together() {
             base: base("b"),
             ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
             holes: None,
-            pattern: HatchPattern {
+            pattern: Box::new(HatchPattern {
                 name: Some("ANSI33".into()),
                 scale: Some(0.5),
                 lines: Some(vec![
@@ -97,15 +97,15 @@ fn unpacking_gives_back_the_objects_and_refuses_what_does_not_hold_together() {
                     },
                 ]),
                 ..HatchPattern::user(HatchPatternType::Pattern, 30.0, 1.0)
-            },
-            assoc: Some(HatchAssoc {
+            }),
+            assoc: Some(Box::new(HatchAssoc {
                 gap: None,
                 outer: Some(id(1)),
                 bounds: Vec::new(),
                 islands: vec![id(2)],
                 cutouts: Vec::new(),
                 seed: Vec2 { x: 1.0, y: 0.5 },
-            }),
+            })),
             annotative: None,
         }),
         Entity::Hatch(HatchEntity {
@@ -113,14 +113,14 @@ fn unpacking_gives_back_the_objects_and_refuses_what_does_not_hold_together() {
             base: base("b"),
             ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
             holes: None,
-            pattern: HatchPattern {
+            pattern: Box::new(HatchPattern {
                 gradient: Some(HatchGradient {
                     shape: GradientShape::Cylinder,
                     inverted: true,
                     color2: "#FFFFFF".into(),
                 }),
                 ..HatchPattern::user(HatchPatternType::Gradient, 90.0, 1.0)
-            },
+            }),
             assoc: None,
             annotative: None,
         }),

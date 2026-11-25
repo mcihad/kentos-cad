@@ -19,7 +19,7 @@ fn opening(doc: &Document, uid: &str) -> OpeningFields {
     let Entity::Opening(o) = doc.get(slot).unwrap() else {
         panic!("opening")
     };
-    o.opening.clone()
+    *o.opening.clone()
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn planned(doc: &Document, input: &OpeningsCreate) -> OpeningFields {
     let Entity::Opening(o) = serde_json::from_value(p["openings"][0].clone()).unwrap() else {
         panic!()
     };
-    o.opening
+    *o.opening
 }
 
 fn opening_measure(uid: &str, a: Value, b: Value) -> DimensionsCreate {

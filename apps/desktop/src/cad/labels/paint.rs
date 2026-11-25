@@ -838,7 +838,7 @@ impl Labels<'_> {
                                         continue;
                                     }
                                     own = core_runs(&t.paragraph.runs).unwrap_or_default();
-                                    (&t.text, &own, t.face.clone())
+                                    (&t.text, &own, t.face.clone().into_inner())
                                 }
                                 _ => continue,
                             };

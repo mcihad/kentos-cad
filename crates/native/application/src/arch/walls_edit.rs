@@ -283,7 +283,7 @@ fn joined(found: &[(usize, Slot, &WallEntity)]) -> Result<WallFields, Stop> {
         ));
     }
     let mut left: Vec<(usize, &WallFields)> =
-        found[1..].iter().map(|(at, _, w)| (*at, &w.wall)).collect();
+        found[1..].iter().map(|(at, _, w)| (*at, &*w.wall)).collect();
     while !left.is_empty() {
         let (start, end) = (chain.pts[0], chain.pts[chain.pts.len() - 1]);
         let mut took = None;
@@ -328,9 +328,9 @@ fn joined(found: &[(usize, Slot, &WallEntity)]) -> Result<WallFields, Stop> {
             ));
         };
         chain = if before {
-            appended(&w, &chain)
+            Box::new(appended(&w, &chain))
         } else {
-            appended(&chain, &w)
+            Box::new(appended(&chain, &w))
         };
         left.remove(k);
     }
@@ -340,10 +340,10 @@ fn joined(found: &[(usize, Slot, &WallEntity)]) -> Result<WallFields, Stop> {
         let ring = WallPath::new(&p.pts[..n - 1], Some(&p.bulges[..n - 1]), true);
         let mut b = ring.bulges.clone();
         b[n - 2] = p.bulges[n - 2];
-        chain = with_path(&chain, &WallPath::new(&ring.pts, Some(&b), true));
+        *chain = with_path(&chain, &WallPath::new(&ring.pts, Some(&b), true));
         chain.joins = WallJoins::default();
     }
-    Ok(chain)
+    Ok(*chain)
 }
 
 /// A wall named by `uid` at `path`, and its slot.
@@ -506,12 +506,12 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     ));
                 }
                 let mut first = (*w).clone();
-                first.wall = with_path(&w.wall, &a);
+                first.wall = Box::new(with_path(&w.wall, &a));
                 match b {
                     Some(b) => {
                         first.wall.joins.end = WallJoin::Auto;
                         let mut second = (*w).clone();
-                        second.wall = with_path(&w.wall, &b);
+                        second.wall = Box::new(with_path(&w.wall, &b));
                         second.wall.joins.start = WallJoin::Auto;
                         // Its slot is the document's to give (0 in a plan).
                         second.base.id = 0;
@@ -537,7 +537,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             let one = joined(&walls_found)?;
             let (_, slot, first) = walls_found[0];
             let mut w = first.clone();
-            w.wall = one;
+            w.wall = Box::new(one);
             work.updates.push((slot, checked(w, 0)?));
             work.removed = walls_found[1..].iter().map(|(_, s, _)| *s).collect();
         }
@@ -586,7 +586,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     ));
                 };
                 let mut out = (*w).clone();
-                out.wall = with_path(&w.wall, &moved);
+                out.wall = Box::new(with_path(&w.wall, &moved));
                 work.updates.push((*slot, checked(out, *at)?));
             }
         }
@@ -613,14 +613,14 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     ));
                 };
                 let mut out = (*w).clone();
-                out.wall = with_path(&w.wall, &cut);
+                out.wall = Box::new(with_path(&w.wall, &cut));
                 work.updates.push((*slot, checked(out, *at)?));
             }
         }
         WallsOperation::Flip => {
             each(&mut work, &|at, w| {
                 let mut out = w.clone();
-                out.wall = with_path(&w.wall, &path_of(&w.wall).reversed());
+                out.wall = Box::new(with_path(&w.wall, &path_of(&w.wall).reversed()));
                 out.wall.joins = WallJoins {
                     start: w.wall.joins.end,
                     end: w.wall.joins.start,

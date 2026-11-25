@@ -20,7 +20,7 @@ fn bench(tool: &str) -> Bench {
 
 fn stair(b: &Bench) -> kentos_commands::StairFields {
     match b.newest() {
-        Entity::Stair(s) => s.stair.clone(),
+        Entity::Stair(s) => *s.stair.clone(),
         other => panic!("a stair, not {other:?}"),
     }
 }

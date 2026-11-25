@@ -135,9 +135,13 @@ impl StyleNames {
             names.dims.insert(s.id.clone(), unique(&s.name));
         }
         for e in entities {
-            let face = match e {
-                Entity::Text(kentos_contracts::TextEntity { face, .. })
-                | Entity::Table(kentos_contracts::TableEntity { face, .. })
+            let face: Option<&kentos_contracts::TextFace> = match e {
+                Entity::Text(t) => Some(&t.face),
+                Entity::Table(t) => Some(&t.face),
+                _ => None,
+            };
+            let face = match (face, e) {
+                (Some(face), _)
                     if face
                         .text_style
                         .as_ref()
@@ -145,7 +149,7 @@ impl StyleNames {
                 {
                     face.font.map(|f| (f, face.bold, face.italic))
                 }
-                Entity::Dimension(d) => d.look.font.map(|f| (f, false, false)),
+                (_, Entity::Dimension(d)) => d.look.font.map(|f| (f, false, false)),
                 _ => None,
             };
             let Some((font, bold, italic)) = face else {

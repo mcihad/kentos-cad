@@ -138,7 +138,7 @@ impl Document {
                     let wall=origins.iter().position(|id| id.to_string()==o.opening.host)
                         .and_then(|i| crate::opening_follow::wall_line(&group[i]));
                     if let Some(line)=wall {
-                        o.opening=crate::opening_follow::placed_on(&o.opening,Some(&line),true);
+                        *o.opening=crate::opening_follow::placed_on(&o.opening,Some(&line),true);
                     }
                     o.opening.host=host.clone();
                 }

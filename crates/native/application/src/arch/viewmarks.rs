@@ -149,7 +149,7 @@ fn check(doc: &Document, input: &ViewMarksCreate) -> Result<(Vec<CommandWarning>
                     label_pins: Vec::new(),
                     attachments: Vec::new(),
                 },
-                mark,
+                mark: Box::new(mark),
             })
         })
         .collect();
@@ -306,7 +306,7 @@ fn edit_check(doc: &Document, input: &ViewMarksEdit) -> Result<Vec<(Slot, Entity
         };
         let retarget = matches!(input.operation, ViewMarksOperation::Retarget { .. });
         holds(doc, &sheets, &m.mark, retarget, at_input)?;
-        m.mark = mark_settled(doc, &sheets, &m.mark);
+        m.mark = Box::new(mark_settled(doc, &sheets, &m.mark));
         out.push((*slot, Entity::ViewMark(m)));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;

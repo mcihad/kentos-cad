@@ -315,7 +315,7 @@ pub struct BeamEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub beam: BeamFields,
+    pub beam: Box<BeamFields>,
 }
 
 /// Whether `e` is a sloped member (docs/adr/8130): what `.kcad` architecture data 22 adds.

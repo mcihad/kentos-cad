@@ -220,7 +220,7 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Ramp(x) => Some(&mut x.ramp.arch),
         Entity::Slab(x) => Some(&mut x.slab.arch),
         // A room separator's level is its role's (docs/adr/8050 §4).
-        Entity::Polyline(x) => x.space_separator.as_mut(),
+        Entity::Polyline(x) => x.space_separator.as_deref_mut(),
         _ => None,
     }
 }
@@ -286,7 +286,7 @@ fn instantiate(
     if let Entity::Opening(o) = &mut e {
         let line =
             wall_of(&o.opening.host).and_then(|w| kentos_domain::opening_follow::wall_line(&w));
-        o.opening = kentos_domain::opening_follow::placed_on(&o.opening, line.as_ref(), true);
+        *o.opening = kentos_domain::opening_follow::placed_on(&o.opening, line.as_ref(), true);
     }
     Ok(e)
 }
@@ -1274,7 +1274,7 @@ fn arch_of(e: &Entity) -> Option<&kentos_commands::ArchInfo> {
         Entity::Stair(x) => Some(&x.stair.arch),
         Entity::Ramp(x) => Some(&x.ramp.arch),
         Entity::Slab(x) => Some(&x.slab.arch),
-        Entity::Polyline(x) => x.space_separator.as_ref(),
+        Entity::Polyline(x) => x.space_separator.as_deref(),
         _ => None,
     }
 }

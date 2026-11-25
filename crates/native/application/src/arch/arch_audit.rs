@@ -1199,7 +1199,7 @@ impl Audit<'_> {
             .doc
             .entities()
             .filter_map(|e| match e {
-                Entity::Grid(g) => Some((e, &g.grid)),
+                Entity::Grid(g) => Some((e, &*g.grid)),
                 _ => None,
             })
             .collect();

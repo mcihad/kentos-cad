@@ -102,7 +102,7 @@ pub fn on_curve(
         return Some(TextEntity {
             p: wire(p),
             rotation,
-            path: Some(contract_curve(path)),
+            path: Some(Box::new(contract_curve(path))),
             ..t.clone()
         });
     }
@@ -119,7 +119,7 @@ pub fn on_curve(
     Some(TextEntity {
         p,
         rotation,
-        path: Some(path),
+        path: Some(Box::new(path)),
         ..t.clone()
     })
 }

@@ -74,7 +74,7 @@ fn with_sample(
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: [487200.0, pixel, 0.0, 4420600.0, 0.0, -pixel],
             width,
             height,
@@ -89,7 +89,7 @@ fn with_sample(
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     });
     app.document
         .as_mut()

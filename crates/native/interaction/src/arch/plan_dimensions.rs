@@ -273,7 +273,7 @@ fn owned_interiors(doc: &Document, scope: &str) -> Vec<(Slot, DimensionEntity)> 
                     .attrs
                     .get(PLAN_OWNER)
                     .is_some_and(|owner| *owner == uid.to_string()))
-            .then(|| (Slot(d.base.id), d.clone()))
+            .then(|| (Slot(d.base.id), (**d).clone()))
         })
         .collect()
 }
@@ -321,7 +321,7 @@ fn refresh_interior(doc: &mut Document, scope: &str, fresh: Vec<Entity>) -> Resu
             dim.c = next.c;
             dim.offset = next.offset;
             dim.refs = next.refs.clone();
-            changes.push((slot, Entity::Dimension(dim)));
+            changes.push((slot, Entity::Dimension(Box::new(dim))));
         } else {
             additions.push(e);
         }
@@ -333,7 +333,7 @@ fn refresh_interior(doc: &mut Document, scope: &str, fresh: Vec<Entity>) -> Resu
         if dim.text_shift.is_some() || dim.text.is_some() {
             dim.base.attrs.remove(PLAN_SCOPE);
             dim.base.attrs.remove(PLAN_OWNER);
-            changes.push((slot, Entity::Dimension(dim)));
+            changes.push((slot, Entity::Dimension(Box::new(dim))));
         } else {
             removed.push(slot);
         }

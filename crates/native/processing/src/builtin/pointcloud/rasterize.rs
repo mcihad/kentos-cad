@@ -314,7 +314,7 @@ fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: 
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: f.affine(),
             width: f.cols as u32,
             height: f.rows as u32,
@@ -343,6 +343,6 @@ fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: 
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     })
 }

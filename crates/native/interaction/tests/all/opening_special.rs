@@ -33,7 +33,7 @@ fn newest(b: &Bench) -> kentos_commands::OpeningFields {
     let Entity::Opening(o) = b.newest() else {
         panic!("an opening")
     };
-    o.opening.clone()
+    *o.opening.clone()
 }
 
 #[test]

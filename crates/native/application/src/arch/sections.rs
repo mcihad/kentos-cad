@@ -381,7 +381,7 @@ pub fn model(doc: &Document) -> Model {
     let voids: Vec<(String, &kentos_commands::SpaceFields)> = entities
         .iter()
         .filter_map(|(u, e)| match e {
-            Entity::Space(sp) if sp.space.void => Some((u.to_string(), &sp.space)),
+            Entity::Space(sp) if sp.space.void => Some((u.to_string(), &*sp.space)),
             _ => None,
         })
         .collect();
@@ -480,7 +480,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
     let walls: Vec<(Uuid, &kentos_commands::WallFields, Shape)> = entities
         .iter()
         .filter_map(|(u, e)| match e {
-            Entity::Wall(w) => Some((*u, &w.wall, kentos_formats::walls::core_wall(&w.wall))),
+            Entity::Wall(w) => Some((*u, &*w.wall, kentos_formats::walls::core_wall(&w.wall))),
             _ => None,
         })
         .collect();

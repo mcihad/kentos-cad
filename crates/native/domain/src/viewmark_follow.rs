@@ -129,9 +129,9 @@ impl Document {
                 continue;
             };
             let settled = mark_settled(self, &sheets, &e.mark);
-            if settled != e.mark {
+            if settled != *e.mark {
                 let mut x = e.clone();
-                x.mark = settled;
+                x.mark = Box::new(settled);
                 out.push(Op::Update {
                     after: Stored {
                         uid: current.uid,

@@ -75,7 +75,7 @@ pub(crate) fn nearest_number<'a, T>(
 
 /// An aligned dimension from `a` to `b`, `offset` to its left, numbers `height` high: drawn, never written.
 pub(crate) fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
-    Entity::Dimension(kentos_commands::DimensionEntity {
+    Entity::Dimension(Box::new(kentos_commands::DimensionEntity {
         base: kentos_commands::EntityBase {
             look: Default::default(),
             id: 0,
@@ -105,7 +105,7 @@ pub(crate) fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
         look: Default::default(),
         annotative: None,
         level: None,
-    })
+    }))
 }
 
 /// The selected opening, alone and not on a locked layer.

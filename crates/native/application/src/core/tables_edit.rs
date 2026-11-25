@@ -79,7 +79,7 @@ fn table_at(doc: &Document, uid: &str, path: &str) -> Result<(Slot, Uuid, TableE
             path,
         ));
     }
-    Ok((slot, u, t.clone()))
+    Ok((slot, u, *t.clone()))
 }
 
 fn tables_at(doc: &Document, uids: &[String]) -> Result<Vec<(Slot, Uuid, TableEntity)>, Stop> {
@@ -117,10 +117,10 @@ fn core_applied(t: &TableEntity, e: &Edit, path: &str) -> Result<TableEntity, St
     if let Some(p) = done.problem {
         return Err(invalid(p, path));
     }
-    let Some(Entity::Table(out)) = done.table.and_then(|s| with_shape(&Entity::Table(t.clone()), s)) else {
+    let Some(Entity::Table(out)) = done.table.and_then(|s| with_shape(&Entity::Table(Box::new(t.clone())), s)) else {
         return Err(invalid("Tablo düzenlenemedi.".into(), path));
     };
-    Ok(out)
+    Ok(*out)
 }
 
 /// A range along one axis after `count` lines inserted at `at` (positive) or deleted from `at` (negative); none when
@@ -635,12 +635,12 @@ fn sheet_rows(bytes: &[u8], sheet: Option<&str>, header: bool) -> Result<(Vec<Ve
 fn refreshed(doc: &Document, t: &TableEntity, cells: &[Vec<String>], aligns: &[String]) -> Option<TableEntity> {
     let font = drawing_font(doc.settings().drawing_font);
     let next = core_edit::refresh(&core_table(t), cells, aligns, font)?;
-    let Some(Entity::Table(mut out)) = with_shape(&Entity::Table(t.clone()), next) else {
+    let Some(Entity::Table(mut out)) = with_shape(&Entity::Table(Box::new(t.clone())), next) else {
         return None;
     };
     let (n, m) = (out.rows.len(), out.columns.len());
     out.clip_to(n, m);
-    Some(out)
+    Some(*out)
 }
 
 /// The file's new cells with the cells changed by hand kept as `rule` says: a cell is changed by hand when it differs
@@ -1311,7 +1311,7 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
         }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    changed.retain(|(slot, _, t)| doc.get(*slot) != Some(&Entity::Table(t.clone())));
+    changed.retain(|(slot, _, t)| doc.get(*slot) != Some(&Entity::Table(Box::new(t.clone()))));
     Ok(Checked {
         changed,
         report,
@@ -1338,7 +1338,7 @@ pub fn plan_in(doc: &Document, input: &TablesEdit) -> CommandResult<TablesPlan> 
     match check(doc, input) {
         Ok(c) => CommandResult::Completed {
             output: TablesPlan {
-                tables: c.changed.into_iter().map(|(_, _, t)| Entity::Table(t)).collect(),
+                tables: c.changed.into_iter().map(|(_, _, t)| Entity::Table(Box::new(t))).collect(),
                 report: c.report,
                 revision: doc.revision().to_string(),
             },
@@ -1371,7 +1371,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: TablesEdit) -> CommandRes
             doc.update_many(
                 c.changed
                     .into_iter()
-                    .map(|(s, _, t)| (s, Entity::Table(t)))
+                    .map(|(s, _, t)| (s, Entity::Table(Box::new(t))))
                     .collect(),
                 name,
             );
@@ -1424,7 +1424,7 @@ mod tests {
                       "digest":digest_of(original),"copy":copy}
         }))
         .unwrap();
-        let slot = doc.add(Entity::Table(table)).unwrap();
+        let slot = doc.add(Entity::Table(Box::new(table))).unwrap();
         let uid = doc.uid(slot).unwrap().to_string();
         let before = doc.to_snapshot_v2();
         let history = doc.undo_labels();
@@ -1525,7 +1525,7 @@ mod tests {
                       "digest":digest_of(original),"copy":copy}
         }))
         .unwrap();
-        let slot = doc.add(Entity::Table(table)).unwrap();
+        let slot = doc.add(Entity::Table(Box::new(table))).unwrap();
         let uid = doc.uid(slot).unwrap().to_string();
         let before = doc.to_snapshot_v2();
         let history = doc.undo_labels();

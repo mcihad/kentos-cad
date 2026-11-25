@@ -349,7 +349,7 @@ impl Seen {
                 .get(&e.base().layer_id)
                 .map_or_else(String::new, |l| l.name.clone()),
             face: match e {
-                Entity::Text(t) => Some(t.face.clone()),
+                Entity::Text(t) => Some(t.face.clone().into_inner()),
                 _ => None,
             },
             look: match e {

@@ -55,7 +55,7 @@ fn near(got: &Value, want: &Value, at: &str) {
 /// The cloud of the slot.
 fn cloud(app: &App, slot: u32) -> kentos_commands::PointCloudFields {
     match app.document.as_ref().expect("a drawing").model.get(Slot(slot)) {
-        Some(kentos_commands::Entity::PointCloud(c)) => c.cloud.clone(),
+        Some(kentos_commands::Entity::PointCloud(c)) => *c.cloud.clone(),
         other => panic!("not a cloud: {other:?}"),
     }
 }

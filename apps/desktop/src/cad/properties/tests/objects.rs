@@ -442,7 +442,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
 
     let dim = add(
         &mut app,
-        Entity::Dimension(DimensionEntity {
+        Entity::Dimension(Box::new(DimensionEntity {
             annotative: None,
             text_shift: None,
             breaks: Vec::new(),
@@ -461,7 +461,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             refs: None,
             look: Default::default(),
             level: None,
-        }),
+        })),
     );
     let s = Slot(dim);
     for (field, typed) in [
@@ -493,7 +493,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
                 },
             ],
             holes: None,
-            pattern: HatchPattern::user(HatchPatternType::Lines, 45.0, 3.0),
+            pattern: Box::new(HatchPattern::user(HatchPatternType::Lines, 45.0, 3.0)),
             assoc: None,
             annotative: None,
         }),

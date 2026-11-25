@@ -48,7 +48,7 @@ impl Document {
         let walls: Vec<&WallFields> = self
             .entities()
             .filter_map(|e| match e {
-                Entity::Wall(w) if w.wall.arch.level == s.arch.level => Some(&w.wall),
+                Entity::Wall(w) if w.wall.arch.level == s.arch.level => Some(&*w.wall),
                 _ => None,
             })
             .collect();

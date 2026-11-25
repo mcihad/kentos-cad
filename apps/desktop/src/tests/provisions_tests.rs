@@ -105,14 +105,14 @@ fn rows(t: &kentos_commands::TableEntity) -> Vec<Vec<&str>> {
 
 fn table(app: &App, source: &kentos_commands::TableSource) -> kentos_commands::TableEntity {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities()
+    *(doc.entities()
         .find_map(|e| match e {
             kentos_commands::Entity::Table(t) if t.source.as_ref() == Some(source) => {
                 Some(t.clone())
             }
             _ => None,
         })
-        .expect("the table")
+        .expect("the table"))
 }
 
 /// Ek-1: ten flats of 100 m² one place for two (5.00), the shop 60 m² one for 50 (1.20): 6.20, seven places; the

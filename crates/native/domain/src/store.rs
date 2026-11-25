@@ -146,7 +146,7 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
         }),
         // A leader's tips while they follow their places, and its content blocks (docs/adr/0326 §2, §3).
         Entity::Leader(l) => {
-            let mut of: Vec<Uuid> = std::iter::once(l.tip.as_ref())
+            let mut of: Vec<Uuid> = std::iter::once(l.tip.as_deref())
                 .chain(l.arms.iter().map(|a| a.tip.as_ref()))
                 .flatten()
                 .filter(|t| t.live())

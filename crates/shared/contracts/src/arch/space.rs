@@ -300,7 +300,7 @@ pub struct SpaceEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub space: SpaceFields,
+    pub space: Box<SpaceFields>,
 }
 
 fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {

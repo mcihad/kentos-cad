@@ -660,9 +660,9 @@ impl Document {
                 continue;
             }
             let found = search.found_as(current.uid, &s.space);
-            if found != s.space {
+            if found != *s.space {
                 let mut e = s.clone();
-                e.space = found;
+                e.space = Box::new(found);
                 let op = updated(current, Entity::Space(e));
                 out.push(op);
             }

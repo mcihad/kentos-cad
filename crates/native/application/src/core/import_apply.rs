@@ -777,13 +777,15 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
             None => !bounds.is_empty() && bounds.len() == a.bounds.len(),
         };
         let mut next = h.clone();
-        next.assoc = whole.then(|| kentos_commands::HatchAssoc {
-            outer: outer.flatten(),
-            bounds,
-            islands: a.islands.iter().filter_map(real).collect(),
-            cutouts: a.cutouts.iter().filter_map(real).collect(),
-            ..a.clone()
-        });
+        next.assoc = whole
+            .then(|| kentos_commands::HatchAssoc {
+                outer: outer.flatten(),
+                bounds,
+                islands: a.islands.iter().filter_map(real).collect(),
+                cutouts: a.cutouts.iter().filter_map(real).collect(),
+                ..kentos_commands::HatchAssoc::clone(a)
+            })
+            .map(Box::new);
         doc.update(slot, Entity::Hatch(next));
     }
 }
@@ -1640,7 +1642,7 @@ mod tests {
                 font: Some(kentos_commands::DrawingFont::Arimo),
                 bold: true,
                 ..Default::default()
-            },
+            }.into(),
             path: None,
         })
     }

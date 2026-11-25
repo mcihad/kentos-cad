@@ -69,7 +69,7 @@ fn bond(d: &DimensionEntity) -> DimensionBond {
 
 /// One dimension as read.
 pub fn read(format: &Format, uid: Uuid, d: &DimensionEntity) -> DimensionRead {
-    let e = core_entity(&Entity::Dimension(d.clone()));
+    let e = core_entity(&Entity::Dimension(Box::new(d.clone())));
     let (measured, unit, prefix) = dimension_geom(&e.shape)
         .and_then(|g| layout_dimension(&g))
         .map_or((f64::NAN, "length", ""), |l| (l.value, l.unit, l.prefix));
@@ -90,7 +90,7 @@ fn check(doc: &Document, input: &DimensionsQuery) -> Result<Vec<(Uuid, Dimension
         return Ok(doc
             .entities()
             .filter_map(|e| match e {
-                Entity::Dimension(d) => Some((doc.uid(Slot(d.base.id))?, d.clone())),
+                Entity::Dimension(d) => Some((doc.uid(Slot(d.base.id))?, (**d).clone())),
                 _ => None,
             })
             .collect());
@@ -121,7 +121,7 @@ fn check(doc: &Document, input: &DimensionsQuery) -> Result<Vec<(Uuid, Dimension
             ));
         };
         match doc.get(slot) {
-            Some(Entity::Dimension(d)) => out.push((id, d.clone())),
+            Some(Entity::Dimension(d)) => out.push((id, (**d).clone())),
             _ => {
                 return Err(fail(
                     codes::NOT_A_DIMENSION,

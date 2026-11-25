@@ -594,7 +594,7 @@ pub fn labels_in_view(
                         t.text.clone(),
                         kentos_native_application::geometry::core_runs(&t.paragraph.runs)
                             .unwrap_or_default(),
-                        t.face.clone(),
+                        (*t.face).clone(),
                     ),
                     _ => continue,
                 };

@@ -189,7 +189,7 @@ fn raster_object(
 ) -> Entity {
     Entity::Raster(RasterEntity {
         base: base(layer, BTreeMap::new(), None),
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: grid.affine,
             width: grid.width,
             height: grid.height,
@@ -204,7 +204,7 @@ fn raster_object(
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     })
 }
 

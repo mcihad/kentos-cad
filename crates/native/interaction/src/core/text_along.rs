@@ -132,7 +132,7 @@ fn letter_ghost(l: &Letter, ch: char, t: &TextEntity) -> TextGhost {
         rotation: l.turn,
         align: None,
         mask: false,
-        face: t.face.clone(),
+        face: t.face.clone().into_inner(),
         width_factor: t.width_factor.unwrap_or(1.0),
     }
 }
@@ -252,8 +252,8 @@ impl TextAlong {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
-            face,
-            path: Some(path),
+            face: face.into(),
+            path: Some(Box::new(path)),
         })
     }
 
@@ -561,7 +561,7 @@ impl Tool for TextAlong {
                     align: t.align,
                 },
                 height: Some(t.height * 1000.0 / scale),
-                face: Some(t.face.clone()),
+                face: Some(t.face.clone().into_inner()),
                 width_factor: None,
                 color: cx.draft.color_text(),
                 expected_revision: None,
@@ -1019,7 +1019,7 @@ impl Stages for TextCurve {
                             kentos_geometry_core::text::TextAlign::from_name(a.name())
                         }),
                         mask: false,
-                        face: t.face.clone(),
+                        face: t.face.clone().into_inner(),
                         width_factor: t.width_factor.unwrap_or(1.0),
                     });
                 }

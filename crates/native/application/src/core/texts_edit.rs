@@ -532,7 +532,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
                 c.removed.push((*s, *u));
             }
             // Touching runs of one format are one.
-            next.paragraph.runs = merged(next.paragraph.runs);
+            next.paragraph.runs = merged(std::mem::take(&mut next.paragraph.runs));
             c.changed.push((slot, uid, next));
         }
         TextEdit::Split { uid } => {

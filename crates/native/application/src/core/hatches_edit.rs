@@ -423,7 +423,7 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 slot,
                 u,
                 HatchEntity {
-                    assoc,
+                    assoc: assoc.map(Box::new),
                     boundary: boundary.or(next.boundary.clone()),
                     ..next
                 },
@@ -631,7 +631,7 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                     slot,
                     u,
                     HatchEntity {
-                        pattern: p,
+                        pattern: Box::new(p),
                         annotative,
                         ..h
                     },
@@ -772,7 +772,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandRe
             && let Some((_, Entity::Hatch(h))) = changes.iter_mut().find(|(s, _)| *s == slot)
             && let Some((first, rest)) = made.split_first()
         {
-            h.assoc = Some(match form {
+            h.assoc = Some(Box::new(match form {
                 BoundaryForm::Area => HatchAssoc {
                     gap: None,
                     outer: Some(*first),
@@ -789,7 +789,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandRe
                     cutouts: Vec::new(),
                     seed,
                 },
-            });
+            }));
         }
         if !changes.is_empty() {
             doc.update_many(changes, name);

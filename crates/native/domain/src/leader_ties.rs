@@ -98,7 +98,7 @@ pub fn block_places(
 
 /// A leader's tips: the first arm's, then each other arm's.
 fn tips(l: &LeaderEntity) -> Vec<Option<&SubRef>> {
-    std::iter::once(l.tip.as_ref())
+    std::iter::once(l.tip.as_deref())
         .chain(l.arms.iter().map(|a| a.tip.as_ref()))
         .collect()
 }
@@ -117,7 +117,7 @@ fn set_tip(l: &mut LeaderEntity, k: usize, p: Vec2, r: Option<SubRef>) {
         if let Some(first) = l.pts.first_mut() {
             *first = p;
         }
-        l.tip = r;
+        l.tip = r.map(Box::new);
     } else if let Some(a) = l.arms.get_mut(k - 1) {
         if let Some(first) = a.pts.first_mut() {
             *first = p;

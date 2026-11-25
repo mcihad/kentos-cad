@@ -198,7 +198,7 @@ mod tests {
             .model
             .entities()
             .filter_map(|e| match e {
-                Entity::Ramp(r) => Some(r.ramp.clone()),
+                Entity::Ramp(r) => Some((*r.ramp).clone()),
                 _ => None,
             })
             .collect()

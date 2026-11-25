@@ -144,7 +144,7 @@ fn clouds_on(app: &App, layer: &str) -> Vec<kentos_commands::PointCloudFields> {
     doc.model
         .entities()
         .filter_map(|e| match e {
-            Entity::PointCloud(c) if c.base.layer_id == layer => Some(c.cloud.clone()),
+            Entity::PointCloud(c) if c.base.layer_id == layer => Some((*c.cloud).clone()),
             _ => None,
         })
         .collect()

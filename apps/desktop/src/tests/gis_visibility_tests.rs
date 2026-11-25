@@ -65,7 +65,7 @@ fn raster_file_on(app: &mut App, layer: &str, file: Option<String>) {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster: RasterFields {
+        raster: Box::new(RasterFields {
             affine: [487200.0, 1.5, 0.0, 4420600.0, 0.0, -1.5],
             width: 700,
             height: 300,
@@ -80,7 +80,7 @@ fn raster_file_on(app: &mut App, layer: &str, file: Option<String>) {
             dataset: None,
             georef: None,
             tiles: None,
-        },
+        }),
     });
     app.document.as_mut().expect("a drawing").model.add(e).expect("added");
 }

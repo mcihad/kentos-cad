@@ -212,9 +212,9 @@ impl Document {
                 continue;
             };
             let followed = self.slab_with_runs(&s.slab);
-            if followed != s.slab {
+            if followed != *s.slab {
                 let mut e = s.clone();
-                e.slab = followed;
+                e.slab = Box::new(followed);
                 out.push(updated(current, Entity::Slab(e)));
             }
         }

@@ -360,8 +360,8 @@ impl App {
             uid,
             scale: doc.model.settings().plot_scale,
             version: 0,
-            draft: t.clone(),
-            saved: t.clone(),
+            draft: *t.clone(),
+            saved: *t.clone(),
             edits: Vec::new(),
             steps: Vec::new(),
             redo: Vec::new(),
@@ -410,7 +410,7 @@ impl App {
         };
         match tables_edit::plan_in(&doc.model, &input) {
             CommandResult::Completed { output, .. } => Ok(match output.tables.into_iter().next() {
-                Some(Entity::Table(t)) => t,
+                Some(Entity::Table(t)) => *t,
                 _ => saved.clone(),
             }),
             CommandResult::Failed { error }

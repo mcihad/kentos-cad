@@ -336,7 +336,7 @@ pub struct PointCloudEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub cloud: PointCloudFields,
+    pub cloud: Box<PointCloudFields>,
 }
 
 /// What places and shows a cloud: the object's own fields, and its geometry

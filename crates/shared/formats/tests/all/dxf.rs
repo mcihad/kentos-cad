@@ -2351,7 +2351,7 @@ fn another_programs_styles_come_in_as_the_projects() {
         .entities
         .iter()
         .filter_map(|e| match e {
-            Entity::Text(t) => Some((t.text.clone(), t.face.clone())),
+            Entity::Text(t) => Some((t.text.clone(), (*t.face).clone())),
             _ => None,
         })
         .collect();
@@ -3289,7 +3289,7 @@ fn an_image_is_its_frame_and_its_file_is_named() {
     ];
     let objects = vec![g(0, "IMAGEDEF"), g(5, "146B6"), g(100, "AcDbRasterImageDef"), g(1, "DDS LOGO.jpg")];
     let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
-    let r = dxf::read(&dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]), &options).expect("read");
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]), &options).expect("read");
     let [Entity::Polyline(frame)] = r.entities.as_slice() else { panic!("{:?}", r.entities) };
     assert!(frame.closed);
     let (w, h) = (2409.0 * 1.7117828025000665, 3435.0 * 1.7117828025000665);
@@ -3299,6 +3299,15 @@ fn an_image_is_its_frame_and_its_file_is_named() {
     }
     let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
     assert!(note.reason.contains("“DDS LOGO.jpg”"), "{}", note.reason);
+    assert!(skipped(&r, "IMAGE").is_none());
+
+    // Its definition naming no file: the frame still shows where it was, and the report says the file is not named.
+    let objects = vec![g(0, "IMAGEDEF"), g(5, "146B6"), g(100, "AcDbRasterImageDef"), g(1, " ")];
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]), &options).expect("read");
+    let [Entity::Polyline(unnamed)] = r.entities.as_slice() else { panic!("{:?}", r.entities) };
+    assert_eq!(unnamed.pts, frame.pts);
+    let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
+    assert!(note.reason.contains("adlandırılmamış"), "{}", note.reason);
     assert!(skipped(&r, "IMAGE").is_none());
 }
 

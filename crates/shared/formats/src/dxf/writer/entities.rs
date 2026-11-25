@@ -1910,7 +1910,7 @@ impl Writer<'_> {
             });
         }
         if block_form {
-            self.insert_whole(&d.base, &name, &Entity::Dimension(d.clone()), "Ölçü");
+            self.insert_whole(&d.base, &name, &Entity::Dimension(Box::new(d.clone())), "Ölçü");
             return true;
         }
 

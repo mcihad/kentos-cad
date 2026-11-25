@@ -88,7 +88,7 @@ fn drawing(more: Vec<Entity>) -> DocumentSnapshotV2 {
 #[test]
 fn the_new_kinds_a_mask_and_elevations_and_only_they_make_schema_9() {
     let of = |doc: &DocumentSnapshotV2| schema(&kentos_kcad::encode_verified(doc).expect("writes"));
-    let with = |d: DimensionEntity| of(&drawing(vec![Entity::Dimension(d)]));
+    let with = |d: DimensionEntity| of(&drawing(vec![Entity::Dimension(Box::new(d))]));
     // The five older kinds stay schema 2.
     for style in [
         None,
@@ -160,7 +160,7 @@ fn every_field_of_the_new_dimensions_comes_back() {
         .entities
         .iter()
         .filter_map(|e| match e {
-            Entity::Dimension(d) => Some(d),
+            Entity::Dimension(d) => Some(&**d),
             _ => None,
         })
         .collect();
@@ -194,7 +194,7 @@ fn every_field_of_the_new_dimensions_comes_back() {
 #[test]
 fn the_writer_refuses_what_a_reader_would_refuse_with_the_place() {
     let refuse = |d: DimensionEntity, code: Code, place: &str| {
-        let err = kentos_kcad::encode(&drawing(vec![Entity::Dimension(d)])).expect_err("refused");
+        let err = kentos_kcad::encode(&drawing(vec![Entity::Dimension(Box::new(d))])).expect_err("refused");
         assert_eq!(err.code, code, "{err}");
         assert!(err.message.contains(place), "{place}: {err}");
     };

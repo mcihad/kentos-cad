@@ -66,7 +66,12 @@ fn a_dxf_goes_in_as_one_undo_step_with_its_layers_in_a_group_named_after_the_fil
         .expect("a group named after the file");
     assert_eq!(group.kind, LayerNodeType::Group);
     assert!(!group.children.is_empty());
-    assert!(last_said(&app).contains("nesne"), "{}", last_said(&app));
+    // The import's summary; what the file left out is said after it (its IMAGE of no size, docs/adr/9227).
+    assert!(
+        app.log.lines().rev().take(3).any(|l| l.text.starts_with("“entities.dxf”:") && l.text.contains("nesne")),
+        "{}",
+        last_said(&app)
+    );
 
     // One undo step takes every object back, and the layers made for them
     // (as on the web since bdaed77; docs/adr/0076).

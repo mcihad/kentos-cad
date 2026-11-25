@@ -228,7 +228,7 @@ pub mod create {
         match create_check(doc, input) {
             Ok((warnings, t)) => CommandResult::Completed {
                 output: SchedulesPlan {
-                    table: Entity::Table(t),
+                    table: Entity::Table(Box::new(t)),
                     revision: doc.revision().to_string(),
                 },
                 warnings,
@@ -259,7 +259,7 @@ pub mod create {
             Err(stop) => return stop.into(),
         };
         let rows = rows_of(&t);
-        let slots = match cx.doc.add_many(vec![Entity::Table(t)], CREATE_STEP) {
+        let slots = match cx.doc.add_many(vec![Entity::Table(Box::new(t))], CREATE_STEP) {
             Ok(slots) => slots,
             Err(full) => {
                 return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();
@@ -300,7 +300,7 @@ fn schedule_at(doc: &Document, uid: &str) -> Result<(Slot, TableEntity), Stop> {
         ));
     };
     match e {
-        Entity::Table(t) if matches!(t.source, Some(TableSource::Schedule { .. })) => Ok((slot, t.clone())),
+        Entity::Table(t) if matches!(t.source, Some(TableSource::Schedule { .. })) => Ok((slot, *t.clone())),
         _ => Err(fail(
             codes::NOT_SCHEDULE,
             "Nesne bir mimari çizelge değil; Çizelge ile yerleştirilen bir tablonun kimliğini verin.".into(),
@@ -638,7 +638,7 @@ fn apply(
         None => {
             let mut all = work;
             if all.is_empty() {
-                all.push((slot, Entity::Table(next.clone())));
+                all.push((slot, Entity::Table(Box::new(next.clone()))));
             }
             doc.update_many(all, EDIT_STEP);
         }
@@ -679,7 +679,7 @@ pub mod edit {
                 let (table, edited, units) = apply(&mut copy, slot, next, work, program);
                 CommandResult::Completed {
                     output: SchedulesEdited {
-                        table: Entity::Table(table),
+                        table: Entity::Table(Box::new(table)),
                         edited,
                         units,
                         revision: doc.revision().to_string(),
@@ -715,7 +715,7 @@ pub mod edit {
         let (table, edited, units) = apply(cx.doc, slot, next, work, program);
         CommandResult::Completed {
             output: SchedulesEdited {
-                table: Entity::Table(table),
+                table: Entity::Table(Box::new(table)),
                 edited,
                 units,
                 revision: cx.doc.revision().to_string(),

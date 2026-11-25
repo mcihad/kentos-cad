@@ -504,7 +504,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                     label_pins: Vec::new(),
                     attachments: Vec::new(),
                 },
-                raster: RasterFields {
+                raster: Box::new(RasterFields {
                     affine,
                     width,
                     height,
@@ -519,7 +519,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                     dataset: None,
                     georef: None,
                     tiles: None,
-                },
+                }),
             }))
         }
     };

@@ -453,7 +453,7 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
         }
         Entity::Column(mut c) => {
             column_valid(&c.column, path)?;
-            c.column = settled_on(doc, c.column, true, path)?;
+            c.column = Box::new(settled_on(doc, *c.column, true, path)?);
             Entity::Column(c)
         }
         Entity::Stair(s) => {
@@ -634,7 +634,7 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 c.column.grids = Some(grids.clone());
                 c.column.place = None;
                 c.column.broken = None;
-                c.column = settled_on(doc, c.column, true, "operation")?;
+                c.column = Box::new(settled_on(doc, *c.column, true, "operation")?);
                 out.push((*slot, Entity::Column(c)));
             }
         }

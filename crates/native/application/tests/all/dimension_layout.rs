@@ -73,7 +73,7 @@ fn facade(doc: &mut Document, walls: &[&String], extra: Value) -> DimensionSetId
 
 fn dimension(doc: &Document, uid: EntityId) -> kentos_commands::DimensionEntity {
     match doc.slot_of(Uuid::from_bytes(uid.0)).and_then(|s| doc.get(s)) {
-        Some(Entity::Dimension(d)) => d.clone(),
+        Some(Entity::Dimension(d)) => *d.clone(),
         other => panic!("a member dimension: {other:?}"),
     }
 }

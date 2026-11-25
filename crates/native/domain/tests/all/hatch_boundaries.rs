@@ -43,8 +43,8 @@ fn hatch(ring: Vec<Vec2>, boundary: Option<Vec<HatchLoop>>, assoc: Option<HatchA
         base: base(),
         ring,
         holes: None,
-        pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
-        assoc,
+        pattern: Box::new(HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0)),
+        assoc: assoc.map(Box::new),
         boundary,
         annotative: None,
     })

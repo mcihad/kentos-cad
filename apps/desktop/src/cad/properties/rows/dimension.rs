@@ -316,7 +316,7 @@ pub(super) fn rows(
         let radius = common(dims, radius_of);
         // The layout's value is the arc's length: its angle is that over its radius.
         let sweep = common(dims, |d| {
-            dimension_layout(&Entity::Dimension(d.clone()))
+            dimension_layout(&Entity::Dimension(Box::new(d.clone())))
                 .map_or(f64::NAN, |l| l.value / radius_of(d))
         });
         rows.push(match radius {
@@ -460,7 +460,7 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
     let mut rows = Vec::new();
     // What the geometry measures, apart from a written value (docs/adr/0321 §3).
     if let [d] = dims
-        && let Some(l) = dimension_layout(&Entity::Dimension((*d).clone()))
+        && let Some(l) = dimension_layout(&Entity::Dimension(Box::new((*d).clone())))
     {
         let measured = f.dimension_value(l.prefix, l.unit, l.value, &d.look, None);
         if l.unit == "none" {

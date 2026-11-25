@@ -51,14 +51,14 @@ fn text(doc: &Document, s: u32) -> TextEntity {
 /// The hatch tied to the square, leaving `cutouts` open; cut by the document's rule as the tie changes.
 fn tie(doc: &mut Document, cutouts: Vec<EntityId>) {
     let tied = Entity::Hatch(HatchEntity {
-        assoc: Some(HatchAssoc {
+        assoc: Some(Box::new(HatchAssoc {
             gap: None,
             outer: Some(id(doc, 1)),
             bounds: Vec::new(),
             islands: Vec::new(),
             cutouts,
             seed: Vec2 { x: 10.0, y: 10.0 },
-        }),
+        })),
         ..hatch(doc)
     });
     assert!(doc.update(Slot(3), tied));

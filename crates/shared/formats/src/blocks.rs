@@ -148,9 +148,9 @@ impl Placing {
                             box_width,
                             line_spacing,
                             runs: contract_runs(runs.as_deref()),
-                        },
+                        }.into(),
                         face: Default::default(),
-                        path: path.map(contract_curve),
+                        path: path.map(contract_curve).map(Box::new),
                     },
                 ))
             })
@@ -664,7 +664,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             runs: core_runs(&t.paragraph.runs),
             flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
-            path: t.path.as_ref().map(core_curve),
+            path: t.path.as_deref().map(core_curve),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: core(d.a),
@@ -997,7 +997,7 @@ fn entity(s: &Shape) -> Option<Entity> {
         } => Entity::Text(TextEntity {
             annotative: None,
             base,
-            path: path.clone().map(contract_curve),
+            path: path.clone().map(contract_curve).map(Box::new),
             p: back(*p),
             text: text.clone(),
             height: *height,
@@ -1013,8 +1013,8 @@ fn entity(s: &Shape) -> Option<Entity> {
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: contract_runs(runs.as_deref()),
-            },
-            face: contract_face(face),
+            }.into(),
+            face: contract_face(face).into(),
         }),
         Shape::Dimension {
             a,
@@ -1029,7 +1029,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             za,
             zb,
             look,
-        } => Entity::Dimension(DimensionEntity {
+        } => Entity::Dimension(Box::new(DimensionEntity {
             annotative: None,
             text_shift: None,
             breaks: Vec::new(),
@@ -1048,7 +1048,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             refs: None,
             look: contract_look(look),
             level: None,
-        }),
+        })),
         Shape::Hatch {
             ring,
             holes,
@@ -1061,7 +1061,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             holes: holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points_back(r)).collect()),
-            pattern: contract_pattern(pattern),
+            pattern: Box::new(contract_pattern(pattern)),
             assoc: None,
             boundary: boundary.as_deref().and_then(contract_boundary),
             annotative: None,

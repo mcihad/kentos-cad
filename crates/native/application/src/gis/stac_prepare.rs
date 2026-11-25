@@ -210,7 +210,7 @@ fn raster(layer_id: &str, plan: &RasterPlan) -> Entity {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        raster: plan.fields.clone(),
+        raster: Box::new(plan.fields.clone()),
     })
 }
 

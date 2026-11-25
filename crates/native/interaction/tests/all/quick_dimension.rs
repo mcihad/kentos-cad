@@ -19,7 +19,7 @@ fn dims(b: &Bench) -> Vec<DimensionEntity> {
         .doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Dimension(d) => Some(d.clone()),
+            Entity::Dimension(d) => Some((**d).clone()),
             _ => None,
         })
         .collect();

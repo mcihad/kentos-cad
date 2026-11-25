@@ -149,7 +149,7 @@ pub(super) fn schedule_planned(
         }
     }
     Ok(match copy.slot_of(uid).and_then(|s| copy.get(s)) {
-        Some(Entity::Table(t)) => t.clone(),
+        Some(Entity::Table(t)) => *t.clone(),
         _ => saved.clone(),
     })
 }

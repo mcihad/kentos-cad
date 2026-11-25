@@ -94,7 +94,7 @@ fn cloud(fields: impl FnOnce(&mut PointCloudFields)) -> Entity {
     fields(&mut cloud);
     Entity::PointCloud(PointCloudEntity {
         base: base(),
-        cloud,
+        cloud: Box::new(cloud),
     })
 }
 

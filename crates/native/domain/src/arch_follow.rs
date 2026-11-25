@@ -65,7 +65,7 @@ impl Document {
     pub fn grid_of(&self, uid: &str) -> Option<GridFields> {
         let slot = self.store.slot_of(Uuid::parse_str(uid).ok()?)?;
         match &*self.store.get(slot)?.entity {
-            Entity::Grid(g) => Some(g.grid.clone()),
+            Entity::Grid(g) => Some(*g.grid.clone()),
             _ => None,
         }
     }
@@ -139,9 +139,9 @@ impl Document {
                 continue;
             };
             let settled = self.column_settled(&c.column);
-            if settled != c.column {
+            if settled != *c.column {
                 let mut e = c.clone();
-                e.column = settled;
+                e.column = Box::new(settled);
                 let op = updated(current, Entity::Column(e));
                 self.apply_op(&op);
                 out.push(op);

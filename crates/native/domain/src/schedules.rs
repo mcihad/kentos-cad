@@ -134,7 +134,7 @@ impl Document {
             Entity::Space(s) => Some(s.space.arch.clone()),
             Entity::Column(c) => Some(c.column.arch.clone()),
             Entity::Wall(w) => Some(w.wall.arch.clone()),
-            Entity::Insert(i) => Some(i.arch.clone()),
+            Entity::Insert(i) => Some((*i.arch).clone()),
             // A beam's and a covering's own (docs/adr/8070 §11).
             Entity::Beam(b) => Some(b.beam.arch.clone()),
             Entity::Slab(s) => Some(s.slab.arch.clone()),

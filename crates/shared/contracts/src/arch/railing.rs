@@ -238,7 +238,7 @@ pub struct RailingEntity {
     pub base: EntityBase,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
-    pub railing: RailingFields,
+    pub railing: Box<RailingFields>,
 }
 
 #[cfg(test)]

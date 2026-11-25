@@ -55,8 +55,8 @@ fn hatch(pattern: HatchPattern, assoc: Option<HatchAssoc>) -> Entity {
         },
         ring: vec![v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0)],
         holes: None,
-        pattern,
-        assoc,
+        pattern: Box::new(pattern),
+        assoc: assoc.map(Box::new),
         annotative: None,
     })
 }
@@ -122,7 +122,7 @@ fn only_a_drawing_with_a_pattern_a_gradient_or_a_tie_is_schema_23() {
         seed: v(1.0, 1.0),
     };
     if let Entity::Hatch(h) = &mut doc.entities[1] {
-        h.assoc = Some(tie);
+        h.assoc = Some(Box::new(tie));
     }
     assert_eq!(of(&doc), 23);
     // A block definition's pattern is the drawing's schema too.
