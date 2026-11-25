@@ -3,7 +3,7 @@
 
 use crate::api::Op;
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{js_hypot, or};
+use crate::jsmath::{js_hypot, js_max, js_min, or};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -40,6 +40,95 @@ pub fn catmull_rom(pts: &[Vec2], closed: bool, per_span: f64) -> Vec<Vec2> {
         while s < per_span {
             let t = t1 + ((t2 - t1) * s) / per_span;
             out.push(eval_span([p0, p1, p2, p3], [t0, t1, t2, t3], t));
+            s += 1.0;
+        }
+    }
+    out.push(if closed { pts[0] } else { pts[n - 1] });
+    out
+}
+
+/// Halvings of a step at most: a span's step over 2¹⁸.
+const DEPTH: u32 = 18;
+
+/// The distance from `p` to the segment from `a` to `c`.
+fn segment_distance(p: Vec2, a: Vec2, c: Vec2) -> f64 {
+    let (dx, dy) = (c.x - a.x, c.y - a.y);
+    let len2 = dx * dx + dy * dy;
+    let t = if len2 == 0.0 {
+        0.0
+    } else {
+        js_min(1.0, js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2))
+    };
+    js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+}
+
+/// [`catmull_rom`]'s curve with its `per_span` steps a span, and in and near `b` each step halved until its middle
+/// lies within `tol` of its chord (docs/adr/9233): never coarser than the outline, round to the deep view's tolerance
+/// in it (plan/render.md RM-09). A step is near `b` when the box of its ends and middle, grown by how far the middle
+/// strays, meets it.
+pub fn catmull_rom_in_box(
+    pts: &[Vec2],
+    closed: bool,
+    per_span: f64,
+    b: &crate::geometry::Bounds,
+    tol: f64,
+) -> Vec<Vec2> {
+    let n = pts.len();
+    if n < 3 || !(tol > 0.0) || !(per_span >= 1.0) {
+        return catmull_rom(pts, closed, per_span);
+    }
+    let ni = n as i64;
+    let at = |i: i64| -> Vec2 {
+        if closed {
+            return pts[(((i % ni) + ni) % ni) as usize];
+        }
+        if i < 0 {
+            return reflect(pts[1], pts[0]);
+        }
+        if i >= ni {
+            return reflect(pts[n - 2], pts[n - 1]);
+        }
+        pts[i as usize]
+    };
+    let near = |a: Vec2, c: Vec2, m: Vec2, far: f64| {
+        let lo = Vec2::new(js_min(js_min(a.x, c.x), m.x) - far, js_min(js_min(a.y, c.y), m.y) - far);
+        let hi = Vec2::new(js_max(js_max(a.x, c.x), m.x) + far, js_max(js_max(a.y, c.y), m.y) + far);
+        !(hi.x < b.min_x || lo.x > b.max_x || hi.y < b.min_y || lo.y > b.max_y)
+    };
+    #[allow(clippy::too_many_arguments)]
+    fn halve(
+        eval: &dyn Fn(f64) -> Vec2,
+        near: &dyn Fn(Vec2, Vec2, Vec2, f64) -> bool,
+        tol: f64,
+        (s0, a): (f64, Vec2),
+        (s1, c): (f64, Vec2),
+        depth: u32,
+        out: &mut Vec<Vec2>,
+    ) {
+        let sm = 0.5 * (s0 + s1);
+        let m = eval(sm);
+        let far = segment_distance(m, a, c);
+        if depth < DEPTH && far > tol && near(a, c, m, far) {
+            halve(eval, near, tol, (s0, a), (sm, m), depth + 1, out);
+            out.push(m);
+            halve(eval, near, tol, (sm, m), (s1, c), depth + 1, out);
+        }
+    }
+    let mut out = Vec::new();
+    let spans = if closed { ni } else { ni - 1 };
+    for i in 0..spans {
+        let p = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+        let t1 = knot(p[0], p[1]);
+        let t2 = t1 + knot(p[1], p[2]);
+        let t3 = t2 + knot(p[2], p[3]);
+        let k = [0.0, t1, t2, t3];
+        let eval = |s: f64| eval_span(p, k, t1 + ((t2 - t1) * s) / per_span);
+        let mut s = 0.0;
+        while s < per_span {
+            let a = eval(s);
+            out.push(a);
+            let end = if s + 1.0 < per_span { eval(s + 1.0) } else { p[2] };
+            halve(&eval, &near, tol, (s, a), (s + 1.0, end), 0, &mut out);
             s += 1.0;
         }
     }
@@ -192,6 +281,29 @@ pub(crate) static OPS: &[Op] = &[op!(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The deep view's spline (docs/adr/9233): over everything with a loose tolerance, the outline's points; in a
+    /// small box with a tight one, more points there, each chord's middle within the tolerance of the curve (a
+    /// 4 096-step outline stands in for it), and every outline point kept.
+    #[test]
+    fn a_spline_in_a_box_is_round_to_the_box_s_tolerance() {
+        let pts = [Vec2::new(0.0, 0.0), Vec2::new(3.0, 2.0), Vec2::new(6.0, -1.0), Vec2::new(9.0, 1.0)];
+        let all = crate::geometry::Bounds { min_x: -1e9, min_y: -1e9, max_x: 1e9, max_y: 1e9 };
+        assert_eq!(catmull_rom_in_box(&pts, false, 16.0, &all, 1.0), catmull_rom(&pts, false, 16.0));
+        let b = crate::geometry::Bounds { min_x: 4.0, min_y: -1.0, max_x: 4.2, max_y: 1.5 };
+        let round = catmull_rom_in_box(&pts, false, 16.0, &b, 1e-7);
+        let outline = catmull_rom(&pts, false, 16.0);
+        assert!(round.len() > outline.len());
+        assert!(outline.iter().all(|p| round.contains(p)), "every outline point kept");
+        let fine = catmull_rom(&pts, false, 4096.0);
+        let off = |p: Vec2| fine.windows(2).map(|s| segment_distance(p, s[0], s[1])).fold(f64::INFINITY, js_min);
+        for s in round.windows(2) {
+            let m = Vec2::new(0.5 * (s[0].x + s[1].x), 0.5 * (s[0].y + s[1].y));
+            if m.x >= b.min_x && m.x <= b.max_x && m.y >= b.min_y && m.y <= b.max_y {
+                assert!(off(m) < 1e-6, "a chord's middle {} off the curve", off(m));
+            }
+        }
+    }
 
     fn bezier(b: &[Vec2; 4], s: f64) -> Vec2 {
         let r = 1.0 - s;

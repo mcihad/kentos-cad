@@ -334,7 +334,7 @@ mod tests {
         assert_eq!(cut.len(), 4);
         for c in &cut[1..3] {
             let cross = (q.x - p.x) * (c.y - p.y) - (q.y - p.y) * (c.x - p.x);
-            let length = ((q.x - p.x).powi(2) + (q.y - p.y).powi(2)).sqrt();
+            let length = js_hypot(q.x - p.x, q.y - p.y);
             assert!((cross / length).abs() < 1e-9, "{c:?} is off the segment by {}", cross / length);
             assert!(c.x.abs() <= 1.0 + 1e-9 && c.y.abs() <= 1.0 + 1e-9, "{c:?} on the box's edge");
         }
@@ -357,9 +357,9 @@ mod tests {
             })
             .map(|w| {
                 let m = v((w[0].x + w[1].x) / 2.0, (w[0].y + w[1].y) / 2.0);
-                r - ((m.x - c.x).powi(2) + (m.y - c.y).powi(2)).sqrt()
+                r - js_hypot(m.x - c.x, m.y - c.y)
             })
-            .fold(0.0, f64::max)
+            .fold(0.0, js_max)
     }
 
     #[test]
@@ -369,7 +369,7 @@ mod tests {
         let (tol, b) = (1e-4, BOX);
         let pts = arc_in_box(c, r, 0.0, TAU, &b, tol);
         for p in &pts {
-            let d = ((p.x - c.x).powi(2) + (p.y - c.y).powi(2)).sqrt();
+            let d = js_hypot(p.x - c.x, p.y - c.y);
             assert!((d - r).abs() < 1e-9, "{p:?} lies on the circle");
         }
         assert!(sagitta(c, r, &pts, Some(&b)) <= tol * 1.000_001, "round in the box");
@@ -447,7 +447,7 @@ mod tests {
         };
         for p in &pts {
             let q = unit(*p);
-            assert!((q.x.hypot(q.y) - 1.0).abs() < 1e-12, "{p:?} on the ellipse");
+            assert!((js_hypot(q.x, q.y) - 1.0).abs() < 1e-12, "{p:?} on the ellipse");
         }
         // In the box its chords stray at most `tol`: the distance of a chord's middle from the curve, measured along
         // the curve's normal there, is below the sagitta of its circle of reach.
@@ -458,7 +458,7 @@ mod tests {
                 let (t0, t1) = (atan2(unit(w[0]).y, unit(w[0]).x), atan2(unit(w[1]).y, unit(w[1]).x));
                 let tm = t0 + norm_angle(t1 - t0) / 2.0;
                 let on = v(c.x + major.x * cos(tm) + minor.x * sin(tm), c.y + major.y * cos(tm) + minor.y * sin(tm));
-                worst = worst.max((on.x - m.x).hypot(on.y - m.y));
+                worst = js_max(worst, js_hypot(on.x - m.x, on.y - m.y));
             }
         }
         assert!(worst > 0.0 && worst <= tol * 1.000_001, "{worst}");
@@ -479,7 +479,7 @@ mod tests {
         let between = &ring[1..ring.iter().position(|p| *p == pts[1]).expect("second vertex")];
         assert!(between.len() > 36, "{}", between.len());
         for p in between {
-            assert!(((p.x + 19.5).hypot(p.y) - 20.0).abs() < 1e-9, "{p:?}");
+            assert!((js_hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9, "{p:?}");
         }
         let c = v(-19.5, 0.0);
         assert!(sagitta(c, 20.0, between, Some(&BOX)) <= 1e-4 * 1.000_001);
