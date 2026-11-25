@@ -44,6 +44,8 @@ struct Look {
 #[derive(Default)]
 pub(super) struct Instancer {
     counts: HashMap<Look, u32>,
+    /// The largest uniform scale of a look's inserts: its definition's curves are drawn for it (RM-09).
+    scales: HashMap<Look, f64>,
     defs: HashMap<Look, Option<Arc<Def>>>,
     made: usize,
     /// Inserts drawn by their placement, and those of a look drawn piece by piece.
@@ -98,7 +100,10 @@ impl Instancer {
             let mode = o.objects[4 * i];
             let color = o.objects[4 * i + 3];
             let band = o.bands.get(i).copied().unwrap_or(0);
-            if let Some((look, _, _)) = look_of(store, item, x, sets, [mode, color, band]) {
+            if let Some((look, _, m)) = look_of(store, item, x, sets, [mode, color, band]) {
+                let k = (m[0] * m[3] - m[1] * m[2]).abs().sqrt();
+                let most = me.scales.entry(look.clone()).or_insert(0.0);
+                *most = js_max(*most, if k.is_finite() { k } else { 0.0 });
                 *me.counts.entry(look).or_default() += 1;
             }
         }
@@ -129,6 +134,7 @@ impl Instancer {
             return false;
         }
         let made = &mut self.made;
+        let most = self.scales.get(&look).copied().filter(|k| *k > 0.0);
         let def = self
             .defs
             .entry(look)
@@ -137,8 +143,12 @@ impl Instancer {
                 let mut rec = BatchSink::recorder();
                 rec.set_line_lod(view.line_lod && !view.plot_precision);
                 rec.set_block_proxy(view.block_proxy && !view.plot_precision);
-                // A definition is in its own units, its inserts scaled: its curves keep the drawing's own chords.
+                // A definition is in its own units, its inserts scaled: its curves are drawn to the world's tolerance
+                // over its largest insert's scale, round wherever an insert of it is drawn (plan/render.md RM-09,
+                // docs/adr/9232). They kept 72 chords a turn, and a curve of a large block (a bound reference's
+                // 30 m façade) was faceted by three pixels at 100 px/m. Without a scale, the drawing's own chords.
                 let curve_tolerance = cx.curve_tolerance.take();
+                cx.curve_tolerance = curve_tolerance.zip(most).map(|(t, k)| t / k);
                 for (k, piece) in flat.pieces.iter().enumerate() {
                     let shape = &piece.shape;
                     // A construction line is clipped to the view's box, which a definition's base knows nothing of.
@@ -326,6 +336,65 @@ mod tests {
         // A dashed line is drawn from the path's start, which a turned definition would move: piece by piece.
         let dashed = r##"{"type":"line","layers":[{"id":"r","type":"simpleLine","color":"#FF0000","width":0.3,"dash":[2,1]}]}"##;
         assert!(built(dashed, true).iter().all(|b| count(b) == 0.0));
+    }
+
+    /// A definition's curves are drawn for its largest insert (docs/adr/9232): a block's circle of radius 1 inserted at
+    /// scale 1 and 20 is round at 20, its chords as many as a 20 m circle takes at the world's tolerance (0.5 mm), not
+    /// the 72 a turn it kept. Without a tolerance (paper, a projected map) the drawing's own chords.
+    #[test]
+    fn a_definition_s_curves_are_drawn_for_its_largest_insert() {
+        use kentos_geometry_core::api::json::Json;
+        let chords_of = |tolerance: Option<f64>| -> f64 {
+            let mut store = Store::new();
+            store
+                .set_blocks_json(
+                    r#"[{"id":"c","name":"C","base":{"x":0,"y":0},"entities":[
+                    {"kind":"circle","id":1,"layerId":"","attrs":{},"c":{"x":0,"y":0},"r":1}]}]"#,
+                )
+                .expect("blocks");
+            store
+                .put_json(
+                    r#"[{"id":1,"layerId":"a","kind":"insert","block":"c","p":{"x":0,"y":0},"scale":1,"rotation":0},
+                    {"id":2,"layerId":"a","kind":"insert","block":"c","p":{"x":100,"y":0},"scale":20,"rotation":0},
+                    {"id":3,"layerId":"a","kind":"insert","block":"c","p":{"x":200,"y":0},"scale":1,"rotation":0}]"#,
+                )
+                .expect("inserts");
+            let line = r##"{"type":"line","layers":[{"id":"r","type":"simpleLine","color":"#FF0000","width":0.3}]}"##;
+            let program = Program::read(&format!(
+                r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{line}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+            ))
+            .expect("program");
+            let ids = [1.0, 2.0, 3.0];
+            let how = [MODE_SET, 0, 0, 0].repeat(3);
+            let lens = vec![-1; 3 * program.fields.len()];
+            let o = LayerObjects {
+                ids: &ids,
+                objects: &how,
+                texts: "",
+                text_lens: &lens,
+                numbers: &[],
+                pieces: &[0; 3],
+                bands: &[],
+            };
+            let view = View { instancing: true, curve_tolerance: tolerance, ..View::default() };
+            let out = super::super::build_layer_with(&store, &program, &o, None, Vec2::new(0.0, 0.0), 1000.0, false, view)
+                .expect("build");
+            let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
+                panic!("{}", out.json);
+            };
+            let inst = batches
+                .iter()
+                .find(|b| matches!(b.get("inst").get("count"), Json::Num(n) if *n == 3.0))
+                .unwrap_or_else(|| panic!("instanced: {batches:?}"));
+            let Json::Num(len) = inst.get("len") else { panic!("{inst:?}") };
+            // A stroke's segment is six numbers.
+            *len / 6.0
+        };
+        // The batch also holds the definition's box (four strokes): compared without and with the tolerance.
+        let (plain, round) = (chords_of(None), chords_of(Some(0.0005)));
+        let at_twenty = (std::f64::consts::PI / acos(1.0 - 0.0005 / 20.0)).ceil();
+        assert_eq!(plain, FINE_CHORDS + 4.0);
+        assert!(round - plain >= at_twenty - FINE_CHORDS, "{round} chords; a 20 m circle takes {at_twenty}");
     }
 
     #[test]

@@ -138,7 +138,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     kenarları derin görünümün eşiğindeki çeyrek piksele yuvarlanır (metrede 0,5 mm); 500 px/m'nin altında her yakınlıkta
     yuvarlak, üstünü derin sahne alır. Evin terası 495 px/m'de 2,6 piksellik kirişten kurtuldu. Bedeli: büyük eğri çok
     kiriş (22 m'lik daire 466).
-  - [ ] Bloklardaki eğriler (tanımın toleransı en büyük örneğin ölçeğinden).
+  - [x] Adım 2 ([ADR 9232](../docs/adr/9232-block-curves-for-their-largest-insert.md)): bloklardaki eğriler. Örnekli
+    bir tanımın eğrileri dünya toleransının en büyük yerleştirmesinin ölçeğine bölümüyle çiziliyor; 72 kirişte
+    kalıyordu. 20 m'lik bir blok çemberi 460 px/m'de kenarında 9 piksellik köşe yapıyordu, şimdi yuvarlak.
   - [ ] Eğri duvarlar. Yüz çizgileri bombeli tutuluyor (`wall::Line::shape`) ve yuvarlanıyor; ama gövdenin dolgu
     halkaları `Line::outline`'ın sabit 5°'lik kirişleri. Dolgu kenarı yuvarlak çizginin içine kaçıyor (5 m'de
     5 000 px/m'de ~24 piksel). Aynı halkalar odaların alanlarını besliyor; adımı inceltmek oda alanlarını ve 8 ortak
