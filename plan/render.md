@@ -636,3 +636,17 @@ harness'ın ekran görüntüsünü de içeriyor: boş bir çizimde (`minimal.kca
   75,2 / 79,0 ms, NCZ 59,5 / 70,8 ms, AVM 19,5 / 33,9 ms, Suşehri 15,0 / 16,5 ms.
 - **ADR 9247 (hata ayıklama, aynı GPU):** uzak tekerlek p50 NCZ −4,6 ms, sivas.kcad −4,3 ms. Bu harness öntanımlı
   ayarla, yani 4×'te ölçüyor. Sahibin ayarı 1×: orada NCZ 56,9, sivas.kcad 59,5 ms (hata ayıklama).
+- **25 Kasım gecesi, ADR 9247–9250'den sonra** (release, `docs/perf/files-desktop-rm10-dar-2026-11-25.json`; taban
+  `minimal.kcad` 11,8 ms). Sahibin ayarı (1×) aynı ikiliyle `KENTOS_PERF_SETTINGS='graphics.msaa=1'` ile ölçüldü,
+  rapora yazılmadı (rapor ayarı kaydetmiyor).
+
+  | Dosya | Uzak tekerlek p50 / p95, 4× | Aynısı 1× | Yakın p50, 4× |
+  |---|---|---|---|
+  | sivas.kcad | 71,8 / 74,3 ms | 46,3 / 52,3 ms | 12,8 ms |
+  | NCZ | 55,4 / 63,9 ms | 44,6 / 51,1 ms | 12,9 ms |
+  | AVM DWG | 18,4 / 31,6 ms | 14,6 / 22,8 ms | 11,4 ms |
+  | Suşehri DXF | 14,2 / 16,1 ms | 12,9 / 13,8 ms | 12,2 ms |
+
+  - Yakın görünüm her yerde ölçütün içinde; Suşehri ve AVM'nin uzak karesi 1×'te de p50'de içinde.
+  - sivas.kcad ve NCZ'nin uzak karesi çizgilerin kapladığı piksellere bağlı (ADR 9250 §1). Bu GPU'da resmi
+    değiştirmeden 16 ms'ye inmiyor; daha az çizmek (uzak düzeyler) sahibin ADR 9222 kararıyla kapalı.
