@@ -576,3 +576,18 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 | Görüntüde sessizce düşen nesne | 0 |
 | Alımda düşen nesne | Her birinin raporda bir nedeni var |
 | Açılış ve “Tümünü göster” | Aynı kutu |
+
+**Durum (25 Kasım akşamı, release, UHD 770, `docs/perf/files-desktop-rm08-son-2026-11-25.json`).** Kare süresi
+harness'ın ekran görüntüsünü de içeriyor: boş bir çizimde (`minimal.kcad`) 11,6 ms (p50). “Pay” bu tabanı çıkarır.
+
+| Dosya | Uzak tekerlek p50 / p95 | Yakın (8 px/m) p50 / p95 | Yakın öğe | Açılış | Tepe |
+|---|---|---|---|---|---|
+| sivas.kcad | 101,6 / 108,1 ms | 13,6 / 13,9 ms (pay 2,0) | 62 370 | 4,3 s | 1 788 MB |
+| NCZ | 90,2 / 103,5 ms | 15,9 / 17,2 ms (pay 4,3) | 87 207 | 3,3 s | 1 568 MB |
+| AVM DWG | 22,3 / 37,6 ms | 11,3 / 16,4 ms | 57 348 | 12,1 s | 3 720 MB |
+| Suşehri DXF | 20,6 / 21,7 ms | 12,0 / 13,1 ms | 25 484 | 2,1 s | 556 MB |
+
+- **Yakın görünümler** bütün dosyalarda ölçütün içinde.
+- **Uzak görünüm** sivas.kcad ve NCZ'de değil. 24 Kasım'da 39,3 ve 40,1 ms'ydi. Fark, kalite kararlarının bedeli: uzak
+  düzeyler ve hareketteki tek örnek kalktı (ADR 9222), eğriler çeyrek piksele çekildi (ADR 9223).
+- **Resmi değiştirmeyen kalan yol:** RM-10'daki tek örnekli çizgi koşuları; ölçülen tavanı uzak karenin üçte biri.
