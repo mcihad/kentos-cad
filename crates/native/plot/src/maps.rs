@@ -594,6 +594,7 @@ fn built_layers_profile_unchecked(
             crate::layers::LayerTables {
                 names: &layer_names,
                 styles: &layer_styles,
+                text: None,
             },
         )?;
         built.push((node.id.clone(), node.name.clone(), styled));

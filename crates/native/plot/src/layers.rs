@@ -304,6 +304,9 @@ pub fn styles(nodes: &[LayerNode], out: &mut HashMap<String, kentos_contracts::L
 pub struct LayerTables<'a> {
     pub names: &'a HashMap<String, String>,
     pub styles: &'a HashMap<String, kentos_contracts::LayerStyle>,
+    /// The host's faces, for ground-sized text markers drawn as vectors on the model screen (docs/adr/9245); none
+    /// keeps them bitmaps (a sheet, a PDF).
+    pub text: Option<&'a dyn kentos_native_style::picture::ImageSource>,
 }
 
 /// One layer through the style engine whole, as a sheet's map frame draws it (the web's
@@ -348,7 +351,7 @@ pub fn build_whole(
                     library,
                     view: look.view_colors,
                     hold_weights: look.hold_weights,
-                    text_outlines: None,
+                    text_outlines: tables.text,
                 },
             )
         })
