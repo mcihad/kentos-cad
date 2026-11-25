@@ -2090,11 +2090,41 @@ impl<'l> Emitter<'l> {
                     e.line,
                 );
             }
+            Kind::OleFrame { a, b: c } => {
+                // An embedded document (a table, a picture, a text): its content is another program's data, its frame
+                // shows where it lies (docs/adr/9231), as an image's does.
+                let ring: Vec<P3> = [*a, [c[0], a[1], a[2]], *c, [a[0], c[1], c[2]]]
+                    .iter()
+                    .map(|p| ctx.full.point(*p))
+                    .collect();
+                let plan: Vec<Vec2> = ring.iter().map(|p| xy(*p)).collect();
+                let area: f64 = (0..4).map(|i| plan[i].x * plan[(i + 1) % 4].y - plan[(i + 1) % 4].x * plan[i].y).sum();
+                if !area.is_finite() || area == 0.0 {
+                    return self.skip("OLE2FRAME", "gömülü belgenin çerçevesi yok; alınmadı", e.line);
+                }
+                self.push(Entity::Polyline(PathEntity {
+                    space_separator: None,
+                    ms: None,
+                    base: b(),
+                    pts: ring.into_iter().map(xy).collect(),
+                    bulges: None,
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                    closed: true,
+                    widths: None,
+                }));
+                self.note(
+                    "OLE nesnesi (OLE2FRAME)",
+                    "gömülü belgenin (tablo, resim, metin) içeriği alınmadı; yerini gösteren çerçevesi alındı",
+                    e.line,
+                );
+            }
             Kind::Leader { .. } => self.leader(ctx, b(), e),
             Kind::MLeader(m) => self.mleader(ctx, m, b(), e),
             Kind::Unsupported(name) => {
                 let reason = match name.as_str() {
-                    "OLE2FRAME" | "OLEFRAME" | "PDFUNDERLAY"
+                    "OLEFRAME" | "PDFUNDERLAY"
                     | "DWFUNDERLAY" | "DGNUNDERLAY" => {
                         "raster görüntü ve gömülü/altlık nesneleri alınmaz"
                     }
@@ -2181,11 +2211,7 @@ impl<'l> Emitter<'l> {
                             e.line,
                         );
                     }
-                    None => self.skip(
-                        &e.name,
-                        "görüş doğrultusuna dik (çizgi gibi görünen) çember",
-                        e.line,
-                    ),
+                    None => self.edge_on(center, u, w, t0, t1, angles.is_none(), b, e),
                 }
             }
         }
@@ -2250,11 +2276,33 @@ impl<'l> Emitter<'l> {
                 t0: el.t0,
                 t1: el.t1,
             })),
-            None => self.skip(
-                &e.name,
-                "görüş doğrultusuna dik (çizgi gibi görünen) elips",
-                e.line,
-            ),
+            None => self.edge_on(xy(ctx.full.point(c)), u, w, t0, t1, full, b, e),
+        }
+    }
+
+    /// A circle, arc or ellipse seen edge on, its plan view without width (docs/adr/9231): the segment it is in plan,
+    /// as a plan shows it. It was left out ("görüş doğrultusuna dik"): TEKNOKENT MİMARİ's 28 circles. One that is a
+    /// point is left out.
+    #[allow(clippy::too_many_arguments)]
+    fn edge_on(&mut self, c: Vec2, u: Vec2, w: Vec2, t0: f64, t1: f64, full: bool, b: EntityBase, e: &Parsed) {
+        match crate::geom::edge_on(c, u, w, t0, t1, full) {
+            Some((a, end)) => {
+                self.push(Entity::Line(LineEntity {
+                    ma: None,
+                    mb: None,
+                    base: b,
+                    a,
+                    b: end,
+                    za: None,
+                    zb: None,
+                }));
+                self.note(
+                    &e.name,
+                    "görüş doğrultusuna dik; planda göründüğü gibi doğru parçası olarak alındı",
+                    e.line,
+                );
+            }
+            None => self.skip(&e.name, "görüş doğrultusuna dik ve bir noktaya iniyor", e.line),
         }
     }
 
@@ -2657,7 +2705,8 @@ impl<'l> Emitter<'l> {
             if e.name == "ATTRIB" {
                 return self.note("Blok özniteliği (ATTRIB)", "değeri boş; çizilecek yazısı yok", e.line);
             }
-            return self.skip(&e.name, "boş yazı", e.line);
+            // Nor does an empty text (docs/adr/9231): TEKNOKENT MİMARİ counted 303 of them "not taken".
+            return self.note("Yazı (TEXT)", "boş; çizilecek yazısı yok", e.line);
         }
         let t = Text {
             ext,
@@ -2971,7 +3020,7 @@ impl<'l> Emitter<'l> {
     ) {
         let content = mtext_content(&caret_decode(text));
         if content.text.trim().is_empty() {
-            return self.skip("Çok satırlı yazı (MTEXT)", "boş yazı", e.line);
+            return self.note("Çok satırlı yazı (MTEXT)", "boş; çizilecek yazısı yok", e.line);
         }
         let raw = if height > 0.0 {
             height

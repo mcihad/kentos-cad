@@ -224,6 +224,11 @@ pub enum Kind {
         ring: Vec<P3>,
         def: Option<u64>,
     },
+    /// An OLE2FRAME (docs/adr/9231): an embedded document's frame, its upper left (10) and lower right (11) corners.
+    OleFrame {
+        a: P3,
+        b: P3,
+    },
     Unsupported(String),
 }
 
@@ -700,6 +705,10 @@ pub fn parse(
                 Kind::Wipeout { ring }
             }
         }
+        "OLE2FRAME" => Kind::OleFrame {
+            a: g.point_or_zero(10)?,
+            b: g.point_or_zero(11)?,
+        },
         other => Kind::Unsupported(other.to_string()),
     };
     Ok(Parsed {
