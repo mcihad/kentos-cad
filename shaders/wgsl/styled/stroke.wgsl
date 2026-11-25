@@ -77,17 +77,22 @@ fn capCover(x: f32, y: f32, cap: u32, halfW: f32) -> f32 {
   if (dot(vec2f(x, i.local.y), i.joins.xy) < -0.01) { discard; }
   if (dot(vec2f(x - i.len, i.local.y), i.joins.zw) > 0.01) { discard; }
   let y = abs(i.local.y);
+  var startCap = 1u;
+  if ((i.ends & 1u) != 0u) { startCap = st.flags.y; }
+  var endCap = 1u;
+  if ((i.ends & 2u) != 0u) { endCap = st.flags.y; }
+  // A path's butt end is smoothed across it as the sides are (docs/adr/9249): the pixel's span against the line's, half
+  // the ramp outside the end and half inside. A round or a square cap, or a joint, keeps the line whole to its end.
+  var along = 1.0;
+  if (startCap == 0u) { along = cover(x); }
+  if (endCap == 0u) { along = along + cover(i.len - x) - 1.0; }
   var a: f32;
-  if (x < 0.0) {
-    var cap = 1u;
-    if ((i.ends & 1u) != 0u) { cap = st.flags.y; }
-    a = capCover(-x, y, cap, i.halfW);
-  } else if (x > i.len) {
-    var cap = 1u;
-    if ((i.ends & 2u) != 0u) { cap = st.flags.y; }
-    a = capCover(x - i.len, y, cap, i.halfW);
+  if (x < 0.0 && startCap != 0u) {
+    a = capCover(-x, y, startCap, i.halfW);
+  } else if (x > i.len && endCap != 0u) {
+    a = capCover(x - i.len, y, endCap, i.halfW);
   } else {
-    a = cover(i.halfW - y);
+    a = cover(i.halfW - y) * max(along, 0.0);
   }
   a *= dashCover(i.s0 + x, unitK(), st.a.y, st.a.z, st.a.w);
   if (a < 0.004) { discard; }

@@ -43,8 +43,15 @@ fn dashLen(i: u32) -> f32 {
   }
   return dashPage[st.flags.z + i];
 }
+// A dash's ink over a pixel (docs/adr/9249): the pixel's span [u - 1/2, u + 1/2] against the dash's [0, l], half the
+// ramp outside the dash and half inside, as the line's sides and its butt ends are smoothed.
+fn dashSpan(u: f32, l: f32) -> f32 {
+  return max(clamp(u + 0.5, 0.0, 1.0) + clamp(l - u + 0.5, 0.0, 1.0) - 1.0, 0.0);
+}
 // A stroke's dashes without its dots, which are `dotCover`'s (ADR 1124): the segment that does not own a dot adds
-// no pixel of it. Hatches keep `dashCover` and its one-pixel dot. Under four pixels the mean, as `dashCover`.
+// no pixel of it. Hatches keep `dashCover` and its one-pixel dot. Under four pixels the mean, as `dashCover`. A dash
+// under a pixel before a gap inks the pixel it falls on; a longer one gives the pixel the share of it the pixel spans,
+// with the dashes of the periods on either side (docs/adr/9249).
 fn strokeDash(s: f32) -> f32 {
   let k = unitK();
   let total = st.a.y * k;
@@ -53,24 +60,25 @@ fn strokeDash(s: f32) -> f32 {
   if (count == 0u) { count = 8u; }
   let t = fmod(s + st.a.w * k, total);
   var acc = 0.0;
-  var a = 0.0;
-  var found = false;
+  var spot = 0.0;
+  var span = 0.0;
   for (var i = 0u; i < count; i++) {
     let raw = dashLen(i);
     let l = raw * k;
     var gap = 0.0;
     if (i + 1u < count) { gap = dashLen(i + 1u); }
-    if ((i & 1u) == 0u && l < 1.0 && gap > 0.0 && raw != 0.0) {
-      let e = abs(t - (acc + 0.5 * l));
-      a = max(a, clamp(1.0 - min(e, total - e), 0.0, 1.0));
-    }
-    if (!found && t < acc + l) {
-      found = true;
-      if ((i & 1u) == 0u) { a = max(a, clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0)); }
+    if ((i & 1u) == 0u && raw != 0.0) {
+      if (l < 1.0 && gap > 0.0) {
+        let e = abs(t - (acc + 0.5 * l));
+        spot = max(spot, clamp(1.0 - min(e, total - e), 0.0, 1.0));
+      } else {
+        let u = t - acc;
+        span += dashSpan(u, l) + dashSpan(u - total, l) + dashSpan(u + total, l);
+      }
     }
     acc += l;
   }
-  return a;
+  return max(spot, min(span, 1.0));
 }
 // ADR 1124: a zero-length dash before a gap is a round dot of the line's weight (halfW its radius), centred on its
 // place along the line, drawn by the segment its centre lies on (x along it, y across; a path's last segment its
