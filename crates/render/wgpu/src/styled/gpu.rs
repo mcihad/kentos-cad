@@ -696,13 +696,16 @@ impl StyledGpu {
             n => (n, self.format),
         };
         self.pipelines.entry(samples).or_insert_with(|| {
-            let pipe = |spec: &StyledPipelineSpec| {
+            // A pipeline of a spec; a stroke's quad drawn as a strip of four corners (docs/adr/9247).
+            // The strip's stage reads the low halves, as the stroke's precise stage does (the stroke's spec always has
+            // one, so `corners` holds); a spec without them keeps its own list.
+            let pipe_as = |spec: &StyledPipelineSpec, strip: Option<&'static str>| {
                 let mut buffers = vec![spec.buffer.clone()];
-                let vertex = if let Some((vertex, low)) = spec.precision() {
+                let (vertex, strip) = if let Some((vertex, low)) = spec.precision() {
                     buffers.push(low);
-                    vertex
+                    (strip.unwrap_or(vertex), strip)
                 } else {
-                    spec.vertex
+                    (spec.vertex, None)
                 };
                 device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                     label: Some(spec.name),
@@ -714,7 +717,11 @@ impl StyledGpu {
                         buffers: &buffers,
                     },
                     primitive: wgpu::PrimitiveState {
-                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        topology: if strip.is_some() {
+                            wgpu::PrimitiveTopology::TriangleStrip
+                        } else {
+                            wgpu::PrimitiveTopology::TriangleList
+                        },
                         cull_mode: None,
                         ..wgpu::PrimitiveState::default()
                     },
@@ -737,6 +744,7 @@ impl StyledGpu {
                     cache: None,
                 })
             };
+            let pipe = |spec: &StyledPipelineSpec| pipe_as(spec, None);
             let [
                 stroke,
                 solid,
@@ -787,7 +795,7 @@ impl StyledGpu {
                 stroke_instanced: instanced("stroke-instanced", "strokeVsInstanced", "strokeFs", STROKE_MESH_BUFFER),
                 solid_instanced: instanced("solid-instanced", "areaVsInstanced", "solidFs", AREA_BUFFER),
                 tile_vector: pipe(&TILE_VECTOR),
-                stroke: pipe(stroke),
+                stroke: pipe_as(stroke, Some(STROKE_STRIP)),
                 solid: pipe(solid),
                 hatch: pipe(hatch),
                 pattern: pipe(pattern),
@@ -1896,7 +1904,7 @@ impl StyledGpu {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
                                 DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
-                                pass.draw(0..6, a..z);
+                                pass.draw(0..corners(b.pipe), a..z);
                             }
                         }
                     }
@@ -1917,13 +1925,13 @@ impl StyledGpu {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
                                 DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
-                                pass.draw(0..6, a..z);
+                                pass.draw(0..corners(b.pipe), a..z);
                             }
                         }
                     }
                     (_, true) => {
                         DRAWN_INSTANCES.fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
-                        pass.draw(0..6, 0..b.count)
+                        pass.draw(0..corners(b.pipe), 0..b.count)
                     }
                     // A solid fill with levels: the level's vertices.
                     (Some(lod), false) if end == i => {
@@ -2167,6 +2175,15 @@ struct GpuBatch {
 pub const FLOAT_PICTURE: u32 = 0;
 /// The one-sample float picture's format.
 pub const FLOAT_PICTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba16Float;
+
+/// The stroke's vertex stage drawn as a strip of four corners (`strip.wgsl`, docs/adr/9247).
+const STROKE_STRIP: &str = "strokeVsStrip";
+
+/// Vertices an instance of a pipe draws: a stroke's quad as a strip of four (docs/adr/9247), a marker's as a list of
+/// six.
+fn corners(pipe: Pipe) -> u32 {
+    if matches!(pipe, Pipe::Stroke) { 4 } else { 6 }
+}
 
 /// Items a stretch of strokes and marks draws at least to be drawn one sample a pixel and laid over (docs/adr/9246): a
 /// lay-over costs about a millisecond on an integrated GPU (a pass broken, a picture cleared and laid over), a million

@@ -233,6 +233,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       başına yuvarlaması: çoğu 1/255, en çok 3–4.
     - 1 M çizgi 50,9 → 18,8 ms. release'te uzak tekerlek: sivas.kcad 101,6 → 75,2 ms, NCZ 90,2 → 59,5 ms, Suşehri
       20,6 → 15,0 ms.
+    - Sahibin ayarı 1× (`graphics.msaa` 1, öntanımlı 4): orada koşu çizilmez, kazanç 4×'te. Gerçek pencere tablosu
+      ara bir ikiliyle alınmıştı, düzeltildi (ADR 9247 §4).
+  - [x] **Çizginin dörtgeni** ([ADR 9247](../docs/adr/9247-stroke-quads-as-strips-with-a-narrower-margin.md)): dört
+    köşeli şerit (köşe aşaması parça başına 6 yerine 4) ve kaplamadan 1 yerine 0,75 px pay. Hiçbir örnek piksel
+    ortasından 0,71 px'ten uzak değil; pay her boru hattında aynı, yoksa keskin sınırlarda piksel kayıyor.
+    - 1 M çizgi: tek örnekli koşu 18,8 → 15,4 ms, 1× 17,9 → 14,7 ms.
+    - Hata ayıklama derlemesinde uzak tekerlek p50: NCZ 65,0 → 60,4 ms (1×: 61,8 → 56,9), sivas.kcad 80,7 → 76,4 ms
+      (1×: 63,4 → 59,5).
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
@@ -347,6 +355,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - GPU'da kapsüllerin birleşiminden en çok 0,6/255. NCZ açılışında 36 347 piksel açıldı, hepsi ızgarada.
     - Ayrıca: tarama deseninin noktaları düz yolda hiç çizilmiyordu (sıfır uzunluklu parça atılıyordu), artık
       çiziliyor.
+  - [ ] **Açık: uçların yarım basamağı** (ADR 9247'de bulundu). Stilli çizginin yanları simetrik bir piksellik rampayla
+    yumuşuyor, uçlar tek yanlı:
+    - düz uçta rampa dışarıda, kenarda 0,5'ten 1'e sıçrıyor; uç sekizde bir piksel uzun;
+    - kesik ucunda rampa içeride, kenarda 0,5'ten 0'a iniyor; kesik her ucunda sekizde bir piksel kısa.
+
+    Paylaşılan WGSL'de, web'de ve CPU ikizinde aynı. Düzeltmek resmi değiştirir: GPU ve CPU birlikte, altın
+    görüntüler yeniden.
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.
@@ -600,3 +615,5 @@ harness'ın ekran görüntüsünü de içeriyor: boş bir çizimde (`minimal.kca
 - **Resmi değiştirmeyen kalan yol:** RM-10'daki tek örnekli çizgi koşuları; ölçülen tavanı uzak karenin üçte biri.
 - **Sonra (ADR 9246, `docs/perf/files-desktop-rm10-tek-2026-11-25.json`):** uzak tekerlek p50 / p95 sivas.kcad
   75,2 / 79,0 ms, NCZ 59,5 / 70,8 ms, AVM 19,5 / 33,9 ms, Suşehri 15,0 / 16,5 ms.
+- **ADR 9247 (hata ayıklama, aynı GPU):** uzak tekerlek p50 NCZ −4,6 ms, sivas.kcad −4,3 ms. Bu harness öntanımlı
+  ayarla, yani 4×'te ölçüyor. Sahibin ayarı 1×: orada NCZ 56,9, sivas.kcad 59,5 ms (hata ayıklama).

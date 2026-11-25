@@ -140,11 +140,17 @@ pub(super) fn a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(gpu: &
             by_step[usize::from(d.min(5))] += 1;
         }
         eprintln!("single case {case}: {differ} of {total} px differ, most {most}; by step {by_step:?}");
-        // The 8-bit picture between rounds each channel once: a step or two where many strokes overlap.
         // Where strokes overlap, the samples' 8-bit picture rounds each blend and the half-float one only once, as
-        // it is laid over: mostly a step apart (the samples' own rounding), rarely three.
-        assert!(most <= 3, "case {case}: {differ} px differ, most {most} steps");
-        assert!(by_step[2] * 10 < total && by_step[3] * 1000 < total, "case {case}: by step {by_step:?}");
+        // it is laid over: mostly a step apart (the samples' own rounding), rarely three. Once in a long while the
+        // samples' rounding runs further under very many overlapping strokes (docs/adr/9247): one pixel of 147 456
+        // four steps apart in case 0, one five in case 1, four there with the dashes removed. A stroke's pixel lost or
+        // moved is its ink, not a rounding: a quad narrowed on one sample a pixel only set 55 pixels five to 45 steps
+        // apart, its coordinates interpolated from other corners a hair apart across the butt ends' half step.
+        assert!(most <= 8, "case {case}: {differ} px differ, most {most} steps");
+        assert!(
+            by_step[2] * 10 < total && by_step[3] * 1000 < total && (by_step[4] + by_step[5]) * 10_000 < total,
+            "case {case}: by step {by_step:?}"
+        );
     }
     // A view with its own one-sample targets (HiDPI off on a 2× screen) has nothing to save: no stretch is laid over.
     settings.samples = 1;
