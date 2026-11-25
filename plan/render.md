@@ -358,8 +358,22 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Ön adım ([ADR 9215](../docs/adr/9215-dwg-bridge-written-faster.md)): okunmayan nesneler atılınca nesne haritası
     küçültülüyor. SİVAS AVM'nin köprü metni 11,3 s yerine 4,9 s'de yazılıyor, metin bayt bayt aynı. Kalan süre
     kodeğin uzantı sözlüğü aramasında.
-  - [~] Kodek düzeltmesi yazara önerildi (sahibin kararı): hakanaktt/acadrust#651, PR #652. Yazarın ana dalında aynı
-    DWG'nin DXF'i 112,3 s yerine 2,95 s'de yazılıyor. Birleşince sabit sürüm yükseltilecek.
+  - [x] Kodek düzeltmesi yazara önerildi (sahibin kararı): hakanaktt/acadrust#651, PR #652. Birleşti (24 Kasım);
+    bağımlılık sahibin çatalının ana dalından alınıyor.
+  - **Ölçüm (25 Kasım, sürüm, gerçek GPU; `docs/perf/files-desktop-rm19-dwg-2026-11-25.json`).** SİVAS AVM DWG:
+    - açılış sonrası yerleşik 3 174 → 1 419 MB (RM-19);
+    - açılış 24,0 → 12,6 s;
+    - tepe 3 719 → 3 694 MB: değişmedi.
+  - **Tepe köprüde değil, kodeğin çözmesinde.** DXF metni RM-22'den sonra 73 MB. `ObjectType` 2 088 bayt (en büyük
+    türü `Material`); 507 811 nesnenin her biri bu kadar, 486 531'i DGN çizgi stili kaydı. Kodek tek başına: tepe
+    3,86 GB, çözme 3,14 s.
+  - [~] Kodek önerisi hazır, yazarın kurallarıyla (kırmızı sınama commit'i, ardından düzeltme). Dal
+    `fix/object-type-inline-size`, yerel kopyası `~/.cache/kentos/acadrust`.
+    - 500 baytı aşan dokuz tür kutuda; `ObjectType` 448 bayt.
+    - Aynı DWG: tepe 3,86 → 1,71 GB, çözme 3,14 → 2,13 s.
+    - Kodeğin 3 322 sınaması geçti.
+    - Yazara göndermek sahibin onayını bekliyor (dış yazışma).
+  - Doğrudan eşlemenin bellek gerekçesi kalmadı (metin 73 MB). Süre kazancı ayrıca ölçülecek.
 - [x] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyordu:
   - [x] “Görünmez” bayrağı doğrulandı (24 Kasım), doğru okunuyor:
     - **2 katlı ev:** DWG ve DXF'inde düz nesnelerden hiçbiri görünmez sayılmıyor.
