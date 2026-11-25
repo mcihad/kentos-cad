@@ -60,6 +60,8 @@ pub fn source() -> String {
     source.push_str(include_str!("dashes.wgsl"));
     // Instanced blocks (docs/adr/1063 §2), native only as the long patterns are.
     source.push_str(include_str!("instances.wgsl"));
+    // Pattern tiles drawn from their SVG marks' triangles (plan/render.md RM-11), reading the long-pattern page.
+    source.push_str(include_str!("vector_tiles.wgsl"));
     source
 }
 

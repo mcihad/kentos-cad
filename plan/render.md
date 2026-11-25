@@ -197,8 +197,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Tarama dolguları (`hatchFill`, BÖHHBÜY'de 8 simge; 1202 Resmî bina 45°) denetlendi (24 Kasım):
     gölgelendiricide hesaplanıyorlar. Döşeme kökeninden 14 km uzaktaki alanda bile 13 çentikte (~700 px/m) çizginin
     sapması ortalama 0,025 px; testere yok.
-  - [ ] Desen dolguları (`patternFill`, BÖHHBÜY'de 30 simge, örneğin 0633 bataklık) atlastaki karo bitmap'iyle
-    çiziliyor ve yakında büyütülür. Vektöre geçmek, alanla kırpma ister (maske ya da kalıp).
+  - [x] Desen dolguları ([ADR 9239](../docs/adr/9239-pattern-marks-drawn-from-their-triangles.md)). BÖHHBÜY'ün 30
+    deseninden 8'inin SVG işaretleri atlas karosuna basılıp büyütülüyordu; şekilliler zaten gölgelendiricideydi.
+    - Karo büyüyünce işaretler üçgenlerinden çiziliyor: renk başına üçgenler, kutularında bir ızgara; katmanın uzun
+      desen sayfasında. `tileVectorFs` alanın kendi üçgenlerinde dört örnek noktasıyla okuyor; kırpma kendiliğinden.
+    - CPU'da kırpma ölçülüp bırakıldı: sınırdaki her işaret ~38 KB'lık bir kopya, binlerce parselde gigabaytlar.
+    - Bitmap keskinken resim aynı (fark 0); tam ekran desende bedel 2,5 ms (UHD 770).
+    - Yan bulgu: kendini kesen dış hatlar (keskin dönen SVG çizgisi) ADR 9208'in işaretlerinde de delik
+      bırakıyordu; kesişim motoruyla çözülüyor.
   - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek.
   - [x] Asıl madde ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)). İşaretler GPU'da
     zaten örnekliydi (yerleşim başına 5 sayı, dörtgen örneği). Kayıp, yol başına 50 000 sınırıydı ve sessizdi:
@@ -256,7 +262,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     opaklaşması gitti. GPU'da her piksel kapsüllerin analitik birleşimine 3 düzey içinde eşit.
   - [x] Maskeler: DWG ve DXF'in WIPEOUT'u ADR 0310'un maskesi olarak alınıyor (RM-22 1. adım,
     [ADR 9227](../docs/adr/9227-dwg-regions-wipeouts-and-images.md)).
-  - [ ] Desen dolguları vektör (RM-11'in açığı).
+  - [x] Desen dolguları vektör (RM-11'in açığı, [ADR 9239](../docs/adr/9239-pattern-marks-drawn-from-their-triangles.md)).
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.
