@@ -4,7 +4,7 @@
 //! of the batch overlap a pixel (a far view) it may land a step or two apart.
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, Unit};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8, Vec2};
 
@@ -142,8 +142,72 @@ pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
             }
         }
         an_edge_cell_whose_lines_reach_the_view_is_drawn(gpu, &mut settings);
+        markers_keep_their_order(gpu, &mut settings);
     }
     gpu.styled = previous;
+}
+
+/// 20 000 circles 6 m wide over 2 km, filled and outlined in two half-transparent colours, block by block of 250 m as a
+/// drawing lays them: where two overlap, which is on top shows.
+fn rings() -> StyledLayer {
+    let mut seed = 11u64;
+    let mut places: Vec<(f64, f64)> =
+        (0..20_000).map(|_| (scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 2_000.0)).collect();
+    places.sort_by_key(|&(x, y)| ((y / 250.0) as u32, (x / 250.0) as u32));
+    let data: Vec<f32> = places.iter().flat_map(|&(x, y)| [x as f32, y as f32, 0.0, 6.0, 6.0]).collect();
+    let kind = BatchKind::Marker {
+        unit: Unit::World,
+        look: MarkerLook::Shape {
+            shape: "circle".into(),
+            fill: Some([0.9, 0.6, 0.1, 0.6]),
+            stroke: Some([0.1, 0.2, 0.7, 0.8]),
+            stroke_width: 0.8,
+            params: [0.0; 4],
+        },
+        offset: [0.0, 0.0],
+        anchor: [0.0, 0.0],
+        opacity: 1.0,
+        extent: [6.0, 6.0],
+        vectors: false,
+    };
+    let mut b = batch(kind, 0..data.len(), 5);
+    b.bounds = [0.0, 0.0, 2_000.0, 2_000.0];
+    // As a marker's decoding gives it: its symbol's extent and a half, two units more.
+    b.reach = 11.0;
+    StyledLayer { data, batches: vec![b], ..Default::default() }
+}
+
+/// A marker batch keeps its order (cells.rs): a view draws the runs of the items its cells hold, so the picture is the
+/// batch drawn whole near the ground and far out, where the overlapping circles' order shows.
+fn markers_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
+    let whole = rings();
+    let mut kept = whole.clone();
+    kentos_native_style::cells::add(&mut kept);
+    assert_eq!(kept.data, whole.data, "the markers' numbers where they were");
+    assert!(kept.cells[0].as_ref().is_some_and(|c| c.parts[0].order.is_some()), "cells in the markers' order");
+    let px = 256u32;
+    for (case, (centre, scale)) in [((700.0, 1_300.0), 4.0), ((1_650.0, 300.0), 12.0), ((1_000.0, 1_000.0), 0.12)].into_iter().enumerate() {
+        let camera = Camera {
+            center: Vec2::new(centre.0, centre.1),
+            width: f64::from(px),
+            height: f64::from(px),
+            scale,
+            ..Default::default()
+        };
+        let id = 62_000 + case as u64 * 10 + u64::from(settings.samples) * 100;
+        gpu.styled = Some(scene(id, &whole));
+        let a = gpu.draw(&[], &camera, settings, px, px);
+        let whole_items = gpu.renderer.stats(1).expect("the view").styled_items;
+        gpu.styled = Some(scene(id + 1, &kept));
+        let b = gpu.draw(&[], &camera, settings, px, px);
+        let kept_items = gpu.renderer.stats(1).expect("the view").styled_items;
+        let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
+        eprintln!("cells markers case {case}, {} samples: items {whole_items} -> {kept_items}, {differ} px differ", settings.samples);
+        assert_eq!(differ, 0, "case {case}: {differ} pixels differ");
+        if case < 2 {
+            assert!(kept_items * 10 < whole_items, "case {case}: {kept_items} of {whole_items} markers drawn");
+        }
+    }
 }
 
 /// 32 × 32 upright lines 50 m apart, 20 m long, 0.8 m wide: a part of 4 × 4 cells, its first column of cells ending
