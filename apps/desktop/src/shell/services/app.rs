@@ -287,9 +287,10 @@ impl App {
         };
         let id = node.id.clone();
         let now = service.opacity.unwrap_or(1.0);
+        // Saydamlık is how much shows through: a layer drawn whole is %0, its opacity 1 (it read %100 before).
         let opacities = OPACITIES.iter().fold(Menu::new(), |m, o| {
             m.radio(
-                format!("% {}", (o * 100.0).round()),
+                format!("% {}", ((1.0 - o) * 100.0).round()),
                 (now - o).abs() < 1e-9,
                 msg(Event::Opacity(id.clone(), *o)),
             )

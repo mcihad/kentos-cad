@@ -10,19 +10,22 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::panes::Side as PaneSide;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, Panes, Segmented, fallback, segmented};
+use kentos_ui::widget::{
+    Dialog as Frame, Elided, Menu, MenuButton, Panes, Segmented, fallback, segmented,
+};
 use kentos_ui::{label, style};
 
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
     ADD_ACTION, ADD_ATTACHMENTS, ADD_COMMENT, ADD_DIVIDER, ADD_GROUP, ADD_LOCATION, ADD_NOTE,
-    ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, COPY_ITEM, CREATE, DOMAINS_WINDOW,
-    DOWN, DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME, NEW_FORM,
+    ADD_REFERENCE, ADD_TAB, AUDIT, CANCEL, CHANGES, COPY_ITEM, CREATE, DOMAINS_WINDOW, DOWN,
+    DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, FORM_SETTINGS, IMPORT, LookupEdit, NAME, NEW_FORM,
     PALETTE_DOMAINS, PALETTE_FIELDS, PALETTE_RELATIONS, PALETTE_SECTIONS, PASTE_ITEM, PREVIEW,
-    PROPERTIES, PUBLISH, PUBLISH_ANYWAY, PUT_BACK, Palette, RECOMPUTE, REDO, REMOVE_FORM,
-    REMOVE_ITEM, RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, Said, TITLE, Text, UNDO, UP, WITHDRAW,
-    Window, bound, find, msg,
+    PROPERTIES, PUBLISH, PUBLISH_ANYWAY, PUT_BACK, Palette, RECOMPUTE, REDO, RELATED_RECORDS,
+    REMOVE_FORM, REMOVE_ITEM, RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, SECTION_CHECKS,
+    SECTION_GENERAL, SECTION_MORE, SECTION_RULES, SECTION_VALUE, Said, TITLE, Text, UNDO, UP,
+    WITHDRAW, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
@@ -208,11 +211,15 @@ impl App {
             self.forms_preview(w)
         } else {
             match (&w.body, &w.item) {
-                (Some(body), Some(id)) => match find(&body.items, id) {
-                    Some(item) => self.forms_inspector(item, &fields, &issues),
-                    None => self.form_overview(body),
+                (Some(body), Some(id)) => match (find(&body.items, id), form) {
+                    (Some(item), _) => self.forms_inspector(item, &fields, &issues),
+                    (None, Some(f)) => self.form_overview(w, f, body, locked.is_none()),
+                    (None, None) => empty_inspector(),
                 },
-                (Some(body), None) => self.form_overview(body),
+                (Some(body), None) => match form {
+                    Some(f) => self.form_overview(w, f, body, locked.is_none()),
+                    None => empty_inspector(),
+                },
                 _ => empty_inspector(),
             }
         };
@@ -267,12 +274,13 @@ impl App {
             segmented::natural_width(&[PROPERTIES, PREVIEW, CHANGES, FLOW], false),
         );
         // A window given a size of its own (docs/adr/0746): the three panes take what it has; else they are
-        // 390 high (at 12 px text), less in a low window, the buttons under them in sight (docs/adr/0749).
+        // 460 high (at 12 px text), less in a low window, the buttons under them in sight (docs/adr/0749). 390 while
+        // the form's name, scope and switches were two lines under them; they are Form ayarları's now.
         let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
         let main = container(main).height(Fill).max_height(if sized {
             f32::INFINITY
         } else {
-            typography::scaled(390.0)
+            typography::scaled(460.0)
         });
 
         let mut above: Vec<Element<'_, Message>> = Vec::new();
@@ -358,40 +366,49 @@ impl App {
                 .into(),
             );
         }
-        let title = match form {
-            Some(f) if w.dirty => format!("{TITLE} · {} ●", f.name),
-            Some(f) => format!("{TITLE} · {}", f.name),
-            None => TITLE.to_owned(),
+        // The window's name, a dot while the copy is unsaved: the form is the chosen row of the list.
+        let title = if form.is_some() && w.dirty {
+            format!("{TITLE} ●")
+        } else {
+            TITLE.to_owned()
         };
-        // The warnings, the panes taking what is left, the footer (docs/adr/0749).
+        // The warnings, the panes taking what is left, the footer (docs/adr/0749); a project with no form its
+        // invitation instead of the panes.
         let mut frame = Frame::new(title);
         for part in above {
             frame = frame.push(part);
         }
-        frame = frame.fill(main);
+        frame = if self.project_forms().is_empty() {
+            frame.fill(
+                container(self.forms_empty(w, locked.is_none()))
+                    .height(typography::scaled(360.0)),
+            )
+        } else {
+            frame.fill(main)
+        };
         if form.is_some() {
-            frame = frame.footer(self.forms_footer(w, form, &issues, locked.is_none()));
+            frame = frame.footer(self.forms_footer(form, &issues, locked.is_none()));
         }
         frame.key(TITLE).width(1040.0).modal(msg(Event::Cancel))
     }
 
-    fn forms_list(
-        &self,
-        w: &Window,
+    fn forms_list<'a>(
+        &'a self,
+        w: &'a Window,
         editable: bool,
         fields: &[LayerField],
-    ) -> Element<'_, Message> {
+    ) -> Element<'a, Message> {
         let mut list = Column::new().spacing(1).padding(2);
         for f in self.project_forms() {
             let chosen = w.chosen.as_deref() == Some(f.id.as_str());
-            let mut caption = self.form_layer_name(&f.layer);
-            if let Some(r) = f.releases.last() {
-                caption.push_str(&format!(" · {}. yayın", r.version));
-            } else {
-                caption.push_str(" · taslak");
+            // Its layer and where it stands, as a sentence (DESIGN.md §13: no “A · B · C” lines).
+            let mut caption = format!("{} katmanı", self.form_layer_name(&f.layer));
+            match f.releases.last() {
+                Some(r) => caption.push_str(&format!(", {}. yayın", r.version)),
+                None => caption.push_str(", taslak"),
             }
             if f.enforce {
-                caption.push_str(" · uygulanıyor");
+                caption.push_str(", kuralları uygulanıyor");
             }
             let face = column![
                 Elided::new(f.name.clone())
@@ -409,39 +426,18 @@ impl App {
                     .style(style::button::row(chosen)),
             );
         }
+        // As tall as its forms, up to four of them; more scroll.
+        let shown = self.project_forms().len().clamp(1, 4) as f32;
         let mut col = Column::new()
             .spacing(8)
             .push(label::strong("Formlar"))
             .push(
-                container(scrollable(list).height(typography::scaled(170.0)))
+                container(scrollable(list).height(typography::scaled(6.0 + 42.0 * shown)))
                     .style(style::container::field_box)
                     .width(Fill),
             );
         match &w.new_form {
-            Some(n) => {
-                let layers = self.form_layers();
-                let at = n
-                    .layer
-                    .as_ref()
-                    .and_then(|l| layers.iter().position(|(id, _)| id == l));
-                let picks = layers.clone();
-                let pick = Select::new(
-                    layers.iter().map(|(_, name)| Choice::new(name.clone())),
-                    at,
-                    move |i| msg(Event::NewLayer(picks[i].0.clone())),
-                )
-                .placeholder("Katman");
-                let name = kentos_ui::widget::text_field("Formun adı (boşsa katmandan)", &n.name)
-                    .on_input(|t| msg(Event::NewName(t)))
-                    .on_submit(msg(Event::Create));
-                col = col.push(name).push(pick).push(
-                    row![
-                        words::primary(CREATE, editable.then(|| msg(Event::Create))),
-                        words::secondary(CANCEL, Some(msg(Event::CancelNew))),
-                    ]
-                    .spacing(8),
-                );
-            }
+            Some(n) => col = col.push(self.new_form_fields(n, editable)),
             None => {
                 col = col.push(words::secondary(
                     NEW_FORM,
@@ -450,6 +446,8 @@ impl App {
             }
         }
         if w.body.is_some() {
+            // What goes on the form: the layer's fields, its relations, the value lists, the saved sections.
+            col = col.push(label::strong("Forma ekle"));
             let tabs = Segmented::new(
                 [
                     PALETTE_FIELDS,
@@ -494,7 +492,10 @@ impl App {
             // A layer without a field says so (not that all of them are on the form); Yeni alan makes one (docs/adr/9141).
             if fields.is_empty() {
                 palette = palette.push(
-                    label::caption("Katmanda alan yok: aşağıdan bir alan oluşturun, forma da eklenir.").style(muted),
+                    label::caption(
+                        "Katmanda alan yok: aşağıdan bir alan oluşturun, forma da eklenir.",
+                    )
+                    .style(muted),
                 );
             } else if free.is_empty() {
                 palette =
@@ -525,15 +526,77 @@ impl App {
         col.into()
     }
 
+    /// Yeni form's fields: the form's name, its layer, Oluştur and Vazgeç.
+    fn new_form_fields<'a>(
+        &'a self,
+        n: &'a crate::forms::designer::NewForm,
+        editable: bool,
+    ) -> Element<'a, Message> {
+        let layers = self.form_layers();
+        let at = n
+            .layer
+            .as_ref()
+            .and_then(|l| layers.iter().position(|(id, _)| id == l));
+        let picks = layers.clone();
+        let pick = Select::new(
+            layers.iter().map(|(_, name)| Choice::new(name.clone())),
+            at,
+            move |i| msg(Event::NewLayer(picks[i].0.clone())),
+        )
+        .placeholder("Katman");
+        let name = kentos_ui::widget::text_field("Boşsa katmanın adı", &n.name)
+            .on_input(|t| msg(Event::NewName(t)))
+            .on_submit(msg(Event::Create));
+        column![
+            words::field("Formun adı", name, None),
+            words::field("Katman", pick, None),
+            row![
+                words::primary(CREATE, editable.then(|| msg(Event::Create))),
+                words::secondary(CANCEL, Some(msg(Event::CancelNew))),
+            ]
+            .spacing(8),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    /// A project with no form: one invitation in the middle (what a form is, Yeni form), not three empty columns with
+    /// tabs that have nothing to show.
+    fn forms_empty<'a>(&'a self, w: &'a Window, editable: bool) -> Element<'a, Message> {
+        let mut col = Column::new()
+            .spacing(12)
+            .max_width(typography::scaled(420.0))
+            .push(icon(Icon::Table).size(32.0).tone(Tone::Muted))
+            .push(label::strong("Henüz form yok"))
+            .push(
+                label::body(
+                    "Form, bir katmanın kayıtlarının nasıl girileceğini tarif eder: hangi alanların, hangi sırayla \
+                     ve hangi kurallarla. Bir katmanın alanlarından başlanır; sekme, grup ve kurallar sonra eklenir.",
+                )
+                .style(muted),
+            );
+        col = match &w.new_form {
+            Some(n) => col.push(self.new_form_fields(n, editable)),
+            None => col.push(words::primary(NEW_FORM, editable.then(|| msg(Event::NewForm)))),
+        };
+        container(col).center(Fill).into()
+    }
+
     /// Yeni alan (docs/adr/9141): a name and a kind, Oluştur makes the layer's field and puts it on the form.
     fn new_field_row(&self, w: &crate::forms::designer::Window) -> Element<'_, Message> {
         let kinds = kentos_commands::LayerFieldKind::ALL;
-        let chosen = kinds.iter().position(|k| *k == w.new_field_kind.unwrap_or(kentos_commands::LayerFieldKind::Text));
+        let chosen = kinds.iter().position(|k| {
+            *k == w
+                .new_field_kind
+                .unwrap_or(kentos_commands::LayerFieldKind::Text)
+        });
         let name = kentos_ui::widget::text_field("Yeni alanın adı", &w.new_field)
             .on_input(|t| msg(Event::NewFieldName(t)))
             .on_submit(msg(Event::CreateField));
         let kind = kentos_ui::widget::select::Select::new(
-            kinds.iter().map(|k| kentos_ui::widget::select::Choice::new(k.label())),
+            kinds
+                .iter()
+                .map(|k| kentos_ui::widget::select::Choice::new(k.label())),
             chosen,
             move |i| msg(Event::NewFieldKind(kinds[i])),
         );
@@ -545,7 +608,9 @@ impl App {
                 row![
                     container(kind).width(Fill),
                     button(label::body("Oluştur"))
-                        .on_press_maybe((!w.new_field.trim().is_empty()).then(|| msg(Event::CreateField)))
+                        .on_press_maybe(
+                            (!w.new_field.trim().is_empty()).then(|| msg(Event::CreateField))
+                        )
                         .style(style::button::secondary),
                 ]
                 .spacing(6)
@@ -562,16 +627,6 @@ impl App {
         issues: &[FormIssue],
     ) -> Element<'_, Message> {
         let chosen = w.item.as_deref();
-        let tool = |words: &'static str, glyph: Icon, event: Option<Event>| {
-            button(
-                row![icon(glyph).size(13.0), label::body(words)]
-                    .spacing(5)
-                    .align_y(Center),
-            )
-            .on_press_maybe(event.map(msg))
-            .padding([4, 8])
-            .style(style::button::tool(false))
-        };
         let icon_tool = |words: &'static str, glyph: Icon, event: Option<Event>| {
             kentos_ui::widget::tip(
                 button(icon(glyph).size(14.0))
@@ -583,70 +638,112 @@ impl App {
             )
         };
         let has_item = chosen.is_some();
-        // The components (docs/adr/0441 §1): the common three named, the rest by their icons; where the
-        // three named do not fit, they too by their icons, their names in their tips (docs/adr/0749).
-        let adds = |named: bool| {
-            let first = |words: &'static str, glyph: Icon, event: Event| -> Element<'_, Message> {
-                if named {
-                    tool(words, glyph, Some(event)).into()
-                } else {
-                    icon_tool(words, glyph, Some(event))
-                }
+        // Ekle ▾ (docs/adr/0441 §1): every kind of item by its name and what it is for, where the chosen item is. Nine
+        // tools side by side, six of them by their icons alone, said nothing of what they put on the form.
+        let line = |named: bool| {
+            let add_face = container(
+                row![
+                    icon(Icon::Plus).size(13.0),
+                    label::body("Ekle"),
+                    icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+                ]
+                .spacing(5)
+                .align_y(Center),
+            )
+            .padding([4, 8])
+            .style(style::container::field_box);
+            let add = MenuButton::new(add_face, || {
+                Menu::new()
+                    .header("Düzen")
+                    .item(ADD_TAB, Some(msg(Event::AddTab)))
+                    .icon(Icon::Tabs)
+                    .detail("Formu sekmelere böler; öğeler sekmelerin içine girer.")
+                    .item(ADD_GROUP, Some(msg(Event::AddGroup)))
+                    .icon(Icon::Layout)
+                    .detail("Alanları başlıklı bir kutuda toplar.")
+                    .item(ADD_DIVIDER, Some(msg(Event::AddDivider)))
+                    .icon(Icon::Minus)
+                    .detail("Bölümleri ayıran bir çizgi, istenirse adıyla.")
+                    .item(ADD_NOTE, Some(msg(Event::AddNote)))
+                    .icon(Icon::Info)
+                    .detail("Formu dolduran kişinin okuyacağı bir açıklama.")
+                    .header("Kayıt")
+                    .item(RELATED_RECORDS, Some(msg(Event::AddRelated)))
+                    .icon(Icon::Link)
+                    .detail("Bağlı katmanın kayıtları: liste ya da tablo.")
+                    .item(ADD_REFERENCE, Some(msg(Event::AddReference)))
+                    .icon(Icon::Target)
+                    .detail("Kaydın bağlı olduğu üst kayıt.")
+                    .item(ADD_ATTACHMENTS, Some(msg(Event::AddAttachments)))
+                    .icon(crate::icons::from_web(Some("photo")))
+                    .detail("Fotoğraf ve belge ekleme yeri.")
+                    .item(ADD_LOCATION, Some(msg(Event::AddLocation)))
+                    .icon(crate::icons::from_web(Some("pin")))
+                    .detail("Kaydın haritadaki yeri.")
+                    .item(ADD_ACTION, Some(msg(Event::AddAction)))
+                    .icon(Icon::Play)
+                    .detail("Bir işlem aracını ya da iş akışı adımını çalıştıran düğme.")
+            });
+            let face: Element<'_, Message> = if named {
+                row![
+                    icon(Icon::Properties).size(13.0),
+                    label::body(FORM_SETTINGS)
+                ]
+                .spacing(5)
+                .align_y(Center)
+                .into()
+            } else {
+                icon(Icon::Properties).size(14.0).into()
             };
+            let settings = kentos_ui::widget::tip(
+                button(face)
+                    .on_press(msg(Event::FormSettings))
+                    .padding(if named {
+                        iced::Padding::from([4, 8])
+                    } else {
+                        kentos_ui::theme::metrics::icon_small(14.0)
+                    })
+                    .style(style::button::tool(
+                        !has_item && !w.previewing && !w.changes && !w.flow,
+                    )),
+                "Formun adı, kapsamı ve davranışı".into(),
+                iced::widget::tooltip::Position::Bottom,
+            );
+            // One line: what is added, what is done to the chosen item, the form's settings, undo and redo.
             row![
-                first(ADD_TAB, Icon::Tabs, Event::AddTab),
-                first(ADD_GROUP, Icon::Layout, Event::AddGroup),
-                first(ADD_NOTE, Icon::Info, Event::AddNote),
-                icon_tool(ADD_DIVIDER, Icon::Minus, Some(Event::AddDivider)),
-                icon_tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
-                icon_tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
+                add,
+                space::horizontal().width(4),
+                icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
+                icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
+                icon_tool(COPY_ITEM, Icon::Copy, has_item.then_some(Event::CopyItem)),
                 icon_tool(
-                    ADD_ATTACHMENTS,
-                    crate::icons::from_web(Some("photo")),
-                    Some(Event::AddAttachments)
+                    PASTE_ITEM,
+                    crate::icons::from_web(Some("paste")),
+                    self.form_clipboard.is_some().then_some(Event::PasteItem)
                 ),
                 icon_tool(
-                    ADD_LOCATION,
-                    crate::icons::from_web(Some("pin")),
-                    Some(Event::AddLocation)
+                    REMOVE_ITEM,
+                    Icon::Eraser,
+                    has_item.then_some(Event::RemoveItem)
                 ),
-                icon_tool(ADD_ACTION, Icon::Play, Some(Event::AddAction)),
+                space::horizontal().width(Fill),
+                settings,
+                icon_tool(
+                    UNDO,
+                    Icon::Undo,
+                    (!w.undo.is_empty()).then_some(Event::Undo)
+                ),
+                icon_tool(
+                    REDO,
+                    Icon::Redo,
+                    (!w.redo.is_empty()).then_some(Event::Redo)
+                ),
             ]
             .spacing(4)
             .align_y(Center)
         };
-        let toolbar = fallback(adds(true), adds(false));
-        // The chosen item's tools on a line of their own, the form's undo and redo at its end: the add tools
-        // fill the first (docs/adr/0437, 0749).
-        let item_tools = row![
-            icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
-            icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
-            icon_tool(
-                REMOVE_ITEM,
-                Icon::Eraser,
-                has_item.then_some(Event::RemoveItem)
-            ),
-            icon_tool(COPY_ITEM, Icon::Copy, has_item.then_some(Event::CopyItem)),
-            icon_tool(
-                PASTE_ITEM,
-                crate::icons::from_web(Some("paste")),
-                self.form_clipboard.is_some().then_some(Event::PasteItem)
-            ),
-            space::horizontal().width(Fill),
-            icon_tool(
-                UNDO,
-                Icon::Undo,
-                (!w.undo.is_empty()).then_some(Event::Undo)
-            ),
-            icon_tool(
-                REDO,
-                Icon::Redo,
-                (!w.redo.is_empty()).then_some(Event::Redo)
-            ),
-        ]
-        .spacing(4)
-        .align_y(Center);
-        let toolbar = column![toolbar, item_tools].spacing(4);
+        // Where the line does not fit the middle pane (a small window), Form ayarları by its icon, its name in its tip.
+        let toolbar = fallback(line(true), line(false));
 
         // The items as a tree: dragged before, after or into a tab or group (docs/adr/0403 §2).
         fn node<'a>(
@@ -699,7 +796,7 @@ impl App {
             container(label::caption(if fields.is_empty() {
                 "Form boş: katmanda alan yok. Soldan bir alan oluşturun; forma da eklenir."
             } else {
-                "Form boş. Soldaki alanlardan birine basın ya da sekme, grup ve not ekleyin."
+                "Form boş. Soldaki alanlardan birine basın ya da Ekle ile sekme, grup ve not koyun."
             }))
             .padding(10)
             .into()
@@ -739,7 +836,10 @@ impl App {
                 shown += 1;
             }
         }
-        let warnings: Vec<&FormIssue> = issues.iter().filter(|i| !kentos_forms::blocks_publishing(i)).collect();
+        let warnings: Vec<&FormIssue> = issues
+            .iter()
+            .filter(|i| !kentos_forms::blocks_publishing(i))
+            .collect();
         if !warnings.is_empty() {
             problems = problems.push(label::strong(format!("Uyarılar ({})", warnings.len())));
             for i in warnings {
@@ -750,7 +850,8 @@ impl App {
             }
         }
         if shown > 8 {
-            problems = problems.push(label::caption(format!("{} sorun daha.", shown - 8)).style(muted));
+            problems =
+                problems.push(label::caption(format!("{} sorun daha.", shown - 8)).style(muted));
         }
         let mut col = column![
             toolbar,
@@ -770,7 +871,6 @@ impl App {
 
     fn forms_footer(
         &self,
-        w: &Window,
         form: Option<&ProjectForm>,
         issues: &[FormIssue],
         editable: bool,
@@ -781,14 +881,17 @@ impl App {
         // What keeps it from a release, kind by kind (docs/adr/9161): an empty form is one too.
         let blockers = kentos_forms::publish_blockers(issues);
         // A role that designs but does not publish (docs/adr/9174).
-        let publish_locked = self.forms_publish_locked().filter(|_| self.forms_locked().is_none());
+        let publish_locked = self
+            .forms_publish_locked()
+            .filter(|_| self.forms_locked().is_none());
+        // Where the form stands, as sentences (DESIGN.md §13: no “A · B · C” line).
         let mut status = format!("Taslak {}. sürüm", form.draft.revision);
         match form.releases.last() {
-            Some(r) => status.push_str(&format!(" · son yayın {}", r.version)),
-            None => status.push_str(" · yayınlanmadı"),
+            Some(r) => status.push_str(&format!(", son yayın {}.", r.version)),
+            None => status.push_str(", yayınlanmadı."),
         }
-        if publish_locked.is_some() {
-            status.push_str(" · rolünüz yayınlamaz");
+        if form.withdrawn {
+            status.push_str(" Yayından kaldırıldı.");
         }
         if !blockers.is_empty() {
             let kinds: Vec<String> = blockers
@@ -798,110 +901,71 @@ impl App {
                     (kind, n) => format!("{n} {}", kind.label().to_lowercase()),
                 })
                 .collect();
-            status.push_str(&format!(" · yayınlanamaz: {}", kinds.join(", ")));
+            status.push_str(&format!(" Yayınlanamaz: {}.", kinds.join(", ")));
         }
-        if form.withdrawn {
-            status.push_str(" · yayından kaldırıldı");
+        if publish_locked.is_some() {
+            status.push_str(" Rolünüz yayınlamaz.");
         }
-        if w.dirty {
-            status.push_str(" · kaydedilmedi");
-        }
-        let name = kentos_ui::widget::text_field("Formun adı", &w.name)
-            .on_input(|t| msg(Event::Name(t)))
-            .on_submit(msg(Event::Save))
-            .width(240);
-        let enforce = words::check(
-            form.enforce,
-            ENFORCE,
-            (editable && (!form.releases.is_empty() || form.enforce))
-                .then(|| msg(Event::Enforce(!form.enforce))),
-        );
-        let clear = w.body.as_ref().is_some_and(|b| b.clear_hidden);
-        let clear_hidden = words::check(
-            clear,
-            "Gizlenenleri sil",
-            editable.then(|| msg(Event::ClearHidden(!clear))),
-        );
-        // Adım adım (docs/adr/0437): a form of two or more tabs.
-        let stepped = w.body.as_ref().is_some_and(|b| b.steps);
-        let tabbed = w.body.as_ref().is_some_and(|b| {
-            b.items
-                .iter()
-                .filter(|i| matches!(i, FormItem::Tab { .. }))
-                .count()
-                >= 2
+        // Form ▾ (DESIGN.md §7.9: one secondary place on the left): the form's own work, each told, the delete last
+        // and red. Six buttons side by side before, under a name, a scope and three switches.
+        let withdrawn = form.withdrawn;
+        let can_withdraw =
+            editable && !form.releases.is_empty() && (form.withdrawn || !form.enforce);
+        let face = container(
+            row![
+                label::body("Form"),
+                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+            ]
+            .spacing(5)
+            .align_y(Center),
+        )
+        .padding([4, 10])
+        .style(style::container::field_box);
+        let menu = MenuButton::new(face, move || {
+            Menu::new()
+                .item(AUDIT, Some(msg(Event::Audit)))
+                .icon(Icon::Check)
+                .detail("Katmanın kayıtlarını formun kurallarıyla denetler.")
+                .item(RECOMPUTE, editable.then(|| msg(Event::Recompute)))
+                .icon(Icon::Retry)
+                .detail("Hesaplanan alanları bütün kayıtlarda yeniden hesaplar.")
+                .separator()
+                .item(IMPORT, Some(msg(Event::Import)))
+                .icon(Icon::Import)
+                .detail("Başka bir projeden dışa aktarılmış formu alır.")
+                .item(EXPORT, editable.then(|| msg(Event::Export)))
+                .icon(Icon::Export)
+                .detail("Formu bir dosyaya yazar.")
+                .separator()
+                // Yayından kaldır / Yeniden yayına al (docs/adr/0445 §1).
+                .item(
+                    if withdrawn { PUT_BACK } else { WITHDRAW },
+                    can_withdraw.then(|| msg(Event::Withdraw(!withdrawn))),
+                )
+                .detail(if withdrawn {
+                    "Son yayın yeniden veri girişinde kullanılır."
+                } else {
+                    "Veri girişi bu formu kullanmaz; taslak ve yayınlar kalır."
+                })
+                .item(REMOVE_FORM, editable.then(|| msg(Event::RemoveForm)))
+                .icon(Icon::Eraser)
+                .danger()
         });
-        let steps = kentos_ui::widget::tip(
-            words::check(
-                stepped,
-                "Adım adım",
-                (editable && (tabbed || stepped)).then(|| msg(Event::Steps(!stepped))),
-            ),
-            kentos_ui::widget::Tip::new("Adım adım").body(
-                "Sekmeler sırayla doldurulan adımlar olur; sorunlu adımdan ileri geçilmez, Kaydet son adımdadır.",
-            ),
-            iced::widget::tooltip::Position::Top,
-        );
-        let top = row![
-            label::body(NAME),
-            name,
+        row![
+            menu,
             label::caption(status).style(muted),
-            space::horizontal().width(Fill),
-            steps,
-            clear_hidden,
-            enforce,
-        ]
-        .spacing(10)
-        .align_y(Center);
-        let actions = row![
-            words::ghost(REMOVE_FORM, editable.then(|| msg(Event::RemoveForm))),
-            words::ghost(AUDIT, Some(msg(Event::Audit))),
-            words::ghost(RECOMPUTE, editable.then(|| msg(Event::Recompute))),
-            words::ghost(EXPORT, editable.then(|| msg(Event::Export))),
-            // Yayından kaldır / Yeniden yayına al (docs/adr/0445 §1).
-            words::ghost(
-                if form.withdrawn { PUT_BACK } else { WITHDRAW },
-                (editable && !form.releases.is_empty() && (form.withdrawn || !form.enforce))
-                    .then(|| msg(Event::Withdraw(!form.withdrawn))),
-            ),
-            words::ghost(IMPORT, Some(msg(Event::Import))),
             space::horizontal().width(Fill),
             words::secondary(CANCEL, Some(msg(Event::Cancel))),
             words::secondary(
                 PUBLISH,
-                (editable && blockers.is_empty() && publish_locked.is_none()).then(|| msg(Event::Publish))
+                (editable && blockers.is_empty() && publish_locked.is_none())
+                    .then(|| msg(Event::Publish))
             ),
             words::primary(SAVE, editable.then(|| msg(Event::Save))),
         ]
-        .spacing(8)
-        .align_y(Center);
-        // Kapsam (docs/adr/0539): which records a Veri girişi reaches through the form.
-        let scope_text = w
-            .body
-            .as_ref()
-            .and_then(|b| b.scope.clone())
-            .unwrap_or_default();
-        let mut scope_input = kentos_ui::widget::text_field(
-            "Bütün kayıtlar (ör. Sorumlu = @kullanici_eposta)",
-            &scope_text,
-        )
-        .width(Fill);
-        if editable {
-            scope_input = scope_input.on_input(|t| msg(Event::Scope(t)));
-        }
-        let scope = row![
-            kentos_ui::widget::tip(
-                label::body("Kapsam"),
-                kentos_ui::widget::Tip::new("Kapsam").body(
-                    "Veri girişi bu formla yalnız ifadenin doğru olduğu kayıtları görür, sayar ve yazar; @kullanici_eposta oturumdaki kişidir. Boş: katmanın bütün kayıtları.",
-                ),
-                iced::widget::tooltip::Position::Top,
-            ),
-            scope_input,
-        ]
         .spacing(10)
-        .align_y(Center);
-        column![top, scope, actions].spacing(10).into()
+        .align_y(Center)
+        .into()
     }
 }
 

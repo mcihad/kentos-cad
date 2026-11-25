@@ -86,6 +86,17 @@ impl App {
                 }
             }
             Event::SelectItem(id) => w.item = Some(id),
+            Event::InspectorSection(name) => {
+                if !w.toggled_sections.remove(name) {
+                    w.toggled_sections.insert(name);
+                }
+            }
+            Event::FormSettings => {
+                w.item = None;
+                w.previewing = false;
+                w.changes = false;
+                w.flow = false;
+            }
             Event::AddTab => {
                 let mut made = None;
                 if let Some(body) = w.body.as_mut() {
@@ -138,7 +149,11 @@ impl App {
                 // The layer's field made through the layer's fields (`cad.layers.edit`), then put on the form where the
                 // chosen item is: the person stays in the form (docs/adr/9141).
                 let name = w.new_field.trim().to_owned();
-                let layer = w.chosen.as_deref().and_then(|id| self.project_forms().iter().find(|f| f.id == id)).map(|f| f.layer.clone());
+                let layer = w
+                    .chosen
+                    .as_deref()
+                    .and_then(|id| self.project_forms().iter().find(|f| f.id == id))
+                    .map(|f| f.layer.clone());
                 let Some(layer) = layer else {
                     return Task::none();
                 };
@@ -147,19 +162,28 @@ impl App {
                     return Task::none();
                 }
                 if fields.iter().any(|f| f.name == name || f.key() == name) {
-                    self.say(Level::Warn, format!("“{name}” alanı katmanda var; listeden basıp forma ekleyin."));
+                    self.say(
+                        Level::Warn,
+                        format!("“{name}” alanı katmanda var; listeden basıp forma ekleyin."),
+                    );
                     return Task::none();
                 }
-                let kind = w.new_field_kind.unwrap_or(kentos_commands::LayerFieldKind::Text);
+                let kind = w
+                    .new_field_kind
+                    .unwrap_or(kentos_commands::LayerFieldKind::Text);
                 let mut all = fields.clone();
                 all.push(kentos_commands::LayerField::new(&name, kind));
-                let mut input = kentos_commands::LayersEdit::new(kentos_commands::LayerEditOperation::Fields);
+                let mut input =
+                    kentos_commands::LayersEdit::new(kentos_commands::LayerEditOperation::Fields);
                 input.layer = Some(layer);
                 input.fields = Some(all);
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                match kentos_native_application::layers_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                match kentos_native_application::layers_edit::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input,
+                ) {
                     kentos_commands::CommandResult::Completed { .. } => {}
                     kentos_commands::CommandResult::Failed { error }
                     | kentos_commands::CommandResult::Conflict { error }
@@ -175,7 +199,10 @@ impl App {
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
                 w.new_field.clear();
-                self.say(Level::Success, format!("“{name}” alanı katmana eklendi ve forma kondu."));
+                self.say(
+                    Level::Success,
+                    format!("“{name}” alanı katmana eklendi ve forma kondu."),
+                );
             }
             Event::AddRelated => {
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();

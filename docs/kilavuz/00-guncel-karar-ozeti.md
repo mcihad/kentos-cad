@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Form tasarımcısı, harita servisi ve veritabanı bağlantısı pencereleri sadeleşti (25 Kasım 2026, sahibin isteği;
+  [ADR 9309](../adr/9309-form-service-and-connection-windows-simplified.md)).**
+  - Formlar: tek araç sırası ve “Ekle ▾” (her öğe adı ve açıklamasıyla); formun ayarları sağ bölmede “Form ayarları”;
+    alanın özellikleri beş katlanır bölümde; formun işleri “Form ▾” menüsünde; formu olmayan projede tek davet.
+  - Harita servisi sabit boylu; hazır altlıklar açıklamalı kartlar; “Saydamlık” görünmeyen pay (tam görünen %0).
+  - Yeni PostgreSQL bağlantısı: sunucu ve bağlantı noktası tek satırda, SSL ve seçenekler “Gelişmiş”te,
+    “Bağlantıyı dene” alt çubukta.
+
 - **Render motoru (23 Kasım 2026, sahibin isteği; [ADR 9200](../adr/9200-render-engine-research.md),
   [plan/render.md](../../plan/render.md), dal `render-motoru`).**
   - Çizim alanı arayüzden bağımsız bir motor olur: kamera, jestler ve bütün çizim içeriği motorda; kamera olayı

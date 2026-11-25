@@ -432,7 +432,16 @@ impl App {
 
     /// The form with no item chosen (docs/adr/0441 §4, §5): what it needs of its host and the form's
     /// own comments.
-    pub(super) fn form_overview<'a>(&'a self, body: &FormBody) -> Element<'a, Message> {
+    /// Form ayarları (no item chosen): the form's name, scope and switches, each said what it does, then what the form
+    /// needs, its translations and its comments. The name, the scope and the switches were a strip under the three
+    /// columns, beside the window's buttons.
+    pub(super) fn form_overview<'a>(
+        &'a self,
+        w: &'a Window,
+        form: &'a ProjectForm,
+        body: &FormBody,
+        editable: bool,
+    ) -> Element<'a, Message> {
         let requires = kentos_forms::requirements(body);
         let words_of = |r: &str| -> String {
             match r {
@@ -451,8 +460,69 @@ impl App {
                 }
             }
         };
+        let told = |text: &'static str| label::caption(text).style(muted);
+        let name = kentos_ui::widget::text_field("Formun adı", &w.name)
+            .on_input(|t| msg(Event::Name(t)))
+            .on_submit(msg(Event::Save));
+        // Kapsam (docs/adr/0539): which records a Veri girişi reaches through the form.
+        let scope_text = body.scope.clone().unwrap_or_default();
+        let mut scope =
+            kentos_ui::widget::text_field("Bütün kayıtlar", &scope_text).font(typography::mono());
+        if editable {
+            scope = scope.on_input(|t| msg(Event::Scope(t)));
+        }
+        // Adım adım (docs/adr/0437): a form of two or more tabs.
+        let stepped = body.steps;
+        let tabbed = body
+            .items
+            .iter()
+            .filter(|i| matches!(i, FormItem::Tab { .. }))
+            .count()
+            >= 2;
+        let clear = body.clear_hidden;
         let mut col = Column::new()
             .spacing(10)
+            .push(label::strong("Form ayarları"))
+            .push(words::field(NAME, name, None))
+            .push(words::field(
+                "Kapsam",
+                column![
+                    scope,
+                    told("Veri girişi bu formla yalnız ifadenin doğru olduğu kayıtları görür ve yazar. Örnek: Sorumlu = @kullanici_eposta (oturumdaki kişi). Boşsa katmanın bütün kayıtları."),
+                ]
+                .spacing(4),
+                None,
+            ))
+            .push(
+                column![
+                    words::check(
+                        stepped,
+                        "Adım adım",
+                        (editable && (tabbed || stepped)).then(|| msg(Event::Steps(!stepped))),
+                    ),
+                    told("Sekmeler sırayla doldurulan adımlar olur; sorunlu adımdan ileri geçilmez. İki ya da daha çok sekmeli formda."),
+                ]
+                .spacing(2),
+            )
+            .push(
+                column![
+                    words::check(clear, "Gizlenenleri sil", editable.then(|| msg(Event::ClearHidden(!clear)))),
+                    told("Formla yazılan kayıtta, kuralın gizlediği alanlar boşaltılır; kapalıyken gizli alan değerini korur."),
+                ]
+                .spacing(2),
+            )
+            .push(
+                column![
+                    words::check(
+                        form.enforce,
+                        ENFORCE,
+                        (editable && (!form.releases.is_empty() || form.enforce))
+                            .then(|| msg(Event::Enforce(!form.enforce))),
+                    ),
+                    told("Kayıt formdan geçmeden (tablo, komut, Python) yazılsa da formun kurallarıyla denetlenir. İlk yayından sonra açılır."),
+                ]
+                .spacing(2),
+            )
             .push(label::strong("Formun gerektirdikleri"));
         if requires.is_empty() {
             col = col.push(
