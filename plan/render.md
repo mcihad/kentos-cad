@@ -205,7 +205,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Bitmap keskinken resim aynı (fark 0); tam ekran desende bedel 2,5 ms (UHD 770).
     - Yan bulgu: kendini kesen dış hatlar (keskin dönen SVG çizgisi) ADR 9208'in işaretlerinde de delik
       bırakıyordu; kesişim motoruyla çözülüyor.
-  - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek.
+  - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek. Büyük glifin dış hattı hazır (ADR 9240); stil
+    katmanlarının yazı işaretleri hâlâ atlasın bitmap'inde, katmanın çizim sırasında.
   - [x] Asıl madde ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)). İşaretler GPU'da
     zaten örnekliydi (yerleşim başına 5 sayı, dörtgen örneği). Kayıp, yol başına 50 000 sınırıydı ve sessizdi:
     60 km'lik 1 m aralıklı çizgi 50. km'de, 5 cm aralıklı çizgi 2,5. km'de bitiyordu.
@@ -238,6 +239,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       sapan piksel yok.
     - [x] İkinci adım (ADR 9212 §8): etiket motorunun etiketleri, eğri boyunca harfleri, gölgeleri ve dikdörtgen
       zeminleri GPU'da. Yuvarlak zeminli etiket ile çerçeve ve çağrı çizgileri kanvasta (aşama 4).
+  - [x] Büyük glif dış hattından ([ADR 9240](../docs/adr/9240-big-glyphs-drawn-from-their-outlines.md), 25 Kasım).
+    ADR 9212 §3'ün sözü yapılmamıştı: her boy SDF'tendi ve çok yakında köşe yuvarlanıyor, basamak çıkıyordu. Glif
+    512 px/em'i geçince programından (üçgenler ve kenarlar, gözlere bölünmüş) dört örnekle okunuyor. E'nin köşesinde
+    çeyrekten fazla sapan piksel 867 → 1 (3 px hale).
   - [x] Aşama 4 (ADR 9212 §9): yazıların kanvası boşaldı. Çizgiler, halkalar (üçgenleme ve yumuşatılmış dış çizgi),
     bantlar, Unicode yazılar ve önizleme GPU'da; yazılar canlı kamerayla çiziliyor. Kanvasta yalnız ekran işaretleri
     (RM-14) ve sistem yazı tipine düşen parça kaldı.

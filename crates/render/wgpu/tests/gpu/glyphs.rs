@@ -513,3 +513,38 @@ pub fn fields_on_many_pages_draw_as_on_one(gpu: &Gpu) {
     assert!(count > 3000, "the lines are in view: {count}");
     assert!(worst <= 2 && mean < 0.05, "{worst} {mean}");
 }
+
+/// docs/adr/9240: a glyph shown past `VECTOR_EM_PX` an em is read from its outline. Its field, 64 px an em in bytes,
+/// rounded a sharp corner over a field pixel and showed its bytes' steps as a staircase there; read from the outline,
+/// the corner is the outline's, against the same outlines drawn whole, with and without a halo. Then the text taken
+/// back below the threshold draws from its field as before.
+pub fn a_glyph_past_its_field_is_read_from_its_outline(gpu: &Gpu) {
+    let mut glyphs = GlyphGpu::new(&gpu.device, FORMAT);
+    let text = layout("E", 2.0, 0.0);
+    let at = [E, N];
+    let ink = text.ink.expect("ink");
+    // The E's top right corner, about 3 000 px an em: its field would be magnified some 47 times.
+    let corner = [E + ink[2] - 0.02, N + ink[3] - 0.02];
+    let frame = view(corner, 1_500.0);
+    for (case, halo_px) in [(0, 0.0_f32), (1, 3.0)] {
+        let ours = draw(gpu, &mut glyphs, &[world(at, &text, halo_px)], &frame);
+        let theirs = reference(&text, at, &frame, halo_px);
+        let (mean, gross, inked) = compare(&ours, &theirs);
+        eprintln!("big glyph {case}: mean difference {mean:.2}, {gross} pixels off by a quarter, {inked} ink pixels");
+        keep(&ours, &format!("buyuk-glif-{case}-gpu"));
+        keep(&theirs, &format!("buyuk-glif-{case}-referans"));
+        assert!(inked > 5_000, "case {case}: the E's corner fills much of the view ({inked} px)");
+        // Edges smoothed by four samples against the reference's exact coverage: a pixel off by more than a quarter
+        // only along them, never in the corner's body.
+        assert!(gross <= (W + H) as usize, "case {case}: {gross} pixels off by a quarter");
+        assert!(mean < 3.0, "case {case}: mean difference {mean:.2}");
+    }
+    // Below the threshold the text draws from its field, as it always did.
+    let text = layout("Kentos Ağ 17", 2.0, 30.0);
+    let m = middle(&text);
+    let frame = view([E + m[0], N + m[1]], 20.0);
+    let ours = draw(gpu, &mut glyphs, &[world(at, &text, 1.5)], &frame);
+    let theirs = reference(&text, at, &frame, 1.5);
+    let (mean, ..) = compare(&ours, &theirs);
+    assert!(mean < 1.0, "a small text from its field: mean difference {mean:.2}");
+}

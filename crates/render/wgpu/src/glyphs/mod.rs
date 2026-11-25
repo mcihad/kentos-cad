@@ -13,6 +13,7 @@
 pub mod atlas;
 mod gpu;
 pub mod sdf;
+pub mod vector;
 
 pub use atlas::{EXTRA_FACES, GlyphAtlas, GlyphKey, Lookup, Slot, extra_face};
 pub use gpu::{GlyphGpu, GlyphLayer};

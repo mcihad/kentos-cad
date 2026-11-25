@@ -343,10 +343,69 @@ fn inside(p: Vec2, r: &[Vec2]) -> bool {
 /// filled starts an area; its holes are the first rings inside it that are not filled. Each area is triangulated
 /// once, so nothing is covered twice (a translucent symbol would darken where it was).
 fn fill_rings(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
-    if !even_odd && let Some(tris) = nonzero(rings) {
+    // Rings no edge of which crosses another are nested as they are: the overlay only where one does (a glyph's
+    // contours mostly do not; it made a glyph's program take 0.61 ms instead of 0.24, docs/adr/9240).
+    if !even_odd && crossing(rings) && let Some(tris) = nonzero(rings) {
         return tris;
     }
     nested(rings, even_odd)
+}
+
+/// Whether an edge of the rings crosses or touches another, but where two edges following each other in a ring meet: a
+/// sweep along x over the edges' spans.
+fn crossing(rings: &[Vec<Vec2>]) -> bool {
+    let mut edges: Vec<(Vec2, Vec2, usize, usize, usize)> = Vec::new();
+    for (r, ring) in rings.iter().enumerate() {
+        let n = ring.len();
+        for i in 0..n {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            let (a, b) = if (a.x, a.y) <= (b.x, b.y) { (a, b) } else { (b, a) };
+            edges.push((a, b, r, i, n));
+        }
+    }
+    edges.sort_by(|p, q| p.0.x.total_cmp(&q.0.x));
+    let orient = |a: Vec2, b: Vec2, c: Vec2| (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    let on = |a: Vec2, b: Vec2, c: Vec2| {
+        c.x >= a.x.min(b.x) && c.x <= a.x.max(b.x) && c.y >= a.y.min(b.y) && c.y <= a.y.max(b.y)
+    };
+    let meet = |(a, b): (Vec2, Vec2), (c, d): (Vec2, Vec2)| {
+        let (o1, o2, o3, o4) = (orient(a, b, c), orient(a, b, d), orient(c, d, a), orient(c, d, b));
+        if ((o1 > 0.0 && o2 < 0.0) || (o1 < 0.0 && o2 > 0.0)) && ((o3 > 0.0 && o4 < 0.0) || (o3 < 0.0 && o4 > 0.0)) {
+            return true;
+        }
+        (o1 == 0.0 && on(a, b, c)) || (o2 == 0.0 && on(a, b, d)) || (o3 == 0.0 && on(c, d, a)) || (o4 == 0.0 && on(c, d, b))
+    };
+    let mut active: Vec<usize> = Vec::new();
+    for k in 0..edges.len() {
+        let (a, b, r, i, n) = edges[k];
+        active.retain(|&j| edges[j].1.x.max(edges[j].0.x) >= a.x);
+        for &j in &active {
+            let (c, d, rj, ij, _) = edges[j];
+            // Edges following each other in a ring share an end: they cross only where one runs back over the other.
+            if r == rj && (ij == (i + 1) % n || i == (ij + 1) % n) {
+                let shared = [(a, b), (b, a)].into_iter().find_map(|(s, u)| {
+                    [(c, d), (d, c)].into_iter().find(|(t, _)| t.x == s.x && t.y == s.y).map(|(_, v)| (s, u, v))
+                });
+                if let Some((s, u, v)) = shared {
+                    if orient(s, u, v) == 0.0 && (u.x - s.x) * (v.x - s.x) + (u.y - s.y) * (v.y - s.y) > 0.0 {
+                        return true;
+                    }
+                    continue;
+                }
+            }
+            if meet((a, b), (c, d)) {
+                return true;
+            }
+        }
+        active.push(k);
+    }
+    false
+}
+
+/// The triangles (flat, x y each corner) of rings filled by their winding (nonzero), rings that cross themselves
+/// included: an SVG's stroke outline, a glyph's contours (the glyphs' vectors, docs/adr/9239).
+pub fn fill_nonzero(rings: &[Vec<Vec2>]) -> Vec<f64> {
+    fill_rings(rings, false)
 }
 
 /// The rings' area by their winding (nonzero), resolved by the geometry core's overlay into areas whose rings do not
@@ -640,6 +699,20 @@ mod tests {
             assert!(held(p), "{p:?} is inked");
         }
         assert!(!held([60.0, 60.0]), "the ground beside the stem");
+    }
+
+    /// Rings that cross go to the overlay; nested or apart ones are nested as they are.
+    #[test]
+    fn a_crossing_is_found_and_nesting_is_not_one() {
+        let ring = |pts: &[(f64, f64)]| pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect::<Vec<_>>();
+        let square = |x: f64, y: f64, s: f64| ring(&[(x, y), (x + s, y), (x + s, y + s), (x, y + s)]);
+        assert!(!crossing(&[square(0.0, 0.0, 10.0)]), "a square");
+        assert!(!crossing(&[square(0.0, 0.0, 10.0), square(3.0, 3.0, 2.0)]), "a square in a square");
+        assert!(!crossing(&[square(0.0, 0.0, 2.0), square(5.0, 0.0, 2.0)]), "two apart");
+        assert!(crossing(&[ring(&[(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)])]), "a figure of eight");
+        assert!(crossing(&[square(0.0, 0.0, 10.0), square(5.0, 5.0, 10.0)]), "two overlapping");
+        assert!(crossing(&[ring(&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0), (5.0, 5.0)])]), "a ring running back over itself");
+        assert!(crossing(&[square(0.0, 0.0, 10.0), ring(&[(10.0, 5.0), (15.0, 2.0), (15.0, 8.0)])]), "touching at a point");
     }
 
     #[test]
