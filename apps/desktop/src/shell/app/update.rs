@@ -440,12 +440,27 @@ impl App {
         }
         // What the drawing area's device can draw with, known after its first frame (AA-01).
         self.sync_device();
-        // Dots Nokta yoğunluğu left out are said once a layer (docs/adr/0213 §2.4).
-        for (name, n) in self.viewport.take_dropped() {
-            self.warn(format!(
-                "“{name}” katmanında Nokta yoğunluğunun {} noktası çizilmedi: bir katmanda en çok 1 000 000 nokta çizilir. Nokta değerini büyütün.",
-                crate::view::thousands(n as f64)
-            ));
+        // What a layer left out over a limit is said once a layer and kind: Nokta yoğunluğu's dots (docs/adr/0213
+        // §2.4), a line's markers and waves (plan/render.md RM-11).
+        for (name, kind, n) in self.viewport.take_dropped() {
+            use crate::style::scene::LeftOut;
+            // The count and the limit written alike (12.345), as the rest of the app writes counts.
+            let n = crate::view::thousands(n as f64);
+            let most = |m: f64| crate::view::thousands(m);
+            self.warn(match kind {
+                LeftOut::Dots => format!(
+                    "“{name}” katmanında Nokta yoğunluğunun {n} noktası çizilmedi: bir katmanda en çok {} nokta çizilir. Nokta değerini büyütün.",
+                    most(kentos_native_style::MOST_DOTS as f64)
+                ),
+                LeftOut::Markers => format!(
+                    "“{name}” katmanında {n} işaret çizilmedi: bir çizgi boyunca en çok {} işaret çizilir. Simgenin Aralık değerini büyütün.",
+                    most(kentos_native_style::MAX_MARKERS_PER_PATH as f64)
+                ),
+                LeftOut::Waves => format!(
+                    "“{name}” katmanında {n} dalga çizilmedi: bir çizgi boyunca en çok {} dalga çizilir. Simgenin Tekrar değerini büyütün.",
+                    most(kentos_native_style::MAX_WAVES_PER_PATH as f64)
+                ),
+            });
         }
         // What the extensions' İşlemler tools noted on their threads: their logs and notices (extensions/tools.rs).
         self.ext_tool_notes();

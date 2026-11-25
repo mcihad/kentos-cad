@@ -91,6 +91,15 @@ impl StyledLayerPart {
         self.layer.dropped
     }
 
+    /// Markers and waves left out over a path's limit (plan/render.md RM-11).
+    pub fn markers_left(&self) -> u64 {
+        self.layer.markers_left
+    }
+
+    pub fn waves_left(&self) -> u64 {
+        self.layer.waves_left
+    }
+
     /// Its numbers, while the CPU has them.
     pub fn numbers(&self) -> MutexGuard<'_, Option<Numbers>> {
         self.numbers.lock().unwrap_or_else(PoisonError::into_inner)

@@ -297,6 +297,12 @@ impl Sink for MarksOnly<'_> {
     fn cad_mark_mesh(&mut self, p: &FillPaint, r: &[Vec<Vec2>], indices: &[u32]) {
         self.0.cad_mark_mesh(p, r, indices);
     }
+    fn markers_left_out(&mut self, n: u64) {
+        self.0.markers_left_out(n);
+    }
+    fn waves_left_out(&mut self, n: u64) {
+        self.0.waves_left_out(n);
+    }
 }
 
 /// Native intrinsic wide paths have one plain line layer. Preserve the old

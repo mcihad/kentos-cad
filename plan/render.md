@@ -200,7 +200,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [ ] Desen dolguları (`patternFill`, BÖHHBÜY'de 30 simge, örneğin 0633 bataklık) atlastaki karo bitmap'iyle
     çiziliyor ve yakında büyütülür. Vektöre geçmek, alanla kırpma ister (maske ya da kalıp).
   - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek.
-  - [ ] Asıl madde: İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000 işaret sınırı kalkar.
+  - [x] Asıl madde ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)). İşaretler GPU'da
+    zaten örnekliydi (yerleşim başına 5 sayı, dörtgen örneği). Kayıp, yol başına 50 000 sınırıydı ve sessizdi:
+    60 km'lik 1 m aralıklı çizgi 50. km'de, 5 cm aralıklı çizgi 2,5. km'de bitiyordu.
+    - Sınır 1 000 000 oldu; dalgalarda 50 000 kaldı (bir dalga 96 sayı, bir işaret 5: bellekte eşit).
+    - Aşan yerleşimler yaratılmadan sayılıyor. Katman ve tür başına bir kez, simgenin alan adıyla söyleniyor:
+      “… 200.000 işaret çizilmedi: bir çizgi boyunca en çok 1.000.000 işaret çizilir. Simgenin Aralık değerini
+      büyütün.”
+    - Gerçek GPU'da 1 000 000 işaret ~110 MB tutuyor (40 MB'ı CPU'da kalan sayılar).
 - [ ] **RM-12 — Veri katmanları aynı döşemelere geçer.**
   - PostGIS ve GeoPackage döşeme başına sorgulanır.
   - Sadeleştirme sunucuda yapılır, sonuç önbellekte tutulur.
@@ -341,6 +348,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Okumanın tepesi artık en büyüğü değil: 2. adımla nesne dizisi ve belgenin kopyaları üçte birine indi.
   - Kalan tepe ilk karede: stilli sayılar yüklenene kadar CPU'da duruyor. Parçaları kuruldukça yüklemek RM-07'ye
     kaldı.
+  - [ ] İşaretli katmanların sayıları, bir maske okumasa da CPU'da kalıyor (maskeler işaret kutularını oradan okuyor,
+    ADR 0226 §3). 1 000 000 işaret için 40 MB ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)
+    §3). Sayılar yalnız maske kaynağı olan katmanlarda kalmalı; sonradan maske kaynağı olan katman, kaybolan parça
+    yolundan (`parts_lost`) yeniden kurulur.
 
 ### F7 — DWG ve DXF alımı
 

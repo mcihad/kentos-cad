@@ -95,6 +95,27 @@ struct Dirty {
 /// NCZ: about 440 MB above what it keeps).
 const GIVE_BACK_AFTER: Duration = Duration::from_millis(250);
 
+/// What a layer's build left out over a limit, said once a layer and kind (docs/adr/0213 §2.4, plan/render.md RM-11).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum LeftOut {
+    /// Dots of Nokta yoğunluğu over the layer's 1 000 000.
+    Dots,
+    /// Markers over a path's `MAX_MARKERS_PER_PATH`.
+    Markers,
+    /// Waves over a path's `MAX_WAVES_PER_PATH`.
+    Waves,
+}
+
+impl LeftOut {
+    fn of(self, part: &StyledLayerPart) -> u64 {
+        match self {
+            LeftOut::Dots => part.dropped(),
+            LeftOut::Markers => part.markers_left(),
+            LeftOut::Waves => part.waves_left(),
+        }
+    }
+}
+
 /// The styled layers as last built, and what they were built from.
 #[derive(Default)]
 pub struct StyledCache {
@@ -133,9 +154,10 @@ pub struct StyledCache {
     view_built: HashMap<String, ViewBuilt>,
     /// A count that keeps every heat map picture's key new.
     made: u64,
-    /// Layers already said to have dots left out, and those to say (docs/adr/0213 §2.4).
-    dropped_said: HashSet<String>,
-    dropped: Vec<(String, u64)>,
+    /// Layers already said to have left something out, by what, and those to say (docs/adr/0213 §2.4, plan/render.md
+    /// RM-11).
+    dropped_said: HashSet<(String, LeftOut)>,
+    dropped: Vec<(String, LeftOut, u64)>,
     /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
     /// composition's place in the scene, the mask's place in it and the source layer's id.
     label_masks: Vec<(usize, usize, String)>,
@@ -372,14 +394,15 @@ impl StyledCache {
         self.view_built.values().any(|b| b.needs.scale)
     }
 
-    /// The layers whose dots were left out since last asked, each once (docs/adr/0213 §2.4): name and count.
     /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
     /// composition's place in the scene, the mask's and the source layer's id.
     pub fn label_masks(&self) -> &[(usize, usize, String)] {
         &self.label_masks
     }
 
-    pub fn take_dropped(&mut self) -> Vec<(String, u64)> {
+    /// The layers that left something out over a limit since last asked, each once a kind (docs/adr/0213 §2.4,
+    /// plan/render.md RM-11): name, what and how many.
+    pub fn take_dropped(&mut self) -> Vec<(String, LeftOut, u64)> {
         std::mem::take(&mut self.dropped)
     }
 
@@ -1026,14 +1049,18 @@ impl StyledCache {
                 }
             }
         }
-        // Dots a layer left out are said once (docs/adr/0213 §2.4).
+        // What a layer left out over a limit is said once a kind: dots (docs/adr/0213 §2.4), a path's markers and
+        // waves (plan/render.md RM-11).
         for plan in &plans {
             let id = &plan.node.id;
-            let left = self.layers.get(id).map_or(0, |l| {
-                l.parts.values().map(|p| p.part.dropped()).sum::<u64>()
-            });
-            if left > 0 && self.dropped_said.insert(id.clone()) {
-                self.dropped.push((plan.node.name.clone(), left));
+            let Some(layer) = self.layers.get(id) else {
+                continue;
+            };
+            for kind in [LeftOut::Dots, LeftOut::Markers, LeftOut::Waves] {
+                let left = layer.parts.values().map(|p| kind.of(&p.part)).fold(0u64, u64::saturating_add);
+                if left > 0 && self.dropped_said.insert((id.clone(), kind)) {
+                    self.dropped.push((plan.node.name.clone(), kind, left));
+                }
             }
         }
         // Layers gone from the tree go with their buffers.

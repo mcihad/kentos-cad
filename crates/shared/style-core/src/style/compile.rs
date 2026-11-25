@@ -15,8 +15,8 @@ use super::model::{
     SimpleLine, Symbol, SymbolType, Unit,
 };
 use super::place::{
-    PlaceGroup, WaveSpec, centroid_of, interior_point, line_middle, place_along, positive,
-    wave_paths,
+    PlaceGroup, WaveSpec, centroid_of, interior_point, line_middle, place_along_counted, positive,
+    wave_paths_counted,
 };
 use super::prim::{
     Common, EffectSpec, FillPaint, GlowSpec, Look, MarkerStyle, PrimUnit, ShadowSpec, Sink,
@@ -506,7 +506,11 @@ pub(super) fn emit_line_layer_on(
                         connect: w.connect != Some(false),
                         offset_along: w.offset_along.map(len),
                     };
-                    for piece in wave_paths(&path, closed, &spec) {
+                    let (pieces, left) = wave_paths_counted(&path, closed, &spec);
+                    if left > 0 {
+                        sink.waves_left_out(left);
+                    }
+                    for piece in pieces {
                         sink.stroke(&style, &piece, false);
                     }
                 }
@@ -572,7 +576,7 @@ fn emit_markers_along(
     } else {
         0.0
     };
-    for p in place_along(
+    let (placed, left) = place_along_counted(
         path,
         closed,
         &layer.placement,
@@ -580,7 +584,12 @@ fn emit_markers_along(
         along,
         group,
         clear,
-    ) {
+    );
+    if left > 0 {
+        // Each place is a marker of every style.
+        sink.markers_left_out(left.saturating_mul(styles.len() as u64));
+    }
+    for p in placed {
         for (st, alt) in styles.iter().zip(&turned) {
             if !follow {
                 sink.marker(st, p.at, 0.0);
