@@ -951,6 +951,7 @@ impl StyledGpu {
                 block,
                 pattern_page,
                 vectors,
+                shown: None,
                 offset,
                 visible: false,
                 placed: None,
@@ -1142,6 +1143,7 @@ impl StyledGpu {
             let generation = self.atlas.generation;
             for layer in &mut view.layers {
                 let batches = &layer.source.layer.batches;
+                let mut cells = (0..batches.len()).map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
                     // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
@@ -1157,6 +1159,9 @@ impl StyledGpu {
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
+                    // Every batch takes its own cells, shown or not: the list follows the batches one for one.
+                    let own = cells.next().flatten();
+                    g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1388,6 +1393,7 @@ impl StyledGpu {
                     continue;
                 }
                 let batches = &layer.source.layer.batches;
+                let mut cells = (0..batches.len()).map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
                     // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
@@ -1403,6 +1409,9 @@ impl StyledGpu {
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
+                    // Every batch takes its own cells, shown or not: the list follows the batches one for one.
+                    let own = cells.next().flatten();
+                    g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1821,6 +1830,13 @@ impl StyledGpu {
                 _ => b.proxied,
             };
             let lod = source.and_then(|s| s.lod.as_ref());
+            // A batch with cells draws the cells its view meets (plan/render.md RM-08): the lens its own.
+            let shown = match (seen, source) {
+                (Some((box_, px_per_m, dpr)), Some(s)) => {
+                    culled(s, layer.source.layer.cells.get(i).and_then(|c| c.as_deref()), level, box_, px_per_m, dpr)
+                }
+                _ => b.shown.clone(),
+            };
             if let Some(placed) = &b.own {
                 pass.set_vertex_buffer(0, placed.mesh.slice(..));
                 pass.set_vertex_buffer(1, placed.instances.slice(..));
@@ -1852,6 +1868,27 @@ impl StyledGpu {
                     pass.set_vertex_buffer(1, low.slice(bytes));
                 }
                 match (lod, b.instanced) {
+                    (_, true) if let Some(shown) = shown.as_ref().filter(|_| end == i) => {
+                        let floats = match b.pipe {
+                            Pipe::Marker => MARKER_FLOATS,
+                            _ => STROKE_FLOATS,
+                        };
+                        for r in shown {
+                            let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
+                            if z > a {
+                                DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
+                                pass.draw(0..6, a..z);
+                            }
+                        }
+                    }
+                    (_, false) if let Some(shown) = shown.as_ref().filter(|_| end == i) => {
+                        for r in shown {
+                            let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
+                            if z > a {
+                                pass.draw(a..z, 0..1);
+                            }
+                        }
+                    }
                     (Some(lod), true) => {
                         let floats = match b.pipe {
                             Pipe::Marker => MARKER_FLOATS,
@@ -2092,11 +2129,54 @@ struct GpuBatch {
     /// A pattern tile with its SVG marks' program in its page (plan/render.md RM-11): the scale past which it draws
     /// from the program, not its bitmap (`vector_tiles::switch`).
     vectors: Option<f64>,
+    /// The numbers this frame's view draws (from the batch's first), when the batch has cells (plan/render.md RM-08):
+    /// its level's ranges cut to the cells the view meets. None: its level's ranges whole.
+    shown: Option<Vec<Range<usize>>>,
     /// Its block's offset in the layer's uniform buffer.
     offset: u32,
     visible: bool,
     /// The atlas generation and rectangle last written into its block.
     placed: Option<(u64, [f32; 4])>,
+}
+
+/// The numbers a view (`view` from the layers' origin, `px_per_m` device px a metre) draws of a batch with cells
+/// (cells.rs, plan/render.md RM-08), from the batch's first: its level's ranges, each cut to the cells the view meets.
+/// None for a batch without cells: its level's ranges whole.
+fn culled(
+    b: &StyledBatch,
+    cells: Option<&kentos_native_style::cells::Cells>,
+    level: usize,
+    view: [f64; 4],
+    px_per_m: f64,
+    dpr: f64,
+) -> Option<Vec<Range<usize>>> {
+    let cells = cells?;
+    let to_m = |v: f64, unit: Unit| match unit {
+        Unit::World => v,
+        Unit::Px => v * dpr / px_per_m,
+    };
+    // Every frame meets cells at the view's edge, so the reach takes what a line's quad spreads past its width too
+    // (stroke.wgsl: half its blur, a pixel's smoothing, its thinnest half pixel): a cell just outside the view whose
+    // items' edges reach into it is drawn. Far out, the batch's own reach (its width and a unit) is under a pixel.
+    let blur = match &b.kind {
+        BatchKind::Stroke { blur, unit, .. } => 0.5 * to_m(*blur, *unit),
+        _ => 0.0,
+    };
+    let reach = to_m(b.reach, b.reach_unit) + blur + 2.0 / px_per_m.max(1e-12);
+    let ranges: Vec<Range<usize>> = match &b.lod {
+        Some(lod) => lod.ranges(level).into_iter().filter(|r| !r.is_empty()).collect(),
+        None => std::iter::once(0..b.range.len()).collect(),
+    };
+    let mut out = Vec::new();
+    for r in ranges {
+        match cells.parts.iter().find(|p| p.range == r) {
+            Some(p) => out.extend(p.ranges_in(view, reach).into_iter().map(|q| {
+                r.start + q.start as usize * p.floats..r.start + q.end as usize * p.floats
+            })),
+            None => out.push(r),
+        }
+    }
+    Some(out)
 }
 
 impl GpuBatch {
@@ -2460,9 +2540,10 @@ impl ViewStyled {
                     BatchKind::Marker { .. } => MARKER_FLOATS,
                     _ => AREA_FLOATS,
                 };
-                // A batch with levels draws one of them (docs/adr/1063 §3, 9207).
-                let k = match (&b.lod, &b.instances) {
-                    (Some(lod), None) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
+                // A batch with levels draws one of them (docs/adr/1063 §3, 9207); one with cells those in view (RM-08).
+                let k = match (&g.shown, &b.lod, &b.instances) {
+                    (Some(shown), ..) => shown.iter().map(|r| (r.len() / floats) as u64).sum(),
+                    (None, Some(lod), None) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
                     _ => u64::from(g.count),
                 };
                 n += k;
