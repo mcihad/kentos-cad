@@ -165,7 +165,7 @@ fn scene_stats(app: &App) -> Value {
     json!({
         "segments": s.segments, "triangles": s.triangles, "markers": s.markers, "styledItems": s.styled_items,
         "drawCalls": s.draw_calls,
-        "residentBytes": s.resident_bytes, "pictureKept": s.picture_kept,
+        "residentBytes": s.resident_bytes, "parkedBytes": s.parked_bytes, "pictureKept": s.picture_kept,
     })
 }
 

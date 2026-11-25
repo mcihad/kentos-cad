@@ -29,7 +29,7 @@ fn hatches(b: &Bench) -> Vec<HatchPattern> {
         .shapes()
         .filter_map(|shape| {
             if let Shape::Hatch { pattern, .. } = shape {
-                Some(pattern.clone())
+                Some((**pattern).clone())
             } else {
                 None
             }

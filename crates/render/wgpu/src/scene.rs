@@ -1486,12 +1486,12 @@ fn shape(entity: &Entity) -> Shape {
                 file: r.raster.file.clone(),
                 url: r.raster.url.clone(),
                 srid: f64::from(r.raster.srid),
-                style: kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
-                    .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                style: Box::new(kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
+                    .unwrap_or(kentos_geometry_core::api::json::Json::Null)),
                 opacity: r.raster.opacity,
                 dataset: r.raster.dataset.as_ref().and_then(|d| {
                     kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
-                }),
+                }).map(Box::new),
                 // A GeoPackage tile table it shows (docs/adr/0627 §3): its table, zoom and window's first pixel.
                 tiles: r.raster.tiles.as_ref().map(|t| {
                     use kentos_geometry_core::api::json::Json;
@@ -1501,7 +1501,7 @@ fn shape(entity: &Entity) -> Shape {
                         ("x".to_owned(), Json::Num(t.x as f64)),
                         ("y".to_owned(), Json::Num(t.y as f64)),
                     ])
-                }),
+                }).map(Box::new),
             }
         }
         // A record is not drawn (docs/adr/0410).
@@ -1562,8 +1562,8 @@ fn shape(entity: &Entity) -> Shape {
                 height: b.height,
                 gap: Some(b.gap),
                 once: b.once.then_some(true),
-            }),
-            face: text_face(&t.face),
+            }).map(Box::new),
+            face: Box::new(text_face(&t.face)),
         },
         Entity::Leader(l) => Shape::Leader {
             // Its content blocks are drawn as the inserts they are; only whether it has some counts here.
@@ -1653,7 +1653,7 @@ fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
-            look: dimension_look(&d.look),
+            look: Box::new(dimension_look(&d.look)),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -1661,7 +1661,7 @@ fn shape(entity: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: core_pattern(&h.pattern),
+            pattern: Box::new(core_pattern(&h.pattern)),
             assoc: None,
             // The scene draws the ring the boundary drew (docs/adr/0328 §1).
             boundary: None,

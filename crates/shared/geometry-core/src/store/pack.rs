@@ -535,7 +535,7 @@ impl Reader<'_> {
                     mask,
                     za: (!za.is_nan()).then_some(za),
                     zb: (!zb.is_nan()).then_some(zb),
-                    look: Look {
+                    look: Box::new(Look {
                         style: dim_style,
                         arrow,
                         arrow_size,
@@ -560,7 +560,7 @@ impl Reader<'_> {
                         .boxed(),
                         // The page sends no options, moved values or breaks (docs/adr/0321; the web waits, ADR 0228).
                         more: None,
-                    },
+                    }),
                 }
             }
             12 | 26 => {
@@ -623,7 +623,7 @@ impl Reader<'_> {
                     boundary: None,
                     ring,
                     holes,
-                    pattern: HatchPattern {
+                    pattern: Box::new(HatchPattern {
                         kind,
                         angle,
                         spacing,
@@ -632,8 +632,8 @@ impl Reader<'_> {
                         lines,
                         gradient,
                         origin,
-                    },
-                    assoc,
+                    }),
+                    assoc: assoc.map(Box::new),
                 }
             }
             15 | 24 => {
@@ -707,10 +707,10 @@ impl Reader<'_> {
                     file,
                     url,
                     srid,
-                    style,
+                    style: Box::new(style),
                     opacity: (!opacity.is_nan()).then_some(opacity),
-                    dataset,
-                    tiles,
+                    dataset: dataset.map(Box::new),
+                    tiles: tiles.map(Box::new),
                 }
             }
             // docs/adr/0410: a record, nothing more.
@@ -723,7 +723,7 @@ impl Reader<'_> {
                 Shape::Wall {
                     pts,
                     bulges,
-                    wall: <crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                    wall: Box::new(<crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?),
                 }
             }
             // docs/adr/0341: its place along its wall, its width, its jambs, then the rest as its JSON text.
@@ -737,7 +737,7 @@ impl Reader<'_> {
                     at,
                     width,
                     place,
-                    opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                    opening: Box::new(<crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?),
                 }
             }
             // docs/adr/0343, 0344, 0345, 3041, 8044, 8045: a grid, a column, a stair, a ramp, a tag, a view mark, a beam,
@@ -891,7 +891,7 @@ impl Reader<'_> {
                 };
                 Shape::Table {
                     styles,
-                    breaks,
+                    breaks: breaks.map(Box::new),
                     p,
                     rotation,
                     height,
@@ -905,13 +905,13 @@ impl Reader<'_> {
                     frame: (!frame.is_nan()).then_some(frame),
                     // The store draws, picks and snaps: what the table came from is not packed.
                     source: None,
-                    face: Face {
+                    face: Box::new(Face {
                         style,
                         font,
                         bold,
                         italic,
                         oblique: (!oblique.is_nan()).then_some(oblique),
-                    },
+                    }),
                 }
             }
             _ => {

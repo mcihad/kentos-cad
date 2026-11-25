@@ -325,7 +325,7 @@ impl Store {
                     Some(r) => {
                         let plain = wall::Spec {
                             fill: None,
-                            ..wall.clone()
+                            ..*wall.clone()
                         };
                         let mut pieces = Vec::new();
                         if r.added(id)
@@ -337,7 +337,7 @@ impl Store {
                                     Shape::Hatch {
                                         ring: ring.clone(),
                                         holes: holes.clone(),
-                                        pattern: pattern.clone(),
+                                        pattern: Box::new(pattern.clone()),
                                         assoc: None,
                                         boundary: None,
                                     },

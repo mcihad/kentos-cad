@@ -540,6 +540,19 @@ pub trait Flat: Sized {
     fn write_flat(&self, out: &mut String, first: &mut bool);
 }
 
+/// A boxed one's fields are the value's (a shape's large parts are held apart, plan/render.md RM-19).
+impl<T: Flat> Flat for Box<T> {
+    const NAMES: &'static [&'static str] = T::NAMES;
+
+    fn read_flat(v: &Json) -> Result<Self, String> {
+        T::read_flat(v).map(Box::new)
+    }
+
+    fn write_flat(&self, out: &mut String, first: &mut bool) {
+        (**self).write_flat(out, first);
+    }
+}
+
 /// The JSON name of a field: its Rust name, or the one given after `=>`.
 #[macro_export]
 macro_rules! json_name {

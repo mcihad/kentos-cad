@@ -109,7 +109,7 @@ pub fn core_opening(o: &OpeningFields) -> Shape {
         at: o.at,
         width: o.width,
         place: o.place.iter().map(core).collect(),
-        opening: spec(o),
+        opening: Box::new(spec(o)),
     }
 }
 

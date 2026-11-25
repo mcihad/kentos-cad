@@ -316,7 +316,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] KA_KORUNMA_ALANI (sınır boyunca iri noktalar, çizgi tipi 31): sahibin kararı (24 Kasım) düz çizgi kalsın;
     anlamı belli olunca eşlenir. Çizgi tipi 4 (demiryolu kuşağı ile rezerv yapı ortak) ve 22 (jeolojik formasyon)
     bilerek düz.
-- [~] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
+- [x] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek. **Tuttu**
+  (sürüm, gerçek GPU, [ADR 9237](../docs/adr/9237-store-items-and-label-memory-as-large-as-they-are.md) §4):
+  - açılışın tepesi 1 485 MB, açık çizimde yerleşik ~1 200 MB;
+  - 24 Kasım'da yerleşik 2 448, tepe 2 572 MB'tı.
   - Ölçüm aracı: `perf::memory::file_parts` (açılış uygulamanın yaptığı gibi; sonra parçaları tek tek bırakır;
     `heap-count` ile Rust yığını, `KENTOS_PERF_STAGES=1` ile aşamalar). Gerçek pencerede sürücünün `memory` komutu.
   - [x] 1. adım: stilli katmanların sayıları GPU'da yaşar, açılışın bıraktığı bellek geri verilir
@@ -330,8 +333,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - belge 706 → 341 MB;
     - açılışın tepesi 1 996 → 1 712 MB;
     - gerçek pencerede yerleşik 2 780 → 2 549 MB, tepe 3 507 → 2 946 MB; resim aynı.
-  - [ ] 3. adım: geometri deposunun `Shape`'i küçülür (`Item` 472 bayt). Depo 450 MB.
-  - [ ] 4. adım: okumanın tepesi. Okuyucunun nesne dizisi ile belgenin kopyaları yan yana durmaz.
+  - [x] 3. adım: geometri deposunun nesneleri ve etiketlerin belleği kendi boyları kadar
+    ([ADR 9237](../docs/adr/9237-store-items-and-label-memory-as-large-as-they-are.md)):
+    - yazısız nesne etiket belleğinde bir damga;
+    - `Shape`'in iri alanları kutuda; `Item` 472 → 336 bayt.
+    NCZ, hata ayıklama: etiket belleği 196 → 118 MB, depo 251 → 192 MB, açılışın tepesi 1 712 → 1 561 MB.
+  - Okumanın tepesi artık en büyüğü değil: 2. adımla nesne dizisi ve belgenin kopyaları üçte birine indi.
+  - Kalan tepe ilk karede: stilli sayılar yüklenene kadar CPU'da duruyor. Parçaları kuruldukça yüklemek RM-07'ye
+    kaldı.
 
 ### F7 — DWG ve DXF alımı
 

@@ -1065,7 +1065,7 @@ impl Store {
                             Shape::Hatch {
                                 ring,
                                 holes: None,
-                                pattern,
+                                pattern: Box::new(pattern),
                                 assoc: None,
                                 boundary: None,
                             },

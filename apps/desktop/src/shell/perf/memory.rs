@@ -223,7 +223,53 @@ fn file_parts() {
     // document on the open's thread, the app taking it, its first frame (the styled layers built and uploaded),
     // settled.
     reset_peak();
-    if std::env::var("KENTOS_PERF_STAGES").as_deref() == Ok("1") {
+    // `KENTOS_PERF_STAGES=2`: the stages as the app goes through them, nothing given back between them: each stage's
+    // resident memory and the peak so far.
+    let as_app = std::env::var("KENTOS_PERF_STAGES").as_deref() == Ok("2");
+    let mark = |step: &str| {
+        if as_app {
+            let (resident, peak) = super::memory();
+            println!("{step}: yerleşik {resident:.0} MB, şimdiye kadarki tepe {peak:.0} MB");
+        }
+    };
+    if as_app {
+        let rx = super::large::drive(
+            app.start_opening(std::path::PathBuf::from(&file), crate::opening::Purpose::File),
+        );
+        let done = loop {
+            match rx.recv_timeout(std::time::Duration::from_millis(16)) {
+                Ok((_, m)) if super::large::is_done(&m) => break m,
+                Ok((_, m)) => {
+                    harness.frame_with(&mut app, &[], |app| {
+                        let _ = app.update(m);
+                    });
+                }
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                    harness.frame(&mut app, &[]);
+                }
+                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                    panic!("the open ended without an answer")
+                }
+            }
+        };
+        mark("dosya belgeye okundu");
+        let _ = app.update(done);
+        if app.opening.is_some() {
+            let rx = super::large::drive(app.opening_event(crate::opening::Event::ConfirmUnit));
+            while let Ok((_, m)) = rx.recv_timeout(std::time::Duration::from_secs(600)) {
+                let _ = app.update(m);
+            }
+        }
+        mark("uygulama belgeyi aldı");
+        harness.frame(&mut app, &[]);
+        mark("ilk kare");
+        app.dialog = None;
+        harness.settle(&mut app);
+        mark("oturdu");
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        harness.frame(&mut app, &[]);
+        mark("üç saniye sonra");
+    } else if std::env::var("KENTOS_PERF_STAGES").as_deref() == Ok("1") {
         let rx = super::large::drive(
             app.start_opening(std::path::PathBuf::from(&file), crate::opening::Purpose::File),
         );
@@ -298,6 +344,21 @@ fn file_parts() {
                 .join(", ")
         );
     }
+    // The geometry store made again beside the app's: what it holds, and of it its objects' records inline.
+    #[cfg(feature = "heap-count")]
+    if let Some(doc) = app.document.as_ref() {
+        let before = rust_heap().unwrap_or(0.0);
+        let mut again = kentos_interaction::Spatial::default();
+        again.reload(&doc.model);
+        let after = rust_heap().unwrap_or(0.0);
+        let items = again.store().len();
+        let inline = std::mem::size_of::<Option<kentos_geometry_core::store::Item>>();
+        println!(
+            "  geometri deposu yeniden kuruldu: {:.0} MB; nesneleri satır içinde {items} × {inline} bayt = {:.0} MB",
+            after - before,
+            (items * inline) as f64 / 1_048_576.0
+        );
+    }
     let [data, low, batches, fills, segments, markers] = app.viewport.built_bytes();
     println!(
         "  stilli katmanlar: veri {:.0} MB, artık {:.0} MB, toplu {:.0} MB; düz sahne: dolgu {:.0} MB, kesim {:.0} MB, işaret {:.0} MB",
@@ -315,9 +376,13 @@ fn file_parts() {
     app.gpu_layers = Default::default();
     let labels = split();
     said("yazı ve katman resimleri bırakıldı", labels, Some(scene));
+    println!("  etiketlerin önbellekleri: {}", app.spatial.label_memory_report());
+    app.spatial.forget_label_memory();
+    let memo = split();
+    said("etiketlerin önbellekleri bırakıldı", memo, Some(labels));
     app.spatial = Default::default();
     let store = split();
-    said("geometri deposu bırakıldı", store, Some(labels));
+    said("geometri deposu bırakıldı", store, Some(memo));
     app.document = None;
     let document = split();
     said("belge bırakıldı", document, Some(store));

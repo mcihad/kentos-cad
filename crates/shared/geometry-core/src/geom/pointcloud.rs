@@ -334,7 +334,7 @@ mod tests {
             file: None,
             url: Some("https://ornek.test/dem.tif".into()),
             srid: 5254.0,
-            style: Json::parse(r#"{"render":"ramp","bands":[1]}"#).unwrap(),
+            style: Box::new(Json::parse(r#"{"render":"ramp","bands":[1]}"#).unwrap()),
             opacity: None,
             dataset: None,
             tiles: None,

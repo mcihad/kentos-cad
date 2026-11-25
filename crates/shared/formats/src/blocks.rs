@@ -261,8 +261,8 @@ pub fn core_table(t: &TableEntity) -> Shape {
             height: b.height,
             gap: Some(b.gap),
             once: b.once.then_some(true),
-        }),
-        face: core_face(&t.face),
+        }).map(Box::new),
+        face: Box::new(core_face(&t.face)),
     }
 }
 
@@ -678,7 +678,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
-            look: core_look(&d.look),
+            look: Box::new(core_look(&d.look)),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -686,7 +686,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: core_pattern(&h.pattern),
+            pattern: Box::new(core_pattern(&h.pattern)),
             // A block's hatch follows nothing (docs/adr/0186 §6).
             assoc: None,
             boundary: h.boundary.as_deref().and_then(core_boundary),
@@ -752,15 +752,15 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 file: f.file.clone(),
                 url: f.url.clone(),
                 srid: f64::from(f.srid),
-                style: kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
-                    .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                style: Box::new(kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
+                    .unwrap_or(kentos_geometry_core::api::json::Json::Null)),
                 opacity: f.opacity,
                 dataset: f.dataset.as_ref().and_then(|d| {
                     kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
-                }),
+                }).map(Box::new),
                 tiles: f.tiles.as_ref().and_then(|t| {
                     kentos_geometry_core::api::json::Json::parse(&serde_json::to_string(t).ok()?).ok()
-                }),
+                }).map(Box::new),
             }
         }
         // Its attributes show as texts, which these formats leave out of a block.

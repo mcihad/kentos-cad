@@ -163,13 +163,13 @@ pub fn core_table(t: &TableEntity) -> Shape {
         header: t.header.then_some(true),
         grid: t.grid.map(|g| g.name().to_owned()),
         frame: t.frame,
-        source: core_source(t.source.as_ref()),
+        source: core_source(t.source.as_ref()).map(Box::new),
         breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
             height: b.height,
             gap: Some(b.gap),
             once: b.once.then_some(true),
-        }),
-        face: core_face(&t.face),
+        }).map(Box::new),
+        face: Box::new(core_face(&t.face)),
     }
 }
 
@@ -674,16 +674,16 @@ pub fn core_raster(r: &RasterFields) -> Shape {
         file: r.file.clone(),
         url: r.url.clone(),
         srid: f64::from(r.srid),
-        style: Json::parse(&r.style.to_json_text()).unwrap_or(Json::Null),
+        style: Box::new(Json::parse(&r.style.to_json_text()).unwrap_or(Json::Null)),
         opacity: r.opacity,
         dataset: r
             .dataset
             .as_ref()
-            .and_then(|d| Json::parse(&d.to_json_text()).ok()),
+            .and_then(|d| Json::parse(&d.to_json_text()).ok()).map(Box::new),
         tiles: r
             .tiles
             .as_ref()
-            .and_then(|t| Json::parse(&serde_json::to_string(t).ok()?).ok()),
+            .and_then(|t| Json::parse(&serde_json::to_string(t).ok()?).ok()).map(Box::new),
     }
 }
 
@@ -953,7 +953,7 @@ pub fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
-            look: core_dimension_look(d),
+            look: Box::new(core_dimension_look(d)),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -961,8 +961,8 @@ pub fn shape(entity: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: core_pattern(&h.pattern),
-            assoc: h.assoc.as_deref().map(core_assoc),
+            pattern: Box::new(core_pattern(&h.pattern)),
+            assoc: h.assoc.as_deref().map(core_assoc).map(Box::new),
             boundary: h
                 .boundary
                 .as_deref()
@@ -1347,10 +1347,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             // its definition, and moves the point it follows from (docs/adr/0186 §8).
             e.ring = back(ring);
             e.holes = holes.map(|hs| hs.into_iter().map(back).collect());
-            if let Some(p) = contract_pattern(pattern) {
+            if let Some(p) = contract_pattern(*pattern) {
                 *e.pattern = p;
             }
-            e.assoc = assoc.and_then(contract_assoc).map(Box::new);
+            e.assoc = assoc.and_then(|a| contract_assoc(*a)).map(Box::new);
             // The exact boundary the core carried (docs/adr/0328 §1); none when it dropped it.
             e.boundary = boundary
                 .as_deref()
@@ -2130,7 +2130,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 zb,
                 // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
                 refs: None,
-                look: contract_look(look),
+                look: contract_look(*look),
                 level: None,
             }
         }
@@ -2146,9 +2146,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 .and_then(kentos_formats::blocks::contract_boundary),
             ring: back(ring),
             holes: holes.map(|hs| hs.into_iter().map(back).collect()),
-            pattern: contract_pattern(pattern)?,
+            pattern: contract_pattern(*pattern)?,
             assoc: match assoc {
-                Some(a) => Some(contract_assoc(a)?),
+                Some(a) => Some(contract_assoc(*a)?),
                 None => None,
             },
             annotative: None,
@@ -2241,8 +2241,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 None => None,
             },
             frame,
-            face: contract_face(face),
-            source: contract_source(source),
+            face: contract_face(*face),
+            source: contract_source(source.map(|s| *s)),
             table_style: None,
         },
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
@@ -2363,7 +2363,7 @@ mod tests {
         let odd = Shape::Hatch {
             ring: vec![Vec2::new(0.0, 0.0); 3],
             holes: None,
-            pattern: HatchPattern::user("dots", 0.0, 1.0),
+            pattern: Box::new(HatchPattern::user("dots", 0.0, 1.0)),
             assoc: None,
             boundary: None,
         };

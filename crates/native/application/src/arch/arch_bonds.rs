@@ -75,7 +75,7 @@ impl CoreWall {
             Shape::Wall { pts, bulges, wall } => Some(CoreWall {
                 pts,
                 bulges,
-                spec: wall,
+                spec: *wall,
             }),
             _ => None,
         }
@@ -838,7 +838,7 @@ fn held(
                 let then = CoreWall {
                     pts: pts.clone(),
                     bulges: bulges.clone(),
-                    spec: wall.clone(),
+                    spec: *wall.clone(),
                 };
                 let now = view.wall(slot).and_then(|w| CoreWall::of(&w));
                 match (then.edge(*e), now.as_ref().and_then(|n| n.edge(*e))) {

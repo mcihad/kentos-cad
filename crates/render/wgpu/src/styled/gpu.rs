@@ -2429,6 +2429,11 @@ impl ViewStyled {
         (drawn, held)
     }
 
+    /// The bytes of its parked layers (`FrameStats::parked_bytes`).
+    pub fn parked_bytes(&self) -> u64 {
+        self.parked.values().map(|l| l.bytes).sum()
+    }
+
     /// Whether it holds the only copy of numbers a part the app still holds has (`StyledLayerPart::on_gpu`): a view
     /// left undrawn keeps its buffers then (the drawing area under a sheet), for the app has nothing to upload them
     /// from again.
