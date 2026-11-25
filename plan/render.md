@@ -181,7 +181,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Adım 3 ([ADR 9233](../docs/adr/9233-nurbs-and-splines-round-in-the-deep-view.md)): spline ve NURBS derin
     görünümün kutusunda ve ekranda toleransla. NURBS sabit 0,1 mm'de kalıyordu (10⁶ px/m'de 100 piksel); spline açıklık
     başına 16 adımda (500 px/m'de 3 piksel). Hiçbir yerde bugünkünden kaba değil.
-  - [ ] GPU'da analitik eğriler (belleği kiriş sayısından kurtarır; RM-15 ile).
+  - [ ] GPU'da analitik eğriler (belleği kiriş sayısından kurtarır; RM-15 ile). **Değerlendirildi ve ertelendi**
+    (25 Kasım akşamı; sahibin “karar ver” sözüyle):
+    - **Ölçüm:** NCZ'de 40 492 eğri yakın düzey için 5,6 milyon kiriş kuruyor (eğri başına ~138; sivas.kcad'de 28 960
+      eğri, 2,0 milyon). Bu NCZ'nin GPU belleğinin ~260 MB'ı.
+    - **Uzak kare kazanmaz:** uzakta ADR 1063'ün seyrek düzeyi çiziliyor (en az 4 kiriş); yay da en az 4 parça olurdu.
+    - **Kalite zaten ölçütte:** kirişten sapma her yakınlıkta ≤ 0,25 px (ADR 9223 ve derin sahne).
+    - **Maliyet:** çizgi parçasına 7. sayı (bombe). Ortak düzeni stil çekirdeği, CPU ikizi, pafta/PDF çıktısı, gözler,
+      örnekleme, GPU düzeni ve ~30 dosyadaki sınama okuyor.
+    - Bellek bir sorun olursa (daha büyük çizim, zayıf makine) açılır.
 - [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
   [ADR 9207](../docs/adr/9207-far-levels-of-strokes-and-fills.md).
   - **24 Kasım: geri alındı** ([ADR 9222](../docs/adr/9222-quality-is-not-traded-for-speed.md)). Sahibin sözü
