@@ -105,6 +105,7 @@ fn build(entities: &[Entity], store: &Store, style: &LayerStyle) -> StyledLayer 
             library: &library,
             view: Default::default(),
             hold_weights: false,
+            text_outlines: None,
         },
     )
     .expect("decodes")

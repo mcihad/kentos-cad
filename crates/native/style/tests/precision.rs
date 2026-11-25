@@ -43,6 +43,7 @@ fn rectangle(center: Vec2) -> StyledLayer {
             library: &StyleLibrary::default(),
             view: ViewColors::default(),
             hold_weights: false,
+            text_outlines: None,
         },
     )
     .unwrap()

@@ -17,8 +17,15 @@
 //! The marker batch stays and draws while the symbol is small: there its bitmap is the SVG rasterized at its size, a
 //! stroke thinner than a pixel a faint continuous line, where the vectors' samples would break it into beads. Past
 //! [`VECTORS_FROM_PX`] the vectors draw instead (`StyledBatch::legible`), never both.
+//!
+//! **Text markers too** (plan/render.md RM-11, docs/adr/9245): a ground-sized text marker's bitmap (`raster::text_image`)
+//! is magnified the same way. Its glyphs' outlines, from the host's faces (`DecodeOptions::text_outlines`), are written
+//! as the SVG the bitmap paints (`text_svg`: its halo a round-joined stroke under its fill, the letters at the box's
+//! height over 1.25, their baseline at 78 % of it) and made vectors as an SVG symbol is. Its box is its height wide over
+//! its aspect (the marker shader's `fit` 2), and the switch compares its height, as the bitmap's batch does.
 
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 
 use kentos_geometry_core::triangulate::triangulate;
 use kentos_geometry_core::vec2::Vec2;
@@ -28,6 +35,7 @@ use resvg::usvg;
 use crate::batches::{
     AtlasImage, BatchKind, FillPaintBatch, INSTANCE_FLOATS, Instances, Mark, MarkerLook, StyledBatch, StyledLayer, Unit,
 };
+use crate::picture::{ImageSource, Segment};
 
 /// Numbers a marker takes: its place (x, y from the batch's tile), its turn, its width and its height.
 const MARKER: usize = 5;
@@ -40,19 +48,28 @@ pub const VECTORS_FROM_PX: f64 = 128.0;
 
 /// The vector batches of every ground-sized SVG marker batch, right after it in the draw order; the marker batch keeps
 /// drawing its bitmap while the symbol is small.
-pub fn add(layer: &mut StyledLayer) {
-    if !layer.batches.iter().any(|b| svg_of(b).is_some()) {
+pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
+    if !layer.batches.iter().any(|b| svg_of(b).is_some() || text_of(b).is_some()) {
         return;
     }
     let has_low = !layer.low.is_empty();
     let mut batches = Vec::with_capacity(layer.batches.len());
     for b in std::mem::take(&mut layer.batches) {
-        let meshes = svg_of(&b).and_then(|(svg, w, h)| mesh(svg, w, h));
+        // A text marker's box is its height (the marker's fifth number) wide over its aspect.
+        let mut by_height = false;
+        let meshes = match (svg_of(&b), text_of(&b)) {
+            (Some((svg, w, h)), _) => mesh(svg, w, h),
+            (None, Some(t)) => {
+                by_height = true;
+                text.and_then(|source| text_svg(source, t)).and_then(|(svg, w, h)| mesh(&svg, w, h))
+            }
+            (None, None) => None,
+        };
         let marks = match &b.kind {
-            BatchKind::Marker { offset, anchor, opacity, .. } => Some((*offset, *anchor, *opacity)),
+            BatchKind::Marker { offset, anchor, opacity, extent, .. } => Some((*offset, *anchor, *opacity, extent[1])),
             _ => None,
         };
-        let (Some(meshes), Some((offset, anchor, opacity))) = (meshes, marks) else {
+        let (Some(meshes), Some((offset, anchor, opacity, height))) = (meshes, marks) else {
             batches.push(b);
             continue;
         };
@@ -69,7 +86,8 @@ pub fn add(layer: &mut StyledLayer) {
         let mut largest = 0.0f64;
         for m in 0..n {
             let i = m * MARKER;
-            let (x, y, turn, w) = (at(i), at(i + 1), at(i + 2), at(i + 3));
+            let (x, y, turn) = (at(i), at(i + 1), at(i + 2));
+            let w = if by_height { at(i + 4) / meshes.aspect } else { at(i + 3) };
             if !(w.is_finite() && w > 0.0) {
                 continue;
             }
@@ -121,7 +139,8 @@ pub fn add(layer: &mut StyledLayer) {
                 instances: Some(Instances {
                     mesh: mesh_len,
                     count,
-                    scale: largest,
+                    // The switch compares what the bitmap's batch does (`StyledBatch::legible`): a text's height.
+                    scale: if by_height { height } else { largest },
                     proxy: None,
                     mark: Some(Mark { anchor, aspect: meshes.aspect, boxes: k == 0 }),
                 }),
@@ -173,6 +192,80 @@ fn svg_of(b: &StyledBatch) -> Option<(&str, f64, f64)> {
         } if b.instances.is_none() && b.lod.is_none() => Some((svg.as_str(), *width, *height)),
         _ => None,
     }
+}
+
+/// A ground-sized text marker batch's text and look (its bitmap's, `raster::text_image`).
+fn text_of(b: &StyledBatch) -> Option<&AtlasImage> {
+    match &b.kind {
+        BatchKind::Marker {
+            unit: Unit::World,
+            look: MarkerLook::Image { image: image @ AtlasImage::Text { .. }, fit_height: true },
+            ..
+        } if b.instances.is_none() && b.lod.is_none() => Some(image),
+        _ => None,
+    }
+}
+
+/// The box height of a text marker's SVG: its own units (any would do; the instance scales it).
+const TEXT_STEP: f64 = 100.0;
+/// A text marker's box over its letters' size (`raster::TEXT_BOX`).
+const TEXT_BOX: f64 = 1.25;
+/// Where the baseline lies in the box, from its top (`raster::text_image`).
+const BASELINE: f64 = 0.78;
+
+/// A text marker as the SVG its bitmap paints (`raster::text_image`), its width and height: the box [`TEXT_STEP`]
+/// high, the letters [`TEXT_BOX`] times smaller, the baseline at [`BASELINE`] of it, a halo the given share of the
+/// letters' size each side, stroked round-joined under the fill. None when the host has no face for it.
+pub(crate) fn text_svg(source: &dyn ImageSource, image: &AtlasImage) -> Option<(String, f64, f64)> {
+    let AtlasImage::Text { text, font, weight, italic, color, halo, .. } = image else {
+        return None;
+    };
+    let outline = source.text(text, font.as_deref(), *weight, *italic)?;
+    let size = TEXT_STEP / TEXT_BOX;
+    let s = size / f64::from(outline.size).max(1e-6);
+    let halo_w = halo.as_ref().map_or(0.0, |(_, w)| w * size);
+    let width = f64::from(outline.advance) * s + 2.0 * halo_w;
+    if !(width > 0.0 && width.is_finite()) {
+        return None;
+    }
+    let mut d = String::new();
+    let at = |p: [f32; 2]| (halo_w + s * f64::from(p[0]), TEXT_STEP * BASELINE + s * f64::from(p[1]));
+    for glyph in &outline.glyphs {
+        for segment in glyph {
+            let _ = match *segment {
+                Segment::Move(p) => write!(d, "M{} {}", at(p).0, at(p).1),
+                Segment::Line(p) => write!(d, "L{} {}", at(p).0, at(p).1),
+                Segment::Quad(c, p) => write!(d, "Q{} {} {} {}", at(c).0, at(c).1, at(p).0, at(p).1),
+                Segment::Cubic(c1, c2, p) => {
+                    write!(d, "C{} {} {} {} {} {}", at(c1).0, at(c1).1, at(c2).0, at(c2).1, at(p).0, at(p).1)
+                }
+                Segment::Close => write!(d, "Z"),
+            };
+        }
+    }
+    if d.is_empty() {
+        return None;
+    }
+    // A colour as the SVG reads it: its red, green and blue, and its opacity apart.
+    let paint = |hex: &str| -> (String, f64) {
+        let c = crate::color::parse_hex(hex, 1.0);
+        let v = |x: f64| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
+        (format!("rgb({},{},{})", v(c[0]), v(c[1]), v(c[2])), c[3].clamp(0.0, 1.0))
+    };
+    let mut svg = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{TEXT_STEP}" viewBox="0 0 {width} {TEXT_STEP}">"#
+    );
+    if let Some((halo_color, _)) = halo.as_ref().filter(|_| halo_w > 0.0) {
+        let (rgb, a) = paint(halo_color);
+        let w = 2.0 * halo_w;
+        let _ = write!(
+            svg,
+            r#"<path d="{d}" fill="none" stroke="{rgb}" stroke-opacity="{a}" stroke-width="{w}" stroke-linejoin="round"/>"#
+        );
+    }
+    let (rgb, a) = paint(color);
+    let _ = write!(svg, r#"<path d="{d}" fill="{rgb}" fill-opacity="{a}" fill-rule="nonzero"/></svg>"#);
+    Some((svg, width, TEXT_STEP))
 }
 
 /// A symbol's triangles by colour, in the SVG's own pixels (x right, y down), with its size.
@@ -536,7 +629,7 @@ mod tests {
     fn an_svg_marker_becomes_instanced_triangles_where_the_bitmap_lay() {
         // Two markers 2 m wide at (5, 1) and (8, 3), the second turned a quarter.
         let mut layer = marker_batch(SQUARE, &[[5.0, 1.0, 0.0, 2.0, 0.0], [8.0, 3.0, std::f32::consts::FRAC_PI_2, 2.0, 0.0]]);
-        add(&mut layer);
+        add(&mut layer, None);
         assert_eq!(layer.batches.len(), 2, "the marker batch, then one batch a colour");
         assert!(matches!(layer.batches[0].kind, BatchKind::Marker { vectors: true, .. }), "it keeps its bitmap");
         let b = &layer.batches[1];
@@ -580,7 +673,7 @@ mod tests {
             *anchor = [0.25, -0.5];
             *offset = [1.0, 2.0];
         }
-        add(&mut layer);
+        add(&mut layer, None);
         let b = &layer.batches[1];
         let inst = b.instances.as_ref().expect("instanced");
         let numbers = &layer.data[b.range.clone()];
@@ -619,7 +712,7 @@ mod tests {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="#ff0000"/><rect width="5" height="5" fill="#0000ff"/></svg>"##;
         let mut layer = marker_batch(svg, &[[40_000.0, 30_000.0, 0.0, 2.0, 0.0]]);
         layer.low = vec![0.001_25, -0.000_75, 0.0, 0.0, 0.0];
-        add(&mut layer);
+        add(&mut layer, None);
         assert_eq!(layer.batches.len(), 3, "the marker batch, then a batch a colour");
         assert_eq!(layer.low.len(), layer.data.len());
         for (k, b) in layer.batches[1..].iter().enumerate() {
@@ -655,7 +748,7 @@ mod tests {
     fn a_small_symbol_shows_its_bitmap_and_a_grown_one_its_vectors() {
         // 2 m wide: VECTORS_FROM_PX device px at half as many px a metre.
         let mut layer = marker_batch(SQUARE, &[[5.0, 1.0, 0.0, 2.0, 0.0]]);
-        add(&mut layer);
+        add(&mut layer, None);
         let (bitmap, vectors) = (&layer.batches[0], &layer.batches[1]);
         let at = VECTORS_FROM_PX / 2.0;
         for (ppm, dpr) in [(at * 0.5, 1.0), (at, 1.0), (at * 1.01, 1.0), (at * 8.0, 2.0)] {
@@ -736,14 +829,105 @@ mod tests {
     fn screen_sized_and_unreadable_symbols_keep_their_bitmap() {
         let mut layer = marker_batch("<svg", &[[1.0, 1.0, 0.0, 2.0, 0.0]]);
         let before = layer.batches.clone();
-        add(&mut layer);
+        add(&mut layer, None);
         assert_eq!(layer.batches, before, "an SVG that does not parse keeps its bitmap");
         let mut layer = marker_batch(SQUARE, &[[1.0, 1.0, 0.0, 2.0, 0.0]]);
         if let BatchKind::Marker { unit, .. } = &mut layer.batches[0].kind {
             *unit = Unit::Px;
         }
         let before = layer.batches.clone();
-        add(&mut layer);
+        add(&mut layer, None);
         assert_eq!(layer.batches, before, "a screen-sized one never grows past its bitmap");
     }
+
+    /// A face of one square letter, 50 px, 40 wide, its advance 50.
+    struct Square;
+    impl crate::picture::ImageSource for Square {
+        fn picture(&self, _: &AtlasImage) -> Option<std::sync::Arc<crate::picture::Picture>> {
+            None
+        }
+        fn text(&self, _: &str, _: Option<&str>, _: f64, _: bool) -> Option<std::sync::Arc<crate::picture::TextOutline>> {
+            use crate::picture::Segment::{Close, Line, Move};
+            let glyph = vec![Move([0.0, -40.0]), Line([40.0, -40.0]), Line([40.0, 0.0]), Line([0.0, 0.0]), Close];
+            Some(std::sync::Arc::new(crate::picture::TextOutline { size: 50.0, advance: 50.0, glyphs: vec![glyph] }))
+        }
+    }
+
+    /// docs/adr/9245: a text marker's SVG is its bitmap's layout: the box 100 high, the letters 80, the baseline at 78,
+    /// the halo (a tenth of the letters' size each side) a round-joined stroke under the fill.
+    #[test]
+    fn a_text_marker_is_written_as_its_bitmap_paints_it() {
+        let image = AtlasImage::Text {
+            key: "t".into(),
+            text: "A".into(),
+            font: None,
+            weight: 400.0,
+            italic: false,
+            color: "#ff0000".into(),
+            halo: Some(("#ffffff".into(), 0.1)),
+        };
+        let (svg, width, height) = text_svg(&Square, &image).expect("an SVG");
+        // The letters at 80 / 50 = 1.6 times the face's px: the advance 80, the halo 8 each side.
+        assert_eq!((width, height), (96.0, 100.0));
+        let halo = svg.find("stroke-width=\"16\"").expect("the halo's stroke, twice its share");
+        let fill = svg.find("fill=\"rgb(255,0,0)\"").expect("the fill");
+        assert!(halo < fill, "the halo under the fill");
+        // The square from (8, 78 − 64) to (72, 78): its first corner.
+        assert!(svg.contains("M8 14L72 14L72 78L8 78Z"), "{svg}");
+        let meshes = mesh(&svg, width, height).expect("its triangles");
+        assert_eq!(meshes.fills.len(), 2, "the halo's colour and the fill's");
+        assert!((meshes.aspect - 100.0 / 96.0).abs() < 1e-9);
+    }
+
+
+    /// docs/adr/9245: a text marker made vectors is drawn one way at a time, and neither way while too small to read
+    /// (the bitmap's batch keeps `MIN_TEXT_PX`).
+    #[test]
+    fn a_text_marker_is_drawn_one_way_or_none() {
+        let image = AtlasImage::Text {
+            key: "t".into(),
+            text: "A".into(),
+            font: None,
+            weight: 400.0,
+            italic: false,
+            color: "#ff0000".into(),
+            halo: None,
+        };
+        let data = vec![0.0f32, 0.0, 0.0, 10.0, 10.0];
+        let batch = StyledBatch {
+            range: 0..data.len(),
+            kind: BatchKind::Marker {
+                unit: Unit::World,
+                look: MarkerLook::Image { image, fit_height: true },
+                offset: [0.0, 0.0],
+                anchor: [0.0, 0.0],
+                opacity: 1.0,
+                extent: [10.0, 10.0],
+                vectors: false,
+            },
+            level: 0.0,
+            key: 1,
+            bounds: [-10.0, -10.0, 10.0, 10.0],
+            origin: [0.0, 0.0],
+            reach: 30.0,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+            group: 0,
+            effect: None,
+            weight_cap: 0.0,
+            line_type_loss: None,
+            lod: None,
+            instances: None,
+        };
+        let mut layer = StyledLayer { data, batches: vec![batch], ..Default::default() };
+        add(&mut layer, Some(&Square));
+        assert_eq!(layer.batches.len(), 2, "the bitmap's batch and the letter's colour");
+        let (bitmap, vectors) = (&layer.batches[0], &layer.batches[1]);
+        // 10 m high: 0.1 px/m makes it a pixel, 5 px/m 50 px, 20 px/m 200 px.
+        assert!(!bitmap.legible(0.1, 1.0) && !vectors.legible(0.1, 1.0), "too small to read: neither");
+        assert!(bitmap.legible(5.0, 1.0) && !vectors.legible(5.0, 1.0), "small: the bitmap");
+        assert!(!bitmap.legible(20.0, 1.0) && vectors.legible(20.0, 1.0), "grown: the vectors");
+    }
+
 }

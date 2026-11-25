@@ -600,6 +600,9 @@ pub struct DecodeOptions<'a> {
     /// The model screen: paper widths held to their size at the drawing scale (docs/adr/0793 §1); a sheet's map and
     /// a picture leave them in the world.
     pub hold_weights: bool,
+    /// The host's faces, for text markers drawn as vectors on the model screen (`svg_marks`, docs/adr/9245): none
+    /// keeps every text marker a bitmap.
+    pub text_outlines: Option<&'a dyn crate::picture::ImageSource>,
 }
 
 // ── Reading the core's JSON ────────────────────────────────────────────
@@ -1457,7 +1460,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
     if o.hold_weights {
         // Ground-sized SVG symbols as vectors (svg_marks.rs, docs/adr/9208): a bitmap magnified close up turned their
         // slanted edges into steps.
-        crate::svg_marks::add(&mut layer);
+        crate::svg_marks::add(&mut layer, o.text_outlines);
         // A large batch's items by cell, last, once its batches are what they will be (cells.rs, plan/render.md RM-08):
         // a view near the ground drew a whole city's segments.
         crate::cells::add(&mut layer);
@@ -1812,12 +1815,15 @@ impl StyledBatch {
         if let Some(i) = self.instances.as_ref().filter(|i| i.mark.is_some()) {
             return i.scale * px_per_m > crate::svg_marks::VECTORS_FROM_PX;
         }
-        if let BatchKind::Marker { vectors: true, .. } = self.kind {
-            return self.image_px(px_per_m, dpr) <= crate::svg_marks::VECTORS_FROM_PX;
-        }
-        match self.image() {
-            Some(AtlasImage::Text { .. }) => self.image_px(px_per_m, dpr) >= MIN_TEXT_PX * dpr,
+        let px = self.image_px(px_per_m, dpr);
+        // A text too small to read is drawn neither way (docs/adr/9245): its bitmap's batch keeps the rule.
+        let readable = match self.image() {
+            Some(AtlasImage::Text { .. }) => px >= MIN_TEXT_PX * dpr,
             _ => true,
+        };
+        match self.kind {
+            BatchKind::Marker { vectors: true, .. } => readable && px <= crate::svg_marks::VECTORS_FROM_PX,
+            _ => readable,
         }
     }
 }

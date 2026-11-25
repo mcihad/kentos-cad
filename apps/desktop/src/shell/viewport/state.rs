@@ -567,6 +567,7 @@ impl Viewport {
         let cache = self.styled_in_use();
         cache.borrow_mut().filters_at(s.spatial.filters_version());
         cache.borrow_mut().set_only(deep.map(|d| d.bounds));
+        cache.borrow_mut().text_from(s.styles.images.clone());
         let scene = cache.borrow_mut().scene_themed(
             self.generation,
             &doc.model,

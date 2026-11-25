@@ -541,6 +541,7 @@ fn parts_draw_whole(n: usize) {
             library: &library,
             view: Default::default(),
             hold_weights: false,
+            text_outlines: None,
         },
     )
     .expect("decoded");

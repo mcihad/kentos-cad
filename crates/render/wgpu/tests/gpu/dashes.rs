@@ -404,6 +404,7 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
                 library: &library,
                 view: Default::default(),
                 hold_weights: false,
+                text_outlines: None,
             },
         )
         .unwrap();

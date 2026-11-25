@@ -154,6 +154,8 @@ pub struct StyledCache {
     view_built: HashMap<String, ViewBuilt>,
     /// A count that keeps every heat map picture's key new.
     made: u64,
+    /// The faces text markers are drawn as vectors with on the model screen (docs/adr/9245); none keeps them bitmaps.
+    text: Option<Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>>,
     /// Layers already said to have left something out, by what, and those to say (docs/adr/0213 §2.4, plan/render.md
     /// RM-11).
     dropped_said: HashSet<(String, LeftOut)>,
@@ -382,6 +384,11 @@ impl StyledCache {
     /// object. The look's `View::deep` is the same box, so a new box builds every layer again.
     pub fn set_only(&mut self, b: Option<Bounds>) {
         self.only = b;
+    }
+
+    /// The faces text markers are drawn as vectors with (docs/adr/9245): the style's images, which read them.
+    pub fn text_from(&mut self, source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>) {
+        self.text = Some(source);
     }
 
     /// The symbol scale the layers were last built at, and whether on the screen.
@@ -859,6 +866,8 @@ impl StyledCache {
                 self.view_built.remove(&plan.node.id);
             }
         }
+        // Text markers drawn as vectors (docs/adr/9245): the faces, for every part built side by side.
+        let text = self.text.clone();
         let build = |node: &LayerNode, entities: &[&Entity]| -> (StyledLayer, bool) {
             let framed = frames.get(&node.id);
             let opts = BuildOptions {
@@ -901,6 +910,9 @@ impl StyledCache {
                             library,
                             view: look.view_colors,
                             hold_weights: look.hold_weights,
+                            text_outlines: text
+                                .as_deref()
+                                .map(|t| t as &dyn kentos_native_style::picture::ImageSource),
                         },
                     )
                     .map(|layer| (layer, call.reads_index))

@@ -256,6 +256,7 @@ fn builds_the_web_s_batches() {
                     opaque: view["transparency"] == false,
                 },
                 hold_weights: false,
+                text_outlines: None,
             },
         )
         .expect("decode");
@@ -417,6 +418,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
                     library: &library,
                     view: Default::default(),
                     hold_weights: false,
+                    text_outlines: None,
                 },
             )
             .expect("decode")

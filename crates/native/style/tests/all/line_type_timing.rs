@@ -74,6 +74,7 @@ fn build(
             library: &library,
             view: Default::default(),
             hold_weights: false,
+            text_outlines: None,
         },
     )
     .expect("decodes")

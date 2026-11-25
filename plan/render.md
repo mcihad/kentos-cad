@@ -213,12 +213,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       pikselin dört örneğini de kaplıyor. Bir koşunun bunları tek örnekli bir dokuya biriktirilip MSAA hedefine
       bindirilse, karıştırma doğrusal olduğu için sonuç aynı olur (8 bitlik ara yuvarlama dışında).
     - **Bedeli:** her katmanın çizgi koşusu bir bindirme. Koşular birleştirilip makaslanmazsa bindirmeler kazancı yer.
-      Yapılmadı.
+      Ölçü (aynı sınama): 4× hedefe tam ekran bir karıştırma ~0,4 ms; boş 4× kare 2,95 ms. Koşu başına geçiş kesme,
+      temizleme ve bindirme ~1–1,5 ms.
+    - **Engel:** bileşik kare yolu (ADR 0226) kaydırmada resmi taşıyan yolun (ADR 1067) önüne geçiyor. Büyük koşular için
+      açmak kaydırma karelerinin yeniden kullanımını kapatır; bu ödünleşim ölçülmeden yapılmadı.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
   - Hazır olmayan döşemenin yerinde ebeveyni gösterilir; ekran boş kalmaz.
-- [~] **RM-11 — Örnekli işaret ve simgeler.** **Öne alındı (23 Kasım, sahibin bildirimi):** “SVG çizgileri, stil
+- [x] **RM-11 — Örnekli işaret ve simgeler.** **Öne alındı (23 Kasım, sahibin bildirimi):** “SVG çizgileri, stil
   çizgileri çok zoom yapınca testere gibi.”
   - Neden: SVG semboller ve desen karoları 2048×2048'lik tek bir atlasa en çok 512 px'lik bitmap olarak
     rasterleştiriliyor. Sayfa dolunca bu sınır yarıya iniyor. Yakında büyütülen bitmap'in çapraz kenarları
@@ -238,8 +241,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Bitmap keskinken resim aynı (fark 0); tam ekran desende bedel 2,5 ms (UHD 770).
     - Yan bulgu: kendini kesen dış hatlar (keskin dönen SVG çizgisi) ADR 9208'in işaretlerinde de delik
       bırakıyordu; kesişim motoruyla çözülüyor.
-  - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek. Büyük glifin dış hattı hazır (ADR 9240); stil
-    katmanlarının yazı işaretleri hâlâ atlasın bitmap'inde, katmanın çizim sırasında.
+  - [x] Yazı işaretleri ([ADR 9245](../docs/adr/9245-text-markers-drawn-from-their-outlines.md)). Yere ölçülü yazı
+    işareti, bitmap'inin bastığı SVG olarak yazılıyor (glifler ev sahibinin yazı tiplerinden, hale altta). Ekranda 128
+    pikseli geçince SVG simgesi gibi vektörden çiziliyor, katmanın çizim sırasında.
+    - GPU'da 20 kat büyütülmüş “E”: ters çizilen piksel 110 → 0 (11 940'ta).
+    - Yan bulgu: vektörlü yazının bitmap'i “okunamayacak kadar küçük” kuralını atlıyordu (NCZ'de 1 327 piksel);
+      düzeltildi.
   - [x] Asıl madde ([ADR 9238](../docs/adr/9238-markers-along-a-path-counted-past-their-limit.md)). İşaretler GPU'da
     zaten örnekliydi (yerleşim başına 5 sayı, dörtgen örneği). Kayıp, yol başına 50 000 sınırıydı ve sessizdi:
     60 km'lik 1 m aralıklı çizgi 50. km'de, 5 cm aralıklı çizgi 2,5. km'de bitiyordu.
