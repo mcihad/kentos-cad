@@ -330,7 +330,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     kodeğin uzantı sözlüğü aramasında.
   - [~] Kodek düzeltmesi yazara önerildi (sahibin kararı): hakanaktt/acadrust#651, PR #652. Yazarın ana dalında aynı
     DWG'nin DXF'i 112,3 s yerine 2,95 s'de yazılıyor. Birleşince sabit sürüm yükseltilecek.
-- [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
+- [x] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyordu:
   - [x] “Görünmez” bayrağı doğrulandı (24 Kasım), doğru okunuyor:
     - **2 katlı ev:** DWG ve DXF'inde düz nesnelerden hiçbiri görünmez sayılmıyor.
     - **İLBANK İÇMESUYU:** DWG ve DXF birebir aynı (3 472 nesne).
@@ -361,10 +361,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Adım 4 ([ADR 9230](../docs/adr/9230-hatch-boundaries-of-pieces.md)): okunamayan tarama sınırları. YILTAŞ'ların
     130 taraması dört “kapalı değil” bayraklı tek doğrulu yoldan oluşuyor; okuyucu artık parçaları uç uca ekleyip
     halka yapıyor. 118'i dosyada kapalı bir katmanda (kolonlar), 12'si görünür (dış merdiven dikmeleri).
-  - [ ] Adım 5: görüş doğrultusuna dik çember ve yaylar çizgi gibi görünür; atılmak yerine izdüşümleri alınmalı
-    (TEKNOKENT'te 28).
-  - [ ] Adım 6: OLE nesnesi (OLE2FRAME) yerini gösteren çerçeveyle; boş yazı “alınmadı” değil bilgi notu (TEKNOKENT'te
-    303).
+  - [x] Adım 5 ve 6 ([ADR 9231](../docs/adr/9231-edge-on-circles-ole-frames-empty-texts.md)):
+    - yandan görülen çember, yay ve elips planda göründüğü doğru parçası (TEKNOKENT'in 28 yaprağı);
+    - OLE nesnesi yerini gösteren çerçeveyle (7 gömülü Excel sayfası);
+    - boş yazı bilgi notu (TEKNOKENT'te 303).
+
+    10 DWG örneğinde “alınmadı” kalanların hepsi çizilmeyen şeyler: görünmez işaretliler, tek köşeli çoklu çizgiler,
+    yarıçapı sıfır yaylar, alanı olmayan taramalar.
 - [x] **RM-23 — Birim** ([ADR 9210](../docs/adr/9210-cad-unit-from-the-survey-grid.md)).
   - Sayıları Türkiye'nin ölçme ızgarasında duran CAD dosyası, ister milimetre bildirsin ister bildirmesin, Aç'ta
     metre okunuyor ve birim soruluyor (metre seçili).

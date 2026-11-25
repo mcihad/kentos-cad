@@ -273,6 +273,42 @@ pub fn ellipse_from(
     })
 }
 
+/// The segment an elliptic arc `c + u·cos t + w·sin t` (t from `t0` to `t1`, the whole turn when `full`) is in plan
+/// when its plan view has no width: a circle, arc or ellipse whose plane holds the view's direction, seen edge on
+/// (docs/adr/9231). `u` and `w` lie along one line; along it the arc's point is `R·cos(t − φ)`, so the segment's ends
+/// are its values at the ends and at the turning points `φ + kπ` between them. None when it is a point.
+pub fn edge_on(c: Vec2, u: Vec2, w: Vec2, t0: f64, t1: f64, full: bool) -> Option<(Vec2, Vec2)> {
+    let (lu, lw) = (hypot(u.x, u.y), hypot(w.x, w.y));
+    let (along, l) = if lu >= lw { (u, lu) } else { (w, lw) };
+    if !(l > 0.0) || !finite(c) || !finite(u) || !finite(w) {
+        return None;
+    }
+    let e = v(along.x / l, along.y / l);
+    let (a, b) = (u.x * e.x + u.y * e.y, w.x * e.x + w.y * e.y);
+    let r = hypot(a, b);
+    let t1 = if t1 >= t0 { t1 } else { t1 + TAU };
+    let (lo, hi) = if full || t1 - t0 >= TAU || !(t1 - t0).is_finite() {
+        (-r, r)
+    } else {
+        let s = |t: f64| a * cos(t) + b * sin(t);
+        let (s0, s1) = (s(t0), s(t1));
+        let (mut lo, mut hi) = (s0.min(s1), s0.max(s1));
+        let phi = atan2(b, a);
+        let half = TAU / 2.0;
+        let mut k = ((t0 - phi) / half).ceil();
+        while phi + k * half <= t1 {
+            let st = s(phi + k * half);
+            (lo, hi) = (lo.min(st), hi.max(st));
+            k += 1.0;
+        }
+        (lo, hi)
+    };
+    if !(hi - lo > 1e-12 * l) {
+        return None;
+    }
+    Some((v(c.x + e.x * lo, c.y + e.y * lo), v(c.x + e.x * hi, c.y + e.y * hi)))
+}
+
 /// Segments of an arc of `sweep` radians, by the app's rule (`tessellateArc`,
 /// `bulgePathOutline`): 72 per turn, at least two.
 pub fn arc_steps(sweep: f64) -> usize {

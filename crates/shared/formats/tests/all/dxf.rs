@@ -2273,9 +2273,12 @@ fn an_mtext_is_one_text_with_its_lines_and_formats() {
         ("Dönük kutulu not", Some(15.0), Some(2.0))
     );
     assert!((t.rotation - 90.0).abs() < 1e-9, "{}", t.rotation);
-    assert_eq!(
-        skipped(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
-        Some("boş yazı")
+    // An empty text loses nothing: said, not counted lost (docs/adr/9231).
+    assert!(skipped(&r, "Çok satırlı yazı (MTEXT)").is_none());
+    assert!(
+        r.report.notes.iter().any(|n| n.what == "Çok satırlı yazı (MTEXT)" && n.reason == "boş; çizilecek yazısı yok"),
+        "{:?}",
+        r.report.notes
     );
 }
 
@@ -3297,6 +3300,81 @@ fn an_image_is_its_frame_and_its_file_is_named() {
     let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
     assert!(note.reason.contains("“DDS LOGO.jpg”"), "{}", note.reason);
     assert!(skipped(&r, "IMAGE").is_none());
+}
+
+/// A circle or arc seen edge on (docs/adr/9231): its normal along x puts it in a plane that holds the view's direction,
+/// and a plan shows it as a segment. It was left out ("görüş doğrultusuna dik"): TEKNOKENT MİMARİ's 28 circles. Its
+/// object coordinates' x runs along the world's y and their y up (the arbitrary axis rule), so the centre (0, 5) at
+/// elevation 3 is (3, 0) in plan and the radius 2 runs along y; the quarter arc from 0° to 90° is its upper half. One
+/// of no radius is left out for that.
+#[test]
+fn a_circle_seen_edge_on_is_the_segment_it_is_in_plan() {
+    let g = |code: i32, value: &str| (code, value.to_string());
+    let edge_on = |kind: &str, r: &str, angles: Option<(&str, &str)>| {
+        let mut e = vec![g(0, kind), g(8, "0"), g(10, "0"), g(20, "5"), g(30, "3"), g(40, r)];
+        if let Some((a0, a1)) = angles {
+            e.extend([g(50, a0), g(51, a1)]);
+        }
+        e.extend([g(210, "1"), g(220, "0"), g(230, "0")]);
+        e
+    };
+    let mut entities = edge_on("CIRCLE", "2", None);
+    entities.extend(edge_on("ARC", "2", Some(("0", "90"))));
+    entities.extend(edge_on("CIRCLE", "0", None));
+    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
+    let lines: Vec<[(f64, f64); 2]> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Line(l) => Some([(l.a.x, l.a.y), (l.b.x, l.b.y)]),
+            _ => None,
+        })
+        .collect();
+    let close = |p: (f64, f64), q: (f64, f64)| (p.0 - q.0).abs() < 1e-12 && (p.1 - q.1).abs() < 1e-12;
+    assert_eq!(lines.len(), 2, "{:?} {:?}", r.entities, r.report.skipped);
+    assert!(close(lines[0][0], (3.0, -2.0)) && close(lines[0][1], (3.0, 2.0)), "{lines:?}");
+    assert!(close(lines[1][0], (3.0, 0.0)) && close(lines[1][1], (3.0, 2.0)), "{lines:?}");
+    let said = r.report.notes.iter().find(|n| n.what == "CIRCLE").expect("said");
+    assert!(said.reason.contains("doğru parçası olarak alındı"), "{}", said.reason);
+    let point = r.report.skipped.iter().find(|s| s.what == "CIRCLE").expect("the point is left out");
+    assert_eq!((point.count, point.reason.as_str()), (1, "yarıçapı sıfır ya da negatif"));
+}
+
+/// An embedded document is its frame, said (docs/adr/9231): OLE2FRAME's corners, upper left (10) and lower right
+/// (11), give a closed outline where it lies; its content was another program's data and stays out. An empty text
+/// draws nothing and loses nothing: a note, not "not taken".
+#[test]
+fn an_ole_frame_is_its_outline_and_an_empty_text_a_note() {
+    let entities = groups(&[
+        (0, "OLE2FRAME"),
+        (8, "0"),
+        (70, "2"),
+        (10, "10"),
+        (20, "8"),
+        (30, "0"),
+        (11, "16"),
+        (21, "4"),
+        (31, "0"),
+        (71, "2"),
+        (0, "TEXT"),
+        (8, "0"),
+        (10, "0"),
+        (20, "0"),
+        (40, "2.5"),
+        (1, ""),
+    ]);
+    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
+    let Some(Entity::Polyline(p)) = r.entities.first() else { panic!("{:?} {:?}", r.entities, r.report.skipped) };
+    assert!(p.closed);
+    let outline: Vec<(f64, f64)> = p.pts.iter().map(|q| (q.x, q.y)).collect();
+    assert_eq!(outline, vec![(10.0, 8.0), (16.0, 8.0), (16.0, 4.0), (10.0, 4.0)]);
+    assert_eq!(r.entities.len(), 1);
+    assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
+    let said = |what: &str| r.report.notes.iter().find(|n| n.what == what).map(|n| n.reason.clone());
+    assert!(said("OLE nesnesi (OLE2FRAME)").is_some_and(|w| w.contains("yerini gösteren çerçevesi alındı")));
+    assert_eq!(said("Yazı (TEXT)").as_deref(), Some("boş; çizilecek yazısı yok"));
 }
 
 /// A hatch whose boundary is pieces that close only together (docs/adr/9230): paths flagged not closed (92 bit 32),
