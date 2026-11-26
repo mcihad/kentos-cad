@@ -5057,7 +5057,7 @@
   {
    "id": "layer.editSave",
    "kind": "command",
-   "title": "Değişiklikleri kaydet",
+   "title": "Katman değişikliklerini kaynağa kaydet",
    "level": "semantic",
    "via": [
     "cad.layers.session"

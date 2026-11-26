@@ -627,7 +627,8 @@ impl App {
         let mut body = Column::new()
             .spacing(10)
             .push(label::caption(head).style(muted));
-        body = self.entry_pages(e, false, body, None);
+        // A preview seen through Okuyan's eyes is read-only, as the record would be (docs/adr/9325).
+        body = self.entry_pages(e, e.read_only, body, None);
         let errors = e.errors().count();
         let warnings = e.issues.len() - errors;
         let mut summary = Vec::new();

@@ -73,9 +73,9 @@ impl App {
             self.say(
                 Level::Info,
                 if link {
-                    "Nesne bağlanacak; Kaydet ile kayıtla birlikte yazılır."
+                    "Nesne bağlanacak; Kaydı uygula ile kayıtla birlikte yazılır."
                 } else {
-                    "Nesnenin bağı koparılacak; Kaydet ile kayıtla birlikte yazılır."
+                    "Nesnenin bağı koparılacak; Kaydı uygula ile kayıtla birlikte yazılır."
                 },
             );
             return Task::none();

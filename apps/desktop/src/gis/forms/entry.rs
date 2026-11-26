@@ -62,7 +62,7 @@ use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Formla düzenle";
-const SAVE: &str = "Kaydet";
+const SAVE: &str = "Kaydı uygula";
 const RELOAD: &str = "Yeniden yükle";
 const OVERWRITE: &str = "Üzerine yaz";
 /// A new release's form opened with what was typed (docs/adr/0442 §2).
@@ -74,10 +74,10 @@ const COMMIT: &str = "Kaynağa da yaz";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
 const NEXT_ISSUE: &str = "Sonraki sorun";
-const UNSAVED: &str = "Kaydedilmedi.";
-const DISCARD: &str = "Kaydetmeden kapat";
+const UNSAVED: &str = "Uygulanmadı.";
+const DISCARD: &str = "Uygulamadan kapat";
 const KEEP_EDITING: &str = "Düzenlemeye dön";
-const SAVE_AND_CLOSE: &str = "Kaydet ve kapat";
+const SAVE_AND_CLOSE: &str = "Uygula ve kapat";
 const BACK: &str = "Geri";
 const NEXT: &str = "İleri";
 /// The scrolled items' room: clear of the scrollbar on the right.
@@ -372,6 +372,11 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn uid_text(&self) -> String {
         self.uid.clone()
+    }
+
+    /// Whether the record is one of the drawing's (the designer's preview shows a selected object's, docs/adr/9325).
+    pub(crate) fn has_record(&self) -> bool {
+        !self.uid.is_empty()
     }
 
     /// Whether Vazgeç asked before dropping what was typed (for the tests).

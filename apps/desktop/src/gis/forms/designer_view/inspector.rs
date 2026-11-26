@@ -1412,7 +1412,34 @@ impl App {
         let Some(e) = &self.gis.form_preview else {
             return empty_inspector();
         };
-        let shown = column![self.entry_preview(e), self.scenarios_box(w)].spacing(16);
+        // The record shown and whose eyes it is seen through (docs/adr/9325); nothing typed here is written.
+        let sample = if !e.has_record() {
+            "Boş kayıt. Haritada bu katmandan bir nesne seçerseniz önizleme onun değerleriyle açılır."
+        } else {
+            "Örnek kayıt: haritada seçili nesne, değerleriyle."
+        };
+        let role_words = match w.preview_role {
+            crate::forms::designer::PreviewRole::Editor => "Kaydı düzenleyen bütün formu görür ve değiştirir.",
+            crate::forms::designer::PreviewRole::Entry => {
+                "Veri girişi yalnız yayınlanmış formla kaydın özniteliklerini değiştirir; nesne ekleyemez, silemez, \
+                 şeklini değiştiremez."
+            }
+            crate::forms::designer::PreviewRole::Viewer => "Okuyan kaydı okur; formda hiçbir şeyi değiştiremez.",
+        };
+        let head = column![
+            label::caption(format!("{sample} Önizlemede yazılanlar kayda geçmez.")).style(muted),
+            row![
+                label::caption("Rol").style(muted),
+                Segmented::new(crate::forms::designer::PreviewRole::ALL, w.preview_role, |r| {
+                    msg(Event::PreviewRole(r))
+                }),
+            ]
+            .spacing(8)
+            .align_y(Center),
+            label::caption(role_words).style(muted),
+        ]
+        .spacing(6);
+        let shown = column![head, self.entry_preview(e), self.scenarios_box(w)].spacing(16);
         scrollable(container(shown).padding(iced::Padding {
             top: 0.0,
             right: 14.0,

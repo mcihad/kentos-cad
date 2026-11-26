@@ -260,7 +260,7 @@ impl App {
                         }
                         self.say(
                             Level::Info,
-                            "Hesaplar kayıtta yeniden çalıştı; yazmak için Kaydet’e basın.",
+                            "Hesaplar kayıtta yeniden çalıştı; yazmak için Kaydı uygula’ya basın.",
                         );
                     }
                     K::Step => {
@@ -346,7 +346,7 @@ impl App {
                 if e.dirty() {
                     self.say(
                         Level::Warn,
-                        "Kaydedilmemiş değişiklik var: önce Kaydet’e basın ya da Vazgeç’le bırakın.",
+                        "Uygulanmamış değişiklik var: önce Kaydı uygula’ya basın ya da Vazgeç’le bırakın.",
                     );
                     return Task::none();
                 }

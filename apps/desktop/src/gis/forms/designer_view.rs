@@ -291,6 +291,10 @@ impl App {
         });
 
         let mut above: Vec<Element<'_, Message>> = Vec::new();
+        // The way to a release, step by step (docs/adr/9325).
+        if let Some(f) = form {
+            above.push(self.design_steps(w, f));
+        }
         if let Some(why) = locked {
             above.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
         }
@@ -1041,3 +1045,5 @@ mod palettes;
 mod inspector;
 
 mod flow;
+#[path = "designer_view/steps.rs"]
+mod steps;

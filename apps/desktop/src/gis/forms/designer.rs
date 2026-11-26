@@ -40,8 +40,8 @@ use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Formlar";
-pub(super) const SAVE: &str = "Kaydet";
-pub(super) const PUBLISH: &str = "Yayınla";
+pub(super) const SAVE: &str = "Taslağı kaydet";
+pub(super) const PUBLISH: &str = "Formu yayınla";
 pub(super) const CANCEL: &str = "Vazgeç";
 pub(super) const REMOVE_FORM: &str = "Formu sil";
 pub(super) const NEW_FORM: &str = "Yeni form";
@@ -160,6 +160,36 @@ pub enum Text {
     AttachMax,
 }
 
+/// Whose eyes the designer's preview shows the record through (the CBS review's 6th item, docs/adr/9325).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum PreviewRole {
+    /// Düzenleyen: the record open for editing.
+    #[default]
+    Editor,
+    /// Veri girişi: a record's attributes through the published form alone.
+    Entry,
+    /// Okuyan: the record read, nothing changed.
+    Viewer,
+}
+
+impl PreviewRole {
+    pub const ALL: [PreviewRole; 3] = [PreviewRole::Editor, PreviewRole::Entry, PreviewRole::Viewer];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            PreviewRole::Editor => "Düzenleyen",
+            PreviewRole::Entry => "Veri girişi",
+            PreviewRole::Viewer => "Okuyan",
+        }
+    }
+}
+
+impl std::fmt::Display for PreviewRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.label())
+    }
+}
+
 /// A new form being made: its name and layer.
 #[derive(Debug, Clone, Default)]
 pub struct NewForm {
@@ -218,6 +248,10 @@ pub struct Window {
     pub(crate) toggled_sections: std::collections::BTreeSet<&'static str>,
     /// The properties pane's offset: the designer comes back from Değer listeleri where it was (docs/adr/9322).
     pub(crate) properties_offset: f32,
+    /// Örnek kayıtla dene done: the preview was opened in this window (docs/adr/9325).
+    pub(crate) tried: bool,
+    /// The role the preview shows the record to (docs/adr/9325).
+    pub(crate) preview_role: PreviewRole,
 }
 
 /// Veri kaynağına sütun ekle, asked in the designer (docs/adr/9318): the data layer, the field its new column becomes,
@@ -298,6 +332,8 @@ pub enum Event {
     NewDomainForField,
     /// The properties pane scrolled: its offset, restored when the designer comes back.
     PropertiesScrolled(f32),
+    /// The preview's role (docs/adr/9325).
+    PreviewRole(PreviewRole),
     /// The section library (docs/adr/0441 §1): the chosen item kept under the name typed, a kept
     /// section put where the chosen item is.
     SectionName(String),
@@ -816,7 +852,7 @@ pub(crate) fn id_at(body: &FormBody, index: usize) -> Option<String> {
 }
 
 /// Two copies of a form's draft are the same form, whatever their revision.
-fn same_form(a: &FormBody, b: &FormBody) -> bool {
+pub(crate) fn same_form(a: &FormBody, b: &FormBody) -> bool {
     a.items == b.items
         && a.clear_hidden == b.clear_hidden
         && a.translations == b.translations
@@ -1225,6 +1261,14 @@ impl App {
         if error.is_some() {
             self.gis.form_preview = None;
         }
+        // Okuyan: the record read, nothing changed in the preview either (docs/adr/9325).
+        let role = self.gis.forms_window.as_ref().map(|w| w.preview_role);
+        if role == Some(PreviewRole::Viewer)
+            && let Some(e) = self.gis.form_preview.as_mut()
+        {
+            e.read_only = true;
+            e.read_why = Some("Okuyan rolü kaydı okur; formda hiçbir şeyi değiştiremez.".to_owned());
+        }
         if let Some(w) = self.gis.forms_window.as_mut() {
             w.preview_error = error;
         }
@@ -1594,6 +1638,10 @@ mod new_field_tests;
 #[cfg(test)]
 #[path = "list_source_tests.rs"]
 mod list_source_tests;
+
+#[cfg(test)]
+#[path = "design_steps_tests.rs"]
+mod design_steps_tests;
 
 #[cfg(test)]
 #[path = "source_columns_tests.rs"]

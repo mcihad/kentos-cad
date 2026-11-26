@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Form tasarımının adımları ve ayrı adlar (27 Kasım 2026, CBS incelemesinin 6. maddesi;
+  [ADR 9325](../adr/9325-form-design-steps-and-names.md)).**
+  - Adlar: Taslağı kaydet ve Formu yayınla (tasarımcı), Kaydı uygula (kayıt penceresi), Katman değişikliklerini
+    kaynağa kaydet (düzenleme oturumu; şeritte Kaynağa kaydet). Taslağı kaydet pencereyi açık tutar.
+  - Tasarımcının başında adımlar: Alanları yerleştir, Örnek kayıtla dene, Taslağı kaydet, Formu yayınla.
+  - Önizleme hangi kaydı gösterdiğini söyler; rol (Düzenleyen, Veri girişi, Okuyan) seçilir, Okuyan'da salt okunurdur.
+
 - **Alanın listesi ve aralığı kaynağa kural olarak (27 Kasım 2026, CBS incelemesinin 4. maddesi, ikinci dilim;
   [ADR 9324](../adr/9324-field-rules-in-the-source.md)).**
   - Sürücü sözleşmesi: `Source::rules`, `Transaction::set_rules`, `Capabilities.set_rules`. GeoPackage'ta şema uzantısı

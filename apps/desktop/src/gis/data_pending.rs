@@ -257,7 +257,7 @@ impl App {
         let w = self.data_waiting().into_iter().find(|w| w.layer == layer)?;
         Some(format!(
             "Değer “{}” katmanında bekliyor, kaynağa yazılmadı: {}. Kaynağa yazmak için durum çubuğundaki “Kaynağa \
-             yazılmadı”ya ya da katmanın menüsünde Değişiklikleri kaydet'e tıklayın.",
+             yazılmadı”ya ya da katmanın menüsünde Kaynağa kaydet'e tıklayın.",
             w.name,
             crate::data_edits::counts_words(w.added, w.changed, w.deleted)
         ))

@@ -1140,7 +1140,8 @@ fn a_form_is_made_saved_and_published_in_the_window() {
     assert_eq!(kept.releases.len(), 1);
     designer(&mut app, designer::Event::Name("Hasar tespiti 2026".into()));
     designer(&mut app, designer::Event::Save);
-    assert!(app.gis.forms_window.is_none(), "Kaydet closes the window");
+    // Taslağı kaydet keeps the window, saved (docs/adr/9325).
+    assert!(app.gis.forms_window.as_ref().is_some_and(|w| !w.dirty), "Taslağı kaydet keeps the window");
     assert!(
         app.project_forms()
             .iter()

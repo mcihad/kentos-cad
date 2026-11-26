@@ -2212,12 +2212,14 @@
     },
     {
       "id": "layer.editSave",
-      "title": "Değişiklikleri kaydet",
+      "title": "Katman değişikliklerini kaynağa kaydet",
+      "short": "Kaynağa kaydet",
       "icon": "sourceWrite",
       "description": "Düzenlenen bütün veri katmanlarının değişikliklerini kaynaklarına yazar: yeni satırlar eklenir, değişenler güncellenir, silinenler silinir. Kaynak bir katmanın yazmasını reddederse o katmanın değişiklikleri katmanda kalır ve nedeni söylenir. Katmanlar düzenlemeye açık kalır. cad.layers.session'ın save işlemi.",
       "aliases": [
         "DEGISIKLIKLERIKAYDET",
-        "DUZENLEMELERIKAYDET"
+        "DUZENLEMELERIKAYDET",
+        "KAYNAGAKAYDET"
       ],
       "shortcuts": [],
       "category": "Veri",

@@ -175,7 +175,7 @@ impl App {
             Some(if data.read_only {
                 " Veri katmanı, salt okunur: çizilmez.".to_owned()
             } else if doc.model.editing(&n.id) {
-                " Veri katmanı düzenleniyor: çizilenler Değişiklikleri kaydet'e kadar katmanda bekler.".to_owned()
+                " Veri katmanı düzenleniyor: çizilenler Kaynağa kaydet'e kadar katmanda bekler.".to_owned()
             } else {
                 " Veri katmanı düzenlemeye kapalı: çizmek için Düzenle sekmesinde Düzenlemeyi başlat.".to_owned()
             })

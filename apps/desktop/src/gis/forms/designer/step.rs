@@ -26,7 +26,7 @@ impl App {
                 if w.dirty && w.chosen.as_deref() != Some(id.as_str()) {
                     self.say(
                         Level::Warn,
-                        "Formdaki değişiklikler kaydedilmedi: önce Kaydet’e ya da Vazgeç’e basın.",
+                        "Formdaki değişiklikler kaydedilmedi: önce Taslağı kaydet’e ya da Vazgeç’e basın.",
                     );
                     return Task::none();
                 }
@@ -593,7 +593,7 @@ impl App {
                     w.dirty = true;
                     self.say(
                         Level::Info,
-                        "Bu cihazda kalan taslak geri yüklendi; kaydetmek için Kaydet’e basın.",
+                        "Bu cihazda kalan taslak geri yüklendi; kaydetmek için Taslağı kaydet’e basın.",
                     );
                 }
             }
@@ -1024,7 +1024,7 @@ impl App {
                 if w.dirty {
                     self.say(
                         Level::Warn,
-                        "Kayıtlar formun kaydedilmiş hâliyle denetlenir: önce Kaydet’e basın.",
+                        "Kayıtlar formun kaydedilmiş hâliyle denetlenir: önce Taslağı kaydet’e basın.",
                     );
                     self.gis.forms_window = Some(w);
                     return Task::none();
@@ -1038,7 +1038,7 @@ impl App {
                 if w.dirty {
                     self.say(
                         Level::Warn,
-                        "Hesaplar formun kaydedilmiş hâliyle yenilenir: önce Kaydet’e basın.",
+                        "Hesaplar formun kaydedilmiş hâliyle yenilenir: önce Taslağı kaydet’e basın.",
                     );
                 } else if let Some(form) = self.chosen_form().cloned() {
                     self.gis.forms_window = Some(w);
@@ -1182,10 +1182,12 @@ impl App {
                     s.reason = key.clone();
                 }
             }),
+            Event::PreviewRole(role) => w.preview_role = role,
             Event::Preview(on) => {
                 w.changes = false;
                 w.flow = false;
                 w.previewing = on;
+                w.tried |= on;
                 if !on {
                     self.gis.form_preview = None;
                 }
@@ -1465,12 +1467,15 @@ impl App {
                     .forms_window
                     .as_ref()
                     .map(|w| w.name.trim().to_owned());
+                // Taslağı kaydet keeps the designer, as Formu yayınla does: the next step is in the same window
+                // (docs/adr/9325); Vazgeç or the window's close leaves it.
                 if self.save_form() {
-                    self.gis.forms_window = None;
-                    self.dialog = None;
                     self.say(
                         Level::Success,
-                        format!("“{}” formu kaydedildi.", name.unwrap_or_default()),
+                        format!(
+                            "“{}” formunun taslağı kaydedildi; veri girişi onu Formu yayınla'dan sonra kullanır.",
+                            name.unwrap_or_default()
+                        ),
                     );
                 }
                 return Task::none();
