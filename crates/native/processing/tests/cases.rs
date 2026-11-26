@@ -120,7 +120,7 @@ struct State {
 
 fn state(doc: &Document) -> State {
     State {
-        objects: doc.entities().map(|e| (e.base().id, plain(e))).collect(),
+        objects: doc.entities().map(|e| (e.base().id, equivalence::linked(plain(e), doc))).collect(),
         layers: serde_json::to_value(doc.layers().nodes()).expect("the tree writes"),
     }
 }
@@ -552,7 +552,7 @@ fn observed(s: &Seen) -> Value {
                 "log": log,
                 "layers": layers,
                 "groups": groups,
-                "added": added,
+                "added": equivalence::by_place(added, &now, &s.before),
                 "updated": updated,
                 "removed": removed,
                 "selection": s.host.selection.iter().map(|s| s.0).collect::<Vec<_>>(),

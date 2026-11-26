@@ -728,6 +728,9 @@ pub struct ChangeSet {
     pub add: Vec<Entity>,
     pub update: Vec<Patch>,
     pub remove: Vec<Slot>,
+    /// New texts that write new points' names and follow them (docs/adr/9314), as (text, point) places in `add`: the
+    /// runner gives each text its point's persistent id, in the same step.
+    pub name_links: Vec<(usize, usize)>,
 }
 
 /// What a run gives back (the web's `RunResult`).

@@ -40,6 +40,10 @@ use super::*;
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 257 (docs/adr/9314): a point's name, a text linked without a scale.
+    if objs.iter().any(|e| matches!(e, Entity::Text(t) if t.label_of.is_some() && t.label_scale.is_none())) {
+        return crate::SCHEMA_WITH_NAME_LINKS;
+    }
     // Schema 256 (docs/adr/9198): a node's place on the mobile clients.
     fn mobile(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| n.mobile.is_some() || mobile(&n.children))

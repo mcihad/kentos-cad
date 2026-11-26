@@ -1604,8 +1604,9 @@ pub(super) fn commit(
         let Some(base) = model.get(*slot).map(Entity::base) else {
             return Vec::new();
         };
-        // Keep the drawn number in step with the cadastral attribute, in the same step.
-        let follows = (key == "Parsel" || key == "Ada")
+        // Keep the drawn number in step with the cadastral attribute, and a point's name with the attribute that
+        // mirrors it (Nokta, Ad: its name's text follows, docs/adr/9314), in the same step.
+        let follows = matches!(key.as_str(), "Parsel" | "Ada" | "Nokta" | "Ad")
             && base.label.is_some()
             && base.label.as_ref() == base.attrs.get(key);
         let mut input = set_input(model, &[*slot], PropertiesOperation::Attributes);

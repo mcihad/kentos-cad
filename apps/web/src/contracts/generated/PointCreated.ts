@@ -17,4 +17,12 @@ id: number,
  * open transaction or group the write joins it, and the revision
  * changes when that ends.
  */
-revision: string, };
+revision: string, 
+/**
+ * The name's text (`nameText`), its persistent id; absent when none was written.
+ */
+textUid?: string, 
+/**
+ * The name's text's slot in the open document; absent when none was written.
+ */
+textId?: number, };

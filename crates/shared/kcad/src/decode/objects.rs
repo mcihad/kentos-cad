@@ -296,6 +296,8 @@ struct Fields {
     label_of: Option<EntityId>,
     label_scale: Option<f64>,
     link_at: usize,
+    /// Whether the schema has a point's name, a link without a scale (docs/adr/9314).
+    name_links: bool,
     /// A multi-line text's fields (docs/adr/0182), and where its runs start (for a refusal).
     paragraph: Paragraph,
     /// A text's face and a dimension's look (docs/adr/0183), and where the face's first field is.

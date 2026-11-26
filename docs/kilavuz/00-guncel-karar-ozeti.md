@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Noktanın adı yazıdır ve noktasını izler (26 Kasım 2026, sahibin isteği;
+  [ADR 9314](../adr/9314-point-names-follow-their-points.md)).**
+  - Nokta aracı ve Noktalar'ın Satır ekle'si adlı noktanın adını sağ üstüne Metin nesnesi olarak da yazar
+    (`cad.point.create`'in `nameText`'i); köşe numaralandırmanın yazıları da noktalarına bağlıdır.
+  - Ölçeksiz `labelOf` noktanın adının bağıdır: nokta taşınınca yazı kayar; ad Noktalar'dan, Öznitelikler'den,
+    Python'dan ya da MCP'den değişince metni değişir. `.kcad` şema 257.
+
 - **Bütün yazı tipleri `fonts` klasöründe, listeler oradan; yazılar dik (26 Kasım 2026, sahibin isteği;
   [ADR 9313](../adr/9313-fonts-folder-listing-upright-texts.md)).**
   - Yazı tipi dosyaları lisanslarıyla `paket/fonts/{cizim,arayuz,yedek}`'tedir; kullanıcınınkiler `<kullanıcı>/fonts`'ta.

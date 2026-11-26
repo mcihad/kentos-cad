@@ -118,8 +118,9 @@ fn the_writer_refuses_what_the_reader_would() {
     let base = drawing(Vec::new());
     let id = first(&base);
     let refused = |e: Entity| kentos_kcad::encode(&drawing(vec![e])).expect_err("refused");
+    // An object without a scale is a point's name (docs/adr/9314): written, as schema 257.
+    assert!(kentos_kcad::encode(&drawing(vec![text(Some(id), None)])).is_ok());
     for (e, place) in [
-        (text(Some(id), None), "text/labelScale"),
         (text(None, Some(1000.0)), "text/labelOf"),
         (text(Some(id), Some(0.0)), "text/labelScale"),
         (text(Some(id), Some(-500.0)), "text/labelScale"),

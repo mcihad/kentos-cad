@@ -37,14 +37,14 @@ widthFactor?: number,
  */
 mask?: boolean, 
 /**
- * The object whose label this text writes (Etiketleri yazıya çevir's
- * “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
- * follows the object as its label at `label_scale`; absent: a text of
- * its own. Given with `label_scale` or not at all.
+ * The object whose label this text writes, its persistent id: with `label_scale` it follows the object as its
+ * label at that scale (Etiketleri yazıya çevir's “Nesneye bağlı”, docs/adr/0175 §4); without, a point's name
+ * written where it was put, moved as the point moves (docs/adr/9314). Absent: a text of its own.
+ * A scale is never given without it.
  */
 labelOf?: EntityId, 
 /**
- * The scale's denominator (1:N) the linked label is written at; finite, over 0.
+ * The scale's denominator (1:N) the linked label is written at; finite, over 0; absent: a point's name.
  */
 labelScale?: number, 
 /**

@@ -2868,6 +2868,9 @@ def document(d):
     if on_phone(d["layers"]):
         # A node's place on the mobile clients (docs/adr/9198).
         schema = max(schema, 256)
+    if any(e["kind"] == "text" and "labelOf" in e and "labelScale" not in e for e in d["entities"]):
+        # A point's name, a text linked without a scale (docs/adr/9314).
+        schema = max(schema, 257)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3762,7 +3765,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-257.kcad"] = container(root(cmap(parts), version=uint(257)))
+    files["schema-version-258.kcad"] = container(root(cmap(parts), version=uint(258)))
     # Schema 254's module versions (docs/adr/8054 §10): `modules` before `version`, refused before the document when
     # this build does not know a module's version, the module or an extension's data.
     def with_modules(modules, version):
@@ -6620,6 +6623,22 @@ def build():
     for name, word in (("show", b"show"), ("unknown", b"nope")):
         out[f"broken/layer-mobile-{name}.kcad"] = container(
             phone_data.replace(b"\x66mobile\x64hide", b"\x66mobile\x64" + word))
+    # Schema 257 (docs/adr/9314): a point's name, a text linked to it without a scale; schema 256 refuses it, and a scale
+    # without its object is refused.
+    named = load("linked-texts.json")
+    named["name"] = "Nokta adları"
+    point = next(e for e in named["entities"] if e["kind"] == "point")
+    of = named["uids"][named["entities"].index(point)]
+    named_text = next(e for e in named["entities"] if e["kind"] == "text" and "labelOf" in e)
+    named_text.pop("labelScale")
+    named_text["labelOf"] = of
+    named_text["text"] = point["label"]
+    out["name-links.json"] = json_text(named).encode("utf-8")
+    named_data = document(named)
+    assert named_data.count(b"\x67version\x19\x01\x01") == 1, "a point's name is schema 257"
+    out["name-links.kcad"] = container(named_data)
+    out["broken/name-links-in-schema-256.kcad"] = container(
+        named_data.replace(b"\x67version\x19\x01\x01", b"\x67version\x19\x01\x00"))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

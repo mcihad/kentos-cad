@@ -125,6 +125,38 @@ fn objects_in(doc: &Document, folder: Option<&std::path::Path>) -> Vec<Value> {
         .collect()
 }
 
+/// A text's link to its point as the cases write it (docs/adr/9314): the point's slot, `$slot:12`, not its persistent
+/// id (new on every run).
+pub(super) fn linked(mut v: Value, doc: &Document) -> Value {
+    let slot = v
+        .get("labelOf")
+        .and_then(Value::as_str)
+        .and_then(|of| kentos_domain::Uuid::parse_str(of).ok())
+        .and_then(|uid| doc.slot_of(uid));
+    if let Some(slot) = slot {
+        v["labelOf"] = json!(format!("$slot:{}", slot.0));
+    }
+    v
+}
+
+/// A run's new objects as a case writes them (docs/adr/9314): a text that names a new point says which by its place
+/// among them (`$added:0`). The new objects are those of `now` that `before` had not, in slot order, as `added` is.
+pub(super) fn by_place(mut added: Vec<Value>, now: &State, before: &State) -> Vec<Value> {
+    let slots: Vec<String> = now
+        .objects
+        .keys()
+        .filter(|id| !before.objects.contains_key(id))
+        .map(|id| format!("$slot:{id}"))
+        .collect();
+    for a in &mut added {
+        let place = a.get("labelOf").and_then(Value::as_str).and_then(|of| slots.iter().position(|s| s == of));
+        if let Some(k) = place {
+            a["labelOf"] = json!(format!("$added:{k}"));
+        }
+    }
+    added
+}
+
 /// The drawing's objects in their order, a new layer's id put as its name.
 fn objects(doc: &Document) -> Vec<Value> {
     let names: BTreeMap<String, String> = doc
@@ -135,7 +167,8 @@ fn objects(doc: &Document) -> Vec<Value> {
         .collect();
     doc.entities()
         .map(|e| {
-            let mut v = plain(e);
+            // A point's name's link as its point's slot: the persistent ids are new on every run (docs/adr/9314).
+            let mut v = linked(plain(e), doc);
             if let Some(id) = v["layerId"].as_str()
                 && let Some(name) = names.get(id)
             {

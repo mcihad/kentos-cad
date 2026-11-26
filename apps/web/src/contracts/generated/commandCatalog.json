@@ -2958,7 +2958,7 @@
       "id": "cad.point.create",
       "version": 1,
       "title": "Nokta oluştur",
-      "summary": "Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. nameText açıksa ad (label) noktanın sağ üstüne, projenin kenar ve köşe yazısı yüksekliğiyle Metin nesnesi olarak da yazılır, aynı adımda; yazı noktaya bağlıdır: nokta taşınınca kayar, ad değişince metni değişir (ADR 9314). Plan yazıyı text'te, çıktı kimliğini textUid ve textId'de verir. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -3012,6 +3012,10 @@
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
           },
+          "nameText": {
+            "description": "Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,\nat the project's measure text height on paper, in its typeface, upright, on the point's layer. The text follows\nthe point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label\nnothing more is written. Absent: false.",
+            "type": "boolean"
+          },
           "p": {
             "$ref": "#/$defs/Vec2",
             "description": "Where it is: x east (Y), y north (X), in the project's units (m), float64.",
@@ -3057,6 +3061,23 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "textId": {
+            "description": "The name's text's slot in the open document; absent when none was written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "textUid": {
+            "description": "The name's text (`nameText`), its persistent id; absent when none was written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "uid": {
             "description": "Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.",
             "type": "string"
@@ -3082,6 +3103,17 @@
             "description": "The document revision the plan was made against. Give it as\n`expectedRevision` to write exactly this plan, or nothing.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Entity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its name's text (`nameText`) as it would be stored, its link given when it is written; absent when none would\nbe written."
           }
         },
         "required": [
@@ -177506,7 +177538,7 @@
           ]
         },
         "labelOf": {
-          "description": "The object whose label this new text writes (Etiketleri yazıya\nçevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id\n(lowercase UUID text with hyphens), an object of the drawing. On a\ntext only, given with `labelScale`; the text then follows the object\n(`TextEntity.label_of`). Absent: a text of its own.",
+          "description": "The object whose label this new text writes (Etiketleri yazıya\nçevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id\n(lowercase UUID text with hyphens), an object of the drawing. On a\ntext only; with `labelScale` the text then follows the object as its\nlabel, without it a point's name (`TextEntity.label_of`). Absent: a text of its own.",
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
           "type": [
             "string",
@@ -177514,7 +177546,7 @@
           ]
         },
         "labelScale": {
-          "description": "The scale's denominator (1:N) the linked label is written at:\nfinite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.",
+          "description": "The scale's denominator (1:N) the linked label is written at:\nfinite, over 0 (`TextEntity.label_scale`). Given with `labelOf`;\n`labelOf` without it links the text to a point as its name, which\nmoves with the point (docs/adr/9314; another object: `invalid_link`).",
           "format": "double",
           "type": [
             "number",
@@ -229151,7 +229183,7 @@
               "type": "null"
             }
           ],
-          "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+          "description": "The object whose label this text writes, its persistent id: with `label_scale` it follows the object as its\nlabel at that scale (Etiketleri yazıya çevir's “Nesneye bağlı”, docs/adr/0175 §4); without, a point's name\nwritten where it was put, moved as the point moves (docs/adr/9314). Absent: a text of its own.\nA scale is never given without it."
         },
         "labelPins": {
           "description": "Its labels moved, turned, pinned or hidden by hand (docs/adr/0212\n§3.7), one a class at most.",
@@ -229161,7 +229193,7 @@
           "type": "array"
         },
         "labelScale": {
-          "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+          "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0; absent: a point's name.",
           "format": "double",
           "type": [
             "number",

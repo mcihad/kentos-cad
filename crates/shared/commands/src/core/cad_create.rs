@@ -207,14 +207,16 @@ pub struct NewObject {
     /// The object whose label this new text writes (Etiketleri yazıya
     /// çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
     /// (lowercase UUID text with hyphens), an object of the drawing. On a
-    /// text only, given with `labelScale`; the text then follows the object
-    /// (`TextEntity.label_of`). Absent: a text of its own.
+    /// text only; with `labelScale` the text then follows the object as its
+    /// label, without it a point's name (`TextEntity.label_of`). Absent: a text of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub label_of: Option<String>,
     /// The scale's denominator (1:N) the linked label is written at:
-    /// finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
+    /// finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`;
+    /// `labelOf` without it links the text to a point as its name, which
+    /// moves with the point (docs/adr/9314; another object: `invalid_link`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]

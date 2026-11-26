@@ -268,8 +268,11 @@ pub(super) fn build(
             }
         }
         Kind::Text => {
-            // A linked text names its object and its scale together (docs/adr/0175 §4).
-            if f.label_of.is_some() != f.label_scale.is_some() {
+            // A linked text names its object and its scale together (docs/adr/0175 §4); from schema 257 its object
+            // alone is a point's name (docs/adr/9314). A scale never comes without its object.
+            if f.label_scale.is_some() && f.label_of.is_none()
+                || f.label_of.is_some() && f.label_scale.is_none() && !f.name_links
+            {
                 return Err(r.fail_at(
                     Code::BadValue,
                     f.link_at,

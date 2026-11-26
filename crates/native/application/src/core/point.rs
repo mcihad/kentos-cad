@@ -4,7 +4,9 @@
 //! in `fixtures/commands/v1/cad.point.create.json`.
 //!
 //! The point tool calls it once per point it places. Its elevation and the
-//! text beside it are optional (the spot elevation tool writes both).
+//! text beside it are optional (the spot elevation tool writes both). With
+//! `nameText` its name is written as a text object too, linked to the point
+//! (docs/adr/9314): the document keeps it with the point from then on.
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. the point finite, x before y, then the elevation when given;
@@ -12,8 +14,8 @@
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, EntityBase, PointCreate, PointCreated, PointEntity,
-    PointPlan,
+    AnnotationKind, CommandResult, CommandWarning, DrawingFont, Entity, EntityBase, EntityId,
+    PointCreate, PointCreated, PointEntity, PointPlan, TextEntity, Vec2,
 };
 use kentos_domain::Document;
 
@@ -40,6 +42,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCreate) -> CommandResult<Poi
         Ok(warnings) => CommandResult::Completed {
             output: PointPlan {
                 entity: point(settled(cx.doc, input.clone()), 0),
+                text: name_text(cx.doc, &input, None),
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -67,13 +70,72 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: PointCreate) -> CommandRe
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, point(settled(cx.doc, input), 0)) {
-        Ok((id, uid, revision)) => CommandResult::Completed {
-            output: PointCreated { uid, id, revision },
-            warnings,
-        },
-        Err(stop) => stop.into(),
+    let named = input.clone();
+    let (id, uid, revision) = match checks::add(cx.doc, point(settled(cx.doc, input), 0)) {
+        Ok(added) => added,
+        Err(stop) => return stop.into(),
+    };
+    // Its name as a text linked to it, in the same step (docs/adr/9314).
+    let mut output = PointCreated { uid, id, revision, text_uid: None, text_id: None };
+    if let Some(text) = name_text(cx.doc, &named, EntityId::parse(&output.uid)) {
+        match checks::add(cx.doc, text) {
+            Ok((text_id, text_uid, revision)) => {
+                output.text_id = Some(text_id);
+                output.text_uid = Some(text_uid);
+                output.revision = revision;
+            }
+            Err(stop) => return stop.into(),
+        }
     }
+    CommandResult::Completed { output, warnings }
+}
+
+/// The point's name as a text (`nameText`, docs/adr/9314), linked to the point `of` (none in a plan): up and right of
+/// it by the corners' rule, at the project's measure text height on paper, in its typeface, upright, on its layer.
+/// None without `nameText` or a name.
+fn name_text(doc: &Document, input: &PointCreate, of: Option<EntityId>) -> Option<Entity> {
+    if !input.name_text {
+        return None;
+    }
+    let name = input.label.as_deref().filter(|l| !l.trim().is_empty())?;
+    let settings = doc.settings();
+    let height = settings.annotation_height(AnnotationKind::Measure);
+    let font = kentos_geometry_core::text::Font::from_id(DrawingFont::id_of(settings.drawing_font));
+    let out = kentos_geometry_core::vec2::Vec2::new(std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2);
+    let at = kentos_geometry_core::processing::numbering::corner_text_at(
+        kentos_geometry_core::vec2::Vec2::new(input.p.x, input.p.y),
+        out,
+        name,
+        height,
+        font,
+    );
+    Some(Entity::Text(TextEntity {
+        annotative: None,
+        base: EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: input.layer_id.clone(),
+            color: input.color.clone(),
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        },
+        p: Vec2 { x: at.x, y: at.y },
+        text: name.to_owned(),
+        height,
+        rotation: 0.0,
+        align: None,
+        width_factor: None,
+        mask: false,
+        label_of: of,
+        label_scale: None,
+        paragraph: Default::default(),
+        face: Default::default(),
+        path: None,
+    }))
 }
 
 /// The checks in the contract's order; the warnings when the point may be written.
@@ -117,4 +179,46 @@ fn settled(doc: &Document, mut input: PointCreate) -> PointCreate {
         .ok()
         .flatten();
     input
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_domain::Slot;
+
+    /// A named point with `nameText` writes its name up and right of it, at the measure text height at the plot scale
+    /// (2 mm at 1:1000: 2 m), linked to it without a scale, in its own step (docs/adr/9314); plan says so, writing
+    /// nothing.
+    #[test]
+    fn a_name_is_written_up_and_right_of_its_point_and_linked_to_it() {
+        let cases: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.point.create.json"))
+                .expect("cases");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).expect("a drawing");
+        let mut doc = Document::from_snapshot(snapshot).expect("opens");
+        let mut input: PointCreate =
+            serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        input.label = Some("P1".to_owned());
+        input.name_text = true;
+        let CommandResult::Completed { output: plan, .. } = super::plan(&ExecutionContext::new(&mut doc), &input)
+        else {
+            panic!("a plan")
+        };
+        assert!(matches!(&plan.text, Some(Entity::Text(t)) if t.text == "P1" && t.label_of.is_none()));
+        let CommandResult::Completed { output, .. } = execute(&mut ExecutionContext::new(&mut doc), input.clone())
+        else {
+            panic!("written")
+        };
+        let text_id = output.text_id.expect("a text");
+        let Some(Entity::Text(t)) = doc.get(Slot(text_id)) else {
+            panic!("the text")
+        };
+        assert!(t.p.x > input.p.x && t.p.y > input.p.y, "up and right: {:?}", t.p);
+        assert_eq!((t.text.as_str(), t.height, t.label_scale), ("P1", 2.0, None));
+        let point = doc.uid(Slot(output.id)).map(|u| *u.as_bytes());
+        assert_eq!(t.label_of.map(|of| of.0), point);
+        assert_eq!(output.text_uid, doc.uid(Slot(text_id)).map(|u| u.to_string()));
+        assert_eq!(doc.undo().as_deref(), Some("Ekle"), "one step");
+        assert!(doc.get(Slot(output.id)).is_none() && doc.get(Slot(text_id)).is_none());
+    }
 }

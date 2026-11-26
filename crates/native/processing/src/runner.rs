@@ -1640,6 +1640,11 @@ fn apply(
             patches.push((u.id, next));
         }
         doc.update_many(patches, &tool.label);
+        // Texts that write new points' names (docs/adr/9314): every new object takes its persistent id now, so each
+        // text names its point's before either is written.
+        if !ch.name_links.is_empty() {
+            return add_named(doc, tool, ch.add, &ch.name_links, &mut skipped).map_err(|e| e.0);
+        }
         // Filtered in place: nothing moves unless something is left out (an object is large).
         let mut fresh = ch.add;
         let mut verdict: Option<(String, bool)> = None;
@@ -1666,6 +1671,42 @@ fn apply(
         )));
     }
     Ok(added)
+}
+
+/// Adds a run's new objects with their persistent ids given here, each text of `links` (text, point) linked to its
+/// point without a scale (a point's name, docs/adr/9314), as one change. An object on a locked or missing layer is
+/// left out (counted in `skipped`), and a text whose point is left out keeps no link.
+fn add_named(
+    doc: &mut Document,
+    tool: &Tool,
+    add: Vec<Entity>,
+    links: &[(usize, usize)],
+    skipped: &mut usize,
+) -> Result<Vec<Slot>, kentos_domain::Refusal> {
+    let uids: Vec<kentos_domain::Uuid> = add.iter().map(|_| kentos_domain::new_uid()).collect();
+    let takes: Vec<bool> = add
+        .iter()
+        .map(|n| {
+            let layer = &n.base().layer_id;
+            doc.layers().get(layer).is_some() && !doc.layers().is_locked(layer)
+        })
+        .collect();
+    let mut pairs = Vec::with_capacity(add.len());
+    for (i, mut entity) in add.into_iter().enumerate() {
+        if !takes[i] {
+            *skipped += 1;
+            continue;
+        }
+        if let Entity::Text(text) = &mut entity
+            && let Some(&(_, point)) = links.iter().find(|(t, _)| *t == i)
+            && takes.get(point).copied().unwrap_or(false)
+        {
+            text.label_of = Some(kentos_commands::EntityId(*uids[point].as_bytes()));
+            text.label_scale = None;
+        }
+        pairs.push((uids[i], entity));
+    }
+    doc.add_many_with_uids(pairs, &tool.label)
 }
 
 /// Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes.

@@ -27,6 +27,7 @@ mod dimensions;
 mod elevations;
 mod filters;
 mod font_families;
+mod name_links;
 mod fixtures;
 mod frozen;
 mod hatches;

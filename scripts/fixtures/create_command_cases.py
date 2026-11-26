@@ -384,7 +384,12 @@ LINKED_TEXT = {"kind": "text", "p": P(487010, 4420001.5), "text": "Hat 1", "heig
 LINE = {"kind": "line", "a": P(487000, 4420010), "b": P(487010, 4420010)}
 NOT_IN_DRAWING = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4ffe"
 NIL = "00000000-0000-0000-0000-000000000000"
-BOTH = "Bağlı yazının nesnesi ve ölçeği birlikte verilir. İkisini birden verin ya da hiçbirini vermeyin."
+# A scale names the object it is the label of; an object without a scale is a point's name (docs/adr/9314).
+SCALE_ALONE = "Bağlı yazının ölçeği nesnesiyle birlikte verilir. Nesnenin kimliğini verin ya da ölçeği kaldırın."
+
+
+def not_a_point(of):
+    return f"Ölçeksiz bağ bir noktanın adıdır; “{of}” kimlikli nesne nokta değil. Ölçeği verin ya da bir noktaya bağlayın."
 SCALE = "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin."
 
 
@@ -410,13 +415,14 @@ cases.append({
 })
 
 cases.append({
-    "name": "bağ yalnız yazıda, iki alanıyla, kalıcı kimlik yazımıyla ve sonlu, sıfırdan büyük ölçekle olur: invalid_link, her nesnenin geometrisinden sonra, sürümden önce",
+    "name": "bağ yalnız yazıda, ölçek nesnesiyle, ölçeksiz bağ yalnız noktaya, kalıcı kimlik yazımıyla ve sonlu, sıfırdan büyük ölçekle olur: invalid_link, her nesnenin geometrisinden sonra, sürümden önce",
     "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINE, labelOf=uid(1), labelScale=1000)], "expectedRevision": "999"}, "result": not_a_text(1, "labelOf"),
          "note": "Çizgi bir etiketi yazmaz; sürüm denetimi daha sonra.", "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINE, labelScale=1000)]}, "result": not_a_text(1, "labelScale"), "expect": NOTHING},
-        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT), O(LINKED_TEXT, labelOf=uid(1))]}, "result": failed("invalid_link", BOTH, "objects[1].labelScale"), "expect": NOTHING},
-        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelScale=1000)]}, "result": failed("invalid_link", BOTH, "objects[0].labelOf"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT), O(LINKED_TEXT, labelOf=uid(1))]}, "result": failed("invalid_link", not_a_point(uid(1)), "objects[1].labelScale"),
+         "note": "Ölçeksiz bağ bir noktanın adıdır; 1 yuvasındaki çizgi nokta değil.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelScale=1000)]}, "result": failed("invalid_link", SCALE_ALONE, "objects[0].labelOf"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf="Hat-1", labelScale=1000)]},
          "result": failed("invalid_link", "Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “Hat-1” verildi.", "objects[0].labelOf"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=0)]}, "result": failed("invalid_link", SCALE, "objects[0].labelScale"), "expect": NOTHING},
@@ -426,6 +432,20 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LINKED_TEXT, "text": " "}, labelOf=uid(1), labelScale=0)]},
          "result": failed("empty_text", "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "objects[0].geometry.text"),
          "note": "Geometri önce denetlenir.", "expect": NOTHING},
+    ],
+})
+
+# A point's name (docs/adr/9314): a text linked to a point without a scale.
+NAMED_POINT = {"kind": "point", "p": P(487020, 4420020)}
+NAME_TEXT = {**LINKED_TEXT, "text": "N1"}
+FIRST = max(IDS) + 1
+cases.append({
+    "name": "ölçeksiz bağ bir noktanın adıdır: yazı noktaya ölçeksiz bağlanır (ADR 9314)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(NAMED_POINT, label="N1")]}, "result": done([FIRST]),
+         "expect": {"ids": IDS + [FIRST]}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(NAME_TEXT, labelOf=uid(FIRST))]}, "result": done([FIRST + 1]),
+         "expect": {"ids": IDS + [FIRST, FIRST + 1], "entities": {str(FIRST + 1): {**made(O(NAME_TEXT), FIRST + 1), "labelOf": uid(FIRST)}}}},
     ],
 })
 

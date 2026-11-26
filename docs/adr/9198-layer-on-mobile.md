@@ -55,7 +55,7 @@
   (`docs/specs/kcad-v2.md`).
   - Bağımsız okuyucu `tools/kcad/kcad.py` ve üretici `scripts/fixtures/kcad_v2_reference.py` aynı kuralla.
   - Örnekler: `fixtures/kcad/v2/layer-mobile.kcad`; bozuklar `layer-mobile-in-schema-255`, `-show`, `-unknown`;
-    `schema-version-256.kcad` → `schema-version-257.kcad`.
+    `schema-version-256.kcad` → `schema-version-258.kcad`.
 - **Komut** `cad.layers.set` işlemi `mobile` (`kentos_domain::Document::set_layer_mobile`): projenin ayarıdır, sürümü
   değiştirir, geri alma adımı değildir.
   - Retler: `no_value` (`mobile` yok), `mobile_not_offered` (nedeni ve yolu söylenir: “… mobilde düzenlenemez: mobil

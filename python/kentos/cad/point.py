@@ -25,11 +25,14 @@ if TYPE_CHECKING:
 class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
     """``cad.point.create`` v1. Nokta oluştur: Açık çizimde verilen katmana bir nokta
     nesnesi ekler; isteğe bağlı kotu ve yanında görünen yazısıyla. Tek geri alma
-    adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. Katman girdide
-    açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-    ile gider.
+    adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. nameText açıksa
+    ad (label) noktanın sağ üstüne, projenin kenar ve köşe yazısı yüksekliğiyle Metin
+    nesnesi olarak da yazılır, aynı adımda; yazı noktaya bağlıdır: nokta taşınınca
+    kayar, ad değişince metni değişir (ADR 9314). Plan yazıyı text'te, çıktı kimliğini
+    textUid ve textId'de verir. Katman girdide açıkça verilir: kilitli katmana yazılmaz,
+    gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
+    projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.point.create"
@@ -51,6 +54,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         z: float | None | Unset = UNSET,
         request_id: str | None = None,
@@ -58,10 +62,14 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
     ) -> PointCreated:
         """Nokta oluştur: Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı
         kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta
-        için bu komutu bir kez çalıştırır. Katman girdide açıkça verilir: kilitli katmana
-        yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-        bulut projesine değişiklik project.changes ile gider.
+        için bu komutu bir kez çalıştırır. nameText açıksa ad (label) noktanın sağ üstüne,
+        projenin kenar ve köşe yazısı yüksekliğiyle Metin nesnesi olarak da yazılır, aynı
+        adımda; yazı noktaya bağlıdır: nokta taşınınca kayar, ad değişince metni değişir
+        (ADR 9314). Plan yazıyı text'te, çıktı kimliğini textUid ve textId'de verir. Katman
+        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+        ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -74,6 +82,10 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
                 longer at it, nothing is written and the answer is `conflict`.
             label: The text shown beside it (`EntityBase.label`): a point's name, a spot
                 elevation. Absent: none.
+            name_text: Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,
+                at the project's measure text height on paper, in its typeface, upright, on the point's layer. The text follows
+                the point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label
+                nothing more is written. Absent: false.
             symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
@@ -98,6 +110,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            name_text=name_text,
             symbol=symbol,
             z=z,
         ), request_id=request_id, expected=expected)
@@ -113,6 +126,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         z: float | None | Unset = UNSET,
     ) -> PointPlan:
@@ -126,6 +140,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            name_text=name_text,
             symbol=symbol,
             z=z,
         ))
@@ -141,6 +156,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         z: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -154,6 +170,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            name_text=name_text,
             symbol=symbol,
             z=z,
         ))
@@ -169,6 +186,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         z: float | None | Unset = UNSET,
         op: str = "execute",
@@ -187,6 +205,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            name_text=name_text,
             symbol=symbol,
             z=z,
         ), op=op, request_id=request_id, expected=expected)

@@ -286,20 +286,27 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
             .map(|(i, o)| (i, &o.geometry)),
         "objects",
     )?;
-    // A linked text's object is the drawing's (docs/adr/0175 §4).
+    // A linked text's object is the drawing's (docs/adr/0175 §4); a name's, a point (docs/adr/9314).
     for (i, object) in input.objects.iter().enumerate() {
-        if let Some(of) = &object.label_of
-            && Uuid::parse_str(of)
-                .ok()
-                .and_then(|u| doc.slot_of(u))
-                .is_none()
-        {
+        let Some(of) = &object.label_of else {
+            continue;
+        };
+        let Some(slot) = Uuid::parse_str(of).ok().and_then(|u| doc.slot_of(u)) else {
             return Err(Stop::failed(error(
                 codes::LINK_NOT_FOUND,
                 format!(
                     "“{of}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin."
                 ),
                 Some(format!("objects[{i}].labelOf")),
+            )));
+        };
+        if object.label_scale.is_none() && !matches!(doc.get(slot), Some(Entity::Point(_))) {
+            return Err(Stop::failed(error(
+                codes::INVALID_LINK,
+                format!(
+                    "Ölçeksiz bağ bir noktanın adıdır; “{of}” kimlikli nesne nokta değil. Ölçeği verin ya da bir noktaya bağlayın."
+                ),
+                Some(format!("objects[{i}].labelScale")),
             )));
         }
     }
@@ -434,15 +441,11 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
             ),
         );
     }
-    let (Some(of), Some(scale)) = (of, scale) else {
-        let field = if of.is_none() {
-            "labelOf"
-        } else {
-            "labelScale"
-        };
+    // A scale names the object it is the label of; an object without a scale is a point's name (docs/adr/9314).
+    let Some(of) = of else {
         return refuse(
-            field,
-            "Bağlı yazının nesnesi ve ölçeği birlikte verilir. İkisini birden verin ya da hiçbirini vermeyin.".into(),
+            "labelOf",
+            "Bağlı yazının ölçeği nesnesiyle birlikte verilir. Nesnenin kimliğini verin ya da ölçeği kaldırın.".into(),
         );
     };
     if !checks::is_uid_text(of) {
@@ -451,7 +454,7 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
             format!("Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “{of}” verildi."),
         );
     }
-    if !label_scale_ok(scale) {
+    if scale.is_some_and(|n| !label_scale_ok(n)) {
         return refuse(
             "labelScale",
             "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin."

@@ -10,7 +10,9 @@
 //!   field over the drawing (letters typed over it would start a command),
 //!   Kot (Z) is typed; an empty answer clears them. All three are kept for
 //!   the session ([`Memory`]), and the name moves on by Yazı's Artır after
-//!   each point written (101 → 102; a name not ending in a number stays).
+//!   each point written (101 → 102; a name not ending in a number stays). A
+//!   named point's name is written as a text beside it that follows it
+//!   (`nameText`, docs/adr/9314).
 //!   Where a point already is (1 µm) it asks first: Düzelt gives that point
 //!   the name, code and elevation given (one step “Nokta düzelt”), Ekle
 //!   writes the new one too, Atla (Esc) passes. Ad, Kod and the question are
@@ -303,6 +305,8 @@ impl Point {
             ),
             expected_revision: None,
             symbol: cx.template_symbol(),
+            // A survey's point writes its name as a text that follows it (docs/adr/9314).
+            name_text: named,
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(written) = points::written(result, cx) {
@@ -443,6 +447,7 @@ impl Point {
             ])),
             expected_revision: None,
             symbol: None,
+            name_text: false,
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         match points::written(result, cx) {

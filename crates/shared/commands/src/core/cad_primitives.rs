@@ -79,6 +79,13 @@ pub struct PointCreate {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+    /// Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,
+    /// at the project's measure text height on paper, in its typeface, upright, on the point's layer. The text follows
+    /// the point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label
+    /// nothing more is written. Absent: false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub name_text: bool,
 }
 
 /// Output of `cad.point.create` v1: the object written.
@@ -98,6 +105,15 @@ pub struct PointCreated {
     /// changes when that ends.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+    /// The name's text (`nameText`), its persistent id; absent when none was written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_uid: Option<String>,
+    /// The name's text's slot in the open document; absent when none was written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub text_id: Option<u32>,
 }
 
 /// What `cad.point.create` would write (plan mode); nothing is written.
@@ -109,6 +125,11 @@ pub struct PointCreated {
 pub struct PointPlan {
     /// The point as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
+    /// Its name's text (`nameText`) as it would be stored, its link given when it is written; absent when none would
+    /// be written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<Entity>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -401,6 +401,11 @@ pub fn write_draft(
         attrs: (!code.is_empty()).then(|| BTreeMap::from([("Kod".to_owned(), code.clone())])),
         expected_revision: None,
         symbol: None,
+        // A survey's new row writes its name as a text that follows the point, as the point tool does (docs/adr/9314).
+        name_text: matches!(
+            doc.settings().cad_work(),
+            Some(kentos_commands::CadWork::Map | kentos_commands::CadWork::Road)
+        ),
     };
     if let Some(e) = refusal(point::execute(&mut ExecutionContext::new(doc), input)) {
         return fail(e.message);

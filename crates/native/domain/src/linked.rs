@@ -12,11 +12,17 @@
 //!   alignment) loses its link, unless its object changed in the same step
 //!   (then the rule writes it).
 //!
+//! A text linked without a scale is a point's name (docs/adr/9314): it is
+//! written where it was put and moves as far as its point moves, unless the
+//! step moved it too; its text is the point's name, and a point without a
+//! name takes it away. Moved, turned or resized by hand it keeps its link; its
+//! text retyped by hand, it loses it.
+//!
 //! The changes join the step: one undo takes them back with the rest, and
 //! undo and redo replay what was recorded. The web's is `CadDocument`'s
 //! `followLinks`; both run `fixtures/document-ops/v1/linked-texts.json`.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
 use kentos_contracts::{DrawingFont, Entity, TextAlign, TextEntity, Vec2, default_label};
@@ -45,6 +51,35 @@ pub(crate) fn font_of(font: Option<DrawingFont>) -> Font {
     font.and_then(|f| serde_json::to_value(f).ok())
         .and_then(|v| v.as_str().map(Font::from_id))
         .unwrap_or(Font::DEFAULT)
+}
+
+/// Whether a text is a point's name: linked without a scale (docs/adr/9314).
+fn names(text: &TextEntity) -> bool {
+    text.label_of.is_some() && text.label_scale.is_none()
+}
+
+/// Where a point is; none for another object.
+fn point_at(object: &Entity) -> Option<Vec2> {
+    match object {
+        Entity::Point(p) => Some(p.p),
+        _ => None,
+    }
+}
+
+/// A point's name `text` after a step that changed its point from `before` (none: the step made it) to `object`:
+/// moved as far as the point, unless the step `moved` the text itself; its text the point's name. None when the
+/// point has no name now: the text goes with it.
+fn named(text: &TextEntity, before: Option<&Entity>, object: &Entity, moved: bool) -> Option<TextEntity> {
+    let name = object.base().label.as_deref().filter(|l| !l.is_empty())?;
+    let shift = match (before.and_then(point_at), point_at(object)) {
+        (Some(a), Some(b)) if !moved => Vec2 { x: b.x - a.x, y: b.y - a.y },
+        _ => Vec2 { x: 0.0, y: 0.0 },
+    };
+    Some(TextEntity {
+        p: Vec2 { x: text.p.x + shift.x, y: text.p.y + shift.y },
+        text: name.to_owned(),
+        ..text.clone()
+    })
 }
 
 /// A text without its link: it stays as it is and follows nothing.
@@ -124,11 +159,15 @@ impl Document {
         if !self.store.has_links() {
             return Vec::new();
         }
-        // The objects the step changed or removed, by persistent id, and the
-        // linked texts it edited itself, by slot, in the order they came.
+        // The objects the step changed or removed, by persistent id, each as it was before the step; the linked texts
+        // it edited itself, by slot, in the order they came; and, of those, the names it moved and the texts it
+        // retyped (docs/adr/9314).
         let mut objects: Vec<Uuid> = Vec::new();
         let mut seen: HashSet<Uuid> = HashSet::new();
+        let mut befores: HashMap<Uuid, Arc<Entity>> = HashMap::new();
         let mut texts: BTreeMap<Slot, ()> = BTreeMap::new();
+        let mut moved: HashSet<Slot> = HashSet::new();
+        let mut retyped: HashSet<Slot> = HashSet::new();
         for op in ops {
             let (stored, before) = match op {
                 Op::Add(s) | Op::Remove(s) => (s, None),
@@ -138,12 +177,21 @@ impl Document {
             if seen.insert(stored.uid) {
                 objects.push(stored.uid);
             }
+            if let Some(before) = before {
+                befores.entry(stored.uid).or_insert_with(|| before.entity.clone());
+            }
             if let (Some(before), Entity::Text(after)) = (before, &*stored.entity)
                 && let Entity::Text(was) = &*before.entity
                 && after.label_of.is_some()
                 && edited(was, after)
             {
                 texts.insert(stored.slot(), ());
+                if was.p != after.p {
+                    moved.insert(stored.slot());
+                }
+                if was.text != after.text {
+                    retyped.insert(stored.slot());
+                }
             }
         }
         let mut out = Vec::new();
@@ -165,6 +213,19 @@ impl Document {
                     None => {
                         out.push(Op::Remove(current.clone()));
                         continue;
+                    }
+                    // A point's name retyped by hand in the step: a text of its own now (docs/adr/9314).
+                    Some(_) if names(text) && retyped.contains(&slot) => unlinked(text),
+                    Some(object) if names(text) => {
+                        let before = befores.get(&uid).map(|b| &**b);
+                        match named(text, before, &object.entity, moved.contains(&slot)) {
+                            Some(next) => next,
+                            // The point has no name now: its text goes.
+                            None => {
+                                out.push(Op::Remove(current.clone()));
+                                continue;
+                            }
+                        }
                     }
                     Some(object) => self
                         .rewritten(text, &object.entity)
@@ -189,8 +250,10 @@ impl Document {
             let Some(current) = self.store.get(slot).cloned() else {
                 continue;
             };
+            // A point's name moved, turned or resized by hand keeps following its point (docs/adr/9314).
             if let Entity::Text(text) = &*current.entity
                 && text.label_of.is_some()
+                && (!names(text) || retyped.contains(&slot))
             {
                 out.push(Op::Update {
                     after: Stored {

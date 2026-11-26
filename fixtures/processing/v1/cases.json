@@ -317,6 +317,7 @@
             "layerId": "islem-numaralar",
             "p": {"x": 487040.45867965644, "y": 4420032.121320344},
             "text": "K1",
+            "labelOf": "$added:0",
             "height": 2.5,
             "rotation": 0,
             "attrs": {"Nokta": "K1", "Tür": "Köşe noktası"}
@@ -327,6 +328,7 @@
             "layerId": "islem-numaralar",
             "p": {"x": 487039.9786796564, "y": 4419995.378679656},
             "text": "K2",
+            "labelOf": "$added:2",
             "height": 2.5,
             "rotation": 0,
             "attrs": {"Nokta": "K2", "Tür": "Köşe noktası"}
@@ -337,6 +339,7 @@
             "layerId": "islem-numaralar",
             "p": {"x": 487062.1213203436, "y": 4419995.378679656},
             "text": "K3",
+            "labelOf": "$added:4",
             "height": 2.5,
             "rotation": 0,
             "attrs": {"Nokta": "K3", "Tür": "Köşe noktası"}
@@ -347,6 +350,7 @@
             "layerId": "islem-numaralar",
             "p": {"x": 487062.1213203436, "y": 4420032.121320344},
             "text": "K4",
+            "labelOf": "$added:6",
             "height": 2.5,
             "rotation": 0,
             "attrs": {"Nokta": "K4", "Tür": "Köşe noktası"}
@@ -510,6 +514,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 486991.88494372513, "y": 4420031.697056275},
             "text": "P00001",
+            "labelOf": "$added:0",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00001", "Tür": "Köşe noktası"}
@@ -526,6 +531,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487021.69705627486, "y": 4420031.697056275},
             "text": "P00002",
+            "labelOf": "$added:2",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00002", "Tür": "Köşe noktası"}
@@ -542,6 +548,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487021.69705627486, "y": 4419996.302943725},
             "text": "P00003",
+            "labelOf": "$added:4",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00003", "Tür": "Köşe noktası"}
@@ -558,6 +565,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 486991.44894372515, "y": 4419996.302943725},
             "text": "P00004",
+            "labelOf": "$added:6",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}
@@ -574,6 +582,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487046.69705627486, "y": 4420031.697056275},
             "text": "P00005",
+            "labelOf": "$added:8",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00005", "Tür": "Köşe noktası"}
@@ -590,6 +599,7 @@
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487046.69705627486, "y": 4419996.302943725},
             "text": "P00006",
+            "labelOf": "$added:10",
             "height": 2,
             "rotation": 0,
             "attrs": {"Nokta": "P00006", "Tür": "Köşe noktası"}

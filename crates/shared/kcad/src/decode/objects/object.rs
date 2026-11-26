@@ -119,6 +119,7 @@ pub(crate) fn object(
         return Err(r.fail(Code::BadValue, "blok tanımında geometrisiz kayıt olamaz"));
     }
     let mut f = Fields::default();
+    f.name_links = has.name_links;
     map(r, |r, key| {
         if !allowed(kind, key, has) {
             return Err(unknown(r));

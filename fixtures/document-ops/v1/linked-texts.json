@@ -655,6 +655,447 @@
           }
         }
       ]
+    },
+    {
+      "name": "Noktanın adı noktasını izler (docs/adr/9314): ölçeksiz bağlı yazı nokta taşınınca aynı kadar kayar, ad değişince metni değişir, ad silinince yazı da silinir; geri alma ikisini birlikte döndürür",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "a",
+            "p": {
+              "x": 486601.5,
+              "y": 4420101.5
+            },
+            "text": "P7",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {},
+            "labelOf": "$uid:nokta"
+          },
+          "returns": 2,
+          "note": "Nokta aracının yazdığı gibi: noktanın sağ üstünde, ölçeksiz bağlı."
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "p": {
+              "x": 486610,
+              "y": 4420105
+            }
+          },
+          "note": "Nokta 10 m doğuya, 5 m kuzeye taşınır: yazı aynı kadar kayar.",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486610,
+                  "y": 4420105
+                },
+                "label": "P7",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486611.5,
+                  "y": 4420106.5
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": "P8"
+          },
+          "note": "Nokta listesinden ya da Öznitelikler'den ad değişir: yazının metni yeni ad olur.",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486610,
+                  "y": 4420105
+                },
+                "label": "P8",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486611.5,
+                  "y": 4420106.5
+                },
+                "text": "P8",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486611.5,
+                  "y": 4420106.5
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": null
+          },
+          "note": "Adı silinen noktanın yazısı da aynı adımda silinir.",
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elle taşınan ad bağını korur ve noktasıyla kaymaya devam eder; birlikte taşınınca bir kez kayar; metni elle değişen adın bağı kopar (docs/adr/9314)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "a",
+            "p": {
+              "x": 486601.5,
+              "y": 4420101.5
+            },
+            "text": "P7",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {},
+            "labelOf": "$uid:nokta"
+          },
+          "returns": 2
+        },
+        {
+          "op": "update",
+          "id": 2,
+          "patch": {
+            "p": {
+              "x": 486598,
+              "y": 4420103
+            }
+          },
+          "note": "Yazı elle noktanın sol üstüne taşınır: bağ kalır.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486598,
+                  "y": 4420103
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "p": {
+              "x": 486601,
+              "y": 4420100
+            }
+          },
+          "note": "Nokta 1 m doğuya: yazı yeni yerinden aynı kadar kayar.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486599,
+                  "y": 4420103
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "updateMany",
+          "patches": [
+            {
+              "id": 1,
+              "p": {
+                "x": 486611,
+                "y": 4420100
+              }
+            },
+            {
+              "id": 2,
+              "p": {
+                "x": 486609,
+                "y": 4420103
+              }
+            }
+          ],
+          "note": "İkisi birlikte 10 m taşınır: yazı ikinci kez kaymaz.",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486611,
+                  "y": 4420100
+                },
+                "label": "P7",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486609,
+                  "y": 4420103
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 2,
+          "patch": {
+            "text": "Kendi yazım"
+          },
+          "note": "Metni elle değişen yazı kendi başına kalır.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486609,
+                  "y": 4420103
+                },
+                "text": "Kendi yazım",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "p": {
+              "x": 486620,
+              "y": 4420100
+            }
+          },
+          "note": "Bağı kopan yazı noktayı izlemez.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486609,
+                  "y": 4420103
+                },
+                "text": "Kendi yazım",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktası silinen ad aynı adımda silinir; geri alma ikisini döndürür (docs/adr/9314)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "a",
+            "p": {
+              "x": 486601.5,
+              "y": 4420101.5
+            },
+            "text": "P7",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {},
+            "labelOf": "$uid:nokta"
+          },
+          "returns": 2
+        },
+        {
+          "op": "remove",
+          "ids": [
+            1
+          ],
+          "expect": {
+            "ids": []
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "a",
+                "p": {
+                  "x": 486601.5,
+                  "y": 4420101.5
+                },
+                "text": "P7",
+                "height": 2,
+                "rotation": 0,
+                "attrs": {},
+                "labelOf": "$uid:nokta"
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -207,6 +207,20 @@
         {"op": "execute", "input": {"layerId": "yapi", "p": {"x": 487010, "y": 4420010}, "label": "P1", "symbol": "temel.isaret.arti", "attrs": {"Kod": "SN"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "point", "id": 10, "layerId": "yapi", "attrs": {"Kod": "SN"}, "label": "P1", "symbol": "temel.isaret.arti", "p": {"x": 487010, "y": 4420010}}}, "revision": "changed"}},
         {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
+    },
+    {
+      "name": "nameText: ad noktaya bağlı bir yazı olarak da yazılır, tek adımda (ADR 9314)",
+      "steps": [
+        {"op": "plan", "input": {"layerId": "yapi", "p": {"x": 487010, "y": 4420010}, "label": "P1", "nameText": true}, "result": {"status": "completed", "output": {"entity": "$any", "text": "$any", "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "p": {"x": 487010, "y": 4420010}, "label": "P1", "nameText": true}, "result": {"status": "completed", "output": {"uid": "$uidOf:10", "id": 10, "revision": "$current", "textUid": "$uidOf:11", "textId": 11}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11], "entities": {"10": {"kind": "point", "id": 10, "layerId": "yapi", "attrs": {}, "label": "P1", "p": {"x": 487010, "y": 4420010}}, "11": {"kind": "text", "id": 11, "layerId": "yapi", "attrs": {}, "p": "$any", "text": "P1", "height": 2, "rotation": 0, "labelOf": "$uidOf:10"}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "note": "Nokta ve adının yazısı tek adımdır.", "expect": {"ids": [4, 9]}}
+      ]
+    },
+    {
+      "name": "nameText adsız noktada yazı yazmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "p": {"x": 487010, "y": 4420010}, "nameText": true}, "result": {"status": "completed", "output": {"uid": "$uidOf:10", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10]}}
+      ]
     }
   ]
 }

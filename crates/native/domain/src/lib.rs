@@ -157,7 +157,7 @@ pub use edit::{Refusal, SlotsExhausted, labels};
 pub use external::{External, ExternalMeta};
 pub use hash::{SlotHasher, SlotMap};
 pub use history::{Group, LayerInfo, Savepoint, ServedBy, Temporal, UNDO_LIMIT};
-pub use identity::{Slot, Uuid, v1_entity_uids};
+pub use identity::{Slot, Uuid, new_uid, v1_entity_uids};
 pub use integrity::Fault;
 pub use kentos_contracts as contracts;
 pub use layers::{LayerTree, NewLayer, default_style};

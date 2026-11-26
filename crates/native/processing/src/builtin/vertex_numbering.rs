@@ -317,12 +317,15 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
         Vec::new()
     };
     let mut add = Vec::new();
+    // Each corner's text writes its point's name and follows it (docs/adr/9314): (text, point) places in `add`.
+    let mut name_links = Vec::new();
     for (i, c) in created.iter().enumerate() {
         let attrs = BTreeMap::from([
             ("Nokta".to_owned(), c.name.clone()),
             ("Tür".to_owned(), "Köşe noktası".to_owned()),
         ]);
-        if output != "text" {
+        let point = (output != "text").then_some(add.len());
+        if point.is_some() {
             add.push(Entity::Point(PointEntity {
                 base: base(&layer.id, Some(c.name.clone()), &attrs),
                 p: c.p,
@@ -333,6 +336,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
         if output != "points"
             && let Some(p) = texts.get(i)
         {
+            if let Some(point) = point {
+                name_links.push((add.len(), point));
+            }
             add.push(Entity::Text(TextEntity {
                 annotative: None,
                 base: base(&layer.id, None, &attrs),
@@ -390,6 +396,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
     RunResult {
         changes: Some(crate::types::ChangeSet {
             add,
+            name_links,
             ..Default::default()
         }),
         outputs: [("count".to_owned(), json!(count))].into_iter().collect(),

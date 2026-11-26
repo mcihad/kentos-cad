@@ -66873,10 +66873,12 @@ class NewObject(_Model):
         label_of: The object whose label this new text writes (Etiketleri yazıya
             çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
             (lowercase UUID text with hyphens), an object of the drawing. On a
-            text only, given with `labelScale`; the text then follows the object
-            (`TextEntity.label_of`). Absent: a text of its own.
+            text only; with `labelScale` the text then follows the object as its
+            label, without it a point's name (`TextEntity.label_of`). Absent: a text of its own.
         label_scale: The scale's denominator (1:N) the linked label is written at:
-            finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`. Unit: scale.
+            finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`;
+            `labelOf` without it links the text to a point as its name, which
+            moves with the point (docs/adr/9314; another object: `invalid_link`). Unit: scale.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its
             nearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).
         line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
@@ -80628,6 +80630,10 @@ class PointCreate(_Model):
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`): a point's name, a spot
             elevation. Absent: none.
+        name_text: Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,
+            at the project's measure text height on paper, in its typeface, upright, on the point's layer. The text follows
+            the point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label
+            nothing more is written. Absent: false.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -80640,6 +80646,7 @@ class PointCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    name_text: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
@@ -80655,6 +80662,8 @@ class PointCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.name_text is not UNSET:
+            out["nameText"] = self.name_text
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.z is not UNSET:
@@ -80670,6 +80679,7 @@ class PointCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            name_text=data.get("nameText", UNSET),
             symbol=data.get("symbol", UNSET),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
@@ -80684,16 +80694,24 @@ class PointCreated(_Model):
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
+        text_id: The name's text's slot in the open document; absent when none was written. Unit: id.
+        text_uid: The name's text (`nameText`), its persistent id; absent when none was written.
     """
     uid: str
     id: int
     revision: str
+    text_id: int | None | Unset = UNSET
+    text_uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
         out["id"] = self.id
         out["revision"] = self.revision
+        if self.text_id is not UNSET:
+            out["textId"] = self.text_id
+        if self.text_uid is not UNSET:
+            out["textUid"] = self.text_uid
         return out
 
     @classmethod
@@ -80702,6 +80720,8 @@ class PointCreated(_Model):
             uid=data["uid"],
             id=data["id"],
             revision=data["revision"],
+            text_id=data.get("textId", UNSET),
+            text_uid=data.get("textUid", UNSET),
         )
 
 
@@ -80900,14 +80920,19 @@ class PointPlan(_Model):
         entity: The point as it would be stored. Its `id` is 0: the slot is given when it is written.
         revision: The document revision the plan was made against. Give it as
             `expectedRevision` to write exactly this plan, or nothing.
+        text: Its name's text (`nameText`) as it would be stored, its link given when it is written; absent when none would
+            be written.
     """
     entity: Entity
     revision: str
+    text: Entity | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["entity"] = self.entity.to_json()
         out["revision"] = self.revision
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else self.text.to_json()
         return out
 
     @classmethod
@@ -80915,6 +80940,7 @@ class PointPlan(_Model):
         return cls(
             entity=Entity.from_json(data["entity"]),
             revision=data["revision"],
+            text=UNSET if "text" not in data else None if data["text"] is None else Entity.from_json(data["text"]),
         )
 
 
@@ -116932,13 +116958,13 @@ class TextEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         fields: Ranges of its letters bound to a source (docs/adr/0325 §1), in order, not overlapping; absent: none.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
-        label_of: The object whose label this text writes (Etiketleri yazıya çevir's
-            “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
-            follows the object as its label at `label_scale`; absent: a text of
-            its own. Given with `label_scale` or not at all.
+        label_of: The object whose label this text writes, its persistent id: with `label_scale` it follows the object as its
+            label at that scale (Etiketleri yazıya çevir's “Nesneye bağlı”, docs/adr/0175 §4); without, a point's name
+            written where it was put, moved as the point moves (docs/adr/9314). Absent: a text of its own.
+            A scale is never given without it.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
-        label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0. Unit: scale.
+        label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0; absent: a point's name. Unit: scale.
         layout: Its indents, tab stops and columns (docs/adr/0324 §1); absent: none, a tab every
             `DEFAULT_TAB` heights, one column.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:

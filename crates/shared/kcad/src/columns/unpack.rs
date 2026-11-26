@@ -578,7 +578,8 @@ pub(super) fn geometry(
                 let of = c.text(|| place("labelOf"))?;
                 let id = EntityId::parse(&of)
                     .ok_or_else(|| broken(&format!("bağlı yazının nesnesi “{of}”")))?;
-                (Some(id), Some(c.float()?))
+                // A point's name has no scale: NaN in its place (docs/adr/9314).
+                (Some(id), Some(c.float()?).filter(|n| !n.is_nan()))
             } else {
                 (None, None)
             };

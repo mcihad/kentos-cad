@@ -694,23 +694,19 @@ impl<'d> Encoder<'d> {
                 if !para.fields.is_empty() {
                     f.push(("fields", Val::Json(serde_json::to_value(&para.fields).unwrap_or_default())));
                 }
-                // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
-                // drawing's texts (a block definition's objects have no persistent ids to name).
+                // The object whose label it writes (docs/adr/0175 §4), and only the drawing's texts (a block
+                // definition's objects have no persistent ids to name): a scale never without its object; the object
+                // alone is a point's name (docs/adr/9314, schema 257).
                 if e.label_of.is_some() || e.label_scale.is_some() {
                     let refuse = |this: &mut Self, field: &'static str, words: &str| {
                         this.path.push(Seg::Name(kind));
                         this.path.push(Seg::Name(field));
                         Err(this.fail(Code::BadValue, words))
                     };
-                    let (Some(of), Some(scale)) = (&e.label_of, e.label_scale) else {
-                        let field = if e.label_of.is_none() {
-                            "labelOf"
-                        } else {
-                            "labelScale"
-                        };
+                    let Some(of) = &e.label_of else {
                         return refuse(
                             self,
-                            field,
+                            "labelOf",
                             "bağlı yazının nesnesi ve ölçeği birlikte verilir",
                         );
                     };
@@ -729,7 +725,10 @@ impl<'d> Encoder<'d> {
                         );
                     }
                     // Not finite: the float's own refusal (`non_finite`), with its place.
-                    if scale.is_finite() && !label_scale_ok(scale) {
+                    if let Some(scale) = e.label_scale
+                        && scale.is_finite()
+                        && !label_scale_ok(scale)
+                    {
                         return refuse(
                             self,
                             "labelScale",
@@ -737,7 +736,7 @@ impl<'d> Encoder<'d> {
                         );
                     }
                     f.push(("labelOf", Val::Uid(of)));
-                    f.push(("labelScale", Val::Float(scale)));
+                    f.extend(e.label_scale.map(|scale| ("labelScale", Val::Float(scale))));
                 }
                 // Its face (docs/adr/0183 §2): bold, italic and a slant need a typeface. A slant that is
                 // not finite meets the float's own refusal (`non_finite`), with its place.

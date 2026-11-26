@@ -10,6 +10,11 @@ export type PointPlan = {
  */
 entity: Entity, 
 /**
+ * Its name's text (`nameText`) as it would be stored, its link given when it is written; absent when none would
+ * be written.
+ */
+text?: Entity, 
+/**
  * The document revision the plan was made against. Give it as
  * `expectedRevision` to write exactly this plan, or nothing.
  */

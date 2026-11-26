@@ -52,4 +52,11 @@ symbol?: string,
  * (from a plan, or the document). When given and the document is no
  * longer at it, nothing is written and the answer is `conflict`.
  */
-expectedRevision?: string, };
+expectedRevision?: string, 
+/**
+ * Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,
+ * at the project's measure text height on paper, in its typeface, upright, on the point's layer. The text follows
+ * the point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label
+ * nothing more is written. Absent: false.
+ */
+nameText?: boolean, };

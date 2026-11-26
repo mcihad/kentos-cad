@@ -21,6 +21,7 @@ mod font_folders_screens;
 mod layer_menu_tests;
 mod layout_program_tests;
 mod map_survey_program_tests;
+mod point_names_screens;
 mod module_surface_tests;
 mod program_tests;
 mod scenes;
