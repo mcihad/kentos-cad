@@ -37,11 +37,14 @@ struct Live {
     camera: Camera,
     /// The camera a running gesture started at, and its last move; none when the app has the camera the area shows.
     gesture: Option<(Camera, Instant)>,
+    /// Where a pan's drag left the pointer (logical pixels in the area): it moved with the drag, and no move of it
+    /// reached the app meanwhile (docs/adr/9251). None for the wheel, which leaves the pointer where it is.
+    dragged: Option<Point>,
 }
 
 impl LiveView {
     pub fn new(camera: Camera) -> Self {
-        Self(Arc::new(Mutex::new(Live { camera, gesture: None })))
+        Self(Arc::new(Mutex::new(Live { camera, gesture: None, dragged: None })))
     }
 
     fn with<T>(&self, f: impl FnOnce(&mut Live) -> T) -> T {
@@ -63,9 +66,10 @@ impl LiveView {
         self.moved(now, |c| c.zoom_at(factor, f64::from(at.x), f64::from(at.y)));
     }
 
-    /// A middle-button drag moved the view by `by` pixels, as `Camera::pan_by`.
-    pub fn pan(&self, by: Vector, now: Instant) {
+    /// A middle-button drag moved the view by `by` pixels, as `Camera::pan_by`, and the pointer to `at`.
+    pub fn pan(&self, by: Vector, at: Point, now: Instant) {
         self.moved(now, |c| c.pan_by(f64::from(by.x), f64::from(by.y)));
+        self.with(|l| l.dragged = Some(at));
     }
 
     fn moved(&self, now: Instant, change: impl FnOnce(&mut Camera)) {
@@ -81,9 +85,13 @@ impl LiveView {
         self.with(|l| l.gesture.map(|(_, at)| at + SETTLE))
     }
 
-    /// The running gesture handed to the app: the camera it started at and the one the area shows. None without one.
-    pub fn take(&self) -> Option<(Camera, Camera)> {
-        self.with(|l| l.gesture.take().map(|(from, _)| (from, l.camera)))
+    /// The running gesture handed to the app: the camera it started at, the one the area shows, and where a pan's drag
+    /// left the pointer. None without one.
+    pub fn take(&self) -> Option<(Camera, Camera, Option<Point>)> {
+        self.with(|l| {
+            let dragged = l.dragged.take();
+            l.gesture.take().map(|(from, _)| (from, l.camera, dragged))
+        })
     }
 
     /// The app's own camera: a fit, a step back in the history, a resize. It ends any gesture: the app's change wins.
@@ -91,6 +99,7 @@ impl LiveView {
         self.with(|l| {
             l.camera = camera;
             l.gesture = None;
+            l.dragged = None;
         });
     }
 }
@@ -111,14 +120,15 @@ mod tests {
         let start = live.camera();
         let t0 = Instant::now();
         live.zoom(1.15, Point::new(100.0, 100.0), t0);
-        live.pan(Vector::new(30.0, -10.0), t0 + Duration::from_millis(40));
+        live.pan(Vector::new(30.0, -10.0), Point::new(130.0, 90.0), t0 + Duration::from_millis(40));
         assert!(live.moving());
         assert_eq!(live.settles_at(), Some(t0 + Duration::from_millis(40) + SETTLE), "the last move counts");
         let mut expected = start;
         expected.zoom_at(1.15, 100.0, 100.0);
         expected.pan_by(30.0, -10.0);
-        let (from, to) = live.take().expect("a gesture");
+        let (from, to, dragged) = live.take().expect("a gesture");
         assert_eq!((from, to), (start, expected), "the camera's own math, from where the gesture started");
+        assert_eq!(dragged, Some(Point::new(130.0, 90.0)), "where the drag left the pointer");
         assert!(!live.moving() && live.take().is_none(), "told once");
     }
 

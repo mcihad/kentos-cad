@@ -51,6 +51,9 @@
     `App::view`'ı çağırmaz; tuval kendi iş parçacığında kendi dokularına çizer, iced yalnız son dokuyu koyar.
   - Geçici resim tek kurala iner (kamera damgalı doku, dönüşümle gösterilir); bugünkü beş yeniden kullanma yolu kalkar.
   - Döşeme, görünüm ayıklaması ve LOD; görüntüde hiçbir nesne sessizce düşmez. NCZ ve DWG alımı aynı planda.
+  - Aracın önizlemesi görünüm hareket ederken de çizilir (26 Kasım 2026, sahibin sözü “zoom esnasında görmeden ben
+    çalışamam”; [ADR 9251](../adr/9251-tool-preview-drawn-while-the-view-moves.md)): işaretler, tutamaçlar ve taslak
+    canlı kamerayı her karede okur; ölçü etiketi ve değer alanı noktasıyla kayar; kartlar durana kadar gizli.
 
 - **Modül ve istemci ayrımı, saklama modeli (23 Kasım 2026, sahibin isteği; [ADR 9195](../adr/9195-module-separation.md),
   [ADR 9196](../adr/9196-storage-by-project-kind.md), [plan/ayrim.md](../../plan/ayrim.md), CLAUDE.md §25).**

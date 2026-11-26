@@ -65,6 +65,8 @@ impl App {
                 };
                 let marks = Marks {
                     camera: self.viewport.camera,
+                    // Set by the layer from the area's live camera (preview.rs, docs/adr/9251).
+                    live: None,
                     snap: self.snap,
                     snap_note: self.snap_marker_note(),
                     select: self.session.select_box(),
@@ -91,8 +93,11 @@ impl App {
                     locks: self.lock_marks(&format),
                     colors: mark_colors(self.canvas()),
                 };
+                // The marks, the draft and the cards beside the pointer read the area's live camera when they draw:
+                // on every frame of a gesture, where the scene of the same frame is (preview.rs, docs/adr/9251).
                 let over = preview::layer(
                     &self.viewport.camera,
+                    Some(&self.viewport.live),
                     marks,
                     self.drawing_preview(&format),
                     self.field.as_ref().map(|f| preview::FieldView {
@@ -239,7 +244,8 @@ impl App {
                 let writing = self.paragraph_view();
                 // The drawing's overlays go with the area's live camera while a gesture runs, built for the app's
                 // (viewport/follow.rs, docs/adr/9205): the labels and the data layers' marks moved and scaled with the
-                // scene; the marks drawn at a screen size, the cards and the editors hidden until the view settles.
+                // scene; the marks, the grips and a tool's preview drawn with it (docs/adr/9251); the cards and the
+                // editors hidden until the view settles.
                 let (built, live) = (self.viewport.camera, &self.viewport.live);
                 let drawn = iced::widget::Stack::new()
                         // A road project's terrain surfaces over the drawing (terrain_layer.rs, plan/road.md Y2.4).
@@ -266,9 +272,10 @@ impl App {
                     stack![area, following(built, live, Follows::Moved, drawn.into())]
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())
-                        // The marks, grips, the crosshair and a tool's preview are drawn at a size on the screen: moved
-                        // and scaled with the view they grew sevenfold in a fast wheel. They wait for the view to settle.
-                        .push(following(built, live, Follows::Still, over))
+                        // The marks, grips, the crosshair and a tool's preview are drawn at a size on the screen, with
+                        // the camera the area shows at that frame: never scaled with the view, never hidden while it
+                        // moves (preview.rs, docs/adr/9251).
+                        .push(over)
                         .extend(credits)
                         // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).
                         .extend(self.navigation_view())
@@ -329,6 +336,7 @@ impl App {
         };
         let marks = Marks {
             camera,
+            live: None,
             snap: self.snap,
             snap_note: None,
             select: None,
@@ -357,6 +365,7 @@ impl App {
         };
         let over = preview::layer(
             &camera,
+            None,
             marks,
             (if !self.session.is_running() && !self.session.grip_active() {
                 self.cad_inspection_preview()

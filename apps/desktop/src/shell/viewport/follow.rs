@@ -20,13 +20,16 @@ use kentos_render_wgpu::Camera;
 use super::live::LiveView;
 
 /// How an overlay goes with the live view.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Follows {
     /// Moved and scaled with it: the drawing's marks and labels.
     Moved,
     /// Drawn only while the view is the one it was built for: a card naming what lies under the pointer, a text
     /// being edited.
     Still,
+    /// Moved, never scaled, with this world point (docs/adr/9251): a running tool's measurement and its value field
+    /// beside the pointer stay beside the place they were laid out at, at their size on the screen.
+    Pinned(kentos_render_wgpu::Vec2),
 }
 
 /// The overlay `content`, built for `built`, on the live view `live`.
@@ -69,6 +72,14 @@ pub fn moved(built: &Camera, now: &Camera) -> Option<(f32, Vector)> {
     (k.is_finite() && shift.x.is_finite() && shift.y.is_finite()).then_some((k as f32, shift))
 }
 
+/// How far the screen of `now` puts the world point `p` from where `built` put it, in whole pixels as a card's layout
+/// places it: what moves a card pinned to `p` (any turn or map system). None where either camera does not reach it.
+pub fn pinned(built: &Camera, now: &Camera, p: kentos_render_wgpu::Vec2) -> Option<Vector> {
+    let ([ax, ay], [bx, by]) = (built.world_to_screen(p), now.world_to_screen(p));
+    let shift = Vector::new((bx - ax).round() as f32, (by - ay).round() as f32);
+    (shift.x.is_finite() && shift.y.is_finite()).then_some(shift)
+}
+
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer> for Follow<'_, Message, Theme, Renderer>
 where
     Renderer: iced::advanced::Renderer,
@@ -103,17 +114,25 @@ where
             draw(renderer);
             return;
         }
-        if self.follows == Follows::Still {
-            return;
-        }
-        let Some((k, shift)) = moved(&self.built, &now) else {
-            return;
-        };
         let bounds = layout.bounds();
-        let origin = Vector::new(bounds.x, bounds.y);
-        let to = Transformation::translate(origin.x + shift.x, origin.y + shift.y)
-            * Transformation::scale(k)
-            * Transformation::translate(-origin.x, -origin.y);
+        let to = match self.follows {
+            Follows::Still => return,
+            Follows::Pinned(p) => {
+                let Some(by) = pinned(&self.built, &now, p) else {
+                    return;
+                };
+                Transformation::translate(by.x, by.y)
+            }
+            Follows::Moved => {
+                let Some((k, shift)) = moved(&self.built, &now) else {
+                    return;
+                };
+                let origin = Vector::new(bounds.x, bounds.y);
+                Transformation::translate(origin.x + shift.x, origin.y + shift.y)
+                    * Transformation::scale(k)
+                    * Transformation::translate(-origin.x, -origin.y)
+            }
+        };
         renderer.with_layer(bounds, |renderer| {
             renderer.with_transformation(to, |renderer| draw(renderer));
         });
@@ -214,6 +233,25 @@ mod tests {
             assert!((f64::from(gx) - ex).abs() < 1e-3 && (f64::from(gy) - ey).abs() < 1e-3, "({x}, {y})");
         }
         assert_eq!(moved(&built, &built), Some((1.0, Vector::ZERO)));
+    }
+
+    /// A card pinned to a world point (docs/adr/9251) goes where the live camera puts the point, by whole pixels as its
+    /// layout placed it, never scaled; a turn of the view moves it too, the card itself does not turn.
+    #[test]
+    fn a_pinned_card_goes_with_its_world_point_by_whole_pixels() {
+        let built = camera();
+        let p = built.screen_to_world(500.0, 200.0);
+        let mut now = built;
+        now.zoom_at(1.15, 120.0, 340.0);
+        now.pan_by(-37.0, 12.5);
+        let by = pinned(&built, &now, p).expect("a shift");
+        let [x, y] = now.world_to_screen(p);
+        assert!((500.0 + f64::from(by.x) - x).abs() <= 0.5 && (200.0 + f64::from(by.y) - y).abs() <= 0.5, "{by:?}");
+        assert!(by.x.fract() == 0.0 && by.y.fract() == 0.0, "whole pixels: {by:?}");
+        assert_eq!(pinned(&built, &built, p), Some(Vector::ZERO));
+        let mut turned = built;
+        turned.twist = 0.3;
+        assert!(pinned(&built, &turned, p).is_some(), "a turn moves the card's place");
     }
 
     #[test]

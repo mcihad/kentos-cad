@@ -122,8 +122,10 @@ pub enum Event {
     /// Show everything (a middle double click).
     Extents,
     /// A wheel turn or a middle-button pan the area made on its live camera has settled (live.rs, docs/adr/9205): from
-    /// the camera it started at to the one it stopped at. Wheel turns and pans reach the app so, once a gesture.
-    ViewChanged { from: Camera, to: Camera },
+    /// the camera it started at to the one it stopped at. Wheel turns and pans reach the app so, once a gesture. `at`:
+    /// where a pan's drag left the pointer (logical pixels from the area's top-left), which no move told the app
+    /// (docs/adr/9251); none after the wheel.
+    ViewChanged { from: Camera, to: Camera, at: Option<Point> },
     /// Put this world point in the middle of the area.
     CenterOn(Vec2),
     /// The left button went down here (logical pixels from the area's top-left).
@@ -702,8 +704,8 @@ impl shader::Program<Message> for Program {
             if *now < at {
                 return Some(shader::Action::request_redraw_at(at));
             }
-            if let Some((from, to)) = self.live.take() {
-                return Some(shader::Action::publish(self.message(Event::ViewChanged { from, to })));
+            if let Some((from, to, at)) = self.live.take() {
+                return Some(shader::Action::publish(self.message(Event::ViewChanged { from, to, at })));
             }
         }
         // Screen-sized symbols wait for the wheel to stop, then are built again (docs/adr/0090).
@@ -746,8 +748,8 @@ impl shader::Program<Message> for Program {
                 self.live.zoom(factor, at, Instant::now());
                 shader::Action::request_redraw()
             }
-            Some(Event::Panned { by, .. }) if self.other.is_none() && self.keep => {
-                self.live.pan(by, Instant::now());
+            Some(Event::Panned { by, at }) if self.other.is_none() && self.keep => {
+                self.live.pan(by, at, Instant::now());
                 shader::Action::request_redraw()
             }
             Some(event) => shader::Action::publish(self.message(event)),

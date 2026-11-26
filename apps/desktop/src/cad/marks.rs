@@ -19,6 +19,8 @@
 //!
 //! They change with every pointer move and hold one glyph or one box, so
 //! they are not scene parts; the selection's own highlight is (viewport.rs).
+//! They draw with the camera the drawing area shows at that frame, a running
+//! gesture's live one too (docs/adr/9251): never hidden while the view moves.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
@@ -75,7 +77,12 @@ pub fn snap_name(kind: SnapKind) -> &'static str {
 /// The marks' canvas program: the snap marker, the selection box and the
 /// selection's grips, when there are.
 pub struct Marks {
+    /// The camera they were built for: the app's.
     pub camera: Camera,
+    /// The drawing area's live camera, read when they draw (docs/adr/9251): while the wheel turns or the middle
+    /// button pans, the marks stand where the scene of the same frame puts their world points, at their size on the
+    /// screen. None in Büyüteç's window, which draws with its own camera.
+    pub live: Option<crate::viewport::live::LiveView>,
     pub snap: Option<SnapHit>,
     /// What the snap marker says after its kind (docs/adr/0271): the object's kind and, while Tab steps
     /// through the candidates, which one of how many (“çizgi · 2/5”).
@@ -213,6 +220,11 @@ pub enum Guide {
 }
 
 impl Marks {
+    /// The camera the marks draw with now: the area's live one, else the one they were built for.
+    fn shown(&self) -> Camera {
+        self.live.as_ref().map_or(self.camera, crate::viewport::live::LiveView::camera)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.snap.is_none()
             && self.select.is_none()
@@ -250,74 +262,76 @@ impl<Message> canvas::Program<Message> for Marks {
     ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let accent = Tokens::of(theme).accent;
+        // The camera this frame of the area is drawn with (docs/adr/9251): a gesture's live one while it runs.
+        let camera = self.shown();
         grips(
             &mut frame,
             &self.grips,
             &self.hot,
-            &self.camera,
+            &camera,
             &self.colors,
             accent,
         );
-        bonds(&mut frame, &self.bonds, &self.camera, &self.colors, accent);
+        bonds(&mut frame, &self.bonds, &camera, &self.colors, accent);
         if let Some(c) = &self.constraints {
             crate::constraint_view::draw(
                 &mut frame,
                 c,
-                &self.camera,
+                &camera,
                 &self.colors,
                 &Tokens::of(theme),
                 self.constraint_pointer,
             );
         }
-        param_grips(&mut frame, &self.params, &self.camera, &self.colors);
-        range(&mut frame, &self.range, &self.camera, &self.colors, accent);
-        marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
-        ways(&mut frame, &self.ways, &self.camera, &self.colors, accent);
+        param_grips(&mut frame, &self.params, &camera, &self.colors);
+        range(&mut frame, &self.range, &camera, &self.colors, accent);
+        marked(&mut frame, &self.marked, &camera, &self.colors, accent);
+        ways(&mut frame, &self.ways, &camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
-            found(&mut frame, *p, words, &self.camera, &self.colors, accent);
+            found(&mut frame, *p, words, &camera, &self.colors, accent);
         }
         if let Some((b, name)) = &self.extent {
-            extent_frame(&mut frame, *b, name, &self.camera, &self.colors, accent);
+            extent_frame(&mut frame, *b, name, &camera, &self.colors, accent);
         }
-        missing(&mut frame, &self.missing, &self.camera, &self.colors, Tokens::of(theme).danger);
-        clip_frames(&mut frame, &self.clips, &self.camera, &self.colors);
+        missing(&mut frame, &self.missing, &camera, &self.colors, Tokens::of(theme).danger);
+        clip_frames(&mut frame, &self.clips, &camera, &self.colors);
         if let Some(p) = &self.picked {
-            crate::extensions::panel_marks::draw(&mut frame, p, &self.camera, &self.colors, accent);
+            crate::extensions::panel_marks::draw(&mut frame, p, &camera, &self.colors, accent);
         }
         broken(
             &mut frame,
             &self.broken,
-            &self.camera,
+            &camera,
             &self.colors,
             Tokens::of(theme).danger,
         );
         if let Some(r) = &self.reach {
             let tokens = Tokens::of(theme);
-            crate::impact_reach_marks::draw(&mut frame, r, &self.camera, &self.colors, &tokens);
+            crate::impact_reach_marks::draw(&mut frame, r, &camera, &self.colors, &tokens);
         }
         for m in &self.module {
-            m.draw(&mut frame, &self.camera, &self.colors, &Tokens::of(theme));
+            m.draw(&mut frame, &camera, &self.colors, &Tokens::of(theme));
         }
         if let Some(m) = &self.problem {
             problem(
                 &mut frame,
                 m,
-                &self.camera,
+                &camera,
                 &self.colors,
                 Tokens::of(theme).danger,
             );
         }
         if let Some(b) = self.select {
-            select_box(&mut frame, b, &self.camera, &self.colors);
+            select_box(&mut frame, b, &camera, &self.colors);
         }
         if let Some(l) = &self.locks {
-            locks(&mut frame, l, &self.camera, &self.colors);
+            locks(&mut frame, l, &camera, &self.colors);
         }
         if let Some(t) = &self.tracking {
-            tracking(&mut frame, t, &self.camera, &self.colors);
+            tracking(&mut frame, t, &camera, &self.colors);
         }
         if let Some(hit) = self.snap {
-            let [x, y] = self.camera.world_to_screen(hit.point);
+            let [x, y] = camera.world_to_screen(hit.point);
             // On the pixel's middle, as the web strokes it.
             let at = Point::new(x.round() as f32 + 0.5, y.round() as f32 + 0.5);
             let label = self

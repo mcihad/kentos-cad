@@ -10,6 +10,14 @@
 //! (ADR 0019), and the tag and the field need text, which the pipeline does
 //! not draw yet (REN-12). World points become screen points through the
 //! float64 camera; the float32 canvas gets only screen offsets.
+//!
+//! The camera is the one the drawing area shows at that frame (docs/adr/9251):
+//! while the wheel turns or the middle button pans, the area draws with its
+//! live camera and the app builds nothing (viewport/live.rs). The draft and the
+//! marks read that camera whenever they draw, so a line, a polyline or a wall
+//! being drawn stays on the screen through the whole gesture, its lines one
+//! pixel wide. Before, they waited for the view to settle: the owner could not
+//! see what they were drawing while they zoomed.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke};
 use iced::widget::{Space, canvas as canvas_widget, column, container, row, stack, text};
@@ -23,6 +31,8 @@ use kentos_ui::widget::beside;
 
 use crate::app::Message;
 use crate::marks::Marks;
+use crate::viewport::follow::{Follow, Follows};
+use crate::viewport::live::LiveView;
 
 /// A preview label's halo, logical pixels (the map's marks').
 const LABEL_HALO: f32 = 1.5;
@@ -47,8 +57,17 @@ pub struct FieldView<'a> {
 /// the digitizing locks' tag above-left of the cursor (docs/adr/0166 §6).
 /// Always present, empty when there is nothing to show, so the drawing
 /// area keeps its place in the widget tree (and its gesture state).
+///
+/// `camera` is the one it is built for; `live`, the drawing area's live camera
+/// (viewport/live.rs). While the wheel turns or the middle button pans, the
+/// area draws with that camera and the app builds nothing: the marks and the
+/// draft read it whenever they draw, and the cards beside a place of the
+/// drawing go with that place (docs/adr/9251). A tool's preview is on every
+/// frame of a gesture, where the scene of the same frame puts it. None in
+/// Büyüteç's window, which draws with its own camera.
 pub fn layer<'a>(
     camera: &Camera,
+    live: Option<&LiveView>,
     mut marks: Marks,
     preview: Option<Preview>,
     field: Option<FieldView<'a>>,
@@ -59,6 +78,14 @@ pub fn layer<'a>(
         let [x, y] = camera.world_to_screen(p);
         Point::new(x as f32, y as f32)
     };
+    // A card beside a place of the drawing goes with it while a gesture moves the view, at its own size.
+    let pinned = |at: Vec2, card: Element<'a, Message>| -> Element<'a, Message> {
+        match live {
+            Some(live) => Follow::new(*camera, live.clone(), Follows::Pinned(at), card).into(),
+            None => card,
+        }
+    };
+    marks.live = live.cloned();
     let mut layers: Vec<Element<'a, Message>> = Vec::new();
     // The snap colour of the drawing (`--canvas-snap`): a corner's reach is drawn in it.
     let snap = marks.colors.snap;
@@ -80,6 +107,7 @@ pub fn layer<'a>(
             canvas_widget(Draft {
                 preview,
                 camera: *camera,
+                live: live.cloned(),
                 snap,
                 font,
                 halo,
@@ -92,20 +120,26 @@ pub fn layer<'a>(
             // Below right of the cursor; on its other side where the drawing's
             // edge would cut the tag off (the web's `drawTag`).
             let at = screen(tag.at);
-            layers.push(beside(
-                measurement(tag.lines, tag_tone, snap),
-                Point::new(at.x.round(), at.y.round()),
-                Vector::new(16.0, 16.0),
+            layers.push(pinned(
+                tag.at,
+                beside(
+                    measurement(tag.lines, tag_tone, snap),
+                    Point::new(at.x.round(), at.y.round()),
+                    Vector::new(16.0, 16.0),
+                ),
             ));
         }
     }
-    if let Some((label, at)) = lock_tag {
+    if let Some((label, world)) = lock_tag {
         // Above left of the cursor: the value field is above right of it, the tool's tag below right.
-        let at = screen(at);
-        layers.push(kentos_ui::widget::beside_above_left(
-            measurement(vec![label], Tone::Snap, snap),
-            Point::new(at.x.round(), at.y.round()),
-            Vector::new(16.0, 16.0),
+        let at = screen(world);
+        layers.push(pinned(
+            world,
+            kentos_ui::widget::beside_above_left(
+                measurement(vec![label], Tone::Snap, snap),
+                Point::new(at.x.round(), at.y.round()),
+                Vector::new(16.0, 16.0),
+            ),
         ));
     }
     // Above dimension/text masks; editable value fields stay above the CAD pointer.
@@ -117,11 +151,15 @@ pub fn layer<'a>(
         // it however many locks it lists; left of it near the drawing's right
         // edge, lower near its top, never outside it (the web's
         // `besidePointer`, DESIGN.md §7.4.2).
-        let at = screen(field.at);
-        layers.push(kentos_ui::widget::beside_above_right(
-            value_field(field, snap),
-            Point::new(at.x.round(), at.y.round()),
-            Vector::new(18.0, 8.0),
+        let world = field.at;
+        let at = screen(world);
+        layers.push(pinned(
+            world,
+            kentos_ui::widget::beside_above_right(
+                value_field(field, snap),
+                Point::new(at.x.round(), at.y.round()),
+                Vector::new(18.0, 8.0),
+            ),
         ));
     }
     if layers.is_empty() {
@@ -292,7 +330,11 @@ fn lock_chip<'a>(words: String, length: bool, snap: Color) -> Element<'a, Messag
 /// colour, a corner's reach in the snap colour (docs/adr/0047).
 struct Draft {
     preview: Preview,
+    /// The camera the preview was built for: the app's.
     camera: Camera,
+    /// The drawing area's live camera, read when the draft draws (docs/adr/9251): while a gesture moves the view the
+    /// draft stands where the scene of the same frame puts its points, its lines one pixel wide.
+    live: Option<LiveView>,
     snap: Color,
     /// The drawing's face and the drawing area's colour: texts to come are drawn in them (docs/adr/0175 §3).
     font: DrawingFont,
@@ -300,24 +342,31 @@ struct Draft {
 }
 
 impl Draft {
-    fn screen(&self, p: Vec2) -> Point {
-        let [x, y] = self.camera.world_to_screen(p);
-        Point::new(x as f32, y as f32)
+    /// The camera the draft draws with now: the area's live one, else the one it was built for.
+    fn shown(&self) -> Camera {
+        self.live.as_ref().map_or(self.camera, LiveView::camera)
     }
+}
 
-    fn path(&self, points: &[Vec2], closed: bool) -> Option<Path> {
-        (points.len() >= 2).then(|| {
-            Path::new(|b| {
-                b.move_to(self.screen(points[0]));
-                for p in &points[1..] {
-                    b.line_to(self.screen(*p));
-                }
-                if closed {
-                    b.close();
-                }
-            })
+/// A world point on the screen of `camera`.
+fn screen_of(camera: &Camera, p: Vec2) -> Point {
+    let [x, y] = camera.world_to_screen(p);
+    Point::new(x as f32, y as f32)
+}
+
+/// A line through world points on the screen of `camera`; none for fewer than two.
+fn path_of(camera: &Camera, points: &[Vec2], closed: bool) -> Option<Path> {
+    (points.len() >= 2).then(|| {
+        Path::new(|b| {
+            b.move_to(screen_of(camera, points[0]));
+            for p in &points[1..] {
+                b.line_to(screen_of(camera, *p));
+            }
+            if closed {
+                b.close();
+            }
         })
-    }
+    })
 }
 
 impl canvas::Program<Message> for Draft {
@@ -339,6 +388,10 @@ impl canvas::Program<Message> for Draft {
             Tone::Snap => self.snap,
         };
         let mut frame = canvas::Frame::new(renderer, bounds.size());
+        // The camera this frame of the area is drawn with (docs/adr/9251): a gesture's live one while it runs.
+        let camera = self.shown();
+        let screen = |p: Vec2| screen_of(&camera, p);
+        let path = |points: &[Vec2], closed: bool| path_of(&camera, points, closed);
         let dashed = |segments: &'static [f32]| Stroke {
             line_dash: LineDash {
                 segments,
@@ -353,7 +406,7 @@ impl canvas::Program<Message> for Draft {
             let rings: Vec<Path> = area
                 .rings
                 .iter()
-                .filter_map(|r| self.path(r, true))
+                .filter_map(|r| path(r, true))
                 .collect();
             if rings.is_empty() {
                 continue;
@@ -361,9 +414,9 @@ impl canvas::Program<Message> for Draft {
             let shape = Path::new(|b| {
                 for ring in &area.rings {
                     if let Some((first, rest)) = ring.split_first() {
-                        b.move_to(self.screen(*first));
+                        b.move_to(screen(*first));
                         for p in rest {
-                            b.line_to(self.screen(*p));
+                            b.line_to(screen(*p));
                         }
                         b.close();
                     }
@@ -394,8 +447,8 @@ impl canvas::Program<Message> for Draft {
         if !self.preview.hatch.is_empty() {
             let lines = Path::new(|b| {
                 for [p, q] in &self.preview.hatch {
-                    b.move_to(self.screen(*p));
-                    b.line_to(self.screen(*q));
+                    b.move_to(screen(*p));
+                    b.line_to(screen(*q));
                 }
             });
             frame.stroke(
@@ -410,23 +463,23 @@ impl canvas::Program<Message> for Draft {
             .preview
             .ring
             .as_deref()
-            .and_then(|r| self.path(r, true))
+            .and_then(|r| path(r, true))
         {
             frame.fill(&ring, accent.scale_alpha(0.08));
             frame.stroke(&ring, dashed(&[4.0, 4.0]));
         }
-        if let Some(path) = self.path(&self.preview.path, false) {
+        if let Some(path) = path(&self.preview.path, false) {
             frame.stroke(&path, Stroke::default().with_color(accent).with_width(1.0));
         }
         for [a, b] in &self.preview.guides {
-            if let Some(guide) = self.path(&[*a, *b], false) {
+            if let Some(guide) = path(&[*a, *b], false) {
                 frame.stroke(&guide, dashed(&[2.0, 3.0]));
             }
         }
         // The circle, the arc or the rectangle a tool would write, and its guides
         // (docs/adr/0032): as the web's `strokePath` draws them.
         for line in &self.preview.strokes {
-            let Some(path) = self.path(&line.pts, line.closed) else {
+            let Some(path) = path(&line.pts, line.closed) else {
                 continue;
             };
             let dash = line.dash.unwrap_or_default();
@@ -445,7 +498,7 @@ impl canvas::Program<Message> for Draft {
         // (docs/adr/0047); Böl's points to come and a perpendicular's right
         // angle: 1 px, where the point falls (docs/adr/0057).
         for m in &self.preview.markers {
-            let at = self.screen(m.at);
+            let at = screen(m.at);
             let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
             let mark = Path::new(|b| match m.shape {
                 MarkerShape::Ring(r) => b.circle(Point::new(x, y), r),
@@ -471,7 +524,7 @@ impl canvas::Program<Message> for Draft {
                 MarkerShape::RightAngle { along, up } => {
                     // The web's `drawRightAngle`: 8 px along each side, on screen.
                     let unit = |to: Vec2| {
-                        let s = self.screen(to);
+                        let s = screen(to);
                         let (dx, dy) = (s.x - at.x, s.y - at.y);
                         let l = dx.hypot(dy);
                         (l >= 1e-9).then(|| (dx / l, dy / l))
@@ -523,10 +576,10 @@ impl canvas::Program<Message> for Draft {
             crate::labels::ghost(
                 &mut frame,
                 &t.text,
-                self.screen(t.p),
-                (t.height * self.camera.scale) as f32,
+                screen(t.p),
+                (t.height * camera.scale) as f32,
                 // Clockwise on the screen, the view's twist taken in (docs/adr/0285 §2).
-                (-(t.rotation.to_radians() - self.camera.twist)) as f32,
+                (-(t.rotation.to_radians() - camera.twist)) as f32,
                 (along as f32, up as f32),
                 (&t.face, t.width_factor as f32),
                 self.font,
@@ -539,8 +592,8 @@ impl canvas::Program<Message> for Draft {
             crate::labels::cell_ghost(
                 &mut frame,
                 &c.text,
-                self.screen(c.at),
-                (c.height * self.camera.scale) as f32,
+                screen(c.at),
+                (c.height * camera.scale) as f32,
                 c.bold,
                 &c.face,
                 self.font,
@@ -550,7 +603,7 @@ impl canvas::Program<Message> for Draft {
         // Short texts beside points: a reference line's start “A” (docs/adr/0057), a room's number to come
         // (docs/adr/0653). Over eight copies in the halo's colour, as the map's marks: a line under one does not cross it.
         for label in &self.preview.labels {
-            let at = self.screen(label.at);
+            let at = screen(label.at);
             let text = |position: Point, color: Color| canvas::Text {
                 content: label.text.clone(),
                 position,
@@ -572,7 +625,7 @@ impl canvas::Program<Message> for Draft {
         }
         // The objects picked for a tangent circle: a 9 px square where each was clicked.
         for p in &self.preview.squares {
-            let at = self.screen(*p);
+            let at = screen(*p);
             let square = Path::rectangle(
                 Point::new(at.x.round() - 4.5, at.y.round() - 4.5),
                 iced::Size::new(9.0, 9.0),
@@ -584,7 +637,7 @@ impl canvas::Program<Message> for Draft {
         }
         // Points and texts among a modify tool's ghosts: a 7 px square each, solid (docs/adr/0037).
         for p in &self.preview.marks {
-            let at = self.screen(*p);
+            let at = screen(*p);
             let square = Path::rectangle(
                 Point::new(at.x.round() - 3.5, at.y.round() - 3.5),
                 iced::Size::new(7.0, 7.0),
@@ -596,9 +649,9 @@ impl canvas::Program<Message> for Draft {
         }
         // A polar tracking ray across the area.
         if let Some(tracking) = self.preview.tracking {
-            let o = self.screen(tracking.origin);
+            let o = screen(tracking.origin);
             let rad = tracking.angle.to_radians();
-            let (dx, dy) = crate::marks::screen_dir(&self.camera, rad.cos(), rad.sin(), 1e4);
+            let (dx, dy) = crate::marks::screen_dir(&camera, rad.cos(), rad.sin(), 1e4);
             let far = Point::new(o.x + dx, o.y + dy);
             let ray = Path::line(o, far);
             frame.stroke(

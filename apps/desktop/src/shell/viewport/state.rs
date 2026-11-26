@@ -261,10 +261,20 @@ impl Viewport {
             }
             // A gesture the area made on its live camera, settled (live.rs): its camera is the app's now, and the
             // pointer's world point is the one under the same place of the screen. The view has already been still
-            // for the labels' settle: they and screen-sized symbols are placed for it at once.
-            Event::ViewChanged { to, .. } => {
+            // for the labels' settle: they and screen-sized symbols are placed for it at once. A pan's drag moved the
+            // pointer with the drawing and no move told it: it is where the drag left it, off the area past its edge
+            // (docs/adr/9251). Read through the camera it stopped at, it is the world point the drag held under it,
+            // so a running tool's preview still ends at the pointer.
+            Event::ViewChanged { to, at, .. } => {
                 self.camera = to;
                 self.live_sent.set(to);
+                if let Some(at) = at {
+                    let inside = at.x >= 0.0
+                        && at.y >= 0.0
+                        && at.x < self.bounds.width
+                        && at.y < self.bounds.height;
+                    self.pointer_px = inside.then_some(at);
+                }
                 self.cursor = self.pointer_px.map(|at| self.world(at));
             }
             // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
@@ -760,8 +770,8 @@ impl Viewport {
     }
 
     /// A gesture the area is running or has not yet told, taken by the app before it reads the pointer (live.rs):
-    /// the camera it started at and the one the area shows.
-    pub fn take_live(&mut self) -> Option<(Camera, Camera)> {
+    /// the camera it started at, the one the area shows, and where a pan's drag left the pointer.
+    pub fn take_live(&mut self) -> Option<(Camera, Camera, Option<Point>)> {
         self.live.take()
     }
 
@@ -1088,6 +1098,15 @@ impl Viewport {
         .width(Fill)
         .height(Fill)
         .into()
+    }
+
+    /// The pointer's world point again, through the app's camera now, where the pointer is on the screen; none off the
+    /// area. Yakınlaştır and Uzaklaştır zoom about the middle (`App::zoom`): the drawing moves under a still pointer
+    /// (docs/adr/9251).
+    pub fn repoint_cursor(&mut self) {
+        self.cursor = self
+            .pointer_px
+            .map(|at| self.camera.screen_to_world(f64::from(at.x), f64::from(at.y)));
     }
 
     /// The world point at a position of the area, through the float64 camera.

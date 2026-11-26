@@ -102,6 +102,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - **Planda olmayan:**
     - `Message::Viewport` kalkmadı, çünkü imleç ve tıklama araçların iletisi olarak kalıyor;
     - durum çubuğundaki ölçek görünüm durunca değişiyor.
+  - [x] **Ek (26 Kasım): aracın önizlemesi hareket ederken de çizilir**
+    ([ADR 9251](../docs/adr/9251-tool-preview-drawn-while-the-view-moves.md)). Sahibin sözü: “zoom esnasında görmeden ben
+    çalışamam”.
+    - Bu madde işaretleri ve önizlemeyi görünüm durana kadar gizliyordu. Çizgi, Çoklu çizgi ya da Duvar sürerken
+      tekerlek dönünce lastik bant ve verilen kenarlar ekrandan kalkıyordu.
+    - İşaretler, tutamaçlar ve taslak artık canlı kamerayı her karede okuyor; çizgileri bir piksel kalıyor. Ölçü
+      etiketi ve değer alanı noktasıyla tam piksel kayıyor. Kartlar ve düzenleyiciler eskisi gibi durana kadar gizli.
+    - Aynı akışta düzelen iki kusur: orta tuşla kaydırmadan sonra bandın ucu imleçten sürükleme kadar kaçıyordu;
+      Yakınlaştır bandı ekranın ortasına götürüyordu.
+    - Gerileme sınaması `render_preview_tests` (GPU): dokuz durumun dokuzu önce kırmızı, sonra yeşil.
 - [x] **RM-06 — Seçim arayüzü yeniden kurmanın bedelini taşımaz.**
   ([ADR 9206](../docs/adr/9206-selection-without-whole-drawing-scans.md))
   - Profil (`perf`, simgeli release, 150 tık): DWG'de tıklamanın görünüm payının çoğu Öznitelikler'in “Bu değer nereden
@@ -348,8 +358,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Delikli dolgular ve köşe birleşimleri GPU'da. Arayüz yazı tipleri atlasta; tanınmayan yazı tipinin harfleri dış
     hatlarıyla dolduruluyor.
   - Önce/sonra gerçek pencerede: farklar harf kenarlarında.
-  - Kanvasta kalanlar: tutamaçlar, kenet işaretleri, artı imleç, araç önizlemesi ve kartlar. Hareket boyunca gizliler;
-    çizim iş parçacığıyla (RM-07) ele alınacak.
+  - Kanvasta kalanlar: tutamaçlar, kenet işaretleri, artı imleç, araç önizlemesi ve kartlar. Hareket boyunca
+    gizliydiler. Kartlar dışındakiler 26 Kasım'dan beri canlı kamerayla her karede çiziliyor
+    ([ADR 9251](../docs/adr/9251-tool-preview-drawn-while-the-view-moves.md)); kartlar görünüm durana kadar gizli.
 
 ### F5 — CAD görünümü
 

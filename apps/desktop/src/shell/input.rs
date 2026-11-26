@@ -593,6 +593,9 @@ impl App {
             viewport::Event::Zoomed { factor, at: middle },
             self.document.as_ref(),
         );
+        // The zoom is about the middle, the pointer stays where it is on the screen: its world point is the one under
+        // it now, none off the area. A running tool's preview follows it (`follow_view`), not the middle (docs/adr/9251).
+        self.viewport.repoint_cursor();
     }
 
     pub(crate) fn zoom_in(&mut self) {
@@ -613,9 +616,9 @@ impl App {
         if !matches!(
             event,
             viewport::Event::ViewChanged { .. } | viewport::Event::Moved(_) | viewport::Event::Left
-        ) && let Some((from, to)) = self.viewport.take_live()
+        ) && let Some((from, to, at)) = self.viewport.take_live()
         {
-            let _ = self.pointer(viewport::Event::ViewChanged { from, to });
+            let _ = self.pointer(viewport::Event::ViewChanged { from, to, at });
         }
         // A press on the drawing, or a pan with the middle button, keeps the text
         // field's text first (the web's blur); the wheel does not (text_field.rs).

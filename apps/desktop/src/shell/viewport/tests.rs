@@ -621,6 +621,50 @@ fn a_wheel_turn_moves_the_live_camera_and_reaches_the_app_once_settled() {
     assert!(app.view_history.can_back(), "the view left is kept");
 }
 
+/// A pan with the middle button drags the pointer with the drawing and tells the app nothing on the way; once it
+/// settles, the pointer is where the drag left it and its world point is the one the drag held under it, so a running
+/// tool's preview still ends at the pointer (docs/adr/9251). A drag let go past the area's edge leaves no point.
+#[test]
+fn a_settled_pan_puts_the_pointer_where_the_drag_left_it() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.update(Message::Viewport(Event::Resized(AREA)));
+    let _ = app.view();
+    let start = Point::new(300.0, 200.0);
+    let _ = app.update(Message::Viewport(Event::Moved(start)));
+    let held = app.viewport.cursor.expect("a point");
+    let end = Point::new(340.0, 175.0);
+    app.viewport.live.pan(end - start, end, iced::time::Instant::now());
+    let (from, to, at) = app.viewport.take_live().expect("a gesture");
+    assert_eq!(at, Some(end));
+    let _ = app.update(Message::Viewport(Event::ViewChanged { from, to, at }));
+    let cursor = app.viewport.cursor.expect("a point");
+    assert!((cursor.x - held.x).abs() < 1e-9 && (cursor.y - held.y).abs() < 1e-9, "{cursor:?} against {held:?}");
+    let _ = app.view();
+    let past = Point::new(-30.0, 175.0);
+    app.viewport.live.pan(past - end, past, iced::time::Instant::now());
+    let (from, to, at) = app.viewport.take_live().expect("a gesture");
+    let _ = app.update(Message::Viewport(Event::ViewChanged { from, to, at }));
+    assert!(app.viewport.cursor.is_none(), "off the area");
+}
+
+/// Yakınlaştır and Uzaklaştır zoom about the middle: the pointer stays where it is on the screen and its world point is
+/// the one under it now, not the middle's (a running tool's preview follows it); off the area there is none
+/// (docs/adr/9251).
+#[test]
+fn a_zoom_about_the_middle_leaves_the_pointer_where_it_is_on_the_screen() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.update(Message::Viewport(Event::Resized(AREA)));
+    let _ = app.view();
+    let _ = app.update(Message::Viewport(Event::Moved(Point::new(120.0, 80.0))));
+    app.zoom_in();
+    let cursor = app.viewport.cursor.expect("a point");
+    let under = app.viewport.camera.screen_to_world(120.0, 80.0);
+    assert!((cursor.x - under.x).abs() < 1e-9 && (cursor.y - under.y).abs() < 1e-9, "{cursor:?} against {under:?}");
+    let _ = app.update(Message::Viewport(Event::Left));
+    app.zoom_out();
+    assert!(app.viewport.cursor.is_none(), "off the area");
+}
+
 /// While a gesture has not yet settled, a move reads the pointer through the camera the screen shows without taking
 /// the gesture (the app would build the view's labels and curves again on every move); a press takes it first
 /// (docs/adr/9205).
