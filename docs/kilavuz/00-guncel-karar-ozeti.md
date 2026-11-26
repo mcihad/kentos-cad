@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Tabloda seçilen veri satırı her yüzeyin kaydı (27 Kasım 2026, CBS incelemesinin 5. maddesi;
+  [ADR 9326](../adr/9326-one-record-on-every-surface.md)).**
+  - Çizimde seçim yokken tabloda seçilen veri satırını Öznitelikler (“Veri satırı (N)”: katman, anahtar, değerler) ve
+    Koordinat listesi (“fid 1 (kaynakta)”, düzenlenmez) gösterir; satır çizime alınmaz. Kimlik katman ve anahtardır.
+  - Çubuktaki “Çizim hedefi” sözünün ipucu tablo katmanıyla çizim hedefini ayırır.
+
 - **Form tasarımının adımları ve ayrı adlar (27 Kasım 2026, CBS incelemesinin 6. maddesi;
   [ADR 9325](../adr/9325-form-design-steps-and-names.md)).**
   - Adlar: Taslağı kaydet ve Formu yayınla (tasarımcı), Kaydı uygula (kayıt penceresi), Katman değişikliklerini

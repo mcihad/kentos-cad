@@ -156,6 +156,15 @@ impl App {
             let at = panel.sections.len().min(1);
             panel.sections.insert(at, section);
         }
+        // Nothing selected in the drawing, rows of a data layer selected in its table (docs/adr/9326): the first row's
+        // values as its source holds them, by the layer and the key; read, not taken into the drawing.
+        if selected.is_empty()
+            && let Some((title, lines, note)) = self.source_row_lines()
+        {
+            let mut rows: Vec<rows::Row> = lines.into_iter().map(|(label, value)| rows::Row::text(label, value)).collect();
+            rows.push(rows::Row::note(&note));
+            panel.sections.insert(0, rows::Section { id: "source-row".into(), title: title.into(), rows });
+        }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
         if selected.is_empty()
@@ -322,7 +331,11 @@ impl App {
         let kinds: Vec<_> = panel.types.iter().map(|(kind, _)| kind.to_string()).collect();
         let selected = if panel.types.len() > 1 { self.properties_kind(doc).and_then(|kind| kinds.iter().position(|k| k == kind)).map_or(0, |i| i + 1) } else { 0 };
         let all = match panel.types.as_slice() {
-            [] => "Seçili nesne yok".to_owned(),
+            // Rows of a data layer selected in its table (docs/adr/9326): said as rows, not as nothing.
+            [] => match self.selected_source_rows() {
+                Some((_, rows)) => format!("Veri satırı ({})", rows.len()),
+                None => "Seçili nesne yok".to_owned(),
+            },
             [(kind, n)] => format!("{} ({n})", crate::selecting::kind_title(kind)),
             _ => format!("Tümü ({total})"),
         };

@@ -623,6 +623,9 @@ mod layer_migrate_tests;
 #[path = "gis/layer_migrate_many_tests.rs"]
 mod layer_migrate_many_tests;
 #[cfg(test)]
+#[path = "gis/source_selection_tests.rs"]
+mod source_selection_tests;
+#[cfg(test)]
 #[path = "gis/project_store_tests.rs"]
 mod project_store_tests;
 #[cfg(test)]

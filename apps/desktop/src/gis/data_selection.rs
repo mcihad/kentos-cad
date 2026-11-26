@@ -1,7 +1,8 @@
 //! A data layer's selected rows on the map (docs/adr/9102 §5, plan/veri.md VY-04): the rows pressed in Öznitelik
-//! tablosu are read from the source with their geometry (`layers_rows::read`, their keys, off the interface's thread)
-//! and their outlines drawn over the drawing in the selection's colour; Seçime yakınlaş frames them. The rows are not
-//! the drawing's: the drawing's selection is left as it is.
+//! tablosu are read from the source with their geometry and values (`layers_rows::read`, their keys, off the
+//! interface's thread) and their outlines drawn over the drawing in the selection's colour; Seçime yakınlaş frames
+//! them. The rows are not the drawing's: the drawing's selection is left as it is. Öznitelikler and Koordinat listesi
+//! show the same rows, by their layer and key, read without taking them (docs/adr/9326).
 
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -15,19 +16,30 @@ use crate::approved_layer::Approved;
 /// The most rows outlined at once.
 const MOST: u32 = 1000;
 
+/// A selected row as its source holds it: its key, its values and its geometry as an object of the layer (none for a
+/// table without one).
+#[derive(Debug, Clone)]
+pub struct SourceRow {
+    pub key: i64,
+    pub attrs: std::collections::BTreeMap<String, String>,
+    pub object: Option<kentos_commands::Entity>,
+}
+
 /// The selected rows' outlines and what they are of.
 #[derive(Debug, Default)]
 pub(crate) struct DataSelection {
     /// The layer and the keys the outlines are of.
     of: Option<(String, Vec<i64>)>,
     outlines: Option<Approved>,
+    /// The rows read, in the keys' order the source answered (docs/adr/9326).
+    rows: Vec<SourceRow>,
     asked: u64,
 }
 
 /// What the read said.
 #[derive(Debug, Clone)]
 pub enum Event {
-    Read(u64, Vec<kentos_commands::Entity>),
+    Read(u64, Vec<SourceRow>),
 }
 
 fn message(e: Event) -> Message {
@@ -48,6 +60,7 @@ impl App {
         }
         sel.of = wanted.clone();
         sel.outlines = None;
+        sel.rows.clear();
         sel.asked += 1;
         let (Some(node), Some((layer, keys)), Some(doc)) = (node, wanted, self.document.as_ref()) else {
             return Task::none();
@@ -57,7 +70,6 @@ impl App {
         let input = LayersRows {
             layer,
             keys: Some(keys),
-            fields: Some(Vec::new()),
             geometry: Some(true),
             limit: Some(MOST),
             ..LayersRows::default()
@@ -67,10 +79,18 @@ impl App {
                 let rows = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
                     .map(|a| a.rows)
                     .unwrap_or_default();
-                rows.iter()
-                    .filter_map(|r| {
-                        let g = kentos_data::wkt::read_wkt(r.wkt.as_deref()?).ok()?;
-                        kentos_native_application::geopackage::object_of(&g, &node.id, 1, serde_json::Map::new())
+                rows.into_iter()
+                    .map(|r| {
+                        let attrs: serde_json::Map<String, serde_json::Value> = r
+                            .attrs
+                            .iter()
+                            .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+                            .collect();
+                        let object = r.wkt.as_deref().and_then(|w| kentos_data::wkt::read_wkt(w).ok()).and_then(|g| {
+                            let id = u32::try_from(r.key).unwrap_or(1);
+                            kentos_native_application::geopackage::object_of(&g, &node.id, id, attrs)
+                        });
+                        SourceRow { key: r.key, attrs: r.attrs, object }
                     })
                     .collect::<Vec<_>>()
             },
@@ -80,13 +100,44 @@ impl App {
 
     pub(crate) fn data_selection_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Read(asked, objects) => {
+            Event::Read(asked, rows) => {
                 if asked == self.gis.data_selection.asked {
+                    let objects: Vec<kentos_commands::Entity> = rows.iter().filter_map(|r| r.object.clone()).collect();
                     self.gis.data_selection.outlines = Some(Approved::of(&objects, asked));
+                    self.gis.data_selection.rows = rows;
                 }
             }
         }
         Task::none()
+    }
+
+    /// The data layer's rows selected in its table and read from its source, with the layer's id (docs/adr/9326):
+    /// what Öznitelikler and Koordinat listesi show while the drawing has nothing selected.
+    pub(crate) fn selected_source_rows(&self) -> Option<(&str, &[SourceRow])> {
+        let sel = &self.gis.data_selection;
+        let (layer, _) = sel.of.as_ref()?;
+        (!sel.rows.is_empty()).then_some((layer.as_str(), sel.rows.as_slice()))
+    }
+
+    /// The first selected source row in words for Öznitelikler (docs/adr/9326): the heading with how many rows, the
+    /// layer and the key, the values by the layer's fields (a code by its label), and what is said under them.
+    pub(crate) fn source_row_lines(&self) -> Option<(String, Vec<(String, String)>, String)> {
+        let (layer, rows) = self.selected_source_rows()?;
+        let node = self.document.as_ref()?.model.layers().get(layer)?;
+        let first = rows.first()?;
+        let key = node.data.as_ref().map_or("anahtar", |d| d.key.as_str());
+        let mut lines = vec![("Katman".to_owned(), node.name.clone()), (key.to_owned(), first.key.to_string())];
+        for f in &node.fields {
+            let raw = first.attrs.get(&f.name).cloned().unwrap_or_default();
+            let shown = if f.values.as_ref().is_some_and(|v| !v.is_empty()) && !raw.is_empty() {
+                kentos_commands::display_value(f, &raw)
+            } else {
+                raw
+            };
+            lines.push((f.label().to_owned(), shown));
+        }
+        let many = if rows.len() > 1 { "İlki gösteriliyor. ".to_owned() } else { String::new() };
+        Some((format!("Veri satırı ({})", rows.len()), lines, format!("{many}Kaynaktan okundu; çizime alınmadı.")))
     }
 
     /// Whether a data layer's selected rows are outlined on the map (Seçime yakınlaştır frames them).

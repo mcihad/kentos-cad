@@ -388,15 +388,27 @@ impl App {
             return Listing::Empty;
         };
         let model = &doc.model;
-        let entities: Vec<&Entity> = self
+        let mut entities: Vec<&Entity> = self
             .selection
             .ids()
             .iter()
             .filter_map(|s| model.get(*s))
             .collect();
+        // Nothing selected in the drawing, rows of a data layer selected in its table (docs/adr/9326): their
+        // coordinates as their source holds them, read only, named by their key.
+        let source = entities.is_empty();
+        if source {
+            entities = self
+                .selected_source_rows()
+                .map(|(_, rows)| rows.iter().filter_map(|r| r.object.as_ref()).collect())
+                .unwrap_or_default();
+        }
         if entities.is_empty() {
             return Listing::Empty;
         }
+        let key_field = |e: &Entity| {
+            model.layers().get(&e.base().layer_id).and_then(|n| n.data.as_ref()).map_or("anahtar".to_owned(), |d| d.key.clone())
+        };
         let layer_name = |id: &str| {
             model
                 .layers()
@@ -414,14 +426,16 @@ impl App {
                         _ => None,
                     })
                     .flat_map(|p| {
-                        let name = crate::points::edit::point_name(p, map)
-                            .cloned()
-                            .unwrap_or_else(|| format!("#{}", p.base.id));
+                        let name = if source {
+                            format!("{} {} (kaynakta)", key_field(&Entity::Point(p.clone())), p.base.id)
+                        } else {
+                            crate::points::edit::point_name(p, map).cloned().unwrap_or_else(|| format!("#{}", p.base.id))
+                        };
                         let layer = layer_name(&p.base.layer_id);
                         let others = p.parts.iter().flatten().map(|q| (q.p, q.z));
                         std::iter::once((p.p, p.z)).chain(others).enumerate().map(
                             move |(k, (at, z))| Point {
-                                editable_slot: (k == 0).then_some(kentos_domain::Slot(p.base.id)),
+                                editable_slot: (k == 0 && !source).then_some(kentos_domain::Slot(p.base.id)),
                                 code: p.base.attrs.get("Kod").cloned().unwrap_or_default(),
                                 name: if k == 0 {
                                     name.clone()
@@ -501,6 +515,7 @@ impl App {
         };
         let base = e.base();
         let title = match &base.label {
+            _ if source => format!("{} {} (kaynakta, çizime alınmadı)", key_field(e), base.id),
             Some(label) => match base.attrs.get("Ada") {
                 Some(ada) if !ada.is_empty() => format!("{ada} ada {label}"),
                 _ => label.clone(),
@@ -525,6 +540,15 @@ impl App {
             footer
         };
         Listing::Vertices { pts, rings, footer }
+    }
+
+    /// Koordinat listesi's points as it lists them: each one's name and whether it is edited in place (a test's).
+    #[cfg(test)]
+    pub(crate) fn coordinate_points_for_test(&self) -> Vec<(String, bool)> {
+        match self.listing() {
+            Listing::Points(points) => points.iter().map(|p| (p.name.clone(), p.editable_slot.is_some())).collect(),
+            _ => Vec::new(),
+        }
     }
 
     fn coordinate_list(&self) -> Element<'_, Message> {

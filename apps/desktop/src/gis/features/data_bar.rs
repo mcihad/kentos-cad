@@ -171,8 +171,24 @@ impl App {
         .align_y(Center);
         // The layer drawn on, when the table shows another (docs/adr/9129): both are read, neither is taken for the other.
         let mut bar = row![filters, space::horizontal(), actions].spacing(8).align_y(Center);
+        // Said with what each is for (docs/adr/9326): the table's selection is its layer's rows; the drawing tools draw
+        // on the target.
         if let Some(t) = self.table_target_words(rows) {
-            bar = bar.push(kentos_ui::label::caption(t).style(kentos_ui::style::text::muted));
+            let table = rows.layer.as_deref().and_then(|id| {
+                self.document.as_ref().and_then(|d| d.model.layers().get(id).map(|n| n.name.clone()))
+            });
+            let body = match table {
+                Some(name) => format!(
+                    "Tablo “{name}” katmanının satırlarını gösterir; seçtiğiniz satırlar onundur, Öznitelikler ve Koordinat \
+                     listesi onları okur. Çizim araçları ise etkin katmana çizer."
+                ),
+                None => "Çizim araçları etkin katmana çizer.".to_owned(),
+            };
+            bar = bar.push(kentos_ui::widget::tip(
+                kentos_ui::label::caption(t).style(kentos_ui::style::text::muted),
+                kentos_ui::widget::Tip::new("Tablo ve çizim hedefi").body(body),
+                iced::widget::tooltip::Position::Top,
+            ));
         }
         container(bar.wrap().vertical_spacing(6)).padding([4, 8]).into()
     }
