@@ -37,6 +37,8 @@ pub struct Rights {
     pub insert: bool,
     pub update: bool,
     pub delete: bool,
+    /// The account owns the table (a member of its owner's role): only then may it add columns (docs/adr/9318).
+    pub alter: bool,
 }
 
 /// An identifier quoted.
@@ -220,7 +222,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     let found = sqlx::query(
         "SELECT c.oid::int8 AS oid, c.relkind::text AS kind,
                 has_table_privilege(c.oid, 'INSERT') AS ins, has_table_privilege(c.oid, 'UPDATE') AS upd,
-                has_table_privilege(c.oid, 'DELETE') AS del
+                has_table_privilege(c.oid, 'DELETE') AS del, pg_has_role(c.relowner, 'USAGE') AS own
          FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
          WHERE n.nspname = $1 AND c.relname = $2",
     )
@@ -236,6 +238,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         insert: found.try_get("ins").map_err(error_of)?,
         update: found.try_get("upd").map_err(error_of)?,
         delete: found.try_get("del").map_err(error_of)?,
+        alter: found.try_get("own").map_err(error_of)?,
     };
     let writes = granted.insert || granted.update || granted.delete;
     let cols = sqlx::query(

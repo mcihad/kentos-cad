@@ -4,6 +4,16 @@
 
 ## 0. Güncel karar özeti
 
+- **Veri katmanının tablosu ve alanları birlikte (26 Kasım 2026, CBS incelemesinin 1. maddesi;
+  [ADR 9318](../adr/9318-data-layer-columns.md)).**
+  - `cad.layers.columns` v1: `add` tabloya boş bırakılabilir sütun ekler (GeoPackage'ta yazılabilir dosya, PostgreSQL'de
+    tablonun sahibi; `columns_not_permitted`), tablo yeniden okununca katmanın alanını yazar; `refresh` alanları tablonun
+    sütunlarına getirir. Katmanın alanları tek geri alma adımı, sütun tabloda kalır.
+  - Formlar › Yeni alan veri katmanında önce sorar (tablo, sütun, tür, boş kalacak satırlar). Alanlar yeni alanı tabloya
+    ekler, yeniden adlandırmayı reddeder, Kaynak şemasını yenile düğmesi var.
+  - Tabloda olmayan alan okumayı durdurmaz (`cad.layers.rows`'un `missing`'i, tablonun alt satırında uyarı) ve formun
+    yayınını engeller (`form_field_not_in_source`).
+
 - **Proje kullandığı Kitaplığım sembollerini yanına alır (26 Kasım 2026, sahibin isteği;
   [ADR 9317](../adr/9317-project-keeps-library-symbols-it-uses.md)).**
   - Kusur: Kitaplığım sembolüyle çizilen katman ekranda ve paftada dolu, baskı önizlemesinde, PDF'te ve başka

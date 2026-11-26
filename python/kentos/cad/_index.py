@@ -153,6 +153,7 @@ COMMANDS: dict[str, Any] = {
     "cad.labels.pin": labels.pin,
     "cad.labels.report": labels.report,
     "cad.layers.classes": layers.classes,
+    "cad.layers.columns": layers.columns,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
     "cad.layers.create": layers.create,

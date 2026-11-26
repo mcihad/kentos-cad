@@ -201,6 +201,17 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9318: a data layer's table and its fields kept together.
+    Entry {
+        id: "cad.layers.columns",
+        refusals: &[
+            &["no_layer", "no_columns", "invalid_name", "column_exists"],
+            &["layer_not_found", "not_a_layer", "not_a_data_layer", "data_layer_read_only", "invalid_fields"],
+            &["source_unreachable", "columns_not_permitted"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/9103 §3: a data layer's edit session.
     Entry {
         id: "cad.layers.session",

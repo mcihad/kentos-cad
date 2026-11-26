@@ -2782,6 +2782,10 @@ mod tests {
                             serde_json::from_value::<crate::LayersCreated>(output.clone())
                                 .map(|_| ())
                         }
+                        crate::CAD_LAYERS_COLUMNS => {
+                            serde_json::from_value::<crate::LayersColumnsDone>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::CAD_LAYERS_MIGRATE => {
                             serde_json::from_value::<crate::LayersMigrated>(output.clone())
                                 .map(|_| ())

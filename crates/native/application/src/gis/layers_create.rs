@@ -42,7 +42,7 @@ struct Made {
 
 /// Why a table or column name cannot be taken: empty, longer than a source takes, a control character, a name a
 /// GeoPackage keeps for itself.
-fn name_problem(name: &str) -> Option<String> {
+pub(crate) fn name_problem(name: &str) -> Option<String> {
     if name.trim().is_empty() {
         return Some("ad boş olamaz".into());
     }

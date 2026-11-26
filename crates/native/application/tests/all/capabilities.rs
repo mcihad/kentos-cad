@@ -1049,6 +1049,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "yetki ve satır güvenliği yalnız veritabanında: GeoPackage'ın satır hakkı yoktur; kentos-postgis'in postgis_cases.py ile koşan testi satır güvenliği politikalı bir hesapla sınar (ADR 0585)",
     ),
     (
+        "cad.layers.columns",
+        "source_unreachable",
+        "kaynağın okunamaması sürücünün iletisini ve makinenin yolunu taşır, ortak durumda sabitlenmez; dosyası gitmiş tablonun add ve refresh retlerini tests/all/layers_columns.rs'in a_table_whose_file_is_gone_is_said'i sınar (ADR 9318)",
+    ),
+    (
         "cad.sources.describe",
         "source_unreachable",
         "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)",

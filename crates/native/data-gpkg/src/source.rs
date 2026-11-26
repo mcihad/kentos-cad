@@ -221,6 +221,7 @@ impl Source for GpkgSource {
             query_at_source: true,
             curves: true,
             create_table: self.writable(),
+            add_columns: w,
         })
     }
 

@@ -622,6 +622,13 @@ codes! {
     DATA_LAYER_NOT_EDITING = "data_layer_not_editing", Failed, false, "Veri katmanı düzenlemeye açık değil; satırları tablosunda durur. Önce katmanın düzenlemesini başlatın. Hiçbir şey yazılmadı.";
     /// A data layer kept read-only, or whose table the account may not write (docs/adr/9103 §3).
     DATA_LAYER_READ_ONLY = "data_layer_read_only", Failed, false, "Veri katmanı salt okunur; düzenlenemez.";
+    /// `cad.layers.columns`'s add without columns (docs/adr/9318).
+    NO_COLUMNS = "no_columns", Failed, false, "Tabloya eklenecek sütun verilmedi.";
+    /// A column named as a field of the layer or a column of the table already is (docs/adr/9318).
+    COLUMN_EXISTS = "column_exists", Failed, false, "Bu adda bir alan katmanda ya da bir sütun tabloda zaten var; başka bir ad verin.";
+    /// A table its source or the account may not add a column to (docs/adr/9318): a PostgreSQL table the account does not
+    /// own, a file opened read-only, a query.
+    COLUMNS_NOT_PERMITTED = "columns_not_permitted", Failed, false, "Bu tabloya sütun eklenemez: PostgreSQL'de tablonun sahibi olmak gerekir; salt okunur dosyaya ve sorguya sütun eklenmez. Tablo değişmedi.";
     /// `stop` of a layer with changes not saved (docs/adr/9103 §3): save them or let them go first.
     DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
     /// A save over rows someone else changed or deleted since they were taken (docs/adr/9104 §3): nothing written.

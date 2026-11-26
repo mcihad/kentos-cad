@@ -43,6 +43,7 @@ const UP: &str = "Yukarı";
 const DOWN: &str = "Aşağı";
 const FROM_DATA: &str = "Verilerden al";
 const MIGRATE: &str = "Değerleri biçime çevir";
+const REFRESH: &str = "Kaynak şemasını yenile";
 
 /// The table's columns: header and width (logical pixels), each wide enough for its header in the strong caption
 /// face with the cell's padding (a narrower one ran Uzunluk / Basamak over Zorunlu).
@@ -408,6 +409,8 @@ pub enum Event {
     Up,
     Down,
     FromData,
+    /// Kaynak şemasını yenile (docs/adr/9318): a data layer's fields taken to its table's columns as it is now.
+    Refresh,
     Save,
     Cancel,
     /// Liste…: the row's value list.
@@ -448,6 +451,18 @@ impl Window {
     /// Whether the value list's window is open over it.
     pub(crate) fn listing(&self) -> bool {
         self.choices.is_some()
+    }
+
+    /// The rows in the window (a test's own count).
+    #[cfg(test)]
+    pub(crate) fn row_count(&self) -> usize {
+        self.rows.len()
+    }
+
+    /// What the window says under its table now (a test reads it).
+    #[cfg(test)]
+    pub(crate) fn said_text(&self) -> Option<String> {
+        self.said.as_ref().map(|(_, t)| t.clone())
     }
 
     fn changed(&self) -> bool {
@@ -644,6 +659,18 @@ impl App {
                 let layer = w.layer.clone();
                 return self.migrate_layer_values(&layer);
             }
+            Event::Refresh => {
+                if w.changed() {
+                    w.said = Some((
+                        Kind::Warn,
+                        "Önce değişiklikleri kaydedin ya da Vazgeç'e basın: yenileme alanları tablodan yeniden okur."
+                            .to_owned(),
+                    ));
+                    return Task::none();
+                }
+                let layer = w.layer.clone();
+                return self.refresh_layer_columns(&layer);
+            }
             Event::Save => return self.save_layer_fields(),
             Event::Cancel => {
                 self.gis.layer_fields = None;
@@ -816,6 +843,40 @@ impl App {
             return Task::none();
         }
         let fields: Vec<LayerField> = w.rows.iter().map(field_of).collect();
+        // A data layer's field is a column of its table (docs/adr/9318): a new one is added to the table first
+        // (`cad.layers.columns`); a renamed one is refused, the table's column keeps its name and the layer would read a
+        // column the table does not have. A field taken off the layer is no longer read; the column stays.
+        if doc.model.layers().get(&w.layer).is_some_and(|n| n.data.is_some()) {
+            if let Some(r) = w.rows.iter().find(|r| r.from.as_deref().is_some_and(|f| f != r.name)) {
+                w.said = Some((
+                    Kind::Error,
+                    format!(
+                        "“{}” tablonun sütunu; adı burada değişmez. Takma ad verin ya da sütunu kaynakta yeniden adlandırıp {REFRESH}'e basın.",
+                        r.from.as_deref().unwrap_or_default()
+                    ),
+                ));
+                return Task::none();
+            }
+            let new: Vec<LayerField> = w.rows.iter().filter(|r| r.from.is_none()).map(field_of).collect();
+            if !new.is_empty() {
+                let input = kentos_commands::LayersColumns {
+                    action: kentos_commands::LayerColumnsAction::Add,
+                    layer: w.layer.clone(),
+                    fields: Some(new),
+                    expected_revision: None,
+                };
+                match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                    CommandResult::Completed { .. } => {}
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
+                        w.said = Some((Kind::Error, error.message));
+                        return Task::none();
+                    }
+                    CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
+                }
+            }
+        }
         // Through `cad.layers.edit`'s fields (docs/adr/0248 §1); its refusal in the window.
         let mut input = LayersEdit::new(LayerEditOperation::Fields);
         input.layer = Some(w.layer.clone());
@@ -865,6 +926,53 @@ impl App {
             Level::Info,
             format!("“{name}” katmanının alanları kaydedildi.{tail}"),
         );
+        Task::none()
+    }
+
+    /// Kaynak şemasını yenile (docs/adr/9318): `cad.layers.columns`' refresh, the window's rows read again from the layer
+    /// and what changed said under the table (nothing written when nothing changed).
+    pub(crate) fn refresh_layer_columns(&mut self, layer: &str) -> Task<Message> {
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = kentos_commands::LayersColumns {
+            action: kentos_commands::LayerColumnsAction::Refresh,
+            layer: layer.to_owned(),
+            fields: None,
+            expected_revision: None,
+        };
+        let said = match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, .. } => {
+                let names = |list: &[String]| list.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+                let text = match (output.added.is_empty(), output.removed.is_empty()) {
+                    (true, true) => "Katmanın alanları tablonun sütunlarıyla aynı; bir şey değişmedi.".to_owned(),
+                    (false, true) => format!("Tablodan alındı: {}.", names(&output.added)),
+                    (true, false) => format!("Tabloda artık olmayan alanlar katmandan çıktı: {}.", names(&output.removed)),
+                    (false, false) => format!(
+                        "Tablodan alındı: {}. Tabloda artık olmayan alanlar katmandan çıktı: {}.",
+                        names(&output.added),
+                        names(&output.removed)
+                    ),
+                };
+                (Kind::Info, text)
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                (Kind::Error, error.message)
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
+        };
+        let rows: Vec<FieldRow> = doc
+            .model
+            .layers()
+            .get(layer)
+            .map(|n| n.fields.iter().map(row_of).collect())
+            .unwrap_or_default();
+        if let Some(w) = self.gis.layer_fields.as_mut().filter(|w| w.layer == layer) {
+            w.chosen = (!rows.is_empty()).then_some(0);
+            w.saved = rows.clone();
+            w.rows = rows;
+            w.said = Some(said);
+        }
         Task::none()
     }
 
@@ -1096,6 +1204,17 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
+        // A data layer's fields follow its table (docs/adr/9318).
+        let data_layer = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&w.layer))
+            .is_some_and(|n| n.data.is_some());
+        let actions = if data_layer {
+            actions.push(tool("blockSync", REFRESH, Some(msg(Event::Refresh))))
+        } else {
+            actions
+        };
         // The chosen row's Tekil, ends left out and unit (docs/adr/0438 §3, §4).
         let extras: Element<'_, Message> = match chosen.and_then(|i| w.rows.get(i)) {
             Some(r) => {

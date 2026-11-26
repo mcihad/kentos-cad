@@ -997,6 +997,9 @@ pub(super) fn parsed(id: &str, input: &serde_json::Value) -> serde_json::Result<
         crate::CAD_LAYERS_CREATE => {
             serde_json::from_value::<crate::LayersCreate>(input.clone()).map(|_| ())
         }
+        crate::CAD_LAYERS_COLUMNS => {
+            serde_json::from_value::<crate::LayersColumns>(input.clone()).map(|_| ())
+        }
         crate::CAD_LAYERS_MIGRATE => {
             serde_json::from_value::<crate::LayersMigrate>(input.clone()).map(|_| ())
         }

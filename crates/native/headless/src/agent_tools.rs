@@ -526,6 +526,8 @@ pub const DESTRUCTIVE: &[&str] = &[
     "cad.processing.batch",
     // It writes a data layer's changes to its table and deletes rows; a row written is not unwritten (docs/adr/9103 §3).
     "cad.layers.session",
+    // It adds columns to a data layer's table, which stay there; a refresh takes fields off the layer (docs/adr/9318).
+    "cad.layers.columns",
     // It writes over the form's answers or takes them away (docs/adr/8077).
     "cad.form.answer",
     // It writes over a delivery's answer or takes a record away (docs/adr/8099).

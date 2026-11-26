@@ -25,4 +25,9 @@ total?: bigint,
 /**
  * Every kept row's key in the order (with `allKeys`).
  */
-keys?: Array<bigint>, checked: RowsChecked, };
+keys?: Array<bigint>, checked: RowsChecked, 
+/**
+ * The layer's fields its table does not have (docs/adr/9318): not read, each row empty in them, the others read as
+ * they are. Veri kaynağına sütun ekle adds the column, Kaynak şemasını yenile takes the field off the layer.
+ */
+missing?: Array<string>, };

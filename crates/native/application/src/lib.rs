@@ -546,6 +546,10 @@ pub mod gpkg_looks;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_create.rs"]
 pub mod layers_create;
+// A data layer's table and its fields kept together: columns added, its shape read again (docs/adr/9318).
+#[cfg(feature = "mod-gis")]
+#[path = "gis/layers_columns.rs"]
+pub mod layers_columns;
 // A drawing layer moved into a data source (docs/adr/9107 §8).
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_migrate.rs"]

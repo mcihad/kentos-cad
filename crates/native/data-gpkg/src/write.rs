@@ -462,6 +462,23 @@ impl Transaction for GpkgTransaction {
         Ok(())
     }
 
+    /// `ALTER TABLE … ADD COLUMN`, a nullable column without a default (docs/adr/9318): SQLite writes no row, each reads
+    /// NULL in it. Its type as a table made here declares it (`column_of`).
+    fn add_columns(&mut self, table: &str, fields: &[kentos_data::Field]) -> Result<(), DataError> {
+        let conn = self.gp()?.connection();
+        if registered_name_in(conn, table).map_err(failed)?.is_none() {
+            return Err(DataError::NoTable(table.to_owned()));
+        }
+        for f in fields {
+            let c = column_of(&kentos_data::Field { nullable: true, default: None, ..f.clone() });
+            let decl = if c.decl.trim().is_empty() { c.kind.decl() } else { c.decl.clone() };
+            conn.execute_batch(&format!("ALTER TABLE {} ADD COLUMN {} {decl};", quote(table), quote(&c.name)))
+                .map_err(failed)?;
+        }
+        self.targets.remove(table);
+        Ok(())
+    }
+
     fn receipt(&mut self, _scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
         crate::receipts::insert(self.gp()?.connection(), receipt)
     }

@@ -316,6 +316,12 @@ impl Input for kentos_commands::LayersCreate {
     }
 }
 
+impl Input for kentos_commands::LayersColumns {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::LayersMigrate {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None

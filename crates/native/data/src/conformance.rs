@@ -707,8 +707,55 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
         "olmayan satırın değişikliği reddedilmedi".into()
     });
 
+    columns_checks(source, table_name, &mut report)?;
     query_checks(source, table_name, srid, &truth, &mut report)?;
     Ok(report)
+}
+
+/// Columns added to the table (docs/adr/9318): a rolled back add leaves it as it was; added ones come last, nullable,
+/// empty (NULL) in every row, and take a value like any field.
+fn columns_checks(source: &dyn Source, table_name: &str, report: &mut Report) -> Result<(), String> {
+    let caps = source.capabilities(table_name).map_err(|e| format!("capabilities: {e}"))?;
+    report.check(caps.add_columns, || "yazılabilir tabloya sütun eklenemiyor".into());
+    let added = [
+        crate::schema::Field::new("not_1", FieldKind::Text { max: None }),
+        crate::schema::Field::new("sayi_1", FieldKind::INT32),
+    ];
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.add_columns(table_name, &added[..1]).map_err(|e| format!("add_columns: {e}"))?;
+    tx.rollback().map_err(|e| format!("rollback: {e}"))?;
+    let kept = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
+    report.check(kept.field("not_1").is_none(), || "geri alınan sütun tabloda kaldı".into());
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.add_columns(table_name, &added).map_err(|e| format!("add_columns: {e}"))?;
+    tx.commit().map_err(|e| format!("commit: {e}"))?;
+    let grown = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
+    let names: Vec<&str> = grown.fields.iter().map(|f| f.name.as_str()).collect();
+    report.check(
+        names.ends_with(&["not_1", "sayi_1"]) && grown.field("not_1").is_some_and(|f| f.nullable),
+        || format!("eklenen sütunlar {names:?}"),
+    );
+    let asked = Request { columns: Some(vec!["not_1".into(), "sayi_1".into()]), ..Request::all() };
+    let read = collect(source, table_name, &asked).map_err(|e| format!("added read: {e}"))?;
+    report.check(
+        !read.is_empty() && read.iter().all(|f| f.values.iter().all(Value::is_null)),
+        || "eklenen sütun satırlarda boş değil".into(),
+    );
+    let first = read.first().map_or(-1, |f| f.fid);
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.update(
+        table_name,
+        &[Change { fid: first, geometry: None, values: vec![("not_1".into(), Value::Text("yeni".into()))] }],
+    )
+    .map_err(|e| format!("update added: {e}"))?;
+    tx.commit().map_err(|e| format!("commit: {e}"))?;
+    let again = collect(source, table_name, &Request { columns: Some(vec!["not_1".into()]), ..Request::fids(vec![first]) })
+        .map_err(|e| format!("added read: {e}"))?;
+    report.check(
+        again.first().is_some_and(|f| f.values.first() == Some(&Value::Text("yeni".into()))),
+        || "eklenen sütuna yazılan değer okunmadı".into(),
+    );
+    Ok(())
 }
 
 /// A query read as a table (docs/adr/9113 §2): its shape (the key and the geometry chosen, its fields in its order, the

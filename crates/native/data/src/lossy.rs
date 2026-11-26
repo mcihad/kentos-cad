@@ -164,6 +164,9 @@ impl Transaction for LossyTransaction {
     fn drop_table(&mut self, table: &str) -> Result<(), DataError> {
         self.inner.drop_table(table)
     }
+    fn add_columns(&mut self, table: &str, fields: &[crate::schema::Field]) -> Result<(), DataError> {
+        self.inner.add_columns(table, fields)
+    }
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {
         self.inner.receipt(scope, receipt)
     }

@@ -211,9 +211,21 @@ pub struct Window {
     /// Yeni alan in the fields' palette (docs/adr/9141): the name typed and the kind chosen (none: text).
     pub(crate) new_field: String,
     pub(crate) new_field_kind: Option<kentos_commands::LayerFieldKind>,
+    /// Yeni alan on a data layer (docs/adr/9318): the column its table would get, asked before it is added.
+    pub(crate) column_ask: Option<ColumnAsk>,
     /// A field's sections in the third column (Genel, Değer, Kurallar, Denetimler, Diğer) folded or opened away from
     /// their default: Genel open, the rest folded.
     pub(crate) toggled_sections: std::collections::BTreeSet<&'static str>,
+}
+
+/// Veri kaynağına sütun ekle, asked in the designer (docs/adr/9318): the data layer, the field its new column becomes,
+/// the table and how many of its rows are empty in it (from `cad.layers.columns`' plan).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ColumnAsk {
+    pub layer: String,
+    pub field: kentos_commands::LayerField,
+    pub table: String,
+    pub rows: Option<u64>,
 }
 
 /// Which of an item's words a translation writes.
@@ -263,6 +275,9 @@ pub enum Event {
     NewFieldName(String),
     NewFieldKind(kentos_commands::LayerFieldKind),
     CreateField,
+    /// On a data layer (docs/adr/9318): the column asked is added to its table (Sütunu ekle), or not (Vazgeç).
+    ConfirmColumn,
+    CancelColumn,
     /// A related item (docs/adr/0404 §4) where the chosen item is.
     AddRelated,
     /// A reference to the parent through a project relation whose child is the form's layer
@@ -848,6 +863,41 @@ impl App {
             }
         }
         issues
+    }
+
+    /// The fields the form's items name that the data layer's table does not have (docs/adr/9318): each an error that
+    /// keeps the form from being published, said with the way out. None where the layer is not a data layer, or its table
+    /// cannot be read now (the table's read says that itself). The driver keeps the table's shape: no read a frame.
+    pub(crate) fn source_issues(&self, layer: &str, body: &FormBody) -> Vec<FormIssue> {
+        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(layer)) else {
+            return Vec::new();
+        };
+        let Some(data) = &node.data else {
+            return Vec::new();
+        };
+        let Ok(schema) = kentos_data::registry().source(&data.address).and_then(|s| s.schema(&data.table)) else {
+            return Vec::new();
+        };
+        body.walk()
+            .iter()
+            .filter_map(|(_, item)| {
+                let FormItem::Field(f) = item else {
+                    return None;
+                };
+                let name = node.fields.iter().find(|lf| lf.key() == f.field).map_or(f.field.as_str(), |lf| lf.name.as_str());
+                schema.field(name).is_none().then(|| FormIssue {
+                    code: kentos_forms::codes::FIELD_NOT_IN_SOURCE.into(),
+                    severity: kentos_commands::FormSeverity::Error,
+                    item: Some(f.id.clone()),
+                    field: Some(f.field.clone()),
+                    rule: None,
+                    message: format!(
+                        "“{name}” alanı “{}” katmanının tablosunda yok: bu formla kayıt yazılamaz. Alanlar'da Kaynak şemasını yenile ile alanı katmandan çıkarın ya da sütunu tabloya ekleyin.",
+                        node.name
+                    ),
+                })
+            })
+            .collect()
     }
 
     /// Formlar (`data.forms`): the window, on `form` or the first.
@@ -1528,3 +1578,7 @@ mod step;
 #[cfg(test)]
 #[path = "new_field_tests.rs"]
 mod new_field_tests;
+
+#[cfg(test)]
+#[path = "source_columns_tests.rs"]
+mod source_columns_tests;

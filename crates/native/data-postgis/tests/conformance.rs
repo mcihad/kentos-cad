@@ -148,3 +148,66 @@ fn a_receipt_commits_with_its_rows_and_only_with_them() {
     let back = source.receipt(scope, &id).expect("read").expect("there");
     assert_eq!((back.id, back.by.as_deref()), (id, Some("sınama")));
 }
+
+/// `address` as the account `user` (the driver takes no password in an address: every account's is `PGPASSWORD`'s).
+fn as_account(address: &str, user: &str) -> String {
+    let (scheme, rest) = address.split_once("://").unwrap_or(("postgresql", address));
+    let host = rest.split_once('@').map_or(rest, |(_, h)| h);
+    format!("{scheme}://{user}@{host}")
+}
+
+/// SQL the test sets the accounts up with, as the main account (its password from `PGPASSWORD`).
+fn run_sql(address: &str, statements: &[String]) {
+    use sqlx::Connection;
+    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("runtime");
+    rt.block_on(async {
+        let mut c = sqlx::postgres::PgConnection::connect(address).await.expect("connect");
+        for s in statements {
+            // The test's own statements, with the test environment's password.
+            sqlx::query(sqlx::AssertSqlSafe(s.clone())).execute(&mut c).await.expect(s);
+        }
+    });
+}
+
+/// docs/adr/9318: a column is added by the table's owner alone. An account granted SELECT and UPDATE is told so before
+/// (its capability) and refused by the database if it tries (`Denied`); the table stays as it was.
+#[test]
+fn a_column_is_added_by_the_tables_owner_alone() {
+    use kentos_data::{DataError, Field, FieldKind};
+    let Some(address) = address() else {
+        eprintln!("KENTOS_DATA_PG yok: sütun yetkisi sınaması atlandı");
+        return;
+    };
+    let table = "public.kentos_sutun";
+    let owner = PostGis.open(&address).expect("open");
+    let mut tx = owner.begin().expect("begin");
+    tx.create_table(&conformance::table(table, 5256), true).expect("table");
+    tx.commit().expect("commit");
+    assert!(owner.capabilities(table).expect("capabilities").add_columns, "the owner may add columns");
+    let password = std::env::var("PGPASSWORD").unwrap_or_default().replace('\'', "''");
+    run_sql(
+        &address,
+        &[
+            // A run that stopped half way left the account with its rights: they go first.
+            "DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'kentos_sutun_yazan') THEN \
+             EXECUTE 'DROP OWNED BY kentos_sutun_yazan'; EXECUTE 'DROP ROLE kentos_sutun_yazan'; END IF; END $$"
+                .into(),
+            format!("CREATE ROLE kentos_sutun_yazan LOGIN PASSWORD '{password}'"),
+            "GRANT USAGE ON SCHEMA public TO kentos_sutun_yazan".into(),
+            "GRANT SELECT, UPDATE ON public.kentos_sutun TO kentos_sutun_yazan".into(),
+        ],
+    );
+    let writer = PostGis.open(&as_account(&address, "kentos_sutun_yazan")).expect("open as the writer");
+    let caps = writer.capabilities(table).expect("capabilities");
+    assert!(caps.update_values && !caps.insert && !caps.add_columns, "{caps:?}");
+    let mut tx = writer.begin().expect("begin");
+    let refused = tx.add_columns(table, &[Field::new("not_1", FieldKind::Text { max: None })]);
+    assert!(matches!(refused, Err(DataError::Denied(_))), "{refused:?}");
+    let _ = tx.rollback();
+    assert!(owner.schema(table).expect("schema").field("not_1").is_none(), "the table as it was");
+    drop(writer);
+    let mut tx = owner.begin().expect("begin");
+    tx.drop_table(table).expect("drop");
+    tx.commit().expect("commit");
+    run_sql(&address, &["DROP OWNED BY kentos_sutun_yazan".into(), "DROP ROLE kentos_sutun_yazan".into()]);
+}

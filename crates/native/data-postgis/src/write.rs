@@ -394,6 +394,17 @@ impl Transaction for PgTransaction {
         Ok(())
     }
 
+    /// `ALTER TABLE … ADD COLUMN`, nullable and without a default (docs/adr/9318): each row reads NULL in it. Only the
+    /// table's owner may; the database refuses another account (42501, `Denied`), and the transaction writes nothing.
+    fn add_columns(&mut self, table: &str, fields: &[kentos_data::Field]) -> Result<(), DataError> {
+        let (sql, ..) = qualified(table);
+        for f in fields {
+            self.run(&format!("ALTER TABLE {sql} ADD COLUMN {} {}", quote(&f.name), native_of(&f.kind)), &[])?;
+        }
+        self.own.remove(table);
+        Ok(())
+    }
+
     fn receipt(&mut self, scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
         let by = receipt.by.clone().map_or(Arg::Null, Arg::Text);
         self.run(

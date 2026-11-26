@@ -85,6 +85,8 @@ pub struct DataTable {
     written: u64,
     range: (usize, usize),
     error: Option<String>,
+    /// The layer's fields its table does not have (docs/adr/9318), from the first page's answer: shown empty, named.
+    missing: Vec<String>,
     /// The order the headers give: the field and whether it goes down.
     order: Vec<(String, bool)>,
     /// The rows pressed, by key, and the layer they are of.
@@ -202,6 +204,12 @@ impl DataTable {
     #[cfg(test)]
     pub(crate) fn error(&self) -> Option<&str> {
         self.error.as_deref()
+    }
+
+    /// The layer's fields the table's source does not have (docs/adr/9318).
+    #[cfg(test)]
+    pub(crate) fn missing(&self) -> &[String] {
+        &self.missing
     }
 
     /// The question read again where the table is, its layer's changes written or let go (a taken row then shows what
@@ -481,6 +489,7 @@ impl App {
                         }
                         if page == 0 {
                             data.checked = Some(a.checked);
+                            data.missing = a.missing.clone();
                         }
                         data.pages.insert(page, a.rows);
                         // The pages farthest from the view let go.
@@ -924,6 +933,16 @@ impl App {
         // The fields the caller's role does not read, named (docs/adr/9150, 9188).
         let withheld = self.withheld_fields(&node.id);
         let mut foot = row![status].align_y(Center).padding([2, 8]).spacing(12);
+        // The layer's fields its table does not have (docs/adr/9318): the others are read, these shown empty.
+        if !data.missing.is_empty() {
+            let names = data.missing.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+            foot = foot.push(
+                label::caption(format!(
+                    "Kaynak tablosunda olmayan alan: {names}; boş gösterilir. Alanlar › Kaynak şemasını yenile ya da sütunu ekleyin."
+                ))
+                .style(kentos_ui::style::text::warning),
+            );
+        }
         if !withheld.is_empty() {
             foot = foot.push(
                 label::caption(super::role_fields::withheld_words(&withheld)).style(kentos_ui::style::text::muted),

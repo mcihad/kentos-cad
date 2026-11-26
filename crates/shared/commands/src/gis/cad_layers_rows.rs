@@ -139,4 +139,9 @@ pub struct LayerRowsAnswer {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub keys: Option<Vec<i64>>,
     pub checked: RowsChecked,
+    /// The layer's fields its table does not have (docs/adr/9318): not read, each row empty in them, the others read as
+    /// they are. Veri kaynağına sütun ekle adds the column, Kaynak şemasını yenile takes the field off the layer.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub missing: Vec<String>,
 }

@@ -231,9 +231,14 @@ fn rows_of(
     input: &LayersRows,
     stopped: &dyn Fn() -> bool,
 ) -> Result<LayerRowsAnswer, Stop> {
-    let asked = asked(node, settings, input)?;
+    let mut asked = asked(node, settings, input)?;
+    let source = kentos_data::registry().source(&asked.data.address).map_err(unreachable)?;
+    // A field of the layer its table does not have (docs/adr/9318) is not asked of the source, which would refuse the
+    // whole read: the others are read, the row is empty in it, and the answer names it.
+    let schema = source.schema(&asked.data.table).map_err(unreachable)?;
+    let missing: Vec<String> = asked.fields.iter().filter(|f| schema.field(f).is_none()).cloned().collect();
+    asked.fields.retain(|f| schema.field(f).is_some());
     let data = &asked.data;
-    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
     let system = TableSystem::of(settings, srid).map_err(unreachable)?;
     let bbox = match (input.bbox, &system, &data.geometry) {
@@ -318,6 +323,7 @@ fn rows_of(
             total,
             keys,
             checked: RowsChecked::Source,
+            missing,
         });
     };
     // The filter asked of every row the source keeps, in the order: the rows it holds for, by key.
@@ -393,6 +399,7 @@ fn rows_of(
         total: (input.count == Some(true)).then_some(kept.len() as u64),
         keys: (input.all_keys == Some(true)).then_some(kept),
         checked: RowsChecked::Here,
+        missing,
     })
 }
 

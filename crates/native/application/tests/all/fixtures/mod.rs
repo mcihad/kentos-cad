@@ -164,7 +164,7 @@ use kentos_native_application::{
 use kentos_native_application::{
     addresses_check, addresses_compare, addresses_normalize, images_clip, layers_compose,
     layers_contingents, layers_edit, layers_filter, layers_find, layers_info, layers_rules,
-    layer_classes, layer_export, layers_create, layers_data, layers_migrate, layers_rows, layers_session, layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    layer_classes, layer_export, layers_columns, layers_create, layers_data, layers_migrate, layers_rows, layers_session, layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     linearref_define, network_define, scenarios_edit, scenarios_impact, scenarios_record,
     time_version, topology_clean,
 };

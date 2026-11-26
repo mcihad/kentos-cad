@@ -191,7 +191,14 @@ impl App {
         let issues = w
             .body
             .as_ref()
-            .map(|b| self.issues_of(b, &fields))
+            .map(|b| {
+                let mut issues = self.issues_of(b, &fields);
+                // The data layer's table checked too (docs/adr/9318).
+                if let Some(f) = form {
+                    issues.extend(self.source_issues(&f.layer, b));
+                }
+                issues
+            })
             .unwrap_or_default();
 
         let left = self.forms_list(w, locked.is_none(), &fields);
@@ -584,6 +591,39 @@ impl App {
 
     /// Yeni alan (docs/adr/9141): a name and a kind, Oluştur makes the layer's field and puts it on the form.
     fn new_field_row(&self, w: &crate::forms::designer::Window) -> Element<'_, Message> {
+        // On a data layer (docs/adr/9318): the column its table gets, said before it is added.
+        if let Some(ask) = &w.column_ask {
+            let rows = match ask.rows {
+                Some(0) => "Tabloda henüz satır yok.".to_owned(),
+                Some(n) => format!("Var olan {n} satırda bu alan boş kalır."),
+                None => "Var olan satırlarda bu alan boş kalır.".to_owned(),
+            };
+            return Column::new()
+                .spacing(6)
+                .push(label::caption("Veri kaynağına sütun ekle").style(muted))
+                .push(label::body(format!(
+                    "“{}” tablosuna “{}” sütunu ({}) eklenecek. {rows}",
+                    ask.table,
+                    ask.field.name,
+                    ask.field.kind.label()
+                )))
+                .push(
+                    label::caption("Tablodaki sütun geri alınmaz; katmanın alanı Ctrl+Z ile geri alınır.")
+                        .style(muted),
+                )
+                .push(
+                    row![
+                        button(label::body("Sütunu ekle"))
+                            .on_press(msg(Event::ConfirmColumn))
+                            .style(style::button::primary),
+                        button(label::body("Vazgeç"))
+                            .on_press(msg(Event::CancelColumn))
+                            .style(style::button::secondary),
+                    ]
+                    .spacing(6),
+                )
+                .into();
+        }
         let kinds = kentos_commands::LayerFieldKind::ALL;
         let chosen = kinds.iter().position(|k| {
             *k == w

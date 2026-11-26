@@ -641,6 +641,43 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Veri kaynağının sütunları (docs/adr/9318), held together by fixtures/commands/v1/cad.layers.columns.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_COLUMNS.into(),
+            version: crate::CAD_LAYERS_COLUMNS_VERSION,
+            title: "Veri kaynağının sütunları".into(),
+            summary: "Bir veri katmanının tablosunu ve alanlarını birlikte tutar. \
+                      add (Veri kaynağına sütun ekle): fields'in her biri tabloya boş bırakılabilir bir sütun olarak eklenir; tablonun var olan satırları o sütunda boştur (NULL). Tablo yeniden okunup sütunlar görülünce katmanın alanları da eklenir; alanın kuralları (değer listesi, yeni satırın varsayılanı) katmanda durur. PostgreSQL'de yalnız tablonun sahibi sütun ekleyebilir (columns_not_permitted); salt okunur dosyaya ve sorguya eklenmez. \
+                      refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur. \
+                      Katmanın alanları tek geri alma adımıdır; eklenen sütun tabloda kalır. plan tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.".into(),
+            aliases: vec!["sutunekle".into(), "semayiyenile".into(), "addcolumn".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersColumns>(),
+            output: schema::<crate::LayersColumnsDone>(),
+            plan: Some(schema::<crate::LayersColumnsDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Saha varlıkları tablosuna bir not sütunu".into(),
+                    input: json!({
+                        "action": "add", "layer": "saha_varliklari",
+                        "fields": [{ "name": "saha_notu", "kind": "text" }]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Tabloda başka yerde değişen sütunları katmana al".into(),
+                    input: json!({ "action": "refresh", "layer": "saha_varliklari" }),
+                    output: None,
+                },
+            ],
+        },
         // Katmanı kaynağa taşı (docs/adr/9107 §8), held together by fixtures/commands/v1/cad.layers.migrate.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_MIGRATE.into(),

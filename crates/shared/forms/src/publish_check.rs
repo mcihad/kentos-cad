@@ -18,6 +18,8 @@ pub enum PublishKind {
     Default,
     /// A list widget whose field has no values, or a choice filter on a field without a list.
     List,
+    /// A field the data layer's table does not have (docs/adr/9318): a record could not be written.
+    Source,
     /// Every other error of the preflight.
     Other,
 }
@@ -30,6 +32,7 @@ impl PublishKind {
             Self::Required => "Zorunlu alan",
             Self::Default => "Varsayılan değer",
             Self::List => "Değer listesi",
+            Self::Source => "Kaynak tablosu",
             Self::Other => "Öbür sorunlar",
         }
     }
@@ -40,6 +43,7 @@ impl PublishKind {
             codes::REQUIRED_HIDDEN | codes::REQUIRED_READ_ONLY => Self::Required,
             codes::DEFAULT_INVALID => Self::Default,
             codes::WIDGET_NEEDS_VALUES | codes::CHOICE_UNLISTED => Self::List,
+            codes::FIELD_NOT_IN_SOURCE => Self::Source,
             _ => Self::Other,
         }
     }

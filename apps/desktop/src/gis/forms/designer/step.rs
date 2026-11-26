@@ -171,6 +171,46 @@ impl App {
                 let kind = w
                     .new_field_kind
                     .unwrap_or(kentos_commands::LayerFieldKind::Text);
+                // A data layer's field is a column of its table (docs/adr/9318): what the table gets is asked first,
+                // from the command's plan (the table, the rows empty in it); a source that cannot take it says why.
+                let data_layer = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(&layer))
+                    .is_some_and(|n| n.data.is_some());
+                if data_layer {
+                    let field = kentos_commands::LayerField::new(&name, kind);
+                    let input = kentos_commands::LayersColumns {
+                        action: kentos_commands::LayerColumnsAction::Add,
+                        layer: layer.clone(),
+                        fields: Some(vec![field.clone()]),
+                        expected_revision: None,
+                    };
+                    let Some(doc) = self.document.as_mut() else {
+                        return Task::none();
+                    };
+                    match kentos_native_application::layers_columns::plan(
+                        &ExecutionContext::new(&mut doc.model),
+                        &input,
+                    ) {
+                        kentos_commands::CommandResult::Completed { output, .. } => {
+                            w.column_ask = Some(crate::forms::designer::ColumnAsk {
+                                layer,
+                                field,
+                                table: output.table,
+                                rows: output.rows,
+                            });
+                            self.gis.forms_window = Some(w);
+                        }
+                        kentos_commands::CommandResult::Failed { error }
+                        | kentos_commands::CommandResult::Conflict { error }
+                        | kentos_commands::CommandResult::NeedsInput { error } => {
+                            self.say(Level::Error, error.message);
+                        }
+                        _ => {}
+                    }
+                    return Task::none();
+                }
                 let mut all = fields.clone();
                 all.push(kentos_commands::LayerField::new(&name, kind));
                 let mut input =
@@ -204,6 +244,50 @@ impl App {
                     format!("“{name}” alanı katmana eklendi ve forma kondu."),
                 );
             }
+            Event::ConfirmColumn => {
+                let Some(ask) = w.column_ask.take() else {
+                    return Task::none();
+                };
+                let input = kentos_commands::LayersColumns {
+                    action: kentos_commands::LayerColumnsAction::Add,
+                    layer: ask.layer.clone(),
+                    fields: Some(vec![ask.field.clone()]),
+                    expected_revision: None,
+                };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                match kentos_native_application::layers_columns::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input,
+                ) {
+                    kentos_commands::CommandResult::Completed { output, .. } => {
+                        let name = ask.field.name.clone();
+                        let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                        let id = kentos_forms::item_id_of(&name, &taken);
+                        let item = FormItem::Field(FormField::new(id.clone(), name.clone()));
+                        edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                        w.item = Some(id);
+                        w.new_field.clear();
+                        self.say(
+                            Level::Success,
+                            format!(
+                                "“{name}” sütunu “{}” tablosuna eklendi ve forma kondu; var olan satırlarda boş.",
+                                output.table
+                            ),
+                        );
+                    }
+                    kentos_commands::CommandResult::Failed { error }
+                    | kentos_commands::CommandResult::Conflict { error }
+                    | kentos_commands::CommandResult::NeedsInput { error } => {
+                        self.say(Level::Error, error.message);
+                        self.gis.forms_window = Some(w);
+                        return Task::none();
+                    }
+                    _ => {}
+                }
+            }
+            Event::CancelColumn => w.column_ask = None,
             Event::AddRelated => {
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
                 let id = kentos_forms::item_id_of("iliskili", &taken);
@@ -1369,6 +1453,20 @@ impl App {
             // Yine de yayınla skips the question of the records a release breaks (docs/adr/0442 §2).
             ev @ (Event::Publish | Event::PublishAnyway) => {
                 let anyway = matches!(ev, Event::PublishAnyway);
+                // A field the data layer's table does not have keeps it back however it was asked (docs/adr/9318).
+                let missing = w
+                    .chosen
+                    .as_deref()
+                    .and_then(|id| self.project_forms().iter().find(|f| f.id == id))
+                    .map(|f| f.layer.clone())
+                    .zip(w.body.as_ref())
+                    .map(|(layer, body)| self.source_issues(&layer, body))
+                    .unwrap_or_default();
+                if let Some(first) = missing.first() {
+                    self.warn(first.message.clone());
+                    self.gis.forms_window = Some(w);
+                    return Task::none();
+                }
                 w.breaking = None;
                 self.gis.forms_window = Some(w);
                 // A role that designs but does not publish (docs/adr/9174): nothing is written, said why.

@@ -66,6 +66,9 @@ pub mod codes {
     pub const FIELD_UNKNOWN: &str = "form_field_unknown";
     /// Two field items name one field.
     pub const FIELD_TWICE: &str = "form_field_twice";
+    /// A field item names a field the data layer's table does not have (docs/adr/9318): the host's check, which reads
+    /// the table.
+    pub const FIELD_NOT_IN_SOURCE: &str = "form_field_not_in_source";
     /// A mirror whose field has no item of its own (docs/adr/0437).
     pub const MIRROR_ALONE: &str = "form_mirror_alone";
     /// An action's processing tool the host has not (docs/adr/0441 §6): the host adds it, the core

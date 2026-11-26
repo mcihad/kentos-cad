@@ -1499,6 +1499,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_LAYERS_CREATE,
         kentos_commands::CAD_LAYERS_CREATE_VERSION,
     ),
+    // A data layer's table and its fields kept together ([`layers_columns`], docs/adr/9318).
+    (
+        kentos_commands::CAD_LAYERS_COLUMNS,
+        kentos_commands::CAD_LAYERS_COLUMNS_VERSION,
+    ),
     // A drawing layer moved into a data source ([`layers_migrate`], docs/adr/9107 §8).
     (
         kentos_commands::CAD_LAYERS_MIGRATE,

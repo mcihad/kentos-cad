@@ -322,6 +322,14 @@ macro_rules! gis_commands {
                     kentos_commands::LayersCreate
                 )
             }
+            kentos_commands::CAD_LAYERS_COLUMNS => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_columns,
+                    kentos_commands::LayersColumns
+                )
+            }
             kentos_commands::CAD_LAYERS_MIGRATE => {
                 crate::gis_dispatch::gis_arm!(
                     $command,

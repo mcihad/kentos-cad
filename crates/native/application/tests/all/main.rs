@@ -273,6 +273,9 @@ mod write_receipts;
 mod field_counts;
 // A condition naming a field the data layer lacks (docs/adr/9132).
 mod layers_rows_fields;
+// A data layer's columns added and its shape read again where a shared case cannot go (docs/adr/9318).
+#[cfg(feature = "mod-gis")]
+mod layers_columns;
 // A relation by a parent key through the commands (docs/adr/9135).
 mod relation_keys;
 // A tool's table written with its columns' kinds (docs/adr/9136).

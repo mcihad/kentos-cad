@@ -13,7 +13,7 @@ use crate::error::DataError;
 use crate::feature::Feature;
 use crate::projects::ProjectStore;
 use crate::request::Request;
-use crate::schema::Schema;
+use crate::schema::{Field, Schema};
 use crate::value::Value;
 
 /// What a table allows, as the driver and the account's rights decide it.
@@ -35,6 +35,9 @@ pub struct Capabilities {
     /// Arcs and compound curves kept.
     pub curves: bool,
     pub create_table: bool,
+    /// Nullable columns added to the table (docs/adr/9318): a GeoPackage file open for writing; a database table the
+    /// account owns. Not a query's or a view's.
+    pub add_columns: bool,
 }
 
 impl Capabilities {
@@ -197,6 +200,12 @@ pub trait Transaction: Send {
     fn create_table(&mut self, table: &NewTable, replace: bool) -> Result<(), DataError>;
     /// Drops a table.
     fn drop_table(&mut self, table: &str) -> Result<(), DataError>;
+    /// Adds nullable columns to a table, in order (docs/adr/9318): each row is empty (NULL) in them. A source that cannot
+    /// says so; nothing of the transaction is written then.
+    fn add_columns(&mut self, table: &str, fields: &[Field]) -> Result<(), DataError> {
+        let _ = (table, fields);
+        Err(DataError::Unsupported("Bu kaynağın tablosuna sütun eklenemez.".to_owned()))
+    }
     /// Writes a write's receipt into `scope`'s receipts table, inside the transaction: it commits with the rows or not
     /// at all (docs/adr/9126). A receipt of the same id already there is refused (its primary key).
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {

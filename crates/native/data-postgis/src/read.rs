@@ -452,6 +452,7 @@ pub(crate) fn capabilities_of(writable: bool, rights: crate::catalog::Rights, ge
         query_at_source: true,
         curves: true,
         create_table: true,
+        add_columns: writable && rights.alter,
     }
 }
 
@@ -464,12 +465,14 @@ mod tests {
     /// written at all gives no right, whatever was granted.
     #[test]
     fn each_right_on_rows_is_its_own() {
-        let update_only = capabilities_of(true, Rights { insert: false, update: true, delete: false }, true);
+        let update_only = capabilities_of(true, Rights { insert: false, update: true, delete: false, alter: false }, true);
         assert!(!update_only.insert && update_only.update_values && update_only.update_geometry && !update_only.delete);
         assert!(update_only.writable());
-        let all = capabilities_of(true, Rights { insert: true, update: true, delete: true }, false);
+        let all = capabilities_of(true, Rights { insert: true, update: true, delete: true, alter: true }, false);
         assert!(all.insert && all.update_values && !all.update_geometry && all.delete, "no geometry to update");
-        let view = capabilities_of(false, Rights { insert: true, update: true, delete: true }, true);
+        let view = capabilities_of(false, Rights { insert: true, update: true, delete: true, alter: true }, true);
         assert!(!view.writable(), "nothing where rows cannot be written");
+        // docs/adr/9318: columns are added by the table's owner alone, never to a view.
+        assert!(all.add_columns && !update_only.add_columns && !view.add_columns);
     }
 }

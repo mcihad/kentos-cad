@@ -1,0 +1,2128 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.layers.columns",
+  "commandVersion": 1,
+  "title": "Veri katmanının sütunları",
+  "note": "ADR 9318. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/sutun.gpkg); yazan her durum kendi kopyasında çalışır ve veri katmanını kendisi ekler. Beklentiler sözleşmenin kurallarıyla burada hesaplanır: retler ve sırası, tabloya eklenen sütunlar ve satırlarda boş okunmaları (cad.layers.rows), katmanın sonraki alanları, alanları geri getiren ama sütunu tabloda bırakan geri alma, alanları tablonun sütunlarına getiren yenileme.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının sütunları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 600000,
+      "y": 4410000
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "katman verilmedi: no_layer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "  ",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_layer",
+              "message": "Sütunların ekleneceği ya da şemasının yenileneceği veri katmanının kimliğini (layer) verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sütun verilmedi: no_columns",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_columns",
+              "message": "Tabloya eklenecek sütunları (fields) verin.",
+              "path": "fields"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fields hiç yok: no_columns",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_columns",
+              "message": "Tabloya eklenecek sütunları (fields) verin.",
+              "path": "fields"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ad: invalid_name",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_name",
+              "message": "Sütunun adı alınamaz: ad boş olamaz.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "64 baytlık ad: invalid_name",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_name",
+              "message": "Sütunun adı alınamaz: “aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa” en çok 63 bayt olabilir.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynağın kendine ayırdığı ad: invalid_name",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "rtree_dizin",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_name",
+              "message": "Sütunun adı alınamaz: “rtree_dizin” kaynağın kendi tablolarına ayrılmış bir ad.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kez verilen ad: column_exists",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "not",
+                "kind": "text"
+              },
+              {
+                "name": "NOT",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "column_exists",
+              "message": "“NOT” iki kez verildi; her sütuna ayrı bir ad verin.",
+              "path": "fields.1.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm: invalid_revision",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ],
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: katman eklendikten sonra eski sürümle hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/9.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/9.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ],
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan katman: layer_not_found",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "yok",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "grup: not_a_layer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "grup",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; sütunlar bir veri katmanının tablosunun olur.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizim katmanı: not_a_data_layer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "cizim",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_data_layer",
+              "message": "“Çizim” bir veri katmanı değil; nesneleri çizimdedir, sütunu yoktur. Alanlar penceresinde alan ekleyin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizim katmanının şeması yenilenmez: not_a_data_layer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "cizim"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_data_layer",
+              "message": "“Çizim” bir veri katmanı değil; nesneleri çizimdedir, sütunu yoktur. Alanlar penceresinde alan ekleyin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "salt okunur katman: data_layer_read_only",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/13.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/13.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              },
+              "readOnly": true
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "data_layer_read_only",
+              "message": "“Saha varlıkları” salt okunur tutuluyor; tablosuna sütun eklenmez.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanın alanı: column_exists",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/14.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/14.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "Durum",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "column_exists",
+              "message": "“Durum” katmanda ya da tablonun anahtarında, geometrisinde var; başka bir ad verin.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tablonun anahtarı: column_exists",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/15.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/15.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "Fid",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "column_exists",
+              "message": "“Fid” katmanda ya da tablonun anahtarında, geometrisinde var; başka bir ad verin.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tablonun geometrisi: column_exists",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/16.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/16.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "geom",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "column_exists",
+              "message": "“geom” katmanda ya da tablonun anahtarında, geometrisinde var; başka bir ad verin.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tabloda olup katmanda olmayan sütun: column_exists",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/17.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/17.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "eski_not",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "column_exists",
+              "message": "“Saha varlıkları” katmanının tablosunda “eski_not” sütunu var ama katmanın alanı değil: Kaynak şemasını yenile ile katmana alın.",
+              "path": "fields.0.name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "alanın kuralı: invalid_fields",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/18.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/18.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "not ",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_fields",
+              "message": "“not ” alanının adının başında ya da sonunda boşluk var.",
+              "path": "fields"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sorgu katmanı: columns_not_permitted",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/19.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha sorgusu",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/19.gpkg",
+              "table": "-- kentos: key=fid geometry=geom\nSELECT fid, geom, durum FROM saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "columns_not_permitted",
+              "message": "“Saha sorgusu” katmanının tablosuna sütun eklenemez: PostgreSQL'de tablonun sahibi olmak gerekir; salt okunur dosyaya ve sorguya sütun eklenmez. Tablo değişmedi.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan: tablo okunur, sütun eklenmez, satır sayısı söylenir",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/20.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/20.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "saha_notu"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bir sütun: tabloya eklenir, var olan satırlarda boş, katmanın alanı olur",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/21.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/21.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "saha_notu"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "fields": [
+              "durum",
+              "saha_notu"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "durum",
+                "saha_notu"
+              ],
+              "rows": [
+                {
+                  "key": 1,
+                  "attrs": {
+                    "durum": "A"
+                  }
+                },
+                {
+                  "key": 2,
+                  "attrs": {
+                    "durum": "B"
+                  }
+                },
+                {
+                  "key": 3,
+                  "attrs": {}
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki sütun, türleriyle: ikisi de her satırda boş",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/22.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/22.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "sayac",
+                "kind": "integer"
+              },
+              {
+                "name": "tarih",
+                "kind": "date"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "sayac",
+                "tarih"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "sayac",
+                  "kind": "integer"
+                },
+                {
+                  "name": "tarih",
+                  "kind": "date"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "fields": [
+              "sayac",
+              "tarih",
+              "no"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "sayac",
+                "tarih",
+                "no"
+              ],
+              "rows": [
+                {
+                  "key": 1,
+                  "attrs": {
+                    "no": "1"
+                  }
+                },
+                {
+                  "key": 2,
+                  "attrs": {
+                    "no": "2"
+                  }
+                },
+                {
+                  "key": 3,
+                  "attrs": {
+                    "no": "3"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geri alma katmanın alanlarını geri getirir, sütun tabloda kalır: yenile onu yeniden alır",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/23.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/23.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "saha_notu"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kaynağa sütun ekle"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not",
+                "saha_notu"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yenile: başka yerde eklenen sütun alan olur, tabloda olmayan alan çıkar",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/24.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/24.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              },
+              {
+                "name": "kayip",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not"
+              ],
+              "removed": [
+                "kayip"
+              ],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kaynak şemasını yenile"
+        }
+      ]
+    },
+    {
+      "name": "yenile planı hiçbir şey yazmaz",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/25.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/25.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              },
+              {
+                "name": "kayip",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not"
+              ],
+              "removed": [
+                "kayip"
+              ],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yenile: değişen yoksa geri alma adımı da yok",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/26.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/26.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              },
+              {
+                "name": "eski_not",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yenile kalan alanın kurallarını korur",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/27.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/27.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text",
+                "alias": "Durumu"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              },
+              {
+                "name": "kayip",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not"
+              ],
+              "removed": [
+                "kayip"
+              ],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text",
+                  "alias": "Durumu"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama: geçerli girdi bir şey yazmaz",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/28.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/28.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "validate",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eklenen sütuna sonra eklenen sütun: ikisi sırasıyla tabloda",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/sutun.gpkg",
+          "to": "$tmp:sutun/29.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Saha varlıkları",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:sutun/29.gpkg",
+              "table": "saha_varliklari",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "durum",
+                "kind": "text"
+              },
+              {
+                "name": "no",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "saha_notu",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "saha_notu"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "add",
+            "layer": "layer-1",
+            "fields": [
+              {
+                "name": "puan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "puan"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                },
+                {
+                  "name": "puan",
+                  "kind": "decimal"
+                }
+              ],
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "refresh",
+            "layer": "layer-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "table": "saha_varliklari",
+              "added": [
+                "eski_not"
+              ],
+              "removed": [],
+              "fields": [
+                {
+                  "name": "durum",
+                  "kind": "text"
+                },
+                {
+                  "name": "no",
+                  "kind": "integer"
+                },
+                {
+                  "name": "saha_notu",
+                  "kind": "text"
+                },
+                {
+                  "name": "puan",
+                  "kind": "decimal"
+                },
+                {
+                  "name": "eski_not",
+                  "kind": "text"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    }
+  ]
+}
