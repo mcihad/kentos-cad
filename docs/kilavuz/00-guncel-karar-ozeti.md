@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Proje kullandığı Kitaplığım sembollerini yanına alır (26 Kasım 2026, sahibin isteği;
+  [ADR 9317](../adr/9317-project-keeps-library-symbols-it-uses.md)).**
+  - Kusur: Kitaplığım sembolüyle çizilen katman ekranda ve paftada dolu, baskı önizlemesinde, PDF'te ve başka
+    bilgisayarda boştu; baskı yolu yalnız sistemin ve projenin kitaplığını tanır.
+  - Katman stilinde Kitaplığım'dan seçilen, "Kitaplığıma kaydet" ile kaydedilen ve nesnelere verilen sembol projenin
+    kopyasıdır (yeni kimlik, aynı ad; aynı sembole tek kopya).
+  - Kayıt, Baskı önizlemesi, Yazdır, Dışa aktar ve pafta yayını, çizimin hâlâ başvurduğu Kitaplığım öğelerini aynı
+    kimlikle projeye alır ve bunu söyler. Ön denetim bulunamayan sembolü `symbol_missing` ile söyler.
+
 - **Etiket CBS'nindir; CAD'de sonradan verilen ad da yazı olur (26 Kasım 2026, sahibin isteği;
   [ADR 9316](../adr/9316-labels-are-gis-only.md)).**
   - Kesin kural (CLAUDE.md): etiket yalnız CBS'dedir. CAD'de (Mimari, Harita, Yol) katman menüsünde Etiketler, etiket

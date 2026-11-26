@@ -414,7 +414,8 @@ fn katman_stili_picks_from_the_library_and_keeps_its_own_symbols() {
     );
     app.close_dialog();
 
-    // A symbol written into the style goes to Kitaplığım, and the slot refers to it.
+    // A symbol written into the style goes to Kitaplığım, and the slot refers to the project's copy of it
+    // (docs/adr/9317): the paper and another computer draw it too.
     let own = json!({ "type": "fill", "layers": [{ "id": "0", "type": "simpleFill", "color": "#C9D6E3" }] });
     let _ = app.update(Message::LayerStyle(LayerEvent::Keep(
         SetAt::Single,
@@ -427,10 +428,12 @@ fn katman_stili_picks_from_the_library_and_keeps_its_own_symbols() {
     assert_eq!(kept["path"], json!(["Sembollerim"]));
     assert_eq!(kept["symbol"], own);
     let window = app.styles.layer_style.as_ref().expect("open");
-    assert_eq!(
-        window.single.get(GeometryClass::Fill),
-        Some(&json!({ "ref": kept["id"] }))
-    );
+    let slot = window.single.get(GeometryClass::Fill).cloned().expect("a symbol");
+    let copy = slot["ref"].as_str().expect("a reference").to_owned();
+    assert!(copy.starts_with("p-"), "{copy}");
+    let project = app.document.as_ref().expect("open").model.styles().clone();
+    let held = project.items.iter().find(|i| i["id"] == copy.as_str()).expect("the project's copy");
+    assert_eq!((&held["name"], &held["symbol"]), (&kept["name"], &own));
     assert_eq!(
         window.status(),
         Some(("Değişiklikler henüz uygulanmadı.".into(), true))
@@ -439,6 +442,75 @@ fn katman_stili_picks_from_the_library_and_keeps_its_own_symbols() {
         last_said(&app),
         "“Tek sembol (alan)” Kitaplığım'a kaydedildi."
     );
+}
+
+/// docs/adr/9317: a symbol of Kitaplığım given to a layer's slot or to objects is the project's copy, one for the same
+/// symbol; what the drawing still refers to of Kitaplığım is taken into the project under its own id, and said.
+#[test]
+fn the_project_keeps_the_symbols_of_kitapligim_it_uses() {
+    let (mut app, _dir) = app_with_library("tasinan");
+    let mine = |id: &str, name: &str, color: &str| {
+        json!({ "kind": "symbol", "id": id, "name": name, "path": ["Sembollerim"],
+            "symbol": { "type": "fill", "layers": [{ "id": "0", "type": "simpleFill", "color": color }] } })
+    };
+    app.styles.library.add(Source::User, mine("u-deneme", "Deneme", "#FF00FF")).expect("added");
+    app.styles.library.add(Source::User, mine("u-eski", "Eski", "#00FFFF")).expect("added");
+    let styles = |app: &App| app.document.as_ref().expect("open").model.styles().clone();
+    let before = styles(&app).items.len();
+
+    // Picked for Katman stili's slot.
+    let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
+    let _ = app.update(Message::LayerStyle(LayerEvent::Kind(crate::style::layer_style::Kind::Single)));
+    let _ = app.update(Message::LayerStyle(LayerEvent::Pick(
+        SetAt::Single,
+        GeometryClass::Fill,
+        "Tek sembol (alan)".into(),
+        None,
+    )));
+    sm(&mut app, Event::Press("u-deneme".into()));
+    sm(&mut app, Event::Press("u-deneme".into()));
+    let window = app.styles.layer_style.as_ref().expect("open");
+    let copy = window.single.get(GeometryClass::Fill).and_then(|s| s["ref"].as_str()).expect("a reference").to_owned();
+    assert!(copy.starts_with("p-"), "{copy}");
+    assert_eq!(styles(&app).items.len(), before + 1);
+    assert!(styles(&app).items.iter().any(|i| i["id"] == copy.as_str() && i["name"] == "Deneme"));
+    app.close_dialog();
+
+    // Given to objects: the same copy, no second one.
+    let lines: Vec<kentos_domain::Slot> = {
+        let model = &app.document.as_ref().expect("open").model;
+        model.entities().filter(|e| e.kind() == "line").map(|e| kentos_domain::Slot(e.base().id)).take(2).collect()
+    };
+    app.selection.set(lines.clone());
+    let _ = app.update(Message::Run("style.assign"));
+    sm(&mut app, Event::Kind(KindFilter::All));
+    sm(&mut app, Event::Press("u-deneme".into()));
+    let _ = app.style_manager_key(Named::Enter);
+    let model = &app.document.as_ref().expect("open").model;
+    assert!(lines.iter().all(|&s| model.get(s).and_then(|e| e.base().symbol.as_deref()) == Some(copy.as_str())));
+    assert_eq!(styles(&app).items.len(), before + 1, "one copy for the same symbol");
+
+    // A layer that refers to Kitaplığım itself (a drawing from before): taken along under its own id, and said.
+    {
+        use kentos_commands::LayersRenderer;
+        use kentos_native_application::{ExecutionContext, layers_renderer};
+        let doc = &mut app.document.as_mut().expect("open").model;
+        let input = LayersRenderer {
+            layer: "cizim".into(),
+            renderer: Some(json!({ "type": "single", "symbols": { "fill": { "ref": "u-eski" } } })),
+            expected_revision: None,
+        };
+        assert!(matches!(
+            layers_renderer::execute(&mut ExecutionContext::new(doc), input),
+            kentos_commands::CommandResult::Completed { .. }
+        ));
+    }
+    app.take_along_styles();
+    assert!(styles(&app).items.iter().any(|i| i["id"] == "u-eski" && i["name"] == "Eski"));
+    assert_eq!(last_said(&app), "Kitaplığım'dan projeye alındı: “Eski”.");
+    let said = last_said(&app);
+    app.take_along_styles();
+    assert_eq!(last_said(&app), said, "nothing to take a second time");
 }
 
 #[test]

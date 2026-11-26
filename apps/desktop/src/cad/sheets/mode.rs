@@ -724,6 +724,8 @@ impl App {
         let Some(path) = path else {
             return;
         };
+        // With the symbols of Kitaplığım the drawing uses (docs/adr/9317).
+        self.take_along_styles();
         // The file takes the project as it is now (its name, the date, its system), whether or
         // not the sheet mode followed the drawing since (an agent may have changed the book).
         self.sheets.set_context(self.sheet_context());

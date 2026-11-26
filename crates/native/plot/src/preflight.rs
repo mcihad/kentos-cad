@@ -373,6 +373,22 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
             &m.layer_overrides,
         );
         let shown_ids: std::collections::HashSet<_> = shown.iter().map(|l|l.id.as_str()).collect();
+        // A symbol the print's library has not (docs/adr/9317): one of Kitaplığım the project was not saved with, say. The
+        // map prints that layer's plain look; said once a symbol.
+        let mut missing = std::collections::BTreeMap::new();
+        for layer in &shown {
+            for id in kentos_native_application::library_refs::layer_refs(doc, layer) {
+                if library.get(&id).is_none() {
+                    missing.entry(id).or_insert_with(|| layer.name.clone());
+                }
+            }
+        }
+        for (id, layer) in missing {
+            out.push(finding(&m.item, "symbol_missing",
+                format!("“{layer}” katmanının çizdiği “{id}” sembolü ne projenin ne sistemin kitaplığında var; baskıda katmanın yalın görünüşüyle çizilir."),
+                "Projeyi sembolün Kitaplığım'da bulunduğu bilgisayarda kaydedin ya da Stil yöneticisinden başka bir sembol seçin.",
+                Severity::Warning));
+        }
         for layer in &shown {
             if layer.service.is_some() {
                 out.push(finding(&m.item,"plot_provider_unsupported",format!("“{}” harita servisi bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek.",layer.name),"Servisi yerel, desteklenen bir altlığa dönüştürün veya bu viewportta baskıdan çıkarın.",Severity::Error));

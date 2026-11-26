@@ -98,6 +98,8 @@ impl App {
     }
 
     pub(crate) fn sheet_print_preview(&mut self) {
+        // The paper draws the symbols of Kitaplığım the drawing uses as the screen does (docs/adr/9317).
+        self.take_along_styles();
         let result = (|| {
             let doc = self.sheet_output_snapshot()?;
             let id = self.sheets.print_preview_sheet().ok_or("Yazılacak bir pafta seçin.")?;
@@ -131,6 +133,7 @@ impl App {
 
     /// Yazdır: the PDF to a file of its own, opened in the system's viewer to print from there.
     pub(crate) fn sheet_print(&mut self) -> Task<Message> {
+        self.take_along_styles();
         // The project as it is now (see `sheet_export_to`).
         self.sheets.set_context(self.sheet_context());
         let made = self.sheet_native_pdf().map(|p| (p.bytes, p.findings));

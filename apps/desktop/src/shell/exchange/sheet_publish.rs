@@ -251,6 +251,10 @@ impl App {
         if matches!(e, Event::Plan | Event::Publish) && !self.permit_bim_keep() {
             return Task::none();
         }
+        // What is checked and published draws the symbols of Kitaplığım the drawing uses (docs/adr/9317).
+        if matches!(e, Event::Plan | Event::Publish) {
+            self.take_along_styles();
+        }
         let task = self.sheet_publish_step(e);
         // The check's report came: the gate asked with the files it would write (docs/adr/8066).
         if self.permit_gate_due() {

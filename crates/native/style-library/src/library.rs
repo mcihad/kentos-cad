@@ -296,6 +296,30 @@ pub fn assets_of_symbol(symbol: &Value) -> Vec<String> {
     out
 }
 
+/// The library items `v` refers to (`{"ref": id}` anywhere in it: a renderer's symbols, a symbol's markers), each once.
+pub fn refs_in(v: &Value) -> Vec<String> {
+    fn walk(v: &Value, out: &mut Vec<String>) {
+        match v {
+            Value::Object(o) => {
+                if let Some(id) = o.get("ref").and_then(Value::as_str)
+                    && !id.is_empty()
+                    && !out.iter().any(|x| x == id)
+                {
+                    out.push(id.to_owned());
+                }
+                for x in o.values() {
+                    walk(x, out);
+                }
+            }
+            Value::Array(a) => a.iter().for_each(|x| walk(x, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    walk(v, &mut out);
+    out
+}
+
 fn path_key(p: &[String]) -> String {
     p.join("\u{0}")
 }
@@ -752,6 +776,72 @@ impl StyleLibrary {
         Ok(item)
     }
 
+    /// What `item` draws with besides itself: a template's symbol, a symbol's drawings and the items it refers to.
+    fn needs_of(item: &Item) -> Vec<String> {
+        let mut out: Vec<String> = item.template_symbol().map(str::to_owned).into_iter().collect();
+        if let Some(symbol) = item.symbol() {
+            out.extend(assets_of_symbol(symbol));
+            out.extend(refs_in(symbol));
+        }
+        out
+    }
+
+    /// The id a project uses for the item `id` (docs/adr/9317): a user item's copy in the project, the one there already
+    /// (of its kind, name and content) or a new one under its name and category with what it draws with, as a symbol
+    /// from a style is applied as a copy; a system or project item's own id. An error when the library has no `id`.
+    pub fn project_copy(&mut self, id: &str) -> Result<String, String> {
+        let Some((item, source)) = self.get(id) else {
+            return Err(format!("Kitaplıkta yok: {id}"));
+        };
+        if source != Source::User {
+            return Ok(id.to_owned());
+        }
+        fn content(i: &Item) -> [Option<&Value>; 3] {
+            [i.symbol(), i.template(), i.value.get("data")]
+        }
+        let (name, path, own) = (item.name().to_owned(), item.path().join("\u{0}"), content(item));
+        let found = self.project.items.iter().find(|p| {
+            p.kind == item.kind && p.name() == name && p.path().join("\u{0}") == path && content(p) == own
+        });
+        if let Some(found) = found {
+            return Ok(found.id.clone());
+        }
+        let path: Vec<String> = item.path().into_iter().map(str::to_owned).collect();
+        let made = self.copy(id, Source::Project, Some(&name), Some(&path))?;
+        // What it refers to besides its drawings (a marker in a symbol), taken along too.
+        self.take_along(Self::needs_of(&made));
+        Ok(made.id)
+    }
+
+    /// Takes the user's items among `ids` that the project does not hold into the project under their own ids, with
+    /// what they draw with (docs/adr/9317), as `copy` takes a copied symbol's drawings along: a drawing that refers to
+    /// Kitaplığım then draws the same on paper, on another computer and in the cloud. A project item's own needs are
+    /// followed too. The ids taken, in the order taken.
+    pub fn take_along<I: IntoIterator<Item = String>>(&mut self, ids: I) -> Vec<String> {
+        let mut queue: std::collections::VecDeque<String> = ids.into_iter().collect();
+        let mut seen = std::collections::HashSet::new();
+        let mut taken = Vec::new();
+        while let Some(id) = queue.pop_front() {
+            if !seen.insert(id.clone()) {
+                continue;
+            }
+            match self.get(&id) {
+                Some((item, Source::User)) => {
+                    let item = item.clone();
+                    queue.extend(Self::needs_of(&item));
+                    self.project.set(item);
+                    taken.push(id);
+                }
+                Some((item, Source::Project)) => queue.extend(Self::needs_of(item)),
+                _ => {}
+            }
+        }
+        if !taken.is_empty() {
+            self.touched(true);
+        }
+        taken
+    }
+
     /// Adds an empty category, or sets its description and order (`addCategory`).
     pub fn add_category(&mut self, source: Source, category: Value) {
         if !source.editable() {
@@ -855,6 +945,39 @@ mod tests {
         assert_eq!(lib.users_of("a-u").len(), 2);
         lib.remove("s-u").unwrap();
         assert!(lib.get("s-u").is_none());
+    }
+
+    /// docs/adr/9317: a user symbol a project uses is applied as the project's copy (one for the same symbol), with its
+    /// drawing; what the drawing still refers to of Kitaplığım is taken along under its own id, and nothing else.
+    #[test]
+    fn a_project_takes_along_the_user_items_it_uses() {
+        let mut lib = lib();
+        let copy = lib.project_copy("s-u").unwrap();
+        assert!(copy.starts_with("p-"), "{copy}");
+        assert_eq!(lib.get(&copy).unwrap().0.name(), "Benim sembolüm", "the copy keeps its name");
+        assert_eq!(lib.get("a-u").unwrap().1, Source::Project, "its drawing came along");
+        assert_eq!(lib.project_copy("s-u").unwrap(), copy, "one copy for the same symbol");
+        assert_eq!(lib.project_copy("s-sys").unwrap(), "s-sys", "a system item is used as it is");
+        assert!(lib.project_copy("yok").is_err());
+
+        let mut lib = self::lib();
+        lib.load(
+            Source::User,
+            &[
+                json!({ "kind": "asset", "id": "a-u", "name": "Benim", "path": [], "format": "svg", "data": "<svg/>", "width": 1, "height": 1 }),
+                json!({ "kind": "symbol", "id": "s-u", "name": "İşaret", "path": [], "symbol": { "type": "marker", "layers": [{ "id": "v", "type": "svg", "asset": "a-u", "size": 4 }] } }),
+                json!({ "kind": "symbol", "id": "f-u", "name": "Dolgu", "path": [], "symbol": { "type": "fill", "layers": [{ "id": "m", "type": "centroidMarker", "marker": { "ref": "s-u" } }] } }),
+                json!({ "kind": "symbol", "id": "x-u", "name": "Kullanılmayan", "path": [], "symbol": { "type": "fill", "layers": [] } }),
+            ],
+            &[],
+        );
+        let taken = lib.take_along(["f-u".to_owned(), "s-sys".to_owned(), "yok".to_owned()]);
+        assert_eq!(taken, ["f-u", "s-u", "a-u"], "the symbol, the marker it refers to and that marker's drawing");
+        assert!(lib.get("x-u").is_some_and(|(_, s)| s == Source::User), "an item not used stays the user's alone");
+        assert!(lib.take_along(["f-u".to_owned()]).is_empty(), "held already");
+        let mut refs = refs_in(&json!({ "symbols": { "fill": { "ref": "a" }, "line": { "ref": "a" } }, "classes": [{ "symbols": { "marker": { "ref": "b" } } }] }));
+        refs.sort();
+        assert_eq!(refs, ["a", "b"], "every reference once");
     }
 
     #[test]

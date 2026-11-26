@@ -322,6 +322,8 @@ pub mod labels_report;
 pub mod lengthen;
 #[path = "core/library_edit.rs"]
 pub mod library_edit;
+#[path = "core/library_refs.rs"]
+pub mod library_refs;
 #[path = "core/reverse.rs"]
 pub mod reverse;
 #[path = "core/styles_impact.rs"]

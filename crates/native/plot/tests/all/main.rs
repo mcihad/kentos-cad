@@ -46,3 +46,4 @@ mod shx_texts;
 mod table_styles;
 mod block_text_colours;
 mod preflight_legend;
+mod missing_symbols;

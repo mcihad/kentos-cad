@@ -443,6 +443,90 @@ fn the_print_preview_goes_through_every_chosen_sheet_at_a_readable_resolution() 
     assert_eq!(crate::sheet_pdf::preview_dpi(None), 96);
 }
 
+/// The fixture's sheet over a polygon of the layer “Kitaplığım” drawn with `u-deneme`, a magenta fill of Kitaplığım (in
+/// memory), opened in a light window.
+fn kitapligim_app() -> App {
+    use serde_json::json;
+    let fx: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/native-preflight.json")).unwrap();
+    let (mut raw, mut page) = (fx["model"].clone(), fx["book"].clone());
+    raw["layers"] = json!([{ "id": "benim", "name": "Kitaplığım", "type": "layer", "visible": true, "locked": false,
+        "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25,
+            "renderer": { "type": "single", "symbols": { "fill": { "ref": "u-deneme" } } } }, "children": [] }]);
+    raw["activeLayer"] = json!("benim");
+    raw["entities"] = json!([{ "kind": "polygon", "id": 1, "layerId": "benim", "attrs": {},
+        "pts": [{ "x": -2.0, "y": -2.0 }, { "x": 2.0, "y": -2.0 }, { "x": 2.0, "y": 2.0 }, { "x": -2.0, "y": 2.0 }] }]);
+    page["sheets"][0]["items"][0]["kind"]["view"]["center"] = json!({ "x": 0.0, "y": 0.0 });
+    let mut model = kentos_domain::Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+    let book: kentos_sheet::SheetBook = serde_json::from_value(page).unwrap();
+    model.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap()).unwrap();
+    let (mut app, _store) = app_with_store("kitapligim-baski");
+    app.settings.choose(&[("appearance.theme", json!("light"))]);
+    app.apply_settings();
+    app.styles
+        .library
+        .add(
+            kentos_native_style::library::Source::User,
+            json!({ "kind": "symbol", "id": "u-deneme", "name": "Deneme", "path": ["Sembollerim"],
+                "symbol": { "type": "fill", "layers": [{ "id": "0", "type": "simpleFill", "color": "#FF00FF" }] } }),
+        )
+        .unwrap();
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    app
+}
+
+/// docs/adr/9317: the drawing area, the sheet and the print preview of [`kitapligim_app`], the fill on all three.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn kitapligim_symbols_screens() {
+    use kentos_sheet_ui::message::PdfMessage;
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9317");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut app = kitapligim_app();
+    let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    for _ in 0..2 {
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snap.settle(&mut app, App::view, &mut update);
+    }
+    snap.render(app.view(), &app.theme()).save(out.join("1-cizim-alani.png")).unwrap();
+    sheet(&mut app, Sheet::Tab(1));
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("2-pafta.png")).unwrap();
+    sheet(&mut app, Sheet::Print);
+    sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
+    assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("3-baski-onizlemesi.png")).unwrap();
+}
+
+/// docs/adr/9317: a layer drawn with a symbol of Kitaplığım prints it as the screen draws it: the print preview takes the
+/// symbol into the project first, says so, and the page has its fill.
+#[test]
+fn the_print_preview_draws_the_symbols_of_kitapligim() {
+    use kentos_sheet_ui::message::PdfMessage;
+    let mut app = kitapligim_app();
+    sheet(&mut app, Sheet::Tab(1));
+    sheet(&mut app, Sheet::Print);
+    sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
+    assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+    let held = app.document.as_ref().unwrap().model.styles().clone();
+    assert!(held.items.iter().any(|i| i["id"] == "u-deneme" && i["name"] == "Deneme"), "{held:?}");
+    assert_eq!(crate::files_testing::last_said(&app), "Kitaplığım'dan projeye alındı: “Deneme”.");
+    // The drawing the preview drew: its page has the fill.
+    let printed = app.sheet_output_snapshot().unwrap();
+    let id = app.sheets.print_preview_sheet().expect("a sheet");
+    let image = kentos_plot::preview::page(&printed, id.as_str(), "Test", "2026-11-26", None, 72).unwrap();
+    let magenta = image.rgba.chunks(4).filter(|p| p[0] > 200 && p[1] < 80 && p[2] > 200).count();
+    assert!(magenta > 1000, "the fill prints: {magenta} pixels");
+}
+
 #[test]
 #[ignore = "GPU: the print preview's pages and its enlarged detail"]
 fn print_preview_pages_screens() {

@@ -144,9 +144,52 @@ impl App {
         )
     }
 
+    /// The id a drawing uses for the library item `id` (docs/adr/9317): an item of Kitaplığım is applied as the project's
+    /// copy (the one there already, else a new one with its drawings), the project's part written into the drawing, so
+    /// the paper and another computer draw it too; a system or project item's own id.
+    pub(crate) fn project_copy_of(&mut self, id: &str) -> String {
+        if self.document.is_none() {
+            return id.to_owned();
+        }
+        let before = self.styles.library.version();
+        match self.styles.library.project_copy(id) {
+            Ok(own) => {
+                if self.styles.library.version() != before {
+                    self.library_changed(Source::Project);
+                }
+                own
+            }
+            Err(e) => {
+                self.warn(e);
+                id.to_owned()
+            }
+        }
+    }
+
+    /// Takes the items of Kitaplığım the drawing still refers to into the project under their own ids (docs/adr/9317),
+    /// before it is saved, printed or published: the file, the paper and another computer then draw what the screen
+    /// draws. Says which were taken.
+    pub(crate) fn take_along_styles(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let refs = kentos_native_application::library_refs::library_refs(&doc.model);
+        let taken = self.styles.library.take_along(refs);
+        if taken.is_empty() {
+            return;
+        }
+        self.library_changed(Source::Project);
+        let names: Vec<String> = taken
+            .iter()
+            .filter_map(|id| self.styles.library.get(id))
+            .map(|(item, _)| format!("“{}”", item.name()))
+            .collect();
+        self.output(format!("Kitaplığım'dan projeye alındı: {}.", names.join(", ")));
+    }
+
     /// Katman stili's “Kitaplığıma kaydet”: the slot's own symbol goes to
     /// Kitaplığım under Sembollerim, named after the slot, and the slot
-    /// refers to it from then on.
+    /// refers to the project's copy of it from then on (docs/adr/9317).
     pub(crate) fn keep_slot_symbol(
         &mut self,
         at: SetAt,
@@ -167,7 +210,8 @@ impl App {
             return;
         }
         self.library_changed(Source::User);
-        let _ = self.layer_style_event(LayerEvent::Symbol(at, class, Some(json!({ "ref": id }))));
+        let own = self.project_copy_of(&id);
+        let _ = self.layer_style_event(LayerEvent::Symbol(at, class, Some(json!({ "ref": own }))));
         let text = format!("“{title}” Kitaplığım'a kaydedildi.");
         if let Some(window) = &mut self.styles.layer_style {
             window.say(text.clone(), false);
@@ -188,14 +232,17 @@ impl App {
         }
         self.commit_fields();
         match pick.target {
+            // A symbol of Kitaplığım is given as the project's copy (docs/adr/9317).
             PickTarget::Selection => {
                 self.styles.manager = None;
                 self.dialog = None;
+                let id = self.project_copy_of(&id);
                 let text = self.assign_symbol(Some(&id));
                 self.output(text);
             }
             PickTarget::Slot(at, class) => {
                 self.close_style_manager();
+                let id = self.project_copy_of(&id);
                 let _ = self.layer_style_event(LayerEvent::Symbol(
                     at,
                     class,

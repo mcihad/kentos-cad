@@ -507,6 +507,8 @@ impl App {
                 return self.layer_migrate_event(crate::layer_migrate::Event::Open(first));
             }
         }
+        // The symbols of Kitaplığım the drawing uses go into the file with it (docs/adr/9317).
+        self.take_along_styles();
         let Some(doc) = &self.document else {
             return Task::none();
         };

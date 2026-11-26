@@ -77,7 +77,8 @@
   - Katman stili yuvasında:
     - “Kitaplıktan seç…” yöneticiyi yuvanın türüyle, yuvanın sembolünde açar;
     - Seç yuvaya `{ref}` yazar; Esc Katman stili'ne döner;
-    - “Kitaplığıma kaydet” stildeki sembolü Sembollerim'e yazar; yuva artık onu gösterir.
+    - “Kitaplığıma kaydet” stildeki sembolü Sembollerim'e yazar; yuva artık onu gösterir. ADR 9317'den beri yuva
+      projenin kopyasını gösterir; Kitaplığım'dan seçilen ve nesnelere verilen sembol de projenin kopyasıdır.
 - **Resimler** Katman stili'ninkilerle aynı yoldan çizilir (`thumbs.rs`). Anahtar kitaplığın yalnız çizim sürümünü içerir; ad değiştirmek resimleri yeniden kurdurmaz.
 - **JPEG görüntüleri** masaüstünde `zune-jpeg` ile çözülür (sahibin onayı, 27 Eylül; `docs/deps/README.md`): saf Rust, image crate'inin JPEG çözücüsü, SIMD yolları kapalı. Atlas bir kez çözer ve tutar; çözücünün sınırı (kenar başına 16 384 piksel) kötü niyetli dosyanın sınırsız bellek istemesini önler. İçe alırken dosya bütünüyle çözülür; çözülemeyen dosya alınmaz, nedeni söylenir.
 - **Henüz olmayanlar:** Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini ister. Sönüktürler ve nedenini söylerler.
