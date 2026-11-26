@@ -17,6 +17,7 @@ ctor::declarative::ctor! {
     }
 }
 
+mod balastro_screens;
 mod font_folders_screens;
 mod layer_menu_tests;
 mod layout_program_tests;

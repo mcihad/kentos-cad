@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Yeni Harita projesinin Nokta katmanı, balastro (26 Kasım 2026, sahibin isteği;
+  [ADR 9315](../adr/9315-harita-point-layer-balastro.md)).**
+  - Yeni Harita CAD projesi ağacın üstünde “Nokta” katmanıyla başlar; noktaları balastro çizilir.
+  - Balastro Genel kütüphanede (`genel.nokta.olcme.balastro`): 0,75 mm, kâğıt rengi dolgulu daire (BÖHHBÜY). Boyutu
+    stil ayarlarından değişir.
+
 - **Noktanın adı yazıdır ve noktasını izler (26 Kasım 2026, sahibin isteği;
   [ADR 9314](../adr/9314-point-names-follow-their-points.md)).**
   - Nokta aracı ve Noktalar'ın Satır ekle'si adlı noktanın adını sağ üstüne Metin nesnesi olarak da yazar

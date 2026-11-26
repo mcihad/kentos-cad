@@ -200,10 +200,10 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         },
         origin: work_area_centre(crs),
         home_view: Some(start_view(crs, o.plot_scale, o.province.and_then(province))),
-        // A CAD project starts with technical drawing layers, any other with a
-        // cadastral sheet's (docs/adr/0165 §3).
+        // A CAD project starts with technical drawing layers, Harita's with its Nokta layer too (docs/adr/9315), any
+        // other with a cadastral sheet's (docs/adr/0165 §3).
         layers: if cad {
-            cad_layers()
+            cad_layers_for(o.cad_work)
         } else {
             standard_layers(o.plot_scale)
         },
@@ -408,6 +408,26 @@ pub fn cad_layers() -> Vec<LayerNode> {
     ]
 }
 
+/// The point symbol Harita's Nokta layer draws its points with: the general library's balastro (docs/adr/9315).
+pub const BALASTRO: &str = "genel.nokta.olcme.balastro";
+
+/// A CAD project's first layers for its work: the technical drawing set ([`cad_layers`]); Harita's starts with Nokta
+/// on top of them too (docs/adr/9315), so the lines that meet at a point do not show inside its balastro.
+pub fn cad_layers_for(work: Option<CadWork>) -> Vec<LayerNode> {
+    let mut layers = cad_layers();
+    if work == Some(CadWork::Map) {
+        layers.insert(0, point_layer());
+    }
+    layers
+}
+
+/// Harita's Nokta layer (docs/adr/9315): its points drawn as balastros, the general library's symbol, by a single
+/// renderer; its labels off as every new layer's (docs/adr/9311), the names written as texts (docs/adr/9314).
+pub fn point_layer() -> LayerNode {
+    let renderer = serde_json::json!({ "type": "single", "symbols": { "marker": { "ref": BALASTRO } } });
+    node("nokta", "Nokta", LayerStyle { renderer: Some(renderer), ..style("ink", None) })
+}
+
 /// A new CBS project's tree (docs/adr/9302, the owner's word of 24 November 2026: a new project comes empty, its layers
 /// added from sources): one annotation layer, Açıklama, for texts and notes; no drawing or data layer. Its features go to
 /// the data layers Veri ekle and Yeni katman add. (It replaced the wizard's purposes, an empty city map among them.)
@@ -586,6 +606,36 @@ mod tests {
     use super::*;
 
     const FIXTURE: &str = include_str!("../../../../fixtures/project/v1/new-project.json");
+
+    /// Harita starts with Nokta on top of its drawing layers, its points drawn as balastros, its labels off; Mimari
+    /// and Yol do not (docs/adr/9315).
+    #[test]
+    fn a_map_project_starts_with_a_point_layer_of_balastros() {
+        let options = |work| NewProject {
+            name: "Nokta".to_owned(),
+            srid: 5256,
+            plot_scale: 1000.0,
+            workspace: Workspace::Cad,
+            drawing_font: DrawingFont::Arial,
+            province: None,
+            drawing_unit: None,
+            annotation: None,
+            cad_work: Some(work),
+            heights: None,
+        };
+        let map = new_project(&options(CadWork::Map)).expect("builds");
+        let point = &map.layers[0];
+        assert_eq!((point.id.as_str(), point.name.as_str()), ("nokta", "Nokta"));
+        let symbol = point.style.renderer.as_ref().and_then(|r| r.pointer("/symbols/marker/ref"));
+        assert_eq!(symbol.and_then(Value::as_str), Some(BALASTRO));
+        assert!(!point.style.labels_on(), "labels off, names written as texts");
+        assert_eq!(map.active_layer, CAD_ACTIVE_LAYER);
+        assert_eq!(map.layers.len(), cad_layers().len() + 1);
+        for work in [CadWork::Architecture, CadWork::Road] {
+            let other = new_project(&options(work)).expect("builds");
+            assert!(other.layers.iter().all(|l| l.id != "nokta"), "{work:?}");
+        }
+    }
 
     #[test]
     fn a_new_project_is_the_drawing_the_web_records() {

@@ -69,6 +69,8 @@ mod tests {
         assert!(lib.symbol("temel.cizgi.surekli").is_some());
         assert!(lib.symbol("genel.nokta.ulasim.otobus-duragi").is_some());
         assert!(lib.symbol("kent.nokta.agac.yaprakli").is_some());
+        // Harita's Nokta layer draws its points with it (docs/adr/9315).
+        assert!(lib.symbol("genel.nokta.olcme.balastro").is_some());
         assert!(lib.symbol("bohhbuy.0201").is_some());
     }
 }

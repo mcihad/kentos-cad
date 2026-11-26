@@ -666,7 +666,7 @@ def points() -> None:
         shape("square", 3.0, fill=GAS, stroke_=INK, width=0.2), text("G", 2.2, INK)],
         ["altyapı", "doğal gaz", "regülatör"])
 
-    p = group("Ölçme", "Nirengi, poligon, nivelman ve sınır noktaları; mürekkeple")
+    p = group("Ölçme", "Nirengi, poligon, nivelman ve sınır noktaları, balastro; mürekkeple")
     symbol("marker", "olcme", "nirengi", "Nirengi noktası", p, [
         shape("triangle", 3.2, fill=None, stroke_=INK, width=0.25), shape("circle", 0.5, fill=INK)],
         ["ölçme", "nirengi", "kontrol noktası"])
@@ -684,6 +684,11 @@ def points() -> None:
     symbol("marker", "olcme", "kot", "Kot noktası", p, [shape("cross", 1.6, stroke_=INK, width=0.18)],
            ["ölçme", "kot", "yükseklik"])
     symbol("marker", "olcme", "detay", "Detay noktası", p, [shape("circle", 0.6, fill=INK)], ["ölçme", "detay"])
+    # Balastro (docs/adr/9315): the small circle a parcel's corner and break points are drawn with, 0.75 mm across on
+    # paper (BÖHHBÜY: kadastral amaçlı ölçülerde parsellerin köşe ve kırık noktaları). Its paper fill hides the lines
+    # that meet at the point, as the Turkish map standard shows them; the pen is 0.1 mm (the regulation names none).
+    symbol("marker", "olcme", "balastro", "Balastro", p, [shape("circle", 0.75, fill=PAPER, stroke_=INK, width=0.1)],
+           ["ölçme", "balastro", "kadastro", "parsel", "köşe noktası", "kırık noktası"])
 
     p = group("Doğa", "Ağaç, çalı, kaynak, mağara, kaya ve zirve")
     symbol("marker", "doga", "agac", "Ağaç (yapraklı)", p, [pic("agac", 3.6, FOREST)], ["doğa", "ağaç"])
