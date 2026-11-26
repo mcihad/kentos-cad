@@ -53,7 +53,8 @@
   - CBS'de Kaydet, dosyanın tutacağı bütün katmanları tek pencerede listeler: yer bir kez seçilir, tablo adları
     düzenlenir. Var olan ya da paylaşılan ad önce boş bir adla söylenir. Taşı ve kaydet hepsini taşıyıp kaydı sürdürür;
     yeniden denemede taşınanlar yazılmaz.
-  - Verinin yeri yokken ilk gelen katmanlar yeri bir kez sorar.
+  - Verinin yeri yokken ilk içe alma yeri bir kez sorar. İşlem ve araç çıktıları işi kesmez; Kaydet'in penceresi onları
+    da listeler (ADR 9321'in eki, 27 Kasım 2026).
 
 - **Nokta satırının katmanı baştan bulunur (27 Kasım 2026, CBS incelemesinin 11. maddesi;
   [ADR 9320](../adr/9320-point-row-target-layer.md)).**

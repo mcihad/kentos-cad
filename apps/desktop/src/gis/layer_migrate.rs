@@ -232,7 +232,8 @@ impl App {
     }
 
     /// A CBS project whose data has no place yet and was not asked for one this session (docs/adr/9321): a layer an
-    /// import, a run or a tool brings in asks for the place.
+    /// import brings in asks for the place.
+    #[cfg(test)]
     pub(crate) fn data_place_unasked(&self) -> bool {
         !self.gis.data_place_asked
             && self.gis.layer_migrate.is_none()

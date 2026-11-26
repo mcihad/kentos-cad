@@ -74,8 +74,8 @@ gösterir:
 
 ### 3. Verinin yeri bir kez sorulur
 
-- Projenin verisinin yeri yokken (kayıt yeri, veri katmanı ya da dosya yok) bir içe alma, işlem ya da araç yeni katman
-  getirirse aynı pencere açılır (“Verinin yeri”). Bu oturumda bir kez sorulur.
+- Projenin verisinin yeri yokken (kayıt yeri, veri katmanı ya da dosya yok) bir içe alma yeni katman getirirse aynı
+  pencere açılır (“Verinin yeri”). Bu oturumda bir kez sorulur. İşlem ve araç çıktıları için bakınız Ek.
   - Yer seçilip taşınınca projenin verisinin yeri olur. Sonraki içe almalar oraya kendiliğinden yazılır.
   - Vazgeç'te yeniden sorulmaz; kalanları kayıt sorar.
 
@@ -94,6 +94,24 @@ gösterir:
 | MCP | var | Aynı komut, aynı ortak durumlar. |
 | Yapay zekâ ajanı | var | Aynı komut. |
 | Eklenti | var | `document.write` izniyle aynı komut. |
+
+## Ek (27 Kasım 2026): işlem ve araç çıktısı işi kesmez
+
+- **Kusur:** ilk uygulamada pencere, verinin yeri yokken katman getiren her mesajdan sonra açılıyordu. Araç ya da pencere
+  daha sürerken modal pencere araya giriyordu:
+  - En kısa yol ve Hizmet alanı Enter'la Rota katmanını yazınca açılıyor; sonraki Esc, Ctrl+Z, S ve E tuşları araca değil
+    pencereye gidiyordu.
+  - Veri karşılaştır'ın Farkları çizime yaz'ı, Senaryo oluştur, Kopyasını oluştur ve şablonla çizim de onu açıyordu.
+  - Etkileşim izlerinden onu her varyantta bu yüzden kırmızıydı (`cargo test -p kentos-cad --test programs`):
+    data-compare, layer-merge, layer-move, network-route, network-service-area, scenarios ve dört şablon izi.
+- **Karar:** pencere yalnız içe almada açılır; incelemenin açık isteği budur (“ilk içe almada veri deposunu bir kez
+  seçtir”).
+  - İşlem ve araç çıktıları çizimde bekler. Kalıcı olmaları Kaydet'tedir: Kaydet'in tek penceresi (§2) onları da listeler.
+    İncelemenin “ilk kalıcı analiz çıktısı” sözü böyle karşılanır.
+  - Bu, geçici katmanı kayıtta kalıcı yapma geleneğine de uyar (bakınız Araştırma).
+- **Doğrulama:**
+  - `cargo test -p kentos-cad`: 37 geçti; bütün izler her varyantta geçiyor.
+  - `cargo test -p kentos-desktop --lib -- processing:: layer_migrate cbs_storage exchange::gis_tests`: 152 geçti.
 
 ## Açık
 

@@ -259,7 +259,8 @@ fn parcel_sheet(worker: bool, meanwhile: impl FnOnce(&mut App)) -> App {
     app
 }
 
-/// The drawing's objects and layers, to compare two runs.
+/// The drawing's objects and layers, to compare two runs. A point's name is a text bound to the point by its persistent
+/// id (docs/adr/9310), made new in each run: the bond is compared by the point's place in the drawing.
 fn drawn(app: &App) -> (Vec<kentos_commands::Entity>, Vec<(String, String)>) {
     let doc = &app.document.as_ref().expect("open").model;
     let layers = doc
@@ -268,7 +269,24 @@ fn drawn(app: &App) -> (Vec<kentos_commands::Entity>, Vec<(String, String)>) {
         .into_iter()
         .map(|l| (l.id.clone(), l.name.clone()))
         .collect();
-    (doc.entities().cloned().collect(), layers)
+    let place: std::collections::HashMap<[u8; 16], usize> =
+        doc.entities_with_uids().enumerate().map(|(i, (uid, _))| (*uid.as_bytes(), i)).collect();
+    let entities = doc
+        .entities()
+        .cloned()
+        .map(|mut e| {
+            if let kentos_commands::Entity::Text(t) = &mut e
+                && let Some(id) = t.label_of
+            {
+                let at = place.get(&id.0).map_or(u64::MAX, |&i| i as u64);
+                let mut bytes = [0u8; 16];
+                bytes[8..].copy_from_slice(&at.to_be_bytes());
+                t.label_of = Some(kentos_commands::EntityId(bytes));
+            }
+            e
+        })
+        .collect();
+    (entities, layers)
 }
 
 /// A model runs whole on another thread, over the drawing's copy, and its

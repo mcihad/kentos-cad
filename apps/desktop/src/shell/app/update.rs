@@ -189,10 +189,10 @@ impl App {
         let held = self.window_over();
         let view = self.viewpoint();
         // What an import brings into a CBS project goes into its tables (docs/adr/9196 §2): the layers its data would
-        // keep in the project file before and after an import window's message. While the project's data has no place
-        // yet, a run's or a tool's output layers ask for the place once too (docs/adr/9321); else the save asks for them.
-        let watch = matches!(message, Message::Exchange(_))
-            || (!matches!(message, Message::Viewport(_)) && self.data_place_unasked());
+        // keep in the project file before and after an import window's message; without a place yet, the import asks
+        // for it once (docs/adr/9321 §3). A run's or a tool's output layers do not stop the work to ask: Kaydet's window
+        // lists them with the rest (9321's addendum).
+        let watch = matches!(message, Message::Exchange(_));
         let in_file = watch.then(|| self.data_held_in_file());
         let task = self.handle(message);
         if let Some(before) = in_file {
