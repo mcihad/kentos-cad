@@ -328,10 +328,7 @@ impl App {
                     None => {
                         let scales = self.offered_scales();
                         let summary = self.scale_summary();
-                        Readout::new(label::strong(format!(
-                            "1:{}",
-                            thousands(self.view_scale())
-                        )))
+                        Readout::new(label::strong(crate::screen_scale::scale_words(self.view_scale())))
                         .icon(crate::icons::from_web(Some("plotScale")))
                         .tip(
                             Tip::new("Ölçek").body("Görünümün ölçeği. Listeden seçin ya da yazın."),
@@ -576,7 +573,7 @@ impl App {
                 width += text(self.coordinate_unit());
                 kentos_project::wizard::scale_text(doc.settings().plot_scale)
             } else {
-                format!("1:{}", thousands(self.view_scale()))
+                crate::screen_scale::scale_words(self.view_scale())
             };
             width += SEPARATOR + cell(&scale, true);
             if let Some(words) = self.scenario_words() {

@@ -111,26 +111,51 @@ impl Store {
     /// The overview's picture of the extent (§3); none for an empty drawing.
     pub fn overview_picture(&self, request: &OverviewRequest<'_>) -> Option<OverviewPicture> {
         let extent = self.overview_extent()?;
-        let f = fit(&extent, (request.width, request.height));
+        Some(overview_picture_of(&[OverviewLayer { store: self, dot: 1.0 }], &extent, request))
+    }
+
+    /// Its shown objects drawn on `canvas`, each in its layer's colour.
+    fn draw_overview_on(&self, canvas: &mut Canvas, request: &OverviewRequest<'_>) {
         let mut colors: Vec<Option<[u8; 3]>> = vec![None; self.flags.len()];
         for (id, &l) in &self.layer_ids {
             if let (Some(slot), Some(c)) = (colors.get_mut(l as usize), request.colors.get(id)) {
                 *slot = Some(*c);
             }
         }
-        let mut canvas = Canvas::new(request.width, request.height, request.dpr, f);
         for it in self.shown_items() {
             let Some(Some(color)) = colors.get(it.layer as usize) else {
                 continue;
             };
             canvas.object(it, *color);
         }
-        Some(OverviewPicture {
-            width: canvas.w,
-            height: canvas.h,
-            pixels: canvas.px,
-            fit: f,
-        })
+    }
+}
+
+/// A store the overview draws and the side of its dots.
+pub struct OverviewLayer<'a> {
+    pub store: &'a Store,
+    /// A dot's side in logical pixels: the drawing's is 1 (§3); a data layer's rows, which the map draws as symbols of
+    /// a few pixels, take more, centred on their place, so a few rows far apart are seen.
+    pub dot: f64,
+}
+
+/// The overview's picture of `extent` from several stores (docs/adr/9327), each drawn by §3's rules over the ones before
+/// it: the data layers' outlines, whose rows the drawing does not hold, then the drawing's. The host gives the extent:
+/// the drawing's and the data layers' boxes as their sources say them.
+pub fn overview_picture_of(layers: &[OverviewLayer<'_>], extent: &Bounds, request: &OverviewRequest<'_>) -> OverviewPicture {
+    let f = fit(extent, (request.width, request.height));
+    let mut canvas = Canvas::new(request.width, request.height, request.dpr, f);
+    let own = canvas.dot;
+    for layer in layers {
+        canvas.dot = js_max(own as f64, (layer.dot * request.dpr + 0.5).floor()) as i64;
+        canvas.lift = (canvas.dot - own) / 2;
+        layer.store.draw_overview_on(&mut canvas, request);
+    }
+    OverviewPicture {
+        width: canvas.w,
+        height: canvas.h,
+        pixels: canvas.px,
+        fit: f,
     }
 }
 
@@ -143,6 +168,8 @@ struct Canvas {
     cy: f64,
     kp: f64,
     dot: i64,
+    /// How far a dot reaches up and left of its cell: a larger dot than the drawing's is centred on its place.
+    lift: i64,
 }
 
 impl Canvas {
@@ -157,6 +184,7 @@ impl Canvas {
             cy: f.cy,
             kp: f.k * dpr,
             dot: js_max(1.0, (dpr + 0.5).floor()) as i64,
+            lift: 0,
         }
     }
 
@@ -186,6 +214,7 @@ impl Canvas {
 
     fn dot_at(&mut self, p: Vec2, c: [u8; 3]) {
         let (i, j) = self.cell(p);
+        let (i, j) = (i - self.lift, j - self.lift);
         for dj in 0..self.dot {
             for di in 0..self.dot {
                 self.put(i + di, j + dj, c, 255);

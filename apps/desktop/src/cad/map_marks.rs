@@ -244,9 +244,10 @@ fn ucs_icon(
 }
 
 /// The scale bar's length in metres and what its right end says, for a view
-/// of `scale` pixels a metre (the web's `drawScaleBar`): 1, 2, 5 or 10 times
-/// the power of ten below 120 px, the nearest to 120 px (the first among
-/// equals); “2 km”, “50 m”, “5.0 cm”.
+/// of `scale` pixels a metre: 1, 2, 5 or 10 times the power of ten below
+/// 120 px, the nearest to 120 px (the first among equals); “2 km”, “50 m”,
+/// “5.0 cm”, and below a centimetre in millimetres and micrometres
+/// (docs/adr/9327: the deepest zoom said “0.0010 cm”), “5.0 mm”, “10 µm”.
 pub fn scale_length(scale: f64) -> (f64, String) {
     let raw = TARGET / scale;
     let p = 10f64.powf(raw.log10().floor());
@@ -257,12 +258,18 @@ pub fn scale_length(scale: f64) -> (f64, String) {
             best = v;
         }
     }
+    // The series' steps, a power of ten times 1, 2 or 5, in the unit they read whole in; the float's last bits off.
+    let at = |per_metre: f64| (best * per_metre * 1e6).round() / 1e6;
     let unit = if best >= 1000.0 {
-        format!("{} km", best / 1000.0)
+        format!("{} km", at(1e-3))
     } else if best >= 1.0 {
-        format!("{best} m")
+        format!("{} m", at(1.0))
+    } else if best >= 0.01 {
+        format!("{} cm", two_digits(at(100.0)))
+    } else if best >= 0.001 {
+        format!("{} mm", two_digits(at(1000.0)))
     } else {
-        format!("{} cm", two_digits(best * 100.0))
+        format!("{} µm", two_digits(at(1e6)))
     };
     (best, unit)
 }
@@ -455,6 +462,23 @@ mod tests {
         assert_eq!(unit, "5.0 cm");
         // 400 px a metre: 20 cm is 80 px, 50 cm 200 px.
         assert_eq!(scale_length(400.0).1, "20 cm");
+    }
+
+    /// docs/adr/9327: below a centimetre the bar says millimetres, then micrometres, never “0.0010 cm”; at the camera's
+    /// deepest zoom 10 µm.
+    #[test]
+    fn the_scale_bar_says_small_lengths_in_their_unit() {
+        // 20 000 px a metre: 5 mm is 100 px.
+        assert_eq!(scale_length(20_000.0).1, "5.0 mm");
+        // 120 000 px a metre: 1 mm is 120 px.
+        assert_eq!(scale_length(120_000.0).1, "1.0 mm");
+        // 400 000 px a metre: 200 µm is 80 px, 500 µm 200 px.
+        assert_eq!(scale_length(400_000.0).1, "200 µm");
+        let (length, words) = scale_length(kentos_render_wgpu::camera::MAX_SCALE);
+        assert!((length - 1e-5).abs() < 1e-15, "{length}");
+        assert_eq!(words, "10 µm");
+        // A kilometre's steps read whole too.
+        assert_eq!(scale_length(0.024).1, "5 km");
     }
 
     /// UR-005: 0,0 has its own mark where it is on screen, none when it is out of the view or under the corner

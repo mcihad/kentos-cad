@@ -297,6 +297,9 @@ impl App {
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
+        // The data layers' boxes and outlines Tümünü göster and Genel bakış asked for, read from their sources
+        // (data_extents.rs, docs/adr/9327): after the overview, which asks for them as it draws.
+        let task = Task::batch([task, self.data_extents_tasks()]);
         // İstatistik and Grafik keep the layer they read (charts/).
         self.follow_charts();
         // Bilgi's card goes with its tool and its object (info_card.rs).

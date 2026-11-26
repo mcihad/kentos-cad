@@ -535,6 +535,10 @@ pub mod project_store;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/data_describe.rs"]
 pub mod data_describe;
+// A data layer's box and its rows' outline as its source has them now (docs/adr/9327).
+#[cfg(feature = "mod-gis")]
+#[path = "gis/data_extent.rs"]
+pub mod data_extent;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/gpkg_open.rs"]
 pub mod gpkg_open;

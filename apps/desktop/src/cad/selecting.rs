@@ -98,21 +98,44 @@ impl App {
     /// click): [`extents_box`]. The objects it leaves out, far from the rest,
     /// are said: Kapsam denetimi selects them (docs/adr/9203).
     pub(crate) fn zoom_extents(&mut self) {
-        let Some(doc) = &self.document else {
+        if self.document.is_none() {
             return;
+        }
+        // The data layers' boxes as their sources say them now (docs/adr/9327); one still read stands in with the box
+        // the layer kept, and the view is fitted again once the sources have answered.
+        let shown = self.shown_data_boxes();
+        let reading = !shown.reading.is_empty();
+        let shown_any = self.extents_shown(&shown, !reading);
+        if reading {
+            self.fit_when_boxes_read(!shown_any);
+            if !shown_any {
+                self.say(
+                    kentos_interaction::Level::Info,
+                    format!(
+                        "{} kapsamı kaynağından okunuyor; okununca görünüm sığdırılır.",
+                        named_layers(&shown.reading)
+                    ),
+                );
+            }
+        }
+    }
+
+    /// The view on the box of the drawing's objects (Tümünü göster's, less those far from the rest) and `data`, the
+    /// shown data layers' boxes: whether there was a box to show, and how many objects were left out.
+    pub(crate) fn show_extents(&mut self, data: &[[f64; 4]]) -> (bool, usize) {
+        let Some(doc) = &self.document else {
+            return (false, 0);
         };
-        let (bounds, far) = extents_box(doc, &mut self.spatial);
-        if let Some(bounds) = bounds {
-            self.viewport.show(&bounds);
+        let (objects, far) = objects_box(doc, &mut self.spatial);
+        let mut boxes = data.to_vec();
+        if let Some(b) = &objects {
+            boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
         }
-        if far > 0 {
-            self.say(
-                kentos_interaction::Level::Warn,
-                format!(
-                    "{far} nesne çizimin geri kalanından çok uzakta; görünüme alınmadı. Kapsam denetimi onları seçer."
-                ),
-            );
-        }
+        let Some(b) = crate::layering::union(&boxes) else {
+            return (false, far);
+        };
+        self.viewport.show(&kentos_render_wgpu::Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] });
+        (true, far)
     }
 
     /// The view on the box of these objects (by slot), as large as it fits,
@@ -146,6 +169,38 @@ pub(crate) fn extents_box(
     doc: &crate::document::Document,
     spatial: &mut kentos_interaction::Spatial,
 ) -> (Option<kentos_render_wgpu::Bounds>, usize) {
+    let (bounds, far) = objects_box(doc, spatial);
+    let settings = doc.settings();
+    let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(doc.model.layers().nodes())
+        .into_iter()
+        .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
+        .collect();
+    if let Some(b) = &bounds {
+        boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
+    }
+    let bounds = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
+        min_x: b[0],
+        min_y: b[1],
+        max_x: b[2],
+        max_y: b[3],
+    });
+    (bounds, far)
+}
+
+/// The layers named as a message says them: “Katman” or “3 katmanın”.
+fn named_layers(names: &[String]) -> String {
+    match names {
+        [one] => format!("“{one}” katmanının"),
+        many => format!("{} katmanın", many.len()),
+    }
+}
+
+/// The box of the drawing's objects Tümünü göster shows (see [`extents_box`]), without the data layers' tables, and how
+/// many objects lie far from the rest.
+fn objects_box(
+    doc: &crate::document::Document,
+    spatial: &mut kentos_interaction::Spatial,
+) -> (Option<kentos_render_wgpu::Bounds>, usize) {
     spatial.sync(&doc.model);
     let tree = doc.model.layers();
     let counted: Option<Vec<f64>> = tree.leaves().iter().any(|l| tree.is_frozen(&l.id)).then(|| {
@@ -168,20 +223,6 @@ pub(crate) fn extents_box(
             .collect();
         store.extent(Some(&near))
     };
-    let settings = doc.settings();
-    let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(tree.nodes())
-        .into_iter()
-        .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
-        .collect();
-    if let Some(b) = &bounds {
-        boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
-    }
-    let bounds = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
-        min_x: b[0],
-        min_y: b[1],
-        max_x: b[2],
-        max_y: b[3],
-    });
     (bounds, far.len())
 }
 

@@ -22,6 +22,8 @@ pub struct GisUiState {
     pub(crate) data_rows: crate::data_rows::DataRows,
     /// The data layers' fields the counting tabs asked for, counted by their sources (data_counts.rs, docs/adr/9181).
     pub(crate) data_counts: crate::data_counts::DataCounts,
+    /// The data layers' boxes and outlines as their sources have them now (data_extents.rs, docs/adr/9327).
+    pub(crate) data_extents: crate::data_extents::DataExtents,
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     pub(crate) data_pick: crate::data_pick::DataPick,
     /// The counted layers' class counts (docs/adr/9105 §4).
@@ -162,6 +164,8 @@ pub enum Event {
     DataRows(crate::data_rows::Event),
     /// A data layer's field counted by its source, a press on counted values (data_counts.rs, docs/adr/9181).
     DataCounts(crate::data_counts::Event),
+    /// A data layer's box or outline read from its source (data_extents.rs, docs/adr/9327).
+    DataExtents(crate::data_extents::Event),
     /// A layer's style classes in Katmanlar (docs/adr/9105).
     LayerClasses(crate::layer_classes::Event),
     /// Farklı kaydet… (docs/adr/9106).
@@ -404,6 +408,7 @@ impl App {
             Event::DataPending(event) => return self.data_pending_event(event),
             Event::DataRows(event) => return self.data_rows_event(event),
             Event::DataCounts(event) => return self.data_counts_event(event),
+            Event::DataExtents(event) => return self.data_extents_event(event),
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
             Event::ProjectStore(event) => return self.project_store_event(event),

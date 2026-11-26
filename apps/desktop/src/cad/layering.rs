@@ -485,15 +485,12 @@ impl App {
     /// the view history like any navigation (docs/adr/0141). A layer with no
     /// objects has nothing to show: the menu offers it dimmed.
     pub(crate) fn zoom_to_layer(&mut self, id: &str) {
-        let Some(doc) = &self.document else {
+        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(id).cloned()) else {
             return;
         };
-        let Some(node) = doc.model.layers().get(id) else {
-            return;
-        };
-        // A data layer, or a group of them, frames its tables' boxes (docs/adr/9101 §5).
-        let mut boxes = Vec::new();
-        data_boxes(node, doc.settings(), &mut boxes);
+        // A data layer, or a group of them, frames its tables' boxes as their sources say them now (docs/adr/9101 §5,
+        // 9327): rows written since the layer was added are in them.
+        let boxes = self.data_boxes_below(&node);
         if let Some(b) = union(&boxes) {
             self.navigating(|app| {
                 app.zoom_to_bounds(&kentos_commands::Bounds {
@@ -505,8 +502,11 @@ impl App {
             });
             return;
         }
+        let Some(doc) = &self.document else {
+            return;
+        };
         let mut layers = Vec::new();
-        leaves(node, &mut layers);
+        leaves(&node, &mut layers);
         let ids: Vec<f64> = doc
             .model
             .entities()
@@ -959,26 +959,10 @@ fn removal_counts(model: &kentos_domain::Document, id: &str) -> (usize, usize) {
     (layers.len(), objects)
 }
 
-/// The layers of a node: itself, or every layer below a group.
-/// The boxes of the data layers at or below `node`, in the project's system.
-fn data_boxes(node: &LayerNode, settings: &kentos_commands::ProjectSettings, out: &mut Vec<[f64; 4]>) {
-    if let Some(b) = crate::data_layers::extent_in_project(node, settings) {
-        out.push(b);
-    }
-    for c in &node.children {
-        data_boxes(c, settings, out);
-    }
-}
-
 impl App {
     /// Whether a data layer at or below `node` has a box to frame.
     pub(crate) fn data_box_below(&self, node: &LayerNode) -> bool {
-        let Some(doc) = &self.document else {
-            return false;
-        };
-        let mut boxes = Vec::new();
-        data_boxes(node, doc.settings(), &mut boxes);
-        !boxes.is_empty()
+        !self.data_boxes_below(node).is_empty()
     }
 }
 

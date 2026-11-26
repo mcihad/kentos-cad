@@ -309,6 +309,12 @@ impl Camera {
         if !(center.x.is_finite() && center.y.is_finite() && w.is_finite() && h.is_finite()) {
             return;
         }
+        // A box of no size either way (a lone point, every object at one place) has no scale to fit: the view keeps its
+        // own and shows the place in its middle (docs/adr/9327). Fitted, it went to the deepest scale, 2 646:1.
+        if w <= 0.0 && h <= 0.0 {
+            self.center = center;
+            return;
+        }
         let w = w.max(1e-6);
         let h = h.max(1e-6);
         // An area smaller than its margins keeps at least half of itself for the drawing.
@@ -650,6 +656,24 @@ mod tests {
         assert_eq!(y, c.height / 2.0 - (p.y - c.center.y) * c.scale);
         assert_eq!(c.twist_uniform(), [0.0, 0.0]);
         assert_eq!(c.upright(), c);
+    }
+
+    /// docs/adr/9327: a box of no size (a lone point) keeps the view's scale and puts the point in the middle; a line
+    /// along one axis still fits its length.
+    #[test]
+    fn a_box_of_no_size_keeps_the_scale_and_centres_its_place() {
+        let mut c = Camera { width: 800.0, height: 600.0, scale: 2.5, ..Camera::default() };
+        let at = Bounds { min_x: 412_345.5, min_y: 4_512_000.25, max_x: 412_345.5, max_y: 4_512_000.25 };
+        c.fit(&at, FIT_PADDING);
+        assert_eq!(c.scale, 2.5);
+        let [x, y] = c.world_to_screen(Vec2::new(at.min_x, at.min_y));
+        assert!((x - 400.0).abs() < 1e-6 && (y - 300.0).abs() < 1e-6, "{x} {y}");
+        c.fit_size(Vec2::new(10.0, 20.0), 0.0, 0.0, FIT_PADDING);
+        assert_eq!(c.scale, 2.5);
+        assert_eq!(c.world_center(), Vec2::new(10.0, 20.0));
+        // A line along x: its 100 units across the area less its margins.
+        c.fit(&Bounds { min_x: 0.0, min_y: 5.0, max_x: 100.0, max_y: 5.0 }, FIT_PADDING);
+        assert!((c.scale - (800.0 - 2.0 * FIT_PADDING) / 100.0).abs() < 1e-9, "{}", c.scale);
     }
 
     /// A drawing in degrees (a WGS 84 city extract): its 0.002° × 0.0024° neighbourhood fills the area, and the view

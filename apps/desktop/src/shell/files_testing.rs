@@ -138,22 +138,34 @@ pub fn pictured(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
 /// 1100×760 (`prepare` sets each fresh app up), into `.run/gui-evidence/kullanim-<ur>/<name>-<theme>.png`. For the
 /// owner, run by hand; the folder is not committed.
 pub fn usage_shots(ur: &str, name: &str, prepare: impl Fn() -> App) {
+    usage_shots_in(ur, name, |_| prepare());
+}
+
+/// The app's theme set: `light` or `dark`.
+pub fn themed(app: &mut App, theme: &str) {
+    let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+    app.apply_settings();
+}
+
+/// As [`usage_shots`], `prepare` told the theme the picture is taken in: what it draws in its colours (Genel bakış's
+/// picture, drawn once) it draws after [`themed`].
+pub fn usage_shots_in(ur: &str, name: &str, prepare: impl Fn(&str) -> App) {
     use iced::Size;
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join(format!("../../.run/gui-evidence/kullanim-{ur}"));
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size) in [("light", Size::new(1440.0, 900.0)), ("dark", Size::new(1100.0, 760.0))] {
-        let mut app = prepare();
-        let _ = app
-            .settings
-            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
-        app.apply_settings();
+        let mut app = prepare(theme);
+        themed(&mut app, theme);
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         snapshot.settle(&mut app, App::view, &mut update);
+        // The drawing area's glyph layer draws a letter first asked for in a frame from the next one on: one frame
+        // drawn and left, so the picture has every letter (a scale bar's “10 µm” read “10 µ”).
+        let _ = snapshot.render(app.view(), &app.theme());
         let file = out.join(format!("{name}-{theme}.png"));
         snapshot
             .render(app.view(), &app.theme())

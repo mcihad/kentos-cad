@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Tek ölçek yazımı; Tümünü göster ve Genel bakış veri katmanının kapsamını kaynaktan alır (27 Kasım 2026, CBS
+  incelemesinin 7. ve 8. maddeleri; [ADR 9327](../adr/9327-one-scale-and-data-extents.md)).**
+  - Durum çubuğu, rozetler ve Ölçek yaz… ölçeği tek biçimde yazar: 1'in altı `N:1`, `1:0` çıkmaz. Ölçek çubuğu mm ve µm
+    yazar. Boyu olmayan kutu (tek nokta) ölçeği korur.
+  - Veri katmanının kutusu kaynaktan, iş parçacığı dışında okunur; kayıt yeniden okutur. Genel bakış satırların özetini
+    çizer, boşken nedenini söyler.
+
 - **Tabloda seçilen veri satırı her yüzeyin kaydı (27 Kasım 2026, CBS incelemesinin 5. maddesi;
   [ADR 9326](../adr/9326-one-record-on-every-surface.md)).**
   - Çizimde seçim yokken tabloda seçilen veri satırını Öznitelikler (“Veri satırı (N)”: katman, anahtar, değerler) ve

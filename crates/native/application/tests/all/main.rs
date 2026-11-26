@@ -271,6 +271,8 @@ mod write_receipts;
 // A data layer's field counted by its source for İstatistik and Grafik (docs/adr/9181).
 #[cfg(feature = "mod-gis")]
 mod field_counts;
+// A data layer's box and outline as its source has them now (docs/adr/9327).
+mod data_extent;
 // A condition naming a field the data layer lacks (docs/adr/9132).
 mod layers_rows_fields;
 // A data layer's columns added and its shape read again where a shared case cannot go (docs/adr/9318).

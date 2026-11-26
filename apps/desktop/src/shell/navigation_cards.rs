@@ -2,13 +2,17 @@
 //! `viewport/navigationCards.ts`): two cards at the places the core's rule
 //! gives them (`kentos_geometry_core::tools::navigation`).
 //!
-//! - The overview shows the core's picture of the whole drawing
-//!   (`Store::overview_picture`), drawn again 250 ms after the drawing, its
-//!   layers or the drawing area's ground change, never for a view change,
-//!   with the view's frame over it. A press moves the view there (one step
-//!   of the view's history), a drag pans, the wheel zooms the view about its
-//!   middle, a double click shows everything. The picture's pixels are drawn
-//!   as runs of rectangles, kept until the picture changes.
+//! - The overview shows the core's picture of the whole drawing and of the
+//!   shown data layers (`overview_picture_of`, docs/adr/9327): their boxes as
+//!   their sources say them and their rows' outlines under the drawing's
+//!   objects. It is drawn again 250 ms after the drawing, its layers, the
+//!   drawing area's ground or a data layer's read change, never for a view
+//!   change, with the view's frame over it. A press moves the view there (one
+//!   step of the view's history), a drag pans, the wheel zooms the view about
+//!   its middle, a double click shows everything. The picture's pixels are
+//!   drawn as runs of rectangles, kept until the picture changes. Without a
+//!   picture it says why: the data layers are being read, one could not be
+//!   read, the layers holding something are hidden, or there is nothing.
 //! - The magnifier is a frame and a title row with its zooms around a window
 //!   the drawing area's renderer draws again through a second camera
 //!   (`viewport::Viewport::lens`), and the drawing's text and marks through
@@ -33,7 +37,7 @@ use iced::{
     Subscription, Theme, mouse,
 };
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::store::overview::OverviewRequest;
+use kentos_geometry_core::store::overview::{OverviewLayer, OverviewRequest, overview_picture_of};
 use kentos_geometry_core::tools::navigation::{
     self as rule, Cards, Fit, LENS, OVERVIEW, Side, ZOOMS,
 };
@@ -62,8 +66,6 @@ pub struct Picture {
     dpr: f64,
     fit: Fit,
     extent: Bounds,
-    /// Bumped with every new picture: the canvas draws its runs again.
-    number: u64,
 }
 
 /// The cards' session state.
@@ -78,8 +80,20 @@ pub struct Navigation {
     changed: Option<Instant>,
     /// The overview's left button is down (a drag pans).
     pressed: bool,
+    /// Bumped as the overview is drawn again, with a picture or without one: the canvas draws again.
     pictures: u64,
+    /// Why the overview shows no picture.
+    empty: &'static str,
 }
+
+/// A data layer's row's dot in the overview, logical pixels.
+const DATA_DOT: f64 = 3.0;
+
+/// What the overview says without a picture.
+const EMPTY: &str = "Çizimde gösterilecek nesne yok.";
+const READING: &str = "Veri katmanları kaynaklarından okunuyor…";
+const UNREAD: &str = "Veri katmanının kaynağı okunamadı.";
+const HIDDEN: &str = "Görünen katmanlarda nesne yok; gizli katmanlar gösterilmez.";
 
 impl Default for Navigation {
     fn default() -> Self {
@@ -91,6 +105,7 @@ impl Default for Navigation {
             changed: None,
             pressed: false,
             pictures: 0,
+            empty: EMPTY,
         }
     }
 }
@@ -172,17 +187,21 @@ impl App {
         format!("{:?}", self.canvas()).hash(&mut key);
         // The time slider's window leaves its temporal layers' objects out (docs/adr/0210 §6).
         format!("{:?}", self.spatial.store().time_window()).hash(&mut key);
+        // A data layer's box or outline read from its source (docs/adr/9327).
+        self.data_extents_arrived().hash(&mut key);
         self.viewport.scale_factor().to_bits().hash(&mut key);
         Some(key.finish())
     }
 
-    /// The overview's picture from the store, each layer in its colour on the drawing's ground.
+    /// The overview's picture from the store and the shown data layers' outlines, each layer in its colour on the
+    /// drawing's ground, over the box of both (docs/adr/9327).
     fn draw_overview(&mut self) {
         let Some(doc) = &self.document else {
             self.navigation.picture = None;
             return;
         };
         self.spatial.sync(&doc.model);
+        let data = self.overview_data();
         let palette = crate::viewport::palette(self.canvas());
         let colors: HashMap<String, [u8; 3]> = doc
             .model
@@ -196,14 +215,30 @@ impl App {
             .collect();
         let dpr = self.viewport.scale_factor();
         let store = self.spatial.store();
-        let picture = store
-            .overview_picture(&OverviewRequest {
-                width: OVERVIEW.0,
-                height: OVERVIEW.1,
-                dpr,
-                colors: &colors,
-            })
-            .zip(store.overview_extent());
+        let mut boxes = data.boxes.clone();
+        if let Some(e) = store.overview_extent() {
+            boxes.push([e.min_x, e.min_y, e.max_x, e.max_y]);
+        }
+        let extent = boxes.into_iter().reduce(|a, b| [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]);
+        let picture = extent.map(|[min_x, min_y, max_x, max_y]| {
+            let extent = Bounds { min_x, min_y, max_x, max_y };
+            // A data layer's rows as dots of a few pixels, as small as its symbols on the map; the drawing's by §3.
+            let mut stores: Vec<OverviewLayer<'_>> =
+                data.outlines.iter().map(|s| OverviewLayer { store: s.as_ref(), dot: DATA_DOT }).collect();
+            stores.push(OverviewLayer { store, dot: 1.0 });
+            let request = OverviewRequest { width: OVERVIEW.0, height: OVERVIEW.1, dpr, colors: &colors };
+            (overview_picture_of(&stores, &extent, &request), extent)
+        });
+        // Without a picture, why: read still, not readable, hidden, or nothing at all.
+        self.navigation.empty = if data.reading > 0 {
+            READING
+        } else if data.failed.is_some() {
+            UNREAD
+        } else if data.hidden > 0 || doc.model.entities().next().is_some() {
+            HIDDEN
+        } else {
+            EMPTY
+        };
         self.navigation.pictures += 1;
         self.navigation.picture = picture.map(|(p, extent)| Picture {
             width: p.width,
@@ -212,7 +247,6 @@ impl App {
             dpr,
             fit: p.fit,
             extent,
-            number: self.navigation.pictures,
         });
         self.navigation.drawn_for = self.overview_key();
         self.navigation.changed = None;
@@ -322,6 +356,31 @@ impl App {
         })
     }
 
+    /// What the overview says while it shows no picture.
+    #[cfg(test)]
+    pub(crate) fn overview_words(&self) -> Option<&'static str> {
+        (self.overview_shown() && self.navigation.picture.is_none()).then_some(self.navigation.empty)
+    }
+
+    /// The overview's picture's pixel under a drawing point, RGBA; none outside it or without a picture.
+    #[cfg(test)]
+    pub(crate) fn overview_pixel(&self, world: Vec2) -> Option<[u8; 4]> {
+        let p = self.navigation.picture.as_ref()?;
+        let (u, v) = p.fit.to_card(OVERVIEW, world.x, world.y);
+        let (i, j) = ((u * p.dpr).floor(), (v * p.dpr).floor());
+        if i < 0.0 || j < 0.0 || i as usize >= p.width || j as usize >= p.height {
+            return None;
+        }
+        let at = (j as usize * p.width + i as usize) * 4;
+        p.pixels.get(at..at + 4).and_then(|px| px.try_into().ok())
+    }
+
+    /// Redraws the overview now, as the wait after a change would.
+    #[cfg(test)]
+    pub(crate) fn overview_now(&mut self) {
+        self.draw_overview();
+    }
+
     /// Büyüteç's zoom, side and centre while it shows (the traces read it).
     pub(crate) fn magnifier_state(&self) -> Option<(u32, &'static str, Option<[f64; 2]>)> {
         self.magnifier_shown().then(|| {
@@ -354,6 +413,8 @@ impl App {
             });
             let body = canvas::Canvas::new(OverviewCanvas {
                 picture,
+                drawn: self.navigation.pictures,
+                empty: self.navigation.empty,
                 frame,
                 ground: Color::from_rgb8(ground[0], ground[1], ground[2]),
                 accent: tokens.accent,
@@ -524,6 +585,10 @@ fn wake(due: &Instant) -> impl Stream<Item = Message> + use<> {
 /// The overview's picture and the view's frame over it, taking the mouse.
 struct OverviewCanvas<'a> {
     picture: Option<&'a Picture>,
+    /// The overview's drawing's number: the canvas draws again when it changes.
+    drawn: u64,
+    /// What it says without a picture.
+    empty: &'static str,
     frame: Option<([f64; 4], bool)>,
     ground: Color,
     accent: Color,
@@ -605,7 +670,7 @@ impl canvas::Program<Message> for OverviewCanvas<'_> {
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
-        let number = self.picture.map_or(0, |p| p.number);
+        let number = self.drawn;
         if state.drawn.get() != number {
             state.cache.clear();
             state.drawn.set(number);
@@ -615,8 +680,9 @@ impl canvas::Program<Message> for OverviewCanvas<'_> {
             match self.picture {
                 Some(p) => runs(frame, p),
                 None => frame.fill_text(Text {
-                    content: "Çizimde gösterilecek nesne yok.".to_owned(),
+                    content: self.empty.to_owned(),
                     position: Point::new(bounds.width / 2.0, bounds.height / 2.0),
+                    max_width: bounds.width - 16.0,
                     color: self.muted,
                     size: typography::scaled(12.0).into(),
                     align_x: iced::widget::text::Alignment::Center,

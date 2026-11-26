@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
-use kentos_geometry_core::store::overview::OverviewRequest;
+use kentos_geometry_core::store::overview::{OverviewLayer, OverviewRequest, overview_picture_of};
 use kentos_geometry_core::tools::navigation::{Card, Side, cards, fit, next_side};
 use serde_json::{Value, json};
 
@@ -259,4 +259,54 @@ fn hidden_layers_and_construction_lines_stay_out_of_the_overview() {
             })
             .is_none()
     );
+}
+
+/// docs/adr/9327: the overview of several stores over the extent the host gives: a data layer's outline (rows the drawing
+/// does not hold) drawn first, the drawing's objects over it; one store over its own extent is the store's own picture.
+#[test]
+fn the_overview_draws_the_data_layers_outlines_under_the_drawing() {
+    let mut drawing = Store::new();
+    drawing
+        .put_json(
+            &json!([{ "id": 1, "layerId": "a", "kind": "line", "attrs": {}, "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 } }])
+                .to_string(),
+        )
+        .expect("entities");
+    let mut data = Store::new();
+    data.put_json(
+        &json!([
+            { "id": 1, "layerId": "veri", "kind": "point", "attrs": {}, "p": { "x": 100, "y": 50 } },
+            { "id": 2, "layerId": "veri", "kind": "line", "attrs": {}, "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 } }
+        ])
+        .to_string(),
+    )
+    .expect("rows");
+    let colors: HashMap<String, [u8; 3]> =
+        [("a".to_owned(), [200, 0, 0]), ("veri".to_owned(), [0, 0, 200])].into_iter().collect();
+    let request = OverviewRequest { width: 240.0, height: 160.0, dpr: 1.0, colors: &colors };
+    // The drawing alone, over its own extent: the store's own picture, bit for bit.
+    let own = drawing.overview_picture(&request).expect("a picture");
+    let extent = drawing.overview_extent().expect("an extent");
+    assert_eq!(overview_picture_of(&[OverviewLayer { store: &drawing, dot: 1.0 }], &extent, &request), own);
+    // The data layer's box with the drawing's: the point a dot of three pixels about its place, the line the drawing's
+    // colour over the outline's.
+    let both = Bounds { min_x: 0.0, min_y: 0.0, max_x: 100.0, max_y: 50.0 };
+    let picture = overview_picture_of(
+        &[OverviewLayer { store: &data, dot: 3.0 }, OverviewLayer { store: &drawing, dot: 1.0 }],
+        &both,
+        &request,
+    );
+    let (u, v) = picture.fit.to_card((240.0, 160.0), 100.0, 50.0);
+    let pixel = |i: i64, j: i64| {
+        let at = (j as usize * picture.width + i as usize) * 4;
+        picture.pixels[at..at + 4].to_vec()
+    };
+    let (i, j) = (u.floor() as i64, v.floor() as i64);
+    for (di, dj) in [(-1, -1), (0, 0), (1, 1), (1, -1)] {
+        assert_eq!(pixel(i + di, j + dj)[..3], [0, 0, 200], "the data point's dot at {di} {dj}");
+    }
+    assert_eq!(pixel(i + 2, j)[3], 0, "three pixels across");
+    let (u, v) = picture.fit.to_card((240.0, 160.0), 5.0, 0.0);
+    assert_eq!(pixel(u.floor() as i64, v.floor() as i64)[..3], [200, 0, 0], "the drawing over the outline");
+    assert_eq!(picture.fit, fit(&both, (240.0, 160.0)));
 }
