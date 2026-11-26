@@ -708,8 +708,48 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
     });
 
     columns_checks(source, table_name, &mut report)?;
+    rules_checks(source, table_name, &mut report)?;
     query_checks(source, table_name, srid, &truth, &mut report)?;
     Ok(report)
+}
+
+/// The columns' rules in the source (docs/adr/9324): a rolled back write leaves none; a list with its labels and a
+/// range read back as written; a list written again holds what it holds now; a rule taken away is gone.
+fn rules_checks(source: &dyn Source, table_name: &str, report: &mut Report) -> Result<(), String> {
+    use crate::schema::{ColumnRule, RuledColumn};
+    let caps = source.capabilities(table_name).map_err(|e| format!("capabilities: {e}"))?;
+    report.check(caps.set_rules, || "yazılabilir tabloya kural yazılamıyor".into());
+    let list = |values: &[(&str, &str)]| {
+        ColumnRule::Values(values.iter().map(|(v, l)| ((*v).to_owned(), Some((*l).to_owned()))).collect())
+    };
+    let first = RuledColumn { column: "not_1".into(), rule: Some(list(&[("A", "Aktif"), ("B", "Bakımda")])) };
+    let range = RuledColumn {
+        column: "sayi_1".into(),
+        rule: Some(ColumnRule::Range { min: Some(1.0), min_included: true, max: Some(40.0), max_included: false }),
+    };
+    let ruled = |source: &dyn Source| -> Result<Vec<RuledColumn>, String> {
+        let mut r = source.rules(table_name).map_err(|e| format!("rules: {e}"))?;
+        r.sort_by(|a, b| a.column.cmp(&b.column));
+        Ok(r)
+    };
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.set_rules(table_name, std::slice::from_ref(&first)).map_err(|e| format!("set_rules: {e}"))?;
+    tx.rollback().map_err(|e| format!("rollback: {e}"))?;
+    report.check(ruled(source)?.is_empty(), || "geri alınan kural kaynakta kaldı".into());
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.set_rules(table_name, &[first.clone(), range.clone()]).map_err(|e| format!("set_rules: {e}"))?;
+    tx.commit().map_err(|e| format!("commit: {e}"))?;
+    let read = ruled(source)?;
+    report.check(read == [first.clone(), range.clone()], || format!("yazılan kurallar {read:?}"));
+    // Written again: the list holds what it holds now, not what it held.
+    let again = RuledColumn { column: "not_1".into(), rule: Some(list(&[("C", "Kapalı")])) };
+    let gone = RuledColumn { column: "sayi_1".into(), rule: None };
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    tx.set_rules(table_name, &[again.clone(), gone]).map_err(|e| format!("set_rules: {e}"))?;
+    tx.commit().map_err(|e| format!("commit: {e}"))?;
+    let read = ruled(source)?;
+    report.check(read == [again], || format!("yeniden yazılan kurallar {read:?}"));
+    Ok(())
 }
 
 /// Columns added to the table (docs/adr/9318): a rolled back add leaves it as it was; added ones come last, nullable,

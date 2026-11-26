@@ -8,7 +8,8 @@ import type { LayerField } from "./LayerField";
  * - `add`: `layer`, `fields` (the new columns as the layer's fields: name, kind and the field's own rules); a column
  *   is nullable, so the table's rows are empty (NULL) in it; the layer's field keeps its rules (a default for new rows,
  *   a value list);
- * - `refresh`: `layer`.
+ * - `refresh`: `layer`;
+ * - `rules`: `layer`.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_layer` (no `layer`), `no_columns` (add without fields),
  * `invalid_name` (a name a source cannot take: empty, longer than 63 bytes, a control character, a name kept for the
@@ -17,7 +18,8 @@ import type { LayerField } from "./LayerField";
  * then `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`,
  * `not_a_data_layer`, `data_layer_read_only` (add to a layer kept read-only); `source_unreachable` (the table cannot
  * be read, or the source refused the change: the table is as it was); `columns_not_permitted` (add where the source
- * or the account may not add a column: a PostgreSQL table the account does not own, a file opened read-only, a query).
+ * or the account may not add a column, or write a rule: a PostgreSQL table the account does not own, a file opened
+ * read-only, a query); `no_field_rules` (rules where no field of the layer has a value list or a range).
  */
 export type LayersColumns = { action: LayerColumnsAction, 
 /**

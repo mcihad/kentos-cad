@@ -271,8 +271,15 @@ class _LayersColumns(LocalCommand[LayersColumns, LayersColumnsDone, LayersColumn
     okunur dosyaya ve sorguya eklenmez. refresh (Kaynak şemasını yenile): katmanın
     alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan
     olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları
-    korunur. Katmanın alanları tek geri alma adımıdır; eklenen sütun tabloda kalır. plan
-    tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.
+    korunur; kaynağın sütun kuralı, kendi kuralı olmayan alana liste ya da aralık olarak
+    verilir. rules (Kuralları kaynağa yaz): alanların değer listeleri (kullanımdan
+    kalkan kodlar da) ve sayı aralıkları tabloya kural olarak yazılır: GeoPackage'ta
+    şema uzantısı, PostgreSQL'de sonraki her yazmayı denetleyen kural (tablonun sahibi
+    gerekir). Var olan satırlar değişmez; kurala uymayan değerleri outside'da alan alan,
+    satır sayısıyla söylenir; ruled yazılan sütunlardır. Listesi ya da aralığı olmayan
+    alanın sütunu olduğu gibi kalır; hiçbiri yoksa no_field_rules. Katmanın alanları tek
+    geri alma adımıdır; eklenen sütun ve yazılan kural tabloda kalır. plan tabloyu okur,
+    hiçbir şey yazmaz; rows tablonun satır sayısıdır.
     """
     __slots__ = ()
     id = "cad.layers.columns"
@@ -303,8 +310,15 @@ class _LayersColumns(LocalCommand[LayersColumns, LayersColumnsDone, LayersColumn
         tablonun sahibi sütun ekleyebilir (columns_not_permitted); salt okunur dosyaya ve
         sorguya eklenmez. refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun
         şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık
-        taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur. Katmanın
-        alanları tek geri alma adımıdır; eklenen sütun tabloda kalır. plan tabloyu okur,
+        taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur; kaynağın sütun
+        kuralı, kendi kuralı olmayan alana liste ya da aralık olarak verilir. rules
+        (Kuralları kaynağa yaz): alanların değer listeleri (kullanımdan kalkan kodlar da) ve
+        sayı aralıkları tabloya kural olarak yazılır: GeoPackage'ta şema uzantısı,
+        PostgreSQL'de sonraki her yazmayı denetleyen kural (tablonun sahibi gerekir). Var
+        olan satırlar değişmez; kurala uymayan değerleri outside'da alan alan, satır
+        sayısıyla söylenir; ruled yazılan sütunlardır. Listesi ya da aralığı olmayan alanın
+        sütunu olduğu gibi kalır; hiçbiri yoksa no_field_rules. Katmanın alanları tek geri
+        alma adımıdır; eklenen sütun ve yazılan kural tabloda kalır. plan tabloyu okur,
         hiçbir şey yazmaz; rows tablonun satır sayısıdır.
 
         Args:

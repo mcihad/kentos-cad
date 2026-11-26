@@ -4032,12 +4032,14 @@ class LayerColumnsAction(_StrEnum):
 
     - ``add``: Veri kaynağına sütun ekle: each field a nullable column of the table, empty in its rows; then the layer's field.
     - ``refresh``: Kaynak şemasını yenile: the layer's fields taken to the table's columns as it is now.
+    - ``rules``: Kuralları kaynağa yaz (docs/adr/9324): the layer's fields' value lists (their retired codes too) and ranges
     """
     ADD = "add"
     REFRESH = "refresh"
+    RULES = "rules"
 
 
-LayerColumnsActionName = Literal["add", "refresh"]
+LayerColumnsActionName = Literal["add", "refresh", "rules"]
 """The names of :class:`LayerColumnsAction`, for a plain string."""
 
 
@@ -57925,7 +57927,8 @@ class LayersColumns(_Model):
     - `add`: `layer`, `fields` (the new columns as the layer's fields: name, kind and the field's own rules); a column
       is nullable, so the table's rows are empty (NULL) in it; the layer's field keeps its rules (a default for new rows,
       a value list);
-    - `refresh`: `layer`.
+    - `refresh`: `layer`;
+    - `rules`: `layer`.
 
     Refusals (`CommandError.code`), checked in this order: `no_layer` (no `layer`), `no_columns` (add without fields),
     `invalid_name` (a name a source cannot take: empty, longer than 63 bytes, a control character, a name kept for the
@@ -57934,7 +57937,8 @@ class LayersColumns(_Model):
     then `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`,
     `not_a_data_layer`, `data_layer_read_only` (add to a layer kept read-only); `source_unreachable` (the table cannot
     be read, or the source refused the change: the table is as it was); `columns_not_permitted` (add where the source
-    or the account may not add a column: a PostgreSQL table the account does not own, a file opened read-only, a query).
+    or the account may not add a column, or write a rule: a PostgreSQL table the account does not own, a file opened
+    read-only, a query); `no_field_rules` (rules where no field of the layer has a value list or a range).
     Attributes:
         layer: The data layer's id.
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -57974,7 +57978,10 @@ class LayersColumnsDone(_Model):
         removed: `refresh`: the layer's fields the table no longer has, taken off the layer.
         fields: The layer's fields after.
         revision: The document's revision after (the plan's: as it is), as decimal text.
+        outside: `rules`: the values the table's rows hold outside a rule written, by field (a code no longer on the list, a
+            number out of the range): kept in their rows, refused for every later write.
         rows: `add`: the table's rows, each empty (NULL) in an added column; an estimate where the source counts so. Unit: count.
+        ruled: `rules`: the columns whose rules are written (docs/adr/9324).
     """
     layer: str
     table: str
@@ -57982,7 +57989,9 @@ class LayersColumnsDone(_Model):
     removed: list[str]
     fields: list[LayerField]
     revision: str
+    outside: list[RuleOutside] | Unset = UNSET
     rows: int | None | Unset = UNSET
+    ruled: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -57992,8 +58001,12 @@ class LayersColumnsDone(_Model):
         out["removed"] = list(self.removed)
         out["fields"] = [e0.to_json() for e0 in self.fields]
         out["revision"] = self.revision
+        if self.outside is not UNSET:
+            out["outside"] = [e0.to_json() for e0 in self.outside]
         if self.rows is not UNSET:
             out["rows"] = self.rows
+        if self.ruled is not UNSET:
+            out["ruled"] = list(self.ruled)
         return out
 
     @classmethod
@@ -58005,7 +58018,9 @@ class LayersColumnsDone(_Model):
             removed=list(data["removed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]],
             revision=data["revision"],
+            outside=[RuleOutside.from_json(e0) for e0 in data["outside"]] if "outside" in data else UNSET,
             rows=data.get("rows", UNSET),
+            ruled=list(data["ruled"]) if "ruled" in data else UNSET,
         )
 
 
@@ -71897,6 +71912,29 @@ class OrthophotoSeamlinesBuilt(_Model):
             revision=data["revision"],
             difference=UNSET if "difference" not in data else None if data["difference"] is None else OrthoSeamDifference.from_json(data["difference"]),
             opened=data.get("opened", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OutsideValue(_Model):
+    """A value outside a rule and its rows.
+    Attributes:
+        rows: Unit: count.
+    """
+    value: str
+    rows: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["value"] = self.value
+        out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OutsideValue:
+        return cls(
+            value=data["value"],
+            rows=data["rows"],
         )
 
 
@@ -96510,6 +96548,29 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RuleOutside(_Model):
+    """The values a field's rows hold outside its rule (docs/adr/9324).
+    Attributes:
+        values: Each value and how many rows hold it, in the values' order.
+    """
+    field: str
+    values: list[OutsideValue]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["values"] = [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RuleOutside:
+        return cls(
+            field=data["field"],
+            values=[OutsideValue.from_json(e0) for e0 in data["values"]],
         )
 
 
@@ -151096,6 +151157,7 @@ __all__ = [
     "OrthophotoNetworkBuilt",
     "OrthophotoSeamlines",
     "OrthophotoSeamlinesBuilt",
+    "OutsideValue",
     "OverlapCell",
     "OverlapControl",
     "OverlapControlStats",
@@ -152133,6 +152195,7 @@ __all__ = [
     "RowsCheckedName",
     "RubberLink",
     "RubbersheetTransform",
+    "RuleOutside",
     "RunInput",
     "RunSink",
     "SaveComboOptionsOperation",

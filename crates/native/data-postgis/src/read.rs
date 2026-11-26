@@ -116,6 +116,32 @@ impl Source for PgSource {
         Ok(self.shape(table)?.schema)
     }
 
+    /// The rules KentOS wrote as check constraints `kentos_<column>`, read from their comments (docs/adr/9324).
+    fn rules(&self, table: &str) -> Result<Vec<kentos_data::RuledColumn>, DataError> {
+        let s = self.shape(table)?;
+        if s.query {
+            return Ok(Vec::new());
+        }
+        let relation = format!("{}.{}", crate::catalog::quote(&s.namespace), crate::catalog::quote(&s.relation));
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            let rows = sqlx::query(
+                "SELECT obj_description(c.oid, 'pg_constraint') AS note FROM pg_constraint c
+                 WHERE c.conrelid = to_regclass($1) AND c.contype = 'c' AND c.conname LIKE 'kentos\\_%'
+                 ORDER BY c.conname",
+            )
+            .bind(&relation)
+            .fetch_all(&mut *conn)
+            .await
+            .map_err(error_of)?;
+            Ok(rows
+                .iter()
+                .filter_map(|r| sqlx::Row::try_get::<Option<String>, _>(r, "note").ok().flatten())
+                .filter_map(|note| crate::rules::rule_of(&note))
+                .collect())
+        })
+    }
+
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         let s = self.shape(table)?;
         Ok(capabilities_of(s.writable, s.rights, s.schema.geometry.is_some()))
@@ -453,6 +479,7 @@ pub(crate) fn capabilities_of(writable: bool, rights: crate::catalog::Rights, ge
         curves: true,
         create_table: true,
         add_columns: writable && rights.alter,
+        set_rules: writable && rights.alter,
     }
 }
 

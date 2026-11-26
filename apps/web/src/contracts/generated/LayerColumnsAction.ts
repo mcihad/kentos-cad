@@ -3,4 +3,4 @@
 /**
  * What `cad.layers.columns` does.
  */
-export type LayerColumnsAction = "add" | "refresh";
+export type LayerColumnsAction = "add" | "refresh" | "rules";

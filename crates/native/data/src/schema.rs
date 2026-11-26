@@ -220,3 +220,19 @@ mod tests {
         assert_eq!(g.family(), Family::Line);
     }
 }
+
+/// A column's rule as its source keeps it (docs/adr/9324): the values the column takes, each with its label, or a
+/// number's range (its ends each in or out, either open). A GeoPackage keeps it in its schema extension, a database as
+/// a check constraint with its words beside it.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ColumnRule {
+    Values(Vec<(String, Option<String>)>),
+    Range { min: Option<f64>, min_included: bool, max: Option<f64>, max_included: bool },
+}
+
+/// A column and its rule; none: the column's rule taken away.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RuledColumn {
+    pub column: String,
+    pub rule: Option<ColumnRule>,
+}

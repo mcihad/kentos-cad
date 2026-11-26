@@ -199,12 +199,22 @@ fn a_column_is_added_by_the_tables_owner_alone() {
     );
     let writer = PostGis.open(&as_account(&address, "kentos_sutun_yazan")).expect("open as the writer");
     let caps = writer.capabilities(table).expect("capabilities");
-    assert!(caps.update_values && !caps.insert && !caps.add_columns, "{caps:?}");
+    assert!(caps.update_values && !caps.insert && !caps.add_columns && !caps.set_rules, "{caps:?}");
     let mut tx = writer.begin().expect("begin");
     let refused = tx.add_columns(table, &[Field::new("not_1", FieldKind::Text { max: None })]);
     assert!(matches!(refused, Err(DataError::Denied(_))), "{refused:?}");
     let _ = tx.rollback();
     assert!(owner.schema(table).expect("schema").field("not_1").is_none(), "the table as it was");
+    // A column's rule (docs/adr/9324): the owner's alone as well.
+    let rule = kentos_data::RuledColumn {
+        column: "ada".into(),
+        rule: Some(kentos_data::ColumnRule::Values(vec![("1".into(), Some("Bir".into()))])),
+    };
+    let mut tx = writer.begin().expect("begin");
+    let refused = tx.set_rules(table, std::slice::from_ref(&rule));
+    assert!(matches!(refused, Err(DataError::Denied(_))), "{refused:?}");
+    let _ = tx.rollback();
+    assert!(owner.rules(table).expect("rules").is_empty(), "no rule written");
     drop(writer);
     let mut tx = owner.begin().expect("begin");
     tx.drop_table(table).expect("drop");

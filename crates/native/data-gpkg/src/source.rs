@@ -206,6 +206,26 @@ impl Source for GpkgSource {
         Ok(self.shape(table)?.schema)
     }
 
+    /// The schema extension's rules of the table's columns (docs/adr/9324): a list of values with their labels, or a
+    /// number's range.
+    fn rules(&self, table: &str) -> Result<Vec<kentos_data::RuledColumn>, DataError> {
+        self.with(|gp| {
+            let columns = gp.data_columns(table).map_err(failed)?;
+            Ok(columns
+                .into_iter()
+                .filter_map(|(c, rule)| {
+                    let rule = match rule? {
+                        kentos_geopackage::schema::Rule::Values(values) => kentos_data::ColumnRule::Values(values),
+                        kentos_geopackage::schema::Rule::Range { min, min_included, max, max_included } => {
+                            kentos_data::ColumnRule::Range { min, min_included, max, max_included }
+                        }
+                    };
+                    Some(kentos_data::RuledColumn { column: c.column, rule: Some(rule) })
+                })
+                .collect())
+        })
+    }
+
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         let s = self.shape(table)?;
         let w = self.writable() && s.layer.fid != "rowid" && !s.query;
@@ -222,6 +242,7 @@ impl Source for GpkgSource {
             curves: true,
             create_table: self.writable(),
             add_columns: w,
+            set_rules: w,
         })
     }
 

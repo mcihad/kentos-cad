@@ -38,6 +38,8 @@ pub struct Capabilities {
     /// Nullable columns added to the table (docs/adr/9318): a GeoPackage file open for writing; a database table the
     /// account owns. Not a query's or a view's.
     pub add_columns: bool,
+    /// The columns' rules written into the source (docs/adr/9324): as `add_columns`.
+    pub set_rules: bool,
 }
 
 impl Capabilities {
@@ -76,6 +78,11 @@ pub trait Source: Send + Sync {
     fn tables(&self) -> Result<Vec<TableInfo>, DataError>;
     /// A table's shape.
     fn schema(&self, table: &str) -> Result<Schema, DataError>;
+    /// The table's columns' rules as the source keeps them (docs/adr/9324); none for a source that keeps none.
+    fn rules(&self, table: &str) -> Result<Vec<crate::schema::RuledColumn>, DataError> {
+        let _ = table;
+        Ok(Vec::new())
+    }
     /// What the table allows.
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError>;
     /// The table's box in its system: the catalog's when `estimate` (fast, may be stale), else measured.
@@ -205,6 +212,13 @@ pub trait Transaction: Send {
     fn add_columns(&mut self, table: &str, fields: &[Field]) -> Result<(), DataError> {
         let _ = (table, fields);
         Err(DataError::Unsupported("Bu kaynağın tablosuna sütun eklenemez.".to_owned()))
+    }
+    /// Writes the columns' rules into the source (docs/adr/9324), each replacing the column's rule there; a column
+    /// given none loses its rule. Rows already there are not checked against them. A source that cannot says so;
+    /// nothing of the transaction is written then.
+    fn set_rules(&mut self, table: &str, columns: &[crate::schema::RuledColumn]) -> Result<(), DataError> {
+        let _ = (table, columns);
+        Err(DataError::Unsupported("Bu kaynağın tablosuna kural yazılamaz.".to_owned()))
     }
     /// Writes a write's receipt into `scope`'s receipts table, inside the transaction: it commits with the rows or not
     /// at all (docs/adr/9126). A receipt of the same id already there is refused (its primary key).

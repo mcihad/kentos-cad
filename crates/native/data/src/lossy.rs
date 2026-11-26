@@ -96,6 +96,10 @@ impl Source for LossySource {
     fn schema(&self, table: &str) -> Result<Schema, DataError> {
         self.inner.schema(table)
     }
+
+    fn rules(&self, table: &str) -> Result<Vec<crate::schema::RuledColumn>, DataError> {
+        self.inner.rules(table)
+    }
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         self.inner.capabilities(table)
     }
@@ -166,6 +170,10 @@ impl Transaction for LossyTransaction {
     }
     fn add_columns(&mut self, table: &str, fields: &[crate::schema::Field]) -> Result<(), DataError> {
         self.inner.add_columns(table, fields)
+    }
+
+    fn set_rules(&mut self, table: &str, columns: &[crate::schema::RuledColumn]) -> Result<(), DataError> {
+        self.inner.set_rules(table, columns)
     }
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {
         self.inner.receipt(scope, receipt)

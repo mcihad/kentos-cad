@@ -1,8 +1,10 @@
 //! `cad.layers.columns` v1 (docs/adr/9318): a data layer's table and its fields kept together. `add` adds columns to
 //! the table through its driver (Veri kaynağına sütun ekle) and, once the table read again has them, the layer's fields;
 //! `refresh` reads the table's columns again (Kaynak şemasını yenile) and takes the layer's fields to them: a column
-//! made elsewhere comes in, a field the table no longer has goes. The layer's fields change as one undo step; a column
-//! added stays in the table, as a row written by `cad.layers.session` stays.
+//! made elsewhere comes in, a field the table no longer has goes, and a column's rule in the source is given to a field
+//! without one of its own (docs/adr/9324). `rules` writes the layer's fields' value lists and ranges into the table as
+//! its rules (Kuralları kaynağa yaz) and says the values its rows hold outside them. The layer's fields change as one
+//! undo step; a column added and a rule written stay in the table, as a row written by `cad.layers.session` stays.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -26,6 +28,10 @@ pub enum LayerColumnsAction {
     Add,
     /// Kaynak şemasını yenile: the layer's fields taken to the table's columns as it is now.
     Refresh,
+    /// Kuralları kaynağa yaz (docs/adr/9324): the layer's fields' value lists (their retired codes too) and ranges
+    /// written into the table as its rules: a GeoPackage's schema extension, a database's check constraints that every
+    /// later write keeps. A field without a list or range, or of several values, leaves its column's rule as it is.
+    Rules,
 }
 
 /// Input of `cad.layers.columns` v1.
@@ -33,7 +39,8 @@ pub enum LayerColumnsAction {
 /// - `add`: `layer`, `fields` (the new columns as the layer's fields: name, kind and the field's own rules); a column
 ///   is nullable, so the table's rows are empty (NULL) in it; the layer's field keeps its rules (a default for new rows,
 ///   a value list);
-/// - `refresh`: `layer`.
+/// - `refresh`: `layer`;
+/// - `rules`: `layer`.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_layer` (no `layer`), `no_columns` (add without fields),
 /// `invalid_name` (a name a source cannot take: empty, longer than 63 bytes, a control character, a name kept for the
@@ -42,7 +49,8 @@ pub enum LayerColumnsAction {
 /// then `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`,
 /// `not_a_data_layer`, `data_layer_read_only` (add to a layer kept read-only); `source_unreachable` (the table cannot
 /// be read, or the source refused the change: the table is as it was); `columns_not_permitted` (add where the source
-/// or the account may not add a column: a PostgreSQL table the account does not own, a file opened read-only, a query).
+/// or the account may not add a column, or write a rule: a PostgreSQL table the account does not own, a file opened
+/// read-only, a query); `no_field_rules` (rules where no field of the layer has a value list or a range).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -84,7 +92,40 @@ pub struct LayersColumnsDone {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u64>,
+    /// `rules`: the columns whose rules are written (docs/adr/9324).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub ruled: Vec<String>,
+    /// `rules`: the values the table's rows hold outside a rule written, by field (a code no longer on the list, a
+    /// number out of the range): kept in their rows, refused for every later write.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RuleOutside>>", optional))]
+    pub outside: Vec<RuleOutside>,
     /// The document's revision after (the plan's: as it is), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// The values a field's rows hold outside its rule (docs/adr/9324).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RuleOutside {
+    pub field: String,
+    /// Each value and how many rows hold it, in the values' order.
+    pub values: Vec<OutsideValue>,
+}
+
+/// A value outside a rule and its rows.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OutsideValue {
+    pub value: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u64,
 }

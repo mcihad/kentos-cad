@@ -145,6 +145,46 @@ fn a_field_the_table_lacks_leaves_the_rest_read_is_named_and_keeps_the_form_back
     assert!(!kentos_forms::publish_blockers(&issues).is_empty());
 }
 
+/// Kuralları kaynağa yaz (docs/adr/9324): a data layer's list is the project's rule alone until written into its
+/// table; then the GeoPackage keeps it (read back as the table's rule when Alanlar opens again), and a value the rows
+/// hold outside it is said with its rows.
+#[test]
+fn kurallari_kaynaga_yaz_puts_the_list_into_the_table_and_names_the_old_codes() {
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::municipal("kural-kaynak");
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "bakim").expect("described")]).expect("added");
+    let layer = node(&app, "bakim").expect("bakim").id.clone();
+    {
+        let doc = app.document.as_mut().expect("open");
+        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
+        let mahalle = fields.iter_mut().find(|f| f.name == "mahalle").expect("mahalle");
+        mahalle.values = Some(vec![
+            kentos_commands::FieldChoice::new("M1", "Çınar"),
+            kentos_commands::FieldChoice::new("M2", "İstasyon"),
+            kentos_commands::FieldChoice::new("M3", "Kale"),
+        ]);
+        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+    }
+    let _ = app.open_layer_fields(&layer);
+    let ruled = |app: &App| app.gis.layer_fields.as_ref().and_then(|w| w.source_rules_for_test());
+    assert_eq!(ruled(&app), Some(Vec::new()), "the project's rule alone");
+    let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Rules)));
+    drive(&mut app, task);
+    let said = app.gis.layer_fields.as_ref().and_then(|w| w.said_text()).unwrap_or_default();
+    assert!(said.contains("Kaynağa kural olarak yazıldı: “mahalle”"), "{said}");
+    assert!(said.contains("mahalle M9 (1 satır)"), "the old code named: {said}");
+    assert_eq!(ruled(&app), Some(vec!["mahalle".to_owned()]));
+    // Opened again: the table's rule read from the GeoPackage.
+    kentos_data::registry().forget(&address);
+    let _ = app.open_layer_fields(&layer);
+    assert_eq!(ruled(&app), Some(vec!["mahalle".to_owned()]));
+    let rules = kentos_data_gpkg::Gpkg.open(&address).expect("open").rules("bakim").expect("rules");
+    assert_eq!(rules.len(), 1);
+    let _ = std::fs::remove_file(&path);
+}
+
 /// The data table on `layer` in the bottom panel, its first page read and handed to it as the reader answers.
 fn feed_table(app: &mut App, layer: &str) {
     use crate::features::data::DataEvent;
@@ -201,4 +241,39 @@ fn screens() {
         drive(&mut app, task);
         app
     });
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9324/`): Alanlar on a data layer whose list is the project's alone, and
+/// after Kuralları kaynağa yaz with the old code it named.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib source_columns_tests::rules_screens -- --ignored --nocapture"]
+fn rules_screens() {
+    crate::drawing_fonts::load();
+    let opened = |tag: &str, write: bool| {
+        crate::data_layers::register();
+        let path = crate::data_layers_tests::municipal(tag);
+        let address = path.display().to_string();
+        let mut app = app_with_drawing();
+        app.add_data_layers(vec![crate::data_layers::describe(&address, "bakim").expect("described")]).expect("added");
+        let layer = node(&app, "bakim").expect("bakim").id.clone();
+        let doc = app.document.as_mut().expect("open");
+        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
+        let at = fields.iter().position(|f| f.name == "mahalle").expect("mahalle");
+        fields[at].values = Some(vec![
+            kentos_commands::FieldChoice::new("M1", "Çınar"),
+            kentos_commands::FieldChoice::new("M2", "İstasyon"),
+            kentos_commands::FieldChoice::new("M3", "Kale"),
+        ]);
+        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+        let _ = app.open_layer_fields(&layer);
+        let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Choose(at))));
+        drive(&mut app, task);
+        if write {
+            let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Rules)));
+            drive(&mut app, task);
+        }
+        app
+    };
+    crate::files_testing::usage_shots("9324", "01-yalniz-proje-kurali", || opened("resim-kural-proje", false));
+    crate::files_testing::usage_shots("9324", "02-kurallar-kaynakta", || opened("resim-kural-kaynak", true));
 }

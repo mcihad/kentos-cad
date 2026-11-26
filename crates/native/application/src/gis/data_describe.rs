@@ -84,7 +84,9 @@ pub fn describe(address: &str, table: &str) -> Result<Described, String> {
 /// [`describe`] with the source already open.
 pub fn describe_in(source: &dyn kentos_data::Source, address: &str, table: &str) -> Result<Described, String> {
     let schema = source.schema(table).map_err(|e| e.to_string())?;
-    let (fields, left) = fields_of(&schema);
+    let (mut fields, left) = fields_of(&schema);
+    // The columns' rules the source keeps, read back as the fields' lists and ranges (docs/adr/9324).
+    take_source_rules(&mut fields, &source.rules(table).unwrap_or_default());
     let data = DataLayer {
         driver: source.driver().to_owned(),
         address: address.to_owned(),
@@ -109,6 +111,37 @@ pub fn describe_in(source: &dyn kentos_data::Source, address: &str, table: &str)
     }
     let name = table.rsplit('.').next().unwrap_or(table).to_owned();
     Ok(Described { data, fields, left, extent, name })
+}
+
+/// The rules a source keeps given to the fields that have none of their own (docs/adr/9324): a list of values as the
+/// field's codes (a value without a label is its own label), a range as a number field's least and most.
+pub fn take_source_rules(fields: &mut [LayerField], rules: &[kentos_data::RuledColumn]) {
+    for r in rules {
+        let Some(f) = fields.iter_mut().find(|f| f.name == r.column) else {
+            continue;
+        };
+        let own = f.values.as_ref().is_some_and(|v| !v.is_empty()) || f.min.is_some() || f.max.is_some();
+        match (&r.rule, own) {
+            (_, true) | (None, _) => {}
+            (Some(kentos_data::ColumnRule::Values(values)), false) => {
+                f.values = Some(
+                    values
+                        .iter()
+                        .map(|(v, l)| kentos_commands::FieldChoice::new(v, l.as_deref().unwrap_or(v)))
+                        .collect(),
+                );
+            }
+            (Some(kentos_data::ColumnRule::Range { min, min_included, max, max_included }), false)
+                if f.kind.is_number() =>
+            {
+                f.min = min.map(|v| format!("{v}"));
+                f.min_exclusive = min.is_some() && !min_included;
+                f.max = max.map(|v| format!("{v}"));
+                f.max_exclusive = max.is_some() && !max_included;
+            }
+            (Some(kentos_data::ColumnRule::Range { .. }), false) => {}
+        }
+    }
 }
 
 #[cfg(test)]

@@ -479,6 +479,31 @@ impl Transaction for GpkgTransaction {
         Ok(())
     }
 
+    /// The rules in the schema extension (docs/adr/9324), each column's under the name `<table>_<column>`, replacing what
+    /// that name held: what other programs read as the column's domain, and KentOS reads back.
+    fn set_rules(&mut self, table: &str, columns: &[kentos_data::RuledColumn]) -> Result<(), DataError> {
+        let conn = self.gp()?.connection();
+        if registered_name_in(conn, table).map_err(failed)?.is_none() {
+            return Err(DataError::NoTable(table.to_owned()));
+        }
+        for c in columns {
+            let rule = c.rule.as_ref().map(|r| match r {
+                kentos_data::ColumnRule::Values(values) => kentos_geopackage::schema::Rule::Values(values.clone()),
+                kentos_data::ColumnRule::Range { min, min_included, max, max_included } => {
+                    kentos_geopackage::schema::Rule::Range {
+                        min: *min,
+                        min_included: *min_included,
+                        max: *max,
+                        max_included: *max_included,
+                    }
+                }
+            });
+            let name = format!("{table}_{}", c.column);
+            kentos_geopackage::schema::replace_rule_in(conn, table, &c.column, &name, rule.as_ref()).map_err(failed)?;
+        }
+        Ok(())
+    }
+
     fn receipt(&mut self, _scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
         crate::receipts::insert(self.gp()?.connection(), receipt)
     }

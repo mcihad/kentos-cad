@@ -405,6 +405,24 @@ impl Transaction for PgTransaction {
         Ok(())
     }
 
+    /// The rules as check constraints `kentos_<column>`, each replacing the column's, its labels in its comment
+    /// (docs/adr/9324, rules.rs). `NOT VALID`: the rows there are not checked; every later write is.
+    fn set_rules(&mut self, table: &str, columns: &[kentos_data::RuledColumn]) -> Result<(), DataError> {
+        let (sql, ..) = qualified(table);
+        for c in columns {
+            let name = quote(&crate::rules::constraint_name(&c.column));
+            self.run(&format!("ALTER TABLE {sql} DROP CONSTRAINT IF EXISTS {name}"), &[])?;
+            let Some(rule) = &c.rule else {
+                continue;
+            };
+            let check = crate::rules::check_sql(&quote(&c.column), rule);
+            self.run(&format!("ALTER TABLE {sql} ADD CONSTRAINT {name} CHECK ({check}) NOT VALID"), &[])?;
+            let note = crate::rules::literal(&crate::rules::comment_of(&c.column, rule));
+            self.run(&format!("COMMENT ON CONSTRAINT {name} ON {sql} IS {note}"), &[])?;
+        }
+        Ok(())
+    }
+
     fn receipt(&mut self, scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
         let by = receipt.by.clone().map_or(Arg::Null, Arg::Text);
         self.run(

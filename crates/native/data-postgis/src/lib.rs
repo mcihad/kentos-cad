@@ -15,6 +15,7 @@ mod projects;
 mod query;
 mod read;
 mod receipts;
+mod rules;
 mod sql;
 mod write;
 

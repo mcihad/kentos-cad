@@ -102,10 +102,10 @@ def data_of(n, table=TABLE, read_only=False):
     return data
 
 
-def add_layer(n, fields=LAYER_FIELDS, name=NAME, table=TABLE, read_only=False):
+def add_layer(n, fields=LAYER_FIELDS, name=NAME, table=TABLE, read_only=False, layer="layer-1"):
     return {"op": "execute", "command": "cad.layers.data",
             "input": {"operation": "add", "name": name, "data": data_of(n, table, read_only), "fields": fields},
-            "result": completed({"layer": "layer-1", "revision": "$current"})}
+            "result": completed({"layer": layer, "revision": "$current"})}
 
 
 def completed(output, warnings=None):
@@ -140,6 +140,51 @@ def add(fields, layer="layer-1"):
 
 def refresh(layer="layer-1"):
     return {"action": "refresh", "layer": layer}
+
+
+def rules(layer="layer-1"):
+    return {"action": "rules", "layer": layer}
+
+
+def choices(*pairs):
+    return [{"code": code, "label": label} for code, label in pairs]
+
+
+def outside_of(fields):
+    """The values the table's rows hold outside the fields' lists and ranges, by field in the fields' order, each value
+    with its rows, in the values' order; an empty value keeps any rule."""
+    out = []
+    for f in fields:
+        codes = [c["code"] for c in f.get("values", [])]
+        low, high = f.get("min"), f.get("max")
+        found = {}
+        for r in ROWS:
+            v = r.get(f["name"])
+            if v is None:
+                continue
+            text = v if isinstance(v, str) else str(v)
+            if codes:
+                inside = text in codes
+            elif low is not None or high is not None:
+                n = float(text)
+                inside = (low is None or n >= float(low)) and (high is None or n <= float(high))
+            else:
+                continue
+            if not inside:
+                found[text] = found.get(text, 0) + 1
+        if found:
+            out.append({"field": f["name"], "values": [{"value": v, "rows": found[v]} for v in sorted(found)]})
+    return out
+
+
+def ruled_done(fields, layer="layer-1"):
+    out = {"layer": layer, "table": TABLE, "added": [], "removed": [], "fields": fields,
+           "ruled": [f["name"] for f in fields if f.get("values") or "min" in f or "max" in f]}
+    found = outside_of(fields)
+    if found:
+        out["outside"] = found
+    out["revision"] = "$current"
+    return out
 
 
 def rows_read(fields):
@@ -291,6 +336,53 @@ def cases():
                   columns(refresh(), completed(done(["eski_not"], ruled[:2] + [{"name": "eski_not", "kind": "text"}],
                                                     removed=["kayip"])), {"revision": "changed"})],
     })
+    # docs/adr/9324: the fields' lists and ranges written into the table as its rules; another layer on the table reads
+    # them back on Kaynak şemasını yenile.
+    listed = [{"name": "durum", "kind": "text", "values": choices(("A", "Aktif"), ("C", "Kapalı"))},
+              {"name": "no", "kind": "integer", "min": "1", "max": "2"}]
+    back = listed + [{"name": "eski_not", "kind": "text"}]
+    out.append({
+        "name": "kurallar kaynağa: liste ve aralık yazılır, dışarıda kalan değerler sayılır, başka katman onları okur",
+        "steps": [copy(30), add_layer(30, fields=listed),
+                  columns(rules(), completed(ruled_done(listed)), {"revision": "same"}),
+                  add_layer(30, layer="layer-2"),
+                  columns(refresh(layer="layer-2"),
+                          completed({**done(["eski_not"], back), "layer": "layer-2"}), {"revision": "changed"})],
+    })
+    out.append({
+        "name": "kuralların planı dışarıda kalanları sayar, yazmaz",
+        "steps": [copy(31), add_layer(31, fields=listed),
+                  columns(rules(), completed(ruled_done(listed)), {"revision": "same"}, op="plan"),
+                  add_layer(31, layer="layer-2"),
+                  columns(refresh(layer="layer-2"),
+                          completed({**done(["eski_not"], FULL_FIELDS), "layer": "layer-2"}), {"revision": "changed"})],
+    })
+    only_a = [{"name": "durum", "kind": "text", "values": choices(("A", "Aktif"))}]
+    out.append({
+        "name": "yeniden yazılan liste şimdiki kodlarını tutar",
+        "steps": [copy(32), add_layer(32, fields=listed),
+                  columns(rules(), completed(ruled_done(listed)), {"revision": "same"}),
+                  add_layer(32, fields=only_a, layer="layer-2"),
+                  columns(rules(layer="layer-2"), completed(ruled_done(only_a, layer="layer-2")), {"revision": "same"}),
+                  add_layer(32, fields=[], layer="layer-3"),
+                  columns(refresh(layer="layer-3"),
+                          completed({**done(["durum", "no", "eski_not"],
+                                            [{"name": "durum", "kind": "text", "values": choices(("A", "Aktif"))},
+                                             # A column read from the table: SQLite's INTEGER is a 64-bit whole number.
+                                             {"name": "no", "kind": "bigint", "min": "1", "max": "2"},
+                                             {"name": "eski_not", "kind": "text"}]), "layer": "layer-3"}),
+                          {"revision": "changed"})],
+    })
+    out.append(refused("kuralı olmayan alanlar: no_field_rules", rules(), "no_field_rules",
+                       f"“{NAME}” katmanının alanlarında kaynağa yazılacak değer listesi ya da aralık yok; Alanlar'da bir "
+                       "alana liste ya da aralık verin.", "layer", before=[copy(33), add_layer(33)]))
+    out.append(refused("salt okunur katmana kural yazılmaz: data_layer_read_only", rules(), "data_layer_read_only",
+                       f"“{NAME}” salt okunur tutuluyor; tablosuna kural yazılmaz.", "layer",
+                       before=[copy(34), add_layer(34, fields=listed, read_only=True)]))
+    out.append(refused("sorgu katmanına kural yazılmaz: columns_not_permitted", rules(), "columns_not_permitted",
+                       "“Saha sorgusu” katmanının tablosuna kural yazılamaz: PostgreSQL'de tablonun sahibi olmak gerekir; "
+                       "salt okunur dosyaya ve sorguya kural yazılmaz. Tablo değişmedi.", "layer",
+                       before=[copy(35), add_layer(35, fields=listed[:1], name="Saha sorgusu", table=query)]))
     out.append({
         "name": "doğrulama: geçerli girdi bir şey yazmaz",
         "steps": [copy(28), add_layer(28),
@@ -331,11 +423,12 @@ def document():
     return {
         "format": "kentos.command-cases", "version": 1, "command": COMMAND, "commandVersion": 1,
         "title": "Veri katmanının sütunları",
-        "note": "ADR 9318. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/sutun.gpkg); yazan her durum kendi "
+        "note": "ADR 9318, 9324. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/sutun.gpkg); yazan her durum kendi "
                 "kopyasında çalışır ve veri katmanını kendisi ekler. Beklentiler sözleşmenin kurallarıyla burada "
                 "hesaplanır: retler ve sırası, tabloya eklenen sütunlar ve satırlarda boş okunmaları (cad.layers.rows), "
                 "katmanın sonraki alanları, alanları geri getiren ama sütunu tabloda bırakan geri alma, alanları tablonun "
-                "sütunlarına getiren yenileme.",
+                "sütunlarına getiren yenileme; kuralların kaynağa yazılması, dışarıda kalan değerleri ve başka bir "
+                "katmanın yenilemede onları geri okuması.",
         "setup": setup(),
         "cases": cases(),
     }

@@ -629,6 +629,7 @@ codes! {
     /// A table its source or the account may not add a column to (docs/adr/9318): a PostgreSQL table the account does not
     /// own, a file opened read-only, a query.
     COLUMNS_NOT_PERMITTED = "columns_not_permitted", Failed, false, "Bu tabloya sütun eklenemez: PostgreSQL'de tablonun sahibi olmak gerekir; salt okunur dosyaya ve sorguya sütun eklenmez. Tablo değişmedi.";
+    NO_FIELD_RULES = "no_field_rules", Failed, false, "Katmanın alanlarında kaynağa yazılacak değer listesi ya da aralık yok; Alanlar'da bir alana liste ya da aralık verin.";
     /// `stop` of a layer with changes not saved (docs/adr/9103 §3): save them or let them go first.
     DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
     /// A save over rows someone else changed or deleted since they were taken (docs/adr/9104 §3): nothing written.

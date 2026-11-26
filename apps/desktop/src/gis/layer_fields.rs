@@ -44,6 +44,8 @@ const DOWN: &str = "Aşağı";
 const FROM_DATA: &str = "Verilerden al";
 const MIGRATE: &str = "Değerleri biçime çevir";
 const REFRESH: &str = "Kaynak şemasını yenile";
+/// The fields' lists and ranges written into the data layer's table (docs/adr/9324).
+const RULES: &str = "Kuralları kaynağa yaz";
 
 /// The table's columns: header and width (logical pixels), each wide enough for its header in the strong caption
 /// face with the cell's padding (a narrower one ran Uzunluk / Basamak over Zorunlu).
@@ -372,6 +374,9 @@ pub struct Window {
     chosen: Option<usize>,
     said: Option<(Kind, String)>,
     choices: Option<Choices>,
+    /// A data layer's columns whose rules its source keeps (docs/adr/9324): a field's list or range is then the
+    /// table's as well as the project's. None for a drawing layer or a source not read.
+    source_rules: Option<Vec<String>>,
 }
 
 /// A cell of a row typed into.
@@ -411,6 +416,8 @@ pub enum Event {
     FromData,
     /// Kaynak şemasını yenile (docs/adr/9318): a data layer's fields taken to its table's columns as it is now.
     Refresh,
+    /// Kuralları kaynağa yaz (docs/adr/9324): the fields' lists and ranges into the table as its rules.
+    Rules,
     Save,
     Cancel,
     /// Liste…: the row's value list.
@@ -465,6 +472,12 @@ impl Window {
         self.said.as_ref().map(|(_, t)| t.clone())
     }
 
+    /// The columns whose rules the data layer's source keeps (a test reads it).
+    #[cfg(test)]
+    pub(crate) fn source_rules_for_test(&self) -> Option<Vec<String>> {
+        self.source_rules.clone()
+    }
+
     fn changed(&self) -> bool {
         self.rows
             .iter()
@@ -491,6 +504,11 @@ impl App {
             return Task::none();
         };
         let rows: Vec<FieldRow> = node.fields.iter().map(row_of).collect();
+        // The rules the data layer's source keeps, read from its catalog (docs/adr/9324).
+        let source_rules = node.data.as_ref().and_then(|d| {
+            let source = kentos_data::registry().source(&d.address).ok()?;
+            Some(source.rules(&d.table).ok()?.into_iter().map(|r| r.column).collect())
+        });
         self.gis.layer_fields = Some(Window {
             layer: layer.to_owned(),
             chosen: (!rows.is_empty()).then_some(0),
@@ -498,6 +516,7 @@ impl App {
             rows,
             said: None,
             choices: None,
+            source_rules,
         });
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerFields));
         Task::none()
@@ -670,6 +689,18 @@ impl App {
                 }
                 let layer = w.layer.clone();
                 return self.refresh_layer_columns(&layer);
+            }
+            Event::Rules => {
+                if w.changed() {
+                    w.said = Some((
+                        Kind::Warn,
+                        "Önce değişiklikleri kaydedin ya da Vazgeç'e basın: kaynağa kaydedilmiş alanların kuralları yazılır."
+                            .to_owned(),
+                    ));
+                    return Task::none();
+                }
+                let layer = w.layer.clone();
+                return self.write_layer_rules(&layer);
             }
             Event::Save => return self.save_layer_fields(),
             Event::Cancel => {
@@ -976,6 +1007,67 @@ impl App {
         Task::none()
     }
 
+    /// Kuralları kaynağa yaz (docs/adr/9324): `cad.layers.columns`' rules; which columns took a rule and the values the
+    /// rows hold outside them said under the table.
+    pub(crate) fn write_layer_rules(&mut self, layer: &str) -> Task<Message> {
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        // A database keeps its check constraints at every write; a GeoPackage's schema extension is read, not enforced.
+        let database = doc.model.layers().get(layer).and_then(|n| n.data.as_ref()).is_some_and(|d| d.driver == "postgis");
+        let input = kentos_commands::LayersColumns {
+            action: kentos_commands::LayerColumnsAction::Rules,
+            layer: layer.to_owned(),
+            fields: None,
+            expected_revision: None,
+        };
+        let said = match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, .. } => {
+                let names = output.ruled.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+                let outside: Vec<String> = output
+                    .outside
+                    .iter()
+                    .flat_map(|o| o.values.iter().map(move |v| format!("{} {} ({} satır)", o.field, v.value, v.rows)))
+                    .collect();
+                let mut text = if database {
+                    format!("Kaynağa kural olarak yazıldı: {names}. Veritabanı bundan sonraki her yazmayı bu kurallarla denetler.")
+                } else {
+                    format!(
+                        "Kaynağa kural olarak yazıldı: {names}. GeoPackage şema uzantısında tutar; başka programlar alanın \
+                         listesini okur, dosya yazmayı kendisi denetlemez."
+                    )
+                };
+                if !outside.is_empty() {
+                    text.push_str(&format!(" Kurala uymayan eski değerler satırlarında kaldı: {}.", outside.join(", ")));
+                    if database {
+                        text.push_str(" O satırlar değer düzeltilmeden değiştirilemez.");
+                    }
+                }
+                (if outside.is_empty() { Kind::Info } else { Kind::Warn }, text)
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                (Kind::Error, error.message)
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
+        };
+        let ruled = said.0 != Kind::Error;
+        if let Some(w) = self.gis.layer_fields.as_mut().filter(|w| w.layer == layer) {
+            w.said = Some(said);
+            if ruled {
+                let mut columns = w.source_rules.clone().unwrap_or_default();
+                for r in &w.rows {
+                    if r.values.is_some() || !r.min.is_empty() || !r.max.is_empty() {
+                        columns.push(r.name.clone());
+                    }
+                }
+                columns.sort();
+                columns.dedup();
+                w.source_rules = Some(columns);
+            }
+        }
+        Task::none()
+    }
+
     /// Kullanıldığı yerler (docs/adr/0414 §4): the chosen saved field's places; a rename says what
     /// follows it and what a published release keeps.
     fn field_usage_box<'a>(&self, w: &Window) -> Element<'a, Message> {
@@ -1211,7 +1303,9 @@ impl App {
             .and_then(|d| d.model.layers().get(&w.layer))
             .is_some_and(|n| n.data.is_some());
         let actions = if data_layer {
-            actions.push(tool("blockSync", REFRESH, Some(msg(Event::Refresh))))
+            actions
+                .push(tool("blockSync", REFRESH, Some(msg(Event::Refresh))))
+                .push(tool("domains", RULES, Some(msg(Event::Rules))))
         } else {
             actions
         };
@@ -1270,9 +1364,36 @@ impl App {
                     .iter()
                     .find(|s| s.layer == w.layer)
                     .is_some_and(|link| unique_in_table(link, &r.name));
+                // A data layer's list or range: the project's rule, and the table's too when its source keeps it
+                // (docs/adr/9324).
+                let ruled = r.values.as_ref().is_some_and(|v| !v.is_empty())
+                    || (r.kind.is_number() && (!r.min.trim().is_empty() || !r.max.trim().is_empty()));
+                let database = doc
+                    .model
+                    .layers()
+                    .get(&w.layer)
+                    .and_then(|n| n.data.as_ref())
+                    .is_some_and(|d| d.driver == "postgis");
+                let rule = w.source_rules.as_ref().filter(|_| ruled).map(|kept| {
+                    if kept.contains(&r.name) && database {
+                        "Kural: proje ve kaynak. KentOS yazarken denetler; veritabanı da başka programların yazdığını \
+                         denetler."
+                            .to_owned()
+                    } else if kept.contains(&r.name) {
+                        "Kural: proje ve kaynak. KentOS yazarken denetler; GeoPackage kuralı şema uzantısında tutar, \
+                         başka programlar okur."
+                            .to_owned()
+                    } else {
+                        format!(
+                            "Kural: yalnız proje. KentOS yazarken denetler; tabloda kural yok, başka programlar \
+                             denetlenmeden yazar. {RULES} ile tabloya da yazın."
+                        )
+                    }
+                });
                 let said = [
                     column_said(r.column.as_ref()),
                     unique.then(|| "Tabloda tekil: tablonun tekil kısıtı değerin başka bir kayıtta olmasına izin vermez.".to_owned()),
+                    rule,
                 ]
                 .into_iter()
                 .flatten()

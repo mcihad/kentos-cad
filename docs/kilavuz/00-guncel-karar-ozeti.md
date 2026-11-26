@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Alanın listesi ve aralığı kaynağa kural olarak (27 Kasım 2026, CBS incelemesinin 4. maddesi, ikinci dilim;
+  [ADR 9324](../adr/9324-field-rules-in-the-source.md)).**
+  - Sürücü sözleşmesi: `Source::rules`, `Transaction::set_rules`, `Capabilities.set_rules`. GeoPackage'ta şema uzantısı
+    (denetlenmez, okunur), PostgreSQL'de `kentos_<sütun>` `CHECK … NOT VALID` ve açıklamasında kural; ortak uygunluk
+    paketi ikisinde de geçer.
+  - `cad.layers.columns` `rules` (Kuralları kaynağa yaz): listeler (kalkmış kodlar da) ve aralıklar yazılır; kurala
+    uymayan eski değerler `outside`'ta satır sayısıyla söylenir. `refresh` ve tablonun eklenmesi kaynağın kuralını okur.
+  - Alanlar, seçili alanın kuralının yalnız projede mi kaynakta da mı olduğunu sürücüye uygun sözlerle söyler.
+
 - **Veri tablosunda kodlu alan listesiyle (27 Kasım 2026, CBS incelemesinin 4. maddesi, ilk dilim;
   [ADR 9323](../adr/9323-data-table-typed-cells.md)).**
   - Veri katmanının tablosu listesi ya da evet/hayırı olan alanı çizim tablosunun liste düzenleyicisiyle açar.

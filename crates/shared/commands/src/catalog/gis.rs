@@ -648,9 +648,10 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             title: "Veri kaynağının sütunları".into(),
             summary: "Bir veri katmanının tablosunu ve alanlarını birlikte tutar. \
                       add (Veri kaynağına sütun ekle): fields'in her biri tabloya boş bırakılabilir bir sütun olarak eklenir; tablonun var olan satırları o sütunda boştur (NULL). Tablo yeniden okunup sütunlar görülünce katmanın alanları da eklenir; alanın kuralları (değer listesi, yeni satırın varsayılanı) katmanda durur. PostgreSQL'de yalnız tablonun sahibi sütun ekleyebilir (columns_not_permitted); salt okunur dosyaya ve sorguya eklenmez. \
-                      refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur. \
-                      Katmanın alanları tek geri alma adımıdır; eklenen sütun tabloda kalır. plan tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.".into(),
-            aliases: vec!["sutunekle".into(), "semayiyenile".into(), "addcolumn".into()],
+                      refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur; kaynağın sütun kuralı, kendi kuralı olmayan alana liste ya da aralık olarak verilir. \
+                      rules (Kuralları kaynağa yaz): alanların değer listeleri (kullanımdan kalkan kodlar da) ve sayı aralıkları tabloya kural olarak yazılır: GeoPackage'ta şema uzantısı, PostgreSQL'de sonraki her yazmayı denetleyen kural (tablonun sahibi gerekir). Var olan satırlar değişmez; kurala uymayan değerleri outside'da alan alan, satır sayısıyla söylenir; ruled yazılan sütunlardır. Listesi ya da aralığı olmayan alanın sütunu olduğu gibi kalır; hiçbiri yoksa no_field_rules. \
+                      Katmanın alanları tek geri alma adımıdır; eklenen sütun ve yazılan kural tabloda kalır. plan tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.".into(),
+            aliases: vec!["sutunekle".into(), "semayiyenile".into(), "addcolumn".into(), "kurallarikaynagayaz".into()],
             effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop],
             headless: true,

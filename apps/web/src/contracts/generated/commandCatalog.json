@@ -79783,11 +79783,12 @@
       "id": "cad.layers.columns",
       "version": 1,
       "title": "Veri kaynağının sütunları",
-      "summary": "Bir veri katmanının tablosunu ve alanlarını birlikte tutar. add (Veri kaynağına sütun ekle): fields'in her biri tabloya boş bırakılabilir bir sütun olarak eklenir; tablonun var olan satırları o sütunda boştur (NULL). Tablo yeniden okunup sütunlar görülünce katmanın alanları da eklenir; alanın kuralları (değer listesi, yeni satırın varsayılanı) katmanda durur. PostgreSQL'de yalnız tablonun sahibi sütun ekleyebilir (columns_not_permitted); salt okunur dosyaya ve sorguya eklenmez. refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur. Katmanın alanları tek geri alma adımıdır; eklenen sütun tabloda kalır. plan tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.",
+      "summary": "Bir veri katmanının tablosunu ve alanlarını birlikte tutar. add (Veri kaynağına sütun ekle): fields'in her biri tabloya boş bırakılabilir bir sütun olarak eklenir; tablonun var olan satırları o sütunda boştur (NULL). Tablo yeniden okunup sütunlar görülünce katmanın alanları da eklenir; alanın kuralları (değer listesi, yeni satırın varsayılanı) katmanda durur. PostgreSQL'de yalnız tablonun sahibi sütun ekleyebilir (columns_not_permitted); salt okunur dosyaya ve sorguya eklenmez. refresh (Kaynak şemasını yenile): katmanın alanlarını tablonun şimdiki sütunlarına getirir: başka yerde eklenmiş sütun alan olur, tablonun artık taşımadığı alan katmandan çıkar; kalan alanların kuralları korunur; kaynağın sütun kuralı, kendi kuralı olmayan alana liste ya da aralık olarak verilir. rules (Kuralları kaynağa yaz): alanların değer listeleri (kullanımdan kalkan kodlar da) ve sayı aralıkları tabloya kural olarak yazılır: GeoPackage'ta şema uzantısı, PostgreSQL'de sonraki her yazmayı denetleyen kural (tablonun sahibi gerekir). Var olan satırlar değişmez; kurala uymayan değerleri outside'da alan alan, satır sayısıyla söylenir; ruled yazılan sütunlardır. Listesi ya da aralığı olmayan alanın sütunu olduğu gibi kalır; hiçbiri yoksa no_field_rules. Katmanın alanları tek geri alma adımıdır; eklenen sütun ve yazılan kural tabloda kalır. plan tabloyu okur, hiçbir şey yazmaz; rows tablonun satır sayısıdır.",
       "aliases": [
         "sutunekle",
         "semayiyenile",
-        "addcolumn"
+        "addcolumn",
+        "kurallarikaynagayaz"
       ],
       "effect": "document",
       "hosts": [
@@ -79803,7 +79804,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.layers.columns` v1.\n\n- `add`: `layer`, `fields` (the new columns as the layer's fields: name, kind and the field's own rules); a column\n  is nullable, so the table's rows are empty (NULL) in it; the layer's field keeps its rules (a default for new rows,\n  a value list);\n- `refresh`: `layer`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (no `layer`), `no_columns` (add without fields),\n`invalid_name` (a name a source cannot take: empty, longer than 63 bytes, a control character, a name kept for the\nsource's own tables, the key's or the geometry's column), `column_exists` (a field of the layer or a column of the\ntable, folded the Turkish way, or named twice), `invalid_fields` (the fields' rules over the layer's and the new);\nthen `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`,\n`not_a_data_layer`, `data_layer_read_only` (add to a layer kept read-only); `source_unreachable` (the table cannot\nbe read, or the source refused the change: the table is as it was); `columns_not_permitted` (add where the source\nor the account may not add a column: a PostgreSQL table the account does not own, a file opened read-only, a query).",
+        "description": "Input of `cad.layers.columns` v1.\n\n- `add`: `layer`, `fields` (the new columns as the layer's fields: name, kind and the field's own rules); a column\n  is nullable, so the table's rows are empty (NULL) in it; the layer's field keeps its rules (a default for new rows,\n  a value list);\n- `refresh`: `layer`;\n- `rules`: `layer`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (no `layer`), `no_columns` (add without fields),\n`invalid_name` (a name a source cannot take: empty, longer than 63 bytes, a control character, a name kept for the\nsource's own tables, the key's or the geometry's column), `column_exists` (a field of the layer or a column of the\ntable, folded the Turkish way, or named twice), `invalid_fields` (the fields' rules over the layer's and the new);\nthen `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`,\n`not_a_data_layer`, `data_layer_read_only` (add to a layer kept read-only); `source_unreachable` (the table cannot\nbe read, or the source refused the change: the table is as it was); `columns_not_permitted` (add where the source\nor the account may not add a column, or write a rule: a PostgreSQL table the account does not own, a file opened\nread-only, a query); `no_field_rules` (rules where no field of the layer has a value list or a range).",
         "properties": {
           "action": {
             "$ref": "#/$defs/LayerColumnsAction"
@@ -79859,6 +79860,13 @@
           "layer": {
             "type": "string"
           },
+          "outside": {
+            "description": "`rules`: the values the table's rows hold outside a rule written, by field (a code no longer on the list, a\nnumber out of the range): kept in their rows, refused for every later write.",
+            "items": {
+              "$ref": "#/$defs/RuleOutside"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "`refresh`: the layer's fields the table no longer has, taken off the layer.",
             "items": {
@@ -79880,6 +79888,13 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "ruled": {
+            "description": "`rules`: the columns whose rules are written (docs/adr/9324).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "table": {
             "description": "The table the layer reads (a GeoPackage's table name, a database's `schema.table`).",
@@ -79918,6 +79933,13 @@
           "layer": {
             "type": "string"
           },
+          "outside": {
+            "description": "`rules`: the values the table's rows hold outside a rule written, by field (a code no longer on the list, a\nnumber out of the range): kept in their rows, refused for every later write.",
+            "items": {
+              "$ref": "#/$defs/RuleOutside"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "`refresh`: the layer's fields the table no longer has, taken off the layer.",
             "items": {
@@ -79939,6 +79961,13 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "ruled": {
+            "description": "`rules`: the columns whose rules are written (docs/adr/9324).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "table": {
             "description": "The table the layer reads (a GeoPackage's table name, a database's `schema.table`).",
@@ -79967,6 +79996,7 @@
           "not_a_data_layer",
           "data_layer_read_only",
           "invalid_fields",
+          "no_field_rules",
           "source_unreachable",
           "columns_not_permitted"
         ]
@@ -115333,6 +115363,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu tabloya sütun eklenemez: PostgreSQL'de tablonun sahibi olmak gerekir; salt okunur dosyaya ve sorguya sütun eklenmez. Tablo değişmedi."
+    },
+    {
+      "code": "no_field_rules",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın alanlarında kaynağa yazılacak değer listesi ya da aralık yok; Alanlar'da bir alana liste ya da aralık verin."
     },
     {
       "code": "data_edits_unsaved",
@@ -167423,6 +167459,11 @@
           "const": "refresh",
           "description": "Kaynak şemasını yenile: the layer's fields taken to the table's columns as it is now.",
           "type": "string"
+        },
+        {
+          "const": "rules",
+          "description": "Kuralları kaynağa yaz (docs/adr/9324): the layer's fields' value lists (their retired codes too) and ranges\nwritten into the table as its rules: a GeoPackage's schema extension, a database's check constraints that every\nlater write keeps. A field without a list or range, or of several values, leaves its column's rule as it is.",
+          "type": "string"
         }
       ]
     },
@@ -184178,6 +184219,25 @@
         "limitZ",
         "belowPixel",
         "notes"
+      ],
+      "type": "object"
+    },
+    "OutsideValue": {
+      "description": "A value outside a rule and its rows.",
+      "properties": {
+        "rows": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "rows"
       ],
       "type": "object"
     },
@@ -209459,6 +209519,26 @@
       "required": [
         "from",
         "to"
+      ],
+      "type": "object"
+    },
+    "RuleOutside": {
+      "description": "The values a field's rows hold outside its rule (docs/adr/9324).",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "values": {
+          "description": "Each value and how many rows hold it, in the values' order.",
+          "items": {
+            "$ref": "#/$defs/OutsideValue"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "field",
+        "values"
       ],
       "type": "object"
     },

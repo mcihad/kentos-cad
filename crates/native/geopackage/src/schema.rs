@@ -36,6 +36,89 @@ pub enum Rule {
     Values(Vec<(String, Option<String>)>),
 }
 
+/// The extension's tables and their registration, made in `conn` when the file lacks them (inside the caller's
+/// transaction).
+pub fn ensure_schema_in(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    conn.execute_batch(&format!(
+        "CREATE TABLE IF NOT EXISTS {COLUMNS} (
+           table_name TEXT NOT NULL, column_name TEXT NOT NULL, name TEXT, title TEXT, description TEXT,
+           mime_type TEXT, constraint_name TEXT,
+           CONSTRAINT pk_gdc PRIMARY KEY (table_name, column_name),
+           CONSTRAINT gdc_tn UNIQUE (table_name, name));
+         CREATE TABLE IF NOT EXISTS {CONSTRAINTS} (
+           constraint_name TEXT NOT NULL, constraint_type TEXT NOT NULL, value TEXT, min NUMERIC,
+           min_is_inclusive BOOLEAN, max NUMERIC, max_is_inclusive BOOLEAN, description TEXT,
+           CONSTRAINT gdcc_ntv UNIQUE (constraint_name, constraint_type, value));"
+    ))?;
+    super::ensure_extensions(conn)?;
+    for table in [COLUMNS, CONSTRAINTS] {
+        conn.execute(
+            "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, ?2, ?3, 'read-write')",
+            params![table, EXTENSION, DEFINITION],
+        )?;
+    }
+    Ok(())
+}
+
+/// The rows of `rule` under `name`, added (an earlier row of the same name, type and value is kept).
+fn insert_rule(conn: &rusqlite::Connection, name: &str, rule: &Rule) -> rusqlite::Result<()> {
+    match rule {
+        Rule::Range { min, min_included, max, max_included } => {
+            conn.execute(
+                &format!(
+                    "INSERT OR IGNORE INTO {CONSTRAINTS} (constraint_name, constraint_type, value, min,
+                       min_is_inclusive, max, max_is_inclusive) VALUES (?1, 'range', NULL, ?2, ?3, ?4, ?5)"
+                ),
+                params![name, min, min.map(|_| *min_included), max, max.map(|_| *max_included)],
+            )?;
+        }
+        Rule::Values(values) => {
+            for (value, label) in values {
+                conn.execute(
+                    &format!(
+                        "INSERT OR IGNORE INTO {CONSTRAINTS} (constraint_name, constraint_type, value,
+                           description) VALUES (?1, 'enum', ?2, ?3)"
+                    ),
+                    params![name, value, label],
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// `column` of `table` given `rule` under the name `name`, or its rule taken away (none), inside the caller's
+/// transaction (docs/adr/9324): the rule's earlier rows go first, so a list written again holds what it holds now.
+pub fn replace_rule_in(
+    conn: &rusqlite::Connection,
+    table: &str,
+    column: &str,
+    name: &str,
+    rule: Option<&Rule>,
+) -> rusqlite::Result<()> {
+    ensure_schema_in(conn)?;
+    conn.execute(&format!("DELETE FROM {CONSTRAINTS} WHERE constraint_name = ?1"), [name])?;
+    match rule {
+        Some(rule) => {
+            insert_rule(conn, name, rule)?;
+            conn.execute(
+                &format!(
+                    "INSERT INTO {COLUMNS} (table_name, column_name, constraint_name) VALUES (?1, ?2, ?3)
+                     ON CONFLICT (table_name, column_name) DO UPDATE SET constraint_name = excluded.constraint_name"
+                ),
+                params![table, column, name],
+            )?;
+        }
+        None => {
+            conn.execute(
+                &format!("UPDATE {COLUMNS} SET constraint_name = NULL WHERE table_name = ?1 AND column_name = ?2"),
+                params![table, column],
+            )?;
+        }
+    }
+    Ok(())
+}
+
 impl GeoPackage {
     /// Writes the shown names and rules (made with the extension's tables when the file lacks them), all in one
     /// transaction; a rule named again replaces nothing (each name is written once).
@@ -44,47 +127,9 @@ impl GeoPackage {
             return Ok(());
         }
         let tx = self.conn.transaction()?;
-        tx.execute_batch(&format!(
-            "CREATE TABLE IF NOT EXISTS {COLUMNS} (
-               table_name TEXT NOT NULL, column_name TEXT NOT NULL, name TEXT, title TEXT, description TEXT,
-               mime_type TEXT, constraint_name TEXT,
-               CONSTRAINT pk_gdc PRIMARY KEY (table_name, column_name),
-               CONSTRAINT gdc_tn UNIQUE (table_name, name));
-             CREATE TABLE IF NOT EXISTS {CONSTRAINTS} (
-               constraint_name TEXT NOT NULL, constraint_type TEXT NOT NULL, value TEXT, min NUMERIC,
-               min_is_inclusive BOOLEAN, max NUMERIC, max_is_inclusive BOOLEAN, description TEXT,
-               CONSTRAINT gdcc_ntv UNIQUE (constraint_name, constraint_type, value));"
-        ))?;
-        super::ensure_extensions(&tx)?;
-        for table in [COLUMNS, CONSTRAINTS] {
-            tx.execute(
-                "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, ?2, ?3, 'read-write')",
-                params![table, EXTENSION, DEFINITION],
-            )?;
-        }
+        ensure_schema_in(&tx)?;
         for (name, rule) in rules {
-            match rule {
-                Rule::Range { min, min_included, max, max_included } => {
-                    tx.execute(
-                        &format!(
-                            "INSERT OR IGNORE INTO {CONSTRAINTS} (constraint_name, constraint_type, value, min,
-                               min_is_inclusive, max, max_is_inclusive) VALUES (?1, 'range', NULL, ?2, ?3, ?4, ?5)"
-                        ),
-                        params![name, min, min.map(|_| *min_included), max, max.map(|_| *max_included)],
-                    )?;
-                }
-                Rule::Values(values) => {
-                    for (value, label) in values {
-                        tx.execute(
-                            &format!(
-                                "INSERT OR IGNORE INTO {CONSTRAINTS} (constraint_name, constraint_type, value,
-                                   description) VALUES (?1, 'enum', ?2, ?3)"
-                            ),
-                            params![name, value, label],
-                        )?;
-                    }
-                }
-            }
+            insert_rule(&tx, name, rule)?;
         }
         for c in columns {
             tx.execute(

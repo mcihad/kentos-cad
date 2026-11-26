@@ -46,6 +46,26 @@ class LayerColumns(unittest.TestCase):
             self.assertEqual(done.removed, ["kayip"])
             self.assertEqual(done.added, ["no", "eski_not"])
 
+    def test_the_fields_rules_go_into_the_table_and_come_back(self):
+        # ADR 9324: the list written into the GeoPackage; a value the rows hold outside it said; another layer on the
+        # same table reads the list back on refresh.
+        with tempfile.TemporaryDirectory() as folder:
+            listed = {"name": "durum", "kind": "text",
+                      "values": [{"code": "A", "label": "Aktif"}, {"code": "C", "label": "Kapalı"}]}
+            doc, layer = project(folder, [listed, {"name": "no", "kind": "integer"}])
+            done = cad.layers.columns(doc, action="rules", layer=layer)
+            self.assertEqual(done.ruled, ["durum"])
+            self.assertEqual([(o.field, [(v.value, v.rows) for v in o.values]) for o in done.outside],
+                             [("durum", [("B", 1)])])
+            path = Path(folder) / "sutun.gpkg"
+            data = {"driver": "gpkg", "address": str(path), "table": "saha_varliklari", "key": "fid",
+                    "geometry": {"column": "geom", "typeName": "POINT", "srid": 5256}}
+            other = cad.layers.data(doc, operation="add", name="Aynı tablo", data=cad.DataLayer.from_json(data),
+                                    fields=[cad.LayerField.from_json({"name": "durum", "kind": "text"})]).layer
+            back = cad.layers.columns(doc, action="refresh", layer=other)
+            durum = next(f for f in back.fields if f.name == "durum")
+            self.assertEqual([(c.code, c.label) for c in durum.values], [("A", "Aktif"), ("C", "Kapalı")])
+
 
 if __name__ == "__main__":
     unittest.main()
