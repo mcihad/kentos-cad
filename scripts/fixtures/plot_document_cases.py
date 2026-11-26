@@ -31,7 +31,7 @@ for n,(family,file,weight,italic) in enumerate(faces):
  s['items'].append(dict(id=f'caption-{n}',name='Eğri kontrolü',frame=dict(left=30000,top=120000,width=350000,height=10000),kind=dict(type='text',content=f'R = {n+1} mm · Model dairesi R = 1000 mm · 1:50',style=dict(size=3000))))
  m=copy.deepcopy(base['sheet']['items'][-1]);m['id']=f'map-{n}';s['items'].append(m)
  fontfile=f'{file}-{weight}'+('-italic' if italic else '')+'.ttf'
- cases.append(dict(name=s['name'],sheet=s,expected=dict(text=text,postscript=postscript(ROOT/'apps/desktop/assets/fonts/drawing'/fontfile),paperCircle=dict(center=[60.,207.],radius=n+1),modelCircle=dict(center=[130.,97.],radius=20.),pageMm=[420.,297.])))
+ cases.append(dict(name=s['name'],sheet=s,expected=dict(text=text,postscript=postscript(ROOT/'paket/fonts/cizim'/fontfile),paperCircle=dict(center=[60.,207.],radius=n+1),modelCircle=dict(center=[130.,97.],radius=20.),pageMm=[420.,297.])))
 p=ROOT/'fixtures/sheet/v1/plot-document.json';dpi_cases=[]
 for n,dpi in enumerate([72,96,127,150,200,254,300,400,508,600]*2):
  s=copy.deepcopy(cases[0]['sheet']);s['id']=f'raster-{n}';s['name']=f'Raster {n}';s['items']=[copy.deepcopy(base['sheet']['items'][-1])];m=s['items'][0];m['id']=f'raster-map-{n}';m['frame'].update(left=30000,top=50000,width=40000,height=20000);m['kind']['view']['center']=dict(x=1,y=.5);s['export']=dict(dpi=dpi)

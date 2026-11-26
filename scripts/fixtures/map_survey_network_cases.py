@@ -1427,7 +1427,7 @@ def advances():
     """The drawing's default typeface (Barlow, weight 500) by fontTools: each letter's advance in thousandths of an
     em, rounded."""
     from fontTools.ttLib import TTFont
-    font = TTFont(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+    font = TTFont(ROOT / "paket/fonts/cizim/Barlow-500.ttf")
     upem, cmap, hmtx = font["head"].unitsPerEm, font.getBestCmap(), font["hmtx"]
     return {chr(c): round(hmtx[g][0] * 1000 / upem) for c, g in cmap.items()}
 

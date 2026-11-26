@@ -215,7 +215,7 @@ for (const f of files('kpafta/invalid')) {
 
 // ── PDF: the golden file, byte for byte (tests/pdf.rs) ───────────────────
 {
-  const FONTS = join(ROOT, 'apps/desktop/assets/fonts/drawing');
+  const FONTS = join(ROOT, 'paket/fonts/cizim');
   const file = (f) => ({
     'architects-daughter': 'ArchitectsDaughter',
     arimo: 'Arimo',

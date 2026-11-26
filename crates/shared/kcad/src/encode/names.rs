@@ -31,18 +31,9 @@ pub(crate) fn workspace(w: Workspace) -> &'static str {
     }
 }
 
+/// An own face's id, a folder family's name (docs/adr/9313).
 pub(crate) fn drawing_font(f: DrawingFont) -> &'static str {
-    match f {
-        DrawingFont::Barlow => "barlow",
-        DrawingFont::Arimo => "arimo",
-        DrawingFont::Overpass => "overpass",
-        DrawingFont::Quicksand => "quicksand",
-        DrawingFont::ArchitectsDaughter => "architects-daughter",
-        DrawingFont::CourierPrime => "courier-prime",
-        DrawingFont::PlexMono => "plex-mono",
-        DrawingFont::Arial => "arial",
-        DrawingFont::TimesNewRoman => "times-new-roman",
-    }
+    f.id()
 }
 
 pub(crate) fn drawing_unit(u: DrawingUnit) -> &'static str {

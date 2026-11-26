@@ -220,7 +220,7 @@ pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
         text_style: f.style.clone(),
         font: f
             .font
-            .and_then(|c| kentos_contracts::DrawingFont::from_id(c.id())),
+            .and_then(|c| kentos_contracts::DrawingFont::from_name(c.id())),
         bold: f.bold,
         italic: f.italic,
         oblique: f.oblique,
@@ -364,7 +364,7 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
         suffix: l.suffix.clone(),
         font: l
             .font
-            .and_then(|c| kentos_contracts::DrawingFont::from_id(c.id())),
+            .and_then(|c| kentos_contracts::DrawingFont::from_name(c.id())),
         dim_line_color: lines.dim_line_color.clone(),
         dim_line_weight: lines.dim_line_weight,
         dim_line_type: lines

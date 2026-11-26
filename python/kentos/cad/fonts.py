@@ -22,17 +22,24 @@ if TYPE_CHECKING:
 class _FontsReport(LocalCommand[FontsReport, FontsReported, FontsReported]):
     """``cad.fonts.report`` v1. Yazı tiplerini raporla: Çizimin yazı stillerinin
     adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir
-    şey yazmaz. KentOS yalnız kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme
-    olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier
-    Prime, IBM Plex Mono. Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı),
-    çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi,
-    Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; shx: SHX
-    çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx
+    şey yazmaz. KentOS kendi dokuz yüzüyle (Arial, Times New Roman, Barlow, Arimo,
+    Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono) ve yazı tipi
+    klasörlerindeki ailelerle çizer, ölçer ve PDF'e alt küme olarak gömer. Her stil
+    için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own:
+    kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Helvetica ve Liberation Sans için
+    Arial, Courier için Courier Prime; shx: SHX çizgi yazı tipi, okunmaz; missing:
+    KentOS'ta yok; folder: yazı tipi klasöründeki aile), stili kullanan yazı sayısı. shx
     ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted
     uyarısıdır: değişim sessiz değildir. names verilirse her ad aynı kuralla çözülür
     (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve
     kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini
-    gömer.
+    gömer; bu bilgisayarın klasörlerinde olmayan bir aile Arial'la çizilir ve
+    font_substituted uyarısıdır. choices bir kişinin seçebileceği yazı tipleridir:
+    KentOS'un yüzleri, sonra klasörlerdeki aileler adlarıyla (yazı ve ayar komutları bu
+    adları alır). files programın açılışta okuduğu yazı tipi klasörlerinin (kurulumun
+    fonts'u, kullanıcının kentos-cad/fonts'u) dosyalarıdır: her yüzün ailesi, biçemi,
+    kalınlığı, yeri (program, user, system), kullanımı (own, twin, given, interface,
+    fallback, family, unused) ve nedeni.
     """
     __slots__ = ()
     id = "cad.fonts.report"
@@ -53,17 +60,24 @@ class _FontsReport(LocalCommand[FontsReport, FontsReported, FontsReported]):
         expected: Expected | None = None,
     ) -> FontsReported:
         """Yazı tiplerini raporla: Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve
-        KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. KentOS yalnız
-        kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme olarak gömer: Barlow, Arimo,
-        Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. Her stil
-        için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own:
-        kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation
-        Sans için Arimo, Courier için Courier Prime; shx: SHX çizgi yazı tipi, okunmaz;
-        missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi
-        yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz
-        değildir. names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı
-        tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı
-        tipleridir: paftanın PDF'i bunların alt kümelerini gömer.
+        KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. KentOS kendi dokuz
+        yüzüyle (Arial, Times New Roman, Barlow, Arimo, Overpass, Quicksand, Architects
+        Daughter, Courier Prime, IBM Plex Mono) ve yazı tipi klasörlerindeki ailelerle
+        çizer, ölçer ve PDF'e alt küme olarak gömer. Her stil için: adı, adlandırdığı dosya
+        (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent:
+        ölçüleri aynı ikizi, Helvetica ve Liberation Sans için Arial, Courier için Courier
+        Prime; shx: SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok; folder: yazı tipi
+        klasöründeki aile), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı
+        tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir.
+        names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces
+        çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir:
+        paftanın PDF'i bunların alt kümelerini gömer; bu bilgisayarın klasörlerinde olmayan
+        bir aile Arial'la çizilir ve font_substituted uyarısıdır. choices bir kişinin
+        seçebileceği yazı tipleridir: KentOS'un yüzleri, sonra klasörlerdeki aileler
+        adlarıyla (yazı ve ayar komutları bu adları alır). files programın açılışta okuduğu
+        yazı tipi klasörlerinin (kurulumun fonts'u, kullanıcının kentos-cad/fonts'u)
+        dosyalarıdır: her yüzün ailesi, biçemi, kalınlığı, yeri (program, user, system),
+        kullanımı (own, twin, given, interface, fallback, family, unused) ve nedeni.
 
         Args:
             doc: The drawing it works on.

@@ -126,46 +126,8 @@ impl CadWork {
     }
 }
 
-/// The typeface of the text that is part of the drawing (text objects,
-/// dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
-/// the app. A project setting: everyone who opens the project sees the same
-/// letters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating
-/// system's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,
-/// Liberation Serif) elsewhere, with the same widths.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "kebab-case")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub enum DrawingFont {
-    Barlow,
-    Arimo,
-    Overpass,
-    Quicksand,
-    ArchitectsDaughter,
-    CourierPrime,
-    PlexMono,
-    /// docs/adr/9311: after the web's seven, so every file keeps its numbers.
-    Arial,
-    TimesNewRoman,
-}
-
-impl DrawingFont {
-    /// The geometry core's id of the typeface a drawing writes in (none: Barlow).
-    pub fn id_of(font: Option<DrawingFont>) -> &'static str {
-        match font {
-            None | Some(DrawingFont::Barlow) => "barlow",
-            Some(DrawingFont::Arimo) => "arimo",
-            Some(DrawingFont::Overpass) => "overpass",
-            Some(DrawingFont::Quicksand) => "quicksand",
-            Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
-            Some(DrawingFont::CourierPrime) => "courier-prime",
-            Some(DrawingFont::PlexMono) => "plex-mono",
-            Some(DrawingFont::Arial) => "arial",
-            Some(DrawingFont::TimesNewRoman) => "times-new-roman",
-        }
-    }
-}
+// The drawing's typeface is `drawing_font.rs` (docs/adr/9313); its path stays here.
+pub use crate::drawing_font::{DrawingFont, FontFamily, MAX_FONT_FAMILIES, MAX_FONT_FAMILY};
 
 /// The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
 /// Geometry stays in metres: the unit is where the user meets the numbers

@@ -1,9 +1,10 @@
-//! `cad.fonts.report` v1 (docs/adr/0324 §5): each text style's typeface, which of KentOS's faces it is drawn in and
-//! how (the core's `text::fonts::resolve`), the names asked about, the faces a sheet's PDF embeds. It writes nothing;
-//! a style drawn in a substitute is a `font_substituted` warning, so the change is never silent. The shared cases
-//! are `fixtures/commands/v1/cad.fonts.report.json` (`scripts/fixtures/font_report_cases.py`).
+//! `cad.fonts.report` v1 (docs/adr/0324 §5): each text style's typeface, which face it is drawn in and how (the
+//! core's `text::fonts::resolve`), the names asked about, the faces a sheet's PDF embeds, the typefaces a person can
+//! pick and the fonts folders' files (docs/adr/9313). It writes nothing; a style drawn in a substitute, and a folder
+//! family this program's folders do not hold, are `font_substituted` warnings, so the change is never silent. The
+//! shared cases are `fixtures/commands/v1/cad.fonts.report.json` (`scripts/fixtures/font_report_cases.py`).
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use kentos_commands::{
     CommandResult, CommandWarning, DrawingFont, Entity, FontMatch, FontsReport, FontsReported,
@@ -22,6 +23,7 @@ fn contract(how: Core) -> FontMatch {
         Core::Equivalent => FontMatch::Equivalent,
         Core::Shx => FontMatch::Shx,
         Core::Missing => FontMatch::Missing,
+        Core::Folder => FontMatch::Folder,
     }
 }
 
@@ -86,29 +88,40 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
     let project = settings.drawing_font.unwrap_or(DrawingFont::Barlow);
     // The texts by their style, and the faces everything is drawn in.
     let mut used: HashMap<&str, u32> = HashMap::new();
-    let mut faces: BTreeSet<usize> = BTreeSet::new();
-    let place = |f: DrawingFont| DrawingFont::ALL.iter().position(|x| *x == f).unwrap_or(0);
+    let mut faces: Vec<DrawingFont> = Vec::new();
+    let mut face = |f: DrawingFont| {
+        if !faces.contains(&f) {
+            faces.push(f);
+        }
+    };
     for e in doc.entities() {
         match e {
             Entity::Text(t) => {
                 if let Some(id) = t.face.text_style.as_deref() {
                     *used.entry(id).or_default() += 1;
                 }
-                faces.insert(place(t.face.font.unwrap_or(project)));
+                face(t.face.font.unwrap_or(project));
             }
-            Entity::Dimension(d) => {
-                faces.insert(place(d.look.font.unwrap_or(project)));
-            }
-            Entity::Leader(_) => {
-                faces.insert(place(project));
-            }
-            Entity::Table(t) => {
-                faces.insert(place(t.face.font.unwrap_or(project)));
-            }
+            Entity::Dimension(d) => face(d.look.font.unwrap_or(project)),
+            Entity::Leader(_) => face(project),
+            Entity::Table(t) => face(t.face.font.unwrap_or(project)),
             _ => {}
         }
     }
+    // The contract's order: KentOS's own faces, then the folder families by name.
+    faces.sort_by_key(|f| (DrawingFont::ALL.iter().position(|x| x == f).unwrap_or(usize::MAX), f.label()));
     let mut warnings = Vec::new();
+    // A folder family this program's folders do not hold is drawn in Arial (docs/adr/9313): said, never silently.
+    for f in faces.iter().filter(|f| !crate::font_folders::drawable(**f)) {
+        warnings.push(CommandWarning {
+            code: codes::FONT_SUBSTITUTED.into(),
+            message: format!(
+                "“{}” yazı tipi bu bilgisayarın yazı tipi klasörlerinde yok; yazıları Arial ile çizilir. Ailenin dosyasını kullanıcının yazı tipi klasörüne koyup programı yeniden başlatın.",
+                f.label()
+            ),
+            path: Some("faces".to_owned()),
+        });
+    }
     let styles: Vec<StyleFont> = settings
         .text_styles
         .iter()
@@ -130,7 +143,7 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
                 let what = match how {
                     FontMatch::Shx => "SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor",
                     FontMatch::Missing => "KentOS'ta yok",
-                    FontMatch::Own | FontMatch::Equivalent => {
+                    FontMatch::Own | FontMatch::Equivalent | FontMatch::Folder => {
                         "stil başka bir yazı tipine çevrilmiş"
                     }
                 };
@@ -163,7 +176,7 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
             let (id, how) = fonts::resolve(name);
             NamedFont {
                 name: name.clone(),
-                face: id.and_then(DrawingFont::from_id),
+                face: id.and_then(DrawingFont::from_name),
                 how: contract(how),
             }
         })
@@ -172,8 +185,59 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
         project,
         styles,
         names,
-        faces: faces.into_iter().map(|i| DrawingFont::ALL[i]).collect(),
+        faces,
+        choices: crate::font_folders::choices(None),
+        files: crate::font_folders::listing().to_vec(),
         revision: doc.revision().to_string(),
     };
     (output, warnings)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::DocumentSnapshotV2;
+
+    /// The styles fixture, its project in `font` and its first text in the project's face.
+    fn drawing(font: &str) -> Document {
+        let mut raw: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/styles.json")).expect("the fixture");
+        raw["settings"]["drawingFont"] = serde_json::Value::from(font);
+        if let Some(text) = raw["entities"]
+            .as_array_mut()
+            .and_then(|es| es.iter_mut().find(|e| e["kind"] == "text"))
+            .and_then(serde_json::Value::as_object_mut)
+        {
+            text.remove("font");
+            text.remove("textStyle");
+            text.remove("bold");
+            text.remove("italic");
+        }
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(raw).expect("a snapshot");
+        Document::from_snapshot_v2(snapshot).expect("opens")
+    }
+
+    /// The typefaces a person can pick start with KentOS's own nine (docs/adr/9313).
+    #[test]
+    fn the_choices_start_with_the_own_faces() {
+        let (out, warnings) = report(&drawing("arial"), &FontsReport::default());
+        assert_eq!(&out.choices[..9], &DrawingFont::CHOICES);
+        assert!(out.faces.contains(&DrawingFont::Arial), "{:?}", out.faces);
+        assert!(warnings.iter().all(|w| !w.message.contains("klasörlerinde yok")), "{warnings:?}");
+    }
+
+    /// A folder family this program's folders do not hold is drawn in Arial, and said (docs/adr/9313 §4).
+    #[test]
+    fn a_family_this_program_has_not_got_is_said() {
+        let kurum = DrawingFont::from_name("Kurum Sans").expect("a family");
+        let (out, warnings) = report(&drawing("Kurum Sans"), &FontsReport::default());
+        assert_eq!(out.project, kurum);
+        assert!(out.faces.contains(&kurum), "{:?}", out.faces);
+        // Own faces first, the families after them.
+        assert_eq!(out.faces.last(), Some(&kurum));
+        let said: Vec<&CommandWarning> = warnings.iter().filter(|w| w.message.contains("“Kurum Sans”")).collect();
+        assert_eq!(said.len(), 1, "{warnings:?}");
+        assert_eq!(said[0].code, codes::FONT_SUBSTITUTED);
+        assert!(said[0].message.contains("Arial"));
+    }
 }

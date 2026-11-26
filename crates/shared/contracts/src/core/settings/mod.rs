@@ -162,6 +162,11 @@ pub struct SettingDescriptor {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub color: bool,
+    /// A typeface that may also be a fonts folder's family by its name (`Roboto`), besides KentOS's own faces
+    /// (docs/adr/9313).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub font: bool,
     /// Unit of a number: `px`, `deg`, `sample`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

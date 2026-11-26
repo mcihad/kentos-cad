@@ -976,12 +976,12 @@ impl App {
     fn text_style_form<'a>(&'a self, w: &'a Window, s: &'a TextStyleDef) -> Element<'a, Message> {
         let name =
             kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
-        let font = Select::new(
-            DrawingFont::CHOICES.iter().map(|f| Choice::new(f.label())),
-            DrawingFont::CHOICES.iter().position(|f| *f == s.font),
-            |i| msg(Event::Font(DrawingFont::CHOICES.get(i).copied())),
-        )
-        .searchable(false);
+        // KentOS's own faces, then the fonts folders' families (docs/adr/9313).
+        let list = kentos_native_application::font_folders::choices(Some(s.font));
+        let names: Vec<Choice> = list.iter().map(|f| Choice::new(f.label())).collect();
+        let at = list.iter().position(|f| *f == s.font);
+        let font = Select::new(names, at, move |i| msg(Event::Font(list.get(i).copied())))
+            .searchable(true);
         let numbers = TEXT_NUMBERS.iter().fold(row![].spacing(12), |r, n| {
             r.push(container(self.number_field(w, *n)).width(Fill))
         });
@@ -1059,22 +1059,16 @@ impl App {
             |i| msg(Event::Unit(UNIT_CHOICES.get(i).and_then(|(u, _)| *u))),
         )
         .searchable(false);
-        let fonts = Select::new(
-            std::iter::once(Choice::new(format!("Projenin ({})", project.label())))
-                .chain(DrawingFont::CHOICES.iter().map(|f| Choice::new(f.label()))),
-            Some(
-                s.font
-                    .and_then(|f| DrawingFont::CHOICES.iter().position(|x| *x == f))
-                    .map_or(0, |i| i + 1),
-            ),
-            |i| {
-                msg(Event::Font(
-                    i.checked_sub(1)
-                        .and_then(|i| DrawingFont::CHOICES.get(i).copied()),
-                ))
-            },
-        )
-        .searchable(false);
+        // The project's, KentOS's own faces, then the fonts folders' families (docs/adr/9313).
+        let list = kentos_native_application::font_folders::choices(s.font);
+        let names: Vec<Choice> = std::iter::once(Choice::new(format!("Projenin ({})", project.label())))
+            .chain(list.iter().map(|f| Choice::new(f.label())))
+            .collect();
+        let at = Some(s.font.and_then(|f| list.iter().position(|x| *x == f)).map_or(0, |i| i + 1));
+        let fonts = Select::new(names, at, move |i| {
+            msg(Event::Font(i.checked_sub(1).and_then(|i| list.get(i).copied())))
+        })
+        .searchable(true);
         // Its value's text style (DIMTXSTY, docs/adr/1023): the drawing's text styles by name; an SHX one's embedded
         // font draws the value.
         let names: Vec<String> = self
@@ -1221,7 +1215,9 @@ impl App {
             Kind::Text => TEXT_NUMBERS.to_vec(),
             Kind::Dimension => DIMENSION_NUMBERS.to_vec(),
         };
-        let fonts = |item: &str| DrawingFont::ALL.into_iter().find(|f| f.label() == item);
+        let fonts = |item: &str| {
+            kentos_native_application::font_folders::choices(None).into_iter().find(|f| f.label() == item)
+        };
         Ok(match control {
             Control::Fill(NAME, text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill(PREFIX, text) => Some(msg(Event::Prefix(text.to_owned()))),

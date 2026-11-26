@@ -583,7 +583,7 @@ pub fn map_vector(m: &MapPrim) -> Option<kentos_sheet::pdf::MapContent> {
 
 /// The drawing's TrueType faces (the desktop's copies), as the hosts pass them to the PDF.
 pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {
-    let dir = root().join("apps/desktop/assets/fonts/drawing");
+    let dir = root().join("paket/fonts/cizim");
     let files = [
         (
             "architects-daughter",
@@ -644,7 +644,7 @@ pub fn map_images(list: &DisplayList) -> Vec<MapImage> {
 
 /// An HTML page showing an SVG at 1 px per 0.1 mm with the drawing's own faces (the desktop's TrueType copies).
 pub fn html(svg: &str, width_mm: f64, height_mm: f64) -> String {
-    let fonts = root().join("apps/desktop/assets/fonts/drawing");
+    let fonts = root().join("paket/fonts/cizim");
     let mut css = String::new();
     let faces = [
         ("Barlow", "Barlow", &[400, 500, 600][..]),

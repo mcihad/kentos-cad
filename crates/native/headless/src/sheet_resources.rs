@@ -15,31 +15,31 @@ use crate::{
 const LICENSES: [(&str, &[u8]); 7] = [
     (
         "ArchitectsDaughter-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/ArchitectsDaughter-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/ArchitectsDaughter-OFL.txt"),
     ),
     (
         "Arimo-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Arimo-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/Arimo-OFL.txt"),
     ),
     (
         "Barlow-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Barlow-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/Barlow-OFL.txt"),
     ),
     (
         "CourierPrime-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/CourierPrime-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/CourierPrime-OFL.txt"),
     ),
     (
         "IBMPlexMono-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/IBMPlexMono-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/IBMPlexMono-OFL.txt"),
     ),
     (
         "Overpass-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Overpass-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/Overpass-OFL.txt"),
     ),
     (
         "Quicksand-OFL.txt",
-        include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Quicksand-OFL.txt"),
+        include_bytes!("../../../../paket/fonts/cizim/Quicksand-OFL.txt"),
     ),
 ];
 fn entry(path: String, kind: SheetResourceKind, bytes: &[u8]) -> SheetDeliveryResource {

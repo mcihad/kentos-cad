@@ -86,6 +86,8 @@ const NOT_READ: &[&str] = &[
 ];
 
 fn main() -> ExitCode {
+    // The fonts folders' faces before the first text is laid out (docs/adr/9313), as every program reads them.
+    kentos_headless::load_fonts();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let json = args.iter().any(|a| a == "--json");
     let args: Vec<&str> = args

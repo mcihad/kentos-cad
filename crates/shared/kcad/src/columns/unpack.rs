@@ -619,7 +619,10 @@ pub(super) fn geometry(
                 None
             };
             let font = if has(8) {
-                Some(font_at(c.usize()?)?)
+                Some(match c.usize()? {
+                    FAMILY_PLACE => family_at(&c.text(|| place("font"))?)?,
+                    v => font_at(v)?,
+                })
             } else {
                 None
             };
@@ -753,7 +756,10 @@ pub(super) fn geometry(
                 None
             };
             let font = if has(18) {
-                Some(font_at(c.usize()?)?)
+                Some(match c.usize()? {
+                    FAMILY_PLACE => family_at(&c.text(|| place("font"))?)?,
+                    v => font_at(v)?,
+                })
             } else {
                 None
             };
@@ -1196,7 +1202,10 @@ pub(super) fn geometry(
                 None
             };
             let font = if has(5) {
-                Some(font_at(c.usize()?)?)
+                Some(match c.usize()? {
+                    FAMILY_PLACE => family_at(&c.text(|| place("font"))?)?,
+                    v => font_at(v)?,
+                })
             } else {
                 None
             };

@@ -29,7 +29,6 @@ from .types import (
     Bounds,
     CadImportScale,
     DrawingFont,
-    DrawingFontName,
     DrawingUnit,
     DrawingUnitName,
     FileUnit,
@@ -571,7 +570,7 @@ class Document:
         province: int | None = None,
         drawing_unit: DrawingUnit | DrawingUnitName | None = None,
         plot_scale: float | None = None,
-        drawing_font: DrawingFont | DrawingFontName = DrawingFont.BARLOW,
+        drawing_font: DrawingFont = "barlow",
     ) -> Document:
         """A new project, as the Yeni proje wizard makes it (docs/adr/0165,
         0245): its type's layer tree, start view and units.

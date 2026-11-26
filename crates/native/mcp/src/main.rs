@@ -25,6 +25,8 @@ fn main() {
             std::process::exit(2);
         }
     };
+    // The fonts folders' faces before the first text is laid out (docs/adr/9313), as every program reads them.
+    kentos_headless::load_fonts();
     let mut server = Server::with_profile(profile);
     // The installed extensions' tools that declare headless-python (docs/adr/8057 §70): the program's, not a test's.
     #[cfg(feature = "mod-gis")]

@@ -744,7 +744,7 @@ impl MapPainter for SheetPainter<'_> {
         (
             self.maps.revision(),
             self.library.version(),
-            self.font as u8,
+            self.font,
             format!("{:?}", self.format),
         )
             .hash(&mut h);

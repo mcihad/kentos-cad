@@ -209,6 +209,9 @@ pub mod heights;
 pub mod road;
 #[path = "core/document.rs"]
 pub mod document;
+// The drawing's typeface: KentOS's own faces or a fonts folder's family (docs/adr/9313).
+#[path = "core/drawing_font.rs"]
+pub mod drawing_font;
 // Programs signing in with bearer tokens (docs/adr/9000 §12).
 #[path = "core/access_keys.rs"]
 pub mod access_keys;

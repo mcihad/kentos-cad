@@ -33,7 +33,7 @@ import kcad_v2_reference as kr  # noqa: E402
 
 CASES = json.loads((ROOT / "fixtures/commands/v1/map.survey.edit.json").read_text("utf-8"))
 CASE = next(c for c in CASES["cases"] if c["name"].startswith("Ağı kabul et, etiketler: N1"))
-FONT = TTFont(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+FONT = TTFont(ROOT / "paket/fonts/cizim/Barlow-500.ttf")
 UPEM, CMAP, HMTX = FONT["head"].unitsPerEm, FONT.getBestCmap(), FONT["hmtx"]
 
 

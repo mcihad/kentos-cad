@@ -85,7 +85,7 @@ fn table_name(name: &str) -> String {
 #[derive(Default)]
 pub struct StyleNames {
     text: HashMap<String, String>,
-    synthetic: BTreeMap<(usize, bool, bool), String>,
+    synthetic: BTreeMap<(DrawingFont, bool, bool), String>,
     dims: HashMap<String, String>,
     /// The project's table styles' TABLESTYLE objects' handles, by the style's id (docs/adr/1128 §3).
     pub tables: HashMap<String, u64>,
@@ -159,14 +159,7 @@ impl StyleNames {
             let Some((font, bold, italic)) = face else {
                 continue;
             };
-            let key = (
-                DrawingFont::ALL
-                    .iter()
-                    .position(|f| *f == font)
-                    .unwrap_or(0),
-                bold,
-                italic,
-            );
+            let key = (font, bold, italic);
             let shares = &mut names.shares;
             names.synthetic.entry(key).or_insert_with(|| {
                 let mut n = format!("KENTOS_{}", font.id().replace('-', "_").to_uppercase());
@@ -204,14 +197,7 @@ impl StyleNames {
     /// The STYLE a dimension's value names in its block (7): its typeface's record, or Standard.
     pub fn value(&self, font: Option<DrawingFont>) -> &str {
         font.and_then(|font| {
-            self.synthetic.get(&(
-                DrawingFont::ALL
-                    .iter()
-                    .position(|f| *f == font)
-                    .unwrap_or(0),
-                false,
-                false,
-            ))
+            self.synthetic.get(&(font, false, false))
         })
         .map_or("Standard", String::as_str)
     }
@@ -224,14 +210,7 @@ impl StyleNames {
         match face.font {
             Some(font) => self
                 .synthetic
-                .get(&(
-                    DrawingFont::ALL
-                        .iter()
-                        .position(|f| *f == font)
-                        .unwrap_or(0),
-                    face.bold,
-                    face.italic,
-                ))
+                .get(&(font, face.bold, face.italic))
                 .map_or("Standard", String::as_str),
             None => "Standard",
         }
@@ -337,10 +316,7 @@ pub fn style_table(
         style_data(out, s.font, s.bold, s.italic, &json);
     }
     for ((font, bold, italic), name) in &names.synthetic {
-        let font = DrawingFont::ALL
-            .get(*font)
-            .copied()
-            .unwrap_or(DrawingFont::Barlow);
+        let font = *font;
         let h = handles.take();
         record(
             out,

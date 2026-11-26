@@ -166,7 +166,7 @@ pub fn layout(t: &TextPlace<'_>, font: Font, italic: bool) -> Result<Layout, Err
         t.text,
         t.runs,
         Style {
-            family: t.font_or(font).id(),
+            family: t.font_or(font).drawn().id(),
             weight: if t.bold { 600 } else { 400 },
             italic,
             ..Style::default()

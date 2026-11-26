@@ -1356,9 +1356,9 @@ fn positioned_glyphs_match_external_flow_at_rotated_top_center_without_losing_la
         t.line_spacing = c["lineSpacing"].as_f64();
         t.flow = Some(&flow);
         let font = Font::from_id(c["family"].as_str().unwrap());
-        // Noto Arabic is a fallback face, not a selectable DrawingFont. Its
-        // explicit-family paragraph is covered by the lower-level C oracle.
-        if font.id() != c["family"].as_str().unwrap() { continue; }
+        // Noto Arabic is a fallback face, not a selectable DrawingFont: the core takes its name for a fonts folder's
+        // family it has not got (docs/adr/9313). Its explicit-family paragraph is covered by the lower-level C oracle.
+        if font.id() != c["family"].as_str().unwrap() || font.missing() { continue; }
         // The external flow uses its own alignment within a fixed box. For
         // each actual center-aligned row measure the glyph positions with C
         // HarfBuzz again; the persisted oracle already provides exact advances.

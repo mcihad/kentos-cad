@@ -202,7 +202,10 @@ def report(doc, names=()):
             row["face"] = face
         row["how"] = how
         named.append(row)
-    out = {"project": project, "styles": styles, "names": named, "faces": [f for f in FACES if f in faces], "revision": "$current"}
+    # The typefaces a person can pick and the fonts folders' files are the program's (docs/adr/9313): a host that read
+    # its folders lists them, a test that did not lists only KentOS's own; the Rust unit tests hold them.
+    out = {"project": project, "styles": styles, "names": named, "faces": [f for f in FACES if f in faces],
+           "choices": "$any", "files": "$any", "revision": "$current"}
     return out, warnings
 
 

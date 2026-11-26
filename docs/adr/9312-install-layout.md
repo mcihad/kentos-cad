@@ -6,7 +6,8 @@
   paketin `fonts` dizinindedir.
 - **İlgili:** [ADR 0800](0800-kentos-launcher.md) (başlatıcı, programlar yan yana), [ADR 8057](8057-phase-3-extension-packages.md)
   (eklenti klasörü, ilke dosyası), [ADR 9310](9310-processing-tools-by-module.md) (örnek araç),
-  [ADR 9311](9311-arial-times-point-names-labels-off.md) (yazı tipleri).
+  [ADR 9311](9311-arial-times-point-names-labels-off.md) (yazı tipleri), [ADR 9313](9313-fonts-folder-listing-upright-texts.md)
+  (bütün yazı tipleri `fonts`'ta, listeler oradan).
 - **Kural:** CLAUDE.md §26 (yeni bölüm).
 
 ## Bağlam
@@ -53,11 +54,10 @@ Kaynak klasörü (`Contents/Resources`) aranmıyordu. Paketçinin bilmesi gereke
 | Depoda | Kurulumda | İçerik |
 |---|---|---|
 | derlenen programlar | `<program>/` | `kentos-cad`, `kentos-launcher`, modül adları (`kentos-mimari`, `kentos-harita`, `kentos-gis`, `kentos-yol`), `kentos`, `kentos-mcp` |
-| `paket/fonts/` | `<kaynak>/fonts/` | programın okuduğu yazı tipi dosyaları. Arial'ın ve Times New Roman'ın lisanslı kopyası buraya konur; depoya konmaz (ADR 9311) |
+| `paket/fonts/` | `<kaynak>/fonts/` | bütün yazı tipleri, lisansları yanlarında: `cizim/`, `arayuz/`, `yedek/` (ADR 9313). Arial'ın ve Times New Roman'ın lisanslı kopyası buraya konabilir; depoya konmaz (ADR 9311) |
 | `paket/eklentiler/` | `<kaynak>/eklentiler/` | KentOS ile gelen eklentiler, her biri bir klasör; örnek Python işlem aracı `ornek-isleme/` |
 | `paket/betikler/` | `<kaynak>/betikler/` | örnek Python betikleri |
 | `catalog/standards/` | `<kaynak>/catalog/standards/` | standart kural paketleri (Python) |
-| `apps/desktop/assets/fonts/drawing/*-OFL.txt` | `<kaynak>/fonts/lisanslar/` | gömülü yazı tiplerinin lisansları (yüzlerin kendisi programın içindedir) |
 | SDK tekerleği, uv (üretilir) | `<program>/tools/`; macOS'ta tekerlek `<kaynak>/python/`, uv `<program>/` | Python ortamı |
 | — | `<kullanıcı>/eklentiler/`, `fonts/`, `betikler/`, `python/` | kullanıcının kurdukları ve yazdıkları |
 
@@ -83,8 +83,10 @@ Kaynak klasörü (`Contents/Resources`) aranmıyordu. Paketçinin bilmesi gereke
 1. Programları `<program>`'a koy.
 2. `paket/`'in içini `<kaynak>`'a kopyala.
 3. `catalog/standards/`'ı `<kaynak>/catalog/standards/`'a kopyala.
-4. Gömülü yazı tiplerinin lisanslarını `<kaynak>/fonts/lisanslar/`'a kopyala.
-5. SDK tekerleğini ve uv'yi tablonun yerine koy.
+4. SDK tekerleğini ve uv'yi tablonun yerine koy.
+
+Yazı tiplerinin lisansları `paket/fonts/`'ta yüzlerin yanındadır; ikinci adım onları da kopyalar (ADR 9313: bütün
+yazı tipleri o klasöre taşındı, ayrı `lisanslar/` klasörü kalktı).
 
 Yüklü bir programda `kentos_launch::install::resources()` `<kaynak>`'ı vermelidir; paketçinin denemesi budur.
 

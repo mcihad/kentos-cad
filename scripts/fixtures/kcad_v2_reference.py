@@ -4019,8 +4019,8 @@ def broken(minimal_content, minimal_file):
         return cmap({"dimension": cmap({**common, "a": point(one["p"]), "b": point(b), "offset": f64(2.0), "height": f64(0.5), **extra})})
 
     files["style-face-in-schema-20.kcad"] = in_schema(20, text_of(font=text("arimo")))
-    # A face KentOS does not have (Arial is one of its own since docs/adr/9311).
-    files["style-face-font-unknown.kcad"] = in_schema(21, text_of(font=text("helvetica")))
+    # A name no typeface may have: any other is a fonts folder's family (docs/adr/9313), 1-64 letters.
+    files["style-face-font-unknown.kcad"] = in_schema(21, text_of(font=text("A" * 65)))
     files["style-face-bold-false.kcad"] = in_schema(21, text_of(font=text("arimo"), bold=boolean(False)))
     files["style-face-bold-without-font.kcad"] = in_schema(21, text_of(bold=boolean(True)))
     files["style-face-oblique-zero.kcad"] = in_schema(21, text_of(font=text("arimo"), oblique=f64(0.0)))

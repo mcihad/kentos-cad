@@ -10,7 +10,7 @@ the two subsets merged, and variable fonts (Arimo, Overpass, Quicksand)
 instanced at the weights the drawing asks for (400, 500, 600, 700). The
 glyphs and their advances are the web's; nothing is taken from elsewhere.
 
-    python3 scripts/fonts/drawing_fonts.py           # writes apps/desktop/assets/fonts/drawing
+    python3 scripts/fonts/drawing_fonts.py           # writes paket/fonts/cizim
     python3 scripts/fonts/drawing_fonts.py --check   # writes nothing; compares what it would write
 
 The files are not compared byte for byte (fontTools versions lay tables out
@@ -32,7 +32,7 @@ from fontTools.varLib.instancer import instantiateVariableFont
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "apps/web/src/assets/fonts"
 CSS = ROOT / "apps/web/src/styles/fonts.css"
-OUT = ROOT / "apps/desktop/assets/fonts/drawing"
+OUT = ROOT / "paket/fonts/cizim"
 
 # DrawingFont → the CSS family and its folder (apps/web/src/model/projectSettings.ts).
 FAMILIES = {
@@ -150,7 +150,10 @@ def main():
     if "--check" in sys.argv[1:]:
         problems = []
         on_disk = {p.name for p in OUT.glob("*.ttf")} if OUT.is_dir() else set()
-        for extra in sorted(on_disk - set(faces_built)):
+        # The desktop's additions beside the web's faces (docs/adr/9311): Times New Roman's metric twin, unmodified,
+        # its licence beside it; scripts/fonts/drawing_metrics.py reads them.
+        added = {f"LiberationSerif-{style}.ttf" for style in ("Regular", "Bold", "Italic", "BoldItalic")}
+        for extra in sorted(on_disk - set(faces_built) - added):
             problems.append(f"{extra}: betiğin yazmadığı dosya")
         for file, font in faces_built.items():
             path = OUT / file

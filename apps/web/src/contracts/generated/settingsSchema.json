@@ -1256,6 +1256,7 @@
           "label": "IBM Plex Mono"
         }
       ],
+      "font": true,
       "scope": "user",
       "hosts": [
         "web",
@@ -1872,6 +1873,7 @@
           "label": "IBM Plex Mono"
         }
       ],
+      "font": true,
       "scope": "project",
       "hosts": [
         "web",

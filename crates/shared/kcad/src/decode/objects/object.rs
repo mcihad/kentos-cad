@@ -1072,9 +1072,7 @@ pub(crate) fn object(
                 if faced && f.face_at == 0 {
                     f.face_at = r.position();
                 }
-                let names: Vec<(&str, DrawingFont)> =
-                    DrawingFont::ALL.iter().map(|d| (d.id(), *d)).collect();
-                let font = Some(super::super::named(r, &names)?);
+                let font = Some(super::super::font(r)?);
                 if faced {
                     f.face.font = font;
                 } else {

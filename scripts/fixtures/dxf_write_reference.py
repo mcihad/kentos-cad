@@ -292,7 +292,7 @@ def scaled(o, k: float):
 # when KentOS draws it bold) over Arial's own (its metric twin Arimo's regular, read from the face's file here: Standard
 # is arial.ttf, a bold line goes out regular), to three places, the product to six; a TEXT's KENTOS data says the
 # factor. A letter Arimo has no glyph of leaves it as it was.
-FACES = Path(__file__).resolve().parents[2] / "apps/desktop/assets/fonts/drawing"
+FACES = Path(__file__).resolve().parents[2] / "paket/fonts/cizim"
 
 
 def ttf_advances(path: Path) -> tuple[dict[int, int], int]:

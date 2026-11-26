@@ -235,6 +235,18 @@ class Model:
             hint = " | ".join([k for k in kinds if k != "None"] + (["None"] if "None" in kinds else []))
             self.aliases[name] = (s.get("description", ""), hint)
             return
+        # One of some known texts or any other text within bounds (a typeface: KentOS's own faces or a fonts folder's
+        # family, docs/adr/9313): a text, the known ones said in its description.
+        if "anyOf" in s and all(
+            a.get("type") == "string" and set(a) <= {"type", "enum", "minLength", "maxLength", "description"}
+            for a in s["anyOf"]
+        ):
+            known = [v for a in s["anyOf"] for v in a.get("enum", [])]
+            said = s.get("description", "")
+            if known:
+                said = f"{said} Bilinenler: {', '.join(known)}.".strip()
+            self.aliases[name] = (said, "str")
+            return
         if s.get("type") == "string" and "enum" in s:
             self.enums[name] = Enum(name, s.get("description", ""), [(v, "") for v in s["enum"]])
             return

@@ -6,9 +6,9 @@
   - noktalara ad verildiğinde kenar yazıları gibi köşeye Metin nesnesi; “etiket motoru ile olmaz bu”;
   - “Etiketleri varsayılan olarak aktif etme”: kişi katman özelliklerinden açarsa açılır;
   - varsayılan yazı tipi ayarlardan, tasarlanan her şeyde de değiştirilebilir.
-- **İlgili:** [ADR 0055](0055-drawing-fonts.md) (çizim yazı tipleri), [ADR 0183](0183-text-and-dimension-styles.md)
-  (yazı stili), [ADR 0212](0212-labelling-engine.md) (etiket motoru), [ADR 0324](0324-dxf-fonts.md) (DXF'te yazı tipi),
-  [ADR 0914](0914-unicode-text-layout.md) (gömülü yüzler), [ADR 9310](9310-processing-tools-by-module.md),
+- **İlgili:** [ADR 0055](0055-desktop-drawing-text.md) (çizim yazı tipleri), [ADR 0183](0183-text-and-dimension-styles.md)
+  (yazı stili), [ADR 0212](0212-label-engine.md) (etiket motoru), [ADR 0324](0324-paragraph-layout-and-fonts.md) (DXF'te yazı tipi),
+  [ADR 0914](0914-cad-text-layout-and-live-field-delivery.md) (gömülü yüzler), [ADR 9310](9310-processing-tools-by-module.md),
   [ADR 9312](9312-install-layout.md) (`fonts` klasörü).
 - **Web:** iptal edildi. **`.kcad`:** şema değişmedi (§1). **Bağımlılık:** yok; Liberation Serif 2.1.5 (OFL 1.1) eklendi.
 
@@ -128,7 +128,7 @@
 
 | Kanal | Var / yok | Nasıl |
 |---|---|---|
-| Python | var | Yeni proje isteği Arial'la kurar; `cad.processing.run` köşe adlarını yazıyla yazar; etiket kuralı belgenindir. Başsız Python ikizle ölçer, aynı genişlikler. |
+| Python | var | Yeni proje isteği yazı tipini açıkça alır (`Document.new`'un öntanımı hâlâ `barlow`; ADR 9313 §Açık kalanlar); `cad.processing.run` köşe adlarını yazıyla yazar; etiket kuralı belgenindir. Başsız Python ikizle ölçer, aynı genişlikler. |
 | MCP | var | Aynı komutlar; başsız. |
 | Yapay zekâ ajanı | var | MCP ile aynı. |
 | Eklenti | var | Aynı komutlar. Eklentinin yeni katman stili etiket verirse etiket kapalı başlar. |

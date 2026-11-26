@@ -235,10 +235,12 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             version: crate::CAD_FONTS_REPORT_VERSION,
             title: "Yazı tiplerini raporla".into(),
             summary: "Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. \
-                      KentOS yalnız kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. \
-                      Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; \
-                      shx: SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. \
-                      names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer."
+                      KentOS kendi dokuz yüzüyle (Arial, Times New Roman, Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono) ve yazı tipi klasörlerindeki ailelerle çizer, ölçer ve PDF'e alt küme olarak gömer. \
+                      Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Helvetica ve Liberation Sans için Arial, Courier için Courier Prime; \
+                      shx: SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok; folder: yazı tipi klasöründeki aile), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. \
+                      names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer; bu bilgisayarın klasörlerinde olmayan bir aile Arial'la çizilir ve font_substituted uyarısıdır. \
+                      choices bir kişinin seçebileceği yazı tipleridir: KentOS'un yüzleri, sonra klasörlerdeki aileler adlarıyla (yazı ve ayar komutları bu adları alır). \
+                      files programın açılışta okuduğu yazı tipi klasörlerinin (kurulumun fonts'u, kullanıcının kentos-cad/fonts'u) dosyalarıdır: her yüzün ailesi, biçemi, kalınlığı, yeri (program, user, system), kullanımı (own, twin, given, interface, fallback, family, unused) ve nedeni."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -257,8 +259,10 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 input: json!({ "names": ["romans.shx", "arial.ttf"] }),
                 output: Some(json!({
                     "project": "barlow", "styles": [],
-                    "names": [{ "name": "romans.shx", "how": "shx" }, { "name": "arial.ttf", "face": "arimo", "how": "equivalent" }],
-                    "faces": [], "revision": "3"
+                    "names": [{ "name": "romans.shx", "how": "shx" }, { "name": "arial.ttf", "face": "arial", "how": "own" }],
+                    "faces": [],
+                    "choices": ["arial", "times-new-roman", "barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"],
+                    "files": [], "revision": "3"
                 })),
             }],
         },

@@ -4,7 +4,7 @@ carry, made from the web's own font files (TODOS.md UX-13; the web's
 
 Source Sans 3 is not made here: its licence reserves the name “Source”, so
 a changed font (merged, instanced) may not carry it. KentOS UI carries
-Adobe's own static files unchanged (crates/ui/assets/fonts/README.md).
+Adobe's own static files unchanged (paket/fonts/arayuz/README.md).
 
 The web loads them from the WOFF2 files in apps/web/src/assets/fonts
 (apps/web/src/styles/fonts.css), variable fonts in two subsets each (latin,
@@ -14,7 +14,7 @@ SemiBold 600): the two subsets merged, the variable font instanced at the
 weight. The glyphs and their advances are the web's; nothing is taken from
 elsewhere. It works as scripts/fonts/drawing_fonts.py does (docs/adr/0055).
 
-    python3 scripts/fonts/ui_fonts.py           # writes crates/ui/assets/fonts
+    python3 scripts/fonts/ui_fonts.py           # writes paket/fonts/arayuz
     python3 scripts/fonts/ui_fonts.py --check   # writes nothing; compares what it would write
     python3 scripts/fonts/ui_fonts.py --advance # the families' average advance (em), as typography.rs keeps it
 
@@ -32,7 +32,7 @@ from fontTools.varLib.instancer import instantiateVariableFont
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "apps/web/src/assets/fonts"
 CSS = ROOT / "apps/web/src/styles/fonts.css"
-OUT = ROOT / "crates/ui/assets/fonts"
+OUT = ROOT / "paket/fonts/arayuz"
 
 # The web's families KentOS UI did not carry, and their folders (apps/web/src/app/appearance.ts).
 FAMILIES = {

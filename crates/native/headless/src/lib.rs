@@ -86,6 +86,12 @@ pub use query::{
 pub use session::{NewDrawing, Session, new_drawing};
 pub use veil::Veil;
 
+/// Reads the fonts folders and gives the core their faces, once, before the first text is laid out (docs/adr/9313):
+/// `kentos`, `kentos-mcp` and the Python module call it when they start, as the desktop does.
+pub fn load_fonts() {
+    kentos_native_application::font_folders::load();
+}
+
 /// The command catalog as JSON: every product command, its version, title,
 /// summary, hosts, permissions, input and output schemas and examples
 /// (`kentos_commands::catalog`, the file the web and the server read).

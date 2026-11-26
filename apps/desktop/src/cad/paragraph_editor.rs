@@ -381,7 +381,7 @@ impl Open {
             &mut records,
         );
         let preview = crate::labels::Preview {
-            revision: Some((self.preview_id, self.preview_revision, font as u8)),
+            revision: Some((self.preview_id, self.preview_revision, font)),
             text: self.text.clone(),
             runs: self.runs.clone(),
             records,

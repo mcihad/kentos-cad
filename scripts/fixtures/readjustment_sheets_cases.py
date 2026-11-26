@@ -228,7 +228,7 @@ def font_advances(path):
     return advance
 
 
-ADVANCE = font_advances(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+ADVANCE = font_advances(ROOT / "paket/fonts/cizim/Barlow-500.ttf")
 SHARES = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
 
 

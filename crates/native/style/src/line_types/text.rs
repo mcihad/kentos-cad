@@ -275,7 +275,7 @@ pub(super) fn prepare(
             path: None,
         };
         let face =
-            shaping::select_font(font.id(), if place.bold { 600 } else { 400 }, place.italic)
+            shaping::select_font(font.drawn().id(), if place.bold { 600 } else { 400 }, place.italic)
                 .ok_or_else(|| "Çizgi tipi yazısının font yüzü bulunamadı.".to_owned())?;
         let cap = shaping::cap_em(face).map_err(|e| e.message(&text.text))?;
         let layout =

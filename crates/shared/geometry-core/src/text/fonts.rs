@@ -1,7 +1,7 @@
-//! Which of KentOS's drawing typefaces a typeface named by a file or a family is drawn in (docs/adr/0324 §5): one
-//! rule for a DXF's STYLE, a style's file and `cad.fonts.report`. KentOS draws, measures and embeds only its own
-//! faces (the tables of `metrics.rs`, the TrueType files a PDF embeds as subsets); any other face is drawn in one of
-//! them and said, never silently.
+//! Which drawing typeface a typeface named by a file or a family is drawn in (docs/adr/0324 §5): one rule for a DXF's
+//! STYLE, a style's file and `cad.fonts.report`. KentOS draws, measures and embeds its own faces (the tables of
+//! `metrics.rs`, the TrueType files a PDF embeds as subsets) and the families its fonts folders gave (docs/adr/9313);
+//! any other face is drawn in one of them and said, never silently.
 
 /// How a named typeface is drawn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -15,6 +15,8 @@ pub enum FontMatch {
     Shx,
     /// A face KentOS does not have (Times, Calibri …): the project's face takes it.
     Missing,
+    /// A family a fonts folder gave (docs/adr/9313): drawn in its own faces.
+    Folder,
 }
 
 impl FontMatch {
@@ -24,6 +26,7 @@ impl FontMatch {
             FontMatch::Equivalent => "equivalent",
             FontMatch::Shx => "shx",
             FontMatch::Missing => "missing",
+            FontMatch::Folder => "folder",
         }
     }
 
@@ -34,7 +37,7 @@ impl FontMatch {
 }
 
 /// KentOS's face for a typeface named `name` (a file, `arialbd.ttf`, `romans.shx`, or a family, `Arial Narrow`), as
-/// a `DrawingFont` id, and how; none for one drawn in the project's face.
+/// a `DrawingFont` id (a folder family's name), and how; none for one drawn in the project's face.
 pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
     let lower = name.trim().to_lowercase();
     // A source may carry either Windows or Unix font paths. Keep the source
@@ -80,6 +83,13 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
     ] {
         if family_style(&n, stem) {
             return (Some(id), FontMatch::Equivalent);
+        }
+    }
+    // A family the fonts folders gave, by its name or its files' (`Roboto`, `Roboto-Bold.ttf`; docs/adr/9313).
+    for family in super::families::installed_families() {
+        let stem: String = family.to_lowercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        if !stem.is_empty() && family_style(&n, &stem) {
+            return (Some(family), FontMatch::Folder);
         }
     }
     (None, FontMatch::Missing)

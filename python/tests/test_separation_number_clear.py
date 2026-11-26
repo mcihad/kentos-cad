@@ -31,7 +31,7 @@ import readjustment_sheets_cases as sc  # noqa: E402
 P = rs.P_
 TEN = [P(10)]
 NUMBERS = {rs.uid(P(10) + 1): ["101/24", "101/25"]}
-FONT = TTFont(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+FONT = TTFont(ROOT / "paket/fonts/cizim/Barlow-500.ttf")
 UPEM, CMAP, HMTX = FONT["head"].unitsPerEm, FONT.getBestCmap(), FONT["hmtx"]
 ROAD = rs.area_entity(rs.rect(-9, -21, -3, 61), "yol", {"Ad": "Yol"})
 

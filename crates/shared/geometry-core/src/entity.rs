@@ -1632,7 +1632,7 @@ impl<'a> TextPlace<'a> {
         if self.is_unicode() {
             use crate::text::{paragraph::{Layout,Line},shaping::{self,Style}};
             let laid=shaping::rich::layout(self.text,self.runs,Style {
-                family:self.font_or(font).id(),weight:if self.bold {600}else{400},
+                family:self.font_or(font).drawn().id(),weight:if self.bold {600}else{400},
                 italic:self.italic,..Style::default()
             },shaping::paragraph::Settings {
                 height:self.height,width_factor:self.width_factor.unwrap_or(1.),

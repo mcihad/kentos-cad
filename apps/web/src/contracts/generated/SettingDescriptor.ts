@@ -32,6 +32,11 @@ choices?: Array<SettingChoice>,
  */
 color?: boolean, 
 /**
+ * A typeface that may also be a fonts folder's family by its name (`Roboto`), besides KentOS's own faces
+ * (docs/adr/9313).
+ */
+font?: boolean, 
+/**
  * Unit of a number: `px`, `deg`, `sample`.
  */
 unit?: string, scope: SettingScope, hosts: Array<SettingHost>, 

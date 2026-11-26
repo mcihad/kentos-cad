@@ -271,7 +271,7 @@ pub fn contract_face(f: Face) -> kentos_commands::TextFace {
     kentos_commands::TextFace {
         overrides: Vec::new(),
         text_style: f.style,
-        font: f.font.and_then(|c| DrawingFont::from_id(c.id())),
+        font: f.font.and_then(|c| DrawingFont::from_name(c.id())),
         bold: f.bold,
         italic: f.italic,
         oblique: f.oblique,
@@ -406,7 +406,7 @@ pub fn contract_look(l: Look) -> kentos_commands::DimensionLook {
         }),
         prefix: l.prefix,
         suffix: l.suffix,
-        font: l.font.and_then(|c| DrawingFont::from_id(c.id())),
+        font: l.font.and_then(|c| DrawingFont::from_name(c.id())),
         dim_line_color: lines.dim_line_color,
         dim_line_weight: lines.dim_line_weight,
         dim_line_type: lines

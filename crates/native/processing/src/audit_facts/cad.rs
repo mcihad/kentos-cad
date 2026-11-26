@@ -425,19 +425,9 @@ fn derived(_: &Document) -> Vec<CadDerived> {
     Vec::new()
 }
 
-/// A typeface's name as a person says it.
+/// A typeface's name as a person says it (none: Barlow; a fonts folder's family by its name).
 fn font_name(font: Option<DrawingFont>) -> &'static str {
-    match font {
-        None | Some(DrawingFont::Barlow) => "Barlow",
-        Some(DrawingFont::Arimo) => "Arimo",
-        Some(DrawingFont::Overpass) => "Overpass",
-        Some(DrawingFont::Quicksand) => "Quicksand",
-        Some(DrawingFont::ArchitectsDaughter) => "Architects Daughter",
-        Some(DrawingFont::CourierPrime) => "Courier Prime",
-        Some(DrawingFont::PlexMono) => "IBM Plex Mono",
-        Some(DrawingFont::Arial) => "Arial",
-        Some(DrawingFont::TimesNewRoman) => "Times New Roman",
-    }
+    font.unwrap_or(DrawingFont::Barlow).label()
 }
 
 /// The area-weighted centroid of `areas`' rings by their vertices (an outer ring adds, a hole takes away, whichever way

@@ -924,34 +924,14 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
     Ok(())
 }
 
-/// A font's name in the contract and the file (`architects-daughter`).
+/// A font's name in the contract and the file (`architects-daughter`; a fonts folder's family by its name).
 pub fn font_id(f: DrawingFont) -> &'static str {
-    match f {
-        DrawingFont::Barlow => "barlow",
-        DrawingFont::Arimo => "arimo",
-        DrawingFont::Overpass => "overpass",
-        DrawingFont::Quicksand => "quicksand",
-        DrawingFont::ArchitectsDaughter => "architects-daughter",
-        DrawingFont::CourierPrime => "courier-prime",
-        DrawingFont::PlexMono => "plex-mono",
-        DrawingFont::Arial => "arial",
-        DrawingFont::TimesNewRoman => "times-new-roman",
-    }
+    f.id()
 }
 
 /// A font's name as people read it.
 pub fn font_label(f: DrawingFont) -> &'static str {
-    match f {
-        DrawingFont::Barlow => "Barlow",
-        DrawingFont::Arimo => "Arimo",
-        DrawingFont::Overpass => "Overpass",
-        DrawingFont::Quicksand => "Quicksand",
-        DrawingFont::ArchitectsDaughter => "Architects Daughter",
-        DrawingFont::CourierPrime => "Courier Prime",
-        DrawingFont::PlexMono => "IBM Plex Mono",
-        DrawingFont::Arial => "Arial",
-        DrawingFont::TimesNewRoman => "Times New Roman",
-    }
+    f.label()
 }
 
 /// The built-in standards: their ids and their data.

@@ -1,6 +1,6 @@
 //! The sheet's typefaces (`DRAWING_FONTS` ids of the core's text table) as
 //! Iced fonts. The faces themselves are the host's: the desktop embeds the
-//! web's files as TrueType (apps/desktop/assets/fonts/drawing) and loads them
+//! web's files as TrueType (paket/fonts/cizim) and loads them
 //! before the first frame; [`load_dir`] reads such a folder (the tests and the
 //! screens use the desktop's). Where a host has not loaded a face, the text
 //! system falls back to another font: the core measured with the face, so

@@ -1,7 +1,8 @@
-//! `cad.fonts.report` v1 (docs/adr/0324 §5): which typeface each text style names and which of KentOS's faces it is
-//! drawn in, and how; the faces a sheet's PDF embeds. Read only. KentOS draws, measures and embeds only its own seven
-//! faces; a style naming another (an SHX line font, Times …) is drawn in a substitute and said here, never silently.
-//! A style whose SHX font (and Big Font) the project embeds is drawn in that font's strokes instead (ADR 1125).
+//! `cad.fonts.report` v1 (docs/adr/0324 §5): which typeface each text style names and which face it is drawn in, and
+//! how; the faces a sheet's PDF embeds. Read only. KentOS draws, measures and embeds its own faces and the families its
+//! fonts folders hold (docs/adr/9313); a style naming another (an SHX line font, Calibri …) is drawn in a substitute
+//! and said here, never silently. A style whose SHX font (and Big Font) the project embeds is drawn in that font's
+//! strokes instead (ADR 1125). It also lists the fonts folders' files and the typefaces a person can pick.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -45,6 +46,8 @@ pub enum FontMatch {
     Shx,
     /// A face KentOS does not have: drawn in the style's face.
     Missing,
+    /// A family a fonts folder gave (docs/adr/9313): drawn in its own faces.
+    Folder,
 }
 
 /// A text style's typeface.
@@ -102,6 +105,82 @@ pub struct FontsReported {
     /// The faces the drawing's texts, dimensions and leaders are drawn in, in the contract's order: a sheet's PDF
     /// embeds subsets of these.
     pub faces: Vec<DrawingFont>,
+    /// The typefaces a person can pick, in the order the lists show them: KentOS's own, then the fonts folders'
+    /// families (docs/adr/9313).
+    pub choices: Vec<DrawingFont>,
+    /// The fonts folders' files as this program read them when it started (docs/adr/9313), and the operating
+    /// system's Arial and Times New Roman it uses.
+    pub files: Vec<FontFile>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// Where a font file was found (docs/adr/9313, CLAUDE.md §26).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FontFolder {
+    /// The install's `fonts` folder (`<kaynak>/fonts`; the checkout's `paket/fonts`).
+    Program,
+    /// The user's `fonts` folder (`<kullanıcı>/fonts`).
+    User,
+    /// The operating system's fonts: only Arial and Times New Roman are read there (docs/adr/9311).
+    System,
+}
+
+/// What KentOS does with a face of a fonts folder (docs/adr/9313).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FontRole {
+    /// One of KentOS's own drawing faces: the program draws its own copy, the same bytes.
+    Own,
+    /// The bundled metric twin of Arial (Arimo) or Times New Roman (Liberation Serif): it draws where the named face
+    /// is not installed.
+    Twin,
+    /// Arial or Times New Roman itself (a licensed copy, or the operating system's): drawn in place of its twin.
+    Given,
+    /// One of the interface's faces whose family is one of KentOS's own drawing faces (the drawing takes its own).
+    Interface,
+    /// A fallback face for the letters a face has not got (Noto Sans Arabic …).
+    Fallback,
+    /// A family texts can take by its name (`face`).
+    Family,
+    /// Not used; `note` says why.
+    Unused,
+}
+
+/// A face of a font file in a fonts folder (docs/adr/9313).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FontFile {
+    /// The file within its folder (`cizim/Barlow-400.ttf`).
+    pub file: String,
+    pub folder: FontFolder,
+    /// Its family as the file names it (`Roboto`); empty when it names none.
+    pub family: String,
+    /// Its style within the family (`Bold Italic`); empty when the file names none.
+    pub style: String,
+    /// 100–900 (400 regular, 700 bold).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub weight: u16,
+    pub italic: bool,
+    pub role: FontRole,
+    /// The typeface texts take it as; absent for a fallback face and a file not used.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub face: Option<DrawingFont>,
+    /// Whether it has every letter of the Turkish alphabet (ÇçĞğİıÖöŞşÜü).
+    pub turkish: bool,
+    /// Why it is not used, or how it is (`değişken yazı tipi: varsayılan kalınlığıyla çizilir`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
 }

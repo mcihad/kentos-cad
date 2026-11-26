@@ -56,6 +56,15 @@ impl SettingDescriptor {
             SettingType::Map => map(value, self.max)?,
         };
         if !self.choices.is_empty() && !self.choices.iter().any(|c| same_value(&c.value, &value)) {
+            // A fonts folder's family where one may be given instead (docs/adr/9313), by its name as written.
+            if self.font {
+                return value
+                    .as_str()
+                    .and_then(crate::DrawingFont::from_name)
+                    .filter(|f| f.family().is_some())
+                    .map(|f| Value::String(f.id().to_owned()))
+                    .ok_or(Code::NotAllowed);
+            }
             // A colour where one may be given instead (the accent).
             return value
                 .as_str()

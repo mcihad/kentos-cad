@@ -3,4 +3,4 @@
 /**
  * How a named typeface is drawn.
  */
-export type FontMatch = "own" | "equivalent" | "shx" | "missing";
+export type FontMatch = "own" | "equivalent" | "shx" | "missing" | "folder";

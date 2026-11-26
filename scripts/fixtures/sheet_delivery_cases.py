@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'fixtures/sheet/v1/delivery.json'
 base=json.loads((ROOT/'fixtures/commands/v1/file.publish.sheets.json').read_text());MODEL=copy.deepcopy(base['setup']);MODEL['settings']['srid']=5256;BOOK=base['book']
 layer=copy.deepcopy(MODEL['layers'][0]);layer.update(id='resources',name='Kaynaklar',visible=False);MODEL['layers'].append(layer)
-FONTDIR=ROOT/'apps/desktop/assets/fonts/drawing'
+FONTDIR=ROOT/'paket/fonts/cizim'
 fonts=sorted(hashlib.sha256(p.read_bytes()).hexdigest() for p in FONTDIR.glob('*.ttf'))
 licenses=sorted(hashlib.sha256(p.read_bytes()).hexdigest() for p in FONTDIR.glob('*-OFL.txt'))
 profile=copy.deepcopy(json.loads((ROOT/'fixtures/sheet/v1/plot-profiles.json').read_text())['cases'][0]['exchange']['profile'])

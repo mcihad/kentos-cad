@@ -126,7 +126,7 @@
   "profileFaces": [
     {
       "index": 0,
-      "file": "apps/desktop/assets/fonts/drawing/ArchitectsDaughter-400.ttf",
+      "file": "paket/fonts/cizim/ArchitectsDaughter-400.ttf",
       "family": "architects-daughter",
       "weight": 400,
       "italic": false,
@@ -134,7 +134,7 @@
     },
     {
       "index": 1,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-400.ttf",
+      "file": "paket/fonts/cizim/Arimo-400.ttf",
       "family": "arimo",
       "weight": 400,
       "italic": false,
@@ -142,7 +142,7 @@
     },
     {
       "index": 2,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-500.ttf",
+      "file": "paket/fonts/cizim/Arimo-500.ttf",
       "family": "arimo",
       "weight": 500,
       "italic": false,
@@ -150,7 +150,7 @@
     },
     {
       "index": 3,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-600.ttf",
+      "file": "paket/fonts/cizim/Arimo-600.ttf",
       "family": "arimo",
       "weight": 600,
       "italic": false,
@@ -158,7 +158,7 @@
     },
     {
       "index": 4,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-700.ttf",
+      "file": "paket/fonts/cizim/Arimo-700.ttf",
       "family": "arimo",
       "weight": 700,
       "italic": false,
@@ -166,7 +166,7 @@
     },
     {
       "index": 5,
-      "file": "apps/desktop/assets/fonts/drawing/Barlow-400-italic.ttf",
+      "file": "paket/fonts/cizim/Barlow-400-italic.ttf",
       "family": "barlow",
       "weight": 400,
       "italic": true,
@@ -174,7 +174,7 @@
     },
     {
       "index": 6,
-      "file": "apps/desktop/assets/fonts/drawing/Barlow-400.ttf",
+      "file": "paket/fonts/cizim/Barlow-400.ttf",
       "family": "barlow",
       "weight": 400,
       "italic": false,
@@ -182,7 +182,7 @@
     },
     {
       "index": 7,
-      "file": "apps/desktop/assets/fonts/drawing/Barlow-500.ttf",
+      "file": "paket/fonts/cizim/Barlow-500.ttf",
       "family": "barlow",
       "weight": 500,
       "italic": false,
@@ -190,7 +190,7 @@
     },
     {
       "index": 8,
-      "file": "apps/desktop/assets/fonts/drawing/Barlow-600.ttf",
+      "file": "paket/fonts/cizim/Barlow-600.ttf",
       "family": "barlow",
       "weight": 600,
       "italic": false,
@@ -198,7 +198,7 @@
     },
     {
       "index": 9,
-      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-400-italic.ttf",
+      "file": "paket/fonts/cizim/CourierPrime-400-italic.ttf",
       "family": "courier-prime",
       "weight": 400,
       "italic": true,
@@ -206,7 +206,7 @@
     },
     {
       "index": 10,
-      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-400.ttf",
+      "file": "paket/fonts/cizim/CourierPrime-400.ttf",
       "family": "courier-prime",
       "weight": 400,
       "italic": false,
@@ -214,7 +214,7 @@
     },
     {
       "index": 11,
-      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-700.ttf",
+      "file": "paket/fonts/cizim/CourierPrime-700.ttf",
       "family": "courier-prime",
       "weight": 700,
       "italic": false,
@@ -222,7 +222,7 @@
     },
     {
       "index": 12,
-      "file": "apps/desktop/assets/fonts/drawing/IBMPlexMono-400.ttf",
+      "file": "paket/fonts/cizim/IBMPlexMono-400.ttf",
       "family": "plex-mono",
       "weight": 400,
       "italic": false,
@@ -230,7 +230,7 @@
     },
     {
       "index": 13,
-      "file": "apps/desktop/assets/fonts/drawing/IBMPlexMono-500.ttf",
+      "file": "paket/fonts/cizim/IBMPlexMono-500.ttf",
       "family": "plex-mono",
       "weight": 500,
       "italic": false,
@@ -238,7 +238,7 @@
     },
     {
       "index": 14,
-      "file": "apps/desktop/assets/fonts/drawing/Overpass-400.ttf",
+      "file": "paket/fonts/cizim/Overpass-400.ttf",
       "family": "overpass",
       "weight": 400,
       "italic": false,
@@ -246,7 +246,7 @@
     },
     {
       "index": 15,
-      "file": "apps/desktop/assets/fonts/drawing/Overpass-500.ttf",
+      "file": "paket/fonts/cizim/Overpass-500.ttf",
       "family": "overpass",
       "weight": 500,
       "italic": false,
@@ -254,7 +254,7 @@
     },
     {
       "index": 16,
-      "file": "apps/desktop/assets/fonts/drawing/Overpass-600.ttf",
+      "file": "paket/fonts/cizim/Overpass-600.ttf",
       "family": "overpass",
       "weight": 600,
       "italic": false,
@@ -262,7 +262,7 @@
     },
     {
       "index": 17,
-      "file": "apps/desktop/assets/fonts/drawing/Overpass-700.ttf",
+      "file": "paket/fonts/cizim/Overpass-700.ttf",
       "family": "overpass",
       "weight": 700,
       "italic": false,
@@ -270,7 +270,7 @@
     },
     {
       "index": 18,
-      "file": "apps/desktop/assets/fonts/drawing/Quicksand-400.ttf",
+      "file": "paket/fonts/cizim/Quicksand-400.ttf",
       "family": "quicksand",
       "weight": 400,
       "italic": false,
@@ -278,7 +278,7 @@
     },
     {
       "index": 19,
-      "file": "apps/desktop/assets/fonts/drawing/Quicksand-500.ttf",
+      "file": "paket/fonts/cizim/Quicksand-500.ttf",
       "family": "quicksand",
       "weight": 500,
       "italic": false,
@@ -286,7 +286,7 @@
     },
     {
       "index": 20,
-      "file": "apps/desktop/assets/fonts/drawing/Quicksand-600.ttf",
+      "file": "paket/fonts/cizim/Quicksand-600.ttf",
       "family": "quicksand",
       "weight": 600,
       "italic": false,
@@ -294,7 +294,7 @@
     },
     {
       "index": 21,
-      "file": "apps/desktop/assets/fonts/drawing/Quicksand-700.ttf",
+      "file": "paket/fonts/cizim/Quicksand-700.ttf",
       "family": "quicksand",
       "weight": 700,
       "italic": false,
@@ -302,7 +302,7 @@
     },
     {
       "index": 22,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSans-400.ttf",
+      "file": "paket/fonts/yedek/NotoSans-400.ttf",
       "family": "noto-sans",
       "weight": 400,
       "italic": false,
@@ -310,7 +310,7 @@
     },
     {
       "index": 23,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSans-600.ttf",
+      "file": "paket/fonts/yedek/NotoSans-600.ttf",
       "family": "noto-sans",
       "weight": 600,
       "italic": false,
@@ -318,7 +318,7 @@
     },
     {
       "index": 24,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansArabic-400.ttf",
+      "file": "paket/fonts/yedek/NotoSansArabic-400.ttf",
       "family": "noto-sans-arabic",
       "weight": 400,
       "italic": false,
@@ -326,7 +326,7 @@
     },
     {
       "index": 25,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansArabic-600.ttf",
+      "file": "paket/fonts/yedek/NotoSansArabic-600.ttf",
       "family": "noto-sans-arabic",
       "weight": 600,
       "italic": false,
@@ -334,7 +334,7 @@
     },
     {
       "index": 26,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansHebrew-400.ttf",
+      "file": "paket/fonts/yedek/NotoSansHebrew-400.ttf",
       "family": "noto-sans-hebrew",
       "weight": 400,
       "italic": false,
@@ -342,7 +342,7 @@
     },
     {
       "index": 27,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansHebrew-600.ttf",
+      "file": "paket/fonts/yedek/NotoSansHebrew-600.ttf",
       "family": "noto-sans-hebrew",
       "weight": 600,
       "italic": false,
@@ -350,7 +350,7 @@
     },
     {
       "index": 28,
-      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansMath-400.ttf",
+      "file": "paket/fonts/yedek/NotoSansMath-400.ttf",
       "family": "noto-sans-math",
       "weight": 400,
       "italic": false,
@@ -358,7 +358,7 @@
     },
     {
       "index": 29,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-400.ttf",
+      "file": "paket/fonts/cizim/Arimo-400.ttf",
       "family": "arial",
       "weight": 400,
       "italic": false,
@@ -366,7 +366,7 @@
     },
     {
       "index": 30,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-500.ttf",
+      "file": "paket/fonts/cizim/Arimo-500.ttf",
       "family": "arial",
       "weight": 500,
       "italic": false,
@@ -374,7 +374,7 @@
     },
     {
       "index": 31,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-600.ttf",
+      "file": "paket/fonts/cizim/Arimo-600.ttf",
       "family": "arial",
       "weight": 600,
       "italic": false,
@@ -382,7 +382,7 @@
     },
     {
       "index": 32,
-      "file": "apps/desktop/assets/fonts/drawing/Arimo-700.ttf",
+      "file": "paket/fonts/cizim/Arimo-700.ttf",
       "family": "arial",
       "weight": 700,
       "italic": false,
@@ -390,7 +390,7 @@
     },
     {
       "index": 33,
-      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Regular.ttf",
+      "file": "paket/fonts/cizim/LiberationSerif-Regular.ttf",
       "family": "times-new-roman",
       "weight": 400,
       "italic": false,
@@ -398,7 +398,7 @@
     },
     {
       "index": 34,
-      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Bold.ttf",
+      "file": "paket/fonts/cizim/LiberationSerif-Bold.ttf",
       "family": "times-new-roman",
       "weight": 700,
       "italic": false,
@@ -406,7 +406,7 @@
     },
     {
       "index": 35,
-      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Italic.ttf",
+      "file": "paket/fonts/cizim/LiberationSerif-Italic.ttf",
       "family": "times-new-roman",
       "weight": 400,
       "italic": true,
@@ -414,7 +414,7 @@
     },
     {
       "index": 36,
-      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-BoldItalic.ttf",
+      "file": "paket/fonts/cizim/LiberationSerif-BoldItalic.ttf",
       "family": "times-new-roman",
       "weight": 700,
       "italic": true,

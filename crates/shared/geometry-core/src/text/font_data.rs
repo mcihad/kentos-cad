@@ -3,28 +3,28 @@
 
 /// Every face, embedded (1.9 MB; OFL, the licences beside them).
 pub const DRAWING_FACES: [&[u8]; 22] = [
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/ArchitectsDaughter-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Arimo-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Arimo-500.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Arimo-600.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Arimo-700.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Barlow-400-italic.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Barlow-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Barlow-500.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Barlow-600.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/CourierPrime-400-italic.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/CourierPrime-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/CourierPrime-700.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/IBMPlexMono-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/IBMPlexMono-500.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Overpass-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Overpass-500.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Overpass-600.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Overpass-700.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Quicksand-400.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Quicksand-500.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Quicksand-600.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/Quicksand-700.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/ArchitectsDaughter-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Arimo-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Arimo-500.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Arimo-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Arimo-700.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Barlow-400-italic.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Barlow-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Barlow-500.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Barlow-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/CourierPrime-400-italic.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/CourierPrime-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/CourierPrime-700.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/IBMPlexMono-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/IBMPlexMono-500.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Overpass-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Overpass-500.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Overpass-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Overpass-700.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Quicksand-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Quicksand-500.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Quicksand-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/Quicksand-700.ttf"),
 ];
 
 /// Each of [`DRAWING_FACES`] as the sheet core names it (`TextPrim.font`, its weight, italic): what a
@@ -64,10 +64,10 @@ pub const ADDED_FACES: [&[u8]; 8] = [
     DRAWING_FACES[2],
     DRAWING_FACES[3],
     DRAWING_FACES[4],
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/LiberationSerif-Regular.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/LiberationSerif-Bold.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/LiberationSerif-Italic.ttf"),
-    include_bytes!("../../../../../apps/desktop/assets/fonts/drawing/LiberationSerif-BoldItalic.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/LiberationSerif-Regular.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/LiberationSerif-Bold.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/LiberationSerif-Italic.ttf"),
+    include_bytes!("../../../../../paket/fonts/cizim/LiberationSerif-BoldItalic.ttf"),
 ];
 
 /// Each of [`ADDED_FACES`] as the sheet core names it.
@@ -119,15 +119,38 @@ pub fn given(family: &str) -> bool {
     })
 }
 
+/// A face a fonts folder gave (docs/adr/9313): its family as its file names it (`Roboto`), weight, slope and bytes.
+/// Numbered after the added faces, so every other face keeps its number.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct InstalledFace {
+    pub family: &'static str,
+    pub weight: u16,
+    pub italic: bool,
+    pub bytes: &'static [u8],
+}
+
+static INSTALLED: std::sync::OnceLock<Vec<InstalledFace>> = std::sync::OnceLock::new();
+
+/// Gives the fonts folders' faces (docs/adr/9313), once, before the first text is laid out or a family named (the core
+/// numbers the families it met). False when faces were installed, or the core read its own, before.
+pub fn install(faces: Vec<InstalledFace>) -> bool {
+    INSTALLED.set(faces).is_ok()
+}
+
+/// The fonts folders' faces the host installed; none when it installed none.
+pub fn installed() -> &'static [InstalledFace] {
+    INSTALLED.get_or_init(Vec::new)
+}
+
 /// Unicode fallback faces. These do not change the seven user-selected drawing families.
 pub const FALLBACK_FACES: [&[u8]; 7] = [
-    include_bytes!("../../data/text-fonts/NotoSans-400.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSans-600.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSansArabic-400.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSansArabic-600.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSansHebrew-400.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSansHebrew-600.ttf"),
-    include_bytes!("../../data/text-fonts/NotoSansMath-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSans-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSans-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSansArabic-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSansArabic-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSansHebrew-400.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSansHebrew-600.ttf"),
+    include_bytes!("../../../../../paket/fonts/yedek/NotoSansMath-400.ttf"),
 ];
 
 pub const FALLBACK_KEYS: [(&str, u16, bool); 7] = [

@@ -18,7 +18,9 @@ from pathlib import Path
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / 'crates/shared/geometry-core/data/text-fonts'
+# The manifest stays with the core; the faces and their licences are the install's fonts (CLAUDE.md §26).
+DATA = ROOT / 'crates/shared/geometry-core/data/text-fonts'
+OUT = ROOT / 'paket/fonts/yedek'
 
 
 def checked_bytes(path, source, fetch):
@@ -67,7 +69,7 @@ def main():
     parser.add_argument('--fetch', action='store_true')
     parser.add_argument('--source-dir', type=Path)
     args = parser.parse_args()
-    manifest = json.loads((OUT / 'manifest.json').read_text())
+    manifest = json.loads((DATA / 'manifest.json').read_text())
     if args.build:
         version = importlib.metadata.version('fonttools')
         if version != manifest['fontTools']:
@@ -92,8 +94,22 @@ def main():
     # requires another profile while this profile's bytes remain available.
     code = ROOT / 'crates/shared/geometry-core/src/text/font_data.rs'
     source = code.read_text()
-    files = re.findall(r'include_bytes!\("([^"]+)"\)', source)
-    keys = re.findall(r'\("([^"]+)", (\d+), (true|false)\)', source)
+
+    def block(name):
+        # A const array's body by its name: `pub const NAME: [...; n] = [ ... ];`.
+        start = source.index(f'pub const {name}:')
+        return source[source.index('= [', start):source.index('\n];', start)]
+
+    tuple_re = r'\("([^"]+)", (\d+), (true|false)\)'
+    drawing = re.findall(r'include_bytes!\("([^"]+)"\)', block('DRAWING_FACES'))
+    fallback = re.findall(r'include_bytes!\("([^"]+)"\)', block('FALLBACK_FACES'))
+    # The added faces (docs/adr/9311): a drawing face again by its place, or a file of their own.
+    added = [drawing[int(m[0])] if m[0] else m[1]
+             for m in re.findall(r'DRAWING_FACES\[(\d+)\]|include_bytes!\("([^"]+)"\)', block('ADDED_FACES'))]
+    # The faces' numbers: the drawing's, the fallbacks', then the added ones.
+    files = drawing + fallback + added
+    keys = (re.findall(tuple_re, block('DRAWING_KEYS')) + re.findall(tuple_re, block('FALLBACK_KEYS'))
+            + re.findall(tuple_re, block('ADDED_KEYS')))
     profile = manifest['profileFaces']
     if manifest['profile'] != 'unicode-v1' or len(files) != len(keys) or len(files) != len(profile):
         raise SystemExit('Unicode v1 font kataloğunun sürümü/sayısı değişmiş.')

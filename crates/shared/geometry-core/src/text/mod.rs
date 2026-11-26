@@ -7,6 +7,9 @@
 pub mod along;
 pub mod edit;
 pub mod face;
+// The fonts folders' families after the tables' faces (docs/adr/9313).
+pub mod families;
+pub mod face_info;
 pub mod fonts;
 pub mod font_data;
 pub mod shaping;
@@ -32,33 +35,58 @@ fn id_at(i: usize) -> Option<&'static str> {
     }
 }
 
-/// A drawing typeface, as an index into the tables (0 is Barlow, the default).
+/// A drawing typeface: an index into the tables (0 is Barlow, the default), or a fonts folder's family after them
+/// (docs/adr/9313, [`families`]).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Font(u8);
+pub struct Font(u16);
 
 impl Font {
     /// Barlow: files and callers that name no face.
     pub const DEFAULT: Font = Font(0);
+    /// Arial, which draws a family this program's fonts folders do not hold (docs/adr/9313).
+    pub const ARIAL: Font = Font(FONTS.len() as u16);
 
-    /// The face by its `DrawingFont` id; an unknown id is Barlow.
+    /// The face by its `DrawingFont` id (`arimo`), or the folder family by its name (`Roboto`); a name no family may
+    /// have is Barlow.
     pub fn from_id(id: &str) -> Font {
-        (0..FACES)
-            .find(|i| id_at(*i) == Some(id))
-            .map_or(Font::DEFAULT, |i| Font(i as u8))
+        if let Some(i) = (0..FACES).find(|i| id_at(*i) == Some(id)) {
+            return Font(i as u16);
+        }
+        families::slot(id).map_or(Font::DEFAULT, |k| Font((FACES + k) as u16))
     }
 
+    /// Its id: a table face's (`arimo`), a folder family's name (`Roboto`).
     pub fn id(self) -> &'static str {
-        id_at(self.0 as usize).unwrap_or(FONTS[0])
+        let i = self.0 as usize;
+        match i.checked_sub(FACES) {
+            None => id_at(i).unwrap_or(FONTS[0]),
+            Some(k) => families::name(k).unwrap_or(FONTS[0]),
+        }
     }
 
-    /// Its place in the tables (`DrawingFont`'s order).
-    pub fn index(self) -> u8 {
+    /// Its place: in the tables (`DrawingFont`'s order), then the folder families' slots.
+    pub fn index(self) -> u16 {
         self.0
     }
 
-    /// The face at `i` in the tables; none past them.
+    /// The face at `i`; none past the tables and the numbered families.
     pub fn from_index(i: usize) -> Option<Font> {
-        (i < FACES).then_some(Font(i as u8))
+        (i < FACES + families::count()).then_some(Font(i as u16))
+    }
+
+    /// The folder family's slot; none for a table face.
+    fn family(self) -> Option<usize> {
+        (self.0 as usize).checked_sub(FACES)
+    }
+
+    /// Whether it is a folder family this program's fonts folders do not hold (it is drawn in Arial).
+    pub fn missing(self) -> bool {
+        self.family().is_some_and(|k| !families::is_installed(k))
+    }
+
+    /// The face it is drawn and laid out in: itself, or Arial for a family this program's folders do not hold.
+    pub fn drawn(self) -> Font {
+        if self.missing() { Font::ARIAL } else { self }
     }
 }
 
@@ -73,9 +101,14 @@ pub(crate) fn advance_of(font: Font, c: char, bold: bool) -> u32 {
     advance_in(row(font, bold), c)
 }
 
-/// A face's advances, bold (600) or not (500): the web's tables, then the desktop's.
+/// A face's advances, bold (600) or not (500): the web's tables, then the desktop's, then an installed folder family's
+/// from its faces (a family this program has not got measures as Arial).
 fn row(font: Font, bold: bool) -> &'static [u16; 352] {
-    let i = font.0 as usize;
+    let font = font.drawn();
+    if let Some((normal, heavy)) = font.family().and_then(families::rows) {
+        return if bold { heavy } else { normal };
+    }
+    let i = (font.0 as usize).min(FACES - 1);
     match (i.checked_sub(FONTS.len()), bold) {
         (None, false) => &ADVANCES[i],
         (None, true) => &BOLD[i],
@@ -227,7 +260,12 @@ mod tests {
     fn faces_by_id_and_default() {
         assert_eq!(Font::from_id("barlow"), Font::DEFAULT);
         assert_eq!(Font::from_id("plex-mono").id(), "plex-mono");
-        assert_eq!(Font::from_id("comic-sans"), Font::DEFAULT);
+        // A name no face has is a folder family this program has not got: kept, drawn in Arial (docs/adr/9313).
+        let missing = Font::from_id("Comic Neue");
+        assert_eq!(missing.id(), "Comic Neue");
+        assert!(missing.missing() && missing.drawn() == Font::ARIAL);
+        assert_eq!(Font::from_id(""), Font::DEFAULT);
+        assert_eq!(Font::ARIAL.id(), "arial");
     }
 
     #[test]

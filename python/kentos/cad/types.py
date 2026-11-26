@@ -2448,39 +2448,6 @@ DrainageDropEndName = Literal["lowPoint", "flat", "edge", "outside", "steps"]
 """The names of :class:`DrainageDropEnd`, for a plain string."""
 
 
-class DrawingFont(_StrEnum):
-    """The typeface of the text that is part of the drawing (text objects,
-    dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
-    the app. A project setting: everyone who opens the project sees the same
-    letters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating
-    system's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,
-    Liberation Serif) elsewhere, with the same widths.
-
-    - ``barlow``
-    - ``arimo``
-    - ``overpass``
-    - ``quicksand``
-    - ``architects-daughter``
-    - ``courier-prime``
-    - ``plex-mono``
-    - ``times-new-roman``
-    - ``arial``: docs/adr/9311: after the web's seven, so every file keeps its numbers.
-    """
-    BARLOW = "barlow"
-    ARIMO = "arimo"
-    OVERPASS = "overpass"
-    QUICKSAND = "quicksand"
-    ARCHITECTS_DAUGHTER = "architects-daughter"
-    COURIER_PRIME = "courier-prime"
-    PLEX_MONO = "plex-mono"
-    TIMES_NEW_ROMAN = "times-new-roman"
-    ARIAL = "arial"
-
-
-DrawingFontName = Literal["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono", "times-new-roman", "arial"]
-"""The names of :class:`DrawingFont`, for a plain string."""
-
-
 class DrawingUnit(_StrEnum):
     """The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
     Geometry stays in metres: the unit is where the user meets the numbers
@@ -3112,6 +3079,22 @@ FinishSurfaceName = Literal["floor", "ceiling"]
 """The names of :class:`FinishSurface`, for a plain string."""
 
 
+class FontFolder(_StrEnum):
+    """Where a font file was found (docs/adr/9313, CLAUDE.md §26).
+
+    - ``program``: The install's `fonts` folder (`<kaynak>/fonts`; the checkout's `paket/fonts`).
+    - ``user``: The user's `fonts` folder (`<kullanıcı>/fonts`).
+    - ``system``: The operating system's fonts: only Arial and Times New Roman are read there (docs/adr/9311).
+    """
+    PROGRAM = "program"
+    USER = "user"
+    SYSTEM = "system"
+
+
+FontFolderName = Literal["program", "user", "system"]
+"""The names of :class:`FontFolder`, for a plain string."""
+
+
 class FontMatch(_StrEnum):
     """How a named typeface is drawn.
 
@@ -3119,15 +3102,41 @@ class FontMatch(_StrEnum):
     - ``equivalent``: A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
     - ``shx``: An SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
     - ``missing``: A face KentOS does not have: drawn in the style's face.
+    - ``folder``: A family a fonts folder gave (docs/adr/9313): drawn in its own faces.
     """
     OWN = "own"
     EQUIVALENT = "equivalent"
     SHX = "shx"
     MISSING = "missing"
+    FOLDER = "folder"
 
 
-FontMatchName = Literal["own", "equivalent", "shx", "missing"]
+FontMatchName = Literal["own", "equivalent", "shx", "missing", "folder"]
 """The names of :class:`FontMatch`, for a plain string."""
+
+
+class FontRole(_StrEnum):
+    """What KentOS does with a face of a fonts folder (docs/adr/9313).
+
+    - ``own``: One of KentOS's own drawing faces: the program draws its own copy, the same bytes.
+    - ``twin``: The bundled metric twin of Arial (Arimo) or Times New Roman (Liberation Serif): it draws where the named face
+    - ``given``: Arial or Times New Roman itself (a licensed copy, or the operating system's): drawn in place of its twin.
+    - ``interface``: One of the interface's faces whose family is one of KentOS's own drawing faces (the drawing takes its own).
+    - ``fallback``: A fallback face for the letters a face has not got (Noto Sans Arabic …).
+    - ``family``: A family texts can take by its name (`face`).
+    - ``unused``: Not used; `note` says why.
+    """
+    OWN = "own"
+    TWIN = "twin"
+    GIVEN = "given"
+    INTERFACE = "interface"
+    FALLBACK = "fallback"
+    FAMILY = "family"
+    UNUSED = "unused"
+
+
+FontRoleName = Literal["own", "twin", "given", "interface", "fallback", "family", "unused"]
+"""The names of :class:`FontRole`, for a plain string."""
 
 
 class FormChangeKind(_StrEnum):
@@ -9954,6 +9963,10 @@ class Zone(_StrEnum):
 
 ZoneName = Literal["residential", "residentialShops", "mixed", "commercial", "other"]
 """The names of :class:`Zone`, for a plain string."""
+
+
+#: KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı (docs/adr/9313). Bilinenler: barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono, arial, times-new-roman.
+DrawingFont = Union[str]
 
 
 #: A value: none, true/false, a number or text.
@@ -33237,7 +33250,7 @@ class DimensionEntity(Entity):
     ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     level: DimensionLevel | None | Unset = UNSET
@@ -33313,7 +33326,7 @@ class DimensionEntity(Entity):
         if self.ext_weight is not UNSET:
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -33397,7 +33410,7 @@ class DimensionEntity(Entity):
             ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
@@ -33498,7 +33511,7 @@ class DimensionLook(_Model):
     ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
     overrides: list[str] | Unset = UNSET
     prefix: str | None | Unset = UNSET
@@ -33535,7 +33548,7 @@ class DimensionLook(_Model):
         if self.ext_weight is not UNSET:
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.options is not UNSET:
             out["options"] = None if self.options is None else self.options.to_json()
         if self.overrides is not UNSET:
@@ -33569,7 +33582,7 @@ class DimensionLook(_Model):
             ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             prefix=data.get("prefix", UNSET),
@@ -34306,7 +34319,7 @@ class DimensionStyleDef(_Model):
     ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
@@ -34344,7 +34357,7 @@ class DimensionStyleDef(_Model):
         if self.ext_weight is not UNSET:
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.options is not UNSET:
             out["options"] = None if self.options is None else self.options.to_json()
         if self.prefix is not UNSET:
@@ -34380,7 +34393,7 @@ class DimensionStyleDef(_Model):
             ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             prefix=data.get("prefix", UNSET),
             suffix=data.get("suffix", UNSET),
@@ -36195,7 +36208,7 @@ class DrawingStandard(_Model):
     by_layer: bool | Unset = UNSET
     description: str | Unset = UNSET
     dimension_styles: list[StandardDimensionStyle] | Unset = UNSET
-    fonts: list[DrawingFont | DrawingFontName] | Unset = UNSET
+    fonts: list[DrawingFont] | Unset = UNSET
     layers: list[StandardLayer] = field(default_factory=list)
     line_types: list[LineType | LineTypeName] | Unset = UNSET
     naming: list[str] | Unset = UNSET
@@ -36211,7 +36224,7 @@ class DrawingStandard(_Model):
         if self.dimension_styles is not UNSET:
             out["dimensionStyles"] = [e0.to_json() for e0 in self.dimension_styles]
         if self.fonts is not UNSET:
-            out["fonts"] = [_enum_out(e0) for e0 in self.fonts]
+            out["fonts"] = list(self.fonts)
         out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.line_types is not UNSET:
             out["lineTypes"] = [_enum_out(e0) for e0 in self.line_types]
@@ -36228,7 +36241,7 @@ class DrawingStandard(_Model):
             by_layer=data.get("byLayer", UNSET),
             description=data.get("description", UNSET),
             dimension_styles=[StandardDimensionStyle.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
-            fonts=[_enum_in(DrawingFont, e0) for e0 in data["fonts"]] if "fonts" in data else UNSET,
+            fonts=list(data["fonts"]) if "fonts" in data else UNSET,
             layers=[StandardLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else list(),
             line_types=[_enum_in(LineType, e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             naming=list(data["naming"]) if "naming" in data else UNSET,
@@ -44003,6 +44016,61 @@ class FixtureClearance(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FontFile(_Model):
+    """A face of a font file in a fonts folder (docs/adr/9313).
+    Attributes:
+        file: The file within its folder (`cizim/Barlow-400.ttf`).
+        family: Its family as the file names it (`Roboto`); empty when it names none.
+        style: Its style within the family (`Bold Italic`); empty when the file names none.
+        weight: 100–900 (400 regular, 700 bold). Unit: 1.
+        turkish: Whether it has every letter of the Turkish alphabet (ÇçĞğİıÖöŞşÜü).
+        face: The typeface texts take it as; absent for a fallback face and a file not used.
+        note: Why it is not used, or how it is (`değişken yazı tipi: varsayılan kalınlığıyla çizilir`).
+    """
+    file: str
+    folder: FontFolder | FontFolderName
+    family: str
+    style: str
+    weight: int
+    italic: bool
+    role: FontRole | FontRoleName
+    turkish: bool
+    face: DrawingFont | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["folder"] = _enum_out(self.folder)
+        out["family"] = self.family
+        out["style"] = self.style
+        out["weight"] = self.weight
+        out["italic"] = self.italic
+        out["role"] = _enum_out(self.role)
+        out["turkish"] = self.turkish
+        if self.face is not UNSET:
+            out["face"] = self.face
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FontFile:
+        return cls(
+            file=data["file"],
+            folder=_enum_in(FontFolder, data["folder"]),
+            family=data["family"],
+            style=data["style"],
+            weight=data["weight"],
+            italic=data["italic"],
+            role=_enum_in(FontRole, data["role"]),
+            turkish=data["turkish"],
+            face=data.get("face", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FontsReport(_Model):
     """Input of `cad.fonts.report` v1. Refusals: `empty_name`, `invalid_name`.
     Attributes:
@@ -44030,29 +44098,39 @@ class FontsReported(_Model):
         project: The project's face: texts without a style or a face of their own.
         faces: The faces the drawing's texts, dimensions and leaders are drawn in, in the contract's order: a sheet's PDF
             embeds subsets of these.
+        choices: The typefaces a person can pick, in the order the lists show them: KentOS's own, then the fonts folders'
+            families (docs/adr/9313).
+        files: The fonts folders' files as this program read them when it started (docs/adr/9313), and the operating
+            system's Arial and Times New Roman it uses.
     """
-    project: DrawingFont | DrawingFontName
+    project: DrawingFont
     styles: list[StyleFont]
     names: list[NamedFont]
-    faces: list[DrawingFont | DrawingFontName]
+    faces: list[DrawingFont]
+    choices: list[DrawingFont]
+    files: list[FontFile]
     revision: str
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
-        out["project"] = _enum_out(self.project)
+        out["project"] = self.project
         out["styles"] = [e0.to_json() for e0 in self.styles]
         out["names"] = [e0.to_json() for e0 in self.names]
-        out["faces"] = [_enum_out(e0) for e0 in self.faces]
+        out["faces"] = list(self.faces)
+        out["choices"] = list(self.choices)
+        out["files"] = [e0.to_json() for e0 in self.files]
         out["revision"] = self.revision
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FontsReported:
         return cls(
-            project=_enum_in(DrawingFont, data["project"]),
+            project=data["project"],
             styles=[StyleFont.from_json(e0) for e0 in data["styles"]],
             names=[NamedFont.from_json(e0) for e0 in data["names"]],
-            faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]],
+            faces=list(data["faces"]),
+            choices=list(data["choices"]),
+            files=[FontFile.from_json(e0) for e0 in data["files"]],
             revision=data["revision"],
         )
 
@@ -65135,14 +65213,14 @@ class NamedFont(_Model):
     """
     name: str
     how: FontMatch | FontMatchName
-    face: DrawingFont | DrawingFontName | None | Unset = UNSET
+    face: DrawingFont | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
         out["how"] = _enum_out(self.how)
         if self.face is not UNSET:
-            out["face"] = None if self.face is None else _enum_out(self.face)
+            out["face"] = self.face
         return out
 
     @classmethod
@@ -65150,7 +65228,7 @@ class NamedFont(_Model):
         return cls(
             name=data["name"],
             how=_enum_in(FontMatch, data["how"]),
-            face=UNSET if "face" not in data else None if data["face"] is None else _enum_in(DrawingFont, data["face"]),
+            face=data.get("face", UNSET),
         )
 
 
@@ -86004,7 +86082,7 @@ class ProjectPackaged(_Model):
     bytes: int
     embedded: list[PackageEmbedded] | Unset = UNSET
     exchange: ExchangeMatrixed | None | Unset = UNSET
-    faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
+    faces: list[DrawingFont] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
     resources: list[PackageResource] | Unset = UNSET
 
@@ -86023,7 +86101,7 @@ class ProjectPackaged(_Model):
         if self.exchange is not UNSET:
             out["exchange"] = None if self.exchange is None else self.exchange.to_json()
         if self.faces is not UNSET:
-            out["faces"] = [_enum_out(e0) for e0 in self.faces]
+            out["faces"] = list(self.faces)
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
         if self.resources is not UNSET:
@@ -86043,7 +86121,7 @@ class ProjectPackaged(_Model):
             bytes=data["bytes"],
             embedded=[PackageEmbedded.from_json(e0) for e0 in data["embedded"]] if "embedded" in data else UNSET,
             exchange=UNSET if "exchange" not in data else None if data["exchange"] is None else ExchangeMatrixed.from_json(data["exchange"]),
-            faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
+            faces=list(data["faces"]) if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
             resources=[PackageResource.from_json(e0) for e0 in data["resources"]] if "resources" in data else UNSET,
         )
@@ -86377,7 +86455,7 @@ class ProjectSettings(_Model):
     datum_transforms: list[DatumTransform] | Unset = UNSET
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
     domains: list[FieldDomain] | Unset = UNSET
-    drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    drawing_font: DrawingFont | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     forms: list[ProjectForm] | Unset = UNSET
@@ -86456,7 +86534,7 @@ class ProjectSettings(_Model):
         if self.domains is not UNSET:
             out["domains"] = [e0.to_json() for e0 in self.domains]
         if self.drawing_font is not UNSET:
-            out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
+            out["drawingFont"] = self.drawing_font
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.edit_grouping is not UNSET:
@@ -86568,7 +86646,7 @@ class ProjectSettings(_Model):
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
-            drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
+            drawing_font=data.get("drawingFont", UNSET),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
@@ -99386,7 +99464,7 @@ class SettingsSet(_Model):
     auto_select: bool | None | Unset = UNSET
     cad_work: CadWork | CadWorkName | None | Unset = UNSET
     coordinate_epoch: float | None | Unset = UNSET
-    drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    drawing_font: DrawingFont | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -99420,7 +99498,7 @@ class SettingsSet(_Model):
         if self.coordinate_epoch is not UNSET:
             out["coordinateEpoch"] = None if self.coordinate_epoch is None else float(self.coordinate_epoch)
         if self.drawing_font is not UNSET:
-            out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
+            out["drawingFont"] = self.drawing_font
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.edit_grouping is not UNSET:
@@ -99463,7 +99541,7 @@ class SettingsSet(_Model):
             auto_select=data.get("autoSelect", UNSET),
             cad_work=UNSET if "cadWork" not in data else None if data["cadWork"] is None else _enum_in(CadWork, data["cadWork"]),
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
-            drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
+            drawing_font=data.get("drawingFont", UNSET),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             expected_revision=data.get("expectedRevision", UNSET),
@@ -106919,13 +106997,13 @@ class StandardTextStyle(_Model):
         height: The texts' height on paper; absent: the tool's. Unit: paper-mm.
     """
     name: str
-    font: DrawingFont | DrawingFontName
+    font: DrawingFont
     height: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
-        out["font"] = _enum_out(self.font)
+        out["font"] = self.font
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         return out
@@ -106934,7 +107012,7 @@ class StandardTextStyle(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardTextStyle:
         return cls(
             name=data["name"],
-            font=_enum_in(DrawingFont, data["font"]),
+            font=data["font"],
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
         )
 
@@ -107805,7 +107883,7 @@ class StyleFont(_Model):
     """
     style: str
     name: str
-    face: DrawingFont | DrawingFontName
+    face: DrawingFont
     how: FontMatch | FontMatchName
     texts: int
     embedded: bool | Unset = UNSET
@@ -107815,7 +107893,7 @@ class StyleFont(_Model):
         out: dict[str, Any] = {}
         out["style"] = self.style
         out["name"] = self.name
-        out["face"] = _enum_out(self.face)
+        out["face"] = self.face
         out["how"] = _enum_out(self.how)
         out["texts"] = self.texts
         if self.embedded is not UNSET:
@@ -107829,7 +107907,7 @@ class StyleFont(_Model):
         return cls(
             style=data["style"],
             name=data["name"],
-            face=_enum_in(DrawingFont, data["face"]),
+            face=data["face"],
             how=_enum_in(FontMatch, data["how"]),
             texts=data["texts"],
             embedded=data.get("embedded", UNSET),
@@ -112084,7 +112162,7 @@ class TableEntity(Entity):
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     fields: list[CellField] | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     formulas: list[CellFormula] | Unset = UNSET
     frame: float | None | Unset = UNSET
     grid: TableGrid | TableGridName | None | Unset = UNSET
@@ -112134,7 +112212,7 @@ class TableEntity(Entity):
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.formulas is not UNSET:
             out["formulas"] = [e0.to_json() for e0 in self.formulas]
         if self.frame is not UNSET:
@@ -112200,7 +112278,7 @@ class TableEntity(Entity):
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             fields=[CellField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             formulas=[CellFormula.from_json(e0) for e0 in data["formulas"]] if "formulas" in data else UNSET,
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
@@ -116909,7 +116987,7 @@ class TextEntity(Entity):
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     fields: list[TextField] | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_of: str | None | Unset = UNSET
@@ -116959,7 +117037,7 @@ class TextEntity(Entity):
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.italic is not UNSET:
             out["italic"] = self.italic
         if self.label is not UNSET:
@@ -117024,7 +117102,7 @@ class TextEntity(Entity):
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             fields=[TextField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
             label_of=data.get("labelOf", UNSET),
@@ -117065,7 +117143,7 @@ class TextFace(_Model):
         text_style: The project's text style it follows, by its id; absent: Standart.
     """
     bold: bool | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     italic: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
     overrides: list[str] | Unset = UNSET
@@ -117076,7 +117154,7 @@ class TextFace(_Model):
         if self.bold is not UNSET:
             out["bold"] = self.bold
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.italic is not UNSET:
             out["italic"] = self.italic
         if self.oblique is not UNSET:
@@ -117091,7 +117169,7 @@ class TextFace(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> TextFace:
         return cls(
             bold=data.get("bold", UNSET),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             italic=data.get("italic", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
@@ -117289,7 +117367,7 @@ class TextStyleDef(_Model):
     """
     id: str
     name: str
-    font: DrawingFont | DrawingFontName
+    font: DrawingFont
     big_font_file: str | None | Unset = UNSET
     bold: bool | Unset = UNSET
     font_file: str | None | Unset = UNSET
@@ -117302,7 +117380,7 @@ class TextStyleDef(_Model):
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
-        out["font"] = _enum_out(self.font)
+        out["font"] = self.font
         if self.big_font_file is not UNSET:
             out["bigFontFile"] = self.big_font_file
         if self.bold is not UNSET:
@@ -117324,7 +117402,7 @@ class TextStyleDef(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
-            font=_enum_in(DrawingFont, data["font"]),
+            font=data["font"],
             big_font_file=data.get("bigFontFile", UNSET),
             bold=data.get("bold", UNSET),
             font_file=data.get("fontFile", UNSET),
@@ -132255,7 +132333,7 @@ class TextEntityGeometry(EntityGeometry):
     annotative: Annotative | None | Unset = UNSET
     bold: bool | Unset = UNSET
     box_width: float | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     italic: bool | Unset = UNSET
     layout: ParagraphLayout | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
@@ -132282,7 +132360,7 @@ class TextEntityGeometry(EntityGeometry):
         if self.box_width is not UNSET:
             out["boxWidth"] = None if self.box_width is None else float(self.box_width)
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.italic is not UNSET:
             out["italic"] = self.italic
         if self.layout is not UNSET:
@@ -132316,7 +132394,7 @@ class TextEntityGeometry(EntityGeometry):
             annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             bold=data.get("bold", UNSET),
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             italic=data.get("italic", UNSET),
             layout=UNSET if "layout" not in data else None if data["layout"] is None else ParagraphLayout.from_json(data["layout"]),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
@@ -132402,7 +132480,7 @@ class DimensionEntityGeometry(EntityGeometry):
     ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     level: DimensionLevel | None | Unset = UNSET
     mask: bool | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
@@ -132459,7 +132537,7 @@ class DimensionEntityGeometry(EntityGeometry):
         if self.ext_weight is not UNSET:
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.level is not UNSET:
             out["level"] = None if self.level is None else self.level.to_json()
         if self.mask is not UNSET:
@@ -132517,7 +132595,7 @@ class DimensionEntityGeometry(EntityGeometry):
             ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
             mask=data.get("mask", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
@@ -132731,7 +132809,7 @@ class TableEntityGeometry(EntityGeometry):
     aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
     bold: bool | Unset = UNSET
     fields: list[CellField] | None | Unset = UNSET
-    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    font: DrawingFont | None | Unset = UNSET
     formulas: list[CellFormula] | None | Unset = UNSET
     frame: float | None | Unset = UNSET
     grid: TableGrid | TableGridName | None | Unset = UNSET
@@ -132760,7 +132838,7 @@ class TableEntityGeometry(EntityGeometry):
         if self.fields is not UNSET:
             out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
-            out["font"] = None if self.font is None else _enum_out(self.font)
+            out["font"] = self.font
         if self.formulas is not UNSET:
             out["formulas"] = None if self.formulas is None else [e0.to_json() for e0 in self.formulas]
         if self.frame is not UNSET:
@@ -132799,7 +132877,7 @@ class TableEntityGeometry(EntityGeometry):
             aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
             bold=data.get("bold", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else [CellField.from_json(e0) for e0 in data["fields"]],
-            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            font=data.get("font", UNSET),
             formulas=UNSET if "formulas" not in data else None if data["formulas"] is None else [CellFormula.from_json(e0) for e0 in data["formulas"]],
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
@@ -149421,7 +149499,6 @@ __all__ = [
     "DrawingCompared",
     "DrawingExtractValue",
     "DrawingFont",
-    "DrawingFontName",
     "DrawingInspect",
     "DrawingInspected",
     "DrawingMatchCandidate",
@@ -149748,8 +149825,13 @@ __all__ = [
     "FlipConstraintEdit",
     "FlipOpeningsOperation",
     "FlipWallsOperation",
+    "FontFile",
+    "FontFolder",
+    "FontFolderName",
     "FontMatch",
     "FontMatchName",
+    "FontRole",
+    "FontRoleName",
     "FontsReport",
     "FontsReported",
     "ForgetMapWorkOperation",

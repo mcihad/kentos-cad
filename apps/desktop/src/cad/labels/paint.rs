@@ -150,7 +150,7 @@ impl Labels<'_> {
             }
             let bold = f.is_some_and(|r| r.bold) || own_bold;
             let script = f.and_then(|r| r.script);
-            let (font, lean) = face_font(text_face, self.font, false, f);
+            let (font, lean) = face_font(text_face, self.font, f);
             let color = f
                 .and_then(|r| r.color.as_deref())
                 .and_then(|name| self.colors.named(name))
@@ -453,8 +453,8 @@ impl Labels<'_> {
                         if self.shx_text(frame, slot, t, ink) {
                             continue;
                         }
-                        // Its face (docs/adr/0183 §2), else the project's typeface, italic.
-                        let (font, lean) = face_font(&t.face, self.font, true, None);
+                        // Its face (docs/adr/0183 §2), else the project's typeface, upright (docs/adr/9313 §6).
+                        let (font, lean) = face_font(&t.face, self.font, None);
                         self.draw(
                             frame,
                             &Piece {
@@ -534,7 +534,7 @@ impl Labels<'_> {
                             script: None,
                             color: None,
                         };
-                        let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
+                        let (font, lean) = face_font(&t.face, self.font, Some(&heading));
                         // A cell style's colour over the table's (docs/adr/0327 §1).
                         let own = t.cell_style(*row, *col).color;
                         let color = self.ink_of(
@@ -606,7 +606,7 @@ impl Labels<'_> {
                                 continue;
                             }
                         }
-                        let (font, lean) = face_font(&Default::default(), self.font, true, None);
+                        let (font, lean) = face_font(&Default::default(), self.font, None);
                         self.draw(
                             frame,
                             &Piece {
@@ -661,7 +661,7 @@ impl Labels<'_> {
                                 continue;
                             }
                         }
-                        let (font, lean) = face_font(&contract_face(face), self.font, true, None);
+                        let (font, lean) = face_font(&contract_face(face), self.font, None);
                         self.draw(
                             frame,
                             &Piece {

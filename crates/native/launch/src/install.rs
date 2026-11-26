@@ -118,6 +118,39 @@ pub fn user_fonts() -> Option<PathBuf> {
     user_root().map(|u| u.join(FONTS)).filter(|p| p.is_dir())
 }
 
+/// The font files under `dir` and its sub-folders, sorted by path (docs/adr/9313): `.ttf`, `.otf`, `.ttc` and `.otc`,
+/// in any case. A folder four levels down or deeper, and a link to a folder, are not followed.
+pub fn font_files(dir: &Path) -> Vec<PathBuf> {
+    fn walk(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Ok(kind) = entry.file_type() else {
+                continue;
+            };
+            if kind.is_dir() {
+                if depth < 4 {
+                    walk(&path, depth + 1, out);
+                }
+            } else if kind.is_file() || kind.is_symlink() && path.is_file() {
+                let font = path
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .is_some_and(|e| ["ttf", "otf", "ttc", "otc"].iter().any(|x| e.eq_ignore_ascii_case(x)));
+                if font {
+                    out.push(path);
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    walk(dir, 1, &mut out);
+    out.sort();
+    out
+}
+
 /// The user's own Python scripts.
 pub fn user_scripts() -> Option<PathBuf> {
     user_root().map(|u| u.join(SCRIPTS))
@@ -168,5 +201,19 @@ mod tests {
             assert!(paket.join(folder).is_dir(), "paket/{folder}");
         }
         assert!(paket.join("eklentiler/ornek-isleme/manifest.json").is_file());
+    }
+
+    /// Every font KentOS brings is under `paket/fonts`, in its three folders (docs/adr/9313).
+    #[test]
+    fn every_font_is_under_the_fonts_folder() {
+        let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../paket/fonts");
+        let files = font_files(&fonts);
+        for folder in ["cizim", "arayuz", "yedek"] {
+            assert!(files.iter().any(|f| f.starts_with(fonts.join(folder))), "{folder}");
+        }
+        assert!(files.iter().all(|f| f.extension().is_some_and(|e| e == "ttf")));
+        assert!(files.windows(2).all(|w| w[0] < w[1]));
+        assert!(files.iter().any(|f| f.ends_with("cizim/Barlow-400.ttf")));
+        assert!(font_files(&fonts.join("yok")).is_empty());
     }
 }

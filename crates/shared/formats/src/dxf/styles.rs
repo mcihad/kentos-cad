@@ -132,9 +132,10 @@ pub fn style_record(groups: &[Pair<'_>], dec: super::strings::Decoder) -> StyleR
 /// KentOS's family for a typeface named `name` (a file or a family); none
 /// for one KentOS does not have.
 pub fn family_of(name: &str) -> Option<DrawingFont> {
-    // The core's one rule (docs/adr/0324 §5): KentOS's own faces, Arial's and Courier's twins.
+    // The core's one rule (docs/adr/0324 §5): KentOS's own faces, Arial's and Courier's twins, the fonts folders'
+    // families (docs/adr/9313).
     let (id, _) = kentos_geometry_core::text::fonts::resolve(name);
-    DrawingFont::ALL.into_iter().find(|f| Some(f.id()) == id)
+    id.and_then(DrawingFont::from_name)
 }
 
 /// Bold and italic as a typeface file's name says them (`arialbd`, `ariali`,

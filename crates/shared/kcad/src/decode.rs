@@ -173,6 +173,30 @@ fn named<T: Copy>(r: &mut Reader<'_>, values: &[(&str, T)]) -> Result<T, KcadErr
         })
 }
 
+/// A typeface (docs/adr/9313): one of KentOS's own by its id (`courier-prime`), else a fonts folder's family by its
+/// name as written (`Roboto`: trimmed, 1–64 letters, not an own face's name).
+fn font(r: &mut Reader<'_>) -> Result<DrawingFont, KcadError> {
+    let at = r.position();
+    let t = r.text()?;
+    DrawingFont::from_id(t)
+        .or_else(|| {
+            kentos_contracts::FontFamily::new(t)
+                .filter(|f| f.name() == t)
+                .map(DrawingFont::Installed)
+        })
+        .ok_or_else(|| {
+            let own: Vec<&str> = DrawingFont::ALL.iter().map(|f| f.id()).collect();
+            r.fail_at(
+                Code::BadValue,
+                at,
+                &format!(
+                    "“{t}” bir yazı tipi değil: KentOS'un yüzlerinden biri ({}) ya da yazı tipi klasöründeki bir ailenin 1–64 harflik adı olmalı",
+                    own.join(", ")
+                ),
+            )
+        })
+}
+
 /// `[x, y]` (§6.3).
 fn point(r: &mut Reader<'_>) -> Result<Vec2, KcadError> {
     let at = r.position();
@@ -1325,22 +1349,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     ],
                 )?)
             }
-            "drawingFont" => {
-                drawing_font = Some(named(
-                    r,
-                    &[
-                        ("barlow", DrawingFont::Barlow),
-                        ("arimo", DrawingFont::Arimo),
-                        ("overpass", DrawingFont::Overpass),
-                        ("quicksand", DrawingFont::Quicksand),
-                        ("architects-daughter", DrawingFont::ArchitectsDaughter),
-                        ("courier-prime", DrawingFont::CourierPrime),
-                        ("plex-mono", DrawingFont::PlexMono),
-                        ("arial", DrawingFont::Arial),
-                        ("times-new-roman", DrawingFont::TimesNewRoman),
-                    ],
-                )?)
-            }
+            "drawingFont" => drawing_font = Some(font(r)?),
             "drawingUnit" if has.drawing_unit => {
                 // Inches and feet are schema 50's (docs/adr/0262 §1).
                 let units = [

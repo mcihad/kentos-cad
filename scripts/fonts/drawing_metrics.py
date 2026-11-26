@@ -17,7 +17,7 @@ from pathlib import Path
 from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[2]
-FONTS = ROOT / "apps/desktop/assets/fonts/drawing"
+FONTS = ROOT / "paket/fonts/cizim"
 OUT = ROOT / "crates/shared/geometry-core/src/text/metrics_more.rs"
 FIRST, LAST = 32, 383
 # id, name, the 500 face, the 600 face; None: the browser's rows of the twin in metrics.rs (Arial is drawn in Arimo's

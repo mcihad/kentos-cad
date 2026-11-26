@@ -31963,7 +31963,7 @@
       "id": "cad.fonts.report",
       "version": 1,
       "title": "Yazı tiplerini raporla",
-      "summary": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. KentOS yalnız kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; shx: SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer.",
+      "summary": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. KentOS kendi dokuz yüzüyle (Arial, Times New Roman, Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono) ve yazı tipi klasörlerindeki ailelerle çizer, ölçer ve PDF'e alt küme olarak gömer. Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Helvetica ve Liberation Sans için Arial, Courier için Courier Prime; shx: SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok; folder: yazı tipi klasöründeki aile), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer; bu bilgisayarın klasörlerinde olmayan bir aile Arial'la çizilir ve font_substituted uyarısıdır. choices bir kişinin seçebileceği yazı tipleridir: KentOS'un yüzleri, sonra klasörlerdeki aileler adlarıyla (yazı ve ayar komutları bu adları alır). files programın açılışta okuduğu yazı tipi klasörlerinin (kurulumun fonts'u, kullanıcının kentos-cad/fonts'u) dosyalarıdır: her yüzün ailesi, biçemi, kalınlığı, yeri (program, user, system), kullanımı (own, twin, given, interface, fallback, family, unused) ve nedeni.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -31996,10 +31996,24 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.fonts.report` v1. A style drawn in a substitute is also a `font_substituted` warning.",
         "properties": {
+          "choices": {
+            "description": "The typefaces a person can pick, in the order the lists show them: KentOS's own, then the fonts folders'\nfamilies (docs/adr/9313).",
+            "items": {
+              "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
+          },
           "faces": {
             "description": "The faces the drawing's texts, dimensions and leaders are drawn in, in the contract's order: a sheet's PDF\nembeds subsets of these.",
             "items": {
               "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The fonts folders' files as this program read them when it started (docs/adr/9313), and the operating\nsystem's Arial and Times New Roman it uses.",
+            "items": {
+              "$ref": "#/$defs/FontFile"
             },
             "type": "array"
           },
@@ -32029,6 +32043,8 @@
           "styles",
           "names",
           "faces",
+          "choices",
+          "files",
           "revision"
         ],
         "title": "FontsReported",
@@ -32038,10 +32054,24 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.fonts.report` v1. A style drawn in a substitute is also a `font_substituted` warning.",
         "properties": {
+          "choices": {
+            "description": "The typefaces a person can pick, in the order the lists show them: KentOS's own, then the fonts folders'\nfamilies (docs/adr/9313).",
+            "items": {
+              "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
+          },
           "faces": {
             "description": "The faces the drawing's texts, dimensions and leaders are drawn in, in the contract's order: a sheet's PDF\nembeds subsets of these.",
             "items": {
               "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The fonts folders' files as this program read them when it started (docs/adr/9313), and the operating\nsystem's Arial and Times New Roman it uses.",
+            "items": {
+              "$ref": "#/$defs/FontFile"
             },
             "type": "array"
           },
@@ -32071,6 +32101,8 @@
           "styles",
           "names",
           "faces",
+          "choices",
+          "files",
           "revision"
         ],
         "title": "FontsReported",
@@ -32095,15 +32127,27 @@
             ]
           },
           "output": {
+            "choices": [
+              "arial",
+              "times-new-roman",
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
             "faces": [],
+            "files": [],
             "names": [
               {
                 "how": "shx",
                 "name": "romans.shx"
               },
               {
-                "face": "arimo",
-                "how": "equivalent",
+                "face": "arial",
+                "how": "own",
                 "name": "arial.ttf"
               }
             ],
@@ -149073,8 +149117,7 @@
       "type": "object"
     },
     "DrawingFont": {
-      "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating\nsystem's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,\nLiberation Serif) elsewhere, with the same widths.",
-      "oneOf": [
+      "anyOf": [
         {
           "enum": [
             "barlow",
@@ -149084,16 +149127,19 @@
             "architects-daughter",
             "courier-prime",
             "plex-mono",
+            "arial",
             "times-new-roman"
           ],
           "type": "string"
         },
         {
-          "const": "arial",
-          "description": "docs/adr/9311: after the web's seven, so every file keeps its numbers.",
+          "description": "Yazı tipi klasöründeki bir ailenin adı (Roboto).",
+          "maxLength": 64,
+          "minLength": 1,
           "type": "string"
         }
-      ]
+      ],
+      "description": "KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı (docs/adr/9313)."
     },
     "DrawingMatchCandidate": {
       "description": "An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.",
@@ -155347,6 +155393,93 @@
       ],
       "type": "object"
     },
+    "FontFile": {
+      "description": "A face of a font file in a fonts folder (docs/adr/9313).",
+      "properties": {
+        "face": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingFont"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The typeface texts take it as; absent for a fallback face and a file not used."
+        },
+        "family": {
+          "description": "Its family as the file names it (`Roboto`); empty when it names none.",
+          "type": "string"
+        },
+        "file": {
+          "description": "The file within its folder (`cizim/Barlow-400.ttf`).",
+          "type": "string"
+        },
+        "folder": {
+          "$ref": "#/$defs/FontFolder"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "note": {
+          "description": "Why it is not used, or how it is (`değişken yazı tipi: varsayılan kalınlığıyla çizilir`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "$ref": "#/$defs/FontRole"
+        },
+        "style": {
+          "description": "Its style within the family (`Bold Italic`); empty when the file names none.",
+          "type": "string"
+        },
+        "turkish": {
+          "description": "Whether it has every letter of the Turkish alphabet (ÇçĞğİıÖöŞşÜü).",
+          "type": "boolean"
+        },
+        "weight": {
+          "description": "100–900 (400 regular, 700 bold).",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "file",
+        "folder",
+        "family",
+        "style",
+        "weight",
+        "italic",
+        "role",
+        "turkish"
+      ],
+      "type": "object"
+    },
+    "FontFolder": {
+      "description": "Where a font file was found (docs/adr/9313, CLAUDE.md §26).",
+      "oneOf": [
+        {
+          "const": "program",
+          "description": "The install's `fonts` folder (`<kaynak>/fonts`; the checkout's `paket/fonts`).",
+          "type": "string"
+        },
+        {
+          "const": "user",
+          "description": "The user's `fonts` folder (`<kullanıcı>/fonts`).",
+          "type": "string"
+        },
+        {
+          "const": "system",
+          "description": "The operating system's fonts: only Arial and Times New Roman are read there (docs/adr/9311).",
+          "type": "string"
+        }
+      ]
+    },
     "FontMatch": {
       "description": "How a named typeface is drawn.",
       "oneOf": [
@@ -155368,6 +155501,51 @@
         {
           "const": "missing",
           "description": "A face KentOS does not have: drawn in the style's face.",
+          "type": "string"
+        },
+        {
+          "const": "folder",
+          "description": "A family a fonts folder gave (docs/adr/9313): drawn in its own faces.",
+          "type": "string"
+        }
+      ]
+    },
+    "FontRole": {
+      "description": "What KentOS does with a face of a fonts folder (docs/adr/9313).",
+      "oneOf": [
+        {
+          "const": "own",
+          "description": "One of KentOS's own drawing faces: the program draws its own copy, the same bytes.",
+          "type": "string"
+        },
+        {
+          "const": "twin",
+          "description": "The bundled metric twin of Arial (Arimo) or Times New Roman (Liberation Serif): it draws where the named face\nis not installed.",
+          "type": "string"
+        },
+        {
+          "const": "given",
+          "description": "Arial or Times New Roman itself (a licensed copy, or the operating system's): drawn in place of its twin.",
+          "type": "string"
+        },
+        {
+          "const": "interface",
+          "description": "One of the interface's faces whose family is one of KentOS's own drawing faces (the drawing takes its own).",
+          "type": "string"
+        },
+        {
+          "const": "fallback",
+          "description": "A fallback face for the letters a face has not got (Noto Sans Arabic …).",
+          "type": "string"
+        },
+        {
+          "const": "family",
+          "description": "A family texts can take by its name (`face`).",
+          "type": "string"
+        },
+        {
+          "const": "unused",
+          "description": "Not used; `note` says why.",
           "type": "string"
         }
       ]

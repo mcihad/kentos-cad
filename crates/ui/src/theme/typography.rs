@@ -430,22 +430,22 @@ fn chars(text: &str) -> f32 {
 /// Gömülü yazı tipleri: her ailenin normal ve yarı kalın kesimi.
 #[cfg(feature = "fonts")]
 pub const FONTS: [&[u8]; 16] = [
-    include_bytes!("../../assets/fonts/IBMPlexSans-Regular.ttf"),
-    include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/Inter-Regular.ttf"),
-    include_bytes!("../../assets/fonts/Inter-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
-    include_bytes!("../../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/SourceSans3-Regular.ttf"),
-    include_bytes!("../../assets/fonts/SourceSans3-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/NotoSans-Regular.ttf"),
-    include_bytes!("../../assets/fonts/NotoSans-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/Roboto-Regular.ttf"),
-    include_bytes!("../../assets/fonts/Roboto-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/IBMPlexMono-Regular.ttf"),
-    include_bytes!("../../assets/fonts/IBMPlexMono-SemiBold.ttf"),
-    include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf"),
-    include_bytes!("../../assets/fonts/JetBrainsMono-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/IBMPlexSans-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/IBMPlexSans-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/Inter-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/Inter-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/PlusJakartaSans-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/PlusJakartaSans-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/SourceSans3-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/SourceSans3-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/NotoSans-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/NotoSans-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/Roboto-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/Roboto-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/IBMPlexMono-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/IBMPlexMono-SemiBold.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/JetBrainsMono-Regular.ttf"),
+    include_bytes!("../../../../paket/fonts/arayuz/JetBrainsMono-SemiBold.ttf"),
 ];
 
 /// Gömülü yazı tiplerini iced'in yazı tipi sistemine yükler. Uygulama açılmadan

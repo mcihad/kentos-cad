@@ -192,11 +192,7 @@ impl App {
 
 /// A drawing typeface's name; a project that names none draws in Barlow.
 pub fn font_label(font: Option<kentos_commands::DrawingFont>) -> &'static str {
-    let font = font.unwrap_or(kentos_commands::DrawingFont::Barlow);
-    settings::FONTS
-        .iter()
-        .find(|(f, _)| *f == font)
-        .map_or("Barlow", |(_, name)| name)
+    font.unwrap_or(kentos_commands::DrawingFont::Barlow).label()
 }
 
 /// A plot scale as the web writes it: `1:1.000`.

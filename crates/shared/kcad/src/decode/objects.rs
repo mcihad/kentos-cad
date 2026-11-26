@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, CloudFormat,
     CloudRender, CloudSource, ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook,
-    DimensionRefs, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit, EllipseEntity,
+    DimensionRefs, DimensionStyle, DimensionTextPlace, DrawingUnit, EllipseEntity,
     Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity, HatchGradient,
     HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow,
     LeaderEntity, LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO,

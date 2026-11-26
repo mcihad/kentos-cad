@@ -290,7 +290,7 @@ pub fn data_layer<'a>(
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Preview {
     /// Session/revision/font of the immutable prepared editor preview, never persisted.
-    pub revision: Option<(u64,u64,u8)>,
+    pub revision: Option<(u64,u64,DrawingFont)>,
     pub text: String,
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
@@ -438,7 +438,7 @@ fn build<'a>(
         }
     }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
-    (canvas as u8, font as u8, mode as u8).hash(&mut look);
+    (canvas as u8, font, mode as u8).hash(&mut look);
     // Kat görünümü's faint level (docs/adr/0715 §2): another one draws the words again.
     let (level_version, level_looks) = spatial.level_looks();
     level_version.hash(&mut look);
@@ -465,7 +465,7 @@ fn build<'a>(
         camera.twist.to_bits(),
     )
         .hash(&mut band_key);
-    (canvas as u8, font as u8, mode as u8, level_version).hash(&mut band_key);
+    (canvas as u8, font, mode as u8, level_version).hash(&mut band_key);
     format!("{format:?}{palette:?}").hash(&mut band_key);
     let layered = true_size && turned.is_none();
     let labels = Labels {
@@ -1046,13 +1046,12 @@ struct Piece<'t> {
 
 /// A text's typeface, weight, italic and lean as drawn (docs/adr/0183 §2):
 /// its own typeface upright at 400 (600 bold, its italic face when italic)
-/// leaning by its slant; without one the project's in `legacy` (italic for
-/// a text of one line, as always); a run's bold and italic added. A family
-/// without an italic face is leant as a browser leans it.
+/// leaning by its slant; without one the project's, upright (docs/adr/9313 §6:
+/// a text of one line was italic before); a run's bold and italic added. A
+/// family without an italic face is leant as a browser leans it.
 fn face_font(
     face: &kentos_commands::TextFace,
     project: DrawingFont,
-    legacy_italic: bool,
     run: Option<&Run>,
 ) -> (Font, f32) {
     let (bold_run, italic_run) = run.map_or((false, false), |r| (r.bold, r.italic));
@@ -1066,7 +1065,7 @@ fn face_font(
         None => (
             project,
             if bold_run { 600 } else { 400 },
-            legacy_italic || italic_run,
+            italic_run,
             0.0,
         ),
     };
@@ -1526,9 +1525,9 @@ pub(crate) fn ghost(
     if size < SMALLEST || text.is_empty() {
         return;
     }
-    // A text with no face of its own has the project's look (docs/adr/0175 §1): italic, leant where the
-    // family has no italic face.
-    let (font, lean) = face_font(face, drawing, true, None);
+    // A text with no face of its own has the project's look (docs/adr/0175 §1): its typeface, upright
+    // (docs/adr/9313 §6).
+    let (font, lean) = face_font(face, drawing, None);
     let width = measure(text, font).width * size / REFERENCE * width_factor;
     // From its point to where its baseline starts, in the text's own frame (y down the screen).
     let (dx, dy) = (-along * width, up * size);
@@ -1576,7 +1575,7 @@ pub(crate) fn cell_ghost(
         script: None,
         color: None,
     };
-    let (font, lean) = face_font(face, drawing, false, Some(&heading));
+    let (font, lean) = face_font(face, drawing, Some(&heading));
     let piece = Piece {
         text,
         at,
@@ -1607,7 +1606,7 @@ pub(crate) fn sample_text(
     project: DrawingFont,
     (color, halo): (Color, Color),
 ) {
-    let (font, lean) = face_font(face, project, true, None);
+    let (font, lean) = face_font(face, project, None);
     let piece = Piece {
         text,
         at,

@@ -499,6 +499,8 @@ mod native {
     fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
         // The PostGIS provider for bound layers (docs/adr/0505), once per process.
         kentos_postgis::register();
+        // The fonts folders' faces before the first text is laid out (docs/adr/9313), as every program reads them.
+        kentos_headless::load_fonts();
         // The data drivers a data layer's rows are read and written through (docs/adr/9100, 9103 §3).
         kentos_data_gpkg::register();
         kentos_data_postgis::register();

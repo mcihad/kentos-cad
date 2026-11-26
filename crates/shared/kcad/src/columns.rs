@@ -39,7 +39,7 @@
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | nurbs | degree, n, m, curve flags (1 weights, 2 closed, 4 periodic, 8 fit, 16 fit tolerance, 32 start tangent, 64 end tangent), k if fit | ctrl (2n), knots (m), weights (n) if any, fit (2k) if any, fit tolerance if any, start and end tangents (2 each) if any | |
 //! | xline, ray | | p, dir | |
-//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any, its overrides as a JSON list if any (option 14), its scales as JSON if any (option 15) |
+//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`, one past them for a fonts folder's family, docs/adr/9313); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any, its overrides as a JSON list if any (option 14), its scales as JSON if any (option 15) |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule, 3 and 4 the pair rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1); its options, moved value, breaks, overrides and scales as one JSON text if more (bit 29) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer (empty for a face's tie), islands (i) and cutouts (k) ids (UUID text) if tied, then schema 69's boundary and the tie's bounds as one JSON object if any (docs/adr/0328) |
 //! | insert | | p, scale, rotation | block (its id as UUID text); its moved attributes, parameters, clipping and level and phase (`arch`, option 5, docs/adr/0733 §1) as their texts if any |
@@ -470,10 +470,14 @@ struct Cursor<'c> {
     text: usize,
 }
 
-/// A typeface's place in `DrawingFont::ALL` (docs/adr/0183).
+/// A typeface's place in `DrawingFont::ALL` (docs/adr/0183); a fonts folder's family is one past them, its name the
+/// next text (docs/adr/9313).
 fn font_place(f: DrawingFont) -> u32 {
-    count(DrawingFont::ALL.iter().position(|x| *x == f).unwrap_or(0))
+    count(DrawingFont::ALL.iter().position(|x| *x == f).unwrap_or(DrawingFont::ALL.len()))
 }
+
+/// The place that says a folder family's name follows.
+const FAMILY_PLACE: usize = DrawingFont::ALL.len();
 
 /// The typeface at its place; a place past them is broken columns.
 fn font_at(v: usize) -> Result<DrawingFont, KcadError> {
@@ -481,6 +485,13 @@ fn font_at(v: usize) -> Result<DrawingFont, KcadError> {
         .get(v)
         .copied()
         .ok_or_else(|| broken(&format!("yazı tipi {v}")))
+}
+
+/// The folder family by its name; a name no family may have is broken columns.
+fn family_at(name: &str) -> Result<DrawingFont, KcadError> {
+    DrawingFont::from_name(name)
+        .filter(|f| f.family().is_some_and(|family| family.name() == name))
+        .ok_or_else(|| broken(&format!("yazı tipi ailesi “{name}”")))
 }
 
 fn broken(what: &str) -> KcadError {

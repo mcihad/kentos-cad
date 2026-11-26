@@ -15,8 +15,7 @@ use crate::cbor::Reader;
 use crate::error::{Code, KcadError};
 
 fn font(r: &mut Reader<'_>) -> Result<DrawingFont, KcadError> {
-    let names: Vec<(&str, DrawingFont)> = DrawingFont::ALL.iter().map(|d| (d.id(), *d)).collect();
-    named(r, &names)
+    super::font(r)
 }
 
 /// A flag a style writes only when true.

@@ -478,6 +478,9 @@ impl Packer {
                 if let Some(f) = face.font {
                     flags |= OPT[8];
                     self.int(font_place(f));
+                    if let Some(family) = f.family() {
+                        self.text(family.name());
+                    }
                 }
                 if face.bold {
                     flags |= OPT[9];
@@ -617,6 +620,9 @@ impl Packer {
                 if let Some(f) = look.font {
                     flags |= OPT[18];
                     self.int(font_place(f));
+                    if let Some(family) = f.family() {
+                        self.text(family.name());
+                    }
                 }
                 if look.has_lines() {
                     flags |= LINES;
@@ -1328,6 +1334,9 @@ impl Packer {
                 if let Some(f) = face.font {
                     flags |= OPT[5];
                     self.int(font_place(f));
+                    if let Some(family) = f.family() {
+                        self.text(family.name());
+                    }
                 }
                 if face.bold {
                     flags |= OPT[6];

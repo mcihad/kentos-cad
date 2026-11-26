@@ -587,6 +587,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar.",
         ),
         choice("newProjects.drawingFont", "arial", DRAWING_FONTS)
+            .font()
             .hosts(&[Web, Desktop])
             .text(
                 "Çizim yazı tipi",
@@ -834,6 +835,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir.",
         ),
         choice("project.drawingFont", "barlow", DRAWING_FONTS)
+            .font()
             .scope(SettingScope::Project)
             .hosts(&[Web, Desktop])
             .text(
@@ -928,6 +930,7 @@ fn build(key: &str, kind: SettingType, default: Value) -> Build {
         max: None,
         choices: Vec::new(),
         color: false,
+        font: false,
         unit: None,
         scope: SettingScope::User,
         hosts: Vec::new(),
@@ -1006,6 +1009,12 @@ impl Build {
     /// A text that may also be `#rrggbb` besides its choices.
     fn color(mut self) -> Self {
         self.0.color = true;
+        self
+    }
+
+    /// A typeface: KentOS's own faces, or a fonts folder's family by its name (docs/adr/9313).
+    fn font(mut self) -> Self {
+        self.0.font = true;
         self
     }
 

@@ -15,7 +15,9 @@ use unicode_bidi::{BidiClass, BidiInfo, Level, ParagraphInfo, bidi_class};
 use unicode_script::Script as WritingScript;
 use unicode_segmentation::UnicodeSegmentation;
 
-use super::font_data::{ADDED_KEYS, DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, FALLBACK_KEYS, added_face};
+use super::font_data::{
+    ADDED_KEYS, DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, FALLBACK_KEYS, added_face, installed,
+};
 
 pub const MAX_BYTES: usize = 65_536;
 pub const MAX_GLYPHS: usize = MAX_BYTES * 4;
@@ -159,18 +161,24 @@ pub struct Line {
     pub ink: Option<[f64; 4]>,
 }
 
+/// How many faces the core numbers before the fonts folders' (docs/adr/9313).
+const OWN_FACES: usize = DRAWING_FACES.len() + FALLBACK_FACES.len() + ADDED_KEYS.len();
+
 pub fn font_count() -> usize {
-    DRAWING_FACES.len() + FALLBACK_FACES.len() + ADDED_KEYS.len()
+    OWN_FACES + installed().len()
 }
-/// A face's bytes: the drawing's, the fallback's, then the added ones (docs/adr/9311; the host's own where it gave one).
+/// A face's bytes: the drawing's, the fallback's, the added ones (docs/adr/9311; the host's own where it gave one),
+/// then the fonts folders' (docs/adr/9313).
 pub fn font_bytes(id: FontId) -> Option<&'static [u8]> {
     let i = usize::from(id.0);
     if i < DRAWING_FACES.len() {
         DRAWING_FACES.get(i).copied()
     } else if i < DRAWING_FACES.len() + FALLBACK_FACES.len() {
         FALLBACK_FACES.get(i - DRAWING_FACES.len()).copied()
-    } else {
+    } else if i < OWN_FACES {
         added_face(i - DRAWING_FACES.len() - FALLBACK_FACES.len())
+    } else {
+        installed().get(i - OWN_FACES).map(|f| f.bytes)
     }
 }
 /// Whether the face is one of the Unicode fallback faces, not a drawing typeface's.
@@ -199,9 +207,19 @@ pub fn font_key(id: FontId) -> Option<(&'static str, u16, bool)> {
         DRAWING_KEYS.get(i).copied()
     } else if i < DRAWING_KEYS.len() + FALLBACK_KEYS.len() {
         FALLBACK_KEYS.get(i - DRAWING_KEYS.len()).copied()
-    } else {
+    } else if i < OWN_FACES {
         ADDED_KEYS.get(i - DRAWING_KEYS.len() - FALLBACK_KEYS.len()).copied()
+    } else {
+        installed().get(i - OWN_FACES).map(|f| (f.family, f.weight, f.italic))
     }
+}
+/// Whether the face is a fonts folder's (docs/adr/9313), not one of the core's own.
+pub fn is_installed(id: FontId) -> bool {
+    usize::from(id.0) >= OWN_FACES
+}
+/// The face parsed, for reading its tables (advances, names); none for a face it cannot parse.
+pub fn face_of(id: FontId) -> Option<&'static rustybuzz::Face<'static>> {
+    parsed(id).ok()
 }
 fn parsed(id: FontId) -> Result<&'static rustybuzz::Face<'static>, Error> {
     static FACES: OnceLock<Vec<Option<rustybuzz::Face<'static>>>> = OnceLock::new();

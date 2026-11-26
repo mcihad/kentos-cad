@@ -44,7 +44,7 @@ IDS = {
 # The faces the desktop added after the web paused (docs/adr/9311), by their metric twins' files: Arial in Arimo's
 # (the drawing's own Arimo faces), Times New Roman in Liberation Serif's. Measured as the twins draw, their letters as
 # wide as the named faces'.
-DRAWING = ROOT / "apps/desktop/assets/fonts/drawing"
+DRAWING = ROOT / "paket/fonts/cizim"
 ADDED = [
     ("arial", 400, False, "Arimo-400.ttf"),
     ("arial", 500, False, "Arimo-500.ttf"),

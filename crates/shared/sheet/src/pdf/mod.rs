@@ -87,7 +87,7 @@ pub struct PdfFace {
     pub italic: bool,
 }
 
-/// A face's TrueType file (the desktop's `apps/desktop/assets/fonts/drawing/*.ttf`; the web loads
+/// A face's TrueType file (the desktop's `paket/fonts/cizim/*.ttf`; the web loads
 /// the same files): `data` is base64 in JSON.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

@@ -278,6 +278,9 @@ mod hatch_notes;
 pub mod leaders_edit;
 #[path = "core/fonts_report.rs"]
 pub mod fonts_report;
+// The fonts folders, read once when a program starts (docs/adr/9313).
+#[path = "core/font_folders.rs"]
+pub mod font_folders;
 #[path = "core/texts_check.rs"]
 pub mod texts_check;
 #[path = "arch/table_schedule.rs"]

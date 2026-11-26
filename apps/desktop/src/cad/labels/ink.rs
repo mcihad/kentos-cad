@@ -221,7 +221,9 @@ impl Ink for Collect<'_> {
             font: match piece.font.family {
                 iced::font::Family::Name(name) => DrawingFont::ALL
                     .into_iter()
-                    .find(|f| drawing_fonts::family(*f) == name),
+                    .find(|f| drawing_fonts::family(*f) == name)
+                    // A fonts folder's family by its own name (docs/adr/9313).
+                    .or_else(|| DrawingFont::from_name(name).filter(|f| f.family().is_some())),
                 _ => None,
             },
             color: crate::sheet_pdf::hex_of(piece.color),

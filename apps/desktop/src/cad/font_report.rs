@@ -1,10 +1,11 @@
 //! Yazı tipleri (docs/adr/0324 §5; `text.fonts`): the drawing's text styles, the typeface each names, the face it is
-//! drawn in and how, and the faces a sheet's PDF embeds, as `cad.fonts.report` answers them. A style drawn in a
-//! substitute is said on a warning line: the change is never silent.
+//! drawn in and how, the faces a sheet's PDF embeds, and the fonts folders' files with what KentOS does with each
+//! (docs/adr/9313), as `cad.fonts.report` answers them. A style drawn in a substitute is said on a warning line: the
+//! change is never silent.
 
 use iced::widget::{Column, container};
 use iced::{Element, Fill, Task};
-use kentos_commands::{FontMatch, FontsReport};
+use kentos_commands::{FontFolder, FontMatch, FontRole, FontsReport};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::table::{self, Table};
 use kentos_ui::{label, style};
@@ -23,6 +24,29 @@ pub fn how_text(how: FontMatch) -> &'static str {
         FontMatch::Equivalent => "Eşdeğeri",
         FontMatch::Shx => "SHX, yerine",
         FontMatch::Missing => "Yok, yerine",
+        FontMatch::Folder => "Klasörden",
+    }
+}
+
+/// What KentOS does with a fonts folder's face, as the list says it.
+pub fn role_text(role: FontRole) -> &'static str {
+    match role {
+        FontRole::Own => "KentOS'un yüzü",
+        FontRole::Twin => "Eşdeğer",
+        FontRole::Given => "Asıl yüz",
+        FontRole::Interface => "Arayüz",
+        FontRole::Fallback => "Yedek",
+        FontRole::Family => "Seçilebilir",
+        FontRole::Unused => "Kullanılmıyor",
+    }
+}
+
+/// Where a font file was found, as the list says it.
+pub fn folder_text(folder: FontFolder) -> &'static str {
+    match folder {
+        FontFolder::Program => "KentOS",
+        FontFolder::User => "Kullanıcı",
+        FontFolder::System => "İşletim sistemi",
     }
 }
 
@@ -96,11 +120,12 @@ impl App {
         .style(style::container::field_box)
         .width(Fill);
         let faces: Vec<&str> = report.faces.iter().map(|f| f.label()).collect();
+        let user = kentos_launch::install::user_root().map(|u| u.join("fonts"));
         let mut lines = vec![
             words::text_line(
                 Kind::Info,
                 format!(
-                    "Projenin yazı tipi {}. KentOS yalnız kendi yedi yazı tipiyle çizer; Arial ve Helvetica Arimo'yla, Courier Courier Prime'la çizilir.",
+                    "Projenin yazı tipi {}. KentOS kendi yüzleriyle ve yazı tipi klasörlerindeki ailelerle çizer; klasörde olmayan bir aile Arial'la çizilir.",
                     report.project.label()
                 ),
             ),
@@ -124,15 +149,71 @@ impl App {
         if report.styles.is_empty() {
             lines.push(words::text_line(Kind::Info, "Çizimde yazı stili yok."));
         }
+        // The fonts folders (docs/adr/9313): every file, what KentOS does with it.
+        let folder_header = ["Aile", "Biçem", "Dosya", "Yer", "Kullanımı", "Türkçe", "Not"];
+        let folder_widths: [f32; 7] = [130.0, 90.0, 190.0, 80.0, 100.0, 50.0, 220.0];
+        let folder_columns = folder_header
+            .iter()
+            .zip(folder_widths)
+            .map(|(h, w)| table::Column::new(*h).width(w));
+        let folder_body: Vec<table::Row<'_, Message>> = report
+            .files
+            .iter()
+            .map(|f| {
+                let style = if f.style.is_empty() { f.weight.to_string() } else { f.style.clone() };
+                table::Row::new(
+                    [
+                        if f.family.is_empty() { "—".to_owned() } else { f.family.clone() },
+                        style,
+                        f.file.clone(),
+                        folder_text(f.folder).to_owned(),
+                        role_text(f.role).to_owned(),
+                        if f.turkish { "Var" } else { "Eksik" }.to_owned(),
+                        f.note.clone().unwrap_or_default(),
+                    ]
+                    .into_iter()
+                    .map(|c| label::caption(c).into()),
+                )
+            })
+            .collect();
+        let folders = container(
+            Table::new(folder_columns)
+                .extend(folder_body)
+                .min_width(folder_widths.iter().sum::<f32>() + 8.0 * 7.0 + 20.0)
+                .height(240.0),
+        )
+        .style(style::container::field_box)
+        .width(Fill);
+        let families = report.choices.iter().filter(|f| f.family().is_some()).count();
+        let mut folder_lines = vec![words::text_line(
+            Kind::Info,
+            format!(
+                "Yazı tipi klasörlerinde {} dosya var; {families} aile listelerde KentOS'un yüzlerinin ardından seçilebilir.",
+                report.files.len()
+            ),
+        )];
+        if let Some(user) = user {
+            folder_lines.push(words::text_line(
+                Kind::Info,
+                format!(
+                    "Kendi yazı tiplerinizi (.ttf, .otf) {} klasörüne koyup programı yeniden başlatın.",
+                    user.display()
+                ),
+            ));
+        }
+        // The styles' table only when the drawing has styles: a line says when it has none.
+        let mut body = Column::new().spacing(12).push(words::summary(lines));
+        if !report.styles.is_empty() {
+            body = body.push(list);
+        }
         Frame::new(TITLE)
             .push(
-                Column::new()
-                    .spacing(12)
-                    .push(words::summary(lines))
-                    .push(list),
+                body.push(label::heading("Yazı tipi klasörleri"))
+                    .push(words::summary(folder_lines))
+                    .push(folders),
             )
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
-            .width(720.0)
+            .width(960.0)
             .modal(msg(Event::Close))
     }
 }

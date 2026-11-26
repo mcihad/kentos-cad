@@ -89,14 +89,16 @@ fn label(layer: &str, font: DrawingFont) -> MapLabel {
     }
 }
 
-fn face(l: &mut MapLabel, f: &TextFace, legacy_italic: bool) {
+/// A text's face on the sheet (docs/adr/0183 §2): its own typeface, weight, italic and slant; without one the
+/// project's, upright (docs/adr/9313 §6: a text of one line was italic before).
+fn face(l: &mut MapLabel, f: &TextFace) {
     if let Some(font) = f.font {
         l.font = Some(font);
         l.weight = if f.bold { 600 } else { 400 };
         l.italic = f.italic;
         l.lean = f.oblique.unwrap_or(0.).to_radians().tan();
     } else {
-        l.italic = legacy_italic;
+        l.italic = false;
     }
     if l.italic
         && !crate::fonts::FACE_KEYS
@@ -396,7 +398,7 @@ pub fn labels_in_view(
                 ground_mask = *mask;
                 l.width_factor = *width_factor;
                 l.text = t.text.clone();
-                face(&mut l, &t.face, true);
+                face(&mut l, &t.face);
                 // In its style's embedded SHX font (ADR 1125): the font's strokes, its mask its own box.
                 if let Some(Ok(p)) = shx_of(t).as_deref() {
                     shx(&mut l, p, weight_of(entity, layer.style.line_weight), t.mask);
@@ -414,7 +416,7 @@ pub fn labels_in_view(
                 ground_height = t.height;
                 ground_mask = *mask;
                 l.text = t.text.clone().unwrap_or_default();
-                face(&mut l, &TextFace::default(), true);
+                face(&mut l, &TextFace::default());
                 // In its leader style's SHX text style (docs/adr/1025).
                 if let Some(n) = kentos_native_application::shx_text::leader_note(
                     doc.settings(),
@@ -457,11 +459,7 @@ pub fn labels_in_view(
                     &entity.base().attrs,
                 )
                 .into();
-                face(
-                    &mut l,
-                    &kentos_native_application::geometry::contract_face(f.clone()),
-                    true,
-                );
+                face(&mut l, &kentos_native_application::geometry::contract_face(f.clone()));
                 // A block's text in its style's embedded SHX font (docs/adr/1020), as the text object is (ADR 1125):
                 // the insert's line weight, the piece's own box as its mask.
                 if let Some(t) = placed
@@ -601,7 +599,7 @@ pub fn labels_in_view(
                 l.at = *at;
                 l.rotation = *rotation;
                 l.width_factor = *width_factor;
-                face(&mut l, &f, false);
+                face(&mut l, &f);
                 out.extend(line(l, &text, &runs, *start, *end, *height, scale));
                 continue;
             }
@@ -674,7 +672,7 @@ pub fn labels_in_view(
                 l.rotation = *rotation;
                 // Its cell style's height, else the table's (docs/adr/1127 §1).
                 ground_height = g.style_at(*row, *col).height.unwrap_or(t.height);
-                face(&mut l, &t.face, false);
+                face(&mut l, &t.face);
                 if *bold {
                     l.weight = 600;
                 }

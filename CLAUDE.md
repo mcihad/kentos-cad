@@ -372,11 +372,10 @@ Programın çalışırken okuduğu her dosya aşağıdaki yerlerden birindedir v
 | Depoda | Kurulumda | İçerik |
 |---|---|---|
 | derlenen programlar | `<program>/` | `kentos-cad`, `kentos-launcher`, modül adları (`kentos-mimari` …), `kentos`, `kentos-mcp` |
-| `paket/fonts/` | `<kaynak>/fonts/` | programın okuduğu yazı tipi dosyaları; Arial'ın ve Times New Roman'ın dosyası depoya konmaz (lisansı dağıtmayı yasaklar, ADR 9311) |
+| `paket/fonts/` | `<kaynak>/fonts/` | bütün yazı tipleri, lisansları yanlarında: `cizim/` çizimin, `arayuz/` arayüzün, `yedek/` eksik harflerin yüzleri. Programlar yazı tipi listesini buradan ve `<kullanıcı>/fonts/`'tan kurar (ADR 9313). Arial'ın ve Times New Roman'ın dosyası depoya konmaz (lisansı dağıtmayı yasaklar, ADR 9311) |
 | `paket/eklentiler/` | `<kaynak>/eklentiler/` | KentOS ile gelen eklentiler, her biri bir klasör; örnek Python işlem aracı `ornek-isleme/` |
 | `paket/betikler/` | `<kaynak>/betikler/` | örnek Python betikleri |
 | `catalog/standards/` | `<kaynak>/catalog/standards/` | standart kural paketleri (Python) |
-| `apps/desktop/assets/fonts/drawing/*-OFL.txt` | `<kaynak>/fonts/lisanslar/` | gömülü yazı tiplerinin lisansları (yüzler programın içindedir) |
 | SDK tekerleği, uv | `<program>/tools/` (macOS: tekerlek `<kaynak>/python/`, uv `<program>/`) | Python ortamı |
 | — | `<kullanıcı>/eklentiler/`, `fonts/`, `betikler/`, `python/` | kullanıcının kurdukları ve yazdıkları |
 
@@ -384,3 +383,6 @@ Programın çalışırken okuduğu her dosya aşağıdaki yerlerden birindedir v
   `@ext.processing`. Örneği `paket/eklentiler/ornek-isleme/`'dir (ADR 9310).
 - **Depodan çalışan program** kaynakları `paket/`'ten bulur (`target/` üstü). `KENTOS_RESOURCES_DIR` ve
   `KENTOS_USER_DIR` başka yeri gösterir.
+- **Yazı tipi** yalnız `paket/fonts/` altına konur; kod yüzü oradan alır (`include_bytes!` da oradan). Yeni bir
+  program açılışta `kentos_headless::load_fonts()`'u (masaüstü `drawing_fonts::load_font_folders()`'ı) çağırır.
+  Yazı tipi listesi her yerde `font_folders::choices`'tan gelir; sabit liste yazılmaz (ADR 9313).

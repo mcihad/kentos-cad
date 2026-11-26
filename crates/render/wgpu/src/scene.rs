@@ -1315,18 +1315,9 @@ fn core_pattern(p: &kentos_contracts::HatchPattern) -> HatchPattern {
     }
 }
 
+/// The core's id of the drawing's typeface (none: Barlow); a folder family's name (docs/adr/9313).
 fn font_id(font: Option<DrawingFont>) -> &'static str {
-    match font {
-        None | Some(DrawingFont::Barlow) => "barlow",
-        Some(DrawingFont::Arimo) => "arimo",
-        Some(DrawingFont::Overpass) => "overpass",
-        Some(DrawingFont::Quicksand) => "quicksand",
-        Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
-        Some(DrawingFont::CourierPrime) => "courier-prime",
-        Some(DrawingFont::PlexMono) => "plex-mono",
-        Some(DrawingFont::Arial) => "arial",
-        Some(DrawingFont::TimesNewRoman) => "times-new-roman",
-    }
+    DrawingFont::id_of(font)
 }
 
 fn ring(r: &RingGeometry) -> Ring {

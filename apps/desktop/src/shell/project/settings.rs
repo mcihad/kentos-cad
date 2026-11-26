@@ -108,18 +108,11 @@ impl Section {
     }
 }
 
-/// The drawing typefaces a project may name (the settings schema's list).
-pub(super) const FONTS: [(DrawingFont, &str); 9] = [
-    (DrawingFont::Arial, "Arial"),
-    (DrawingFont::TimesNewRoman, "Times New Roman"),
-    (DrawingFont::Barlow, "Barlow"),
-    (DrawingFont::Arimo, "Arimo"),
-    (DrawingFont::Overpass, "Overpass"),
-    (DrawingFont::Quicksand, "Quicksand"),
-    (DrawingFont::ArchitectsDaughter, "Architects Daughter"),
-    (DrawingFont::CourierPrime, "Courier Prime"),
-    (DrawingFont::PlexMono, "IBM Plex Mono"),
-];
+/// The drawing typefaces a project may name: KentOS's own, then the fonts folders' families (docs/adr/9313); the
+/// project's own when the folders do not hold it.
+fn fonts(current: DrawingFont) -> Vec<DrawingFont> {
+    kentos_native_application::font_folders::choices(Some(current))
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Area(AreaUnit);
@@ -1333,14 +1326,14 @@ impl App {
             .on_input(|t| event(Event::Name(t)))
             .width(260);
         let name = name;
-        let font = Select::new(
-            FONTS.iter().map(|(_, name)| Choice::new(*name)),
-            FONTS.iter().position(|(f, _)| {
-                Some(*f) == s.settings.drawing_font.or(Some(DrawingFont::Barlow))
-            }),
-            |i| event(Event::Font(FONTS[i.min(FONTS.len() - 1)].0)),
-        )
-        .searchable(false);
+        let current = s.settings.drawing_font.unwrap_or(DrawingFont::Barlow);
+        let list = fonts(current);
+        let names: Vec<Choice> = list.iter().map(|f| Choice::new(f.label())).collect();
+        let at = list.iter().position(|f| *f == current);
+        let font = Select::new(names, at, move |i| {
+            event(Event::Font(list.get(i).copied().unwrap_or(current)))
+        })
+        .searchable(true);
         let origin = doc.model.origin();
         Column::new()
             .spacing(16)

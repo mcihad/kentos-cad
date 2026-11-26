@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Bütün yazı tipleri `fonts` klasöründe, listeler oradan; yazılar dik (26 Kasım 2026, sahibin isteği;
+  [ADR 9313](../adr/9313-fonts-folder-listing-upright-texts.md)).**
+  - Yazı tipi dosyaları lisanslarıyla `paket/fonts/{cizim,arayuz,yedek}`'tedir; kullanıcınınkiler `<kullanıcı>/fonts`'ta.
+  - Her program açılırken iki klasörü okur (`font_folders::load`). Listeler önce KentOS'un dokuz yüzünü, sonra
+    klasördeki aileleri gösterir; proje aileyi adıyla saklar. Aileyi tutmayan bilgisayar Arial'la çizer ve söyler.
+  - Kendi yüzü olmayan tek satırlık yazı artık eğik değildir; nokta adları diktir.
+
 - **İşlem araçları modüllere ayrıldı, Python araçları iyileşti (26 Kasım 2026, sahibin isteği;
   [ADR 9310](../adr/9310-processing-tools-by-module.md)).**
   - Her araç dört modülün her biri için açıkça var ya da yok (`kentos_processing::modules::PLACED`, altı küme). Örnek:

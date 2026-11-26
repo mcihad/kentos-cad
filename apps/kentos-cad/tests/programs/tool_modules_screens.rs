@@ -35,7 +35,7 @@ fn processing(app: &mut App, e: crate::processing::Event) {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
-    let found = crate::drawing_fonts::give_system_faces();
+    let found = crate::drawing_fonts::load_font_folders();
     println!("the system's own faces: {found:?}");
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9310");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
