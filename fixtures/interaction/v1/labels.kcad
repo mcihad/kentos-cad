@@ -52,6 +52,9 @@
         "point": {
           "symbol": "ring",
           "size": 7
+        },
+        "labels": {
+          "mode": "single"
         }
       },
       "children": []

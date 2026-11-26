@@ -21,6 +21,7 @@ pub fn tool() -> Tool {
         id: "generalize.smooth".into(),
         label: "Yumuşat".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.smooth"),
         description: "Çizgilerin ve alanların köşelerini keserek yumuşatır (Chaikin); komşu alanların ortak kenarları birlikte yumuşayabilir.".into(),
         help: Some([
             "Örnekler: sayısallaştırılmış dere ve yolları yumuşatmak, küçük ölçekli haritada kıyı ve orman sınırlarını yuvarlamak.",

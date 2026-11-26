@@ -1,6 +1,4 @@
-//! Rota oluştur, Rotayı kalibre et and M değerlerini çıkar (the web's
-//! `builtin/lrs/routes.ts`; docs/adr/0224 §5; ArcGIS Create Routes and
-//! Calibrate Routes, QGIS Extract M values).
+//! Rota oluştur, Rotayı kalibre et and M değerlerini çıkar (the web's `builtin/lrs/routes.ts`; docs/adr/0224 §5).
 
 use std::collections::BTreeMap;
 
@@ -46,6 +44,7 @@ pub fn create_routes() -> Tool {
         id: "linearRef.createRoutes".into(),
         label: "Rota oluştur".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.createRoutes"),
         description: "Çizgileri kimliklerine göre uç uca birleştirip köşelerine ölçü (M) veren rotalar yazar.".into(),
         help: Some([
             "Örnekler: yol parçalarından karayolu rotaları, boru hattı parçalarından hat rotaları, kanal ve dere eksenlerinden ölçülü rotalar.",
@@ -272,6 +271,7 @@ pub fn calibrate_routes() -> Tool {
         id: "linearRef.calibrateRoutes".into(),
         label: "Rotayı kalibre et".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.calibrateRoutes"),
         description: "Rotaların ölçülerini (M) üzerlerindeki ölçüsü bilinen noktalardan yeniden verir.".into(),
         help: Some([
             "Örnekler: kilometre taşlarının ölçüleriyle karayolu rotası, vana ve muayene bacalarının bilinen kilometreleriyle boru hattı.",
@@ -435,6 +435,7 @@ pub fn extract_measures() -> Tool {
         id: "linearRef.extractMeasures".into(),
         label: "M değerlerini çıkar".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.extractMeasures"),
         description: "Rotaların ilk, son, en küçük ve en büyük ölçüsünü (M) özniteliklerine yazar.".into(),
         help: Some([
             "Örnekler: her yol rotasının başlangıç ve bitiş kilometresi, ölçü aralıklarının bir tabloda listelenmesi, ölçüsüz rotaların bulunması.",

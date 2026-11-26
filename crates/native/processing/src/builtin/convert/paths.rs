@@ -51,6 +51,7 @@ pub fn substring_tool() -> Tool {
         id: "convert.substring".into(),
         label: "Çizginin parçası".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.substring"),
         description: "Her çizginin başından verilen iki uzaklık arasındaki parçasını yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: bir yolun iki km arası kesimini, bir hattın ilk 100 metresini, her çizginin uçlarından 5 metre kısaltılmışını almak.",
@@ -169,6 +170,7 @@ pub fn polygons_to_lines() -> Tool {
         id: "convert.polygonsToLines".into(),
         label: "Alanları çizgiye çevir".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.polygonsToLines"),
         description: "Alanların halkalarını (dış halka, delikler, parçalar) öznitelikleriyle yeni katmana çizgi olarak yazar.".into(),
         help: Some([
             "Örnekler: parsel sınırlarını çizgi katmanına almak, adaların ve yapıların dış çizgilerini ayrı çizmek.",
@@ -223,6 +225,7 @@ pub fn lines_to_polygons() -> Tool {
         id: "convert.linesToPolygons".into(),
         label: "Çizgileri alana çevir".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.linesToPolygons"),
         description: "Kapalı çoklu çizgileri (isterse açıkları kapatarak) öznitelikleriyle yeni katmana alan olarak yazar.".into(),
         help: Some([
             "Örnekler: sayısallaştırılmış kapalı sınırları alana çevirmek, dosyadan çizgi olarak gelen parselleri alan yapmak.",
@@ -302,6 +305,7 @@ pub fn densify_tool() -> Tool {
         id: "convert.densify".into(),
         label: "Köşe ekle".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.densify"),
         description: "Çizgilerin ve alanların her kenarını eşit parçalara bölerek köşe ekler; sonucu yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: yeniden izdüşümden önce uzun kenarları sıklaştırmak, bir hattı 1 metrede bir köşeli yapmak, her kenarın ortasına köşe koymak.",

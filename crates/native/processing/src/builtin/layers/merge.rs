@@ -1,11 +1,8 @@
-//! Vektör katmanlarını birleştir (the web's `builtin/layers/merge.ts`;
-//! docs/adr/0217 §3; QGIS Merge vector layers, ArcGIS Merge): the chosen
-//! layers' objects copied into one layer, the layers in the tree's order,
-//! each in the drawing's order; a field map (docs/adr/0216 §2) gives the
-//! copies' attributes, else they keep their own; the source layer's name
-//! goes into a field. Into a layer with typed fields the values go by their
-//! rules, its defaults fill what is left empty, and an object with a required
-//! field left empty is not added. One undo step.
+//! Vektör katmanlarını birleştir (the web's `builtin/layers/merge.ts`; docs/adr/0217 §3): the chosen layers' objects
+//! copied into one layer, the layers in the tree's order, each in the drawing's order; a field map (docs/adr/0216 §2)
+//! gives the copies' attributes, else they keep their own; the source layer's name goes into a field. Into a layer with
+//! typed fields the values go by their rules, its defaults fill what is left empty, and an object with a required field
+//! left empty is not added. One undo step.
 
 use std::collections::BTreeMap;
 
@@ -25,6 +22,7 @@ pub fn tool() -> Tool {
         id: "layers.merge".into(),
         label: "Vektör katmanlarını birleştir".into(),
         category: "layers".into(),
+        modules: crate::modules::placed("layers.merge"),
         description: "Seçilen katmanların nesnelerini alan eşlemesiyle tek katmanda toplar; kaynak katmanın adını bir alana yazar.".into(),
         help: Some([
             "Örnekler: paftalara bölünmüş parsel katmanlarını tek parsel katmanında toplamak; farklı ekiplerin bina katmanlarını ortak alan adlarıyla birleştirmek.",

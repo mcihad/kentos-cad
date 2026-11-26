@@ -1,0 +1,45 @@
+{
+  "format": "kentos.processingTool",
+  "schemaVersion": 1,
+  "id": "alan-dilimleri",
+  "version": "1.0.0",
+  "label": "Alan dilimleri",
+  "category": "analysis",
+  "modules": ["harita", "cbs"],
+  "description": "Kapalı alanları alanlarına göre dilimlere ayırır, dilimi yeni katmana yazar ve dilimlerin sayısını verir.",
+  "modelDescription": "Kapalı alanları (parsel, yapı, bölge) alan büyüklüğüne göre sınıflamak için kullanın. alanlar: kapalı alanlar; sinirlar: artan sıralı m² sınırları, virgülle (ör. \"500, 1000, 5000\"). Her alan yeni katmana alan_m2 ve dilim öznitelikleriyle kopyalanır; dilim \"500 m² altı\", \"500–1000 m²\" … \"5000 m² ve üstü\" yazar. tablo her dilimin alan sayısını ve toplam alanını, sayi işlenen alan sayısını verir.",
+  "help": "Alan, alanın dış halkasından deliklerinin alanı düşülerek, çizimin düzlem koordinatlarında hesaplanır (m²).\n\nSınırlar artan sırayla, virgülle ayrılarak yazılır: 500, 1000, 5000 dört dilim verir. Bir alan, alanı sınırdan küçük olduğu ilk dilime girer; en büyük sınıra eşit ya da büyükse son dilimdedir.\n\nBu araç KentOS ile gelen örnek eklentidir: tanımı tools/alan-dilimleri.tool.json'da, işi src/ornek_isleme/logic.py'dedir.",
+  "keywords": ["alan", "dilim", "sınıflama", "büyüklük", "örnek"],
+  "parameters": [
+    {
+      "name": "alanlar",
+      "label": "Alanlar",
+      "type": "features",
+      "kinds": ["polygon"],
+      "scopes": ["layer", "selection", "visible", "all"],
+      "default": { "scope": "selection" },
+      "description": "Dilimlere ayrılacak kapalı alanlar."
+    },
+    {
+      "name": "sinirlar",
+      "label": "Sınırlar (m²)",
+      "type": "string",
+      "default": "500, 1000, 5000",
+      "description": "Artan sıralı alan sınırları, virgülle ayrılmış."
+    },
+    {
+      "name": "katman",
+      "label": "Çıktı katmanı",
+      "type": "layer",
+      "default": { "newName": "Alan dilimleri" },
+      "newLayerStyle": { "color": "#2563eb", "lineWeight": 0.25, "fill": "#2563eb22" }
+    }
+  ],
+  "outputs": [
+    { "name": "alanlar", "label": "Dilimlenen alanlar", "type": "features", "sinkParameter": "katman" },
+    { "name": "tablo", "label": "Dilimler", "type": "table" },
+    { "name": "sayi", "label": "İşlenen alan sayısı", "type": "number" }
+  ],
+  "feedback": { "progress": true, "cancel": true },
+  "capabilities": { "runtimes": ["desktop-python", "headless-python"] }
+}

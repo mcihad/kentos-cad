@@ -120,17 +120,20 @@ pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
             defaults: false,
             fields,
         },
-        _ => match style.and_then(|s| s.label.as_ref()) {
+        set => match style.and_then(|s| s.label.as_ref()) {
             Some(single) => LayerTexts::Classes {
                 classes: vec![text_class(single, None, unit)],
                 defaults: false,
                 fields,
             },
-            None => LayerTexts::Classes {
+            // One label turned on without a style of its own: each object's kind's.
+            None if set.is_some() => LayerTexts::Classes {
                 classes: Vec::new(),
                 defaults: true,
                 fields,
             },
+            // No labelling set and no label style (docs/adr/9311): the layer labels nothing until it is turned on.
+            None => LayerTexts::Off,
         },
     }
 }

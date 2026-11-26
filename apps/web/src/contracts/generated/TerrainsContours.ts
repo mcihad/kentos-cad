@@ -3,7 +3,7 @@
 /**
  * Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a
  * layer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line
- * (thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a
+ * (thicker; 5 when absent, 0: none), as a surface's major and minor contours. A line through a
  * corner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.
  *
  * Refusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),

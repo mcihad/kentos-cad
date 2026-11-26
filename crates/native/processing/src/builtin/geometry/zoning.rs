@@ -26,6 +26,7 @@ pub fn tool() -> Tool {
         id: "zoning.check".into(),
         label: "İmar planını denetle".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("zoning.check"),
         description: "İmar planının katmanlarını İmar denetimi'nin kurallarıyla denetler; bulguları tabloda gösterir ve bulgulu nesneleri seçer; istenirse yola giren bölgeleri hata katmanına alan olarak yazar.".into(),
         help: Some([
             "Denetim İmar denetimi penceresinin ve cad.zoning.check komutunun denetimidir: aynı bulgular, aynı sözler ve alanlar. Planın katmanları imar-plani profilindeki gibidir. Resmî şema ya da mevzuata uygunluk iddia edilmez.",

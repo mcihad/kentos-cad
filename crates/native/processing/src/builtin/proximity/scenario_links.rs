@@ -26,6 +26,7 @@ pub fn tool() -> Tool {
         id: "scenarios.links".into(),
         label: "Altyapı bağlarını çiz".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("scenarios.links"),
         description: "Bir senaryonun alanlarını bir altyapı katmanının en yakın nesnesine bağlar; her bağı alanın ağırlık merkezinden nesnenin en yakın yerine bir çizgi olarak kendi katmanına yazar.".into(),
         help: Some([
             "Bağlar Senaryo ölçüleri'nin altyapıya yakınlık ölçüsünün bağlarıdır (cad.scenarios.impact): her ölçülen alanın ağırlık merkezinden altyapı katmanının en yakın nesnesinin en yakın yerine. Senaryonun yerine geçtiği katmansa her taraf kendi katmanıyla ölçülür.",

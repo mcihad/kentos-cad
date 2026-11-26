@@ -1,8 +1,6 @@
-//! Sınır çıkar (docs/adr/0207 §7; PDAL's filters.hexbin boundary, ArcGIS
-//! Point Cloud Boundary): where the cloud has points: the cells of the grid
-//! (on the cell's multiples) holding at least the given number, taken
-//! together as right-angled rings with their holes (`ops::boundary`),
-//! written as one multi-part area on a new layer.
+//! Sınır çıkar (docs/adr/0207 §7; PDAL's filters.hexbin boundary): where the cloud has points: the cells of the grid
+//! (on the cell's multiples) holding at least the given number, taken together as right-angled rings with their holes
+//! (`ops::boundary`), written as one multi-part area on a new layer.
 
 use kentos_geometry_core::entity::{Part, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
@@ -27,6 +25,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.boundary".into(),
         label: "Sınır çıkar".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.boundary"),
         description: "Nokta bulutunun kapladığı yeri alan olarak çizer: verilen boydaki hücrelerden en az şu kadar nokta düşenler birleşir, delikleriyle tek çok parçalı alan olur.".into(),
         help: Some([
             "Izgara hücre boyunun katlarına oturur. Kenarlar dik açılıdır ve hücrelerin kenarlarından geçer; yalnız köşeden değen hücreler ayrı parçalardır.",

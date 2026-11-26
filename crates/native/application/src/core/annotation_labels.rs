@@ -38,10 +38,10 @@ pub(crate) struct Written {
 fn labelled(doc: &Document, e: &Entity) -> bool {
     let base = e.base();
     let layers = doc.layers();
+    // A layer whose labels are not on has none to write (docs/adr/9311).
     let off = layers
         .get(&base.layer_id)
-        .and_then(|l| l.style.labels.as_ref())
-        .is_some_and(|l| l.mode == LabelsMode::Off);
+        .is_some_and(|l| !l.style.labels_on());
     !(matches!(
         e,
         Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)

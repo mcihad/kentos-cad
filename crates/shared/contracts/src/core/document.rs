@@ -129,7 +129,9 @@ impl CadWork {
 /// The typeface of the text that is part of the drawing (text objects,
 /// dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
 /// the app. A project setting: everyone who opens the project sees the same
-/// letters. Files written before it have none (Barlow).
+/// letters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating
+/// system's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,
+/// Liberation Serif) elsewhere, with the same widths.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -143,6 +145,9 @@ pub enum DrawingFont {
     ArchitectsDaughter,
     CourierPrime,
     PlexMono,
+    /// docs/adr/9311: after the web's seven, so every file keeps its numbers.
+    Arial,
+    TimesNewRoman,
 }
 
 impl DrawingFont {
@@ -156,6 +161,8 @@ impl DrawingFont {
             Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
             Some(DrawingFont::CourierPrime) => "courier-prime",
             Some(DrawingFont::PlexMono) => "plex-mono",
+            Some(DrawingFont::Arial) => "arial",
+            Some(DrawingFont::TimesNewRoman) => "times-new-roman",
         }
     }
 }

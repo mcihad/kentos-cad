@@ -1,10 +1,7 @@
-//! Yinelenenleri sil (the web's `builtin/layers/dedupe.ts`; docs/adr/0217
-//! §5; QGIS Delete duplicates by attribute, ArcGIS Delete Identical): of the
-//! objects whose key is the same the first (in the input's order) stays, the
-//! rest go. A key is the fields' values trimmed (with no field named: every
-//! attribute with a value), and with Geometri de aynı olsun the kind and the
-//! shape exactly; the shape is read only for objects whose values and first
-//! place another object shares, hashed and then compared. One undo step.
+//! Yinelenenleri sil (the web's `builtin/layers/dedupe.ts`; docs/adr/0217 §5): of the objects whose key is the same the
+//! first (in the input's order) stays, the rest go. A key is the fields' values trimmed (with no field named: every
+//! attribute with a value), and with Geometri de aynı olsun the kind and the shape exactly; the shape is read only for
+//! objects whose values and first place another object shares, hashed and then compared. One undo step.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -25,6 +22,7 @@ pub fn tool() -> Tool {
         id: "layers.deleteDuplicates".into(),
         label: "Yinelenenleri sil".into(),
         category: "layers".into(),
+        modules: crate::modules::placed("layers.deleteDuplicates"),
         description: "Aynı öznitelikli (isterse aynı geometrili) nesnelerden ilkini bırakıp öbürlerini siler.".into(),
         help: Some([
             "Örnekler: iki kez içe aktarılmış parselleri temizlemek; aynı numaralı noktalardan yalnız ilkini bırakmak.",

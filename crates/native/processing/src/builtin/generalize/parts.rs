@@ -20,6 +20,7 @@ pub fn tool() -> Tool {
         id: "generalize.dropParts".into(),
         label: "Küçük parçaları ayıkla".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.dropParts"),
         description: "Çok parçalı alanların küçük parçalarını ve küçük delikleri atar; bütün parçaları küçükse en büyüğü kalır.".into(),
         help: Some([
             "Örnekler: sınır verisindeki kırıntı adaları ve iğne deliklerini temizlemek, sayısallaştırma artıklarını atmak.",

@@ -1,8 +1,6 @@
-//! En yakın merkeze bağla (the web's `builtin/proximity/hub.ts`; docs/adr/0215
-//! §3.3; QGIS "Distance to nearest hub (line to hub)"): each object's centre
-//! joined to the nearest hub's by a line on the output layer, the line
-//! carrying the object's attributes, the hub's name (Merkez) and the distance
-//! (Uzaklık). Centre to centre, by the run's store (`Store::nearest`).
+//! En yakın merkeze bağla (the web's `builtin/proximity/hub.ts`; docs/adr/0215 §3.3): each object's centre joined to
+//! the nearest hub's by a line on the output layer, the line carrying the object's attributes, the hub's name (Merkez)
+//! and the distance (Uzaklık). Centre to centre, by the run's store (`Store::nearest`).
 
 use kentos_commands::{Entity, EntityGeometry};
 use kentos_domain::Slot;
@@ -20,6 +18,7 @@ pub fn tool() -> Tool {
         id: "proximity.hub".into(),
         label: "En yakın merkeze bağla".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("proximity.hub"),
         description: "Her nesnenin merkezini en yakın merkezin merkezine bir çizgiyle bağlar; çizgi merkezin adını ve uzaklığı taşır.".into(),
         help: Some([
             "Örnekler: her mahalleyi en yakın sağlık ocağına bağlayan çizgiler; her kuyudan en yakın depoya; her parselden en yakın okula.",

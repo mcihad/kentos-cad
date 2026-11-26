@@ -80,9 +80,7 @@ pub fn page_captured(captured:&crate::provenance::Capture,sheet:&str,dpi:u16)->R
         .replace(" href=\"", " xlink:href=\"");
     // SVG remains portable outside KentOS; the rasterizer also loads these exact faces directly.
     let mut fonts = String::from("<style>");
-    for ((font, weight, italic), bytes) in
-        crate::fonts::FACE_KEYS.into_iter().zip(crate::fonts::FACES)
-    {
+    for (bytes, (font, weight, italic)) in crate::fonts::bundled_faces() {
         if !list
             .prims
             .iter()
@@ -117,7 +115,7 @@ pub fn page_captured(captured:&crate::provenance::Capture,sheet:&str,dpi:u16)->R
         ));
     }
     let mut db = resvg::usvg::fontdb::Database::new();
-    for bytes in crate::fonts::FACES {
+    for (bytes, _) in crate::fonts::bundled_faces() {
         db.load_font_data(bytes.to_vec());
     }
     let opts = resvg::usvg::Options {

@@ -37,12 +37,11 @@ pattern: HatchPatternSpec,
  */
 layerId: string, 
 /**
- * The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
- * HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
+ * The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
  */
 transparency?: number, 
 /**
- * Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+ * Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:
  * `none`.
  */
 drawOrder?: HatchDrawOrder, 

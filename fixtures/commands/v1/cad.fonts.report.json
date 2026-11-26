@@ -27,7 +27,7 @@
         {
           "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
           "name": "Yol adı",
-          "font": "arimo",
+          "font": "arial",
           "fontFile": "arial.ttf"
         },
         {
@@ -40,7 +40,7 @@
           "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
           "name": "Başlık",
           "font": "overpass",
-          "fontFile": "times.ttf"
+          "fontFile": "calibri.ttf"
         },
         {
           "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
@@ -293,7 +293,7 @@
       ]
     },
     {
-      "name": "Stiller ve yazılar: dosyasız stil kendi, Arial ikizi, SHX ve Times yerine stilin yazı tipi, uyarılarla",
+      "name": "Stiller ve yazılar: dosyasız stil kendi, Arial kendisi, SHX ve Calibri yerine stilin yazı tipi, uyarılarla",
       "steps": [
         {
           "op": "execute",
@@ -314,8 +314,8 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
                   "name": "Yol adı",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
                   "texts": 1
                 },
                 {
@@ -329,7 +329,7 @@
                 {
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
                   "name": "Başlık",
-                  "file": "times.ttf",
+                  "file": "calibri.ttf",
                   "face": "overpass",
                   "how": "missing",
                   "texts": 0
@@ -347,7 +347,7 @@
                   "name": "Kot",
                   "file": "arialbd.ttf",
                   "face": "overpass",
-                  "how": "equivalent",
+                  "how": "own",
                   "texts": 0
                 },
                 {
@@ -383,7 +383,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "message": "“Başlık” stili calibri.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
                 "path": "styles[3]"
               },
               {
@@ -509,7 +509,7 @@
       ]
     },
     {
-      "name": "arial.ttf Arimo'yla çizilir: eşdeğer, uyarısız",
+      "name": "arial.ttf Arial'ın kendisidir: uyarısız",
       "setup": {
         "format": "kentos.document",
         "version": 1,
@@ -527,7 +527,7 @@
             {
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
               "name": "Yol adı",
-              "font": "arimo",
+              "font": "arial",
               "fontFile": "arial.ttf"
             }
           ]
@@ -573,8 +573,93 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
                   "name": "Yol adı",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "times.ttf Times New Roman'ın kendisidir: uyarısız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0517",
+              "name": "Künye",
+              "font": "times-new-roman",
+              "fontFile": "times.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0517",
+                  "name": "Künye",
+                  "file": "times.ttf",
+                  "face": "times-new-roman",
+                  "how": "own",
                   "texts": 0
                 }
               ],
@@ -776,7 +861,7 @@
       ]
     },
     {
-      "name": "Times KentOS'ta yok: stilin yazı tipiyle, uyarıyla",
+      "name": "Calibri KentOS'ta yok: stilin yazı tipiyle, uyarıyla",
       "setup": {
         "format": "kentos.document",
         "version": 1,
@@ -795,7 +880,7 @@
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
               "name": "Başlık",
               "font": "overpass",
-              "fontFile": "times.ttf"
+              "fontFile": "calibri.ttf"
             }
           ]
         },
@@ -839,7 +924,7 @@
                 {
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
                   "name": "Başlık",
-                  "file": "times.ttf",
+                  "file": "calibri.ttf",
                   "face": "overpass",
                   "how": "missing",
                   "texts": 0
@@ -852,7 +937,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "message": "“Başlık” stili calibri.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -1017,7 +1102,7 @@
                   "name": "Kot",
                   "file": "arialbd.ttf",
                   "face": "overpass",
-                  "how": "equivalent",
+                  "how": "own",
                   "texts": 0
                 }
               ],
@@ -1629,8 +1714,8 @@
               "names": [
                 {
                   "name": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "face": "arial",
+                  "how": "own"
                 },
                 {
                   "name": "Helvetica Neue",
@@ -1638,7 +1723,7 @@
                 },
                 {
                   "name": "Liberation Sans",
-                  "face": "arimo",
+                  "face": "arial",
                   "how": "equivalent"
                 },
                 {
@@ -1666,7 +1751,8 @@
                 },
                 {
                   "name": "times.ttf",
-                  "how": "missing"
+                  "face": "times-new-roman",
+                  "how": "own"
                 },
                 {
                   "name": "Calibri",
@@ -1906,13 +1992,13 @@
               "names": [
                 {
                   "name": "C:\\Windows\\Fonts\\arialbd.ttf",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "face": "arial",
+                  "how": "own"
                 },
                 {
                   "name": "/fonts/Arial-BoldItalic.otf",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "face": "arial",
+                  "how": "own"
                 },
                 {
                   "name": "/fonts/Barlow-400-italic.ttf",
@@ -2304,8 +2390,8 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
                   "name": "Yol adı",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
                   "texts": 1
                 },
                 {
@@ -2319,7 +2405,7 @@
                 {
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
                   "name": "Başlık",
-                  "file": "times.ttf",
+                  "file": "calibri.ttf",
                   "face": "overpass",
                   "how": "missing",
                   "texts": 0
@@ -2337,7 +2423,7 @@
                   "name": "Kot",
                   "file": "arialbd.ttf",
                   "face": "overpass",
-                  "how": "equivalent",
+                  "how": "own",
                   "texts": 0
                 },
                 {
@@ -2360,8 +2446,8 @@
               "names": [
                 {
                   "name": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "face": "arial",
+                  "how": "own"
                 }
               ],
               "faces": [
@@ -2379,7 +2465,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "message": "“Başlık” stili calibri.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
                 "path": "styles[3]"
               },
               {
@@ -2430,8 +2516,8 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
                   "name": "Yol adı",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
                   "texts": 1
                 },
                 {
@@ -2445,7 +2531,7 @@
                 {
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
                   "name": "Başlık",
-                  "file": "times.ttf",
+                  "file": "calibri.ttf",
                   "face": "overpass",
                   "how": "missing",
                   "texts": 0
@@ -2463,7 +2549,7 @@
                   "name": "Kot",
                   "file": "arialbd.ttf",
                   "face": "overpass",
-                  "how": "equivalent",
+                  "how": "own",
                   "texts": 0
                 },
                 {
@@ -2486,12 +2572,13 @@
               "names": [
                 {
                   "name": "times.ttf",
-                  "how": "missing"
+                  "face": "times-new-roman",
+                  "how": "own"
                 },
                 {
                   "name": "Arial",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "face": "arial",
+                  "how": "own"
                 }
               ],
               "faces": [
@@ -2509,7 +2596,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "message": "“Başlık” stili calibri.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
                 "path": "styles[3]"
               },
               {
@@ -4227,7 +4314,7 @@
             {
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0516",
               "name": "TTF",
-              "font": "arimo",
+              "font": "arial",
               "fontFile": "arial.ttf",
               "bigFontFile": "kentos-big.shx"
             }
@@ -4288,8 +4375,8 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0516",
                   "name": "TTF",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
                   "texts": 0
                 }
               ],
@@ -4872,7 +4959,7 @@
             {
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
               "name": "Yol adı",
-              "font": "arimo",
+              "font": "arial",
               "fontFile": "arial.ttf"
             },
             {
@@ -4885,7 +4972,7 @@
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
               "name": "Başlık",
               "font": "overpass",
-              "fontFile": "times.ttf"
+              "fontFile": "calibri.ttf"
             }
           ]
         },
@@ -4951,8 +5038,8 @@
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
                   "name": "Yol adı",
                   "file": "arial.ttf",
-                  "face": "arimo",
-                  "how": "equivalent",
+                  "face": "arial",
+                  "how": "own",
                   "texts": 0
                 },
                 {
@@ -4967,7 +5054,7 @@
                 {
                   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
                   "name": "Başlık",
-                  "file": "times.ttf",
+                  "file": "calibri.ttf",
                   "face": "overpass",
                   "how": "missing",
                   "texts": 0
@@ -4980,7 +5067,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "message": "“Başlık” stili calibri.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
                 "path": "styles[3]"
               }
             ]

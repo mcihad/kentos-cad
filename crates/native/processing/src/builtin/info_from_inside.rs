@@ -1,10 +1,7 @@
-//! İçindekinden bilgi al (the web's `builtin/infoFromInside.ts`; docs/adr/0200
-//! §3; Netcad's İçindekinden Bilgi Al, QGIS "Join attributes by location
-//! (summary)"): each target area gets a statistic of the source objects in the
-//! relation to it (in it, meeting it, or with their centre in it): how many,
-//! the sum, mean, least or most of a field, or the first value. The pairs come
-//! from the run's store, the numbers from the core's `ops::statistics`; one
-//! undo step.
+//! İçindekinden bilgi al (the web's `builtin/infoFromInside.ts`; docs/adr/0200 §3): each target area gets a statistic
+//! of the source objects in the relation to it (in it, meeting it, or with their centre in it): how many, the sum,
+//! mean, least or most of a field, or the first value. The pairs come from the run's store, the numbers from the core's
+//! `ops::statistics`; one undo step.
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -35,6 +32,7 @@ pub fn tool() -> Tool {
         id: "attributes.fromInside".into(),
         label: "İçindekinden bilgi al".into(),
         category: "attributes".into(),
+        modules: crate::modules::placed("attributes.fromInside"),
         description: "Her alana içindeki ya da ona değen nesnelerin sayısını ya da bir alanlarının toplamını, ortalamasını, en azını, en çoğunu yazar.".into(),
         help: Some([
             "Örnekler: parsellere içlerindeki ağaçların sayısı; adalara yapıların taban alanlarının toplamı; mahallelere içindeki yapıların kat ortalaması.",

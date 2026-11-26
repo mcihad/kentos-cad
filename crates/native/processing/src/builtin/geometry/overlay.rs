@@ -194,6 +194,7 @@ pub fn intersection() -> Tool {
         id: "geometry.intersection".into(),
         label: "Kesişim".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.intersection"),
         description: "Her nesnenin kesen alanlarla ortak parçalarını, iki tarafın öznitelikleriyle yeni katmana yazar.".into(),
         help: Some([
             "Her nesne, kesiştiği her alanla ayrı bir parça verir: alanda ortak alan, çizgide içerideki parçalar, noktada içerideki noktalar. Parça nesnenin ve kesen alanın özniteliklerini taşır; kesen alanınkiler Önek ile yazılır.",
@@ -231,6 +232,7 @@ pub fn difference() -> Tool {
         id: "geometry.difference".into(),
         label: "Fark".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.difference"),
         description: "Her nesneden çıkarılacak alanların kapladığı kısmı atar, kalanı öznitelikleriyle yeni katmana yazar.".into(),
         help: Some([
             "Çıkarılacak alanlar önce birleşir; her nesnenin onların dışında kalan kısmı yazılır: alanın kalan parçaları, çizginin dışarıdaki parçaları, dışarıdaki noktalar. Sınır üstündeki çizgi parçası atılır.",
@@ -264,6 +266,7 @@ pub fn sym_difference() -> Tool {
         id: "geometry.symDifference".into(),
         label: "Simetrik fark".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.symDifference"),
         description: "İki alan kümesinin yalnız birinin kapladığı parçaları, kendi taraflarının öznitelikleriyle yeni katmana yazar.".into(),
         help: Some([
             "Önce birinci alanların ikincilerin dışında kalan parçaları, sonra ikincilerin birincilerin dışında kalanları yazılır; ortak kısımlar atılır.",
@@ -303,6 +306,7 @@ pub fn union() -> Tool {
         id: "geometry.union".into(),
         label: "Birleşim".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.union"),
         description: "İki alan kümesini bindirir: ortak parçalar iki tarafın, kalan parçalar kendi taraflarının öznitelikleriyle yeni katmana yazılır.".into(),
         help: Some([
             "Önce her birinci alanın her ikinciyle ortak parçası (iki tarafın öznitelikleriyle), sonra birincilerin ikincilerin dışında kalan, en son ikincilerin birincilerin dışında kalan parçaları yazılır. İkinci tarafın öznitelikleri Önek ile yazılır.",

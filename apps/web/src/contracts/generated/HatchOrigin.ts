@@ -3,6 +3,6 @@ import type { BoxCorner } from "./BoxCorner";
 import type { Vec2 } from "./Vec2";
 
 /**
- * Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+ * Where a pattern's lines are anchored (docs/adr/0331 §2).
  */
 export type HatchOrigin = { "kind": "world" } | { "kind": "point", at: Vec2, } | { "kind": "corner", corner: BoxCorner, across?: boolean, };

@@ -41,7 +41,22 @@ pub const STANDARD_STYLE: &str = "Standart";
 impl DrawingFont {
     /// Every typeface, in the contract's order (the typed columns and the
     /// core's metrics number them so).
-    pub const ALL: [DrawingFont; 7] = [
+    pub const ALL: [DrawingFont; 9] = [
+        DrawingFont::Barlow,
+        DrawingFont::Arimo,
+        DrawingFont::Overpass,
+        DrawingFont::Quicksand,
+        DrawingFont::ArchitectsDaughter,
+        DrawingFont::CourierPrime,
+        DrawingFont::PlexMono,
+        DrawingFont::Arial,
+        DrawingFont::TimesNewRoman,
+    ];
+
+    /// Every typeface in the order a person picks one: Arial and Times New Roman first (docs/adr/9311).
+    pub const CHOICES: [DrawingFont; 9] = [
+        DrawingFont::Arial,
+        DrawingFont::TimesNewRoman,
         DrawingFont::Barlow,
         DrawingFont::Arimo,
         DrawingFont::Overpass,
@@ -50,6 +65,9 @@ impl DrawingFont {
         DrawingFont::CourierPrime,
         DrawingFont::PlexMono,
     ];
+
+    /// A new project's typeface (docs/adr/9311).
+    pub const NEW_PROJECT: DrawingFont = DrawingFont::Arial;
 
     /// Its name in the contract and the file (`courier-prime`).
     pub fn id(self) -> &'static str {
@@ -61,6 +79,8 @@ impl DrawingFont {
             DrawingFont::ArchitectsDaughter => "architects-daughter",
             DrawingFont::CourierPrime => "courier-prime",
             DrawingFont::PlexMono => "plex-mono",
+            DrawingFont::Arial => "arial",
+            DrawingFont::TimesNewRoman => "times-new-roman",
         }
     }
 
@@ -79,6 +99,8 @@ impl DrawingFont {
             DrawingFont::ArchitectsDaughter => "Architects Daughter",
             DrawingFont::CourierPrime => "Courier Prime",
             DrawingFont::PlexMono => "IBM Plex Mono",
+            DrawingFont::Arial => "Arial",
+            DrawingFont::TimesNewRoman => "Times New Roman",
         }
     }
 }

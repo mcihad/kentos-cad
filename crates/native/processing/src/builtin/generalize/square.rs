@@ -21,6 +21,7 @@ pub fn tool() -> Tool {
         id: "generalize.orthogonalize".into(),
         label: "Dik açılandır".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.orthogonalize"),
         description: "Dik açıya ve düzlüğe yakın köşeleri tam dik ve düz yapar (binalar, parseller); öbür köşeler olduğu gibi kalır.".into(),
         help: Some([
             "Örnekler: sayısallaştırılmış bina köşelerini dik yapmak, el çizimi yapı adalarını düzeltmek.",

@@ -758,7 +758,8 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     let seq = app.gis.processing.runner.history()[0].seq;
     app.selection.clear();
     event(&mut app, Event::Panel(PanelEvent::SelectRun(seq)));
-    assert_eq!(app.selection.len(), 4, "the four new corner points");
+    // The four new corner points and their names' texts (docs/adr/9311).
+    assert_eq!(app.selection.len(), 8, "the four new corner points and their texts");
     event(&mut app, Event::Panel(PanelEvent::Reopen(seq)));
     let window = app.gis.processing.dialog.as_ref().expect("open again");
     assert_eq!(window.values.get("prefix"), Some(&json!("K")));

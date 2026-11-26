@@ -299,6 +299,21 @@ fn inspector_edits_the_displayed_survey_point_and_updates_the_grid() {
         unreachable!()
     };
     point.z = Some(128.75);
+    // The point layer's labels turned on, as its Etiketler does: a layer labels nothing until then (docs/adr/9311).
+    let layer = point.base.layer_id.clone();
+    fn turn_on(nodes: &mut [kentos_commands::LayerNode], id: &str) {
+        for n in nodes {
+            if n.id == id {
+                n.style.labels = Some(kentos_commands::LayerLabels {
+                    mode: kentos_commands::LabelsMode::Single,
+                    classes: Vec::new(),
+                    obstacle: None,
+                });
+            }
+            turn_on(&mut n.children, id);
+        }
+    }
+    turn_on(&mut survey.layers, &layer);
     app.show_document(crate::document::Document::new(survey, None).unwrap());
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("view.coords"));

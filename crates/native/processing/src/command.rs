@@ -60,7 +60,7 @@ pub fn register_as(host: &'static str) {
     register_tools(Box::new(Tools));
 }
 
-struct Tools;
+pub(crate) struct Tools;
 
 pub(crate) fn refused(code: &str, message: String, path: Option<String>) -> Box<CommandError> {
     Box::new(CommandError {
@@ -117,6 +117,7 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
         // §13–§14), read without its code.
         model_description: crate::external::find(&tool.id).and_then(|t| t.model_description),
         extension: crate::external::pin_of(&tool.id),
+        modules: tool.modules.ids().into_iter().map(str::to_owned).collect(),
         aliases: tool.aliases.clone(),
         parameters: tool
             .parameters
@@ -312,6 +313,10 @@ pub(crate) fn ready(
             (tool, model)
         }
     };
+    // A project of another module does not run it (docs/adr/9310): the window, Python, MCP and the agent alike.
+    if let Some(why) = crate::modules::refusal(doc, &tool) {
+        return Err(refused(codes::TOOL_NOT_IN_MODULE, why, Some("tool".into())));
+    }
     let selection = slots_of(doc, &input.selection, "selection")?;
     let view = input.view.map(|[min_x, min_y, max_x, max_y]| Bounds {
         min_x,
@@ -567,11 +572,13 @@ impl ToolHost for Tools {
                 found.push(t);
             }
         }
+        // A project lists the tools its module offers (docs/adr/9310).
         found.retain(|t| {
             input
                 .category
                 .as_deref()
                 .is_none_or(|c| in_category(&registry, t, c))
+                && crate::modules::runs_on(doc, t)
         });
         found.sort_by(|a, b| a.id.cmp(&b.id));
         let mut tools: Vec<ProcessingTool> = found
@@ -593,7 +600,7 @@ impl ToolHost for Tools {
                     .category
                     .as_deref()
                     .is_none_or(|c| in_category(&registry, &as_tool, c));
-                if found && in_cat {
+                if found && in_cat && crate::modules::runs_on(doc, &as_tool) {
                     tools.push(described(&registry, &as_tool, doc));
                 }
             }
@@ -762,6 +769,9 @@ impl ToolHost for Tools {
                 Some("tool".into()),
             ));
         };
+        if let Some(why) = crate::modules::refusal(doc, &tool) {
+            return Err(refused(codes::TOOL_NOT_IN_MODULE, why, Some("tool".into())));
+        }
         // With a sink the rows run on a copy and their results go to the file or the database (docs/adr/0593 §1).
         if let Some(sink) = &input.sink {
             return crate::batch_sink::batch_to_sink(doc, input, sink, &tool, write, flow);

@@ -50,6 +50,7 @@ pub mod local_files;
 pub mod model;
 pub mod model_edit;
 pub mod model_runner;
+pub mod modules;
 pub mod network;
 pub mod output_layer;
 pub mod parameters;

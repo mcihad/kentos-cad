@@ -22,12 +22,14 @@ use super::template::{record, table};
 use crate::num::dxf_real;
 
 /// ACAD's flags of a TrueType style's extended data (1071): italic, bold,
-/// and the pitch and family AutoCAD writes for a TrueType face (34).
+/// and the pitch and family a TrueType face is written with (34).
 const ACAD_ITALIC: i64 = 0x0100_0000;
 const ACAD_BOLD: i64 = 0x0200_0000;
 const ACAD_TRUETYPE: i64 = 34;
 
-/// A family's file as AutoCAD names Arial's and Courier's, KentOS's others as `‹Aile›.ttf`.
+/// A family's file as Windows names Arial's, Times New Roman's and Courier's, KentOS's others as `‹Aile›.ttf`. Arimo
+/// goes as Arial, its metric twin, so another program draws it in the face it stands for (docs/adr/9311); it reads back
+/// as Arial.
 pub fn font_file(font: DrawingFont, bold: bool, italic: bool) -> String {
     let style = match (bold, italic) {
         (false, false) => "",
@@ -36,7 +38,8 @@ pub fn font_file(font: DrawingFont, bold: bool, italic: bool) -> String {
         (true, true) => "bi",
     };
     match font {
-        DrawingFont::Arimo => format!("arial{style}.ttf"),
+        DrawingFont::Arimo | DrawingFont::Arial => format!("arial{style}.ttf"),
+        DrawingFont::TimesNewRoman => format!("times{style}.ttf"),
         DrawingFont::CourierPrime => format!("cour{style}.ttf"),
         other => format!("{}.ttf", other.label().replace(' ', "")),
     }
@@ -52,10 +55,11 @@ fn record_file(s: &TextStyleDef) -> String {
         .unwrap_or_else(|| font_file(s.font, s.bold, s.italic))
 }
 
-/// A family as ACAD's data names it (what AutoCAD shows and maps to an installed face).
+/// A family as ACAD's data names it (what a reader shows and maps to an installed face).
 fn family(font: DrawingFont) -> &'static str {
     match font {
         DrawingFont::Arimo => "Arial",
+        // Arial's and Times New Roman's own names (docs/adr/9311).
         DrawingFont::CourierPrime => "Courier New",
         other => other.label(),
     }

@@ -586,7 +586,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "Çizim birimi",
             "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar.",
         ),
-        choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
+        choice("newProjects.drawingFont", "arial", DRAWING_FONTS)
             .hosts(&[Web, Desktop])
             .text(
                 "Çizim yazı tipi",
@@ -864,6 +864,8 @@ fn settings() -> Vec<SettingDescriptor> {
 }
 
 const DRAWING_FONTS: &[(&str, &str)] = &[
+    ("arial", "Arial"),
+    ("times-new-roman", "Times New Roman"),
     ("barlow", "Barlow"),
     ("arimo", "Arimo"),
     ("overpass", "Overpass"),

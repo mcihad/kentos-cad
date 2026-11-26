@@ -1,9 +1,7 @@
-//! Maliyet matrisi (the web's `builtin/network/odMatrix.ts`; docs/adr/0209
-//! §7; ArcGIS's OD Cost Matrix): from each origin the cost along the network
-//! to each destination, the cheapest first, within an upper bound and the
-//! nearest `count` when given. The table (Başlangıç, Varış, Sıra and the
-//! chosen cost) goes to the clipboard or a CSV; straight lines from each
-//! origin to its destinations are written when asked.
+//! Maliyet matrisi (the web's `builtin/network/odMatrix.ts`; docs/adr/0209 §7): from each origin the cost along the
+//! network to each destination, the cheapest first, within an upper bound and the nearest `count` when given. The table
+//! (Başlangıç, Varış, Sıra and the chosen cost) goes to the clipboard or a CSV; straight lines from each origin to its
+//! destinations are written when asked.
 
 use std::collections::BTreeMap;
 
@@ -25,6 +23,7 @@ pub fn tool() -> Tool {
         id: "network.odMatrix".into(),
         label: "Maliyet matrisi".into(),
         category: "network".into(),
+        modules: crate::modules::placed("network.odMatrix"),
         description: "Başlangıç noktalarından varış noktalarına ağ boyunca maliyetleri tablo olarak çıkarır; isteğe bağlı düz çizgilerle.".into(),
         help: Some([
             "Ağ projenin yol ya da şebeke ağıdır (Ağlar); maliyet uzunluk ya da ağın süresi ve maliyetleridir. Tek yönler ve kapalı yollar gözetilir.",

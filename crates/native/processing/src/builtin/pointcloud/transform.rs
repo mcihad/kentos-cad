@@ -42,6 +42,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.transform".into(),
         label: "Dönüşüm uygula".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.transform"),
         description: "Nokta bulutunun bütün noktalarını 4 × 4'lük afin matrisle taşır (Tarama kaydı'nın matrisi gibi); sonuç kaynağın ızgarasında LAS, LAZ ya da COPC olarak yazılır, kaynak dosya değişmez.".into(),
         help: Some([
             "Matris satır satır 16 sayıdır: ilk üç sütunun üst üç satırı dönüklük (ya da başka doğrusal kısım), dördüncü sütunun üst üç satırı öteleme, son satır 0 0 0 1. Sayılar boşluk, satır sonu, virgül ya da noktalı virgülle ayrılır; ondalık için nokta.",

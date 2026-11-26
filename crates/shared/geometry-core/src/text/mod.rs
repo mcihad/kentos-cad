@@ -1,7 +1,8 @@
 //! Widths of the drawing's text in its own typeface (`ProjectSettings.drawingFont`): the sum of the
 //! letters' advances, from tables measured where the overlay draws them (`metrics.rs`, recorded in
-//! Chrome with the bundled faces). Kerning is left out; a letter the tables do not hold counts as the
-//! face's average lowercase letter.
+//! a browser with the bundled faces; the desktop's additions in `metrics_more.rs`, from the faces'
+//! files). Kerning is left out; a letter the tables do not hold counts as the face's average
+//! lowercase letter.
 
 pub mod along;
 pub mod edit;
@@ -14,8 +15,22 @@ pub mod natural;
 pub mod paragraph;
 #[rustfmt::skip]
 mod metrics;
+// The typefaces the desktop added after the web paused (Arial, Times New Roman; docs/adr/9311), after the web's seven.
+#[rustfmt::skip]
+mod metrics_more;
 
 use metrics::{ADVANCES, BOLD, FIRST, FONTS, LAST};
+
+/// How many faces the tables hold: the web's, then the desktop's.
+const FACES: usize = FONTS.len() + metrics_more::FONTS.len();
+
+/// The id of the face at `i` in `DrawingFont`'s order.
+fn id_at(i: usize) -> Option<&'static str> {
+    match i.checked_sub(FONTS.len()) {
+        None => FONTS.get(i).copied(),
+        Some(j) => metrics_more::FONTS.get(j).copied(),
+    }
+}
 
 /// A drawing typeface, as an index into the tables (0 is Barlow, the default).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -27,14 +42,13 @@ impl Font {
 
     /// The face by its `DrawingFont` id; an unknown id is Barlow.
     pub fn from_id(id: &str) -> Font {
-        FONTS
-            .iter()
-            .position(|f| *f == id)
+        (0..FACES)
+            .find(|i| id_at(*i) == Some(id))
             .map_or(Font::DEFAULT, |i| Font(i as u8))
     }
 
     pub fn id(self) -> &'static str {
-        FONTS[self.0 as usize]
+        id_at(self.0 as usize).unwrap_or(FONTS[0])
     }
 
     /// Its place in the tables (`DrawingFont`'s order).
@@ -44,23 +58,33 @@ impl Font {
 
     /// The face at `i` in the tables; none past them.
     pub fn from_index(i: usize) -> Option<Font> {
-        (i < FONTS.len()).then_some(Font(i as u8))
+        (i < FACES).then_some(Font(i as u8))
     }
 }
 
 /// The advance of `c` in thousandths of an em.
 fn advance(font: Font, c: char) -> u32 {
-    advance_in(&ADVANCES, font, c)
+    advance_in(row(font, false), c)
 }
 
 /// The advance of `c` in thousandths of an em, bold (a multi-line text's
 /// bold letters, docs/adr/0182) or not.
 pub(crate) fn advance_of(font: Font, c: char, bold: bool) -> u32 {
-    advance_in(if bold { &BOLD } else { &ADVANCES }, font, c)
+    advance_in(row(font, bold), c)
 }
 
-fn advance_in(tables: &[[u16; 352]; 7], font: Font, c: char) -> u32 {
-    let table = &tables[font.0 as usize];
+/// A face's advances, bold (600) or not (500): the web's tables, then the desktop's.
+fn row(font: Font, bold: bool) -> &'static [u16; 352] {
+    let i = font.0 as usize;
+    match (i.checked_sub(FONTS.len()), bold) {
+        (None, false) => &ADVANCES[i],
+        (None, true) => &BOLD[i],
+        (Some(j), false) => &metrics_more::ADVANCES[j],
+        (Some(j), true) => &metrics_more::BOLD[j],
+    }
+}
+
+fn advance_in(table: &[u16; 352], c: char) -> u32 {
     let code = c as u32;
     if (FIRST..=LAST).contains(&code) {
         let w = table[(code - FIRST) as usize] as u32;

@@ -15,6 +15,7 @@ apps/desktop-road/     KentOS Yol'un paketi (kentos_desktop_road): eksen, boykes
 apps/kentos-cad/       programlar (kentos-cad; modül adlarıyla KentOS Mimari, Harita, GIS) ve programlar arası sınamalar (tests/programs)
 apps/launcher/         KentOS Launcher (kentos-launcher): manifestlerden uygulamalar, son dosyalar
 apps/ui-showcase/      KentOS UI bileşen vitrini
+paket/                 Kurulum paketinin kaynak dosyaları (<kaynak>): fonts/, eklentiler/ (örnek Python işlem aracı ornek-isleme/), betikler/; yerlerini kentos_launch::install söyler (CLAUDE.md §26, ADR 9312)
 python/                Python SDK'sı: paket `kentos`, tipli katman `kentos.cad` (katalogdan üretilir), testleri
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/model-view-ui/  model görüntüleyicisinin Iced bileşeni (kentos-model-view-ui): 3B sahne, görünüş, ağaç, özellikler; tek pencere örneği (ADR 8073)

@@ -56,7 +56,7 @@
             },
             "kind": {
               "type": "text",
-              "content": "TAKS ≤ 0,30",
+              "content": "TAKS ⟨ 0,30",
               "style": {
                 "size": 4000,
                 "weight": 600

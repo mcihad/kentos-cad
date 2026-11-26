@@ -2356,6 +2356,8 @@ codes! {
     INVALID_WINDOW = "invalid_window", Failed, false, "Pencere geçerli değil: dört sonlu sayı, en küçükler en büyüklerinden küçük; çok büyük pencere de reddedilir.";
     /// A processing tool not among İşlemler's (docs/adr/0508).
     UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
+    /// A processing tool the project's module does not offer (docs/adr/9310): its modules are another's.
+    TOOL_NOT_IN_MODULE = "tool_not_in_module", Failed, false, "Bu işlem aracı bu projenin modülünde yok; ileti aracın çalıştığı projeleri söyler, cad.processing.tools her aracın modüllerini verir.";
     /// A processing tool's values do not fit its parameters (docs/adr/0508).
     INVALID_PARAMETERS = "invalid_parameters", Failed, false, "Aracın parametrelerinden birinin değeri uymuyor; ileti parametreyi ve nedenini söyler.";
     /// A processing tool ran and stopped: nothing written (docs/adr/0508).

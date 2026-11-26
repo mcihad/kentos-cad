@@ -2,6 +2,6 @@
 import type { Vec2 } from "./Vec2";
 
 /**
- * How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).
+ * How the length changes.
  */
 export type LengthenChange = { "kind": "delta", length?: number, angle?: number, } | { "kind": "percent", percent: number, } | { "kind": "total", length?: number, angle?: number, } | { "kind": "dynamic", to: Vec2, };

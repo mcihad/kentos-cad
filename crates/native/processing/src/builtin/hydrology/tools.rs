@@ -33,6 +33,7 @@ fn tool(
         id: id.into(),
         label: label.into(),
         category: HYDROLOGY.into(),
+        modules: crate::modules::placed(id),
         description: description.into(),
         help: Some(help.join("\n\n")),
         keywords: keywords.iter().map(|k| (*k).to_owned()).collect(),

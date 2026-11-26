@@ -2317,7 +2317,7 @@ fn another_programs_styles_come_in_as_the_projects() {
         r.text_styles,
         [
             TextStyleDef {
-                font: DrawingFont::Arimo,
+                font: DrawingFont::Arial,
                 bold: true,
                 font_file: Some("arial.ttf".into()),
                 big_font_file: None,
@@ -2368,7 +2368,7 @@ fn another_programs_styles_come_in_as_the_projects() {
                 "Ada 101".to_owned(),
                 TextFace {
                     bold: true,
-                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arimo))
+                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arial))
                 }
             ),
             // Its own slant (51) over its style's.
@@ -2377,7 +2377,7 @@ fn another_programs_styles_come_in_as_the_projects() {
                 TextFace {
                     bold: true,
                     oblique: Some(10.0),
-                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arimo))
+                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arial))
                 }
             ),
             (
@@ -2435,7 +2435,7 @@ fn another_programs_styles_come_in_as_the_projects() {
                 decimals: Some(3),
                 unit: Some(DrawingUnit::Cm),
                 prefix: Some("L=".into()),
-                font: Some(DrawingFont::Arimo),
+                font: Some(DrawingFont::Arial),
                 // Its DIMTXSTY, by the style's name (docs/adr/1023). ADA is arial.ttf: its DIMTXT of 6 mm is the
                 // capitals' height, KentOS's em 6 / (1466/2048) (docs/adr/8046 §3); the others are in Standard, txt.
                 text_style: Some("ADA".into()),
@@ -2493,7 +2493,7 @@ fn another_programs_styles_come_in_as_the_projects() {
             decimals: Some(3),
             unit: Some(DrawingUnit::Cm),
             prefix: Some("L=".into()),
-            font: Some(DrawingFont::Arimo),
+            font: Some(DrawingFont::Arial),
             ..DimensionLook::default()
         }
     );
@@ -3007,7 +3007,7 @@ fn a_truetype_text_s_height_is_its_capitals_height() {
             ("ARIAL".to_owned(), 2.5 / (1466.0 / 2048.0)),
             ("SHX".to_owned(), 2.5),
             ("TXT".to_owned(), 2.5),
-            ("TIMES".to_owned(), 2.5 / 0.7),
+            ("TIMES".to_owned(), 2.5 / (1356.0 / 2048.0)),
             ("COUR".to_owned(), 2.5 / (1213.0 / 2048.0)),
         ]
     );

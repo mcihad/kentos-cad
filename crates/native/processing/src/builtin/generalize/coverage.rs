@@ -30,6 +30,7 @@ pub fn tool() -> Tool {
         id: "generalize.coverageSimplify".into(),
         label: "Ortak kenarları koruyarak sadeleştir".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.coverageSimplify"),
         description: "Komşu alanların ortak kenarlarını bir kez sadeleştirir; aralarında boşluk ya da örtüşme açılmaz.".into(),
         help: Some([
             "Örnekler: il, ilçe ve mahalle sınırlarını küçük ölçeğe indirmek, parsel katmanının köşelerini azaltmak.",

@@ -1,10 +1,7 @@
-//! Çevreleyenden bilgi al (the web's `builtin/infoFromEnclosing.ts`;
-//! docs/adr/0200 §3; Netcad's Çevreleyenden Bilgi Al, QGIS "Join attributes by
-//! location"): each target object gets a field of the source area its centre
-//! is in (a building its parcel's number). Several areas: the first in the
-//! drawing's order, counted and said; none: the target stays as it is,
-//! counted and said. The centres and the areas are the core's (`Merkezi
-//! içinde`); one undo step.
+//! Çevreleyenden bilgi al (the web's `builtin/infoFromEnclosing.ts`; docs/adr/0200 §3): each target object gets a field
+//! of the source area its centre is in (a building its parcel's number). Several areas: the first in the drawing's
+//! order, counted and said; none: the target stays as it is, counted and said. The centres and the areas are the core's
+//! (`Merkezi içinde`); one undo step.
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -22,6 +19,7 @@ pub fn tool() -> Tool {
         id: "attributes.fromEnclosing".into(),
         label: "Çevreleyenden bilgi al".into(),
         category: "attributes".into(),
+        modules: crate::modules::placed("attributes.fromEnclosing"),
         description: "Her nesneye ağırlık merkezinin içinde kaldığı alanın bir alanını yazar: yapıya parsel numarası, parsele mahalle adı.".into(),
         help: Some([
             "Nesnenin merkezi ifadelerdeki $merkez_y, $merkez_x’tir: alanların ağırlık merkezi, öbür nesnelerin yerleşim noktası. Merkez alanın sınırındaysa (1 mm içinde) o alan da sayılır.",

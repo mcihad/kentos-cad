@@ -274,7 +274,8 @@ fn sheet_snapshot_independent_cases_keep_document_resources_context_and_real_pdf
             assert_eq!(meta["laterEditsExcluded"], true);
             assert_eq!(meta["context"]["user"], user);
             assert_eq!(meta["context"]["date"], date);
-            assert_eq!(meta["fonts"].as_array().unwrap().len(), 22);
+            // The bundled faces: the web's 22 and the 8 Arial and Times New Roman are drawn in (docs/adr/9311).
+            assert_eq!(meta["fonts"].as_array().unwrap().len(), 30);
             if let Some(sha) = c["expectImageSha"].as_str() {
                 assert!(
                     meta["images"]
@@ -357,6 +358,6 @@ fn sheet_snapshot_png_svg_and_pdf_carry_the_same_original_source_and_physical_si
         from_svg
     );
     assert_eq!(from_svg["laterEditsExcluded"], true);
-    assert_eq!(from_svg["fonts"].as_array().unwrap().len(), 22);
+    assert_eq!(from_svg["fonts"].as_array().unwrap().len(), 30);
     fs::remove_dir_all(root).unwrap();
 }

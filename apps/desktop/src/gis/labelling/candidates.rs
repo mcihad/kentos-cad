@@ -129,7 +129,7 @@ pub(super) fn cut(text: &str) -> String {
 /// The candidates of `node` (the window's draft of the layer) in `window` at `scale` px a metre.
 pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f64; 4], scale: f64) -> Candidates {
     let mut c = Candidates {
-        off: node.style.labels.as_ref().is_some_and(|l| l.mode == LabelsMode::Off),
+        off: !node.style.labels_on(),
         hidden: !doc.layers().is_visible(&node.id),
         fields: picker_fields(doc, &node.id),
         ..Candidates::default()

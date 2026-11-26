@@ -23,8 +23,8 @@ export type ConstraintsEdit = {
  */
 edit: ConstraintEdit, 
 /**
- * Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the
- * second; they are not held afterwards.
+ * Objects (persistent ids) this solve does not move (the object picked first stays, the
+ * second moves); they are not held afterwards.
  */
 hold?: Array<string>, 
 /**

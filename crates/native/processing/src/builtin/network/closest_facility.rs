@@ -1,10 +1,7 @@
-//! En yakın tesis (the web's `builtin/network/closestFacility.ts`; docs/adr/0209
-//! §7; ArcGIS's Closest Facility): for each incident the `count` cheapest
-//! facilities along the network, within an upper bound when one is given;
-//! from the incident to the facility or the other way. Each way is written
-//! to the output layer as a polyline with its incident, facility, rank and
-//! costs; the same rows are the table. Equal costs: the facility first in the
-//! list first.
+//! En yakın tesis (the web's `builtin/network/closestFacility.ts`; docs/adr/0209 §7): for each incident the `count`
+//! cheapest facilities along the network, within an upper bound when one is given; from the incident to the facility or
+//! the other way. Each way is written to the output layer as a polyline with its incident, facility, rank and costs;
+//! the same rows are the table. Equal costs: the facility first in the list first.
 
 use std::collections::BTreeMap;
 
@@ -27,6 +24,7 @@ pub fn tool() -> Tool {
         id: "network.closestFacility".into(),
         label: "En yakın tesis".into(),
         category: "network".into(),
+        modules: crate::modules::placed("network.closestFacility"),
         description: "Her olay noktası için ağ boyunca en yakın tesisleri (okul, sağlık ocağı, itfaiye) bulur; yollarını ve maliyetlerini yazar.".into(),
         help: Some([
             "Ağ projenin yol ya da şebeke ağıdır (Ağlar); maliyet uzunluk ya da ağın süresi ve maliyetleridir. Tek yönler ve kapalı yollar gözetilir.",

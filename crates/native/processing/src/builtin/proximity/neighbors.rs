@@ -1,10 +1,7 @@
-//! Komşu alanlar (the web's `builtin/proximity/neighbors.ts`; docs/adr/0215
-//! §3.4; ArcGIS Polygon Neighbors): each area's neighbours, both ways round,
-//! with the length of boundary they share within the tolerance, those that
-//! only meet at a corner (if asked) and those whose insides overlap (if
-//! asked) with the overlapping area. A table; if asked, each area's
-//! neighbour count and names written to its attributes in one undo step. The
-//! pairs are the run's store's (`Store::neighbors`).
+//! Komşu alanlar (the web's `builtin/proximity/neighbors.ts`; docs/adr/0215 §3.4): each area's neighbours, both ways
+//! round, with the length of boundary they share within the tolerance, those that only meet at a corner (if asked) and
+//! those whose insides overlap (if asked) with the overlapping area. A table; if asked, each area's neighbour count and
+//! names written to its attributes in one undo step. The pairs are the run's store's (`Store::neighbors`).
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -42,6 +39,7 @@ pub fn tool() -> Tool {
         id: "proximity.neighbors".into(),
         label: "Komşu alanlar".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("proximity.neighbors"),
         description: "Alanların komşularını, ortak kenar uzunluklarını, köşeden değenleri ve örtüşenleri tablo olarak verir; isterseniz komşu sayısını ve adlarını yazar.".into(),
         help: Some([
             "Örnekler: bir adanın parsellerinin komşuları ve ortak sınır uzunlukları; ifraz öncesi komşu parsellerin listesi; örtüşen parsellerin bulunması.",

@@ -1,8 +1,6 @@
-//! Hizmet alanları (the web's `builtin/network/serviceAreas.ts`; docs/adr/0209
-//! §6; ArcGIS's Service Area): the facilities of a layer and the network
-//! within each break of the chosen cost, as Hizmet alanı draws it: the areas
-//! (the reached lines' buffers, Kenar payı wide; discs or rings; merged or one
-//! each) and, when asked, the lines.
+//! Hizmet alanları (the web's `builtin/network/serviceAreas.ts`; docs/adr/0209 §6): the facilities of a layer and the
+//! network within each break of the chosen cost, as Hizmet alanı draws it: the areas (the reached lines' buffers, Kenar
+//! payı wide; discs or rings; merged or one each) and, when asked, the lines.
 
 use std::collections::BTreeMap;
 
@@ -45,6 +43,7 @@ pub fn tool() -> Tool {
         id: "network.serviceAreas".into(),
         label: "Hizmet alanları".into(),
         category: "network".into(),
+        modules: crate::modules::placed("network.serviceAreas"),
         description: "Tesislerden ağ boyunca verilen uzaklık ya da sürelerde ulaşılan alanları çizer: aralık başına alan, isteğe bağlı ulaşılan yollarla.".into(),
         help: Some([
             "Ağ projenin yol ya da şebeke ağıdır (Ağlar); Aralıklar maliyetin biriminde artan sayılardır (Uzunluk’ta metre, Süre’de dakika): “5 10 15”.",

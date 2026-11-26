@@ -1,7 +1,6 @@
-//! Kırp (docs/adr/0207 §7; PDAL's filters.crop, ArcGIS Extract LAS): the
-//! points inside (or outside) the selected areas, their holes and parts and
-//! arcs exact; a point on a straight edge is inside (`ops::region`). One
-//! pass; the result keeps the source's records whole.
+//! Kırp (docs/adr/0207 §7; PDAL's filters.crop): the points inside (or outside) the selected areas, their holes and
+//! parts and arcs exact; a point on a straight edge is inside (`ops::region`). One pass; the result keeps the source's
+//! records whole.
 
 use kentos_commands::Entity;
 use kentos_geometry_core::ops::areas::areas_of_entity;
@@ -36,6 +35,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.clip".into(),
         label: "Bulutu kırp".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.clip"),
         description: "Nokta bulutunun seçili alanların içinde (ya da dışında) kalan noktalarını LAS, LAZ ya da COPC olarak yazar; alanların delikleri, parçaları ve yayları kesindir.".into(),
         help: Some([
             "Alanlar birlikte bir bölgedir: nokta alanlardan birinin içindeyse (deliğinde değilse) içeridedir. Düz kenarın üstündeki nokta içeride sayılır.",

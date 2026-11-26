@@ -1,10 +1,7 @@
-//! Özniteliğe göre böl (the web's `builtin/layers/split.ts`; docs/adr/0217
-//! §2; QGIS Split vector layer, ArcGIS Split By Attributes): the objects
-//! split into layers by their fields' values, a layer a value in the order
-//! the values first come, in a new group named after the fields right above
-//! the first object's layer; each layer takes the look and fields of its
-//! value's first object's layer. The objects are copied, or moved. One undo
-//! step.
+//! Özniteliğe göre böl (the web's `builtin/layers/split.ts`; docs/adr/0217 §2): the objects split into layers by their
+//! fields' values, a layer a value in the order the values first come, in a new group named after the fields right
+//! above the first object's layer; each layer takes the look and fields of its value's first object's layer. The
+//! objects are copied, or moved. One undo step.
 
 use std::collections::HashMap;
 
@@ -26,6 +23,7 @@ pub fn tool() -> Tool {
         id: "layers.splitByAttribute".into(),
         label: "Özniteliğe göre böl".into(),
         category: "layers".into(),
+        modules: crate::modules::placed("layers.splitByAttribute"),
         description: "Nesneleri bir ya da birkaç özniteliğin değerlerine göre yeni bir gruptaki katmanlara böler: her değer bir katman.".into(),
         help: Some([
             "Örnekler: parselleri mahallelerine, yapıları kullanım ve kat sayılarına, yolları türlerine göre ayrı katmanlarda toplamak.",

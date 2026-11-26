@@ -1,32 +1,19 @@
-//! Etiketleri yazıya çevir (docs/adr/0175 §3; Netcad's Etiketleri CAD'e
-//! çevir, ArcGIS' Convert Labels To Annotation, QGIS' Extract labels): the
-//! layers' labels written as objects where the label engine places them at
-//! 1:N, as a sheet writes them (docs/adr/0212 §4): a one-line label a text,
-//! a stacked one a multi-line text, a curved one a text along a curve, a
-//! callout a line. The placing is the shared core's (`ops::label_text`,
-//! through the store's `label_texts`); the web's tool is
-//! `apps/web/src/tools/labelsToTextTool.ts`, and both play
-//! `fixtures/interaction/v1/labels-to-text.json`.
-//!
-//! - **Scope**, taken when it starts: the selection's objects, else every
-//!   object on a visible layer; their labels are the drawing's (each layer's
-//!   labelling, its classes' texts). Texts, dimensions and leaders show none,
-//!   and an object whose label a text writes already (docs/adr/0175 §4) has
-//!   its text for a label.
-//! - **Options**, as Topolojik temizlik's: a number typed is the scale (Ö
-//!   asks for it; each run starts at the project's drawing scale);
-//!   Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or
-//!   the active one) and Nesneye bağlı (B: the texts know their objects and
-//!   follow them, `labelOf`, `labelScale`) are kept for as long as the app
-//!   lives ([`crate::tool::Memory`]).
-//! - **Shown first**: the texts in place, faint, and the counts beside the
-//!   cursor. Enter, the Uygula button or a quick right click writes them
-//!   through `cad.annotations.write`'s `labels` (docs/adr/0622 §9) in one
-//!   step, opening the text layer in that step when the drawing lacks it,
-//!   selects them and leaves;
-//!   Esc leaves.
+//! Etiketleri yazıya çevir (docs/adr/0175 §3): the layers' labels written as objects where the label engine places them
+//! at 1:N, as a sheet writes them (docs/adr/0212 §4): a one-line label a text, a stacked one a multi-line text, a
+//! curved one a text along a curve, a callout a line. The placing is the shared core's (`ops::label_text`, through the
+//! store's `label_texts`); the web's tool is `apps/web/src/tools/labelsToTextTool.ts`, and both play
+//! `fixtures/interaction/v1/labels-to-text.json`. - **Scope**, taken when it starts: the selection's objects, else
+//! every object on a visible layer; their labels are the drawing's (each layer's labelling, its classes' texts). Texts,
+//! dimensions and leaders show none, and an object whose label a text writes already (docs/adr/0175 §4) has its text
+//! for a label. - **Options**, as Topolojik temizlik's: a number typed is the scale (Ö asks for it; each run starts at
+//! the project's drawing scale); Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or the active one)
+//! and Nesneye bağlı (B: the texts know their objects and follow them, `labelOf`, `labelScale`) are kept for as long as
+//! the app lives ([`crate::tool::Memory`]). - **Shown first**: the texts in place, faint, and the counts beside the
+//! cursor. Enter, the Uygula button or a quick right click writes them through `cad.annotations.write`'s `labels`
+//! (docs/adr/0622 §9) in one step, opening the text layer in that step when the drawing lacks it, selects them and
+//! leaves; Esc leaves.
 
-use kentos_commands::{AnnotationWork, AnnotationsWrite, Entity, LabelsMode};
+use kentos_commands::{AnnotationWork, AnnotationsWrite, Entity};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::label_text::{LabelText, LabelTexts};
 use kentos_native_application::{ExecutionContext, annotations_write};
@@ -103,8 +90,7 @@ impl LabelsToText {
                 // A text writes its label already (docs/adr/0175 §4); a layer labelled with nothing has none.
                 let off = layers
                     .get(&base.layer_id)
-                    .and_then(|l| l.style.labels.as_ref())
-                    .is_some_and(|l| l.mode == LabelsMode::Off);
+                    .is_some_and(|l| !l.style.labels_on());
                 if matches!(
                     e,
                     Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)

@@ -32,7 +32,7 @@ superelevation?: string,
  */
 corridor?: string, 
 /**
- * Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+ * Match lines (docs/adr/0998): where one sheet's plan hands over to the next, at the
  * middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
  * sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
  */

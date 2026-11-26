@@ -8,7 +8,7 @@ import type { Vec2 } from "./Vec2";
 /**
  * Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
  * objects trimmed (or extended) at their picks, as one undo step “Buda”
- * (“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,
+ * (“Uzat”) (docs/adr/0294): the picks are clicks,
  * a fence (Çit) or a crossing window (Kesişen); the boundaries chosen
  * (standard mode) or every shown edge (quick mode); `edgeMode` bounds along
  * the boundaries' extensions; `eraseUncut` is quick mode's erase of what no
@@ -63,12 +63,12 @@ fence?: Array<Vec2>,
  */
 crossing?: TrimWindow, 
 /**
- * AutoCAD's EDGEMODE; absent: `none`.
+ * The edge mode; absent: `none`.
  */
 edgeMode?: TrimEdgeMode, 
 /**
  * Buda: an object no boundary cuts goes whole where it is picked
- * (AutoCAD's quick mode) instead of being left with a `trim_failed`
+ * instead of being left with a `trim_failed`
  * warning. Uzat ignores it.
  */
 eraseUncut?: boolean, 

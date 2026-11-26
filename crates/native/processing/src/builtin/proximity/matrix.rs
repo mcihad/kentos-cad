@@ -1,9 +1,7 @@
-//! Uzaklık matrisi (the web's `builtin/proximity/matrix.ts`; docs/adr/0215
-//! §3.2; ArcGIS Generate Near Table, QGIS "Distance matrix"): the distances
-//! from each object to its nearest `k` targets (0: all), within a bound: a
-//! list (one pair a row, with its rank), a matrix (the targets as columns) or
-//! a summary (each object's count, least, mean and most). The search is the
-//! run's store's (`Store::nearest`). Edits nothing.
+//! Uzaklık matrisi (the web's `builtin/proximity/matrix.ts`; docs/adr/0215 §3.2): the distances from each object to its
+//! nearest `k` targets (0: all), within a bound: a list (one pair a row, with its rank), a matrix (the targets as
+//! columns) or a summary (each object's count, least, mean and most). The search is the run's store's
+//! (`Store::nearest`). Edits nothing.
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -26,6 +24,7 @@ pub fn tool() -> Tool {
         id: "proximity.matrix".into(),
         label: "Uzaklık matrisi".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("proximity.matrix"),
         description: "Her nesneden hedeflere uzaklıkları tablo olarak verir: en yakın k hedef ya da hepsi; liste, matris ya da özet.".into(),
         help: Some([
             "Örnekler: her mahalleden en yakın üç sağlık ocağına uzaklıklar; okullar arası uzaklık matrisi; her parselin yollara en kısa uzaklıklarının özeti.",

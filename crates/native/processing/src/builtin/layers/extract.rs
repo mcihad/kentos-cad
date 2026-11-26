@@ -1,8 +1,6 @@
-//! Seçilenleri çıkar (the web's `builtin/layers/extract.ts`; docs/adr/0217
-//! §4; QGIS Extract selected features): the objects copied, or moved, into
-//! the result layer; a new result layer takes the look and fields of the
-//! first object's layer and goes right above it. Moving leaves the objects
-//! already there as they are. One undo step.
+//! Seçilenleri çıkar (the web's `builtin/layers/extract.ts`; docs/adr/0217 §4): the objects copied, or moved, into the
+//! result layer; a new result layer takes the look and fields of the first object's layer and goes right above it.
+//! Moving leaves the objects already there as they are. One undo step.
 
 use kentos_domain::Slot;
 use serde_json::json;
@@ -18,6 +16,7 @@ pub fn tool() -> Tool {
         id: "layers.extract".into(),
         label: "Seçilenleri çıkar".into(),
         category: "layers".into(),
+        modules: crate::modules::placed("layers.extract"),
         description: "Seçili nesneleri yeni ya da var olan bir katmana kopyalar ya da taşır.".into(),
         help: Some([
             "Örnekler: bir sorgunun seçtiği parselleri ayrı bir katmanda toplamak; elle seçilen yapıları bir iş katmanına taşımak.",

@@ -1,8 +1,6 @@
-//! En yakını bul (the web's `builtin/proximity/nearest.ts`; docs/adr/0215
-//! §3.1; ArcGIS Near, QGIS "Join attributes by nearest"): each object gets
-//! its nearest target's distance, the target's chosen fields and, if asked,
-//! the bearing between them, under a prefix. The search is the run's store's
-//! (`Store::nearest`, edge to edge or centre to centre); one undo step.
+//! En yakını bul (the web's `builtin/proximity/nearest.ts`; docs/adr/0215 §3.1): each object gets its nearest target's
+//! distance, the target's chosen fields and, if asked, the bearing between them, under a prefix. The search is the
+//! run's store's (`Store::nearest`, edge to edge or centre to centre); one undo step.
 
 use std::collections::HashMap;
 
@@ -27,6 +25,7 @@ pub fn tool() -> Tool {
         id: "proximity.nearest".into(),
         label: "En yakını bul".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("proximity.nearest"),
         description: "Her nesneye en yakın hedefin uzaklığını, istenen alanlarını ve semtini yazar.".into(),
         help: Some([
             "Örnekler: her parsele en yakın durağın adı ve uzaklığı; her yapıya en yakın yangın musluğu; her kuyuya en yakın derenin uzaklığı.",

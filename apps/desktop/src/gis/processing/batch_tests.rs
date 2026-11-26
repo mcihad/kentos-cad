@@ -245,9 +245,9 @@ fn the_history_keeps_a_models_steps_with_their_counts() {
             .iter()
             .map(|s| (s.records_in, s.records_out))
             .collect::<Vec<_>>(),
-        [(2, 6), (2, 7), (2, 2)]
+        [(2, 12), (2, 7), (2, 2)]
     );
-    assert_eq!((last.records_in, last.records_out), (6, 15));
+    assert_eq!((last.records_in, last.records_out), (6, 21));
 }
 
 /// The window for the owner: the tool's footer with Toplu çalıştır, the table before and after a run with its record,

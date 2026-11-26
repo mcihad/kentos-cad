@@ -1,8 +1,6 @@
-//! Rota boyunca konumla (the web's `builtin/lrs/locate.ts`; docs/adr/0224
-//! §5; ArcGIS Locate Features Along Routes): each object's places along the
-//! routes within a radius, as a table and, when asked, the first place
-//! written into the object's attributes. The search is the core's
-//! (`ops::lrs::locate_run`, its routes' edges in a packed R-tree).
+//! Rota boyunca konumla (the web's `builtin/lrs/locate.ts`; docs/adr/0224 §5): each object's places along the routes
+//! within a radius, as a table and, when asked, the first place written into the object's attributes. The search is the
+//! core's (`ops::lrs::locate_run`, its routes' edges in a packed R-tree).
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -26,6 +24,7 @@ pub fn locate_along() -> Tool {
         id: "linearRef.locateAlong".into(),
         label: "Rota boyunca konumla".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.locateAlong"),
         description: "Nesnelerin rotalardaki yerini ölçüleriyle bulur: noktanın ölçüsü ve uzaklığı, çizginin ve alanın başlangıç ve bitiş ölçüsü.".into(),
         help: Some([
             "Örnekler: kazaların hangi kilometrede olduğu, bir kaplama çizgisinin yolun hangi kesimine düştüğü, bir parselin yolun hangi kesimini kapladığı.",

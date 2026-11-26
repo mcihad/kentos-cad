@@ -1229,6 +1229,8 @@ pub(super) const ENTRIES: &[Entry] = &[
         refusals: &[&[
             "tools_unavailable",
             "unknown_tool",
+            // docs/adr/9310: the project's module does not offer the tool.
+            "tool_not_in_module",
             "invalid_uid",
             "entity_not_found",
             "invalid_parameters",
@@ -1263,6 +1265,7 @@ pub(super) const ENTRIES: &[Entry] = &[
             &["tools_unavailable", "empty_batch", "too_many_rows"],
             &[
                 "unknown_tool",
+                "tool_not_in_module",
                 "invalid_uid",
                 "entity_not_found",
                 "invalid_parameters",

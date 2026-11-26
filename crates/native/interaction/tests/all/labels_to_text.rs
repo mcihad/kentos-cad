@@ -41,9 +41,12 @@ fn labelled(mut base: kentos_commands::EntityBase, label: &str) -> kentos_comman
 /// named point and a street, each with its kind's default style (the
 /// drawing's).
 fn drawing() -> Bench {
-    let mut b = Bench::on(include_str!(
-        "../../../../../fixtures/interaction/v1/empty.kcad"
-    ));
+    // Its layer's labels turned on, one label each in its kind's style: a layer labels nothing until its labelling is
+    // turned on (docs/adr/9311).
+    let mut drawing: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("JSON");
+    drawing["layers"][0]["style"]["labels"] = serde_json::json!({ "mode": "single" });
+    let mut b = Bench::on(&drawing.to_string());
     b.draft.snap = false;
     let square = |b: &mut Bench, x0: f64, y0: f64, x1: f64, y1: f64, label: &str| {
         b.doc

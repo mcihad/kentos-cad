@@ -31,6 +31,7 @@ pub fn tool() -> Tool {
         id: "geometry.simplify".into(),
         label: "Sadeleştir".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.simplify"),
         description: "Alan ve çoklu çizgilerden toleranstan az sapan köşeleri atarak yeni katmana yazar; köşe sayılarını, alan değişimini ve en büyük sapmayı tabloda verir.".into(),
         help: Some([
             "Çizimdeki Sadeleştir’in kuralıdır: atılacak köşe, onun yerine geçecek doğrudan toleranstan az uzaktır; yay kenarlar bütün kalır, alan en az üç köşesini korur.",

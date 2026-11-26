@@ -4802,6 +4802,8 @@ Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidi
   %25–40, ortak katman büyük), paket ve modül başına sürüm (`OPS-10`: kurulumda modül adlarının bağlantıları), gerçek
   pencerede fare ve klavyeyle kabul, bulut projesinin kimlikle başka programa devri.
 - [ ] `OPS-10` Desktop Windows/macOS/Linux paketleri, dosya association, installer/uninstaller, code signing/notarization uygunluğu ve güvenli update/rollback planını kur.
+  Girdisi (26 Kasım 2026, ADR 9312, CLAUDE.md §26): kurulum dizinleri `<program>`, `<kaynak>` (depoda `paket/`), `<kullanıcı>`;
+  yerleri `kentos_launch::install`; paketçinin adımları ADR 9312 §4. Paketin kendisi yapılmadı.
 - [ ] `OPS-11` CPython, font, shader, native format/CRS kütüphanesi ve grid asset'lerinin paket/ABI/lisans envanterini tut; bundle boyutu ve offline çalışmayı test et.
 - [ ] `OPS-12` Web asset/WASM sürümlerini content hash ve protokol uyumluluğuyla dağıt; eski service worker/cache yeni schema ile karışmasın. Güncelleme aktif çizimi kaybettirmesin.
 - [ ] `OPS-13` SBOM, dependency advisory, lisans taraması, lockfile bütünlüğü ve reproducible-build hedeflerini CI'ya ekle; dependencies kontrolsüz “latest” kullanmasın.

@@ -9,7 +9,7 @@ import type { TrimBoundaries } from "./TrimBoundaries";
  * step “Birleştir”. Those on a locked layer are left out with a
  * `locked_skipped` warning at `uids[i]`.
  *
- * As AutoCAD's JOIN (docs/adr/0296): a chain of lines on one straight line
+ * Join (docs/adr/0296): a chain of lines on one straight line
  * is that line; a chain of arcs of one circle is one arc, or the circle
  * when it closes; any other chain a polyline. The joined object keeps all
  * its first object carried; the others' elevations, measures and widths go

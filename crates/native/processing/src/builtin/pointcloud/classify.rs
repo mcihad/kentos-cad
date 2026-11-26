@@ -1,9 +1,7 @@
-//! Yüksekliğe göre sınıfla (docs/adr/0207 §7; ArcGIS Classify LAS By Height,
-//! PDAL's filters.hag_nn with filters.range): the ground's surface from the
-//! ground points (2), each point's height above it; a point of class 0 or 1
-//! (or, asked, any but ground) from the base to the low limit becomes low
-//! vegetation (3), to the middle limit medium (4), to the high limit high
-//! (5). Two passes (`ops::height`).
+//! Yüksekliğe göre sınıfla (docs/adr/0207 §7; PDAL's filters.hag_nn with filters.range): the ground's surface from the
+//! ground points (2), each point's height above it; a point of class 0 or 1 (or, asked, any but ground) from the base
+//! to the low limit becomes low vegetation (3), to the middle limit medium (4), to the high limit high (5). Two passes
+//! (`ops::height`).
 
 use kentos_commands::CloudRender;
 use kentos_pointcloud::ops::height::{Height, Params};
@@ -34,6 +32,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.classify".into(),
         label: "Yüksekliğe göre sınıfla".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.classify"),
         description: "Zemin noktalarından (2) yüzeyi kurar, noktaları zeminden yüksekliklerine göre düşük (3), orta (4) ve yüksek bitki (5) sınıflarına alır; sonuç LAS, LAZ ya da COPC olarak yazılır.".into(),
         help: Some([
             "Önce Zemin süzgeci: bu araç zemin noktalarını (2) kullanır. Zemin yüzeyi her hücrenin en düşük zemin noktasından, boş hücreler komşularından doldurularak kurulur; noktanın yüksekliği yüzeyden çift doğrusal değerle ölçülür.",

@@ -26,6 +26,7 @@ pub fn validity() -> Tool {
         id: "geometry.validity".into(),
         label: "Geçerliliği denetle".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.validity"),
         description: "Alan ve çizgilerin geometri sorunlarını bulup tabloda gösterir ve sorunlu nesneleri seçer; çizim değişmez.".into(),
         help: Some([
             "Bulunan sorunlar: yinelenen köşe (art arda aynı yerde iki köşe), alanı sıfır olan halka (köşeleri bir doğru üstünde), kendini kesen, kendine değen ya da kendi üstünden geri dönen halka ya da yol, dış halkanın dışına taşan delik, örtüşen delikler. Başladığı yerde biten yol kendini kesmiş sayılmaz.",
@@ -145,6 +146,7 @@ pub fn repair_tool() -> Tool {
         id: "geometry.repair".into(),
         label: "Onar".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.repair"),
         description: "Alan ve çizgilerin geometri sorunlarını düzeltip nesneleri öznitelikleriyle yeni katmana yazar; neyin değiştiğini tabloda gösterir.".into(),
         help: Some([
             "Sorunlu alan kendi halkalarından yeniden kurulur: kendini kesen halka parçalarına ayrılır, dış halkadan taşan delik halkayla kesilir, örtüşen delikler tek delik olur, yinelenen köşeler düşer; alanı kalmayan halka yazılmaz. Çizgilerde yinelenen köşeler düşer; kendini kesen yol onarılmaz, olduğu gibi yazılır.",

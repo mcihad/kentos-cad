@@ -10,11 +10,21 @@ use kentos_contracts::DrawingFont;
 // the 22 drawing faces; Unicode fallback faces are requested by the new layout explicitly.
 pub use kentos_geometry_core::text::font_data::{DRAWING_FACES as FACES, DRAWING_KEYS as FACE_KEYS};
 
-/// The faces for a sheet PDF: their TrueType files, as the core names them.
+use kentos_geometry_core::text::font_data::{ADDED_FACES, ADDED_KEYS, added_face};
+
+/// The faces for a sheet PDF: their TrueType files, as the core names them; Arial's and Times New Roman's the
+/// operating system's own where the host gave them (docs/adr/9311: a PDF embeds the letters it uses, as their
+/// licences allow), else their bundled twins.
 pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {
+    let added = ADDED_KEYS
+        .iter()
+        .enumerate()
+        .filter_map(|(i, key)| added_face(i).map(|data| (data, *key)));
     FACES
         .iter()
+        .copied()
         .zip(FACE_KEYS)
+        .chain(added)
         .map(
             |(data, (font, weight, italic))| kentos_sheet::pdf::PdfFont {
                 font: font.to_owned(),
@@ -24,6 +34,12 @@ pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {
             },
         )
         .collect()
+}
+
+/// Every bundled face with its key, the added twins after the web's (docs/adr/9311): what a file KentOS writes whole
+/// (an SVG's embedded faces, a raster's) carries, never a face of the operating system.
+pub fn bundled_faces() -> impl Iterator<Item = (&'static [u8], (&'static str, u16, bool))> {
+    FACES.into_iter().zip(FACE_KEYS).chain(ADDED_FACES.into_iter().zip(ADDED_KEYS))
 }
 
 /// The sheet core's id of a drawing typeface.
@@ -36,5 +52,7 @@ pub fn sheet_font(font: DrawingFont) -> &'static str {
         DrawingFont::ArchitectsDaughter => "architects-daughter",
         DrawingFont::CourierPrime => "courier-prime",
         DrawingFont::PlexMono => "plex-mono",
+        DrawingFont::Arial => "arial",
+        DrawingFont::TimesNewRoman => "times-new-roman",
     }
 }

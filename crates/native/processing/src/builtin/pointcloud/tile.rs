@@ -30,6 +30,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.tile".into(),
         label: "Karola".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.tile"),
         description: "Nokta bulutunu verilen boyda karolara böler: her karo kendi dosyasıdır (<ad>_<x>_<y>), isterseniz karoların sanal bulutu (.vpc) da yazılır.".into(),
         help: Some([
             "Karoların köşeleri karo boyunun katlarındadır; sınırdaki nokta sağdaki ve üstteki karoya düşer. Dosyanın adındaki x ve y karonun sol alt köşesidir.",

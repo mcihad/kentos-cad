@@ -20,6 +20,7 @@ pub fn tool() -> Tool {
         id: "sample.subdivide".into(),
         label: "Alt bölümlere ayır".into(),
         category: "sampling".into(),
+        modules: crate::modules::placed("sample.subdivide"),
         description: "Çok köşeli alanları ve çoklu çizgileri en çok verilen köşe sayısı olan parçalara ayırıp yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: binlerce köşeli bir il ya da havza sınırını hızlı sorgulanan parçalara ayırmak, uzun eş yükselti eğrilerini bölmek.",

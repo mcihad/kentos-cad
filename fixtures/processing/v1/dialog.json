@@ -417,7 +417,7 @@
        {
         "value": "points",
         "label": "Nokta",
-        "hint": "Adı etiket olarak görünen nokta nesnesi"
+        "hint": "Adlı nokta nesnesi; adı, katmanın etiketi açılınca görünür"
        },
        {
         "value": "text",
@@ -426,7 +426,8 @@
        },
        {
         "value": "both",
-        "label": "Nokta ve yazı"
+        "label": "Nokta ve yazı",
+        "hint": "Adlı nokta nesnesi ve köşenin dışına adının yazısı"
        }
       ]
      }

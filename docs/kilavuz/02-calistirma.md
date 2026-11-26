@@ -84,6 +84,9 @@ python3 tools/kcad/kcad.py validate DOSYA   # bağımsız Python okuyucusu
 python3 scripts/fixtures/kcad_v2_reference.py --check   # örnek dosyaları bağımsız yazıcıyla denetle
 python3 scripts/fixtures/gis_reference.py --check   # GeoJSON/Shapefile fixture'larını bağımsız okuyucuyla denetle (ADR 0046)
 python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı tiplerini web'in WOFF2'lerinden denetle (ADR 0055)
+.run/py/bin/python scripts/fonts/drawing_metrics.py --check   # Arial'ın ve Times New Roman'ın çekirdek ölçü satırları (metrics_more.rs) ikizlerinin dosyalarından; --check'siz yazar (ADR 9311)
+python3 scripts/fonts/sheet_metrics.py --check   # paftanın yazı ölçüleri (font-metrics.json), Arial ve Times New Roman dahil; fontTools ve brotli ister (ADR 9311)
+PYTHONPATH=paket/eklentiler/ornek-isleme/src .run/py/bin/python -m unittest discover -s paket/eklentiler/ornek-isleme/tests   # örnek Python işlem aracının hesabı, KentOS'suz (ADR 9310)
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun

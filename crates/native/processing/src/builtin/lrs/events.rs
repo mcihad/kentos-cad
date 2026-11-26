@@ -1,6 +1,4 @@
-//! Olayları rotada göster and Olayları çakıştır (the web's
-//! `builtin/lrs/events.ts`; docs/adr/0224 §5; ArcGIS Make Route Event Layer
-//! and Overlay Route Events).
+//! Olayları rotada göster and Olayları çakıştır (the web's `builtin/lrs/events.ts`; docs/adr/0224 §5).
 
 use std::collections::BTreeMap;
 
@@ -58,6 +56,7 @@ pub fn route_events() -> Tool {
         id: "linearRef.routeEvents".into(),
         label: "Olayları rotada göster".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.routeEvents"),
         description: "Bir tablonun rota ve ölçüyle verilen nokta ve çizgi olaylarını rotaların üstünde nesne olarak yazar.".into(),
         help: Some([
             "Örnekler: kaza kayıtlarının kilometreleri, yol kaplamasının başlangıç ve bitiş kilometreleri, trafik levhaları, bakım kesimleri.",
@@ -260,6 +259,7 @@ pub fn overlay_events() -> Tool {
         id: "linearRef.overlayEvents".into(),
         label: "Olayları çakıştır".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.overlayEvents"),
         description: "İki çizgi olayı tablosunu aynı rotalarda keser; ortak (Kesişim) ya da bütün (Birleşim) parçaların tablosunu verir.".into(),
         help: Some([
             "Örnekler: kaplama türü ile hız sınırının birlikte geçerli olduğu kesimler, kaza kesimleriyle bakım kesimlerinin ortak parçaları, iki envanterin birleşimi.",

@@ -1,8 +1,6 @@
-//! Gruplayarak birleştir (the web's `builtin/geometry/dissolve.ts`; docs/adr/0201
-//! §4; ArcGIS Dissolve): the objects grouped by a field's value (all one
-//! group without one), each group's areas joined in the core's overlay, its
-//! paths and points gathered; one object a group, or each joined part on its
-//! own. A group's object carries the group's value, how many objects it
+//! Gruplayarak birleştir (the web's `builtin/geometry/dissolve.ts`; docs/adr/0201 §4): the objects grouped by a field's
+//! value (all one group without one), each group's areas joined in the core's overlay, its paths and points gathered;
+//! one object a group, or each joined part on its own. A group's object carries the group's value, how many objects it
 //! joined and the sums of the fields asked for (`kentos.statistics/1`).
 
 use std::collections::BTreeMap;
@@ -36,6 +34,7 @@ pub fn tool() -> Tool {
         id: "geometry.dissolve".into(),
         label: "Gruplayarak birleştir".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.dissolve"),
         description: "Nesneleri bir alanın değerine göre gruplayıp her grubu tek nesnede birleştirir: alanların ortak sınırları kalkar, istenen alanların değerleri toplanır.".into(),
         help: Some([
             "Örnekler: parselleri ada numarasına göre birleştirip adaları elde etmek; aynı kullanım türündeki alanları tek alan yapmak.",

@@ -206,7 +206,7 @@ impl NewRequest {
                 .name
                 .clone()
                 .unwrap_or_else(|| NEW_PROJECT_NAME.to_owned()),
-            font: self.drawing_font.unwrap_or(DrawingFont::Barlow),
+            font: self.drawing_font.unwrap_or(DrawingFont::NEW_PROJECT),
             // The wizard falls back on the app's default system; a script has
             // none, so a system is asked, never guessed.
             fallback_srid: LOCAL_SRID,
@@ -254,7 +254,8 @@ mod tests {
             srid: None,
             plot_scale: None,
             name: "Daire".into(),
-            font: DrawingFont::Barlow,
+            // A new project's typeface when none is asked (docs/adr/9311), the wizard's too.
+            font: DrawingFont::NEW_PROJECT,
             fallback_srid: 5256,
             annotation: None,
             chosen_work: None,

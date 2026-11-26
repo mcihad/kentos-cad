@@ -41,6 +41,9 @@ fn a_data_layers_examples_come_from_its_sources_first_rows() {
     let task = app.open_labelling(Some(id.clone()));
     let said = lines(&app);
     assert!(said.iter().any(|l| l.contains("veri katmanı, satırları kaynağında")), "{said:#?}");
+    // The layer labels nothing until its labelling is turned on (docs/adr/9311): it opens on Yok; Tek etiket.
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+    let said = lines(&app);
     assert!(said.iter().any(|l| l == "Örnekler için kaynağın ilk satırları okunuyor…"), "{said:#?}");
     drive(&mut app, task);
     send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
@@ -62,6 +65,8 @@ fn denetle_counts_a_data_layers_labels_on_the_rows_the_view_read() {
     let (mut app, id) = bound("etiket-denetle");
     let task = app.open_labelling(Some(id.clone()));
     drive(&mut app, task);
+    // The layer labels nothing until its labelling is turned on (docs/adr/9311): Tek etiket.
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
     send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
     // No read of the view yet: said so, the examples' rows giving the candidates.
     send(&mut app, Event::Report);
@@ -89,6 +94,8 @@ fn the_first_text_is_drawn_in_the_styles_look() {
     let (mut app, id) = bound("etiket-onizleme");
     let task = app.open_labelling(Some(id));
     drive(&mut app, task);
+    // The layer labels nothing until its labelling is turned on (docs/adr/9311): Tek etiket.
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
     send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
     let mut shot = crate::files_testing::offscreen(iced::Size::new(1440.0, 900.0));
     let mut update = |app: &mut App, message: Message| {

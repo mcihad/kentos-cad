@@ -77,6 +77,9 @@ pub fn css_family(font: &str) -> &'static str {
         "architects-daughter" => "'Architects Daughter', sans-serif",
         "courier-prime" => "'Courier Prime', 'Courier New', monospace",
         "plex-mono" => "'IBM Plex Mono', monospace",
+        // docs/adr/9311: the named face first, its metric twin (the face KentOS embeds) after it.
+        "arial" => "Arial, Arimo, sans-serif",
+        "times-new-roman" => "'Times New Roman', 'Liberation Serif', serif",
         _ => "Barlow, sans-serif",
     }
 }

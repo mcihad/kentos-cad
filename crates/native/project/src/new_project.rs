@@ -420,7 +420,9 @@ pub fn cbs_start_layers() -> Vec<LayerNode> {
 /// The standard layer tree of a cadastral sheet: what a new project starts
 /// with. The map tools write to layers of this tree by id (`parsel`, `kot`),
 /// so a new project carries them. `plot_scale` is written into the sheet
-/// frame's label (“Pafta P-12   1:1000”).
+/// frame's label (“Pafta P-12   1:1000”). Their labels start off, their label
+/// styles kept for the day the layer turns them on (docs/adr/9311): names and
+/// numbers are written as text objects.
 pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
     let points = |symbol, size| PointStyle { symbol, size };
     vec![
@@ -444,7 +446,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                             ..label(LabelPlacement::Center, 12.0)
                         }),
                         ..style("fg", Some(0.35))
-                    },
+                    }
+                    .labels_off(),
                 ),
                 node(
                     "parsel",
@@ -457,7 +460,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                             ..label(LabelPlacement::Center, 9.0)
                         }),
                         ..style("fg-dim", Some(0.18))
-                    },
+                    }
+                    .labels_off(),
                 ),
                 node(
                     "yapi",
@@ -498,7 +502,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                             ..label(LabelPlacement::Along, 10.0)
                         }),
                         ..style("#C9955F", Some(0.25))
-                    },
+                    }
+                    .labels_off(),
                 ),
                 node(
                     "kot",
@@ -510,7 +515,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                             ..label(LabelPlacement::Beside, 10.5)
                         }),
                         ..style("#9CCB7E", None)
-                    },
+                    }
+                    .labels_off(),
                 ),
             ],
         ),
@@ -527,7 +533,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                         ..label(LabelPlacement::Beside, 10.5)
                     }),
                     ..style("#56B6C2", None)
-                },
+                }
+                .labels_off(),
             )],
         ),
         LayerNode {
@@ -551,7 +558,8 @@ pub fn standard_layers(plot_scale: f64) -> Vec<LayerNode> {
                                 ..label(LabelPlacement::Corner, 12.0)
                             }),
                             ..style("#6B7785", Some(0.5))
-                        },
+                        }
+                        .labels_off(),
                     ),
                     node("karelaj", "Karelaj", style("#6B7785", Some(0.13))),
                     node("yazi", "Yazılar", style("fg-dim", None)),
@@ -618,6 +626,16 @@ mod tests {
             if workspace == Workspace::Cad {
                 want.settings.tool_layers = cad_tool_layers();
             }
+            // docs/adr/9311: the standard tree's labels start off, their styles kept; the web's record labels them.
+            fn labels_off(nodes: &mut [kentos_contracts::LayerNode]) {
+                for n in nodes {
+                    if n.style.label.is_some() && n.style.labels.is_none() {
+                        n.style = n.style.clone().labels_off();
+                    }
+                    labels_off(&mut n.children);
+                }
+            }
+            labels_off(&mut want.layers);
             let got = new_project(&options).expect("builds");
             assert_eq!(got, want, "{options:?}");
         }

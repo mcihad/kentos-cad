@@ -341,6 +341,11 @@ fn survey_project(workspace: &str, work: &str, style: serde_json::Value) -> App 
     if workspace == "cad" {
         drawing["settings"]["cadWork"] = json!(work);
     }
+    // No style of its own: the layer's labels turned on in its kind's style (docs/adr/9311: a layer labels nothing
+    // until its labelling is turned on).
+    if style.is_null() {
+        drawing["layers"][0]["style"]["labels"] = json!({ "mode": "single" });
+    }
     drawing["layers"][0]["style"]["label"] = style;
     drawing["entities"] = json!([
         {"kind":"point","id":1,"layerId":"cizim","label":"P101","attrs":{"Ad":"P101","Kod":"SN"},"p":{"x":487000.0,"y":4420000.0}},

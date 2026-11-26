@@ -40,6 +40,8 @@ pub(crate) fn drawing_font(f: DrawingFont) -> &'static str {
         DrawingFont::ArchitectsDaughter => "architects-daughter",
         DrawingFont::CourierPrime => "courier-prime",
         DrawingFont::PlexMono => "plex-mono",
+        DrawingFont::Arial => "arial",
+        DrawingFont::TimesNewRoman => "times-new-roman",
     }
 }
 
@@ -157,6 +159,8 @@ mod tests {
             DrawingFont::ArchitectsDaughter,
             DrawingFont::CourierPrime,
             DrawingFont::PlexMono,
+            DrawingFont::Arial,
+            DrawingFont::TimesNewRoman,
         ] {
             assert_eq!(drawing_font(f), serde_name(f));
         }

@@ -44,6 +44,7 @@ pub fn tool() -> Tool {
         id: "geometry.reproject".into(),
         label: "Koordinat sistemine dönüştür".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.reproject"),
         description: "Koordinatları başka bir sistemde olan nesneleri projenin koordinat sistemine dönüştürüp yeni katmana yazar.".into(),
         help: Some([
             "Kaynak sistem, nesnelerin koordinatlarının bugün hangi sistemde olduğudur (örneğin ED50 / TM30 ile alınmış eski bir pafta); hedef her zaman projenin sistemidir. Projenin datum seçimleri (Proje ayarları › Datum dönüşümleri) uygulanır.",

@@ -1936,11 +1936,13 @@ pub fn with_tool_problems(
             else {
                 continue;
             };
+            let modules: Vec<&str> = manifest.modules.iter().map(|m| m.id()).collect();
             if let Err(why) = kentos_processing::external::from_descriptor(
                 &manifest.id,
                 &manifest.name,
                 &manifest.version.to_string(),
                 &tool.id,
+                &modules,
                 &value,
             ) {
                 out.push(

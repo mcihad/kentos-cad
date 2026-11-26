@@ -24,4 +24,5 @@ mod module_surface_tests;
 mod program_tests;
 mod scenes;
 mod space_separator_tests;
+mod tool_modules_screens;
 mod wizard_tests;

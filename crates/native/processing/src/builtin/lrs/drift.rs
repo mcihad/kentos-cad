@@ -35,6 +35,7 @@ pub fn event_drift() -> Tool {
         id: "linearRef.eventDrift".into(),
         label: "Olay kaymasını denetle".into(),
         category: "linearRef".into(),
+        modules: crate::modules::placed("linearRef.eventDrift"),
         description: "Rotaların geometrisi ya da ölçüleri değişince olay nesnelerinin rotanın verdiği yerden ne kadar kaydığını raporlar; istenirse yerlerine taşır.".into(),
         help: Some([
             "Örnekler: yol ekseni düzeltildikten sonra kaza noktalarının ve kaplama kesimlerinin yeni eksene oturup oturmadığı, rota yeniden kalibre edilince levhaların kilometrelerinin yerinde kalıp kalmadığı.",

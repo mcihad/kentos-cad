@@ -1324,6 +1324,8 @@ fn font_id(font: Option<DrawingFont>) -> &'static str {
         Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
         Some(DrawingFont::CourierPrime) => "courier-prime",
         Some(DrawingFont::PlexMono) => "plex-mono",
+        Some(DrawingFont::Arial) => "arial",
+        Some(DrawingFont::TimesNewRoman) => "times-new-roman",
     }
 }
 

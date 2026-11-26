@@ -41,6 +41,21 @@ IDS = {
     "IBM Plex Mono": "plex-mono",
 }
 
+# The faces the desktop added after the web paused (docs/adr/9311), by their metric twins' files: Arial in Arimo's
+# (the drawing's own Arimo faces), Times New Roman in Liberation Serif's. Measured as the twins draw, their letters as
+# wide as the named faces'.
+DRAWING = ROOT / "apps/desktop/assets/fonts/drawing"
+ADDED = [
+    ("arial", 400, False, "Arimo-400.ttf"),
+    ("arial", 500, False, "Arimo-500.ttf"),
+    ("arial", 600, False, "Arimo-600.ttf"),
+    ("arial", 700, False, "Arimo-700.ttf"),
+    ("times-new-roman", 400, False, "LiberationSerif-Regular.ttf"),
+    ("times-new-roman", 400, True, "LiberationSerif-Italic.ttf"),
+    ("times-new-roman", 700, False, "LiberationSerif-Bold.ttf"),
+    ("times-new-roman", 700, True, "LiberationSerif-BoldItalic.ttf"),
+]
+
 # Basic Latin, Latin-1 Supplement and Latin Extended-A (the Turkish letters among them), and the
 # punctuation, units and marks a sheet writes: quotes, dashes, the ellipsis, primes for DMS, the
 # euro and lira signs, arrows, comparison signs and the missing-value marker's angle brackets.
@@ -53,7 +68,7 @@ CHARS = [c for c in range(0x20, 0x7F)] + [c for c in range(0xA0, 0x180)] + EXTRA
 
 
 def line_metrics(font):
-    """Ascent, descent (positive) and line gap as Chrome lays a line out: OS/2 typo with USE_TYPO_METRICS, else hhea."""
+    """Ascent, descent (positive) and line gap as a browser lays a line out: OS/2 typo with USE_TYPO_METRICS, else hhea."""
     os2 = font["OS/2"]
     if os2.fsSelection & (1 << 7):
         return os2.sTypoAscender, -os2.sTypoDescender, os2.sTypoLineGap
@@ -70,7 +85,7 @@ def glyph_height(font, ch):
     return getattr(g, "yMax", 0) or 0
 
 
-def face_metrics(family, style, weight, font):
+def face_metrics(family, style, weight, font, font_id=None):
     cmap = font.getBestCmap()
     hmtx = font["hmtx"].metrics
     ascent, descent, gap = line_metrics(font)
@@ -80,7 +95,7 @@ def face_metrics(family, style, weight, font):
     advances = [hmtx[cmap[c]][0] if c in cmap else -1 for c in CHARS]
     lower = [hmtx[cmap[c]][0] for c in range(ord("a"), ord("z") + 1) if c in cmap]
     return {
-        "font": IDS[family],
+        "font": font_id or IDS[family],
         "weight": weight,
         "italic": style == "italic",
         "unitsPerEm": font["head"].unitsPerEm,
@@ -102,7 +117,12 @@ def build():
             if style == "italic" and weight != 400:
                 continue
             out.append(face_metrics(family, style, weight, merged(family, style, weight, files)))
-    order = list(IDS.values())
+    from fontTools.ttLib import TTFont
+
+    for font_id, weight, italic, file in ADDED:
+        style = "italic" if italic else "normal"
+        out.append(face_metrics(None, style, weight, TTFont(DRAWING / file), font_id))
+    order = list(IDS.values()) + ["arial", "times-new-roman"]
     out.sort(key=lambda f: (order.index(f["font"]), f["weight"], f["italic"]))
     return {
         "schema": "kentos.sheet.font-metrics/1",

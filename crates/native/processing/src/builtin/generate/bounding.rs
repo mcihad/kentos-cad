@@ -71,6 +71,7 @@ pub fn bounding_tool() -> Tool {
         id: "generate.bounding".into(),
         label: "Sınırlayıcı geometri".into(),
         category: "generation".into(),
+        modules: crate::modules::placed("generate.bounding"),
         description: "Nesneleri saran dışbükey zarfı, sınır kutusunu, en küçük döndürülmüş kutuyu ya da en küçük daireyi ölçüleriyle yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: yapıların döndürülmüş kutusuyla yönünü ve boyunu bulmak, bir nokta kümesinin kapladığı alanı çizmek, adaların sınır kutularını almak, bir kuyunun koruma dairesini çizmek.",
@@ -198,6 +199,7 @@ pub fn concave_tool() -> Tool {
         id: "generate.concaveHull".into(),
         label: "İçbükey zarf".into(),
         category: "generation".into(),
+        modules: crate::modules::placed("generate.concaveHull"),
         description: "Nesnelerin noktalarını saran, içe doğru oyulmuş zarfı (isteğe bağlı delikleriyle) alanıyla yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: bir yerleşimin evlerinin kapladığı alanı, bir nokta bulutunun ya da kümenin gerçek biçimini çizmek.",

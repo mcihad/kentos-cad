@@ -98,6 +98,7 @@ pub fn bearing_line() -> Tool {
         id: "convert.bearingLine".into(),
         label: "Semt ve uzunluktan çizgi".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.bearingLine"),
         description: "Bir tablonun her satırındaki başlangıç noktası, semt ve uzunluktan çizgi yazar.".into(),
         help: Some([
             "Örnekler: bir aplikasyon karnesindeki doğrultu ve mesafelerden çizgiler, bir röper noktasından ölçülen semt ve uzunluklar, eski bir tapu krokisindeki sınırların semt ve uzunlukları.",
@@ -149,6 +150,7 @@ pub fn xy_line() -> Tool {
         id: "convert.xyLine".into(),
         label: "XY'den çizgi".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.xyLine"),
         description: "Bir tablonun her satırındaki başlangıç ve bitiş koordinatlarından çizgi yazar.".into(),
         help: Some([
             "Örnekler: bir hesap tablosundaki kenarları, bir aplikasyon listesindeki bağlantıları, iki nokta listesinin eşleşmelerini çizgi olarak çizmek.",
@@ -194,6 +196,7 @@ pub fn table_ellipse() -> Tool {
         id: "convert.tableEllipse".into(),
         label: "Tablodan elips".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.tableEllipse"),
         description: "Bir tablonun her satırındaki merkez, iki yarı eksen ve semtten elips yazar.".into(),
         help: Some([
             "Örnekler: ağ dengelemesinin hata elipslerini (a, b ve büyük eksenin semti) çizmek, ölçü belirsizliklerini ya da etki alanlarını göstermek.",
@@ -263,6 +266,7 @@ pub fn table_points() -> Tool {
         id: "convert.tablePoints".into(),
         label: "Tablodan nokta".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.tablePoints"),
         description: "Bir tablonun her satırındaki doğu ve kuzeyden (coğrafi sistemde boylam ve enlemden) nokta yazar.".into(),
         help: Some([
             "Örnekler: bir Excel ya da ODS dosyasındaki nokta listesini (ad, Y, X, kot) çizime almak, GPS'ten ya da bir web haritasından gelen boylam ve enlemleri projenin sistemine çevirip nokta yapmak, bir katmanın özniteliklerindeki koordinatlardan nokta yazmak.",

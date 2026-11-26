@@ -52,6 +52,7 @@ pub fn voronoi_tool() -> Tool {
         id: "generate.voronoi".into(),
         label: "Voronoi alanları".into(),
         category: "generation".into(),
+        modules: crate::modules::placed("generate.voronoi"),
         description: "Her noktanın, kendisine öbür noktalardan daha yakın yerlerini (Thiessen alanı) öznitelikleriyle yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: yağış istasyonlarının etki alanları, okulların ya da sağlık ocaklarının hizmet bölgeleri, ölçü noktalarının sorumluluk alanları.",
@@ -153,6 +154,7 @@ pub fn delaunay_tool() -> Tool {
         id: "generate.delaunay".into(),
         label: "Delaunay üçgenleri".into(),
         category: "generation".into(),
+        modules: crate::modules::placed("generate.delaunay"),
         description: "Noktaların Delaunay üçgenlerini, köşelerinin adları ve kotlarıyla yeni katmana alan olarak yazar.".into(),
         help: Some([
             "Örnekler: ölçü noktalarından üçgen ağı (TIN) kurmak, komşu noktaları bulmak, yüzeyin yüzlerini görmek.",

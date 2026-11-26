@@ -80,6 +80,7 @@ pub fn regular_tool() -> Tool {
         id: "sample.regular".into(),
         label: "Düzenli noktalar".into(),
         category: "sampling".into(),
+        modules: crate::modules::placed("sample.regular"),
         description: "Alanların içine doğu ve kuzey aralıklarıyla düzenli noktalar koyar, isterse noktaları tohumla rastgele kaydırır.".into(),
         help: Some([
             "Örnekler: orman envanterinin örnek alanlarını, toprak örneklemesinin noktalarını, bir paftanın karelaj noktalarını koymak.",
@@ -170,6 +171,7 @@ pub fn random_tool() -> Tool {
         id: "sample.random".into(),
         label: "Rastgele noktalar".into(),
         category: "sampling".into(),
+        modules: crate::modules::placed("sample.random"),
         description: "Alanların içine ya da çizgilerin üstüne nesne başına istenen sayıda rastgele nokta koyar; aynı tohum aynı noktaları verir.".into(),
         help: Some([
             "Örnekler: tabakalı olmayan rastgele örnekleme noktaları, denetim için rastgele parsel noktaları, bir yol üstünde rastgele gözlem yerleri.",

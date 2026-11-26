@@ -4,7 +4,7 @@ import type { PipeUnit } from "./PipeUnit";
 /**
  * The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
  * optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
- * pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
+ * pipe's top outside (invert + diameter + wall) and the clearances outside to outside.
  */
 export type PipeDiameter = { 
 /**

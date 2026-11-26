@@ -109,6 +109,7 @@ pub fn tool() -> Tool {
         id: "address.geocode".into(),
         label: "Adresleri eşle".into(),
         category: "address".into(),
+        modules: crate::modules::placed("address.geocode"),
         description: "Bir tablonun her satırındaki adresi bulur ve yerine nokta yazar.".into(),
         help: Some([
             "Örnekler: ruhsat, şikâyet ya da abone listelerindeki adresleri haritaya koymak; bir Excel dosyasındaki adresleri numarataj verisiyle eşlemek.",

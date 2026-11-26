@@ -133,7 +133,7 @@ impl State {
     pub fn new(app: &App) -> Self {
         let s = &app.settings;
         let font = serde_json::from_value(s.effective("newProjects.drawingFont"))
-            .unwrap_or(DrawingFont::Barlow);
+            .unwrap_or(DrawingFont::NEW_PROJECT);
         let unit = serde_json::from_value(s.effective("newProjects.drawingUnit")).ok();
         let limit = app.program;
         let mut draft = Draft::initial(

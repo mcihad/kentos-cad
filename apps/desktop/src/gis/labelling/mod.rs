@@ -306,11 +306,14 @@ impl App {
 
     /// The window over a layer, its labelling as the drawing has it.
     fn labelling_window(&self, layer: String, tab: Tab) -> Window {
-        let labels = self
-            .document
-            .as_ref()
-            .and_then(|d| d.model.layers().get(&layer))
-            .and_then(|n| n.style.labels.clone());
+        let node = self.document.as_ref().and_then(|d| d.model.layers().get(&layer));
+        let labels = node.and_then(|n| n.style.labels.clone());
+        // A layer with no labelling and no label style labels nothing (docs/adr/9311): the window opens on Yok.
+        let unset = if node.is_some_and(|n| n.style.label.is_some()) {
+            LabelsMode::Single
+        } else {
+            LabelsMode::Off
+        };
         let single = self.starting_label(&layer);
         let mut classes = labels
             .as_ref()
@@ -330,7 +333,7 @@ impl App {
             .unwrap_or_default();
         let mut w = Window {
             layer,
-            mode: labels.as_ref().map_or(LabelsMode::Single, |l| l.mode),
+            mode: labels.as_ref().map_or(unset, |l| l.mode),
             single,
             classes,
             selected: 0,

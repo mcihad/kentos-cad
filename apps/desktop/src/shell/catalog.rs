@@ -486,10 +486,18 @@ impl Catalog {
     }
 
     /// Whether a module's program offers a command (docs/adr/0802): its ribbon holds it (for one of its works,
-    /// contextual tabs too) or the ribbon file gives it to the module. A processing tool or model no ribbon holds
-    /// (the user's models among them) is offered where İşlem araç kutusu is; any other command no ribbon holds and
-    /// the file names for no module is the shell's (Geri al, Komut ara …), every module's.
+    /// contextual tabs too) or the ribbon file gives it to the module. A built-in processing tool is offered where its
+    /// modules are (docs/adr/9310, `kentos_processing::modules::PLACED`); a model no ribbon holds (the user's models
+    /// among them) and an extension's tool where İşlem araç kutusu is (the program asks the extension's own modules
+    /// first); any other command no ribbon holds and the file names for no module is the shell's (Geri al, Komut
+    /// ara …), every module's.
     pub fn module_has(&self, module: kentos_launch::Module, id: &str) -> bool {
+        if let Some(tool) = id.strip_prefix(PROCESSING_RUN) {
+            let placed = kentos_processing::modules::placed(tool);
+            if !placed.is_empty() {
+                return placed.has(module);
+            }
+        }
         if self.ribbon_commands.contains(id) {
             return self
                 .module_commands

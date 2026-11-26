@@ -7,6 +7,8 @@ publish.workspace = true
 description = "The standards packages' Python rules asked from Rust: the same call from the desktop, the sheet publication and the command line (docs/adr/8075 §2.6)."
 
 [dependencies]
+# Where an installation keeps the packages (CLAUDE.md §26, docs/adr/9312).
+kentos-launch = { path = "../launch" }
 # Which Python the user has (their own environment, KentOS's, the checkout's).
 kentos-python-env = { path = "../python-env" }
 serde_json = { workspace = true }

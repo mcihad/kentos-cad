@@ -32,6 +32,7 @@ pub fn tool() -> Tool {
         id: "generalize.building".into(),
         label: "Bina sadeleştir".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.building"),
         description: "Binaların en kısa kenardan kısa kenarlarını komşularına göre atar: basamaklar, çıkıntılar, girintiler ve pahlar gider, dik açılar kalır.".into(),
         help: Some([
             "Örnekler: büyük ölçekli bina ayak izlerini 1/5000 haritaya indirmek, küçük girinti ve çıkıntıları atmak.",

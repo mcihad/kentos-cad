@@ -6,7 +6,7 @@ import type { TableKind } from "./TableKind";
 
 export type PlotProfile = { id: string, name: string, kind: TableKind, entries: Array<StyleEntry>, assignments: Array<Assignment>, defaultStyle?: string, 
 /**
- * The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
+ * The `.ctb` or `.stb` table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
  * profile made in KentOS.
  */
 source?: PlotSource, };

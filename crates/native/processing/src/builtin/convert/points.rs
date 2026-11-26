@@ -56,6 +56,7 @@ pub fn to_points() -> Tool {
         id: "convert.toPoints".into(),
         label: "Nesneden nokta".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.toPoints"),
         description: "Her nesnenin ağırlık merkezini ya da üstündeki bir iç noktayı, öznitelikleriyle yeni katmana nokta olarak yazar.".into(),
         help: Some([
             "Örnekler: parsellerin merkezlerine numara noktaları koymak, yapıları nokta katmanına çevirmek, yolların orta noktalarını almak.",
@@ -152,6 +153,7 @@ pub fn vertices() -> Tool {
         id: "convert.vertices".into(),
         label: "Köşeleri noktaya çevir".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.vertices"),
         description: "Çizgilerin ve alanların köşelerini (ya da yalnız uçlarını, ortalarını) öznitelikleriyle yeni katmana nokta olarak yazar.".into(),
         help: Some([
             "Örnekler: parsel köşelerini noktaya çevirip numaralamak, bir güzergâhın başlangıç ve bitiş noktalarını almak, hatların ortalarına etiket noktası koymak.",
@@ -237,6 +239,7 @@ pub fn points_to_path() -> Tool {
         id: "convert.pointsToPath".into(),
         label: "Noktalardan çizgi".into(),
         category: "conversion".into(),
+        modules: crate::modules::placed("convert.pointsToPath"),
         description: "Noktaları bir ifadenin sırasıyla birleştirip çizgi (isterse kapalı alan) yapar; bir alanın her değeri ayrı bir çizgi olur.".into(),
         help: Some([
             "Örnekler: GNSS ile alınmış saha noktalarından zaman sırasıyla güzergâh çizmek, numaralı sınır noktalarından parsel sınırı kurmak, her hat kodunun noktalarını ayrı çizgi yapmak.",

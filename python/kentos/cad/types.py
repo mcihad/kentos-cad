@@ -2452,7 +2452,19 @@ class DrawingFont(_StrEnum):
     """The typeface of the text that is part of the drawing (text objects,
     dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
     the app. A project setting: everyone who opens the project sees the same
-    letters. Files written before it have none (Barlow).
+    letters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating
+    system's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,
+    Liberation Serif) elsewhere, with the same widths.
+
+    - ``barlow``
+    - ``arimo``
+    - ``overpass``
+    - ``quicksand``
+    - ``architects-daughter``
+    - ``courier-prime``
+    - ``plex-mono``
+    - ``times-new-roman``
+    - ``arial``: docs/adr/9311: after the web's seven, so every file keeps its numbers.
     """
     BARLOW = "barlow"
     ARIMO = "arimo"
@@ -2461,9 +2473,11 @@ class DrawingFont(_StrEnum):
     ARCHITECTS_DAUGHTER = "architects-daughter"
     COURIER_PRIME = "courier-prime"
     PLEX_MONO = "plex-mono"
+    TIMES_NEW_ROMAN = "times-new-roman"
+    ARIAL = "arial"
 
 
-DrawingFontName = Literal["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"]
+DrawingFontName = Literal["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono", "times-new-roman", "arial"]
 """The names of :class:`DrawingFont`, for a plain string."""
 
 
@@ -81770,6 +81784,8 @@ class ProcessingTool(_Model):
         extension: An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it.
         model_description: What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),
             beside `description`, which is the user's.
+        modules: The modules whose projects run it (`cbs`, `harita`, `mimari`, `yol`; docs/adr/9310): a project of another module
+            does not list it and refuses its run (`tool_not_in_module`).
         outputs: What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).
     """
     id: str
@@ -81780,6 +81796,7 @@ class ProcessingTool(_Model):
     aliases: list[str] = field(default_factory=list)
     extension: ExtensionPin | None | Unset = UNSET
     model_description: str | None | Unset = UNSET
+    modules: list[str] = field(default_factory=list)
     outputs: list[ProcessingToolOutput] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -81794,6 +81811,7 @@ class ProcessingTool(_Model):
             out["extension"] = None if self.extension is None else self.extension.to_json()
         if self.model_description is not UNSET:
             out["modelDescription"] = self.model_description
+        out["modules"] = list(self.modules)
         if self.outputs is not UNSET:
             out["outputs"] = [e0.to_json() for e0 in self.outputs]
         return out
@@ -81809,6 +81827,7 @@ class ProcessingTool(_Model):
             aliases=list(data["aliases"]) if "aliases" in data else list(),
             extension=UNSET if "extension" not in data else None if data["extension"] is None else ExtensionPin.from_json(data["extension"]),
             model_description=data.get("modelDescription", UNSET),
+            modules=list(data["modules"]) if "modules" in data else list(),
             outputs=[ProcessingToolOutput.from_json(e0) for e0 in data["outputs"]] if "outputs" in data else UNSET,
         )
 

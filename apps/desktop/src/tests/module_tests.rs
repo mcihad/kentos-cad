@@ -1585,7 +1585,9 @@ fn add_model(app: &mut App, id: &str, label: &str, tool: &str) {
         .expect("the built-in model");
     model.id = id.into();
     model.label = label.into();
-    model.steps[1].tool = tool.into();
+    // One step, the tool asked: the built-in model's other steps are Harita's and Yol's (docs/adr/9310).
+    model.steps.retain(|s| s.id == "edges");
+    model.steps[0].tool = tool.into();
     app.gis
         .processing
         .registry
@@ -1594,12 +1596,13 @@ fn add_model(app: &mut App, id: &str, label: &str, tool: &str) {
 }
 
 /// A model is offered where the program offers every tool its steps run: a model of the user's that fills a DEM's
-/// sinks (hydrology) is KentOS GIS's, not KentOS Harita's; one that writes edge lengths is both's (docs/adr/0802).
+/// sinks (hydrology) is KentOS GIS's, not KentOS Harita's; one that writes edge lengths is Harita's, not KentOS GIS's
+/// (docs/adr/0802, 9310).
 #[test]
 fn a_model_is_offered_where_every_tool_of_its_steps_is() {
     for (module, sinks, edges) in [
         (Some(Module::Map), false, true),
-        (Some(Module::Gis), true, true),
+        (Some(Module::Gis), true, false),
         (Some(Module::Architecture), false, false),
         (None, true, true),
     ] {

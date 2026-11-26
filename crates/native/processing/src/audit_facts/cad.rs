@@ -435,6 +435,8 @@ fn font_name(font: Option<DrawingFont>) -> &'static str {
         Some(DrawingFont::ArchitectsDaughter) => "Architects Daughter",
         Some(DrawingFont::CourierPrime) => "Courier Prime",
         Some(DrawingFont::PlexMono) => "IBM Plex Mono",
+        Some(DrawingFont::Arial) => "Arial",
+        Some(DrawingFont::TimesNewRoman) => "Times New Roman",
     }
 }
 

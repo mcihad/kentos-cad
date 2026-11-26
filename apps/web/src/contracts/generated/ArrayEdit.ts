@@ -3,6 +3,6 @@ import type { ArrayLayout } from "./ArrayLayout";
 import type { Vec2 } from "./Vec2";
 
 /**
- * What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
+ * What changes in the array.
  */
 export type ArrayEdit = { "kind": "layout", layout: ArrayLayout, } | { "kind": "placement", p?: Vec2, scale?: number, rotation?: number, mirror?: boolean, } | { "kind": "replace", items: Array<number>, block: string, } | { "kind": "remove", items: Array<number>, } | { "kind": "reset", items?: Array<number>, };

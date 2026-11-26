@@ -48691,6 +48691,9 @@
      "op": "plan",
      "input": {
       "tool": "points.numberVertices",
+      "parameters": {
+       "output": "points"
+      },
       "selection": [
        "$uidOf:1",
        "$uidOf:2"
@@ -48754,6 +48757,9 @@
      "op": "validate",
      "input": {
       "tool": "points.numberVertices",
+      "parameters": {
+       "output": "points"
+      },
       "selection": [
        "$uidOf:1",
        "$uidOf:2"
@@ -48801,6 +48807,12 @@
         "$any",
         "$any",
         "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
         "$any"
        ],
        "changed": [
@@ -48818,7 +48830,13 @@
          "$uidOf:13",
          "$uidOf:14",
          "$uidOf:15",
-         "$uidOf:16"
+         "$uidOf:16",
+         "$uidOf:17",
+         "$uidOf:18",
+         "$uidOf:19",
+         "$uidOf:20",
+         "$uidOf:21",
+         "$uidOf:22"
         ]
        },
        "inputs": [
@@ -48859,7 +48877,7 @@
           "tool": "points.numberVertices",
           "label": "Köşe noktalarını numarala",
           "recordsIn": 2,
-          "recordsOut": 6,
+          "recordsOut": 12,
           "ms": "$any",
           "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı."
          },
@@ -48884,7 +48902,7 @@
         ],
         "total": {
          "recordsIn": 6,
-         "recordsOut": 15
+         "recordsOut": 21
         }
        },
        "revision": "$current"
@@ -48927,6 +48945,18 @@
         }
        },
        "12": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 486991.88494372513,
+         "y": 4420031.697056275
+        },
+        "attrs": {
+         "Nokta": "P00001",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "13": {
         "kind": "point",
         "layerId": "islem-kose-noktalari",
         "p": {
@@ -48939,7 +48969,19 @@
          "Tür": "Köşe noktası"
         }
        },
-       "13": {
+       "14": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487021.69705627486,
+         "y": 4420031.697056275
+        },
+        "attrs": {
+         "Nokta": "P00002",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "15": {
         "kind": "point",
         "layerId": "islem-kose-noktalari",
         "p": {
@@ -48952,7 +48994,19 @@
          "Tür": "Köşe noktası"
         }
        },
-       "14": {
+       "16": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487021.69705627486,
+         "y": 4419996.302943725
+        },
+        "attrs": {
+         "Nokta": "P00003",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "17": {
         "kind": "point",
         "layerId": "islem-kose-noktalari",
         "p": {
@@ -48965,7 +49019,19 @@
          "Tür": "Köşe noktası"
         }
        },
-       "15": {
+       "18": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 486991.44894372515,
+         "y": 4419996.302943725
+        },
+        "attrs": {
+         "Nokta": "P00004",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "19": {
         "kind": "point",
         "layerId": "islem-kose-noktalari",
         "p": {
@@ -48978,7 +49044,19 @@
          "Tür": "Köşe noktası"
         }
        },
-       "16": {
+       "20": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487046.69705627486,
+         "y": 4420031.697056275
+        },
+        "attrs": {
+         "Nokta": "P00005",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "21": {
         "kind": "point",
         "layerId": "islem-kose-noktalari",
         "p": {
@@ -48991,7 +49069,19 @@
          "Tür": "Köşe noktası"
         }
        },
-       "17": {
+       "22": {
+        "kind": "text",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487046.69705627486,
+         "y": 4419996.302943725
+        },
+        "attrs": {
+         "Nokta": "P00006",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "23": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49003,7 +49093,7 @@
          "Uzunluk (m)": "20.000"
         }
        },
-       "18": {
+       "24": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49015,7 +49105,7 @@
          "Uzunluk (m)": "30.000"
         }
        },
-       "19": {
+       "25": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49027,7 +49117,7 @@
          "Uzunluk (m)": "20.000"
         }
        },
-       "20": {
+       "26": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49039,7 +49129,7 @@
          "Uzunluk (m)": "30.000"
         }
        },
-       "21": {
+       "27": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49051,7 +49141,7 @@
          "Uzunluk (m)": "25.000"
         }
        },
-       "22": {
+       "28": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49063,7 +49153,7 @@
          "Uzunluk (m)": "30.000"
         }
        },
-       "23": {
+       "29": {
         "kind": "text",
         "layerId": "islem-kenar-olculeri",
         "p": {
@@ -49150,6 +49240,12 @@
         "$any",
         "$any",
         "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
         "$any"
        ],
        "changed": [
@@ -49162,6 +49258,12 @@
        ],
        "outputs": {
         "points": [
+         "$any",
+         "$any",
+         "$any",
+         "$any",
+         "$any",
+         "$any",
          "$any",
          "$any",
          "$any",
@@ -49208,7 +49310,7 @@
           "tool": "points.numberVertices",
           "label": "Köşe noktalarını numarala",
           "recordsIn": 2,
-          "recordsOut": 6,
+          "recordsOut": 12,
           "ms": "$any",
           "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı."
          },
@@ -49233,7 +49335,7 @@
         ],
         "total": {
          "recordsIn": 6,
-         "recordsOut": 15
+         "recordsOut": 21
         }
        },
        "revision": "$current"
@@ -49830,6 +49932,354 @@
        "code": "entity_not_found",
        "message": "00000000-0000-4000-8000-000000000001 kimlikli nesne çizimde yok.",
        "path": "parameters.input.uids[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Projenin modülünde olmayan araç: tool_not_in_module, aracın çalıştığı projeler",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: parseller",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingFont": "barlow",
+     "cadWork": "architecture"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mevcut",
+      "name": "Mevcut noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E9BF0",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 7
+       }
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Nitelik": "Tarla"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "label": "1",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "gizli",
+      "label": "2",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419980
+       },
+       {
+        "x": 487030,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420055
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487040,
+       "y": 4420040
+      },
+      "b": {
+       "x": 487060,
+       "y": 4420040
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "mevcut",
+      "label": "P00001",
+      "attrs": {
+       "Nokta": "P00001",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487000,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "mevcut",
+      "label": "P00002",
+      "attrs": {
+       "Nokta": "P00002",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "mevcut",
+      "label": "P00003",
+      "attrs": {
+       "Nokta": "P00003",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420000
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "network.serviceAreas"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tool_not_in_module",
+       "message": "“Hizmet alanları” bu mimari projede yok; CBS projelerinde var.",
+       "path": "tool"
       }
      },
      "expect": {

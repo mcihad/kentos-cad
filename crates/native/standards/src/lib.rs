@@ -62,6 +62,10 @@ pub fn package(name: &str) -> Option<PathBuf> {
         let found = root.join("catalog/standards").join(name);
         found.join("manifest.json").is_file().then_some(found)
     };
+    // An installation's resources (CLAUDE.md §26, docs/adr/9312): `<kaynak>/catalog/standards`.
+    if let Some(found) = kentos_launch::install::resources().and_then(|r| near(&r)) {
+        return Some(found);
+    }
     // The program in `target/<profile>/`, a test's in `target/<profile>/deps/` or, with Cargo's newer build folder,
     // `target/<profile>/build/<crate>/<hash>/out/`.
     let exe = std::env::current_exe().ok();

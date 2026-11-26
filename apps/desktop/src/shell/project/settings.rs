@@ -109,7 +109,9 @@ impl Section {
 }
 
 /// The drawing typefaces a project may name (the settings schema's list).
-pub(super) const FONTS: [(DrawingFont, &str); 7] = [
+pub(super) const FONTS: [(DrawingFont, &str); 9] = [
+    (DrawingFont::Arial, "Arial"),
+    (DrawingFont::TimesNewRoman, "Times New Roman"),
     (DrawingFont::Barlow, "Barlow"),
     (DrawingFont::Arimo, "Arimo"),
     (DrawingFont::Overpass, "Overpass"),

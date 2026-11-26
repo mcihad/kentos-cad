@@ -11,7 +11,7 @@ sınırlarını izleyin.
 ## Kılavuzun haritası
 
 Bölüm numaraları korunur: koddaki ve ADR'lerdeki “CLAUDE.md §N” atıfları aşağıdaki dosyayı gösterir. Bu dosyada kalan
-bölümler (3, 5–8, 11, 13–15, 18–20, 23, 25) aşağıdadır.
+bölümler (3, 5–8, 11, 13–15, 18–20, 23, 25, 26) aşağıdadır.
 
 | § | Dosya | Ne zaman okunur |
 |---|---|---|
@@ -357,3 +357,30 @@ Ayrıntı [ADR 9195](docs/adr/9195-module-separation.md), [ADR 9196](docs/adr/91
    CBS'nin veri satırlarını sunucu komutuyla yazar, proje dosyasını hiç yazmaz.
 8. **Yeni modül ya da istemci tarifle eklenir** (§9.9). Tarif sırasıyla: modül tanımı, profil, sihirbaz, komut
    kümesi, saklama türü, bulut türleri, matris sınaması, bağımlılık denetimi, resim.
+
+## 26. Kurulum paketi ve dizinler (kesin kural, 26 Kasım 2026)
+
+Programın çalışırken okuduğu her dosya aşağıdaki yerlerden birindedir ve yerini `kentos_launch::install`'dan sorar
+(ADR 9312). Yeni bir dizin önce bu tabloya ve `install.rs`'e eklenir; kurulum paketi yalnız bu tablodan kurulur.
+
+- **`<program>`:** programların klasörü (Windows ve Linux'ta kurulum klasörü, macOS'ta `KentOS.app/Contents/MacOS`).
+- **`<kaynak>`:** programın yalnız okuduğu dosyalar (Windows ve Linux'ta kurulum klasörü, macOS'ta
+  `KentOS.app/Contents/Resources`). Depoda `paket/`'tir; paketçi içini olduğu gibi kopyalar.
+- **`<kullanıcı>`:** kullanıcının kurduğu ve yazdığı dosyalar (macOS `~/Library/Application Support/kentos-cad`,
+  Windows `%APPDATA%\kentos-cad`, Linux `$XDG_DATA_HOME/kentos-cad`).
+
+| Depoda | Kurulumda | İçerik |
+|---|---|---|
+| derlenen programlar | `<program>/` | `kentos-cad`, `kentos-launcher`, modül adları (`kentos-mimari` …), `kentos`, `kentos-mcp` |
+| `paket/fonts/` | `<kaynak>/fonts/` | programın okuduğu yazı tipi dosyaları; Arial'ın ve Times New Roman'ın dosyası depoya konmaz (lisansı dağıtmayı yasaklar, ADR 9311) |
+| `paket/eklentiler/` | `<kaynak>/eklentiler/` | KentOS ile gelen eklentiler, her biri bir klasör; örnek Python işlem aracı `ornek-isleme/` |
+| `paket/betikler/` | `<kaynak>/betikler/` | örnek Python betikleri |
+| `catalog/standards/` | `<kaynak>/catalog/standards/` | standart kural paketleri (Python) |
+| `apps/desktop/assets/fonts/drawing/*-OFL.txt` | `<kaynak>/fonts/lisanslar/` | gömülü yazı tiplerinin lisansları (yüzler programın içindedir) |
+| SDK tekerleği, uv | `<program>/tools/` (macOS: tekerlek `<kaynak>/python/`, uv `<program>/`) | Python ortamı |
+| — | `<kullanıcı>/eklentiler/`, `fonts/`, `betikler/`, `python/` | kullanıcının kurdukları ve yazdıkları |
+
+- **Python işlem aracı** eklenti olarak yazılır: tanımı `tools/<id>.tool.json` (`modules`, `category`), işi
+  `@ext.processing`. Örneği `paket/eklentiler/ornek-isleme/`'dir (ADR 9310).
+- **Depodan çalışan program** kaynakları `paket/`'ten bulur (`target/` üstü). `KENTOS_RESOURCES_DIR` ve
+  `KENTOS_USER_DIR` başka yeri gösterir.

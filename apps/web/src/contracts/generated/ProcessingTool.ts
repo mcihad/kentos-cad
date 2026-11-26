@@ -21,6 +21,11 @@ modelDescription?: string,
  */
 extension?: ExtensionPin, 
 /**
+ * The modules whose projects run it (`cbs`, `harita`, `mimari`, `yol`; docs/adr/9310): a project of another module
+ * does not list it and refuses its run (`tool_not_in_module`).
+ */
+modules: Array<string>, 
+/**
  * The names the command line takes for it.
  */
 aliases: Array<string>, parameters: Array<ToolParameter>, 

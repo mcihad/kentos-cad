@@ -1,10 +1,7 @@
-//! Özet istatistik (the web's `builtin/summaryStatistics.ts`; docs/adr/0200
-//! §5; QGIS "Statistics by categories", ArcGIS Summary Statistics): a field's
-//! figures over the objects, group by group when a grouping field is given:
-//! how many objects, how many values read as numbers, the sum, mean, least,
-//! most and the sample standard deviation. The table is the core's
-//! (`ops::statistics::summarize`); the dialog shows it after the run with
-//! Panoya kopyala and CSV olarak kaydet. Edits nothing.
+//! Özet istatistik (the web's `builtin/summaryStatistics.ts`; docs/adr/0200 §5): a field's figures over the objects,
+//! group by group when a grouping field is given: how many objects, how many values read as numbers, the sum, mean,
+//! least, most and the sample standard deviation. The table is the core's (`ops::statistics::summarize`); the dialog
+//! shows it after the run with Panoya kopyala and CSV olarak kaydet. Edits nothing.
 
 use kentos_geometry_core::ops::statistics::summarize;
 use serde_json::json;
@@ -32,6 +29,7 @@ pub fn tool() -> Tool {
         id: "statistics.summary".into(),
         label: "Özet istatistik".into(),
         category: "analysis".into(),
+        modules: crate::modules::placed("statistics.summary"),
         description: "Bir alanın toplamını, ortalamasını, en azını, en çoğunu ve standart sapmasını, isterseniz başka bir alanın değerlerine göre gruplayarak tablo olarak verir.".into(),
         help: Some([
             "Örnekler: yapıların taban alanlarının kat sayısına göre toplamı; parsellerin tapu alanlarının ortalaması ve standart sapması.",

@@ -52,6 +52,7 @@ fn tools(f: &Value) -> BTreeMap<String, Tool> {
                 id: id.clone(),
                 label: t["label"].as_str().expect("a label").to_owned(),
                 category: "points".into(),
+                modules: kentos_processing::modules::SHARED,
                 description: String::new(),
                 help: None,
                 keywords: Vec::new(),

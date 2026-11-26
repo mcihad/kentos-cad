@@ -454,7 +454,8 @@ fn glyphs() {
             && named("kot").contains("Barlow 400")
             && named("kot").contains("Arimo 400")
     );
-    assert!(named("taks").contains("“≤”") && named("taks").contains("“?”"));
+    // “⟨” is in no face (“≤” is Times New Roman's since docs/adr/9311).
+    assert!(named("taks").contains("“⟨”") && named("taks").contains("“?”"));
     assert!(named("bedel").contains("Courier Prime 700") && named("bedel").contains("Barlow 600"));
     // The display list writes what is drawn.
     let list = display_list(&book, sheet, &inputs).unwrap();

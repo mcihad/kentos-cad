@@ -4,6 +4,8 @@
  * The typeface of the text that is part of the drawing (text objects,
  * dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
  * the app. A project setting: everyone who opens the project sees the same
- * letters. Files written before it have none (Barlow).
+ * letters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating
+ * system's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,
+ * Liberation Serif) elsewhere, with the same widths.
  */
-export type DrawingFont = "barlow" | "arimo" | "overpass" | "quicksand" | "architects-daughter" | "courier-prime" | "plex-mono";
+export type DrawingFont = "barlow" | "arimo" | "overpass" | "quicksand" | "architects-daughter" | "courier-prime" | "plex-mono" | "arial" | "times-new-roman";

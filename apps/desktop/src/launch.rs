@@ -19,6 +19,8 @@ const BAD_ARGUMENTS: u8 = 2;
 /// The program's entry (docs/adr/0802 §1): by the name it was started under (`args`' first word), a
 /// module's own program (`kentos-mimari`, a link to this one file) or `kentos-cad`, every module.
 pub fn program_main(args: impl IntoIterator<Item = OsString>) -> ExitCode {
+    // The operating system's own Arial and Times New Roman before the first text is laid out (docs/adr/9311).
+    crate::drawing_fonts::give_system_faces();
     let mut args = args.into_iter();
     let named = args.next();
     match named.as_deref().and_then(Module::of_program_name) {

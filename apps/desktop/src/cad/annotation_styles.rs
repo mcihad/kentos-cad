@@ -977,9 +977,9 @@ impl App {
         let name =
             kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let font = Select::new(
-            DrawingFont::ALL.iter().map(|f| Choice::new(f.label())),
-            DrawingFont::ALL.iter().position(|f| *f == s.font),
-            |i| msg(Event::Font(DrawingFont::ALL.get(i).copied())),
+            DrawingFont::CHOICES.iter().map(|f| Choice::new(f.label())),
+            DrawingFont::CHOICES.iter().position(|f| *f == s.font),
+            |i| msg(Event::Font(DrawingFont::CHOICES.get(i).copied())),
         )
         .searchable(false);
         let numbers = TEXT_NUMBERS.iter().fold(row![].spacing(12), |r, n| {
@@ -1061,16 +1061,16 @@ impl App {
         .searchable(false);
         let fonts = Select::new(
             std::iter::once(Choice::new(format!("Projenin ({})", project.label())))
-                .chain(DrawingFont::ALL.iter().map(|f| Choice::new(f.label()))),
+                .chain(DrawingFont::CHOICES.iter().map(|f| Choice::new(f.label()))),
             Some(
                 s.font
-                    .and_then(|f| DrawingFont::ALL.iter().position(|x| *x == f))
+                    .and_then(|f| DrawingFont::CHOICES.iter().position(|x| *x == f))
                     .map_or(0, |i| i + 1),
             ),
             |i| {
                 msg(Event::Font(
                     i.checked_sub(1)
-                        .and_then(|i| DrawingFont::ALL.get(i).copied()),
+                        .and_then(|i| DrawingFont::CHOICES.get(i).copied()),
                 ))
             },
         )

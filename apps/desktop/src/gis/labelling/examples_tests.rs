@@ -26,6 +26,8 @@ fn named() -> App {
     e.base_mut().attrs.insert("Ad".into(), LONG.into());
     assert!(doc.model.update(second, e));
     let _ = app.open_labelling(Some("cizim".into()));
+    // The layer labels nothing until its labelling is turned on (docs/adr/9311): Tek etiket.
+    let _ = app.update(Message::Gis(gis::Event::Labelling(Event::Mode(kentos_commands::LabelsMode::Single))));
     let _ = app.update(Message::Gis(gis::Event::Labelling(Event::Type(Key::Template, "{Ad}".into()))));
     app
 }

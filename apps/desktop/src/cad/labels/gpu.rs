@@ -463,8 +463,11 @@ fn drawing_face(id: fontdb::ID) -> Option<FontId> {
                 if index != 0 {
                     return None;
                 }
-                match kentos_plot::fonts::FACES.iter().position(same) {
-                    Some(i) => u16::try_from(i).ok().map(FontId),
+                // Any of the core's faces: the drawing's, the fallbacks, the added ones (docs/adr/9311).
+                match kentos_geometry_core::text::shaping::font_of_bytes(data)
+                    .filter(|id| !kentos_geometry_core::text::shaping::is_fallback(*id))
+                {
+                    Some(id) => Some(id),
                     None => kentos_ui::theme::typography::FONTS
                         .iter()
                         .find(|f| same(f))

@@ -364,6 +364,29 @@ pub struct LayerStyle {
     pub renderer: Option<serde_json::Value>,
 }
 
+impl LayerStyle {
+    /// Whether the layer labels its objects (docs/adr/9311): its labelling turned on (one label or rules), or a label
+    /// style with no labelling set. A layer with neither labels nothing, as a CAD drawing's layer: its names are
+    /// written as text objects, and the labels come on when the layer's labelling is turned on.
+    pub fn labels_on(&self) -> bool {
+        match &self.labels {
+            Some(l) => l.mode != crate::labels::LabelsMode::Off,
+            None => self.label.is_some(),
+        }
+    }
+
+    /// The style with its labels off, its label style kept for the day they are turned on.
+    pub fn labels_off(mut self) -> Self {
+        let obstacle = self.labels.take().and_then(|l| l.obstacle);
+        self.labels = Some(crate::labels::LayerLabels {
+            mode: crate::labels::LabelsMode::Off,
+            classes: Vec::new(),
+            obstacle,
+        });
+        self
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

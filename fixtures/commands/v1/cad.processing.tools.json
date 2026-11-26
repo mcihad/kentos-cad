@@ -347,6 +347,7 @@
          "label": "Köşe noktalarını numarala",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KOSENUMARA",
           "KNUM",
@@ -535,6 +536,7 @@
          "label": "Öznitelik hesapla",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "OZHESAP",
           "ALANHESAP"
@@ -642,6 +644,7 @@
          "label": "İfadeyle seç",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "IFADESEC",
           "SORGU"
@@ -779,6 +782,7 @@
          "label": "Kenar uzunluklarını yaz",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KENARYAZ",
           "KENARUZUNLUK"
@@ -916,6 +920,7 @@
          "label": "Kenar uzunluklarını yaz",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KENARYAZ",
           "KENARUZUNLUK"
@@ -1053,6 +1058,7 @@
          "label": "Köşe noktalarını numarala",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KOSENUMARA",
           "KNUM",
@@ -1241,6 +1247,7 @@
          "label": "Öznitelik hesapla",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "OZHESAP",
           "ALANHESAP"
@@ -1348,6 +1355,7 @@
          "label": "İfadeyle seç",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "IFADESEC",
           "SORGU"
@@ -1485,6 +1493,7 @@
          "label": "Anahtarla birleştir",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "ANAHTARBIRLESTIR"
          ],
@@ -1631,6 +1640,7 @@
          "label": "İçindekinden bilgi al",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "ICBILGI",
           "ICINDEKIBILGI"
@@ -1738,6 +1748,7 @@
          "label": "En yakını bul",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "ENYAKIN",
           "YAKINBUL",
@@ -1856,6 +1867,7 @@
          "label": "Ağ oluştur",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "AG",
           "AGOLUSTUR",
@@ -1984,6 +1996,7 @@
          "label": "Kırp",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KIRP",
           "CLIP"
@@ -2061,6 +2074,7 @@
          "label": "Gruplayarak birleştir",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "GRUPBIRLESTIR",
           "DISSOLVE"
@@ -2158,6 +2172,7 @@
          "label": "Geçerliliği denetle",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "GECERLILIK",
           "CHECKGEOMETRY"
@@ -2220,6 +2235,7 @@
          "label": "Sadeleştir",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "SADELESTIRKATMAN",
           "GENERALIZE"
@@ -2302,6 +2318,7 @@
          "label": "Özniteliğe göre böl",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "OZNITELIKBOL"
          ],
@@ -2378,6 +2395,7 @@
          "label": "Yinelenenleri sil",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "YINELENENSIL"
          ],
@@ -2454,6 +2472,7 @@
          "label": "Nesneden nokta",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "NESNEDENNOKTA",
           "MERKEZNOKTA"
@@ -2541,6 +2560,7 @@
          "label": "Voronoi alanları",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "VORONOI",
           "THIESSEN"
@@ -2664,6 +2684,7 @@
          "label": "Parsel ölçü yazıları",
          "category": "$any",
          "description": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; hepsi tek adımda geri alınır.",
+         "modules": "$any",
          "aliases": [],
          "parameters": [
           {
@@ -2738,6 +2759,7 @@
          "label": "Köşe noktalarını numarala",
          "category": "$any",
          "description": "$any",
+         "modules": "$any",
          "aliases": [
           "KOSENUMARA",
           "KNUM",

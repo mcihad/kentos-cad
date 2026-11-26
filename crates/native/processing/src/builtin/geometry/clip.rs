@@ -1,8 +1,6 @@
-//! Kırp (the web's `builtin/geometry/clip.ts`; docs/adr/0201 §3; ArcGIS Clip,
-//! QGIS Kırp): each object's parts inside the cutting areas, which are joined
-//! first; an area meets them in the core's overlay, a path is cut where it
-//! crosses their boundary and keeps the pieces inside or on it, a point stays
-//! when it is inside or on it. The objects keep their attributes.
+//! Kırp (the web's `builtin/geometry/clip.ts`; docs/adr/0201 §3): each object's parts inside the cutting areas, which
+//! are joined first; an area meets them in the core's overlay, a path is cut where it crosses their boundary and keeps
+//! the pieces inside or on it, a point stays when it is inside or on it. The objects keep their attributes.
 
 use kentos_geometry_core::ops::geoprocess::calls::clip_run;
 use serde_json::json;
@@ -21,6 +19,7 @@ pub fn tool() -> Tool {
         id: "geometry.clip".into(),
         label: "Kırp".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.clip"),
         description: "Nesnelerin kesen alanların içinde kalan parçalarını yeni katmana yazar; öznitelikler olduğu gibi kalır.".into(),
         help: Some([
             "Kesen alanlar önce birleşir; her nesnenin onların içinde ya da sınırında kalan kısmı yazılır: alanın ortak kısmı, çizginin içerideki parçaları, içerideki noktalar. Sınır üstündeki çizgi parçası içeride sayılır.",

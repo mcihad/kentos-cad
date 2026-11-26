@@ -46,7 +46,7 @@ approval?: VolumeApprovalReport, problem?: string,
  */
 curve?: VolumeCurve, 
 /**
- * What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
+ * What it measures and how (docs/adr/1037; ROAD-VOL-19): only in `road.volumes.query`'s answer.
  */
 basis?: VolumeBasis, 
 /**

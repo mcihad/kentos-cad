@@ -21,6 +21,6 @@ sense?: ConstraintSense,
  */
 value?: string, 
 /**
- * A dimension that only measures (AutoCAD's reference parameter): it drives nothing.
+ * A dimension that only measures: it drives nothing.
  */
 reference?: boolean, };

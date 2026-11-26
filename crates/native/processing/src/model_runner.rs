@@ -42,10 +42,16 @@ pub fn model_as_tool(model: &Model, lookup: &dyn Fn(&str) -> Option<Tool>) -> To
         .map(|(i, s)| format!("{}. {}", i + 1, step_name(s, lookup)))
         .collect::<Vec<_>>()
         .join("\n\n");
+    // Where every step's tool is (docs/adr/9310): a step whose tool is not known runs nowhere.
+    let modules = model.steps.iter().fold(
+        kentos_launch::ModuleSet::of(kentos_launch::Module::ALL),
+        |set, s| set.and(lookup(&s.tool).map_or(kentos_launch::ModuleSet::NONE, |t| t.modules)),
+    );
     Tool {
         id: format!("{MODEL_PREFIX}{}", model.id),
         label: model.label.clone(),
         category: model.category.clone(),
+        modules,
         description: if model.description.is_empty() {
             format!("{} adımlı model.", model.steps.len())
         } else {

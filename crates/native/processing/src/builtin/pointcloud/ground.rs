@@ -1,10 +1,7 @@
-//! Zemin süzgeci (docs/adr/0207 §7; Netcad's Yüzey Filtresi, ArcGIS Classify
-//! LAS Ground, PDAL's filters.smrf): the simple morphological filter of
-//! Pingel, Clarke and McBride as the ADR defines it (`ops::ground`): the
-//! ground's surface from the last returns' least heights, the low outliers
-//! and the objects opened away; a point within the threshold and the scaled
-//! slope of the surface is ground (2), a 2 that is not becomes 1, other
-//! classes stay. Two passes: the cells, then the classes written.
+//! Zemin süzgeci (docs/adr/0207 §7; PDAL's filters.smrf): the simple morphological filter of Pingel, Clarke and McBride
+//! as the ADR defines it (`ops::ground`): the ground's surface from the last returns' least heights, the low outliers
+//! and the objects opened away; a point within the threshold and the scaled slope of the surface is ground (2), a 2
+//! that is not becomes 1, other classes stay. Two passes: the cells, then the classes written.
 
 use kentos_commands::CloudRender;
 use kentos_pointcloud::ops::ground::{Ground, Params};
@@ -49,6 +46,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.ground".into(),
         label: "Zemin süzgeci".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.ground"),
         description: "Nokta bulutunda zemini ayırır (SMRF): zemin noktaları 2 sınıfına alınır, zemin olmayan 2'ler 1 olur, öbür sınıflar kalır; sonuç LAS, LAZ ya da COPC olarak yazılır.".into(),
         help: Some([
             "Basit morfolojik süzgeç (Pingel ve ark. 2013): son dönüşlerin her hücredeki en düşük kotundan yüzey; boş hücreler komşularından doldurulur; düşük aykırılar ve nesneler (binalar, ağaçlar) aşamalı açmayla ayıklanır; kalan yüzeyden eşik ve eğimle zemin seçilir.",

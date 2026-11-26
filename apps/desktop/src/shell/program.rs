@@ -274,9 +274,21 @@ impl App {
         match self.active_module() {
             None => true,
             Some(m) => {
-                catalog().module_has(m, id)
-                    || (self.program.is_none() && Module::ALL.into_iter().all(|o| !catalog().module_has(o, id)))
+                self.module_offers(m, id)
+                    || (self.program.is_none() && Module::ALL.into_iter().all(|o| !self.module_offers(o, id)))
             }
+        }
+    }
+
+    /// Whether a module offers a command: an İşlemler tool where its modules are (docs/adr/9310: a built-in tool's
+    /// table, an extension's descriptor, both in the registry), any other command as the catalog says.
+    fn module_offers(&self, m: Module, id: &str) -> bool {
+        match id
+            .strip_prefix(crate::catalog::PROCESSING_RUN)
+            .and_then(|tool| self.gis.processing.registry.modules_of(tool))
+        {
+            Some(modules) => modules.has(m),
+            None => catalog().module_has(m, id),
         }
     }
 
@@ -288,7 +300,7 @@ impl App {
         let here = self.active_module()?;
         let others: Vec<&str> = Module::ALL
             .into_iter()
-            .filter(|m| *m != here && catalog().module_has(*m, id))
+            .filter(|m| *m != here && self.module_offers(*m, id))
             .map(in_program)
             .collect();
         let place = self.here_words();

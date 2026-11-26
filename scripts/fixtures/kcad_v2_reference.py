@@ -62,7 +62,9 @@ ANNOTATION_KINDS = ("text", "leader", "dimension", "table", "coordinate", "stati
 LINE_TYPES = ("continuous", "dashed", "dashdot", "dotted")
 DIMENSION_LINES = ("dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor")
 # Schema 21 (docs/adr/0183): the drawing typefaces and a dimension's arrowheads by name.
-DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
+# DrawingFont's order: a typed column holds a face's place in it; Arial and Times New Roman came last (docs/adr/9311).
+DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono", "arial",
+                 "times-new-roman")
 DIMENSION_ARROWS = ("closed", "open", "dot", "none")
 # Schema 23 (docs/adr/0186): a hatch's pattern kinds and a gradient's shapes by name.
 HATCH_TYPES = ("solid", "lines", "cross", "pattern", "gradient")
@@ -302,7 +304,7 @@ def settings(s):
                 "cadWork": (enum(("architecture", "map", "road")), False),
                 # Schema 162 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
                 "road": (opaque, False),
-                "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
+                "drawingFont": (enum(DRAWING_FONTS), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
                 "secondSrid": (uint, False),
@@ -4017,7 +4019,8 @@ def broken(minimal_content, minimal_file):
         return cmap({"dimension": cmap({**common, "a": point(one["p"]), "b": point(b), "offset": f64(2.0), "height": f64(0.5), **extra})})
 
     files["style-face-in-schema-20.kcad"] = in_schema(20, text_of(font=text("arimo")))
-    files["style-face-font-unknown.kcad"] = in_schema(21, text_of(font=text("arial")))
+    # A face KentOS does not have (Arial is one of its own since docs/adr/9311).
+    files["style-face-font-unknown.kcad"] = in_schema(21, text_of(font=text("helvetica")))
     files["style-face-bold-false.kcad"] = in_schema(21, text_of(font=text("arimo"), bold=boolean(False)))
     files["style-face-bold-without-font.kcad"] = in_schema(21, text_of(bold=boolean(True)))
     files["style-face-oblique-zero.kcad"] = in_schema(21, text_of(font=text("arimo"), oblique=f64(0.0)))

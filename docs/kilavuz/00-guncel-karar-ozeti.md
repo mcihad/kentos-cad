@@ -4,6 +4,25 @@
 
 ## 0. Güncel karar özeti
 
+- **İşlem araçları modüllere ayrıldı, Python araçları iyileşti (26 Kasım 2026, sahibin isteği;
+  [ADR 9310](../adr/9310-processing-tools-by-module.md)).**
+  - Her araç dört modülün her biri için açıkça var ya da yok (`kentos_processing::modules::PLACED`, altı küme). Örnek:
+    hidroloji CBS ve Yol'da; kenar yazıları ve köşe numaraları Harita ve Yol'da; ağ analizi yalnız CBS'de.
+  - Araç kutusu, komut satırı, Python, MCP, eklenti ve ajan aynı kümeyi okur. Başka modülün aracı listelenmez,
+    çalıştırılırsa `tool_not_in_module` ile reddedilir.
+  - Python aracının tanımı `modules` ve `category` söyler. Örnek araç `paket/eklentiler/ornek-isleme/`'dir.
+
+- **Çizim yazı tipi Arial; etiketler kapalı başlar, nokta adları yazıdır (26 Kasım 2026, sahibin isteği;
+  [ADR 9311](../adr/9311-arial-times-point-names-labels-off.md)).**
+  - Yeni projeler Arial'la açılır; Times New Roman da seçilebilir. Program işletim sisteminin gerçek Arial'ını ve Times
+    New Roman'ını kullanır. Dosyaları pakete konmaz (lisans): olmayan makinede aynı ölçülü ikizler (Arimo,
+    Liberation Serif) çizer.
+  - Katman, etiketlemesi açılmadıkça etiketlemez. Köşe noktalarını numarala adları köşeye Metin nesnesi olarak yazar.
+
+- **Kurulum paketinin dizinleri (26 Kasım 2026, sahibin isteği; [ADR 9312](../adr/9312-install-layout.md),
+  CLAUDE.md §26).**
+  - Üç yer: `<program>`, `<kaynak>` (depoda `paket/`), `<kullanıcı>`. Yerleri tek modül söyler: `kentos_launch::install`.
+
 - **Form tasarımcısı, harita servisi ve veritabanı bağlantısı pencereleri sadeleşti (25 Kasım 2026, sahibin isteği;
   [ADR 9309](../adr/9309-form-service-and-connection-windows-simplified.md)).**
   - Formlar: tek araç sırası ve “Ekle ▾” (her öğe adı ve açıklamasıyla); formun ayarları sağ bölmede “Form ayarları”;

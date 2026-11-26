@@ -218,6 +218,91 @@ impl Module {
     }
 }
 
+/// The modules something is offered in (CLAUDE.md §25 rule 2, docs/adr/9310): each module's yes or no, stated by name.
+/// A new module is a new field, so no set compiles until it places it; there is no "every module" default.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ModuleSet {
+    pub architecture: bool,
+    pub map: bool,
+    pub gis: bool,
+    pub road: bool,
+}
+
+impl ModuleSet {
+    /// Offered nowhere: what a set read from a list no module of which KentOS knows is.
+    pub const NONE: ModuleSet = ModuleSet {
+        architecture: false,
+        map: false,
+        gis: false,
+        road: false,
+    };
+
+    /// Whether `module` offers it.
+    pub const fn has(self, module: Module) -> bool {
+        match module {
+            Module::Architecture => self.architecture,
+            Module::Map => self.map,
+            Module::Gis => self.gis,
+            Module::Road => self.road,
+        }
+    }
+
+    /// The set with `module` in it.
+    pub const fn with(self, module: Module) -> ModuleSet {
+        let mut set = self;
+        match module {
+            Module::Architecture => set.architecture = true,
+            Module::Map => set.map = true,
+            Module::Gis => set.gis = true,
+            Module::Road => set.road = true,
+        }
+        set
+    }
+
+    /// The modules both sets have: where a model whose steps run tools of two sets is offered.
+    pub const fn and(self, other: ModuleSet) -> ModuleSet {
+        ModuleSet {
+            architecture: self.architecture && other.architecture,
+            map: self.map && other.map,
+            gis: self.gis && other.gis,
+            road: self.road && other.road,
+        }
+    }
+
+    pub const fn is_empty(self) -> bool {
+        !(self.architecture || self.map || self.gis || self.road)
+    }
+
+    /// The set of these modules.
+    pub fn of(modules: impl IntoIterator<Item = Module>) -> ModuleSet {
+        modules.into_iter().fold(ModuleSet::NONE, ModuleSet::with)
+    }
+
+    /// The set the ids name (`mimari`, `harita`, `cbs`, `yol`: an extension's descriptor, a catalog); an id KentOS does
+    /// not know is an error naming the ones it does.
+    pub fn from_ids<'a>(ids: impl IntoIterator<Item = &'a str>) -> Result<ModuleSet, String> {
+        let mut set = ModuleSet::NONE;
+        for id in ids {
+            let module = Module::from_id(id).ok_or_else(|| {
+                let known: Vec<&str> = Module::ALL.iter().map(|m| m.id()).collect();
+                format!("“{id}” bir KentOS modülü değil ({}).", known.join(", "))
+            })?;
+            set = set.with(module);
+        }
+        Ok(set)
+    }
+
+    /// Its modules, in [`Module::ALL`]'s order.
+    pub fn modules(self) -> Vec<Module> {
+        Module::ALL.into_iter().filter(|m| self.has(*m)).collect()
+    }
+
+    /// Its modules' ids, in [`Module::ALL`]'s order.
+    pub fn ids(self) -> Vec<&'static str> {
+        self.modules().into_iter().map(Module::id).collect()
+    }
+}
+
 /// Where a module's projects keep their data (docs/adr/9196 §2): the two kinds a module chooses from; a third needs an
 /// ADR.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -2,6 +2,6 @@
 import type { Vec2 } from "./Vec2";
 
 /**
- * What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).
+ * What a revision cloud goes round.
  */
 export type RevcloudFrame = { "kind": "rectangle", a: Vec2, b: Vec2, } | { "kind": "polygon", pts: Array<Vec2>, } | { "kind": "object", uid: string, };

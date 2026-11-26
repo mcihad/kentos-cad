@@ -1217,8 +1217,16 @@
     {
       "key": "newProjects.drawingFont",
       "type": "enum",
-      "default": "barlow",
+      "default": "arial",
       "choices": [
+        {
+          "value": "arial",
+          "label": "Arial"
+        },
+        {
+          "value": "times-new-roman",
+          "label": "Times New Roman"
+        },
         {
           "value": "barlow",
           "label": "Barlow"
@@ -1827,6 +1835,14 @@
       "type": "enum",
       "default": "barlow",
       "choices": [
+        {
+          "value": "arial",
+          "label": "Arial"
+        },
+        {
+          "value": "times-new-roman",
+          "label": "Times New Roman"
+        },
         {
           "value": "barlow",
           "label": "Barlow"

@@ -3830,6 +3830,7 @@ dependencies = [
  "kentos-geopackage",
  "kentos-ifc",
  "kentos-kcad",
+ "kentos-launch",
  "kentos-native-application",
  "kentos-pointcloud",
  "kentos-project",
@@ -4062,6 +4063,7 @@ dependencies = [
 name = "kentos-standards"
 version = "0.1.0"
 dependencies = [
+ "kentos-launch",
  "kentos-python-env",
  "serde_json",
 ]

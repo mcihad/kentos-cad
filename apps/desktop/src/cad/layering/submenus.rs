@@ -82,7 +82,7 @@ impl App {
                 .item(
                     match node.style.labels.as_ref().map(|l| l.mode) {
                         Some(kentos_commands::LabelsMode::Rules) => "Etiketler… (kurallı)",
-                        Some(kentos_commands::LabelsMode::Off) => "Etiketler… (etiketsiz)",
+                        _ if !node.style.labels_on() => "Etiketler… (etiketsiz)",
                         _ => "Etiketler…",
                     },
                     event(Event::Labels(id.clone())),

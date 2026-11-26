@@ -1,8 +1,6 @@
-//! İfadeyle seç (the web's `builtin/selectByExpression.ts`, QGIS "Select by
-//! expression"): selects the objects for which a condition over attributes
-//! and geometry holds, combined with the current selection as the user
-//! chose. Edits nothing, so there is nothing to undo; the selection is the
-//! result.
+//! İfadeyle seç (the web's `builtin/selectByExpression.ts`): selects the objects for which a condition over attributes
+//! and geometry holds, combined with the current selection as the user chose. Edits nothing, so there is nothing to
+//! undo; the selection is the result.
 
 use std::collections::HashSet;
 
@@ -22,6 +20,7 @@ pub fn tool() -> Tool {
         id: "selection.byExpression".into(),
         label: "İfadeyle seç".into(),
         category: "selection".into(),
+        modules: crate::modules::placed("selection.byExpression"),
         description: "Özniteliklere ve geometriye göre yazdığınız koşulu sağlayan nesneleri seçer.".into(),
         help: Some([
             "Koşulda alan adları doğrudan (Nitelik) ya da köşeli parantezle ([Tapu alanı]) yazılır, metinler tırnak içindedir ('Arsa'). Geometri için $alan, $uzunluk, $köşe, $katman gibi değişkenler vardır.",

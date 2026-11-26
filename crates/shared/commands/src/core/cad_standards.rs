@@ -934,6 +934,8 @@ pub fn font_id(f: DrawingFont) -> &'static str {
         DrawingFont::ArchitectsDaughter => "architects-daughter",
         DrawingFont::CourierPrime => "courier-prime",
         DrawingFont::PlexMono => "plex-mono",
+        DrawingFont::Arial => "arial",
+        DrawingFont::TimesNewRoman => "times-new-roman",
     }
 }
 
@@ -947,6 +949,8 @@ pub fn font_label(f: DrawingFont) -> &'static str {
         DrawingFont::ArchitectsDaughter => "Architects Daughter",
         DrawingFont::CourierPrime => "Courier Prime",
         DrawingFont::PlexMono => "IBM Plex Mono",
+        DrawingFont::Arial => "Arial",
+        DrawingFont::TimesNewRoman => "Times New Roman",
     }
 }
 

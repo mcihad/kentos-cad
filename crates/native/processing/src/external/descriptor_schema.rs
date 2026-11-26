@@ -135,7 +135,14 @@ pub fn descriptor_schema() -> Value {
             "id": { "type": "string", "description": "Manifestin entrypoints.processing kimliği." },
             "version": text,
             "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-            "category": { "type": "string", "description": "KentOS eklenti araçlarını kendi kategorisinde gösterir." },
+            "category": { "type": "string",
+                          "examples": crate::categories::CATEGORIES.iter().map(|c| c.id).collect::<Vec<_>>(),
+                          "description": "Araç kutusundaki kategorisinin kimliği (analysis, geometry …); başka bir \
+                                          değer ya da yokluğu aracı Eklentiler'de gösterir." },
+            "modules": { "type": "array", "minItems": 1, "uniqueItems": true,
+                         "items": { "enum": kentos_launch::Module::ALL.iter().map(|m| m.id()).collect::<Vec<_>>() },
+                         "description": "Aracın çıktığı modüller; her biri eklentinin manifestinde olmalı. Yoksa \
+                                         manifestin modülleri." },
             "description": text,
             "help": text,
             "modelDescription": { "type": "string", "maxLength": MOST_MODEL_DESCRIPTION,
@@ -210,6 +217,7 @@ mod tests {
                     "Deneme",
                     "1.0.0",
                     "deneme",
+                    &["cbs"],
                     &descriptor(kind, output),
                 );
                 assert!(

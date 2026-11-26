@@ -1,8 +1,6 @@
-//! Öznitelik hesapla (the web's `builtin/calculateField.ts`, QGIS "Field
-//! calculator"): writes an expression's value into an attribute of every
-//! chosen object, new field or existing. Values are stored as text
-//! (attributes are text until typed schemas arrive). A label that showed the
-//! old value follows the new one.
+//! Öznitelik hesapla (the web's `builtin/calculateField.ts`): writes an expression's value into an attribute of every
+//! chosen object, new field or existing. Values are stored as text (attributes are text until typed schemas arrive). A
+//! label that showed the old value follows the new one.
 
 use kentos_domain::Slot;
 use kentos_style_core::expr::Value as ExprValue;
@@ -31,6 +29,7 @@ pub fn tool() -> Tool {
         id: "attributes.calculate".into(),
         label: "Öznitelik hesapla".into(),
         category: "attributes".into(),
+        modules: crate::modules::placed("attributes.calculate"),
         description: "Seçtiğiniz alana her nesne için bir ifadenin değerini yazar; alan yoksa oluşturur.".into(),
         help: Some([
             "Değer bir ifadedir: sabit bir metin ('Arsa'), başka alanlardan hesap (Ada || '/' || Parsel) ya da geometri ($alan, $uzunluk, $y, $x).",

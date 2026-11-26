@@ -92843,6 +92843,7 @@
         "refusals": [
           "tools_unavailable",
           "unknown_tool",
+          "tool_not_in_module",
           "invalid_uid",
           "entity_not_found",
           "invalid_parameters",
@@ -93162,6 +93163,7 @@
           "empty_batch",
           "too_many_rows",
           "unknown_tool",
+          "tool_not_in_module",
           "invalid_uid",
           "entity_not_found",
           "invalid_parameters",
@@ -119941,6 +119943,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta."
+    },
+    {
+      "code": "tool_not_in_module",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu işlem aracı bu projenin modülünde yok; ileti aracın çalıştığı projeleri söyler, cad.processing.tools her aracın modüllerini verir."
     },
     {
       "code": "invalid_parameters",
@@ -149065,17 +149073,27 @@
       "type": "object"
     },
     "DrawingFont": {
-      "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
-      "enum": [
-        "barlow",
-        "arimo",
-        "overpass",
-        "quicksand",
-        "architects-daughter",
-        "courier-prime",
-        "plex-mono"
-      ],
-      "type": "string"
+      "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow). New projects write Arial (docs/adr/9311): the operating\nsystem's own Arial and Times New Roman draw where they are installed, their bundled metric twins (Arimo,\nLiberation Serif) elsewhere, with the same widths.",
+      "oneOf": [
+        {
+          "enum": [
+            "barlow",
+            "arimo",
+            "overpass",
+            "quicksand",
+            "architects-daughter",
+            "courier-prime",
+            "plex-mono",
+            "times-new-roman"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "arial",
+          "description": "docs/adr/9311: after the web's seven, so every file keeps its numbers.",
+          "type": "string"
+        }
+      ]
     },
     "DrawingMatchCandidate": {
       "description": "An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.",
@@ -197165,6 +197183,14 @@
             "string",
             "null"
           ]
+        },
+        "modules": {
+          "default": [],
+          "description": "The modules whose projects run it (`cbs`, `harita`, `mimari`, `yol`; docs/adr/9310): a project of another module\ndoes not list it and refuses its run (`tool_not_in_module`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "outputs": {
           "description": "What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).",

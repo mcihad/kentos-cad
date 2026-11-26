@@ -146,8 +146,8 @@ impl Class {
         }
     }
 
-    /// Whether a view at `scale` px per metre is inside its range, read as every range is ([`crate::scale::visible_at`],
-    /// QGIS's way): `min_scale` the farthest end (the fewest pixels a metre), itself not shown; `max_scale` the nearest,
+    /// Whether a view at `scale` px per metre is inside its range, read as every range is
+    /// ([`crate::scale::visible_at`]): `min_scale` the farthest end (the fewest pixels a metre), itself not shown; `max_scale` the nearest,
     /// itself shown. Both ends were shown before 14 November 2026; only a view at exactly the farthest end differs.
     pub fn shown_at(&self, scale: f64) -> bool {
         use crate::scale::{denominator, visible_at};
@@ -403,6 +403,8 @@ impl Class {
 pub fn read_labelling(v: &Json) -> Result<Labelling, String> {
     let labels = v.get("labels");
     let mode = match labels {
+        // No labelling and no label style labels nothing (docs/adr/9311): the layer's labels come on when it turns them on.
+        Json::Null if matches!(v.get("label"), Json::Null) => "off",
         Json::Null => "single",
         l => name(l, "mode")?.ok_or("labels.mode gerekli")?,
     };
@@ -465,7 +467,7 @@ mod tests {
 
     #[test]
     fn a_range_shows_its_nearest_end_and_hides_its_farthest() {
-        // Held in pixels a metre, read as 1:N as QGIS reads a range: from 1:10 000 (not shown) in to 1:500 (shown).
+        // Held in pixels a metre, read as 1:N as a map's scale range reads: from 1:10 000 (not shown) in to 1:500 (shown).
         use crate::scale::px_per_metre;
         let mut c = read_class(&Json::parse(r#"{"size":10}"#).unwrap(), None).unwrap();
         (c.min_scale, c.max_scale) = (Some(px_per_metre(10_000.0)), Some(px_per_metre(500.0)));

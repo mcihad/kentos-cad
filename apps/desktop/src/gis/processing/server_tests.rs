@@ -9,7 +9,8 @@
 //! cargo test -p kentos-desktop processing::server_tests::screens -- --ignored --nocapture
 //! ```
 //!
-//! They go to `.run/shots/islem-sunucu-*.png`.
+//! They go to `.run/shots/islem-sunucu-*.png`. The tool is Köşeleri noktaya çevir, a CBS project's (docs/adr/9310: the
+//! edge lengths' writing is a drawing's, not a CBS project's).
 
 use crate::gis;
 use kentos_cloud::ApiFailure;
@@ -81,7 +82,7 @@ fn job_of(mode: &str) -> ServerJob {
         id: "0199bbbb-0000-7000-8000-000000000001".into(),
         project: crate::cloud::tests::PROJECT.into(),
         kind: "project.processing".into(),
-        input: json!({ "tool": "annotation.edgeLengths", "label": "Kenar uzunluklarını yaz", "mode": mode }),
+        input: json!({ "tool": "convert.vertices", "label": "Köşeleri noktaya çevir", "mode": mode }),
         input_sha256: "0".repeat(64),
         base_revision: "4".into(),
         state: ServerJobState::Queued,
@@ -159,11 +160,11 @@ fn the_organisation_s_policy_keeps_an_extension_s_tool_off_the_server() {
         ServerPlace::Off("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor".into())
     );
     assert_eq!(
-        app.server_place_for("annotation.edgeLengths"),
+        app.server_place_for("convert.vertices"),
         ServerPlace::Ready
     );
     // KentOS's own tool in the window: its server row on.
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     assert_eq!(app.processing_server_place(), ServerPlace::Ready);
     set(
         &mut app,
@@ -216,7 +217,7 @@ fn the_organisation_s_policy_keeps_an_extension_s_tool_off_the_server() {
 fn the_server_is_a_place_for_an_open_cloud_database_project_and_off_with_why_without_the_right() {
     // A local drawing: not listed.
     let mut app = local_app();
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     assert_eq!(app.server_place(), ServerPlace::Absent);
     assert!(
         rows(&app)
@@ -227,7 +228,7 @@ fn the_server_is_a_place_for_an_open_cloud_database_project_and_off_with_why_wit
     );
     // An account that may run jobs: listed, on.
     let mut app = cloud_app(true);
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     assert_eq!(app.server_place(), ServerPlace::Ready);
     let listed = rows(&app);
     let server = listed
@@ -237,7 +238,7 @@ fn the_server_is_a_place_for_an_open_cloud_database_project_and_off_with_why_wit
     assert!(!server.2, "{listed:?}");
     // One that may not: listed, off, with why in the row's note.
     let mut app = cloud_app(false);
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     assert_eq!(
         app.server_place(),
         ServerPlace::Off("yetkiniz yok (project.jobs.run)".into())
@@ -279,7 +280,7 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
         .map(|e| kentos_domain::Slot(e.base().id))
         .collect();
     app.selection.set(chosen.iter().copied());
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     event(&mut app, Event::Target("server".into()));
     assert!(app.processing_at_server());
     // The button says what it will do; the result goes to the project unless the window says a file.
@@ -289,8 +290,8 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
         "Sunucuda çalıştır"
     );
     let input = app.processing_server_input().expect("a job's input");
-    assert_eq!(input.tool, "annotation.edgeLengths");
-    assert_eq!(input.label.as_deref(), Some("Kenar uzunluklarını yaz"));
+    assert_eq!(input.tool, "convert.vertices");
+    assert_eq!(input.label.as_deref(), Some("Köşeleri noktaya çevir"));
     assert_eq!(input.mode, ProcessingJobMode::Commit);
     assert_eq!(input.selection.len(), 2);
     assert!(input.view.is_some());
@@ -362,7 +363,7 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
         panic!("{:?}", status(&app));
     };
     assert!(
-        text.starts_with("Sunucu işi istendi: İşlem (dosyaya): Kenar uzunluklarını yaz."),
+        text.starts_with("Sunucu işi istendi: İşlem (dosyaya): Köşeleri noktaya çevir."),
         "{text}"
     );
     assert!(
@@ -391,7 +392,7 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
 #[test]
 fn an_edit_of_the_window_takes_the_asked_line_back() {
     let mut app = cloud_app(true);
-    tool(&mut app, "processing.run.annotation.edgeLengths");
+    tool(&mut app, "processing.run.convert.vertices");
     event(&mut app, Event::Target("server".into()));
     event(&mut app, Event::Run);
     assert!(matches!(status(&app), RunStatus::Asked(_)));
@@ -473,7 +474,7 @@ fn screens() {
                         kentos_ui::snapshot::Input::Scroll(iced::Point::new(1045.0, 600.0), -30.0),
                     );
                 } else {
-                    tool(&mut app, "processing.run.annotation.edgeLengths");
+                    tool(&mut app, "processing.run.convert.vertices");
                     event(&mut app, Event::Target("server".into()));
                 }
                 if name == "dosya" {

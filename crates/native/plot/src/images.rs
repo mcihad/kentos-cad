@@ -167,7 +167,11 @@ pub(crate) fn outline(
     italic: bool,
 ) -> Option<TextOutline> {
     let family = font.unwrap_or("Arimo").to_lowercase();
-    let id = if family.contains("plex") || family.contains("monospace") {
+    let id = if family.contains("times") || family.contains("liberation serif") {
+        "times-new-roman"
+    } else if family.starts_with("arial") {
+        "arial"
+    } else if family.contains("plex") || family.contains("monospace") {
         "plex-mono"
     } else if family.contains("barlow") {
         "barlow"
@@ -182,13 +186,9 @@ pub(crate) fn outline(
     } else {
         "arimo"
     };
-    let index = crate::fonts::FACE_KEYS
-        .iter()
-        .enumerate()
+    let (data, _) = crate::fonts::bundled_faces()
         .filter(|(_, f)| f.0 == id)
-        .min_by_key(|(_, f)| (u16::from(f.2 != italic) * 1000) + f.1.abs_diff(weight))
-        .map(|(i, _)| i)?;
-    let data = crate::fonts::FACES[index];
+        .min_by_key(|(_, f)| (u16::from(f.2 != italic) * 1000) + f.1.abs_diff(weight))?;
     let face = rustybuzz::Face::from_slice(data, 0)?;
     let ttf = ttf_parser::Face::parse(data, 0).ok()?;
     let mut buffer = rustybuzz::UnicodeBuffer::new();
@@ -260,7 +260,7 @@ pub(crate) fn svg_assets(
         return Ok(());
     }
     let mut db = resvg::usvg::fontdb::Database::new();
-    for face in crate::fonts::FACES {
+    for (face, _) in crate::fonts::bundled_faces() {
         db.load_font_data(face.to_vec());
     }
     let options = resvg::usvg::Options {

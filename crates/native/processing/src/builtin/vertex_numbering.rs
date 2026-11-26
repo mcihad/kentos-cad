@@ -3,7 +3,9 @@
 //! fixed format — "P00001", "P00002", … — walked clockwise or
 //! counter-clockwise from a chosen start corner. Corners shared by
 //! neighbouring parcels get one number; points already on the target layer
-//! keep theirs and numbering continues after them.
+//! keep theirs and numbering continues after them. The name is written at its
+//! corner as a text object, as the edge lengths are (docs/adr/9311): the
+//! layer's labels start off and show the names only when it turns them on.
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -79,6 +81,7 @@ pub fn tool() -> Tool {
         id: "points.numberVertices".into(),
         label: "Köşe noktalarını numarala".into(),
         category: "points".into(),
+        modules: crate::modules::placed("points.numberVertices"),
         description: "Alanların köşelerine belirlediğiniz biçimde numaralı nokta koyar (P00001, P00002 …); yön ve başlangıç köşesi seçilir.".into(),
         help: Some([
             "Her alanın köşeleri seçilen yönde, seçilen başlangıç köşesinden itibaren numaralanır; delikli alanlarda önce dış halka, sonra delikler.",
@@ -150,13 +153,15 @@ pub fn tool() -> Tool {
                 "Oluşturulacak",
                 ParamKind::Choice {
                     options: vec![
-                        EnumOption::new("points", "Nokta").hint("Adı etiket olarak görünen nokta nesnesi"),
+                        EnumOption::new("points", "Nokta")
+                            .hint("Adlı nokta nesnesi; adı, katmanın etiketi açılınca görünür"),
                         EnumOption::new("text", "Yazı").hint("Köşenin dışına yazı"),
-                        EnumOption::new("both", "Nokta ve yazı"),
+                        EnumOption::new("both", "Nokta ve yazı")
+                            .hint("Adlı nokta nesnesi ve köşenin dışına adının yazısı"),
                     ],
                 },
             )
-            .default_value(json!("points")),
+            .default_value(json!("both")),
             // Empty: the project's Kenar ve köşe yazıları height (docs/adr/0205 §2).
             number_param("textHeight", "Yazı yüksekliği", Some(0.1), Some(50.0), false, "mm")
                 .optional()

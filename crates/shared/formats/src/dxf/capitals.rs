@@ -13,6 +13,10 @@ use kentos_geometry_core::text::shaping;
 /// programs draw for KentOS's Standard (`arial.ttf`). Arimo, KentOS's metric twin, is 1409: as wide, its capitals
 /// 4.1 % shorter.
 pub const ARIAL: f64 = 1466.0 / 2048.0;
+/// Times New Roman's capital H: 1356 of 2048 in each of its four files (times, timesbd, timesi, timesbi.ttf; docs/adr/9311).
+/// Liberation Serif, KentOS's metric twin, is 1341: as wide, its capitals 1.1 % shorter.
+pub const TIMES_NEW_ROMAN: f64 = 1356.0 / 2048.0;
+const LIBERATION_SERIF: f64 = 1341.0 / 2048.0;
 /// Courier New's capital H: 1170 of 2048 (cour.ttf); its italic 1171 (couri.ttf), its bold 1213 (courbd, courbi.ttf).
 pub const COURIER_NEW: f64 = 1170.0 / 2048.0;
 const COURIER_NEW_ITALIC: f64 = 1171.0 / 2048.0;
@@ -25,10 +29,11 @@ fn own(id: &str) -> Option<f64> {
 
 /// The share of a TrueType text's em its capitals take in the face a STYLE names by its `file` (group 3), else by
 /// ACAD's `family` (1000) with its `bold` and `italic` flags (1071); none for an SHX font, a file without a TrueType
-/// extension (`txt`, `romans`: shape files) or a style that names nothing. Arial, Helvetica: Arial's; Courier
-/// New: its own by weight and slope; KentOS's own faces (and Liberation Sans, Arimo's design): their files'; a face
-/// KentOS has not got (Times, Calibri …) is drawn in KentOS's default face, Barlow: Barlow's, so its capitals stand as
-/// tall in both programs.
+/// extension (`txt`, `romans`: shape files) or a style that names nothing. Arial, Helvetica: Arial's; Times New Roman:
+/// its own (fixed numbers: the face drawn here may be the operating system's own or its twin, the file the same on
+/// every computer); Courier New: its own by weight and slope; KentOS's own faces (and Liberation Sans, Arimo's design;
+/// Liberation Serif and Tinos, Liberation Serif's): their files'; a face KentOS has not got (Calibri …) is drawn in
+/// KentOS's default face, Barlow: Barlow's, so its capitals stand as tall in both programs.
 pub fn share(file: &str, family: Option<&str>, bold: bool, italic: bool) -> Option<f64> {
     let file = file.trim();
     let lower = file.to_lowercase();
@@ -50,8 +55,10 @@ pub fn share(file: &str, family: Option<&str>, bold: bool, italic: bool) -> Opti
     let stem = leaf.split('.').next().unwrap_or(leaf);
     match resolve(&named) {
         (_, FontMatch::Shx) => None,
-        (Some("arimo"), FontMatch::Equivalent) if compact.contains("liberation") => own("arimo"),
-        (Some("arimo"), FontMatch::Equivalent) => Some(ARIAL),
+        (Some("arial"), FontMatch::Equivalent) if compact.contains("liberation") => own("arimo"),
+        (Some("arial"), _) => Some(ARIAL),
+        (Some("times-new-roman"), FontMatch::Equivalent) => Some(LIBERATION_SERIF),
+        (Some("times-new-roman"), _) => Some(TIMES_NEW_ROMAN),
         (Some("courier-prime"), FontMatch::Equivalent) => {
             let bold = bold || matches!(stem, "courbd" | "courbi") || compact.contains("bold");
             let italic = italic || stem == "couri" || compact.contains("italic");
@@ -217,8 +224,11 @@ mod tests {
             share("CourierPrime.ttf", None, false, false),
             Some(1187.0 / 2048.0)
         );
-        // A face KentOS draws in Barlow: Barlow's capitals.
-        assert_eq!(share("times.ttf", None, false, false), Some(0.7));
+        // Times New Roman's own capitals (docs/adr/9311), its twins' theirs; a face KentOS draws in Barlow, Barlow's.
+        assert_eq!(share("times.ttf", None, false, false), Some(TIMES_NEW_ROMAN));
+        assert_eq!(share("timesbd.ttf", None, false, false), Some(1356.0 / 2048.0));
+        assert_eq!(share("LiberationSerif-Bold.ttf", None, false, false), Some(1341.0 / 2048.0));
+        assert_eq!(share("calibri.ttf", None, false, false), Some(0.7));
         // Shape files and a style naming nothing: their height is their capitals'.
         for none in ["romans.shx", "txt", "ROMANS", "", "isocp.shx"] {
             assert_eq!(share(none, None, false, false), None, "{none}");

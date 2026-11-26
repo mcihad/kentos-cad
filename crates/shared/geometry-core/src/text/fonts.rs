@@ -8,10 +8,10 @@
 pub enum FontMatch {
     /// One of KentOS's own faces by its name.
     Own,
-    /// A face KentOS has a metric twin of (Arial, Helvetica and Liberation Sans as Arimo, Courier as Courier Prime):
-    /// its letters as wide, its look close.
+    /// A face KentOS has a metric twin of (Helvetica and Liberation Sans as Arial, Liberation Serif and Tinos as Times
+    /// New Roman, Courier as Courier Prime): its letters as wide, its look close.
     Equivalent,
-    /// An AutoCAD SHX line font (`romans.shx`, a big font): KentOS does not read SHX; the project's face takes it.
+    /// An SHX line font (`romans.shx`, a big font): KentOS does not read SHX; the project's face takes it.
     Shx,
     /// A face KentOS does not have (Times, Calibri …): the project's face takes it.
     Missing,
@@ -60,15 +60,20 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
         ("courierprime", "courier-prime"),
         ("ibmplexmono", "plex-mono"),
         ("plexmono", "plex-mono"),
+        // docs/adr/9311: Arial and Times New Roman by their names and their files (arial.ttf, times.ttf …).
+        ("arial", "arial"),
+        ("timesnewroman", "times-new-roman"),
+        ("times", "times-new-roman"),
     ] {
         if family_style(&n, stem) {
             return (Some(id), FontMatch::Own);
         }
     }
     for (stem, id) in [
-        ("arial", "arimo"),
-        ("helvetica", "arimo"),
-        ("liberationsans", "arimo"),
+        ("helvetica", "arial"),
+        ("liberationsans", "arial"),
+        ("liberationserif", "times-new-roman"),
+        ("tinos", "times-new-roman"),
         ("couriernew", "courier-prime"),
         ("courier", "courier-prime"),
         ("cour", "courier-prime"),
@@ -102,9 +107,11 @@ mod tests {
             resolve("IBM Plex Mono"),
             (Some("plex-mono"), FontMatch::Own)
         );
+        assert_eq!(resolve("arialbd.ttf"), (Some("arial"), FontMatch::Own));
+        assert_eq!(resolve("Times New Roman"), (Some("times-new-roman"), FontMatch::Own));
         assert_eq!(
-            resolve("arialbd.ttf"),
-            (Some("arimo"), FontMatch::Equivalent)
+            resolve("LiberationSerif-Bold.ttf"),
+            (Some("times-new-roman"), FontMatch::Equivalent)
         );
         assert_eq!(
             resolve("couri.ttf"),
@@ -115,7 +122,8 @@ mod tests {
             (Some("courier-prime"), FontMatch::Own)
         );
         assert_eq!(resolve("romans.shx"), (None, FontMatch::Shx));
-        assert_eq!(resolve("times.ttf"), (None, FontMatch::Missing));
+        assert_eq!(resolve("times.ttf"), (Some("times-new-roman"), FontMatch::Own));
+        assert_eq!(resolve("calibri.ttf"), (None, FontMatch::Missing));
         assert!(FontMatch::Shx.substituted() && !FontMatch::Equivalent.substituted());
     }
 
@@ -130,9 +138,11 @@ mod tests {
 
     #[test]
     fn file_paths_and_recognized_styles_share_the_family_rule() {
-        for name in [r"C:\Windows\Fonts\arialbd.ttf", "/fonts/Arial-BoldItalic.otf",
-            "Arial Oblique", "LiberationSans-Regular.ttf", "Helvetica-Bold"] {
-            assert_eq!(resolve(name), (Some("arimo"), FontMatch::Equivalent), "{name}");
+        for name in [r"C:\Windows\Fonts\arialbd.ttf", "/fonts/Arial-BoldItalic.otf", "Arial Oblique"] {
+            assert_eq!(resolve(name), (Some("arial"), FontMatch::Own), "{name}");
+        }
+        for name in ["LiberationSans-Regular.ttf", "Helvetica-Bold"] {
+            assert_eq!(resolve(name), (Some("arial"), FontMatch::Equivalent), "{name}");
         }
         assert_eq!(resolve("/fonts/Barlow-400-italic.ttf"), (Some("barlow"), FontMatch::Own));
         assert_eq!(resolve(r"C:\Fonts\ROMANS.SHX"), (None, FontMatch::Shx));

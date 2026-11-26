@@ -39,6 +39,7 @@ fn tool() -> Tool {
         id: "test.polls".into(),
         label: "Sorular".into(),
         category: "analysis".into(),
+        modules: kentos_processing::modules::SHARED,
         description: "Durdurma bayrağını soran araç.".into(),
         help: None,
         keywords: Vec::new(),

@@ -23,7 +23,40 @@
       "type": "object"
     },
     "category": {
-      "description": "KentOS eklenti araçlarını kendi kategorisinde gösterir.",
+      "description": "Araç kutusundaki kategorisinin kimliği (analysis, geometry …); başka bir değer ya da yokluğu aracı Eklentiler'de gösterir.",
+      "examples": [
+        "points",
+        "annotation",
+        "attributes",
+        "layers",
+        "cadastre",
+        "geometry",
+        "analysis",
+        "address",
+        "proximity",
+        "spatialStats",
+        "network",
+        "linearRef",
+        "conversion",
+        "generation",
+        "sampling",
+        "generalization",
+        "selection",
+        "pointcloud",
+        "surface",
+        "interpolation",
+        "density",
+        "rasterOps",
+        "rasterStats",
+        "rasterVector",
+        "scannedMap",
+        "hydrology",
+        "distance",
+        "suitability",
+        "remoteSensing",
+        "multidim",
+        "extensions"
+      ],
       "type": "string"
     },
     "description": {
@@ -128,6 +161,20 @@
       "description": "Yapay zekâ modeli için.",
       "maxLength": 2000,
       "type": "string"
+    },
+    "modules": {
+      "description": "Aracın çıktığı modüller; her biri eklentinin manifestinde olmalı. Yoksa manifestin modülleri.",
+      "items": {
+        "enum": [
+          "mimari",
+          "harita",
+          "cbs",
+          "yol"
+        ]
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
     },
     "outputs": {
       "items": {

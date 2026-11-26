@@ -1,11 +1,8 @@
-//! Rasterleştir (docs/adr/0207 §7; ArcGIS LAS Dataset To Raster, PDAL's
-//! writers.gdal): the cloud's points as a grid of heights on the cell's
-//! multiples: each cell's least, most or mean height, its count, or IDW
-//! (the points within the radius weighted by the inverse square of their
-//! distance); the classes taken all or those listed (Zemin: a DTM). The
-//! result is a tiled, Deflate, 32-bit GeoTIFF (ADR 0204's writer), empty
-//! cells nodata −9999, and, asked, a raster object in a ramp lit by its
-//! relief (`ops::raster`).
+//! Rasterleştir (docs/adr/0207 §7; PDAL's writers.gdal): the cloud's points as a grid of heights on the cell's
+//! multiples: each cell's least, most or mean height, its count, or IDW (the points within the radius weighted by the
+//! inverse square of their distance); the classes taken all or those listed (Zemin: a DTM). The result is a tiled,
+//! Deflate, 32-bit GeoTIFF (ADR 0204's writer), empty cells nodata −9999, and, asked, a raster object in a ramp lit by
+//! its relief (`ops::raster`).
 
 use kentos_commands::{
     Entity, EntityBase, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch,
@@ -69,6 +66,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.rasterize".into(),
         label: "Rasterleştir".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.rasterize"),
         description: "Nokta bulutundan yükseklik rasteri (GeoTIFF) üretir: hücrenin en düşük, en yüksek ya da ortalama kotu, nokta sayısı ya da IDW; zemin noktalarından sayısal arazi modeli (DTM).".into(),
         help: Some([
             "Izgara hücre boyunun katlarına oturur; boş hücre nodata'dır (−9999). Hücre boş bırakılırsa noktaların ortalama aralığının iki katı alınır.",

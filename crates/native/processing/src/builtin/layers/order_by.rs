@@ -1,9 +1,7 @@
-//! İfadeye göre sırala (the web's `builtin/layers/orderBy.ts`; docs/adr/0217
-//! §6; QGIS Order by expression): copies of the objects written in an
-//! expression's order into the result layer (the attribute table and the
-//! drawing order are theirs), the order field 1, 2, 3 …; the order is the
-//! core's (`ops::order`). A new result layer takes the look and fields of
-//! the first object's layer and goes right above it. One undo step.
+//! İfadeye göre sırala (the web's `builtin/layers/orderBy.ts`; docs/adr/0217 §6): copies of the objects written in an
+//! expression's order into the result layer (the attribute table and the drawing order are theirs), the order field 1,
+//! 2, 3 …; the order is the core's (`ops::order`). A new result layer takes the look and fields of the first object's
+//! layer and goes right above it. One undo step.
 
 use kentos_geometry_core::ops::order::{Key, order};
 use kentos_style_core::expr::Value as ExprValue;
@@ -23,6 +21,7 @@ pub fn tool() -> Tool {
         id: "layers.orderBy".into(),
         label: "İfadeye göre sırala".into(),
         category: "layers".into(),
+        modules: crate::modules::placed("layers.orderBy"),
         description: "Nesnelerin kopyalarını bir ifadenin değerine göre sıralı olarak yeni bir katmana yazar; isterse sıra numarasını bir alana yazar.".into(),
         help: Some([
             "Örnekler: parselleri alanlarına göre büyükten küçüğe, noktaları adlarına göre doğal sırayla (P2, P10) dizmek; sıra numarasını bir alana yazmak.",

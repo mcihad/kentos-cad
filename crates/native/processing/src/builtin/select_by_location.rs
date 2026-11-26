@@ -22,6 +22,7 @@ pub fn tool() -> Tool {
         id: "selection.byLocation".into(),
         label: "Konuma göre seç".into(),
         category: "selection".into(),
+        modules: crate::modules::placed("selection.byLocation"),
         description: "Başka nesnelerle konum ilişkisi olan nesneleri seçer: kesişen, içeren, içinde kalan, ayrık, uzaklıkta ya da merkezi içinde.".into(),
         help: Some([
             "Seçilecek nesneler başvuru nesnelerinden en az biriyle ilişkiyi sağlıyorsa seçilir; Ayrık, hiçbiriyle kesişmeyenleri seçer.",

@@ -255,6 +255,43 @@ fn text<'a>(o: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
     o.get(key).and_then(Value::as_str)
 }
 
+/// Where an extension's tool is offered (docs/adr/9310): the descriptor's `modules`, each one its manifest has; without
+/// them, the manifest's modules. A module KentOS does not know, or one the manifest lacks, refuses the descriptor.
+fn modules_of(
+    o: &Map<String, Value>,
+    manifest_modules: &[&str],
+) -> Result<kentos_launch::ModuleSet, String> {
+    let manifest = kentos_launch::ModuleSet::from_ids(manifest_modules.iter().copied())
+        .map_err(|e| format!("Manifestin modülleri: {e}"))?;
+    let Some(given) = o.get("modules") else {
+        return Ok(manifest);
+    };
+    let ids = given
+        .as_array()
+        .filter(|ids| !ids.is_empty())
+        .and_then(|ids| ids.iter().map(Value::as_str).collect::<Option<Vec<&str>>>())
+        .ok_or("modules: aracın çıktığı modüllerin kimlikleri, en az biri (cbs, harita, mimari, yol).")?;
+    let set =
+        kentos_launch::ModuleSet::from_ids(ids.iter().copied()).map_err(|e| format!("modules: {e}"))?;
+    if let Some(stray) = set.modules().into_iter().find(|m| !manifest.has(*m)) {
+        return Err(format!(
+            "modules: “{}” eklentinin manifestinde yok; araç yalnız eklentinin modüllerinde çıkar ({}).",
+            stray.id(),
+            manifest.ids().join(", ")
+        ));
+    }
+    Ok(set)
+}
+
+/// The toolbox category an extension's tool is listed under: one of İşlemler' own by its id (`category`), else
+/// Eklentiler. Any other value (a name of the extension's own, as descriptors wrote before) keeps it in Eklentiler.
+fn category_of(o: &Map<String, Value>) -> Result<String, String> {
+    Ok(text(o, "category")
+        .filter(|given| crate::categories::CATEGORIES.iter().any(|c| c.id == *given))
+        .unwrap_or(CATEGORY)
+        .to_owned())
+}
+
 fn is_python_name(name: &str) -> bool {
     let mut chars = name.chars();
     chars
@@ -272,6 +309,7 @@ pub fn from_descriptor(
     extension_name: &str,
     version: &str,
     local: &str,
+    manifest_modules: &[&str],
     descriptor: &Value,
 ) -> Result<ExternalTool, String> {
     let o = descriptor
@@ -294,6 +332,8 @@ pub fn from_descriptor(
         return Err("label: aracın adı boş olmamalı, en çok 80 karakter.".into());
     }
     let headless = runtimes(o)?.is_some_and(|r| r.iter().any(|r| r == HEADLESS_RUNTIME));
+    let modules = modules_of(o, manifest_modules)?;
+    let category = category_of(o)?;
     let mut parameters: Vec<ParamDef> = Vec::new();
     for (i, p) in o
         .get("parameters")
@@ -444,7 +484,8 @@ pub fn from_descriptor(
         tool: Tool {
             id: format!("{PREFIX}{extension}.{local}"),
             label: label.to_owned(),
-            category: CATEGORY.to_owned(),
+            category,
+            modules,
             description,
             help: Some(match own_help {
                 Some(h) => format!("{h}\n\n{whose}"),

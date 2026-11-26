@@ -1,13 +1,9 @@
-//! Anahtarla birleştir (the web's `builtin/joinByField.ts`; docs/adr/0200 §6;
-//! QGIS "Join attributes by field value", ArcGIS Join Field; Veri aktar maps,
-//! adds and moves geometry, docs/adr/0216): fields of a source (another
-//! layer's objects, or a CSV, TXT or Excel file's rows) are copied into the
-//! target objects whose key matches.
-//! Keys match trimmed; two numbers as numbers (`007` is `7`), otherwise as
-//! texts exactly (the core's `ops::statistics::join_plan`). A key the source
-//! has more than once takes its first row, its targets take nothing or the
-//! tool stops, as Yinelenen anahtar says (docs/adr/0439 §4); unmatched
-//! targets and unused rows are counted and said. One undo step.
+//! Anahtarla birleştir (the web's `builtin/joinByField.ts`; docs/adr/0200 §6; Veri aktar maps, adds and moves geometry,
+//! docs/adr/0216): fields of a source (another layer's objects, or a CSV, TXT or Excel file's rows) are copied into the
+//! target objects whose key matches. Keys match trimmed; two numbers as numbers (`007` is `7`), otherwise as texts
+//! exactly (the core's `ops::statistics::join_plan`). A key the source has more than once takes its first row, its
+//! targets take nothing or the tool stops, as Yinelenen anahtar says (docs/adr/0439 §4); unmatched targets and unused
+//! rows are counted and said. One undo step.
 
 use kentos_commands::Entity;
 use kentos_domain::Slot;
@@ -40,6 +36,7 @@ pub fn tool() -> Tool {
         id: "attributes.joinByField".into(),
         label: "Anahtarla birleştir".into(),
         category: "attributes".into(),
+        modules: crate::modules::placed("attributes.joinByField"),
         description: "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.".into(),
         help: Some([
             "Örnek: tapu kayıtlarının malik ve hisse sütunlarını parsel numarasıyla parsellere aktarmak.",

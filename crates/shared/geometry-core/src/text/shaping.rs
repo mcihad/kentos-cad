@@ -15,7 +15,7 @@ use unicode_bidi::{BidiClass, BidiInfo, Level, ParagraphInfo, bidi_class};
 use unicode_script::Script as WritingScript;
 use unicode_segmentation::UnicodeSegmentation;
 
-use super::font_data::{DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, FALLBACK_KEYS};
+use super::font_data::{ADDED_KEYS, DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, FALLBACK_KEYS, added_face};
 
 pub const MAX_BYTES: usize = 65_536;
 pub const MAX_GLYPHS: usize = MAX_BYTES * 4;
@@ -160,15 +160,27 @@ pub struct Line {
 }
 
 pub fn font_count() -> usize {
-    DRAWING_FACES.len() + FALLBACK_FACES.len()
+    DRAWING_FACES.len() + FALLBACK_FACES.len() + ADDED_KEYS.len()
 }
+/// A face's bytes: the drawing's, the fallback's, then the added ones (docs/adr/9311; the host's own where it gave one).
 pub fn font_bytes(id: FontId) -> Option<&'static [u8]> {
     let i = usize::from(id.0);
     if i < DRAWING_FACES.len() {
         DRAWING_FACES.get(i).copied()
-    } else {
+    } else if i < DRAWING_FACES.len() + FALLBACK_FACES.len() {
         FALLBACK_FACES.get(i - DRAWING_FACES.len()).copied()
+    } else {
+        added_face(i - DRAWING_FACES.len() - FALLBACK_FACES.len())
     }
+}
+/// Whether the face is one of the Unicode fallback faces, not a drawing typeface's.
+pub fn is_fallback(id: FontId) -> bool {
+    let i = usize::from(id.0);
+    (DRAWING_FACES.len()..DRAWING_FACES.len() + FALLBACK_FACES.len()).contains(&i)
+}
+/// The face whose bytes these are (a text system's copy of one), any of the core's; none for another face.
+pub fn font_of_bytes(data: &[u8]) -> Option<FontId> {
+    (0..font_count()).map(|i| FontId(i as u16)).find(|id| font_bytes(*id).is_some_and(|b| b == data))
 }
 
 /// Nominal capital height in ems for a rotation/anchor pivot. This does
@@ -185,8 +197,10 @@ pub fn font_key(id: FontId) -> Option<(&'static str, u16, bool)> {
     let i = usize::from(id.0);
     if i < DRAWING_KEYS.len() {
         DRAWING_KEYS.get(i).copied()
-    } else {
+    } else if i < DRAWING_KEYS.len() + FALLBACK_KEYS.len() {
         FALLBACK_KEYS.get(i - DRAWING_KEYS.len()).copied()
+    } else {
+        ADDED_KEYS.get(i - DRAWING_KEYS.len() - FALLBACK_KEYS.len()).copied()
     }
 }
 fn parsed(id: FontId) -> Result<&'static rustybuzz::Face<'static>, Error> {

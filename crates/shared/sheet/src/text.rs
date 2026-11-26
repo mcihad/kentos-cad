@@ -141,6 +141,8 @@ pub fn family_name(font: &str) -> &str {
         "architects-daughter" => "Architects Daughter",
         "courier-prime" => "Courier Prime",
         "plex-mono" => "IBM Plex Mono",
+        "arial" => "Arial",
+        "times-new-roman" => "Times New Roman",
         other => other,
     }
 }
@@ -552,10 +554,13 @@ mod tests {
                 "quicksand",
                 "architects-daughter",
                 "courier-prime",
-                "plex-mono"
+                "plex-mono",
+                // docs/adr/9311: in their metric twins' faces.
+                "arial",
+                "times-new-roman"
             ]
         );
-        assert_eq!(table().faces.len(), 22);
+        assert_eq!(table().faces.len(), 30);
         assert_eq!(
             table().chars.chars().count(),
             table().faces[0].advances.len()
@@ -606,8 +611,12 @@ mod tests {
         let (a, em) = (g.advance_of('↑').unwrap(), i64::from(g.units_per_em));
         assert_ne!(em, 1000, "the faces' ems differ");
         assert_eq!(barlow.advance('↑'), (a * 1000 + em / 2) / em);
-        // No drawing face has “≤”: a “?”.
-        assert!(matches!(glyph(barlow, '≤'), Glyph::Missing('≤')));
+        // “≤” is Times New Roman's alone (docs/adr/9311: its twin, Liberation Serif, has it); no face has “⟨”: a “?”.
+        let Glyph::Other('≤', g) = glyph(barlow, '≤') else {
+            panic!("{:?}", glyph(barlow, '≤'));
+        };
+        assert_eq!((g.font.as_str(), g.weight, g.italic), ("times-new-roman", 400, false));
+        assert!(matches!(glyph(barlow, '⟨'), Glyph::Missing('⟨')));
         let mut bold = TextStyle::new(2_500, 600);
         bold.font = "courier-prime".into();
         let courier = face(&bold).unwrap();
@@ -617,7 +626,7 @@ mod tests {
         };
         assert_eq!((g.font.as_str(), g.weight), ("barlow", 600));
         // The pieces of a line: its face's, another's, a “?”, its face's again.
-        let r = runs(barlow, "Ok ↑ ≤ 5");
+        let r = runs(barlow, "Ok ↑ ⟨ 5");
         let pieces: Vec<(&str, &str)> = r
             .iter()
             .map(|r| (r.text.as_str(), r.face.font.as_str()))

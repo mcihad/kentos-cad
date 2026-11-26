@@ -21,6 +21,7 @@ pub fn tool() -> Tool {
         id: "generate.pole".into(),
         label: "Ulaşılmazlık kutbu".into(),
         category: "generation".into(),
+        modules: crate::modules::placed("generate.pole"),
         description: "Her alanın kenarlarından en uzak iç noktasını, kenara uzaklığıyla yeni katmana nokta olarak yazar.".into(),
         help: Some([
             "Örnekler: parsel numaralarını ve etiketleri alanın en geniş yerine koymak, ince uzun ya da L biçimli alanların içinde kalan bir nokta bulmak.",

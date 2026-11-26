@@ -355,6 +355,70 @@
       "weight": 400,
       "italic": false,
       "sha256": "2d564eb558428b82d33873beb5ccd4502a8a4227c157f1831209f19c4fdf5015"
+    },
+    {
+      "index": 29,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-400.ttf",
+      "family": "arial",
+      "weight": 400,
+      "italic": false,
+      "sha256": "bff6260ba15d755a1d31c54acadf2da9dfb77109a790ee5d3bdbacd971d37634"
+    },
+    {
+      "index": 30,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-500.ttf",
+      "family": "arial",
+      "weight": 500,
+      "italic": false,
+      "sha256": "d969ee6b7c51fb6dc627585749ffe8a2355863a043e233d9a29c593bf3fd62f1"
+    },
+    {
+      "index": 31,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-600.ttf",
+      "family": "arial",
+      "weight": 600,
+      "italic": false,
+      "sha256": "1f048e73c622b8cceee05218cfaf8a646cf670bf26fb6c5ea01b67ddfa38b588"
+    },
+    {
+      "index": 32,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-700.ttf",
+      "family": "arial",
+      "weight": 700,
+      "italic": false,
+      "sha256": "17feb545abf5082e8da6d4094fd96da5e4adf700a883dfce61a4091c471756b2"
+    },
+    {
+      "index": 33,
+      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Regular.ttf",
+      "family": "times-new-roman",
+      "weight": 400,
+      "italic": false,
+      "sha256": "058ea80864aef09a23f45cbec2bb5400bc3dfbdea01c3f10538a21fcb497fb74"
+    },
+    {
+      "index": 34,
+      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Bold.ttf",
+      "family": "times-new-roman",
+      "weight": 700,
+      "italic": false,
+      "sha256": "d754ba427cfe0bca54ae052384baa8f842da5bd6550ad4da024ac441e7a7d5ce"
+    },
+    {
+      "index": 35,
+      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-Italic.ttf",
+      "family": "times-new-roman",
+      "weight": 400,
+      "italic": true,
+      "sha256": "0e3dea9f8d613e006ccfa62201f33e265d19167bd0907725c3e145368b04fc2e"
+    },
+    {
+      "index": 36,
+      "file": "apps/desktop/assets/fonts/drawing/LiberationSerif-BoldItalic.ttf",
+      "family": "times-new-roman",
+      "weight": 700,
+      "italic": true,
+      "sha256": "f17db8af71e24d2066b587546021d4f0b296be389512b658dec3c09affeb11a7"
     }
   ]
 }

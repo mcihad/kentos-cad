@@ -1,9 +1,7 @@
-//! En kısa çizgi (the web's `builtin/proximity/shortestLine.ts`; docs/adr/0215
-//! §3.5; QGIS "Shortest line between features"): from each object to its
-//! nearest `k` targets, the segment between their nearest points on the
-//! output layer, with Kaynak, Hedef, Sıra and Uzaklık. Pairs that meet (0
-//! apart) give none and are counted. The search is the run's store's
-//! (`Store::nearest`, edge to edge).
+//! En kısa çizgi (the web's `builtin/proximity/shortestLine.ts`; docs/adr/0215 §3.5): from each object to its nearest
+//! `k` targets, the segment between their nearest points on the output layer, with Kaynak, Hedef, Sıra and Uzaklık.
+//! Pairs that meet (0 apart) give none and are counted. The search is the run's store's (`Store::nearest`, edge to
+//! edge).
 
 use std::collections::BTreeMap;
 
@@ -23,6 +21,7 @@ pub fn tool() -> Tool {
         id: "proximity.shortestLine".into(),
         label: "En kısa çizgi".into(),
         category: "proximity".into(),
+        modules: crate::modules::placed("proximity.shortestLine"),
         description: "Her nesneden en yakın k hedefe en yakın noktalar arası doğru parçaları çizer.".into(),
         help: Some([
             "Örnekler: her yapıdan en yakın yola bağlantı çizgisi; her kuyudan en yakın iki dereye; iki katman arası en kısa bağlantılar.",

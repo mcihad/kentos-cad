@@ -24,6 +24,24 @@ fn drawing() -> Session {
     .expect("a drawing")
 }
 
+/// A Harita drawing: İşlemler's tools are a project's module's (docs/adr/9310), and a Mimari drawing runs the two
+/// selections alone.
+fn map_drawing() -> Session {
+    Session::new(&NewDrawing {
+        name: "Ajan".into(),
+        srid: 0,
+        plot_scale: 500.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Arial,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Map),
+        heights: None,
+    })
+    .expect("a drawing")
+}
+
 /// A 4 × 3 area at `x`, on the active layer.
 fn area(s: &Session, x: f64) -> Value {
     json!({
@@ -573,7 +591,7 @@ fn the_checks_and_the_processing_tools_have_doors_of_their_own() {
 /// parameter stopped a real agent at 90 900 of its 80 000 tokens before it ran anything.
 #[test]
 fn the_processing_list_is_an_index_an_agent_can_afford() {
-    let mut s = drawing();
+    let mut s = map_drawing();
     let mut guard = Guard::new();
     let all = tool(&mut s, &mut guard, "processing.list", json!({})).expect("the index");
     let tools = all
@@ -586,7 +604,8 @@ fn the_processing_list_is_an_index_an_agent_can_afford() {
             && t["id"].is_string()
             && t["label"].is_string())
     );
-    // 157 tools: 35 102 bytes as one index, the whole list 274 957 (17 Nov); a page of 50 (§114).
+    // 157 tools: 35 102 bytes as one index, the whole list 274 957 (17 Nov); a page of 50 (§114). A Harita drawing
+    // lists Harita's (docs/adr/9310).
     assert_eq!(tools.len(), 50);
     assert!(size < 16_000, "{size} bytes for a page");
     // Paged to its end by next.offset: every tool once.
@@ -702,7 +721,7 @@ fn the_processing_list_is_an_index_an_agent_can_afford() {
 /// the desktop's, which a drawing of the server's own says.
 #[test]
 fn the_common_catalog_finds_tools_and_codes_and_says_what_next() {
-    let mut s = drawing();
+    let mut s = map_drawing();
     let mut guard = Guard::new();
     let found = tool(
         &mut s,
@@ -1830,7 +1849,7 @@ fn a_processing_run_that_makes_a_layer_executes_as_planned() {
     // layer's derivation says when the tool ran (to the millisecond); plan and execution compute the run at two
     // moments, and the plan's id took that moment in: every such execution was refused (`plan_changed`), whatever the
     // tool (found running Vitrin's TAKS tool from Asistan in a real window).
-    let mut s = drawing();
+    let mut s = map_drawing();
     let mut guard = Guard::new();
     let input = area(&s, 0.0);
     let plan = tool(

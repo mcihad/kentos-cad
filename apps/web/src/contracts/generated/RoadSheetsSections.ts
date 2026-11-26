@@ -2,8 +2,8 @@
 import type { SheetTemplateSource } from "./SheetTemplateSource";
 
 /**
- * Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production
- * section views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
+ * Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as production
+ * section views (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
  * on `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide
  * and high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;
  * the first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The

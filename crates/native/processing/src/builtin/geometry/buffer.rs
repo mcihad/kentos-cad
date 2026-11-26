@@ -26,6 +26,7 @@ pub fn tool() -> Tool {
         id: "geometry.buffer".into(),
         label: "Tampon".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("geometry.buffer"),
         description: "Nesnelerin çevresinde verilen uzaklıktaki alanı çizer: noktada daire, çizgide koridor, alanda dışa ya da (eksi uzaklıkla) içe; halkalarla ya da tek yandan da.".into(),
         help: Some([
             "Noktanın tamponu dairedir; çizginin her kenarı iki yanından uzaklık kadar genişler, uçları yarım dairedir; alanın tamponu alanı da içine alır. Yaylar ve daireler kesin kalır; elips ve eğri 0,1 mm içinde doğru parçalarıyla girer.",

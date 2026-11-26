@@ -38,6 +38,7 @@ pub fn tool() -> Tool {
         id: "address.reverse".into(),
         label: "Konumlara adres yaz".into(),
         category: "address".into(),
+        modules: crate::modules::placed("address.reverse"),
         description: "Nesnelerin yerlerinin adresini bulur ve özniteliklerine yazar.".into(),
         help: Some([
             "Örnekler: arıza ya da şikâyet noktalarına en yakın kapının adresini yazmak, yapı alanlarına bulundukları mahalle ve yolu yazmak.",

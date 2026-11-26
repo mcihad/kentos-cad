@@ -18,7 +18,7 @@
           "step": 1,
           "shared": true,
           "tolerance": 0.001,
-          "output": "points",
+          "output": "both",
           "textHeight": null,
           "layer": {"newName": "Köşe noktaları"}
         },
@@ -42,11 +42,11 @@
   "cases": [
     {
       "id": "number-vertices",
-      "title": "Köşe noktalarını numarala, varsayılanlarla: iki komşu parsel, saat yönünde kuzeybatıdan; ortak köşeler tek numara, yeni katman",
+      "title": "Köşe noktalarını numarala, nokta olarak: iki komşu parsel, saat yönünde kuzeybatıdan; ortak köşeler tek numara, yeni katman",
       "document": "parcels.kcad",
       "selection": [1, 2],
       "run": {"tool": "points.numberVertices"},
-      "values": {},
+      "values": {"output": "points"},
       "expect": {
         "status": "ok",
         "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı.",
@@ -60,7 +60,9 @@
               "lineType": "continuous",
               "lineWeight": 0.18,
               "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5}
+              "label": {"placement": "beside", "size": 10.5},
+
+              "labels": {"mode": "off"}
             }
           }
         ],
@@ -117,7 +119,7 @@
       "document": "parcels.kcad",
       "selection": [1],
       "run": {"tool": "points.numberVertices"},
-      "values": {"layer": {"layerId": "mevcut"}},
+      "values": {"output": "points", "layer": {"layerId": "mevcut"}},
       "expect": {
         "status": "ok",
         "summary": "1 nesnede 1 köşe numaralandı: P00004 – P00004; 3 köşe mevcut numarasını korudu.",
@@ -302,7 +304,9 @@
               "lineType": "continuous",
               "lineWeight": 0.18,
               "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5}
+              "label": {"placement": "beside", "size": 10.5},
+
+              "labels": {"mode": "off"}
             }
           }
         ],
@@ -486,7 +490,9 @@
               "lineType": "continuous",
               "lineWeight": 0.18,
               "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5}
+              "label": {"placement": "beside", "size": 10.5},
+
+              "labels": {"mode": "off"}
             }
           },
           {"id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}}
@@ -500,10 +506,28 @@
             "attrs": {"Nokta": "P00001", "Tür": "Köşe noktası"}
           },
           {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 486991.88494372513, "y": 4420031.697056275},
+            "text": "P00001",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Nokta": "P00001", "Tür": "Köşe noktası"}
+          },
+          {
             "kind": "point",
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487020, "y": 4420030},
             "label": "P00002",
+            "attrs": {"Nokta": "P00002", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487021.69705627486, "y": 4420031.697056275},
+            "text": "P00002",
+            "height": 2,
+            "rotation": 0,
             "attrs": {"Nokta": "P00002", "Tür": "Köşe noktası"}
           },
           {
@@ -514,10 +538,28 @@
             "attrs": {"Nokta": "P00003", "Tür": "Köşe noktası"}
           },
           {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487021.69705627486, "y": 4419996.302943725},
+            "text": "P00003",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Nokta": "P00003", "Tür": "Köşe noktası"}
+          },
+          {
             "kind": "point",
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487000, "y": 4420000},
             "label": "P00004",
+            "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 486991.44894372515, "y": 4419996.302943725},
+            "text": "P00004",
+            "height": 2,
+            "rotation": 0,
             "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}
           },
           {
@@ -528,10 +570,28 @@
             "attrs": {"Nokta": "P00005", "Tür": "Köşe noktası"}
           },
           {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487046.69705627486, "y": 4420031.697056275},
+            "text": "P00005",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Nokta": "P00005", "Tür": "Köşe noktası"}
+          },
+          {
             "kind": "point",
             "layerId": "islem-kose-noktalari",
             "p": {"x": 487045, "y": 4420000},
             "label": "P00006",
+            "attrs": {"Nokta": "P00006", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487046.69705627486, "y": 4419996.302943725},
+            "text": "P00006",
+            "height": 2,
+            "rotation": 0,
             "attrs": {"Nokta": "P00006", "Tür": "Köşe noktası"}
           },
           {
@@ -602,7 +662,7 @@
           {"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Hesap alanı": "600.00"}, "label": "1"},
           {"id": 2, "attrs": {"Ada": "101", "Parsel": "2", "Nitelik": "Arsa", "Hesap alanı": "750.00"}, "label": "2"}
         ],
-        "outputs": {"points": [11, 12, 13, 14, 15, 16]}
+        "outputs": {"points": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]}
       }
     },
     {

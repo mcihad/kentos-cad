@@ -168,7 +168,9 @@ impl NewLayerStyle {
             base.point.clone_from(&self.point);
         }
         if let Some(label) = &self.label {
+            // The label style is kept, the labels start off (docs/adr/9311): the layer's labelling turns them on.
             base.label = Some(LabelStyle::clone(label));
+            base = base.labels_off();
         }
         if self.renderer.is_some() {
             base.renderer.clone_from(&self.renderer);
@@ -509,6 +511,9 @@ pub struct Tool {
     /// The Turkish name in the toolbox, menus and dialog title; the undo step's name.
     pub label: String,
     pub category: String,
+    /// The modules whose projects offer it (docs/adr/9310, CLAUDE.md §25 rule 2): a built-in tool's from
+    /// [`crate::modules::PLACED`], an extension's from its descriptor or manifest, a model's where all its steps are.
+    pub modules: kentos_launch::ModuleSet,
     /// One sentence: what it does.
     pub description: String,
     /// Paragraphs separated by blank lines.

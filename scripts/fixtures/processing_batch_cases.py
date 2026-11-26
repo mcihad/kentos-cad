@@ -449,6 +449,9 @@ def build() -> list[dict]:
                        "“points.yok” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.", "tool"))
     out.append(refusal("Bilinmeyen model: unknown_tool", {"tool": "model:builtin.yok", "rows": [{}]}, "unknown_tool",
                        "“model:builtin.yok” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.", "tool"))
+    # docs/adr/9310: a project of another module refuses the tool before any row.
+    out.append(refusal("Projenin modülünde olmayan araç: tool_not_in_module", {"tool": "network.serviceAreas", "rows": [{}]},
+                       "tool_not_in_module", pcc.NOT_IN_MODULE, "tool", setup=pcc.mimari_drawing()))
     out.append(refusal("Toplu işin seçiminde UUID olmayan kimlik: invalid_uid, yeriyle",
                        {"tool": tool, "selection": [uid(1), "parsel-2"], "rows": [{}]}, "invalid_uid",
                        "“parsel-2” bir nesne kimliği değil (UUID olmalı).", "selection[1]"))

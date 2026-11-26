@@ -52,6 +52,7 @@ pub fn tool() -> Tool {
         id: "annotation.edgeLengths".into(),
         label: "Kenar uzunluklarını yaz".into(),
         category: "annotation".into(),
+        modules: crate::modules::placed("annotation.edgeLengths"),
         description: "Alan, çoklu çizgi ve çizgilerin her kenarına uzunluğunu yazar; ortak kenarlar bir kez yazılır.".into(),
         help: Some([
             "Yazı kenarın ortasına, kenar boyunca okunur biçimde konur: kapalı alanlarda dışa (ya da içe), açık çizgilerde sola (ya da sağa).",

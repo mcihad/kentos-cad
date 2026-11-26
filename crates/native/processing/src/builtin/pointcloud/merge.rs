@@ -22,6 +22,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.merge".into(),
         label: "Bulutları birleştir".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.merge"),
         description: "Seçili nokta bulutlarının (sanal bulutun bütün dosyalarının) noktalarını tek LAS, LAZ ya da COPC dosyasında toplar.".into(),
         help: Some([
             "Sonuç LAS 1.4'tür: nokta biçimi dosyaların gerektirdiğinin en genişi (6, 7 ya da 8), ölçek en incesi, öteleme ve sistem ilk dosyanınki.",

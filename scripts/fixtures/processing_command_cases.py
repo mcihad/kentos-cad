@@ -779,6 +779,32 @@ def failed(code: str, message: str, path: str) -> dict:
 UNCHANGED = {"canUndo": False, "revision": "same"}
 
 # The command's own rules.
+def mimari_drawing() -> dict:
+    """The sample parcels as a Mimari project (docs/adr/9310): a CBS analysis is not among its tools."""
+    doc = document("parcels.kcad")
+    doc["settings"]["workspace"] = "cad"
+    doc["settings"]["cadWork"] = "architecture"
+    return doc
+
+
+# The refusal of a tool the project's module does not offer (docs/adr/9310): the projects that have it are said.
+NOT_IN_MODULE = "“Hizmet alanları” bu mimari projede yok; CBS projelerinde var."
+
+
+def module_run_cases() -> list[dict]:
+    """A project of another module refuses the tool before anything runs."""
+    return [{
+        "name": "Projenin modülünde olmayan araç: tool_not_in_module, aracın çalıştığı projeler",
+        "setup": mimari_drawing(),
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": "network.serviceAreas"},
+            "result": failed("tool_not_in_module", NOT_IN_MODULE, "tool"),
+            "expect": UNCHANGED,
+        }],
+    }]
+
+
 OWN_RUN = [
     {
         "name": "Bilinmeyen araç: unknown_tool, aracın yolu",
@@ -930,14 +956,16 @@ PARCEL_STEPS = [
 
 def model_record(cases: dict) -> dict:
     """The parcel sheet's record from İşlemler's own shared case: each step read the two chosen parcels
-    (`recordsIn` 2); what the steps made or changed gives `recordsOut` (the points, the texts, the parcels written),
-    and the whole made or changed the distinct objects of all three."""
+    (`recordsIn` 2); what the steps made or changed gives `recordsOut` (the corners' points and their names' texts on
+    their layer, docs/adr/9311; the edges' texts on theirs; the parcels written), and the whole made or changed the
+    distinct objects of all three."""
     want = cases["model-parcel-sheet"]["expect"]
-    points = [a for a in want["added"] if a["kind"] == "point"]
-    texts = [a for a in want["added"] if a["kind"] == "text"]
+    corners = [a for a in want["added"] if a["layerId"] == "islem-kose-noktalari"]
+    edges = [a for a in want["added"] if a["layerId"] == "islem-kenar-olculeri"]
+    assert len(corners) + len(edges) == len(want["added"]), want["added"]
     written = want["updated"]
     chosen = cases["model-parcel-sheet"]["selection"]
-    outs = [len(points), len(texts), len(written)]
+    outs = [len(corners), len(edges), len(written)]
     # What each step said is the model's summary's sentences, in order.
     sentences = want["summary"].split(". ", 1)[1]
     parts = [
@@ -949,7 +977,7 @@ def model_record(cases: dict) -> dict:
     steps = [step_of(i, t, name, len(chosen), n, text) for (i, t, name), n, text in zip(PARCEL_STEPS, outs, parts)]
     return record(
         "model", PARCEL_MODEL, "Parsel ölçü yazıları",
-        steps=steps, total=(len(chosen) * 3, len(points) + len(texts) + len(written)),
+        steps=steps, total=(len(chosen) * 3, len(corners) + len(edges) + len(written)),
         selection=[uid(n) for n in chosen], inputs=[{"layer": "parsel", "digest": "$any"}],
         definition=True,
     )
@@ -1133,6 +1161,8 @@ def listed_tool(t: dict) -> dict:
         "label": t["label"],
         "category": "$any",
         "description": "$any",
+        # The modules whose projects run it (docs/adr/9310): the tools' table says them; the sample drawing has none.
+        "modules": "$any",
         "aliases": t.get("aliases", []),
         "parameters": [
             {
@@ -1220,6 +1250,7 @@ def tools_cases() -> list[dict]:
         "category": "$any",
         "description": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; "
                        "hepsi tek adımda geri alınır.",
+        "modules": "$any",
         "aliases": [],
         "parameters": [model_input("parcels", "Parseller", "features"), model_input("prefix", "Nokta öneki", "text")],
     }
@@ -1316,7 +1347,7 @@ def main() -> int:
     run_cases += tables_into_cases({c["id"]: c for c in queries}, others)
     run_cases += own_run_from(cases)
     run_cases += model_cases(cases)
-    run_cases += OWN_RUN
+    run_cases += OWN_RUN + module_run_cases()
     run = {
         "format": "kentos.command-cases",
         "version": 1,

@@ -24,6 +24,7 @@ pub fn tool() -> Tool {
         id: "generalize.aggregate".into(),
         label: "Alanları kümele".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.aggregate"),
         description: "Birbirine kümeleme uzaklığından yakın alanları aralarına köprü kurarak birleştirir (yapı adaları, orman ve göl kümeleri).".into(),
         help: Some([
             "Örnekler: küçük ölçekte binaları yapı adalarına toplamak, dağınık orman lekelerini birleştirmek.",

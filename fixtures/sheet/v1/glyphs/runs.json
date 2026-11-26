@@ -1,12 +1,12 @@
 {
-  "description": "Eksik karakter kuralı (docs/sheet/design.md §6): yazının yüzünde olmayan karakter, ölçü tablosunun sırasıyla (barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono) onu içeren ilk yazı tipinin aynı kalınlık ve eğiklikteki (CSS eşlemesiyle) yüzüyle; hiçbir yüzde olmayan “?”; denetim karakteri boşluk. Beklenenler elle, tablonun -1 hücrelerinden (crates/shared/sheet/data/font-metrics.json).",
+  "description": "Eksik karakter kuralı (docs/sheet/design.md §6): yazının yüzünde olmayan karakter, ölçü tablosunun sırasıyla (barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono, arial, times-new-roman) onu içeren ilk yazı tipinin aynı kalınlık ve eğiklikteki (CSS eşlemesiyle) yüzüyle; hiçbir yüzde olmayan “?”; denetim karakteri boşluk. Beklenenler elle, tablonun -1 hücrelerinden (crates/shared/sheet/data/font-metrics.json).",
   "cases": [
     {
-      "why": "Barlow'da yukarı ok yok, Arimo'da var; ≤ hiçbir yüzde yok",
+      "why": "Barlow'da yukarı ok yok, Arimo'da var; ⟨ hiçbir yüzde yok",
       "font": "barlow",
       "weight": 400,
       "italic": false,
-      "text": "Ok ↑ ≤ 5",
+      "text": "Ok ↑ ⟨ 5",
       "runs": [
         {
           "text": "Ok ",
@@ -22,6 +22,33 @@
         },
         {
           "text": " ? 5",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "≤ yalnız Times New Roman'da var (ikizi Liberation Serif'te; ADR 9311): onun aynı kalınlıktaki yüzüyle",
+      "font": "barlow",
+      "weight": 400,
+      "italic": false,
+      "text": "a ≤ b",
+      "runs": [
+        {
+          "text": "a ",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        },
+        {
+          "text": "≤",
+          "font": "times-new-roman",
+          "weight": 400,
+          "italic": false
+        },
+        {
+          "text": " b",
           "font": "barlow",
           "weight": 400,
           "italic": false
@@ -128,11 +155,11 @@
       ]
     },
     {
-      "why": "Sekme boşluk olur; ≈ ve ≠ hiçbir yüzde yok",
+      "why": "Sekme boşluk olur; ⟨ ve ⟩ hiçbir yüzde yok",
       "font": "plex-mono",
       "weight": 500,
       "italic": false,
-      "text": "a\tb≈≠",
+      "text": "a\tb⟨⟩",
       "runs": [
         {
           "text": "a b??",

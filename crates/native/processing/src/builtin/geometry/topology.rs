@@ -3,8 +3,8 @@
 //! script, read only. The check is `cad.topology.check`'s own (`topology_check::check_on`): the same findings, keys,
 //! places, measures, life cycle (Değerlendirilmedi, Hata, İstisna, Yeniden değerlendir) and lapsed exceptions. The
 //! findings go to a table, their objects are selected, the counts are numbers. Asked to (docs/adr/2200), the listed
-//! findings are also written as points at their places on an error layer, one undo step, as QGIS's Check validity
-//! writes its error output and ArcGIS's Export Topology Errors its error features; otherwise nothing is written.
+//! findings are also written as points at their places on an error layer, one undo step, as a GIS writes a check's
+//! error output; otherwise nothing is written.
 
 use std::collections::BTreeMap;
 
@@ -42,6 +42,7 @@ pub fn tool() -> Tool {
         id: "topology.check".into(),
         label: "Topolojiyi kurallarla denetle".into(),
         category: "geometry".into(),
+        modules: crate::modules::placed("topology.check"),
         description: "Projenin topoloji kurallarını çalıştırır; bulguları durumlarıyla tabloda gösterir ve bulgulu nesneleri seçer; istenirse bulguları hata katmanına nokta olarak yazar.".into(),
         help: Some([
             "Denetim Topoloji kuralları penceresinin ve cad.topology.check komutunun denetimidir: aynı kurallar, aynı bulgular, aynı yerler ve ölçüler. Kurallar projenin kalite profiliyle birlikte Topoloji kuralları penceresinde tanımlanır.",

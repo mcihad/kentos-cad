@@ -24,6 +24,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.areaStats".into(),
         label: "Nokta bulutu alan sorgusu".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.areaStats"),
         description: "Seçili her alanın içindeki bulut noktalarını sayar: yoğunluk, kotların en küçüğü, en büyüğü, ortalaması ve standart sapması, sınıfların sayıları; tablo olarak verir.".into(),
         help: Some([
             "Alanın delikleri ve parçaları hesaba girer, yaylı kenarlar kesindir; düz kenarın üstündeki nokta içeride sayılır.",

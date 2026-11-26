@@ -86,6 +86,15 @@ impl Registry {
         self.tool(id)
     }
 
+    /// A tool's modules without copying it (docs/adr/9310): a model's (`model:` prefix) where all its steps are; none
+    /// for an id the registry lacks.
+    pub fn modules_of(&self, id: &str) -> Option<kentos_launch::ModuleSet> {
+        if let Some(model) = id.strip_prefix(MODEL_PREFIX).and_then(|m| self.model(m)) {
+            return Some(model_as_tool(model, &|t| self.tool(t)).modules);
+        }
+        self.tools.iter().find(|t| t.id == id).map(|t| t.modules)
+    }
+
     /// A tool (not a model) by id, owned: what models look their steps up with.
     pub fn tool(&self, id: &str) -> Option<Tool> {
         self.tools.iter().find(|t| t.id == id).cloned()

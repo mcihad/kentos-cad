@@ -300,11 +300,13 @@ pub(crate) fn registry_options(safe_mode: bool) -> Options {
         policy: kentos_extension_host::places::load_policy(&policy_file),
         tools: Some(kentos_extension_host::ToolCheck(std::sync::Arc::new(
             |m: &kentos_extensions::Manifest, local: &str, value: &serde_json::Value| {
+                let modules: Vec<&str> = m.modules.iter().map(|module| module.id()).collect();
                 kentos_processing::external::from_descriptor(
                     &m.id,
                     &m.name,
                     &m.version.to_string(),
                     local,
+                    &modules,
                     value,
                 )
                 .map(|_| ())

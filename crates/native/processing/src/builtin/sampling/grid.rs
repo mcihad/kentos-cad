@@ -56,6 +56,7 @@ pub fn tool() -> Tool {
         id: "sample.grid".into(),
         label: "Ağ oluştur".into(),
         category: "sampling".into(),
+        modules: crate::modules::placed("sample.grid"),
         description: "Nesnelerin kutusunu dikdörtgen, altıgen ya da üçgen hücrelerle ya da ağın çizgileriyle kaplayıp yeni katmana yazar.".into(),
         help: Some([
             "Örnekler: bir mahalleyi sayım için altıgen hücrelere bölmek, pafta için karelaj çizgileri çizmek, örnekleme çerçevesi için balık ağı kurmak.",

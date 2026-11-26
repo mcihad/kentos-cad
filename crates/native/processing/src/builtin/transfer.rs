@@ -1,13 +1,8 @@
-//! Veri aktar (the web's `builtin/transfer.ts`; docs/adr/0216; ArcGIS Append
-//! with matching fields, QGIS Refactor fields and Join attributes by field
-//! value, Netcad Veri Aktar): a source's rows (another layer's objects, or a
-//! CSV, TXT or Excel file's rows) go into the target layer's objects whose
-//! key matches, through a field map (each target field's source column or
-//! default), typed fields by their rules; optionally the source objects'
-//! geometry, and the rows no object took as new objects. A report says what
-//! happened to each object and row; Yalnız raporla changes nothing. Keys
-//! match as Anahtarla birleştir's (`ops::statistics::join_plan`). One undo
-//! step.
+//! Veri aktar (the web's `builtin/transfer.ts`; docs/adr/0216): a source's rows (another layer's objects, or a CSV, TXT
+//! or Excel file's rows) go into the target layer's objects whose key matches, through a field map (each target field's
+//! source column or default), typed fields by their rules; optionally the source objects' geometry, and the rows no
+//! object took as new objects. A report says what happened to each object and row; Yalnız raporla changes nothing. Keys
+//! match as Anahtarla birleştir's (`ops::statistics::join_plan`). One undo step.
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -42,6 +37,7 @@ pub fn tool() -> Tool {
         id: "attributes.transfer".into(),
         label: "Veri aktar".into(),
         category: "attributes".into(),
+        modules: crate::modules::placed("attributes.transfer"),
         description: "Başka bir katmandan ya da CSV, TXT, Excel dosyasından ortak anahtarla öznitelikleri alan eşlemesiyle aktarır; isterse geometriyi günceller, eşleşmeyenleri ekler.".into(),
         help: Some([
             "Örnekler: tapu listesindeki malik, hisse ve yüzölçümünü parsel numarasıyla parsellere aktarmak; başka bir ekibin güncel ölçümünü mevcut katmana geometrisiyle işlemek, yeni parselleri eklemek; koordinat listesinden noktaları adlarıyla güncellemek ve yenilerini eklemek.",

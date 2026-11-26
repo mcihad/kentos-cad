@@ -373,7 +373,8 @@ def standard(e: dict, names: tuple) -> bool:
 # Other programs read a TrueType text's height (40) as its capitals' height (their sources: docs/adr/8046 §3);
 # KentOS draws it as the em. A text's
 # 40 is its height times the capital share of the face its STYLE's file names: Arial's H, 1466 of 2048 (arial*.ttf,
-# Standard's); Courier New's 1170, 1171 (couri), 1213 (courbd, courbi); KentOS's own faces their files' OS/2 capital
+# Standard's); Times New Roman's 1356 (times*.ttf), its twins Liberation Serif's and Tinos' 1341; Courier New's 1170,
+# 1171 (couri), 1213 (courbd, courbi); KentOS's own faces their files' OS/2 capital
 # height (Barlow 700/1000, Arimo 1409/2048 …); a face KentOS has not got Barlow's; an SHX file, or a name without a
 # TrueType extension, none. A TEXT's or an ATTDEF's KENTOS data holds its own height ("height") exactly when the
 # capitals' height divided back does not give it.
@@ -412,6 +413,11 @@ def cap_share(file: str) -> float | None:
         return os2_cap(FACES / OWN_FILES["arimo"])
     if styled("arial") or styled("helvetica"):
         return 1466 / 2048
+    # Times New Roman's capital H in its four files (docs/adr/9311); Liberation Serif's and Tinos' their twin's.
+    if styled("liberationserif") or styled("tinos"):
+        return 1341 / 2048
+    if styled("timesnewroman") or styled("times"):
+        return 1356 / 2048
     if styled("couriernew") or styled("courier") or styled("cour"):
         if stem in ("courbd", "courbi") or "bold" in compact:
             return 1213 / 2048
@@ -1424,10 +1430,12 @@ def check_dimension(o: list[tuple[int, str]], e: dict, value: str | None, blocks
 
 
 # Text and dimension styles (docs/adr/0183 §7).
-FONTS = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"]
+FONTS = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono", "arial",
+         "times-new-roman"]
 LABELS = {
     "barlow": "Barlow", "arimo": "Arimo", "overpass": "Overpass", "quicksand": "Quicksand",
     "architects-daughter": "Architects Daughter", "courier-prime": "Courier Prime", "plex-mono": "IBM Plex Mono",
+    "arial": "Arial", "times-new-roman": "Times New Roman",
 }
 STYLE_REFUSED = set('<>/\\":;?*|=,`')
 FACE_KEYS = ("textStyle", "font", "bold", "italic", "oblique")
@@ -1453,8 +1461,11 @@ STANDARD_STYLE = [(2, "Standard"), (70, "0"), (40, "0.0"), (41, "1.0"), (50, "0.
 
 def font_file(font: str, bold: bool, italic: bool) -> str:
     style = {(False, False): "", (True, False): "bd", (False, True): "i", (True, True): "bi"}[(bold, italic)]
-    if font == "arimo":
+    if font in ("arimo", "arial"):
         return f"arial{style}.ttf"
+    # docs/adr/9311: Times New Roman by its own files.
+    if font == "times-new-roman":
+        return f"times{style}.ttf"
     if font == "courier-prime":
         return f"cour{style}.ttf"
     return LABELS[font].replace(" ", "") + ".ttf"

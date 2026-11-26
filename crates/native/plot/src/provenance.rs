@@ -133,5 +133,5 @@ impl Capture {
 
 fn font_versions() -> &'static Vec<serde_json::Value> {
     static FONTS: std::sync::OnceLock<Vec<serde_json::Value>> = std::sync::OnceLock::new();
-    FONTS.get_or_init(||crate::fonts::FACE_KEYS.iter().zip(crate::fonts::FACES).map(|((font,weight,italic),bytes)|json!({"font":font,"weight":weight,"italic":italic,"sha256":sha256_hex(bytes)})).collect())
+    FONTS.get_or_init(||crate::fonts::bundled_faces().map(|(bytes,(font,weight,italic))|json!({"font":font,"weight":weight,"italic":italic,"sha256":sha256_hex(bytes)})).collect())
 }

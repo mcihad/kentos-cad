@@ -22,6 +22,9 @@ pub fn family(font: &str) -> Option<&'static str> {
         "architects-daughter" => "Architects Daughter",
         "courier-prime" => "Courier Prime",
         "plex-mono" => "IBM Plex Mono",
+        // docs/adr/9311: their bundled metric twins, which the text system always has.
+        "arial" => "Arimo",
+        "times-new-roman" => "Liberation Serif",
         _ => return None,
     })
 }

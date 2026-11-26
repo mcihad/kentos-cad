@@ -443,6 +443,7 @@ fn tool(
         id: id.into(),
         label: label.into(),
         category: "spatialStats".into(),
+        modules: crate::modules::placed(id),
         description: description.into(),
         help: Some(help),
         keywords: words(keywords),

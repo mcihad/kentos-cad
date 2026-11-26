@@ -22,6 +22,8 @@ kentos-commands = { path = "../../shared/commands", default-features = false }
 # The dated scope decision's particulars the audit facts' permit section reads (docs/adr/8063).
 kentos-digital-project = { path = "../../shared/digital-project" }
 kentos-domain = { path = "../domain" }
+# Which modules offer each tool (docs/adr/9310): the modules' shared definition and its `ModuleSet`.
+kentos-launch = { path = "../launch" }
 # A storey's code as the sheets name it (EK-2 Tablo 2.14) for the audit facts' rooms (docs/adr/8064); already in the
 # tree through the application.
 kentos-sheet = { path = "../../shared/sheet" }

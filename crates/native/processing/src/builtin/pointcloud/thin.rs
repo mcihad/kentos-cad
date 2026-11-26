@@ -1,9 +1,7 @@
-//! Seyrelt (docs/adr/0207 §7; Netcad's Nokta Bulutu Seyreltme, PDAL's
-//! filters.voxelcenternearestneighbor, filters.sample and filters.decimation):
-//! Hücreyle keeps in each 3D cell the point nearest its centre (two passes:
-//! decide, then write), Yarıçapla drops a point nearer than the radius to
-//! one kept (one pass, in the file's order), Her n'inci keeps the first and
-//! every n-th after it. The machines are the core's (`ops::thin`).
+//! Seyrelt (docs/adr/0207 §7; PDAL's filters.voxelcenternearestneighbor, filters.sample and filters.decimation):
+//! Hücreyle keeps in each 3D cell the point nearest its centre (two passes: decide, then write), Yarıçapla drops a
+//! point nearer than the radius to one kept (one pass, in the file's order), Her n'inci keeps the first and every n-th
+//! after it. The machines are the core's (`ops::thin`).
 
 use kentos_pointcloud::ops::thin::{Cells, Radius, nth};
 use serde_json::json;
@@ -29,6 +27,7 @@ pub fn tool() -> Tool {
         id: "pointcloud.thin".into(),
         label: "Seyrelt".into(),
         category: CATEGORY.into(),
+        modules: crate::modules::placed("pointcloud.thin"),
         description: "Nokta bulutunu seyreltir: her hücrede merkezine en yakın nokta, birbirine yarıçaptan yakın olmayan noktalar ya da her n'inci nokta kalır; sonuç LAS, LAZ ya da COPC olarak yazılır.".into(),
         help: Some([
             "Hücreyle: bulut, kenarı verilen boyda küplere bölünür; her küpte merkezine en yakın nokta kalır (eşitlikte dosyada önce gelen). Düzgün yoğunluk ister.",

@@ -2,7 +2,7 @@
 import type { TranslateRule } from "./TranslateRule";
 
 /**
- * Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:
+ * Input of `cad.layers.translate` v1 (docs/adr/0311 §5), the layer translation:
  *
  * - every layer holding objects (not a group, not drawn from a service)
  *   takes the first rule whose `from` matches its name, unless its name is

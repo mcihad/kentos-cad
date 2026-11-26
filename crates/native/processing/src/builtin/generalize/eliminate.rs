@@ -24,6 +24,7 @@ pub fn tool() -> Tool {
         id: "generalize.eliminate".into(),
         label: "Küçükleri komşuya kat".into(),
         category: "generalization".into(),
+        modules: crate::modules::placed("generalize.eliminate"),
         description: "Küçük alanları en uzun ortak sınırlı ya da en büyük komşusuna katar (kırıntı parseller, sayısallaştırma artıkları).".into(),
         help: Some([
             "Örnekler: arazi örtüsü verisindeki küçük kırıntıları komşularına katmak, en küçük haritalama birimini sağlamak.",

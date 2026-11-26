@@ -3,9 +3,9 @@
 - fixtures/commands/v1/cad.fonts.report.json (`cad.fonts.report` v1)
 
 The rule is the ADR's, written here again without KentOS code: a name ending in `.shx` is an SHX line font; one whose
-family is exactly one of KentOS's seven faces is that face; recognized style suffixes do not change the family.
-Arial, Helvetica and Liberation Sans are Arimo's
-twins, Courier Courier Prime's; any other is missing. A style naming no file is its own face. A style drawn in another
+family is exactly one of KentOS's faces is that face; recognized style suffixes do not change the family. Arial
+(arial*.ttf) and Times New Roman (times*.ttf) are faces of their own (docs/adr/9311); Helvetica and Liberation Sans
+are Arial's twins, Liberation Serif and Tinos Times New Roman's, Courier Courier Prime's; any other is missing. A style naming no file is its own face. A style drawn in another
 face than the one its file names is a `font_substituted` warning, unless (ADR 1125) its SHX font is embedded: the
 project's styles hold an SHX asset of the file's name (lowercase, its basename) whose bytes are a text font (a unifont,
 or a shapes file with its font descriptor, shape 0), and the Big Font it names, if any, is embedded too as a bigfont;
@@ -33,13 +33,16 @@ BIGFONT = b"AutoCAD-86 bigfont 1.0\r\n\x1a"
 # The shapes 1.0 file of one shape (FENCE, no font descriptor) the KCAD samples embed: not a text font.
 FENCE = base64.b64decode(json.loads((ROOT / "fixtures/kcad/v2/shape-resources.json").read_text("utf-8"))["styles"]["items"][0]["data"].split(",", 1)[1])
 
-FACES = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"]
+FACES = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono", "arial",
+         "times-new-roman"]
 LABELS = {"barlow": "Barlow", "arimo": "Arimo", "overpass": "Overpass", "quicksand": "Quicksand",
-          "architects-daughter": "Architects Daughter", "courier-prime": "Courier Prime", "plex-mono": "IBM Plex Mono"}
+          "architects-daughter": "Architects Daughter", "courier-prime": "Courier Prime", "plex-mono": "IBM Plex Mono",
+          "arial": "Arial", "times-new-roman": "Times New Roman"}
 OWN = [("barlow", "barlow"), ("arimo", "arimo"), ("overpass", "overpass"), ("quicksand", "quicksand"),
        ("architectsdaughter", "architects-daughter"), ("courierprime", "courier-prime"), ("ibmplexmono", "plex-mono"),
-       ("plexmono", "plex-mono")]
-TWINS = [("arial", "arimo"), ("helvetica", "arimo"), ("liberationsans", "arimo"), ("couriernew", "courier-prime"), ("courier", "courier-prime"), ("cour", "courier-prime")]
+       ("plexmono", "plex-mono"), ("arial", "arial"), ("timesnewroman", "times-new-roman"), ("times", "times-new-roman")]
+TWINS = [("helvetica", "arial"), ("liberationsans", "arial"), ("liberationserif", "times-new-roman"),
+         ("tinos", "times-new-roman"), ("couriernew", "courier-prime"), ("courier", "courier-prime"), ("cour", "courier-prime")]
 
 
 def resolve(name):
@@ -223,9 +226,10 @@ def refused(name, input_, code, message, path):
 
 
 S_OWN = style(1, "Ada no", "arimo")
-S_ARIAL = style(2, "Yol adı", "arimo", "arial.ttf")
+S_ARIAL = style(2, "Yol adı", "arial", "arial.ttf")
 S_SHX = style(3, "Pafta", "barlow", "romans.shx")
-S_TIMES = style(4, "Başlık", "overpass", "times.ttf")
+S_TIMES = style(4, "Başlık", "overpass", "calibri.ttf")
+S_TNR = style(17, "Künye", "times-new-roman", "times.ttf")
 S_BARLOW = style(5, "Not", "barlow", "Barlow-Bold.ttf")
 S_TURNED = style(6, "Kot", "overpass", "arialbd.ttf")
 S_BIG = style(7, "Çince", "quicksand", "gbcbig.shx")
@@ -246,12 +250,13 @@ MESSAGE_LONG = "{}. yazı tipi adı 80 karakterden uzun. Kısaltın."
 
 CASES = [
     case("Boş çizim: projenin yazı tipi, stil ve yazı yok", setup()),
-    case("Stiller ve yazılar: dosyasız stil kendi, Arial ikizi, SHX ve Times yerine stilin yazı tipi, uyarılarla", BASE),
+    case("Stiller ve yazılar: dosyasız stil kendi, Arial kendisi, SHX ve Calibri yerine stilin yazı tipi, uyarılarla", BASE),
     case("Dosyasız stil kendi yazı tipidir, uyarısız", setup([S_OWN], [text(1, "101", S_OWN["id"], "arimo")])),
-    case("arial.ttf Arimo'yla çizilir: eşdeğer, uyarısız", setup([S_ARIAL])),
+    case("arial.ttf Arial'ın kendisidir: uyarısız", setup([S_ARIAL])),
+    case("times.ttf Times New Roman'ın kendisidir: uyarısız", setup([S_TNR])),
     case("SHX çizgi yazı tipi okunmaz: stilin yazı tipiyle, uyarıyla", setup([S_SHX])),
     case("Big font da SHX'tir", setup([S_BIG])),
-    case("Times KentOS'ta yok: stilin yazı tipiyle, uyarıyla", setup([S_TIMES])),
+    case("Calibri KentOS'ta yok: stilin yazı tipiyle, uyarıyla", setup([S_TIMES])),
     case("Barlow-Bold.ttf Barlow'un kendisidir", setup([S_BARLOW])),
     case("Arial adlandırıp Overpass'a çevrilmiş stil uyarılır", setup([S_TURNED])),
     case("couri.ttf Courier Prime'ın ikizidir", setup([S_COUR])),
@@ -294,7 +299,7 @@ CASES = [
     case("Bir stil gömülü, öbürü değil", setup([U_STYLE, S_SHX], shx=["kentos-uni.shx"])),
     case("Gömülü stilin yazıları sayılır", setup([U_STYLE], [text(1, "SU", U_STYLE["id"]), text(2, "US", U_STYLE["id"]), text(3, "Not")], shx=["kentos-uni.shx"])),
     case("Gömülü stilin yüzü değişmez: Quicksand", setup([style(15, "Q", "quicksand", "kentos-uni.shx")], shx=["kentos-uni.shx"])),
-    case("TrueType stilin Big Font'u SHX değildir: gömülü sayılmaz", setup([style(16, "TTF", "arimo", "arial.ttf", "kentos-big.shx")], shx=["kentos-big.shx"])),
+    case("TrueType stilin Big Font'u SHX değildir: gömülü sayılmaz", setup([style(16, "TTF", "arial", "arial.ttf", "kentos-big.shx")], shx=["kentos-big.shx"])),
     case("Ad sorusu gömülülüğe bakmaz: kentos-uni.shx SHX'tir", setup([U_STYLE], shx=["kentos-uni.shx"]), {"names": ["kentos-uni.shx"]}),
     case("Plan execute ile aynıdır (gömülü)", setup([UB_STYLE], shx=["kentos-uni.shx", "kentos-big.shx"]), op="plan"),
     case("Kullanılmayan gömülü kaynak stilsiz rapora girmez", setup([S_OWN], shx=["kentos-uni.shx"])),

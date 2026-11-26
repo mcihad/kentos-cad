@@ -1,0 +1,35 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.kentos.ornek-isleme",
+  "version": "1.0.0",
+  "name": "Örnek Python işlem aracı",
+  "icon": "assets/alan-dilimleri.svg",
+  "summary": "Python ile yazılmış bir İşlemler aracının örneği: alanları büyüklüklerine göre dilimlere ayırır.",
+  "description": "KentOS ile gelen örnek eklenti (CLAUDE.md §26, paket/eklentiler). İşlemler'e Alan dilimleri aracını ekler: seçilen kapalı alanların alanını hesaplar, verilen sınırlara göre dilimini yazar, alanları yeni katmana kopyalar ve dilimlerin sayısını tablo olarak verir. Aracın tanımı tools/alan-dilimleri.tool.json'da, işi src/ornek_isleme/logic.py'dedir; kendi aracınızı yazarken buradan başlayın. Harita ve CBS projelerinde çıkar (modules).",
+  "authors": ["KentOS"],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "changelogFile": "CHANGELOG.md",
+  "keywords": ["örnek", "python", "işlem aracı", "alan"],
+  "kind": "utility",
+  "modules": ["harita", "cbs"],
+  "runtimes": ["desktop", "headless"],
+  "compatibility": {
+    "sdkProtocol": { "min": 1, "max": 1 },
+    "kentos": { "min": "0.1.0" },
+    "operatingSystems": ["windows", "macos", "linux"]
+  },
+  "python": {
+    "projectFile": "pyproject.toml",
+    "lockFile": "uv.lock"
+  },
+  "entrypoints": {
+    "processing": [
+      { "id": "alan-dilimleri", "descriptor": "tools/alan-dilimleri.tool.json", "handler": "ornek_isleme.logic:alan_dilimleri" }
+    ]
+  },
+  "requestedCapabilities": [
+    { "id": "processing.provider", "scope": "plugin-owned", "reason": "Alan dilimleri aracını İşlemler'e ekler." }
+  ]
+}

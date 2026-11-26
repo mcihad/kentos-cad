@@ -1336,6 +1336,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         ("architects-daughter", DrawingFont::ArchitectsDaughter),
                         ("courier-prime", DrawingFont::CourierPrime),
                         ("plex-mono", DrawingFont::PlexMono),
+                        ("arial", DrawingFont::Arial),
+                        ("times-new-roman", DrawingFont::TimesNewRoman),
                     ],
                 )?)
             }

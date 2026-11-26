@@ -15,6 +15,17 @@ fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
+/// The built-in İşlemler tools a module's projects run (docs/adr/9310), sorted.
+fn processing_tools(m: Module) -> Vec<&'static str> {
+    let mut ids: Vec<&'static str> = kentos_processing::modules::PLACED
+        .iter()
+        .filter(|(_, set)| set.has(m))
+        .map(|(id, _)| *id)
+        .collect();
+    ids.sort_unstable();
+    ids
+}
+
 /// The catalog as it is written: every module, the layer kinds and the storage kinds, in their orders.
 fn catalog_text() -> String {
     let modules: Vec<Value> = Module::ALL
@@ -31,6 +42,8 @@ fn catalog_text() -> String {
                 "storage": m.storage().id(),
                 "layerKinds": m.layer_kinds().iter().map(|k| k.id()).collect::<Vec<_>>(),
                 "commands": catalog().module_command_list(m),
+                // The built-in İşlemler tools its projects run (docs/adr/9310), sorted.
+                "processingTools": processing_tools(m),
             })
         })
         .collect();
@@ -75,9 +88,10 @@ fn catalog_text() -> String {
         "version": 1,
         "note": "KentOS modüllerinin ortak tanımı (ADR 9195 §6, CLAUDE.md §25): kimlik, program, proje türü ve işleri, \
                  bulut türleri, saklama türü (database: CBS verisi veritabanında; file: CAD projesinin tamamı proje \
-                 dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. İstemciler saklama türüne \
-                 göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler (ADR 9197). Hiçbir şeridin tutmadığı \
-                 komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop \
+                 dosyasında, ADR 9196), katman türleri, şeridin modüle verdiği komutlar ve projelerinin çalıştırdığı \
+                 hazır işlem araçları (processingTools, ADR 9310). İstemciler saklama türüne \
+                 göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler (ADR 9197). İşlem \
+                 araçlarından başka, hiçbir şeridin tutmadığı komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop \
                  --lib module_catalog.",
         "storages": storages,
         "layerKinds": kinds,
@@ -137,6 +151,33 @@ fn the_module_catalog_says_what_each_module_offers() {
         ids(Module::Architecture).contains(&"tool.wall")
             && !ids(Module::Gis).contains(&"tool.wall")
     );
+}
+
+/// The İşlemler tools' modules and the ribbons agree (docs/adr/9310, CLAUDE.md §25 rule 2), cell by cell: a ribbon holds
+/// a tool only in a module its set has, and a module whose projects run a tool reaches it, on its ribbon or in İşlem
+/// araç kutusu; Mimari, with no toolbox, runs the two selections its ribbon holds alone.
+#[test]
+fn the_processing_tools_modules_and_ribbons_agree() {
+    let c = catalog();
+    for m in Module::ALL {
+        let ribbon = c.module_command_list(m);
+        let toolbox = c.module_has(m, crate::catalog::TOOLBOX);
+        for (tool, set) in kentos_processing::modules::PLACED {
+            let id = format!("{}{tool}", crate::catalog::PROCESSING_RUN);
+            let on_ribbon = ribbon.contains(&id.as_str());
+            assert!(!on_ribbon || set.has(m), "{m:?}'s ribbon holds {tool}, which its set does not have");
+            assert!(!set.has(m) || on_ribbon || toolbox, "{m:?} runs {tool} but cannot reach it");
+            assert_eq!(c.module_has(m, &id), set.has(m), "{m:?} {tool}");
+        }
+    }
+    let mimari: Vec<&str> = processing_tools(Module::Architecture);
+    assert_eq!(mimari, ["selection.byExpression", "selection.byLocation"]);
+    // A drawing's own writing is not a GIS's; a GIS's analyses are not a drawing's.
+    assert!(!processing_tools(Module::Gis).contains(&"annotation.edgeLengths"));
+    assert!(processing_tools(Module::Map).contains(&"annotation.edgeLengths"));
+    assert!(!processing_tools(Module::Map).contains(&"network.serviceAreas"));
+    assert!(processing_tools(Module::Road).contains(&"hydrology.watershed"));
+    assert!(!processing_tools(Module::Map).contains(&"hydrology.watershed"));
 }
 
 #[test]

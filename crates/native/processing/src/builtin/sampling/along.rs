@@ -48,6 +48,7 @@ pub fn tool() -> Tool {
         id: "sample.alongLines".into(),
         label: "Hat boyunca nokta".into(),
         category: "sampling".into(),
+        modules: crate::modules::placed("sample.alongLines"),
         description: "Çizgilerin ve alan sınırlarının üstüne aralıkla ya da eşit parçalara noktalar koyar; noktalar uzaklık ve semt alır.".into(),
         help: Some([
             "Örnekler: bir enerji hattına 50 metrede bir direk yeri, bir yolun 20 metrelik enkesit yerleri, bir parsel sınırına eşit aralıklı noktalar koymak.",
