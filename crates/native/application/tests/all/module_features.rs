@@ -31,9 +31,9 @@ const ALWAYS: &[(&str, &[&str])] = &[
     (
         "gis",
         &[
-            "address_define", "csv_table", "datasets_edit", "event_follow", "fgb_table", "fields_edit", "fields_usage",
-            "fields_write", "forms", "geopackage", "gis_derive", "gis_set", "gml_read", "gml_table", "gml_write",
-            "gpkg_fields", "gpkg_profile", "gpkg_tiles", "layers_indexes", "layers_labels", "layers_renderer",
+            "address_define", "csv_table", "data_write", "datasets_edit", "event_follow", "fgb_table", "fields_edit",
+            "fields_usage", "fields_write", "forms", "forms_source", "geopackage", "gis_derive", "gis_set", "gml_read",
+            "gml_table", "gml_write", "gpkg_fields", "gpkg_into", "gpkg_profile", "gpkg_tiles", "layers_indexes", "layers_labels", "layers_renderer",
             "layers_translate", "links", "lrs_events", "multidim_source", "network_ellipses", "parquet_table",
             "processing_host", "project_store", "qml", "raster_files", "rasters_georef", "relations_edit",
             "remote_host", "shapefile", "sld", "source_bytes", "source_places", "sources", "subnetwork_follow",
