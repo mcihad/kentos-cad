@@ -302,6 +302,7 @@ impl App {
             }),
             label: text("label"),
             unlink: false,
+            name_text: false,
             operation: PropertiesOperation::Template,
             expected_revision: None,
             attachments: None,

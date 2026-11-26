@@ -1532,17 +1532,17 @@
       "apply": "live"
     },
     {
-      "key": "graphics.pointNames",
+      "key": "graphics.pointLabels",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "scope": "user",
       "hosts": [
         "desktop"
       ],
       "version": 1,
       "group": "graphics",
-      "title": "Nokta adları",
-      "description": "Noktaların adları (nokta numaraları) yanlarında yazılır. Kapalıyken yazılmaz; çizim değişmez.",
+      "title": "Nokta etiketleri",
+      "description": "Her nokta adıyla etiketlenir: etiketleri açık katmanda katmanın etiketiyle, kapalı katmanda noktanın öntanımlı etiketiyle. Kapalıyken etiketleri katmanların ayarları belirler; çizim değişmez.",
       "sensitive": false,
       "apply": "live"
     },
@@ -1557,7 +1557,7 @@
       "version": 1,
       "group": "graphics",
       "title": "Nokta kodları",
-      "description": "Noktaların kodları (Kod özniteliği) yanlarında, varsa adlarından sonra yazılır. Çizim değişmez.",
+      "description": "Noktaların etiketlerine kodları (Kod özniteliği) adlarından sonra yazılır; etiketi olmayan noktaya yazılmaz. Çizim değişmez.",
       "sensitive": false,
       "apply": "live"
     },

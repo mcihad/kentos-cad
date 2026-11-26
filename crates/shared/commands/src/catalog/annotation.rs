@@ -1022,6 +1022,7 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                       Öznitelikler panelinin katman, renk, sembol ve öznitelik satırları, Sembol ver ve Sembolü kaldır bu komutla yazar. \
                       Kilitli katmandaki nesne değişmez, kilitli katmana nesne taşınmaz: böyle bir nesne ya da katman verilirse hiçbir şey yazılmaz. Gizli katmana uyarıyla taşınır. \
                       Zaten istendiği gibi olan nesne değişmez; hiçbiri değişmiyorsa hiçbir şey yazılmaz. \
+                      nameText ile yeni adını alan noktanın adını yazan yazısı yoksa aynı adımda noktaya bağlı bir yazı yazılır (adım Ad değiştir); Noktalar ve Öznitelikler Harita ve Yol projelerinde böyle yazar. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),

@@ -1026,10 +1026,56 @@ cases.append({
     ],
 })
 
+# Bir noktanın adı yazı olarak (docs/adr/9314, 9316): nameText ile yeni adını alan noktanın adını yazan yazısı yoksa
+# aynı adımda yazılır, noktaya ölçeksiz bağlı; yeri ve boyu projenin ölçü yazısı kuralındandır (yeri $any).
+def name_text(i, name, slot):
+    point = BY_ID[i]
+    return {"kind": "text", "id": slot, "layerId": point["layerId"], "attrs": {}, "p": "$any", "text": name, "height": 2,
+            "rotation": 0, "labelOf": uid(i)}
+
+
+cases.append({
+    "name": "nameText: adsız noktaya ad verilince adı noktaya bağlı bir yazı olarak da yazılır, tek adımda (Ad değiştir)",
+    "steps": [
+        {"op": "plan", "input": {"uids": uids(3), "label": "N1", "operation": "label", "nameText": True},
+         "result": {"status": "completed", "output": {"changed": [planned(after(3, label="N1"))], "texts": [name_text(3, "N1", 0)],
+                                                       "revision": "$current"}, "warnings": []},
+         "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(3), "label": "N1", "operation": "label", "nameText": True},
+         "result": {"status": "completed", "output": {"changed": uids(3), "ids": [3], "revision": "$current", "texts": [uid(9)],
+                                                       "textIds": [9]}, "warnings": []},
+         "expect": {"ids": IDS + [9], "entities": {"3": after(3, label="N1"), "9": name_text(3, "N1", 9)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ad değiştir", "expect": {"ids": IDS, "entities": {"3": E(3)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "nameText: adını yazan yazısı olan nokta ikinci yazı almaz; yazısı yeni adı alır",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(3), "label": "N1", "operation": "label", "nameText": True},
+         "result": {"status": "completed", "output": {"changed": uids(3), "ids": [3], "revision": "$current", "texts": [uid(9)],
+                                                       "textIds": [9]}, "warnings": []}},
+        {"op": "execute", "input": {"uids": uids(3), "label": "N2", "operation": "label", "nameText": True}, "result": done([3]),
+         "expect": {"ids": IDS + [9], "entities": {"3": after(3, label="N2"), "9": name_text(3, "N2", 9)}}},
+    ],
+})
+
+cases.append({
+    "name": "nameText yalnız yeni adı olan noktaya yazı yazar: nokta olmayan, adı kaldırılan ve adı değişmeyen nesne yazı almaz",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "label": "D9", "operation": "label", "nameText": True}, "result": done([1]),
+         "expect": {"ids": IDS, "entities": {"1": after(1, label="D9")}}},
+        {"op": "execute", "input": {"uids": uids(3), "label": None, "operation": "label", "nameText": True}, "result": done([]),
+         "expect": {"ids": IDS}},
+        {"op": "execute", "input": {"uids": uids(3), "color": GREEN, "operation": "color", "nameText": True}, "result": done([3]),
+         "expect": {"ids": IDS}},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",
-    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez), Ekler (attachments: nesnenin ekleri bütün liste olarak, boş liste kaldırır; ADR 0225 §1; kurala uymayan invalid_attachments öznitelik ve kalınlık denetiminden sonra, kitaplıkta olmayan gömülü fotoğraf unknown_asset nesnelerin bulunmasından sonra). Katmanın alanları (ADR 0199 §2): verilen öznitelikler nesnenin katmanının (taşınıyorsa gittiği katmanın) alanlarıyla denetlenir ve tek biçimleriyle yazılır; kurala uymayan invalid_attribute, zorunlu alana boş ya da silme attribute_required (yol attrs.<ad>), nesneler girdinin sırasıyla, adlar kendi sıralarıyla; kilit denetiminden sonra. Kurulumdaki en büyük kimlik 8; Bağı kopar'ın ve katman alanlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir (nameText ile Ad değiştir), Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez), Ekler (attachments: nesnenin ekleri bütün liste olarak, boş liste kaldırır; ADR 0225 §1; kurala uymayan invalid_attachments öznitelik ve kalınlık denetiminden sonra, kitaplıkta olmayan gömülü fotoğraf unknown_asset nesnelerin bulunmasından sonra). Katmanın alanları (ADR 0199 §2): verilen öznitelikler nesnenin katmanının (taşınıyorsa gittiği katmanın) alanlarıyla denetlenir ve tek biçimleriyle yazılır; kurala uymayan invalid_attribute, zorunlu alana boş ya da silme attribute_required (yol attrs.<ad>), nesneler girdinin sırasıyla, adlar kendi sıralarıyla; kilit denetiminden sonra. nameText (ADR 9314, 9316): yeni adını alan noktanın adını yazan yazısı yoksa aynı adımda noktaya ölçeksiz bağlı bir yazı yazılır (çıktıda texts ve textIds, planda texts); yazısı olan noktanın yazısı yeni adı alır; nokta olmayan, adı kaldırılan ya da adı değişmeyen nesne yazı almaz. Kurulumdaki en büyük kimlik 8; Bağı kopar'ın ve katman alanlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

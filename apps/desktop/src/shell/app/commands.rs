@@ -242,7 +242,8 @@ impl App {
             | "view.annotationSize.screen" => self.choose_annotation_size(id),
             "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
             "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
-            "view.pointNames" => self.toggle_session("graphics.pointNames", "Nokta adları"),
+            // Labels are a CBS's (docs/adr/9316): every point labelled with its name, and its code.
+            "view.pointLabels" => self.toggle_session("graphics.pointLabels", "Nokta etiketleri"),
             "view.pointCodes" => self.toggle_session("graphics.pointCodes", "Nokta kodları"),
             "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
             // Sabit ve yerleşmeyen etiketler (docs/adr/0212 §4): the user's view, the drawing unchanged.
@@ -825,7 +826,7 @@ impl App {
             ),
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
-            "view.pointNames" => self.settings.bool("graphics.pointNames"),
+            "view.pointLabels" => self.settings.bool("graphics.pointLabels"),
             "view.pointCodes" => self.settings.bool("graphics.pointCodes"),
             "view.pinnedLabels" => self.settings.bool("graphics.pinnedLabels"),
             "view.unplacedLabels" => self.settings.bool("graphics.unplacedLabels"),

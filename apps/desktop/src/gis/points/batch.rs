@@ -246,7 +246,12 @@ pub fn plan(doc: &Document, slots: &[Slot], op: &Op) -> Plan {
     }
 }
 
-fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> EntitiesSetProperties {
+fn input(
+    uids: Vec<String>,
+    label: Option<String>,
+    layer: Option<String>,
+    name_text: bool,
+) -> EntitiesSetProperties {
     EntitiesSetProperties {
         line_pattern: None,
         line_type: None,
@@ -267,6 +272,7 @@ fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> Ent
         label: label.map(Some),
         expected_revision: None,
         unlink: false,
+        name_text,
         attachments: None,
     }
 }
@@ -305,7 +311,7 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome
         let refused = in_step(doc, step, |doc| {
             match set::execute(
                 &mut ExecutionContext::new(doc),
-                input(uids, None, Some(layer.clone())),
+                input(uids, None, Some(layer.clone()), false),
             ) {
                 CommandResult::Completed {
                     output,
@@ -350,11 +356,13 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome
         .iter()
         .map(|(s, name)| (uid(doc, *s), name.clone().unwrap_or_default()))
         .collect();
+    // A name given in a map or a road is written as a text too, when none writes it yet (docs/adr/9316).
+    let name_text = kentos_native_application::point::names_as_texts(doc);
     let refused = in_step(doc, step, |doc| {
         for (uid, name) in writes {
             let result = set::execute(
                 &mut ExecutionContext::new(doc),
-                input(vec![uid], Some(name), None),
+                input(vec![uid], Some(name), None, name_text),
             );
             if !matches!(result, CommandResult::Completed { .. }) {
                 return Some(
@@ -683,7 +691,7 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
                 }
             }
         };
-        let input = input(removed, None, Some(layer));
+        let input = input(removed, None, Some(layer), false);
         refusal(set::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
     });
     if let Some(refused) = refused {

@@ -70,6 +70,9 @@ pub enum AppSetting {
     /// The Kısayollar section (settings_keys.rs, docs/adr/9308): the user's keys and names, the person's in every
     /// program.
     Shortcuts,
+    /// Görünüm › Nokta etiketleri and Nokta kodları (`graphics.pointLabels`, `graphics.pointCodes`): labels are a
+    /// CBS's (docs/adr/9316).
+    PointLabels,
 }
 
 /// The application menu's İçe aktar and Dışa aktar formats a program lists.

@@ -346,6 +346,7 @@ impl CogoApp for App {
                         operation: PropertiesOperation::Attributes,
                         expected_revision: None,
                         unlink: false,
+                        name_text: false,
                         attachments: None,
                     };
                     if let Some(error) =

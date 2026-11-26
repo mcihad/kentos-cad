@@ -180,6 +180,8 @@ pub fn write_cell(
             }
             _ => None,
         };
+        // A name given in a map or a road is written as a text too, when none writes it yet (docs/adr/9316).
+        let name_text = col == EditColumn::Name && point::names_as_texts(doc);
         let refused = in_step(doc, STEP, |doc| {
             let input = EntitiesSetProperties {
                 line_pattern: None,
@@ -201,6 +203,7 @@ pub fn write_cell(
                 },
                 expected_revision: None,
                 unlink: false,
+                name_text,
                 attachments: None,
             };
             refusal(set::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
@@ -402,10 +405,7 @@ pub fn write_draft(
         expected_revision: None,
         symbol: None,
         // A survey's new row writes its name as a text that follows the point, as the point tool does (docs/adr/9314).
-        name_text: matches!(
-            doc.settings().cad_work(),
-            Some(kentos_commands::CadWork::Map | kentos_commands::CadWork::Road)
-        ),
+        name_text: point::names_as_texts(doc),
     };
     if let Some(e) = refusal(point::execute(&mut ExecutionContext::new(doc), input)) {
         return fail(e.message);

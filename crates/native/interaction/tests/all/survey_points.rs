@@ -359,3 +359,43 @@ fn named_point_says_so_where_no_point_is_asked() {
     assert!(b.type_text("#101"));
     assert_eq!(b.last_text(), Some("#101: bu adımda nokta istenmiyor."));
 }
+
+/// In a map the Nokta tool writes a named point's name as a text that follows it, in the same step (docs/adr/9314,
+/// 9316); in a project no module is decided for, as in a CBS, the name stays the point's alone.
+#[test]
+fn in_a_map_a_named_point_writes_its_name_as_a_text() {
+    let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("the drawing reads");
+    drawing["settings"]["workspace"] = "cad".into();
+    drawing["settings"]["cadWork"] = "map".into();
+    let mut b = Bench::on(&drawing.to_string());
+    b.draft.snap = false;
+    b.start("point");
+    answer(&mut b, "A", Some("101"));
+    b.click(10.0, 5.0);
+    let texts: Vec<TextEntity> = b
+        .doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t.clone()),
+            _ => None,
+        })
+        .collect();
+    let [text] = &texts[..] else {
+        panic!("one name text: {texts:?}")
+    };
+    assert_eq!(text.text, "101");
+    assert!(text.label_of.is_some() && text.label_scale.is_none());
+    // One step: the point and its name together.
+    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.entities().count(), 0);
+    // A project no module is decided for: the name is the point's alone.
+    let mut b = bench();
+    b.start("point");
+    answer(&mut b, "A", Some("101"));
+    b.click(10.0, 5.0);
+    assert_eq!(labels(&b), ["101"]);
+    assert!(b.doc.entities().all(|e| matches!(e, Entity::Point(_))));
+}

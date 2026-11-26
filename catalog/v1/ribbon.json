@@ -1551,12 +1551,6 @@
        "text.split",
        "text.check",
        "text.fonts",
-       {
-        "command": "tool.labelsToText",
-        "works": [
-         "map"
-        ]
-       },
        "tool.readable"
       ]
      },
@@ -2740,22 +2734,6 @@
        {
         "command": "view.areaEdges",
         "size": "small"
-       },
-       {
-        "command": "view.pointNames",
-        "size": "small",
-        "works": [
-         "map",
-         "road"
-        ]
-       },
-       {
-        "command": "view.pointCodes",
-        "size": "small",
-        "works": [
-         "map",
-         "road"
-        ]
        },
        {
         "command": "view.transparency",
@@ -4431,6 +4409,14 @@
        },
        {
         "command": "view.areaEdges",
+        "size": "small"
+       },
+       {
+        "command": "view.pointLabels",
+        "size": "small"
+       },
+       {
+        "command": "view.pointCodes",
         "size": "small"
        },
        {
@@ -7697,8 +7683,6 @@
    "file.import.fgb",
    "file.import.gml",
    "file.import.parquet",
-   "file.import.maplibre",
-   "file.export.maplibre",
    "source.read",
    "source.write",
    "source.writeTogether",
@@ -7714,13 +7698,6 @@
    "layer.newAnnotation",
    "layer.filter",
    "layer.filterClear",
-   "layer.labels",
-   "tool.labelMove",
-   "tool.labelPin",
-   "tool.labelHide",
-   "tool.labelRotate",
-   "view.pinnedLabels",
-   "view.unplacedLabels",
    "draft.overlap.allow",
    "draft.overlap.layer",
    "draft.overlap.layers",

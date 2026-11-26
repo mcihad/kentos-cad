@@ -102,6 +102,7 @@ fn a_mask_is_picked_by_its_boundary_and_what_it_covers_stays_reachable() {
         label: None,
         attachments: None,
         unlink: false,
+        name_text: false,
         operation: kentos_commands::PropertiesOperation::Wipeout,
         expected_revision: None,
     };

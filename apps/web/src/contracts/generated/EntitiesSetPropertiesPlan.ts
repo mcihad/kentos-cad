@@ -11,6 +11,11 @@ export type EntitiesSetPropertiesPlan = {
  */
 changed: Array<Entity>, 
 /**
+ * The texts execute would write for the points' names (`nameText`), each linked to its point, with no slot
+ * (`id` 0), in the input's order; absent when none would be.
+ */
+texts?: Array<Entity>, 
+/**
  * The document revision the plan was made against. Give it as
  * `expectedRevision` to write exactly this plan, or nothing.
  */

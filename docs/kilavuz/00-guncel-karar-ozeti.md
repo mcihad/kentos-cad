@@ -4,6 +4,16 @@
 
 ## 0. Güncel karar özeti
 
+- **Etiket CBS'nindir; CAD'de sonradan verilen ad da yazı olur (26 Kasım 2026, sahibin isteği;
+  [ADR 9316](../adr/9316-labels-are-gis-only.md)).**
+  - Kesin kural (CLAUDE.md): etiket yalnız CBS'dedir. CAD'de (Mimari, Harita, Yol) katman menüsünde Etiketler, etiket
+    komutları, Nokta etiketleri ve stil dosyaları (Stil yükle/kaydet, SLD, QML, MapLibre) yoktur; stil Katman
+    stili'nden seçilir.
+  - Adsız noktaya Noktalar'dan ya da Öznitelikler'den sonradan ad verilince Harita'da ve Yol'da adı noktaya bağlı yazı
+    olarak da yazılır (`cad.entities.set`'in `nameText`'i, adım “Ad değiştir”).
+  - Nokta adları düğmesi CBS'de Nokta etiketleri oldu (`view.pointLabels`, öntanımlı kapalı): her noktayı adıyla
+    etiketler, yazıya dokunmaz.
+
 - **Yeni Harita projesinin Nokta katmanı, balastro (26 Kasım 2026, sahibin isteği;
   [ADR 9315](../adr/9315-harita-point-layer-balastro.md)).**
   - Yeni Harita CAD projesi ağacın üstünde “Nokta” katmanıyla başlar; noktaları balastro çizilir.

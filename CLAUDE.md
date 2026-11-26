@@ -79,6 +79,13 @@ satıra (749 KB) büyüdüğü için bölündü.
   durur. Şeritteki (ribbon) ipuçları ve arayüz metinleri ADR'ye de atıf yapmaz (“ADR …”, “docs/adr/…” yok). Dokunulan
   her dosyada eski atıflar da aynı işte temizlenir; yeni kodda hiç yazılmaz. Dosya biçimi adları (DXF, DWG, LandXML,
   GeoPackage…) uygulama adı sayılmaz.
+- **Etiket CBS'nindir (kesin kural, 26 Kasım 2026):** etiket kavramı yalnız CBS'dedir. Bu kavram katmanın
+  etiketlemesini, etiket araçlarını, Nokta etiketleri ve Nokta kodları düğmelerini ve Etiketleri yazıya çevir'i kapsar.
+  CAD modüllerinde (Mimari, Harita, Yol) sahip açıkça istemedikçe etiket sunulmaz: katman menüsünde Etiketler, şeritte
+  etiket komutu, ayarlarda etiket satırı, işlem aracının yeni katmanında etiket stili olmaz. CAD'de nokta adı noktaya
+  bağlı yazıdır (ADR 9314); etiket desteği ortak çekirdekte kalır. CAD'de stil seçilir (Katman stili). Stil içe alma ve
+  başka programların stil dosyaları (Stil yükle/kaydet, SLD, QML, MapLibre) yalnız CBS'dedir
+  ([ADR 9316](docs/adr/9316-labels-are-gis-only.md)).
 - **Araç = komut** (§9.2): çizimi değiştiren her iş anlamsal komutla yapılır; katalog, ≥20 bağımsız başvurulu ortak durum,
   modüllerin kararı, Python, MCP, yapay zekâ ajanı, eklenti ve manifest olmadan bitmiş sayılmaz.
 - **Pencere düzeni** (DESIGN.md §7.19): Yol pencereleri `road_dialog::RoadDialog` iskeletindedir; çizim alanı

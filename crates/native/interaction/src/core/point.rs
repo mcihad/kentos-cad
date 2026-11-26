@@ -305,8 +305,8 @@ impl Point {
             ),
             expected_revision: None,
             symbol: cx.template_symbol(),
-            // A survey's point writes its name as a text that follows it (docs/adr/9314).
-            name_text: named,
+            // A map's or a road's point writes its name as a text that follows it (docs/adr/9314, 9316).
+            name_text: named && point::names_as_texts(cx.doc),
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(written) = points::written(result, cx) {
@@ -338,6 +338,8 @@ impl Point {
             return;
         };
         let (uid, at, old_z, others) = (uid.to_string(), old.p, old.z, old.parts.clone());
+        // A name given in a map or a road is written as a text too, when none writes it yet (docs/adr/9316).
+        let name_text = Self::named(cx) && point::names_as_texts(cx.doc);
         let done = cx.doc.transact(CORRECT_LABEL, |doc| {
             if !given.is_empty() || !code.is_empty() {
                 let input = EntitiesSetProperties {
@@ -357,6 +359,7 @@ impl Point {
                     operation: PropertiesOperation::Attributes,
                     expected_revision: None,
                     unlink: false,
+                    name_text,
                     attachments: None,
                 };
                 refusal(set::execute(&mut ExecutionContext::new(doc), input))?;

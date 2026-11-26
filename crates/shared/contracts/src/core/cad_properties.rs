@@ -218,6 +218,14 @@ pub struct EntitiesSetProperties {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unlink: bool,
+    /// A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets
+    /// one in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the
+    /// point, at the project's measure text height on paper, in its typeface, upright, on the point's layer, linked to
+    /// it without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other
+    /// objects are left alone. Absent or false: none is written.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub name_text: bool,
     /// What the change is; it names the undo step.
     pub operation: PropertiesOperation,
     /// The document revision the input was prepared against, as decimal text
@@ -227,6 +235,31 @@ pub struct EntitiesSetProperties {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+impl EntitiesSetProperties {
+    /// The input of `operation` on the objects `uids` with nothing set yet: what changes is given over it by name.
+    pub fn new(uids: Vec<String>, operation: PropertiesOperation) -> Self {
+        Self {
+            uids,
+            layer_id: None,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            line_pattern: None,
+            line_type_scale: None,
+            transparency: None,
+            wipeout: None,
+            symbol: None,
+            attrs: None,
+            label: None,
+            attachments: None,
+            unlink: false,
+            name_text: false,
+            operation,
+            expected_revision: None,
+        }
+    }
 }
 
 /// Output of `cad.entities.set` v1: the objects that changed.
@@ -248,6 +281,17 @@ pub struct EntitiesPropertiesSet {
     /// joins it, and the revision changes when that ends.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+    /// The texts written for the points' names (`nameText`), their persistent ids, in the input's order; absent when
+    /// none was written.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub texts: Vec<String>,
+    /// Their slots in the open document, in the same order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub text_ids: Vec<u32>,
 }
 
 /// What `cad.entities.set` would write (plan mode); nothing is written.
@@ -260,6 +304,11 @@ pub struct EntitiesSetPropertiesPlan {
     /// The objects that would change, each as execute would write it, with
     /// its own slot (`id`), in the input's order.
     pub changed: Vec<Entity>,
+    /// The texts execute would write for the points' names (`nameText`), each linked to its point, with no slot
+    /// (`id` 0), in the input's order; absent when none would be.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub texts: Vec<Entity>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -418,6 +418,7 @@ impl App {
             operation: PropertiesOperation::Attachments,
             expected_revision: None,
             unlink: false,
+            name_text: false,
             attachments: Some(list),
         };
         let said = kentos_interaction::properties::set_properties(model, input);

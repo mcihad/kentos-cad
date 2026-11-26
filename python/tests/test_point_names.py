@@ -44,6 +44,23 @@ class PointNames(unittest.TestCase):
         cad.entities.set(doc, uids=[made.uid], operation='label', label='P8')
         self.assertEqual(doc.entity(made.text_uid).entity.text, 'P8')
 
+    def test_a_point_named_later_gets_its_name_text_in_the_same_step(self):
+        """ADR 9316: `cad.entities.set` with `name_text` writes the text of a point given its first name."""
+        doc = self.drawing()
+        made = cad.point.create(doc, layer_id='yapi', p=cad.Vec2(x=487020.0, y=4420020.0))
+        self.assertIs(made.text_uid, cad.UNSET, 'no name, no text')
+        plan = cad.entities.set.plan(doc, uids=[made.uid], operation='label', label='P9', name_text=True)
+        self.assertEqual([t.text for t in plan.texts], ['P9'])
+        named = cad.entities.set(doc, uids=[made.uid], operation='label', label='P9', name_text=True)
+        self.assertEqual(len(named.texts), 1)
+        text = doc.entity(named.texts[0]).entity
+        self.assertEqual((text.text, text.label_of), ('P9', made.uid))
+        # A second name: the same text, no new one.
+        again = cad.entities.set(doc, uids=[made.uid], operation='label', label='P10', name_text=True)
+        self.assertIs(again.texts, cad.UNSET, 'no second text')
+        self.assertEqual(doc.entity(named.texts[0]).entity.text, 'P10')
+        self.assertEqual(doc.undo(), 'Ad değiştir')
+
     def test_the_project_file_keeps_the_link(self):
         doc = self.drawing()
         made = self.named(doc)

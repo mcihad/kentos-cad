@@ -116,9 +116,9 @@ pub struct Spatial {
     /// How many times a filter calling an extension's function was worked out again with new answers: the layers it
     /// filters are drawn again (the desktop's styled layers are keyed by it, docs/adr/8057 §8).
     filters_version: u64,
-    /// Nokta adları off (`graphics.pointNames` false) and Nokta kodları on (docs/adr/1540): what a point's label
-    /// says. Both default to the drawing's own labels (names, no codes).
-    hide_point_names: bool,
+    /// Nokta etiketleri (`graphics.pointLabels`, docs/adr/9316) and Nokta kodları (docs/adr/1540): every point
+    /// labelled with its name, and its code. Both off by default: the layers' own labels.
+    point_labels: bool,
     point_codes: bool,
     /// The main view's last labels (`label_at`): their records, stride and scale.
     kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
@@ -811,18 +811,18 @@ impl Spatial {
             .collect()
     }
 
-    /// Nokta adları and Nokta kodları as the labels were made: (names, codes).
+    /// Nokta etiketleri and Nokta kodları as the labels were made: (labels, codes).
     pub fn point_texts(&self) -> (bool, bool) {
-        (!self.hide_point_names, self.point_codes)
+        (self.point_labels, self.point_codes)
     }
 
-    /// Nokta adları and Nokta kodları (docs/adr/1540): what points' labels say; the layers' texts are made again
-    /// when it changes (with the drawing, when there is one).
-    pub fn set_point_texts(&mut self, doc: Option<&Document>, names: bool, codes: bool) {
-        if (self.hide_point_names, self.point_codes) == (!names, codes) {
+    /// Nokta etiketleri and Nokta kodları (docs/adr/1540, 9316): which points are labelled and what their labels say;
+    /// the layers' texts are made again when it changes (with the drawing, when there is one).
+    pub fn set_point_texts(&mut self, doc: Option<&Document>, labels: bool, codes: bool) {
+        if (self.point_labels, self.point_codes) == (labels, codes) {
             return;
         }
-        self.hide_point_names = !names;
+        self.point_labels = labels;
         self.point_codes = codes;
         if let Some(doc) = doc
             && self.revision.is_some()
@@ -849,7 +849,7 @@ impl Spatial {
             .into_iter()
             .filter(|l| l.service.is_none())
             .collect();
-        let table = label_layers_json(&leaves);
+        let table = label_layers_json(&leaves, self.point_labels);
         if table != self.label_layers {
             if let Err(e) = self.store.set_label_layers_json(&table) {
                 debug_assert!(false, "the layers' labelling: {e}");
@@ -874,7 +874,7 @@ impl Spatial {
                 "{}|{}|{}{}|{answers}",
                 texts,
                 unit.factor(),
-                self.hide_point_names,
+                self.point_labels,
                 self.point_codes
             );
             if self.label_keys.get(&l.id) != Some(&key) {
@@ -925,7 +925,7 @@ impl Spatial {
             for (i, (e, (texts, z))) in list.iter().zip(texts).enumerate() {
                 let off = drawn.as_ref().is_some_and(|d| !d[i]) && crate::style_classes::drawn_by_style(e);
                 let texts = if off { Vec::new() } else { texts };
-                let texts = point_texts(e, texts, shown, !self.hide_point_names, self.point_codes);
+                let texts = point_texts(e, texts, shown, self.point_labels, self.point_codes);
                 self.store
                     .set_object_labels(f64::from(e.base().id), ObjectLabels { texts, z });
             }
@@ -2763,27 +2763,27 @@ pub fn shown_text<'a>(
         .unwrap_or(text)
 }
 
-/// A point's label texts under Nokta adları and Nokta kodları (docs/adr/1540): as the layer's labelling makes them
-/// while names are on and codes off; else its name and/or its code (`Kod`), in the first text's class (the layer's
-/// first, or its kind's default), when the layer labels at all (`shown`). Other objects keep theirs.
+/// A point's label texts under Nokta etiketleri and Nokta kodları (docs/adr/1540, 9316): on a layer that labels
+/// (`shown`), its labelling's, or its name and code (`Kod`) with Nokta kodları; on one that labels nothing, its name
+/// (and code) with Nokta etiketleri, else none; in the first text's class (the layer's or its kind's). Others keep.
 fn point_texts(
     e: &Entity,
     texts: Vec<(u16, String)>,
     shown: bool,
-    names: bool,
+    labels: bool,
     codes: bool,
 ) -> Vec<(u16, String)> {
     let Entity::Point(p) = e else {
         return texts;
     };
-    if names && !codes {
-        return texts;
-    }
-    if !shown {
+    if !shown && !labels {
         return Vec::new();
     }
+    if shown && !codes {
+        return texts;
+    }
     let trimmed = |s: Option<&String>| s.map(|s| s.trim().to_owned()).filter(|s| !s.is_empty());
-    let name = trimmed(p.base.label.as_ref()).filter(|_| names);
+    let name = trimmed(p.base.label.as_ref());
     let code = trimmed(p.base.attrs.get("Kod")).filter(|_| codes);
     let text = match (name, code) {
         (Some(n), Some(c)) => format!("{n}  {c}"),

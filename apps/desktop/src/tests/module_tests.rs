@@ -668,6 +668,31 @@ fn found(app: &mut App, query: &str) -> Vec<String> {
         .collect()
 }
 
+/// Labels are a CBS's (CLAUDE.md, docs/adr/9316): Etiketler, the label tools, Nokta etiketleri and Nokta kodları,
+/// Etiketleri yazıya çevir and the style files other programs read are KentOS GIS's alone; the CAD modules write their
+/// points' names as texts and choose a layer's look in Katman stili.
+#[test]
+fn labels_and_other_programs_style_files_are_a_cbs_s_alone() {
+    const GIS_ONLY: [&str; 12] = [
+        "layer.labels",
+        "tool.labelMove",
+        "tool.labelPin",
+        "tool.labelHide",
+        "tool.labelRotate",
+        "tool.labelsToText",
+        "view.pinnedLabels",
+        "view.unplacedLabels",
+        "view.pointLabels",
+        "view.pointCodes",
+        "file.import.maplibre",
+        "file.export.maplibre",
+    ];
+    offers_as(Some(Module::Gis), &GIS_ONLY, &[]);
+    for module in [Module::Architecture, Module::Map, Module::Road] {
+        offers_as(Some(module), &["style.layerStyle"], &GIS_ONLY);
+    }
+}
+
 /// The GNSS archive (docs/adr/1340 §1): its editing is KentOS Harita's, its accepted points are read in KentOS GIS
 /// too; a road's survey tab has no GNSS arşivi, a building none of it.
 #[test]
@@ -800,8 +825,7 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             "processing.run.raster.mosaic",
             "processing.run.scan.captureLine",
             "processing.run.geometry.buffer",
-            // CBS's layers, labels, filter and data, and the toolbox's tools no ribbon holds.
-            "layer.labels",
+            // CBS's layers, filter and data, and the toolbox's tools no ribbon holds.
             "layer.filter",
             "layer.newPoint",
             "layer.dataset",
@@ -861,6 +885,16 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             // The drawing standard is KentOS Mimari's.
             "standards.check",
             "standards.apply",
+            // Labels and the style files other programs read are a CBS's (docs/adr/9316): a map writes its points'
+            // names as texts.
+            "layer.labels",
+            "tool.labelMove",
+            "tool.labelsToText",
+            "view.unplacedLabels",
+            "view.pointLabels",
+            "view.pointCodes",
+            "file.import.maplibre",
+            "file.export.maplibre",
             // Charts, network analysis and the type's switch.
             "data.chart",
             "chart.pie",

@@ -39480,16 +39480,25 @@ class EntitiesPropertiesSet(_Model):
         revision: The document's revision after the write, as decimal text (the same
             when nothing changed). Inside an open transaction or group the write
             joins it, and the revision changes when that ends.
+        text_ids: Their slots in the open document, in the same order. Unit: id.
+        texts: The texts written for the points' names (`nameText`), their persistent ids, in the input's order; absent when
+            none was written.
     """
     changed: list[str]
     ids: list[int]
     revision: str
+    text_ids: list[int] | Unset = UNSET
+    texts: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["changed"] = list(self.changed)
         out["ids"] = list(self.ids)
         out["revision"] = self.revision
+        if self.text_ids is not UNSET:
+            out["textIds"] = list(self.text_ids)
+        if self.texts is not UNSET:
+            out["texts"] = list(self.texts)
         return out
 
     @classmethod
@@ -39498,6 +39507,8 @@ class EntitiesPropertiesSet(_Model):
             changed=list(data["changed"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+            text_ids=list(data["textIds"]) if "textIds" in data else UNSET,
+            texts=list(data["texts"]) if "texts" in data else UNSET,
         )
 
 
@@ -39866,6 +39877,11 @@ class EntitiesSetProperties(_Model):
         line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100); null: their layer's (katmana göre). Absent:
             unchanged. Unit: paper-mm.
+        name_text: A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets
+            one in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the
+            point, at the project's measure text height on paper, in its typeface, upright, on the point's layer, linked to
+            it without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other
+            objects are left alone. Absent or false: none is written.
         symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of their layer's style; null: the layer's style. The id is
             not looked up: the libraries are the host's. Absent: unchanged.
@@ -39889,6 +39905,7 @@ class EntitiesSetProperties(_Model):
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    name_text: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     unlink: bool | Unset = UNSET
@@ -39918,6 +39935,8 @@ class EntitiesSetProperties(_Model):
             out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.name_text is not UNSET:
+            out["nameText"] = self.name_text
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -39943,6 +39962,7 @@ class EntitiesSetProperties(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            name_text=data.get("nameText", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unlink=data.get("unlink", UNSET),
@@ -39958,14 +39978,19 @@ class EntitiesSetPropertiesPlan(_Model):
             its own slot (`id`), in the input's order.
         revision: The document revision the plan was made against. Give it as
             `expectedRevision` to write exactly this plan, or nothing.
+        texts: The texts execute would write for the points' names (`nameText`), each linked to its point, with no slot
+            (`id` 0), in the input's order; absent when none would be.
     """
     changed: list[Entity]
     revision: str
+    texts: list[Entity] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["changed"] = [e0.to_json() for e0 in self.changed]
         out["revision"] = self.revision
+        if self.texts is not UNSET:
+            out["texts"] = [e0.to_json() for e0 in self.texts]
         return out
 
     @classmethod
@@ -39973,6 +39998,7 @@ class EntitiesSetPropertiesPlan(_Model):
         return cls(
             changed=[Entity.from_json(e0) for e0 in data["changed"]],
             revision=data["revision"],
+            texts=[Entity.from_json(e0) for e0 in data["texts"]] if "texts" in data else UNSET,
         )
 
 

@@ -216,8 +216,8 @@ Ayrıntı [plan/ayrim.md](../../plan/ayrim.md)'de:
 | Nesne sayısını göster | C | ç v b |
 | Görünüş ▸ Renk | MHYC | ç a v b |
 | Görünüş ▸ Çizgi tipi, Kalınlık | MHYC | ç a b |
-| Görünüş ▸ Katman stili…, Etiketler… | MHYC; Etiketler HYC | ç v b |
-| Görünüş ▸ Stil yükle/kaydet, SLD, QML, MapLibre | HC | ç v b |
+| Görünüş ▸ Katman stili…, Etiketler… | MHYC; Etiketler C ([ADR 9316](9316-labels-are-gis-only.md)) | ç v b |
+| Görünüş ▸ Stil yükle/kaydet, SLD, QML, MapLibre | C ([ADR 9316](9316-labels-are-gis-only.md)) | ç v b |
 | Görünüş ▸ Değişikliğin etkisi… | MHYC | ç a v b |
 | Veri ▸ Alanlar…, Formlar…, Bilgi kartı ve eylemler… | HC | ç v b |
 | Veri ▸ Veri kümesi bilgisi… | HYC | ç v b |

@@ -923,6 +923,7 @@ impl App {
                 label: None,
                 attachments: None,
                 unlink: false,
+                name_text: false,
                 operation: PropertiesOperation::Attributes,
                 expected_revision: None,
             },

@@ -82,6 +82,8 @@ impl ModuleProfile for Map {
             AppSetting::NewProjectType | AppSetting::NewProjectUnit => false,
             // The user's keys and names are the person's, every program's (docs/adr/9308).
             AppSetting::Shortcuts => true,
+            // Labels are a CBS's (docs/adr/9316): a map's points have their names as texts.
+            AppSetting::PointLabels => false,
         }
     }
 
@@ -105,11 +107,6 @@ impl ModuleProfile for Map {
             | E::LineType
             | E::LineWeight
             | E::Style
-            | E::Labels
-            | E::StyleFiles
-            | E::Sld
-            | E::Qml
-            | E::MapLibre
             | E::Impact
             | E::Fields
             | E::Forms
@@ -125,8 +122,15 @@ impl ModuleProfile for Map {
             | E::Duplicate
             | E::Merge
             | E::Remove => true,
-            // A CBS's: the move into a table, counts, time, charts, typed layers and scenarios.
-            E::Migrate
+            // A CBS's: the move into a table, counts, time, charts, typed layers and scenarios. Labels and the style
+            // files other programs read are a CBS's too (docs/adr/9316): a CAD drawing writes its names as texts, its
+            // look is chosen in Katman stili.
+            E::Labels
+            | E::StyleFiles
+            | E::Sld
+            | E::Qml
+            | E::MapLibre
+            | E::Migrate
             | E::Counts
             | E::Time
             | E::Chart

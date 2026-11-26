@@ -36295,7 +36295,7 @@
       "id": "cad.entities.set",
       "version": 1,
       "title": "Nesnelerin özelliklerini değiştir",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelerin katmanını, rengini, sembolünü, özniteliklerini ya da etiketini değiştirir; hepsi tek geri alma adımında, adı işlemin: Katman değiştir, Renk değiştir, Sembol ata (null ile Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir. Verilmeyen özellik değişmez. Renk, sembol ve etiket null ile kaldırılır: nesne katmanının rengiyle ve stiliyle çizilir. Öznitelik adıyla verilir ya da null ile silinir; adı geçmeyenler kalır. Öznitelikler panelinin katman, renk, sembol ve öznitelik satırları, Sembol ver ve Sembolü kaldır bu komutla yazar. Kilitli katmandaki nesne değişmez, kilitli katmana nesne taşınmaz: böyle bir nesne ya da katman verilirse hiçbir şey yazılmaz. Gizli katmana uyarıyla taşınır. Zaten istendiği gibi olan nesne değişmez; hiçbiri değişmiyorsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelerin katmanını, rengini, sembolünü, özniteliklerini ya da etiketini değiştirir; hepsi tek geri alma adımında, adı işlemin: Katman değiştir, Renk değiştir, Sembol ata (null ile Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir. Verilmeyen özellik değişmez. Renk, sembol ve etiket null ile kaldırılır: nesne katmanının rengiyle ve stiliyle çizilir. Öznitelik adıyla verilir ya da null ile silinir; adı geçmeyenler kalır. Öznitelikler panelinin katman, renk, sembol ve öznitelik satırları, Sembol ver ve Sembolü kaldır bu komutla yazar. Kilitli katmandaki nesne değişmez, kilitli katmana nesne taşınmaz: böyle bir nesne ya da katman verilirse hiçbir şey yazılmaz. Gizli katmana uyarıyla taşınır. Zaten istendiği gibi olan nesne değişmez; hiçbiri değişmiyorsa hiçbir şey yazılmaz. nameText ile yeni adını alan noktanın adını yazan yazısı yoksa aynı adımda noktaya bağlı bir yazı yazılır (adım Ad değiştir); Noktalar ve Öznitelikler Harita ve Yol projelerinde böyle yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -36403,6 +36403,10 @@
             ],
             "x-unit": "paper-mm"
           },
+          "nameText": {
+            "description": "A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets\none in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the\npoint, at the project's measure text height on paper, in its typeface, upright, on the point's layer, linked to\nit without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other\nobjects are left alone. Absent or false: none is written.",
+            "type": "boolean"
+          },
           "operation": {
             "$ref": "#/$defs/PropertiesOperation",
             "description": "What the change is; it names the undo step."
@@ -36481,6 +36485,24 @@
             "description": "The document's revision after the write, as decimal text (the same\nwhen nothing changed). Inside an open transaction or group the write\njoins it, and the revision changes when that ends.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "textIds": {
+            "description": "Their slots in the open document, in the same order.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "texts": {
+            "description": "The texts written for the points' names (`nameText`), their persistent ids, in the input's order; absent when\nnone was written.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -36506,6 +36528,13 @@
             "description": "The document revision the plan was made against. Give it as\n`expectedRevision` to write exactly this plan, or nothing.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "texts": {
+            "description": "The texts execute would write for the points' names (`nameText`), each linked to its point, with no slot\n(`id` 0), in the input's order; absent when none would be.",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
           }
         },
         "required": [

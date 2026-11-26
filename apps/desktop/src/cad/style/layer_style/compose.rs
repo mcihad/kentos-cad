@@ -142,6 +142,20 @@ pub(super) fn section<'a>(
     let (labels, markers) = mask
         .as_ref()
         .map_or((false, false), |m| (m.labels, m.markers));
+    // Etiketler where labels are, a CBS's (docs/adr/9316).
+    let mut mask_checks = iced::widget::Row::new().spacing(16);
+    if window.labels {
+        mask_checks = mask_checks.push(fields::check(
+            Check::from(labels),
+            "Etiketler",
+            Some(ev(Edit::Labels(!labels))),
+        ));
+    }
+    let mask_checks = mask_checks.push(fields::check(
+        Check::from(markers),
+        "İşaretler",
+        Some(ev(Edit::Markers(!markers))),
+    ));
     let mut rows: Vec<Element<'a, Message>> = vec![
         row![
             kentos_ui::icon::icon(crate::icons::from_web(Some("layerCompose"))).size(16.0),
@@ -177,20 +191,12 @@ pub(super) fn section<'a>(
         ),
         line(
             "Maske",
-            row![
-                fields::check(
-                    Check::from(labels),
-                    "Etiketler",
-                    Some(ev(Edit::Labels(!labels)))
-                ),
-                fields::check(
-                    Check::from(markers),
-                    "İşaretler",
-                    Some(ev(Edit::Markers(!markers)))
-                ),
-            ]
-            .spacing(16),
-            Some("Bu katmanın etiketlerinin ve işaretlerinin altında seçilen katmanlar boşalır."),
+            mask_checks,
+            Some(if window.labels {
+                "Bu katmanın etiketlerinin ve işaretlerinin altında seçilen katmanlar boşalır."
+            } else {
+                "Bu katmanın işaretlerinin altında seçilen katmanlar boşalır."
+            }),
         ),
     ];
     if let Some(m) = mask.filter(|m| m.labels || m.markers) {

@@ -300,7 +300,7 @@ pub const PORTED: &[&str] = &[
     "view.annotationSize.screen",
     "view.fills",
     "view.areaEdges",
-    "view.pointNames",
+    "view.pointLabels",
     "view.pointCodes",
     "view.transparency",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala

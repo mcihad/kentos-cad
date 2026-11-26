@@ -4,15 +4,13 @@
 //! counter-clockwise from a chosen start corner. Corners shared by
 //! neighbouring parcels get one number; points already on the target layer
 //! keep theirs and numbering continues after them. The name is written at its
-//! corner as a text object, as the edge lengths are (docs/adr/9311): the
-//! layer's labels start off and show the names only when it turns them on.
+//! corner as a text object, as the edge lengths are (docs/adr/9311). Labels are
+//! a CBS's (docs/adr/9316): the tool is a CAD drawing's, its new layer labels
+//! nothing.
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_commands::{
-    Entity, EntityBase, LabelPlacement, LabelStyle, PointEntity, PointStyle, PointSymbol,
-    TextEntity,
-};
+use kentos_commands::{Entity, EntityBase, PointEntity, PointStyle, PointSymbol, TextEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use serde_json::{Value, json};
@@ -153,8 +151,7 @@ pub fn tool() -> Tool {
                 "Oluşturulacak",
                 ParamKind::Choice {
                     options: vec![
-                        EnumOption::new("points", "Nokta")
-                            .hint("Adlı nokta nesnesi; adı, katmanın etiketi açılınca görünür"),
+                        EnumOption::new("points", "Nokta").hint("Adlı nokta nesnesi; adı yazılmaz"),
                         EnumOption::new("text", "Yazı").hint("Köşenin dışına yazı"),
                         EnumOption::new("both", "Nokta ve yazı")
                             .hint("Adlı nokta nesnesi ve köşenin dışına adının yazısı"),
@@ -179,19 +176,7 @@ pub fn tool() -> Tool {
                             symbol: PointSymbol::Cross,
                             size: 7.0,
                         }),
-                        label: Some(Box::new(LabelStyle {
-                            placement: LabelPlacement::Beside,
-                            size: 10.5,
-                            grow: None,
-                            max_size: None,
-                            weight: None,
-                            template: None,
-                            min_feature_px: None,
-                            min_scale: None,
-                            max_scale: None,
-                            ink: None,
-                            ..LabelStyle::default()
-                        })),
+                        // No label style: the names are texts (docs/adr/9316).
                         ..NewLayerStyle::default()
                     },
                     above: None,

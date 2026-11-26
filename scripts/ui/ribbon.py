@@ -224,9 +224,6 @@ def view_tab(cad):
         panels[2]["items"].insert(4, M("Kat görünümü", [("", ["view.levels.all", "view.levels.active", "view.levels.below"]),
                                                        ("Etkin kat", ["view.levels.up", "view.levels.down"])],
                                        works=ARCHITECTURE))
-        items = panels[2]["items"]
-        at = next(i for i, it in enumerate(items) if it.get("command") == "view.transparency")
-        items[at:at] = [S("view.pointNames", MAP_ROAD), S("view.pointCodes", MAP_ROAD)]
         panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
             S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
         # A building's queries (docs/adr/0802): KentOS Mimari has no Ölçme.
@@ -234,6 +231,11 @@ def view_tab(cad):
     else:
         # User coordinate systems are a drawing's; a CBS map's bar has no CAD terms (docs/adr/9185).
         panels = [p for p in panels if p["label"] != "Koordinatlar"]
+        # Labels are a CBS's (docs/adr/9316): Nokta etiketleri labels every point with its name, Nokta kodları adds its
+        # code, beside the other view preferences; a CAD drawing writes its points' names as texts (docs/adr/9314).
+        items = next(p for p in panels if p["label"] == "Görünüş")["items"]
+        at = next(i for i, it in enumerate(items) if it.get("command") == "view.transparency")
+        items[at:at] = [S("view.pointLabels"), S("view.pointCodes")]
     return T("view", "Görünüm", panels)
 
 def output_tab(cad):
@@ -375,9 +377,9 @@ CAD = [
     T("annotate", "Açıklama", [
         P("Yazı", "text", [L("tool.text"), S("tool.mtext"), SP("textAlong"), S("tool.placeTextFile"),
             S("text.findReplace"), S("style.textStyles")],
-          # A layer's labels are a map's (docs/adr/0802): a building labels its objects with Etiket.
+          # Labels are a CBS's (docs/adr/9316): a CAD drawing has none to turn into texts.
           overflow=["text.fieldInsert", "text.fieldsUpdate", "text.number", "text.combine", "text.split", "text.check",
-            "text.fonts", W("tool.labelsToText", MAP), "tool.readable"]),
+            "text.fonts", "tool.readable"]),
         P("Ölçü", "dimension", [DIMENSION("lead"), S("tool.dimContinue"), S("tool.dimBaseline"),
             S("tool.quickDimension"), S("style.dimensionStyles")],
           overflow=["tool.centerMark", "tool.dimCenterLine", "tool.dimElevation", "tool.dimensionReassociate",
@@ -974,9 +976,10 @@ for tab in CONTEXTUAL:
 # A module's program offers what its ribbon holds and nothing a ribbon of another module alone holds (docs/adr/0802):
 # Komut ara, the command line, the shortcuts and `App::run` find nothing else. These commands only CBS's ribbon holds
 # (or only the architectural tabs) belong to a CAD module's program too: every module's (`everywhere`: a layer made,
-# the project's coordinate system, Nesne özellikleri, İfadeyle seç and Konuma göre seç), and Harita's (`map`: a layer's
-# coordinate system, labels, filter and typed kinds, its value lists and rules, bound sources, CBS's file formats, the
-# map's system, the processing history, a dataset's record).
+# the project's coordinate system, Nesne özellikleri, İfadeyle seç and Konuma göre seç), and Harita's and Yol's (`map`:
+# a layer's coordinate system, filter and typed kinds, its value lists and rules, bound sources, CBS's data file
+# formats, the map's system, the processing history, a dataset's record). Labels and the style files other programs
+# read are a CBS's alone (docs/adr/9316).
 # `only`: commands no ribbon holds that only these modules' programs offer (an empty list: kentos-cad's alone, as the
 # project type's switch: a module's projects keep their type). A processing tool or model no ribbon holds or names is
 # offered where İşlem araç kutusu is (catalog.rs); every other command no ribbon holds is the shell's, every module's.
@@ -984,11 +987,10 @@ MODULES = {
     "everywhere": ["layer.new", "layer.newGroup", "layer.showAll", "crs.set", "view.properties",
         "processing.run.selection.byExpression", "processing.run.selection.byLocation"],
     "map": ["layer.crs", "layer.reproject", "view.mapCrs", "file.import.fgb", "file.import.gml", "file.import.parquet",
-        "file.import.maplibre", "file.export.maplibre", "source.read", "source.write",
+        "source.read", "source.write",
         "source.writeTogether", "source.status", "source.reconcile", "source.relink", "source.unlink", "profile.window",
         "linearRef.eventLinks", "layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation",
-        "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin", "tool.labelHide",
-        "tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "draft.overlap.allow", "draft.overlap.layer",
+        "layer.filter", "layer.filterClear", "draft.overlap.allow", "draft.overlap.layer",
         "draft.overlap.layers", "draft.topologyPoints", "data.domains", "data.subtypes", "data.layerRules",
         "data.layerIndexes", "data.tableStyles", "data.duplicate", "data.contingents", "processing.history", "layer.dataset"],
     "only": {

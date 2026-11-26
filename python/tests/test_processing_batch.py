@@ -34,9 +34,11 @@ class ProcessingBatchTests(unittest.TestCase):
         self.assertEqual((r.kind, r.format, r.version), ("model", "kentos.run-record", 1))
         self.assertEqual([s.tool for s in r.steps],
                          ["points.numberVertices", "annotation.edgeLengths", "attributes.calculate"])
-        # Each step read the two chosen parcels; the whole made or changed 6 points, 7 texts and 2 parcels.
+        # Each step read the two chosen parcels; the whole made or changed 6 points, 13 texts (each corner's name, written
+        # as a text by default since docs/adr/9311, and 7 edge lengths) and 2 parcels.
         self.assertEqual([s.records_in for s in r.steps], [2, 2, 2])
-        self.assertEqual((r.total.records_in, r.total.records_out), (6, 15))
+        self.assertEqual([s.records_out for s in r.steps], [12, 7, 2])
+        self.assertEqual((r.total.records_in, r.total.records_out), (6, 21))
         self.assertEqual(r.selection, ids)
         self.assertIsNotNone(r.definition)
         self.assertEqual(doc.undo(), "Parsel ölçü yazıları")

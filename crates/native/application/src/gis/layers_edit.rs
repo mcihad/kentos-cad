@@ -720,6 +720,7 @@ fn merge(doc: &mut Document, target: &str, from: &[String]) -> CommandResult<Lay
             operation: PropertiesOperation::Layer,
             expected_revision: None,
             unlink: false,
+            name_text: false,
             attachments: None,
         };
         match set::execute(&mut ExecutionContext::new(doc), input) {

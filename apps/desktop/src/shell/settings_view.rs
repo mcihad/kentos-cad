@@ -67,7 +67,7 @@ pub const KEYS: [&str; 65] = [
     "graphics.annotationSize",
     "graphics.fills",
     "graphics.areaEdges",
-    "graphics.pointNames",
+    "graphics.pointLabels",
     "graphics.pointCodes",
     "graphics.transparency",
     "graphics.highlightColor",

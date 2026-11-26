@@ -1,6 +1,6 @@
 //! Noktaların görünüşü ve düzenlenişi (docs/adr/1540): a point drawn as a solid dot when its layer has no symbol,
-//! Nokta adları and Nokta kodları in Görünüm (settings, the label engine's texts), Ad and Kod of the one selected row
-//! edited by a click, and Çift noktaları ayıkla setting the points left over aside on a layer.
+//! Nokta etiketleri and Nokta kodları (settings, the label engine's texts; a CBS's, docs/adr/9316), Ad and Kod of the
+//! one selected row edited by a click, and Çift noktaları ayıkla setting the points left over aside on a layer.
 
 use crate::gis;
 use kentos_commands::Entity;
@@ -67,34 +67,31 @@ fn a_layer_without_a_point_symbol_draws_a_solid_dot() {
 }
 
 #[test]
-fn nokta_adlari_and_kodlari_are_settings_and_change_only_the_labels() {
+fn nokta_etiketleri_and_kodlari_are_settings_and_change_only_the_labels() {
     let mut app = app_with_points();
     let (slot, name, code) = named_and_coded(&app);
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    // As the drawing labels it: its name.
-    assert!(app.settings.bool("graphics.pointNames"));
+    // Its layer labels nothing (docs/adr/9311), and both are off: no label.
+    assert!(!app.settings.bool("graphics.pointLabels"));
     assert!(!app.settings.bool("graphics.pointCodes"));
-    let before = app.spatial.label_texts(slot);
-    assert!(
-        before.is_empty() || before == [name.clone()],
-        "{before:?}"
-    );
-    let labelled = !before.is_empty();
+    assert!(app.spatial.label_texts(slot).is_empty());
+    // Nokta etiketleri: every point its name, on a layer whose labels are off too.
+    let _ = app.update(Message::Run("view.pointLabels"));
+    assert!(app.settings.bool("graphics.pointLabels"));
+    assert_eq!(app.spatial.label_texts(slot), std::slice::from_ref(&name));
+    // Nokta kodları: its code after its name.
     let _ = app.update(Message::Run("view.pointCodes"));
     assert!(app.settings.bool("graphics.pointCodes"));
-    let expect = |t: String| if labelled { vec![t] } else { Vec::new() };
-    assert_eq!(app.spatial.label_texts(slot), expect(format!("{name}  {code}")));
-    let _ = app.update(Message::Run("view.pointNames"));
-    assert!(!app.settings.bool("graphics.pointNames"));
-    assert_eq!(app.spatial.label_texts(slot), expect(code.clone()));
+    assert_eq!(app.spatial.label_texts(slot), [format!("{name}  {code}")]);
+    // Nokta etiketleri off: the layer's own labels again, none; a code alone labels nothing.
+    let _ = app.update(Message::Run("view.pointLabels"));
+    assert!(app.spatial.label_texts(slot).is_empty());
     let _ = app.update(Message::Run("view.pointCodes"));
     assert!(app.spatial.label_texts(slot).is_empty());
-    let _ = app.update(Message::Run("view.pointNames"));
-    assert_eq!(app.spatial.label_texts(slot), before);
     // A view preference: the drawing did not change.
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
     // Uygulama ayarları › Görünüm lists both.
-    for key in ["graphics.pointNames", "graphics.pointCodes"] {
+    for key in ["graphics.pointLabels", "graphics.pointCodes"] {
         assert!(crate::settings_view::KEYS.contains(&key), "{key}");
     }
 }
@@ -122,8 +119,13 @@ fn a_labelled_point_layer_writes_the_name_and_the_code() {
     assert_eq!(app.spatial.label_texts(slot), std::slice::from_ref(&name));
     let _ = app.update(Message::Run("view.pointCodes"));
     assert_eq!(app.spatial.label_texts(slot), [format!("{name}  {code}")]);
-    let _ = app.update(Message::Run("view.pointNames"));
-    assert_eq!(app.spatial.label_texts(slot), [code]);
+    // Nokta etiketleri adds nothing to a layer that labels; off, the layer's own labels stay.
+    let _ = app.update(Message::Run("view.pointLabels"));
+    assert_eq!(app.spatial.label_texts(slot), [format!("{name}  {code}")]);
+    let _ = app.update(Message::Run("view.pointCodes"));
+    assert_eq!(app.spatial.label_texts(slot), std::slice::from_ref(&name));
+    let _ = app.update(Message::Run("view.pointLabels"));
+    assert_eq!(app.spatial.label_texts(slot), [name]);
 }
 
 #[test]
@@ -295,12 +297,13 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::RibbonTab("home"));
         shot(&mut snapshot, &mut app, "1-giris-nokta");
+        let _ = app.update(Message::Run("view.pointLabels"));
         let _ = app.update(Message::Run("view.pointCodes"));
         let _ = app.update(Message::RibbonTab("view"));
         shot(&mut snapshot, &mut app, "2-gorunum-ad-kod");
-        let _ = app.update(Message::Run("view.pointNames"));
-        shot(&mut snapshot, &mut app, "3-gorunum-yalniz-kod");
-        let _ = app.update(Message::Run("view.pointNames"));
+        let _ = app.update(Message::Run("view.pointCodes"));
+        shot(&mut snapshot, &mut app, "3-gorunum-yalniz-ad");
+        let _ = app.update(Message::Run("view.pointLabels"));
         let _ = app.update(Message::Run("point.editor"));
         let _ = app.update(Message::BottomResized(300.0));
         let (slot, _, _) = named_and_coded(&app);
@@ -580,4 +583,59 @@ fn a_points_elevation_shows_rounded_and_edits_from_its_stored_figure() {
     assert_eq!(doc.revision().to_string(), revision, "nothing written");
     let Some(Entity::Point(p)) = doc.get(Slot(2)) else { unreachable!() };
     assert_eq!(p.z, Some(STORED), "the stored figure kept");
+}
+
+/// A point written without a name in a map, named later in Noktalar (the inspector's Nokta adı writes the same way):
+/// its name is written as a text that follows it, in the same step (docs/adr/9316); renamed again, the text takes the
+/// new name and no second one is written. The name in a CBS project stays the label's.
+#[test]
+fn a_point_named_later_in_a_map_gets_its_name_text() {
+    use super::edit::{Draft, write_cell, write_draft};
+    let named_in = |cad_work: Option<kentos_commands::CadWork>| {
+        let mut snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+            "../../../../../fixtures/interaction/v1/point-editor.kcad"
+        ))
+        .expect("the drawing reads");
+        snapshot.settings.workspace = Some(match cad_work {
+            Some(_) => kentos_commands::Workspace::Cad,
+            None => kentos_commands::Workspace::Gis,
+        });
+        snapshot.settings.cad_work = cad_work;
+        let mut doc = crate::document::Document::new(snapshot, None).expect("opens").model;
+        let layer = doc.layers().active().to_owned();
+        let draft = Draft {
+            east: "487100".to_owned(),
+            north: "4420100".to_owned(),
+            ..Draft::default()
+        };
+        assert!(write_draft(&mut doc, &draft, &layer, None).outcome.step.is_some());
+        let slot = doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Point(_)))
+            .map(|e| Slot(e.base().id))
+            .max()
+            .expect("the new point");
+        assert!(doc.linked_texts(slot).is_empty(), "no name, no text");
+        let named = write_cell(&mut doc, slot, EditColumn::Name, "N7", false);
+        assert!(named.step.is_some(), "{:?}", named.said);
+        (doc, slot)
+    };
+    let (mut doc, slot) = named_in(Some(kentos_commands::CadWork::Map));
+    let texts = doc.linked_texts(slot);
+    let [text] = texts[..] else { panic!("one name text: {texts:?}") };
+    let Some(Entity::Text(t)) = doc.get(text) else { panic!("a text") };
+    assert_eq!((t.text.as_str(), t.label_scale), ("N7", None));
+    // Renamed: the same text takes the new name.
+    assert!(write_cell(&mut doc, slot, EditColumn::Name, "N8", false).step.is_some());
+    assert_eq!(doc.linked_texts(slot), [text]);
+    assert!(matches!(doc.get(text), Some(Entity::Text(t)) if t.text == "N8"));
+    // One undo step takes the name and its text back together.
+    let _ = doc.undo();
+    let _ = doc.undo();
+    assert!(doc.linked_texts(slot).is_empty());
+    // A road's point too; a CBS point's name stays its label.
+    let (doc, slot) = named_in(Some(kentos_commands::CadWork::Road));
+    assert_eq!(doc.linked_texts(slot).len(), 1);
+    let (doc, slot) = named_in(None);
+    assert!(doc.linked_texts(slot).is_empty());
 }

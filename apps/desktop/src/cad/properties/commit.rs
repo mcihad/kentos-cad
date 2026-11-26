@@ -254,6 +254,7 @@ pub(super) fn set_input(
         operation,
         expected_revision: None,
         unlink: false,
+        name_text: false,
         attachments: None,
     }
 }
@@ -1612,6 +1613,8 @@ pub(super) fn commit(
         let mut input = set_input(model, &[*slot], PropertiesOperation::Attributes);
         input.attrs = Some(BTreeMap::from([(key.clone(), Some(text.to_owned()))]));
         input.label = follows.then(|| Some(text.to_owned()));
+        // A map's or a road's point without its name's text gets one (docs/adr/9316).
+        input.name_text = follows && kentos_native_application::point::names_as_texts(model);
         return properties::set_properties(model, input);
     }
     let n = web_number(text);

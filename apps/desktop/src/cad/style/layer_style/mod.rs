@@ -410,6 +410,9 @@ pub struct LayerStyleWindow {
     applied_compose: Option<kentos_commands::LayerCompose>,
     /// Whether the program lists the thematic kinds (module_surfaces.rs): a GIS's.
     pub thematic: bool,
+    /// Whether the layer's labels are spoken of (Katman çizimi's Maske › Etiketler): a CBS's, labels are none of a CAD
+    /// drawing's (docs/adr/9316).
+    pub labels: bool,
     /// The kind the layer was drawn with as the window opened: listed whatever it is.
     own: Kind,
     /// The layer's geometry, declared or its data table's (none: mixed or unknown): the kinds that fit it are listed
@@ -494,6 +497,7 @@ impl LayerStyleWindow {
             compose: compose.clone(),
             applied_compose: compose,
             thematic: true,
+            labels: true,
             own: kind,
             geometry: node.geometry.or_else(|| {
                 node.data
@@ -1482,8 +1486,11 @@ impl App {
         let id = id.unwrap_or_else(|| doc.model.layers().active().to_owned());
         match LayerStyleWindow::open(&doc.model, &id) {
             Ok(mut window) => {
-                // The program's own kinds (module_surfaces.rs).
+                // The program's own kinds (module_surfaces.rs), and labels where the layer menu has them
+                // (docs/adr/9316).
                 window.thematic = self.shows_thematic_renderers();
+                window.labels =
+                    self.shows_layer_entry(crate::layer_entries::LayerEntry::Labels);
                 self.styles.layer_style = Some(window);
                 self.dialog = Some(Dialog::LayerStyle);
             }

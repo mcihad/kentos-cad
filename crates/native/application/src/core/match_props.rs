@@ -204,6 +204,7 @@ fn write(
                 label: None,
                 attachments: None,
                 unlink: false,
+                name_text: false,
                 operation: PropertiesOperation::Layer,
                 expected_revision: None,
             };

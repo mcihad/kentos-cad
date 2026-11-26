@@ -134,7 +134,8 @@ impl ModuleProfile for NoProject {
             | AppSetting::NewProjectType
             | AppSetting::NewProjectUnit
             // The user's keys and names are the person's (docs/adr/9308).
-            | AppSetting::Shortcuts => true,
+            | AppSetting::Shortcuts
+            | AppSetting::PointLabels => true,
         }
     }
 

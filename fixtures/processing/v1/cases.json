@@ -59,10 +59,7 @@
               "color": "#E5C07B",
               "lineType": "continuous",
               "lineWeight": 0.18,
-              "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5},
-
-              "labels": {"mode": "off"}
+              "point": {"symbol": "cross", "size": 7}
             }
           }
         ],
@@ -303,10 +300,7 @@
               "color": "#E5C07B",
               "lineType": "continuous",
               "lineWeight": 0.18,
-              "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5},
-
-              "labels": {"mode": "off"}
+              "point": {"symbol": "cross", "size": 7}
             }
           }
         ],
@@ -493,10 +487,7 @@
               "color": "#E5C07B",
               "lineType": "continuous",
               "lineWeight": 0.18,
-              "point": {"symbol": "cross", "size": 7},
-              "label": {"placement": "beside", "size": 10.5},
-
-              "labels": {"mode": "off"}
+              "point": {"symbol": "cross", "size": 7}
             }
           },
           {"id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}}

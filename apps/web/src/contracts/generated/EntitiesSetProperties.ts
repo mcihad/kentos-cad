@@ -127,6 +127,14 @@ attachments?: Array<Attachment>,
  */
 unlink?: boolean, 
 /**
+ * A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets
+ * one in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the
+ * point, at the project's measure text height on paper, in its typeface, upright, on the point's layer, linked to
+ * it without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other
+ * objects are left alone. Absent or false: none is written.
+ */
+nameText?: boolean, 
+/**
  * What the change is; it names the undo step.
  */
 operation: PropertiesOperation, 

@@ -90,32 +90,56 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: PointCreate) -> CommandRe
     CommandResult::Completed { output, warnings }
 }
 
-/// The point's name as a text (`nameText`, docs/adr/9314), linked to the point `of` (none in a plan): up and right of
-/// it by the corners' rule, at the project's measure text height on paper, in its typeface, upright, on its layer.
-/// None without `nameText` or a name.
+/// Whether a point's name is written as a text that follows it (`nameText`): in a map's and a road's drawing, which
+/// have no labels (docs/adr/9314, 9316); a CBS shows its points' names with labels. The Nokta tool, Noktalar and
+/// Öznitelikler ask it.
+pub fn names_as_texts(doc: &Document) -> bool {
+    matches!(
+        doc.settings().cad_work(),
+        Some(kentos_commands::CadWork::Map | kentos_commands::CadWork::Road)
+    )
+}
+
+/// The point's name as a text (`nameText`, docs/adr/9314), linked to the point `of` (none in a plan). None without
+/// `nameText` or a name.
 fn name_text(doc: &Document, input: &PointCreate, of: Option<EntityId>) -> Option<Entity> {
     if !input.name_text {
         return None;
     }
     let name = input.label.as_deref().filter(|l| !l.trim().is_empty())?;
+    Some(name_text_at(doc, &input.layer_id, input.color.as_ref(), input.p, name, of))
+}
+
+/// A point's name `name` as a text (docs/adr/9314), linked to the point `of` (none in a plan) without a scale: up and
+/// right of the point at `p` by the corners' rule, at the project's measure text height on paper, in its typeface,
+/// upright, on the layer `layer_id` in the colour `color`. `cad.point.create`'s `nameText` writes it, and
+/// `cad.entities.set`'s for a point named later (docs/adr/9316).
+pub(crate) fn name_text_at(
+    doc: &Document,
+    layer_id: &str,
+    color: Option<&String>,
+    p: Vec2,
+    name: &str,
+    of: Option<EntityId>,
+) -> Entity {
     let settings = doc.settings();
     let height = settings.annotation_height(AnnotationKind::Measure);
     let font = kentos_geometry_core::text::Font::from_id(DrawingFont::id_of(settings.drawing_font));
     let out = kentos_geometry_core::vec2::Vec2::new(std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2);
     let at = kentos_geometry_core::processing::numbering::corner_text_at(
-        kentos_geometry_core::vec2::Vec2::new(input.p.x, input.p.y),
+        kentos_geometry_core::vec2::Vec2::new(p.x, p.y),
         out,
         name,
         height,
         font,
     );
-    Some(Entity::Text(TextEntity {
+    Entity::Text(TextEntity {
         annotative: None,
         base: EntityBase {
             look: Default::default(),
             id: 0,
-            layer_id: input.layer_id.clone(),
-            color: input.color.clone(),
+            layer_id: layer_id.to_owned(),
+            color: color.cloned(),
             attrs: Default::default(),
             label: None,
             symbol: None,
@@ -135,7 +159,7 @@ fn name_text(doc: &Document, input: &PointCreate, of: Option<EntityId>) -> Optio
         paragraph: Default::default(),
         face: Default::default(),
         path: None,
-    }))
+    })
 }
 
 /// The checks in the contract's order; the warnings when the point may be written.

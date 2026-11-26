@@ -625,6 +625,7 @@ impl App {
             attrs: Some([(field, value)].into_iter().collect()),
             label: None,
             unlink: false,
+            name_text: false,
             operation: kentos_commands::PropertiesOperation::Attributes,
             expected_revision: None,
             attachments: None,

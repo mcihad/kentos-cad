@@ -24,12 +24,17 @@
 //!
 //! An object already as asked is left alone; when none changes nothing is
 //! written: no undo step, and the revision stays.
+//!
+//! With `nameText` a point given a new name that no text writes the name of
+//! gets one in the same step (docs/adr/9314, 9316), as `cad.point.create`
+//! writes it; the step is then “Ad değiştir”.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
-    EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation, attachments_problem,
+    EntitiesSetPropertiesPlan, Entity, EntityId, LayerNodeType, PropertiesOperation,
+    attachments_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -67,6 +72,7 @@ pub fn plan_in(
         Ok(checked) => CommandResult::Completed {
             output: EntitiesSetPropertiesPlan {
                 changed: checked.changes.into_iter().map(|c| c.entity).collect(),
+                texts: checked.texts,
                 revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
@@ -115,11 +121,24 @@ fn write_execute(
             .collect();
         cx.doc.update_many(writes, label(&input));
     }
+    // The points' names as texts, in the same step (docs/adr/9316).
+    let (mut texts, mut text_ids) = (Vec::new(), Vec::new());
+    for text in checked.texts {
+        match checks::add(cx.doc, text) {
+            Ok((id, uid, _)) => {
+                text_ids.push(id);
+                texts.push(uid);
+            }
+            Err(stop) => return stop.into(),
+        }
+    }
     CommandResult::Completed {
         output: EntitiesPropertiesSet {
             changed,
             ids,
             revision: cx.doc.revision().to_string(),
+            texts,
+            text_ids,
         },
         warnings: checked.warnings,
     }
@@ -135,6 +154,8 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::Symbol if input.symbol == Some(None) => "Sembolü kaldır",
         PropertiesOperation::Symbol => "Sembol ata",
         PropertiesOperation::Attributes => "Değiştir",
+        // A point's name, written as a text too (docs/adr/9316): no label in a CAD drawing.
+        PropertiesOperation::Label if input.name_text => "Ad değiştir",
         PropertiesOperation::Label => "Etiket değiştir",
         // Öznitelikler's Bağı kopar (docs/adr/0175 §4).
         PropertiesOperation::Unlink => "Bağı kopar",
@@ -163,6 +184,8 @@ struct Change {
 struct Checked {
     changes: Vec<Change>,
     warnings: Vec<CommandWarning>,
+    /// The texts `nameText` writes for the points' new names (docs/adr/9316), in the input's order.
+    texts: Vec<Entity>,
 }
 
 /// `e` as the input asks, its attributes `attrs` (the input's in their
@@ -517,5 +540,39 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             path: at_layer(),
         });
     }
-    Ok(Checked { changes, warnings })
+    let texts = if input.name_text {
+        name_texts(doc, &changes)
+    } else {
+        Vec::new()
+    };
+    Ok(Checked {
+        changes,
+        warnings,
+        texts,
+    })
+}
+
+/// The texts of the points among `changes` given a new name that no text writes the name of (docs/adr/9314, 9316),
+/// each linked to its point, in the changes' order.
+fn name_texts(doc: &Document, changes: &[Change]) -> Vec<Entity> {
+    changes
+        .iter()
+        .filter_map(|c| {
+            let Entity::Point(point) = &c.entity else {
+                return None;
+            };
+            let name = point.base.label.as_deref().filter(|l| !l.trim().is_empty())?;
+            let renamed = doc.get(c.slot)?.base().label.as_deref() != Some(name);
+            (renamed && !doc.has_name_text(c.slot)).then(|| {
+                crate::point::name_text_at(
+                    doc,
+                    &point.base.layer_id,
+                    point.base.color.as_ref(),
+                    point.p,
+                    name,
+                    EntityId::parse(&c.uid),
+                )
+            })
+        })
+        .collect()
 }

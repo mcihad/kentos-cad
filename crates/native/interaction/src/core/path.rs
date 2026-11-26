@@ -1543,24 +1543,13 @@ impl Path {
             return;
         }
         let input = kentos_commands::EntitiesSetProperties {
-            line_pattern: None,
-            uids: vec![uid.to_string()],
-            layer_id: None,
-            color: None,
-            line_weight: None,
-            line_type: None,
-            line_type_scale: None,
-            transparency: None,
             wipeout: Some(Some(kentos_commands::Wipeout {
                 frame: !cx.memory.wipeout_no_frame,
             })),
-            symbol: None,
-            attrs: None,
-            label: None,
-            attachments: None,
-            unlink: false,
-            operation: kentos_commands::PropertiesOperation::Wipeout,
-            expected_revision: None,
+            ..kentos_commands::EntitiesSetProperties::new(
+                vec![uid.to_string()],
+                kentos_commands::PropertiesOperation::Wipeout,
+            )
         };
         let result =
             kentos_native_application::set::execute(&mut ExecutionContext::new(cx.doc), input);

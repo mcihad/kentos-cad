@@ -228,6 +228,7 @@ fn set_input(group: &Group) -> EntitiesSetProperties {
         operation: PropertiesOperation::Attributes,
         expected_revision: None,
         unlink: false,
+        name_text: false,
         attachments: None,
     }
 }

@@ -993,6 +993,7 @@ impl App {
             attrs: Some([(key, value)].into_iter().collect()),
             label: None,
             unlink: false,
+            name_text: false,
             operation: PropertiesOperation::Attributes,
             expected_revision: None,
             attachments: None,

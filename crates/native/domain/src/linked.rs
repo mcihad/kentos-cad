@@ -99,6 +99,13 @@ impl Document {
             .unwrap_or_default()
     }
 
+    /// Whether a text writes the name of the point in `slot` (linked without a scale, docs/adr/9314).
+    pub fn has_name_text(&self, slot: Slot) -> bool {
+        self.linked_texts(slot)
+            .into_iter()
+            .any(|t| matches!(self.get(t), Some(Entity::Text(text)) if names(text)))
+    }
+
     /// Whether a text writes the label of the object in `slot`: that text is
     /// its label now, so the drawing, the sheet and Etiketleri yazıya çevir
     /// leave its own out.

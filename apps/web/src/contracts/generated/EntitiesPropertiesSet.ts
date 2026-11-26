@@ -19,4 +19,13 @@ ids: Array<number>,
  * when nothing changed). Inside an open transaction or group the write
  * joins it, and the revision changes when that ends.
  */
-revision: string, };
+revision: string, 
+/**
+ * The texts written for the points' names (`nameText`), their persistent ids, in the input's order; absent when
+ * none was written.
+ */
+texts?: Array<string>, 
+/**
+ * Their slots in the open document, in the same order.
+ */
+textIds?: Array<number>, };

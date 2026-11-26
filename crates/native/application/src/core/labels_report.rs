@@ -221,7 +221,8 @@ pub(crate) fn label_store<'a>(
             _ => l,
         })
         .collect();
-    let _ = store.set_label_layers_json(&label_layers_json(&leaves));
+    // The layers' own labelling: Nokta etiketleri is the desktop's view (docs/adr/9316).
+    let _ = store.set_label_layers_json(&label_layers_json(&leaves, false));
     let ids: Vec<f64> = doc
         .text_labelled()
         .iter()

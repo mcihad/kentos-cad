@@ -190,7 +190,7 @@ impl Section {
                 "graphics.annotationSize",
                 "graphics.fills",
                 "graphics.areaEdges",
-                "graphics.pointNames",
+                "graphics.pointLabels",
                 "graphics.pointCodes",
                 "graphics.transparency",
                 "graphics.highlightColor",
@@ -642,8 +642,13 @@ impl App {
             .help(Fields::help("graphics.annotationSize"));
         let form = f.switch_field(form, "graphics.fills", None);
         let form = f.switch_field(form, "graphics.areaEdges", None);
-        let form = f.switch_field(form, "graphics.pointNames", None);
-        let form = f.switch_field(form, "graphics.pointCodes", None);
+        // Nokta etiketleri and Nokta kodları where labels are, a CBS's (docs/adr/9316).
+        let form = if self.shows_setting(AppSetting::PointLabels) {
+            let form = f.switch_field(form, "graphics.pointLabels", None);
+            f.switch_field(form, "graphics.pointCodes", None)
+        } else {
+            form
+        };
         f.switch_field(form, "graphics.transparency", None)
             .field(
                 Fields::title("graphics.highlightColor"),

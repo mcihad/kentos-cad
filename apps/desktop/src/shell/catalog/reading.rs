@@ -298,7 +298,7 @@ impl Catalog {
                     tabs.into_iter().flat_map(Tab::commands).collect();
                 ids.extend(everywhere.iter().copied());
                 // KentOS Yol works on a map's coordinates and layers (plan/road.md ROAD-MOD): a layer's system,
-                // GIS files, sources, labels and typed layers are a road's too.
+                // GIS files, sources and typed layers are a road's too; labels are a CBS's alone (docs/adr/9316).
                 if matches!(
                     module,
                     kentos_launch::Module::Map | kentos_launch::Module::Road

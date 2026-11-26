@@ -397,6 +397,7 @@ pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResul
             operation: PropertiesOperation::Layer,
             expected_revision: None,
             unlink: false,
+            name_text: false,
             attachments: None,
         };
         match set::execute(&mut ExecutionContext::new(doc), set_input) {

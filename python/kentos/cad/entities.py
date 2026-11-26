@@ -5046,9 +5046,11 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
     katmandaki nesne değişmez, kilitli katmana nesne taşınmaz: böyle bir nesne ya da
     katman verilirse hiçbir şey yazılmaz. Gizli katmana uyarıyla taşınır. Zaten
     istendiği gibi olan nesne değişmez; hiçbiri değişmiyorsa hiçbir şey yazılmaz.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-    ile gider.
+    nameText ile yeni adını alan noktanın adını yazan yazısı yoksa aynı adımda noktaya
+    bağlı bir yazı yazılır (adım Ad değiştir); Noktalar ve Öznitelikler Harita ve Yol
+    projelerinde böyle yazar. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
+    değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.set"
@@ -5076,6 +5078,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
@@ -5093,9 +5096,11 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         ver ve Sembolü kaldır bu komutla yazar. Kilitli katmandaki nesne değişmez, kilitli
         katmana nesne taşınmaz: böyle bir nesne ya da katman verilirse hiçbir şey yazılmaz.
         Gizli katmana uyarıyla taşınır. Zaten istendiği gibi olan nesne değişmez; hiçbiri
-        değişmiyorsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
-        projesine değişiklik project.changes ile gider.
+        değişmiyorsa hiçbir şey yazılmaz. nameText ile yeni adını alan noktanın adını yazan
+        yazısı yoksa aynı adımda noktaya bağlı bir yazı yazılır (adım Ad değiştir); Noktalar
+        ve Öznitelikler Harita ve Yol projelerinde böyle yazar. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
+        izin istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -5124,6 +5129,11 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100); null: their layer's (katmana göre). Absent:
                 unchanged. Unit: paper-mm.
+            name_text: A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets
+                one in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the
+                point, at the project's measure text height on paper, in its typeface, upright, on the point's layer, linked to
+                it without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other
+                objects are left alone. Absent or false: none is written.
             symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of their layer's style; null: the layer's style. The id is
                 not looked up: the libraries are the host's. Absent: unchanged.
@@ -5159,6 +5169,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
+            name_text=name_text,
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
@@ -5182,6 +5193,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
@@ -5203,6 +5215,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
+            name_text=name_text,
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
@@ -5226,6 +5239,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
@@ -5247,6 +5261,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
+            name_text=name_text,
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
@@ -5270,6 +5285,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        name_text: bool | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
@@ -5296,6 +5312,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
+            name_text=name_text,
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,

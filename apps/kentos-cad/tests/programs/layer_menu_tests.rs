@@ -49,14 +49,15 @@ const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
     (LayerEntry::LineType, "Çizgi tipi", "MHYC", "dab"),
     (LayerEntry::LineWeight, "Kalınlık", "MHYC", "dab"),
     (LayerEntry::Style, "Katman stili…", "MHYC", "dvb"),
-    (LayerEntry::Labels, "Etiketler…", "HYC", "dvb"),
-    (LayerEntry::StyleFiles, "Stil yükle…", "HC", "dvb"),
-    (LayerEntry::Sld, "Görünüşü SLD olarak kaydet…", "HC", "dvb"),
-    (LayerEntry::Qml, "QML'den görünüş al…", "HC", "dvb"),
+    // Labels and other programs' style files are a CBS's (docs/adr/9316).
+    (LayerEntry::Labels, "Etiketler…", "C", "dvb"),
+    (LayerEntry::StyleFiles, "Stil yükle…", "C", "dvb"),
+    (LayerEntry::Sld, "Görünüşü SLD olarak kaydet…", "C", "dvb"),
+    (LayerEntry::Qml, "QML'den görünüş al…", "C", "dvb"),
     (
         LayerEntry::MapLibre,
         "MapLibre stilinden görünüş al…",
-        "HC",
+        "C",
         "dvb",
     ),
     (LayerEntry::Impact, "Değişikliğin etkisi…", "MHYC", "davb"),
@@ -424,6 +425,20 @@ fn each_modules_layer_menu_pictures() {
         size,
         &out,
     );
+}
+
+/// The pictures of docs/adr/9316: Görünüş ▸ of a Harita and a Yol drawing layer (Katman stili, no Etiketler, no style
+/// files) and of a CBS data layer (both), light at 1440×900, into `.run/gui-evidence/kullanim-9316/`. For the owner,
+/// run by hand.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn labels_are_a_cbs_s_menu_pictures() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9316");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    picture(Module::Map, "Çizim katmanı", LayerKind::Drawing, Some("Görünüş"), size, &out);
+    picture(Module::Road, "Çizim katmanı", LayerKind::Drawing, Some("Görünüş"), size, &out);
+    picture(Module::Gis, "Veri katmanı", LayerKind::Data, Some("Görünüş"), size, &out);
 }
 
 /// The picture of docs/adr/9301: a CBS data layer's right-click menu without the edit session (Düzenle's Düzenleme

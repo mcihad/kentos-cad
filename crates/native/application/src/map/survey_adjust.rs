@@ -552,6 +552,7 @@ fn z_input(uid: String, z: f64) -> EntitiesSetProperties {
         operation: PropertiesOperation::Attributes,
         expected_revision: None,
         unlink: false,
+        name_text: false,
         attachments: None,
     }
 }

@@ -340,8 +340,11 @@ pub fn object_texts<'s>(
 /// The label engine's view of the layers as the geometry store reads it
 /// (docs/adr/0212 §3.1): every layer drawn from its objects with its place in
 /// the drawing order (the top first: the tree's first leaf is drawn last,
-/// over the others), its point symbol's size and its label fields.
-pub fn label_layers_json(leaves: &[&LayerNode]) -> String {
+/// over the others), its point symbol's size and its label fields. Under Nokta
+/// etiketleri (`point_labels`, docs/adr/9316) a layer whose labels are off
+/// labels with its own style or its objects' kinds' defaults: its points alone
+/// are given texts, their names.
+pub fn label_layers_json(leaves: &[&LayerNode], point_labels: bool) -> String {
     let rows: Vec<serde_json::Value> = leaves
         .iter()
         .enumerate()
@@ -354,7 +357,11 @@ pub fn label_layers_json(leaves: &[&LayerNode]) -> String {
                 row["label"] = serde_json::to_value(label).unwrap_or_default();
             }
             if let Some(labels) = &l.style.labels {
-                row["labels"] = serde_json::to_value(labels).unwrap_or_default();
+                let mut labels_row = serde_json::to_value(labels).unwrap_or_default();
+                if point_labels && labels.mode == LabelsMode::Off {
+                    labels_row["mode"] = "single".into();
+                }
+                row["labels"] = labels_row;
             }
             row
         })

@@ -708,18 +708,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Alan sınırları",
                 "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
             ),
-        // A point's name and its code beside it (docs/adr/1540), as a map's point display shows them.
-        boolean("graphics.pointNames", true)
+        // Every point labelled with its name, and its code (docs/adr/1540, 9316): labels are a CBS's, a CAD drawing
+        // writes its points' names as texts.
+        boolean("graphics.pointLabels", false)
             .hosts(&[Desktop])
             .text(
-                "Nokta adları",
-                "Noktaların adları (nokta numaraları) yanlarında yazılır. Kapalıyken yazılmaz; çizim değişmez.",
+                "Nokta etiketleri",
+                "Her nokta adıyla etiketlenir: etiketleri açık katmanda katmanın etiketiyle, kapalı katmanda noktanın öntanımlı etiketiyle. Kapalıyken etiketleri katmanların ayarları belirler; çizim değişmez.",
             ),
         boolean("graphics.pointCodes", false)
             .hosts(&[Desktop])
             .text(
                 "Nokta kodları",
-                "Noktaların kodları (Kod özniteliği) yanlarında, varsa adlarından sonra yazılır. Çizim değişmez.",
+                "Noktaların etiketlerine kodları (Kod özniteliği) adlarından sonra yazılır; etiketi olmayan noktaya yazılmaz. Çizim değişmez.",
             ),
         boolean("graphics.transparency", true)
             .hosts(&[Web, Desktop])

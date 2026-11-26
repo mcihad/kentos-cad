@@ -74,9 +74,11 @@ impl ModuleProfile for Road {
         match setting {
             // The user's keys and names are the person's, every program's (docs/adr/9308).
             AppSetting::Geographic | AppSetting::NewProjects | AppSetting::Shortcuts => true,
-            AppSetting::FormOnCreate | AppSetting::NewProjectType | AppSetting::NewProjectUnit => {
-                false
-            }
+            // Labels are a CBS's (docs/adr/9316): a road's points have their names as texts.
+            AppSetting::FormOnCreate
+            | AppSetting::NewProjectType
+            | AppSetting::NewProjectUnit
+            | AppSetting::PointLabels => false,
         }
     }
 
@@ -100,7 +102,6 @@ impl ModuleProfile for Road {
             | E::LineType
             | E::LineWeight
             | E::Style
-            | E::Labels
             | E::Impact
             | E::Dataset
             | E::Filter
@@ -113,8 +114,9 @@ impl ModuleProfile for Road {
             | E::Merge
             | E::Remove => true,
             // A CBS table is a road's read-only underlay (docs/adr/9196 §2); no forms, cards, statistics or other
-            // programs' style files.
-            E::Migrate
+            // programs' style files. Labels are a CBS's (docs/adr/9316): a CAD drawing writes its names as texts.
+            E::Labels
+            | E::Migrate
             | E::Counts
             | E::StyleFiles
             | E::Sld

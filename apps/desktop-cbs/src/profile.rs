@@ -81,6 +81,8 @@ impl ModuleProfile for Gis {
             AppSetting::NewProjectType | AppSetting::NewProjectUnit => false,
             // The user's keys and names are the person's, every program's (docs/adr/9308).
             AppSetting::Shortcuts => true,
+            // Labels are a CBS's (docs/adr/9316).
+            AppSetting::PointLabels => true,
         }
     }
 
