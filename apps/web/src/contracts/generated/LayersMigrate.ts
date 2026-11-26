@@ -6,7 +6,7 @@ import type { CreateTarget } from "./CreateTarget";
  *
  * `layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and
  * `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
- * its layer filter hides too: the layer goes, so none may stay behind).
+ * its layer filter hides too: the layer reads the table afterwards, so none may stay behind).
  *
  * Its texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a
  * point and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading

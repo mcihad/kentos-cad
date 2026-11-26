@@ -1,6 +1,6 @@
-//! Katmanlar › Veri kaynağına taşı… (docs/adr/9107 §8): a CBS project's drawing layer of points moved into a
-//! GeoPackage in one step — its objects the table's rows, a data layer in its place with its name, colour and active
-//! role — and taken back whole by one undo, the table staying in the file.
+//! Katmanlar › Veri kaynağına taşı… (docs/adr/9107 §8, 9321): a CBS project's drawing layer of points moved into a
+//! GeoPackage in one step — its objects the table's rows, the layer itself reading it under its id, name, colour and
+//! active role — and taken back whole by one undo, the table staying in the file.
 
 use serde_json::json;
 
@@ -33,8 +33,9 @@ fn a_drawing_layer_moves_into_a_geopackage_in_one_undo_step() {
     assert!(app.gis.layer_migrate.is_none(), "{}", crate::files_testing::last_said(&app));
 
     let doc = &app.document.as_ref().expect("a drawing").model;
-    assert!(doc.layers().get("direk").is_none(), "the drawing layer went");
-    let moved = doc.layers().leaves().into_iter().find(|n| n.name == "Direkler").cloned().expect("in its place");
+    // The layer itself reads the table, under its own id (docs/adr/9321).
+    let moved = doc.layers().get("direk").cloned().expect("in its place, under its id");
+    assert_eq!(moved.name, "Direkler");
     let data = moved.data.clone().expect("a data layer");
     assert_eq!((data.address.as_str(), data.table.as_str()), (gpkg.display().to_string().as_str(), "direkler"));
     assert_eq!(moved.style.color, node.style.color, "its colour kept");
@@ -56,7 +57,7 @@ fn a_drawing_layer_moves_into_a_geopackage_in_one_undo_step() {
     assert!(doc.layers().get("direk").is_some_and(|n| n.data.is_none()), "the drawing layer back");
     assert_eq!(doc.layers().active(), "direk", "active again, as before");
     assert_eq!(doc.len(), 3, "its objects back");
-    assert!(doc.layers().leaves().iter().all(|n| n.data.is_none()), "the data layer gone");
+    assert!(doc.layers().leaves().iter().all(|n| n.data.is_none()), "no layer reads a table");
     let tables = kentos_data::registry().source(&gpkg.display().to_string()).expect("source").tables().expect("tables");
     assert!(tables.iter().any(|t| t.name == "direkler"), "the table stays");
     let _ = std::fs::remove_dir_all(gpkg.parent().expect("a folder"));

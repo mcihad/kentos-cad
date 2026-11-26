@@ -32,8 +32,11 @@ pub struct GisUiState {
     pub(crate) project_store: Option<crate::project_store::StoreWindow>,
     /// Yeni katman's window in a CBS project (layer_create.rs, docs/adr/9107 §7).
     pub(crate) layer_create: Option<crate::layer_create::NewLayerWindow>,
-    /// Veri kaynağına taşı…'s window (layer_migrate.rs, docs/adr/9107 §8).
+    /// Veri kaynağına taşı…'s window (layer_migrate.rs, docs/adr/9107 §8, 9321).
     pub(crate) layer_migrate: Option<crate::layer_migrate::MigrateWindow>,
+    /// The place of a CBS project's data was asked once when an import or a run brought layers in (docs/adr/9321): not
+    /// asked again this session; the save asks for what is left.
+    pub(crate) data_place_asked: bool,
     /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
     pub(crate) data_info: crate::data_info::State,
     /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).

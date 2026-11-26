@@ -1,8 +1,8 @@
 //! `cad.layers.migrate` v1 (docs/adr/9107 §8): a drawing layer of a GIS project moved into a data source. Its objects
-//! are written as `cad.layers.export` writes them (every one, those its layer filter hides too), into a new table; a
-//! data layer reading that table takes the layer's place with its name and style (its renderer and labels), active if
-//! it was; the drawing layer goes with its objects. All in one undo step: undone, the drawing layer and its objects
-//! are back and the tables stay in their source.
+//! are written as `cad.layers.export` writes them (every one, those its layer filter hides too), into a new table; the
+//! objects leave the drawing and the layer itself reads the table, under its own id, name and look (docs/adr/9321), so
+//! every reference to it stays: a network's edges, a relation, a form, a join, a view. All in one undo step: undone,
+//! the drawing layer and its objects are back and the tables stay in their source.
 //!
 //! Its texts go into a table of their own beside it, read by a data layer that draws its rows as texts, above the
 //! layer's (docs/adr/9114 §2, layers_migrate_texts.rs); a layer of texts only becomes that table, in its place. A layer
@@ -13,7 +13,7 @@ use kentos_commands::{
     CommandResult, CommandWarning, CreateTarget, DataLayer, Entity, ExportFormat, LayerDataOperation, LayerField,
     LayerNodeType, LayersData, LayersExport, LayersMigrate, LayersMigrated, MigratedTexts, TextEntity,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, ServedBy, Slot};
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -351,7 +351,6 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
         return fail(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), "layer").into();
     };
     let (parent, index) = cx.doc.layers().place_of(&id).unwrap_or((None, 0));
-    let was_active = cx.doc.layers().active() == id;
     let mut output = LayersMigrated {
         layer: String::new(),
         table: table.clone(),
@@ -361,23 +360,29 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
         texts: None,
         revision: String::new(),
     };
-    // The data layer of the layer's table in its place, with its name and look: the renderer, the labels, the colour.
-    if let Some((written, geometry, data, fields)) = main {
-        let layer = match add(cx, old.name.clone(), (parent.clone(), index), data, fields, was_active) {
-            Ok(l) => l,
-            Err(r) => return *r,
-        };
-        cx.doc.set_layer_style(&layer, old.style.clone(), LABEL);
-        output.layer = layer;
+    // The layer's objects are its table's rows now (docs/adr/9321): they leave the drawing, and the layer itself reads
+    // the table under its own id, name and look (a layer of texts only: its texts' table). Every reference to it stays:
+    // a network's edges and junctions, a relation, a form, a join, a view, its filter, its time.
+    let beside = main.is_some();
+    let own = match &main {
+        Some((_, _, data, fields)) => (data.clone(), fields.clone()),
+        None => match &texts_table {
+            Some(t) => texts::data_layer(gpkg, &address, t, srid),
+            None => return fail(codes::NOTHING_TO_EXPORT, "Taşınacak nesne yok.".into(), "layer").into(),
+        },
+    };
+    if let Err(why) = read_in_place(cx.doc, &id, own.0, own.1) {
+        return fail(codes::LAYER_REFUSED, why, "layer").into();
+    }
+    output.layer = id.clone();
+    if let Some((written, geometry, _, _)) = main {
         output.written = written;
         output.geometry = geometry;
     }
-    // The texts' data layer above it (in its place, with its name, for a layer of texts only), in the layer's colour.
-    if let Some(t) = &texts_table {
+    // A layer's texts beside other objects: a data layer of their own above it, in the layer's colour.
+    if let Some(t) = texts_table.as_ref().filter(|_| beside) {
         let (data, fields) = texts::data_layer(gpkg, &address, t, srid);
-        let alone = output.layer.is_empty();
-        let name = if alone { old.name.clone() } else { format!("{} (yazılar)", old.name) };
-        let layer = match add(cx, name, (parent, index), data, fields, was_active && alone) {
+        let layer = match add(cx, format!("{} (yazılar)", old.name), (parent, index), data, fields, false) {
             Ok(l) => l,
             Err(r) => return *r,
         };
@@ -385,18 +390,25 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
             style.color = old.style.color.clone();
             cx.doc.set_layer_style(&layer, style, LABEL);
         }
-        if alone {
-            output.layer = layer;
-        } else {
-            output.texts = Some(MigratedTexts { layer, table: t.clone(), written: texts_written });
-        }
-    }
-    // The drawing layer goes with its objects, in the same step.
-    if let Err(refusal) = cx.doc.remove_layer(&id) {
-        return fail(codes::LAYER_LOCKED, refusal.0, "layer").into();
+        output.texts = Some(MigratedTexts { layer, table: t.clone(), written: texts_written });
     }
     output.revision = cx.doc.revision().to_string();
     CommandResult::Completed { output, warnings }
+}
+
+/// The layer `id`'s objects taken out of the drawing and the layer made to read `data` with its table's `fields` and
+/// the table's geometry kind, as the step [`LABEL`]; why the drawing refused, in its words (nothing changed then).
+fn read_in_place(doc: &mut Document, id: &str, data: DataLayer, fields: Vec<LayerField>) -> Result<(), String> {
+    let objects: Vec<Slot> = doc.by_layer(id).map(|e| Slot(e.base().id)).collect();
+    let family = data.family();
+    doc.transact(LABEL, |doc| {
+        doc.remove(&objects);
+        doc.set_layer_service(id, ServedBy { data: Some(data), ..ServedBy::default() }, None, LABEL)?;
+        doc.set_layer_fields(id, fields, &[])?;
+        doc.set_layer_geometry(id, family, LABEL)?;
+        Ok(())
+    })
+    .map_err(|r: kentos_domain::Refusal| r.0)
 }
 
 /// The step's name.

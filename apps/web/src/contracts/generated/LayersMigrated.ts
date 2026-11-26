@@ -2,11 +2,11 @@
 import type { MigratedTexts } from "./MigratedTexts";
 
 /**
- * What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.
+ * What `cad.layers.migrate` did: the layer, reading its table now, the table, where, how many rows.
  */
 export type LayersMigrated = { 
 /**
- * The data layer (its id); empty in a plan.
+ * The layer, reading its table now: the id it had (docs/adr/9321); empty in a plan.
  */
 layer: string, 
 /**

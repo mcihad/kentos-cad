@@ -304,6 +304,7 @@ impl App {
                 project_store: None,
                 layer_create: None,
                 layer_migrate: None,
+                data_place_asked: false,
                 data_info: Default::default(),
                 data_selection: Default::default(),
                 data_labels: Vec::new(),

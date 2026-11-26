@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Kaydet bekleyen bütün katmanları tek pencerede taşır; taşınan katman kimliğini korur (27 Kasım 2026, CBS
+  incelemesinin 15. maddesi; [ADR 9321](../adr/9321-one-save-moves-every-held-layer.md)).**
+  - `cad.layers.migrate` artık yeni katman eklemez: nesneler tabloya geçer ve katmanın kendisi aynı kimlikle tabloyu
+    okur. Ağ, ilişki, form ve görünüm başvuruları kopmaz.
+  - CBS'de Kaydet, dosyanın tutacağı bütün katmanları tek pencerede listeler: yer bir kez seçilir, tablo adları
+    düzenlenir. Var olan ya da paylaşılan ad önce boş bir adla söylenir. Taşı ve kaydet hepsini taşıyıp kaydı sürdürür;
+    yeniden denemede taşınanlar yazılmaz.
+  - Verinin yeri yokken ilk gelen katmanlar yeri bir kez sorar.
+
 - **Nokta satırının katmanı baştan bulunur (27 Kasım 2026, CBS incelemesinin 11. maddesi;
   [ADR 9320](../adr/9320-point-row-target-layer.md)).**
   - Noktalar › Satır ekle açılınca satırın katmanı bulunur ve tablonun üstünde, listede gösterilir. CAD'de nokta alan

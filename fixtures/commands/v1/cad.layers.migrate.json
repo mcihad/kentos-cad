@@ -4,7 +4,7 @@
  "command": "cad.layers.migrate",
  "commandVersion": 1,
  "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; yazılar kendi tablolarına; retler (ADR 9107 §8, ADR 9114 §2)",
- "note": "ADR 9107 §8. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu cad.layers.rows ile okunur, katmanın gittiği ikinci bir taşımanın reddiyle görülür.",
+ "note": "ADR 9107 §8, ADR 9321. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu cad.layers.rows ile okunur; katmanın kimliğiyle yerinde kaldığı ikinci bir taşımanın reddiyle, onu anan ağın değişmemesiyle ve geri almayla görülür.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -17,7 +17,24 @@
    "angleUnit": "grad",
    "plotScale": 1000,
    "workspace": "gis",
-   "drawingFont": "barlow"
+   "drawingFont": "barlow",
+   "networks": [
+    {
+     "id": "hat-agi",
+     "name": "Hat ağı",
+     "kind": "road",
+     "edges": [
+      {
+       "layer": "hatlar"
+      }
+     ],
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "both"
+     }
+    }
+   ]
   },
   "origin": {
    "x": 600000.0,
@@ -727,7 +744,7 @@
  },
  "cases": [
   {
-   "name": "Nokta katmanı GeoPackage'a taşınır; satırları okunur, katman gider",
+   "name": "Nokta katmanı GeoPackage'a taşınır; satırları okunur, katman kimliğiyle tabloyu okur",
    "steps": [
     {
      "op": "execute",
@@ -739,7 +756,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "direkler",
        "table": "direkler",
        "address": "$tmp:tasi/direk.gpkg",
        "written": 3,
@@ -753,7 +770,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "direkler",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -808,8 +825,8 @@
      "result": {
       "status": "failed",
       "error": {
-       "code": "layer_not_found",
-       "message": "“direkler” kimlikli katman çizimde yok.",
+       "code": "data_layer",
+       "message": "“Direkler” zaten “direkler” tablosunu okuyor; nesneleri kaynağında.",
        "path": "layer"
       }
      }
@@ -817,7 +834,87 @@
    ]
   },
   {
-   "name": "Çizgi katmanı",
+   "name": "Geri al: katman ve nesneleri çizime döner, tablo kaynağında kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/geri.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "direkler",
+       "table": "direkler",
+       "address": "$tmp:tasi/geri.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Katmanı kaynağa taşı",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/geri.gpkg",
+      "table": "direkler_2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "direkler",
+       "table": "direkler_2",
+       "address": "$tmp:tasi/geri.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi katmanı; onu kenar alan ağ onu anmayı sürdürür",
    "steps": [
     {
      "op": "execute",
@@ -829,7 +926,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "hatlar",
        "table": "hatlar",
        "address": "$tmp:tasi/hat.gpkg",
        "written": 2,
@@ -843,7 +940,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "hatlar",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -878,6 +975,25 @@
        "checked": "source"
       },
       "warnings": []
+     },
+     "expect": {
+      "networks": [
+       {
+        "id": "hat-agi",
+        "name": "Hat ağı",
+        "kind": "road",
+        "edges": [
+         {
+          "layer": "hatlar"
+         }
+        ],
+        "connect": "ends",
+        "tolerance": 0.01,
+        "direction": {
+         "kind": "both"
+        }
+       }
+      ]
      }
     }
    ]
@@ -895,7 +1011,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "alanlar",
        "table": "alanlar",
        "address": "$tmp:tasi/alan.gpkg",
        "written": 2,
@@ -909,7 +1025,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "alanlar",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -962,7 +1078,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "direkler",
        "table": "direk_2026",
        "address": "$tmp:tasi/ad.gpkg",
        "written": 3,
@@ -987,7 +1103,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "su_vanalari",
        "table": "su_vanalari",
        "address": "$tmp:tasi/vana.gpkg",
        "written": 3,
@@ -1012,7 +1128,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "suzgecli",
        "table": "suzgecli",
        "address": "$tmp:tasi/suzgec.gpkg",
        "written": 3,
@@ -1026,7 +1142,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "suzgecli",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -1086,7 +1202,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "gruptaki",
        "table": "gruptaki",
        "address": "$tmp:tasi/grup.gpkg",
        "written": 3,
@@ -1111,7 +1227,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "alanlar",
        "table": "alanlar",
        "address": "$tmp:tasi/yeni/klasor/alan.gpkg",
        "written": 2,
@@ -1136,7 +1252,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "direkler",
        "table": "direkler",
        "address": "$tmp:tasi/ortak.gpkg",
        "written": 3,
@@ -1156,7 +1272,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-2",
+       "layer": "hatlar",
        "table": "hatlar",
        "address": "$tmp:tasi/ortak.gpkg",
        "written": 2,
@@ -1201,7 +1317,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "direkler",
        "table": "direkler",
        "address": "$tmp:tasi/plan.gpkg",
        "written": 3,
@@ -1435,7 +1551,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "direkler",
        "table": "ortak",
        "address": "$tmp:tasi/var.gpkg",
        "written": 3,
@@ -1486,7 +1602,7 @@
    ]
   },
   {
-   "name": "Yalnız yazı tutan katman yazı tablosu olur, yerinde ve adıyla",
+   "name": "Yalnız yazı tutan katman yazı tablosu olur, yerinde, adıyla ve kimliğiyle",
    "steps": [
     {
      "op": "execute",
@@ -1498,7 +1614,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "yazilar",
        "table": "yazilar",
        "address": "$tmp:tasi/yazi.gpkg",
        "written": 2,
@@ -1512,7 +1628,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "yazilar",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -1568,8 +1684,8 @@
      "result": {
       "status": "failed",
       "error": {
-       "code": "layer_not_found",
-       "message": "“yazilar” kimlikli katman çizimde yok.",
+       "code": "data_layer",
+       "message": "“Yazılar” zaten “yazilar” tablosunu okuyor; nesneleri kaynağında.",
        "path": "layer"
       }
      }
@@ -1589,13 +1705,13 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "yazili",
        "table": "yazili",
        "address": "$tmp:tasi/yazili.gpkg",
        "written": 1,
        "geometry": "GEOMETRY",
        "texts": {
-        "layer": "layer-2",
+        "layer": "layer-1",
         "table": "yazili_yazilar",
         "written": 1
        },
@@ -1608,7 +1724,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-1",
+      "layer": "yazili",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -1639,7 +1755,7 @@
      "op": "execute",
      "command": "cad.layers.rows",
      "input": {
-      "layer": "layer-2",
+      "layer": "layer-1",
       "count": true,
       "limit": 1000,
       "geometry": true
@@ -1719,13 +1835,13 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "zeminli",
        "table": "zeminli",
        "address": "$tmp:tasi/zeminli.gpkg",
        "written": 1,
        "geometry": "POINT",
        "texts": {
-        "layer": "layer-2",
+        "layer": "layer-1",
         "table": "zeminli_yazilar",
         "written": 1
        },
@@ -1756,7 +1872,7 @@
      "result": {
       "status": "completed",
       "output": {
-       "layer": "layer-1",
+       "layer": "yazilar",
        "table": "yazili_yazilar",
        "address": "$tmp:tasi/yazivar.gpkg",
        "written": 2,

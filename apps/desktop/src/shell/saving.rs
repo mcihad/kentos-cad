@@ -496,15 +496,16 @@ impl App {
             return Task::none();
         }
         // A CBS project's data is its tables (docs/adr/9196 §2, CLAUDE.md §25 rule 5): its project file takes no layer of
-        // objects but its annotation, rasters and point clouds. Such a save is refused, the layers named and the first
-        // one's Veri kaynağına taşı… opened; a copy is the drawing's as it is (docs/adr/0737 §3).
+        // objects but its annotation, rasters and point clouds. Such a save waits: every such layer is listed in one
+        // window, moved into the place chosen there, and the save goes on (docs/adr/9321); a copy is the drawing's as it
+        // is (docs/adr/0737 §3).
         if matches!(target, Target::File(_) | Target::Source(_)) {
             let held = self.data_held_in_file();
-            if let Some((first, _)) = held.first() {
-                let first = first.clone();
+            if !held.is_empty() {
                 self.warn(App::data_held_words(&held));
                 self.save_then_dropped();
-                return self.layer_migrate_event(crate::layer_migrate::Event::Open(first));
+                self.migrate_then_save(&held, target);
+                return Task::none();
             }
         }
         // The symbols of Kitaplığım the drawing uses go into the file with it (docs/adr/9317).

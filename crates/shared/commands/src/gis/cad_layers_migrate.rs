@@ -1,9 +1,10 @@
-//! `cad.layers.migrate` v1 (docs/adr/9107 §8): a drawing layer of a GIS project whose objects are kept in the
+//! `cad.layers.migrate` v1 (docs/adr/9107 §8, 9321): a drawing layer of a GIS project whose objects are kept in the
 //! project file moved into a data source in one step — its objects written as the rows of a new table of a GeoPackage
-//! (made when it is not there) or a PostgreSQL schema, and the layer replaced by a data layer reading that table, in
-//! its place, with its name, style and labels. One undo step: undone, the drawing layer and its objects are back; the
-//! table stays in its source. The layer's texts go into a table of their own beside it, read by a data layer that
-//! draws them as texts (docs/adr/9114 §2).
+//! (made when it is not there) or a PostgreSQL schema; they leave the drawing and the layer itself reads that table,
+//! under its own id, with its name, style, labels, filter and every reference to it (a network's edges, a relation, a
+//! form, a join, a view). One undo step: undone, the drawing layer and its objects are back; the table stays in its
+//! source. The layer's texts go into a table of their own beside it, read by a data layer that draws them as texts
+//! (docs/adr/9114 §2).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -18,7 +19,7 @@ pub const CAD_LAYERS_MIGRATE_VERSION: u32 = 1;
 ///
 /// `layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and
 /// `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
-/// its layer filter hides too: the layer goes, so none may stay behind).
+/// its layer filter hides too: the layer reads the table afterwards, so none may stay behind).
 ///
 /// Its texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a
 /// point and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading
@@ -58,14 +59,14 @@ pub struct LayersMigrate {
     pub table: Option<String>,
 }
 
-/// What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.
+/// What `cad.layers.migrate` did: the layer, reading its table now, the table, where, how many rows.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersMigrated {
-    /// The data layer (its id); empty in a plan.
+    /// The layer, reading its table now: the id it had (docs/adr/9321); empty in a plan.
     pub layer: String,
     /// The table: a GeoPackage's table name, PostGIS's `schema.table`.
     pub table: String,

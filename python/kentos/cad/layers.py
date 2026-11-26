@@ -2590,13 +2590,13 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
     """``cad.layers.migrate`` v1. Katmanı kaynağa taşı: Nesneleri proje dosyasında duran
     bir CBS çizim katmanını tek adımda bir veri kaynağına taşır: nesnelerini bir
     GeoPackage dosyasında (yoksa yapılır) ya da bir PostgreSQL şemasında yeni bir
-    tablonun satırları olarak yazar ve katmanın yerine o tabloyu okuyan bir veri katmanı
-    koyar; adı, stili (işleyicisi, etiketleri), etkinliği aynen kalır, çizim katmanı
-    nesneleriyle gider. Katmanın bütün nesneleri yazılır, katman süzgecinin gizledikleri
-    de. Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz
-    (unwritable_objects): katmanla birlikte kaybolurlardı. table tablonun adıdır
-    (verilmezse katmanın adından üretilir). Tek geri alma adımıdır: geri alınınca çizim
-    katmanı nesneleriyle döner, tablo kaynakta kalır.
+    tablonun satırları olarak yazar; nesneler çizimden çıkar, katmanın kendisi aynı
+    kimlikle o tabloyu okur. Adı, stili (işleyicisi, etiketleri), süzgeci, etkinliği ve
+    onu anan ağ, ilişki, form ve görünümler aynen kalır. Katmanın bütün nesneleri
+    yazılır, katman süzgecinin gizledikleri de. Tabloya yazılamayan nesne (yazı, ölçü)
+    varsa hiçbir şey yazılmaz (unwritable_objects): katmanla birlikte kaybolurlardı.
+    table tablonun adıdır (verilmezse katmanın adından üretilir). Tek geri alma
+    adımıdır: geri alınınca çizim katmanı nesneleriyle döner, tablo kaynakta kalır.
     """
     __slots__ = ()
     id = "cad.layers.migrate"
@@ -2623,14 +2623,14 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
     ) -> LayersMigrated:
         """Katmanı kaynağa taşı: Nesneleri proje dosyasında duran bir CBS çizim katmanını tek
         adımda bir veri kaynağına taşır: nesnelerini bir GeoPackage dosyasında (yoksa
-        yapılır) ya da bir PostgreSQL şemasında yeni bir tablonun satırları olarak yazar ve
-        katmanın yerine o tabloyu okuyan bir veri katmanı koyar; adı, stili (işleyicisi,
-        etiketleri), etkinliği aynen kalır, çizim katmanı nesneleriyle gider. Katmanın bütün
-        nesneleri yazılır, katman süzgecinin gizledikleri de. Tabloya yazılamayan nesne
-        (yazı, ölçü) varsa hiçbir şey yazılmaz (unwritable_objects): katmanla birlikte
-        kaybolurlardı. table tablonun adıdır (verilmezse katmanın adından üretilir). Tek
-        geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner, tablo kaynakta
-        kalır.
+        yapılır) ya da bir PostgreSQL şemasında yeni bir tablonun satırları olarak yazar;
+        nesneler çizimden çıkar, katmanın kendisi aynı kimlikle o tabloyu okur. Adı, stili
+        (işleyicisi, etiketleri), süzgeci, etkinliği ve onu anan ağ, ilişki, form ve
+        görünümler aynen kalır. Katmanın bütün nesneleri yazılır, katman süzgecinin
+        gizledikleri de. Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz
+        (unwritable_objects): katmanla birlikte kaybolurlardı. table tablonun adıdır
+        (verilmezse katmanın adından üretilir). Tek geri alma adımıdır: geri alınınca çizim
+        katmanı nesneleriyle döner, tablo kaynakta kalır.
 
         Args:
             doc: The drawing it works on.

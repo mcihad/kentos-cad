@@ -28,7 +28,7 @@ fn lines(app: &App) -> Vec<String> {
 }
 
 /// Kaydet writes no drawing layer's objects into a CBS project's file: it says which layers and how, and opens Veri
-/// kaynağına taşı on the first; once they are tables the same Kaydet writes the project.
+/// kaynağına taşı on every one of them; Taşı ve kaydet makes them tables and writes the project (docs/adr/9321).
 #[test]
 fn a_cbs_projects_file_takes_its_tables_not_its_drawing_layers_objects() {
     let dir = scratch("cbs-kayit");
@@ -52,14 +52,14 @@ fn a_cbs_projects_file_takes_its_tables_not_its_drawing_layers_objects() {
         "{said:?}"
     );
     assert_eq!(app.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::LayerMigrate)));
-    assert_eq!(app.gis.layer_migrate.as_ref().map(|w| w.layer_for_test().to_owned()), Some(held[0].0.clone()));
-    // Moved into the GeoPackage beside the project, the layers leave nothing for the file but its structure.
-    app.gis.layer_migrate = None;
-    app.dialog = None;
-    app.data_into_tables(held);
-    assert!(app.data_held_in_file().is_empty(), "{:?}", lines(&app));
-    let task = app.update(Message::Run("file.save"));
+    let w = app.gis.layer_migrate.as_ref().expect("the window on every held layer");
+    assert_eq!(w.layers_for_test(), [held[0].0.clone()]);
+    assert_eq!(w.after_for_test(), &crate::layer_migrate::After::Save(crate::saving::Target::File(path.clone())));
+    // Taşı ve kaydet: moved into the GeoPackage beside the project, the layers leave nothing for the file but its
+    // structure, and the save goes on.
+    let task = app.update(Message::Gis(crate::gis::Event::LayerMigrate(crate::layer_migrate::Event::Run)));
     drive(&mut app, task);
+    assert!(app.data_held_in_file().is_empty(), "{:?}", lines(&app));
     assert!(path.exists(), "{:?}", lines(&app));
     // A CAD project's file keeps everything.
     let mut cad = app_with_drawing();

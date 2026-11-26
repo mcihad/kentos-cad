@@ -167,6 +167,9 @@ tür, uzunluk) sorar (kurulu programın ekranı `.run/gui-evidence/veri/qgis/14`
     renk); katman etkinse o da etkin olur.
   - Çizim katmanı nesneleriyle gider. Hepsi tek geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner,
     tablo kaynakta kalır.
+  - **Değişti ([ADR 9321](9321-one-save-moves-every-held-layer.md), 27 Kasım 2026):** yeni katman eklenmez; nesneler
+    çizimden çıkar ve katmanın kendisi aynı kimlikle tabloyu okur. Böylece onu anan ağ, ilişki, form ve görünümler
+    kopmaz. Kaydet, bekleyen bütün katmanları tek pencerede taşır.
 - **Hiçbir şey kaybolmaz:**
   - Katman süzgecinin gizlediği nesneler de taşınır. Dışa aktarma onları atlıyordu; taşımada atlansalardı katmanla
     birlikte silinirlerdi. Bu yüzden dışa aktarma planına `all_objects` bayrağı eklendi.

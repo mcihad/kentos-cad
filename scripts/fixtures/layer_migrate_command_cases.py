@@ -4,7 +4,8 @@ docs/adr/9114 §2).
 Every expectation is worked out here from the contract's rules (crates/shared/commands/src/gis/cad_layers_migrate.rs):
 the rows a drawing layer's objects make (their attributes as text, their geometry as WKT in the project's system),
 the table's name made from the layer's name when none is given, every object moved (those the layer filter hides
-too), the layer gone afterwards (a second migration of it is refused as not found), the refusals and their order.
+too), the layer kept under its own id reading the table afterwards (docs/adr/9321: a second migration of it is refused
+as a data layer, a network naming it still names it, undo brings its objects back), the refusals and their order.
 A layer's texts go into a table of their own beside its table (`<table>_yazilar`; a layer of texts only: its table):
 a point and `metin`, `yukseklik` (metres), `aci` (degrees), `hiza` (Yazı's names) and `genislik`, read back as a text
 data layer's rows; a text's details a table has no column for (here its mask) are said as `text_details_left`.
@@ -90,12 +91,19 @@ def entities():
     return out
 
 
+# A network whose edges are Hatlar: its reference stays when the layer moves into a table (docs/adr/9321).
+NETWORK = {"id": "hat-agi", "name": "Hat ağı", "kind": "road", "edges": [{"layer": "hatlar"}], "connect": "ends",
+           "tolerance": 0.01, "direction": {"kind": "both"}}
+
+# Every object's id: what undo brings back.
+ALL_IDS = list(range(1, len(entities()) + 1))
+
 SETUP = {
     "format": "kentos.document",
     "version": 1,
     "name": "Katmanı kaynağa taşı",
     "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                 "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+                 "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow", "networks": [NETWORK]},
     "origin": {"x": X0, "y": Y0},
     "layers": [
         layer("0", "0"),
@@ -139,7 +147,7 @@ def refused(code, message, path):
     return {"status": "failed", "error": error}
 
 
-def migrated(table, address, written, geometry, layer="layer-1", texts=None, warnings=None):
+def migrated(table, address, written, geometry, layer, texts=None, warnings=None):
     out = {"layer": layer, "table": table, "address": address, "written": written, "geometry": geometry}
     if texts is not None:
         out["texts"] = texts
@@ -196,8 +204,10 @@ def area_rows():
             for i, pts in enumerate(AREAS)]
 
 
-def gone(layer_id, file):
-    return step(gpkg(layer_id, file), refused("layer_not_found", f"“{layer_id}” kimlikli katman çizimde yok.", "layer"))
+def reads(layer_id, name, table, file):
+    """A second migration of a moved layer: it is there under its id, reading its table (docs/adr/9321)."""
+    return step(gpkg(layer_id, file), refused("data_layer", f"“{name}” zaten “{table}” tablosunu okuyor; nesneleri "
+                                                            "kaynağında.", "layer"))
 
 
 def case(name, steps):
@@ -206,31 +216,42 @@ def case(name, steps):
 
 def cases():
     return [
-        case("Nokta katmanı GeoPackage'a taşınır; satırları okunur, katman gider", [
-            step(gpkg("direkler", "direk.gpkg"), migrated("direkler", tmp("direk.gpkg"), 3, "POINT")),
-            rows_step("layer-1", pole_rows()),
-            gone("direkler", "direk2.gpkg")]),
-        case("Çizgi katmanı", [step(gpkg("hatlar", "hat.gpkg"), migrated("hatlar", tmp("hat.gpkg"), 2, "LINESTRING")),
-                               rows_step("layer-1", line_rows())]),
-        case("Alan katmanı", [step(gpkg("alanlar", "alan.gpkg"), migrated("alanlar", tmp("alan.gpkg"), 2, "POLYGON")),
-                              rows_step("layer-1", area_rows())]),
+        case("Nokta katmanı GeoPackage'a taşınır; satırları okunur, katman kimliğiyle tabloyu okur", [
+            step(gpkg("direkler", "direk.gpkg"), migrated("direkler", tmp("direk.gpkg"), 3, "POINT", "direkler")),
+            rows_step("direkler", pole_rows()),
+            reads("direkler", "Direkler", "direkler", "direk2.gpkg")]),
+        case("Geri al: katman ve nesneleri çizime döner, tablo kaynağında kalır", [
+            step(gpkg("direkler", "geri.gpkg"), migrated("direkler", tmp("geri.gpkg"), 3, "POINT", "direkler")),
+            {"op": "undo", "returns": "Katmanı kaynağa taşı", "expect": {"ids": ALL_IDS, "revision": "changed"}},
+            step(gpkg("direkler", "geri.gpkg", table="direkler_2"),
+                 migrated("direkler_2", tmp("geri.gpkg"), 3, "POINT", "direkler"))]),
+        case("Çizgi katmanı; onu kenar alan ağ onu anmayı sürdürür", [
+            step(gpkg("hatlar", "hat.gpkg"), migrated("hatlar", tmp("hat.gpkg"), 2, "LINESTRING", "hatlar"),),
+            {"op": "execute", "command": "cad.layers.rows",
+             "input": {"layer": "hatlar", "count": True, "limit": 1000, "geometry": True},
+             "result": completed({"fields": ["no", "durum"], "rows": line_rows(), "offset": 0, "total": 2,
+                                  "checked": "source"}),
+             "expect": {"networks": [NETWORK]}}]),
+        case("Alan katmanı", [step(gpkg("alanlar", "alan.gpkg"), migrated("alanlar", tmp("alan.gpkg"), 2, "POLYGON", "alanlar")),
+                              rows_step("alanlar", area_rows())]),
         case("Verilen tablo adı", [step(gpkg("direkler", "ad.gpkg", table="direk_2026"),
-                                        migrated("direk_2026", tmp("ad.gpkg"), 3, "POINT"))]),
+                                        migrated("direk_2026", tmp("ad.gpkg"), 3, "POINT", "direkler"))]),
         case("Türkçe adlı katmanın tablo adı", [step(gpkg("su_vanalari", "vana.gpkg"),
-                                                     migrated("su_vanalari", tmp("vana.gpkg"), 3, "POINT"))]),
+                                                     migrated("su_vanalari", tmp("vana.gpkg"), 3, "POINT", "su_vanalari"))]),
         case("Süzgecin gizlediği nesneler de taşınır", [
-            step(gpkg("suzgecli", "suzgec.gpkg"), migrated("suzgecli", tmp("suzgec.gpkg"), 3, "POINT")),
-            rows_step("layer-1", pole_rows())]),
+            step(gpkg("suzgecli", "suzgec.gpkg"), migrated("suzgecli", tmp("suzgec.gpkg"), 3, "POINT", "suzgecli")),
+            rows_step("suzgecli", pole_rows())]),
         case("Grubun içindeki katman", [step(gpkg("gruptaki", "grup.gpkg"),
-                                             migrated("gruptaki", tmp("grup.gpkg"), 3, "POINT"))]),
+                                             migrated("gruptaki", tmp("grup.gpkg"), 3, "POINT", "gruptaki"))]),
         case("Yeni bir klasördeki dosya yapılır", [step(gpkg("alanlar", "yeni/klasor/alan.gpkg"),
-                                                        migrated("alanlar", tmp("yeni/klasor/alan.gpkg"), 2, "POLYGON"))]),
+                                                        migrated("alanlar", tmp("yeni/klasor/alan.gpkg"), 2, "POLYGON",
+                                                                 "alanlar"))]),
         case("Aynı dosyaya iki katman", [
-            step(gpkg("direkler", "ortak.gpkg"), migrated("direkler", tmp("ortak.gpkg"), 3, "POINT")),
-            step(gpkg("hatlar", "ortak.gpkg"), migrated("hatlar", tmp("ortak.gpkg"), 2, "LINESTRING", layer="layer-2"))]),
+            step(gpkg("direkler", "ortak.gpkg"), migrated("direkler", tmp("ortak.gpkg"), 3, "POINT", "direkler")),
+            step(gpkg("hatlar", "ortak.gpkg"), migrated("hatlar", tmp("ortak.gpkg"), 2, "LINESTRING", "hatlar"))]),
         case("plan sayar, yazmaz: aynı taşıma sonra yapılır", [
-            step(gpkg("direkler", "plan.gpkg"), migrated("direkler", tmp("plan.gpkg"), 3, "POINT", layer=""), op="plan"),
-            step(gpkg("direkler", "plan.gpkg"), migrated("direkler", tmp("plan.gpkg"), 3, "POINT"))]),
+            step(gpkg("direkler", "plan.gpkg"), migrated("direkler", tmp("plan.gpkg"), 3, "POINT", ""), op="plan"),
+            step(gpkg("direkler", "plan.gpkg"), migrated("direkler", tmp("plan.gpkg"), 3, "POINT", "direkler"))]),
         case("Ret: katman verilmedi", [step(gpkg("  ", "x.gpkg"), refused("no_layer", "Taşınacak katman verilmedi (layer).",
                                                                           "layer"))]),
         case("Ret: GeoPackage dosyası yok", [step({"layer": "direkler", "target": "gpkg"}, refused(
@@ -252,32 +273,32 @@ def cases():
         case("Ret: kilitli katman", [step(gpkg("kilitli", "x.gpkg"), refused(
             "layer_locked", "“Kilitli” kilitli; nesneleri taşınmaz. Kilidi açıp yeniden deneyin.", "layer"))]),
         case("Ret: tablo var", [
-            step(gpkg("direkler", "var.gpkg", table="ortak"), migrated("ortak", tmp("var.gpkg"), 3, "POINT")),
+            step(gpkg("direkler", "var.gpkg", table="ortak"), migrated("ortak", tmp("var.gpkg"), 3, "POINT", "direkler")),
             step(gpkg("hatlar", "var.gpkg", table="ortak"), refused(
                 "target_exists", "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
         case("Ret: boş katman", [step(gpkg("bos", "bos.gpkg"), refused(
             "nothing_to_export", "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.", "layer"))]),
         # docs/adr/9114 §2: a layer's texts in a table of their own.
-        case("Yalnız yazı tutan katman yazı tablosu olur, yerinde ve adıyla", [
-            step(gpkg("yazilar", "yazi.gpkg"), migrated("yazilar", tmp("yazi.gpkg"), 2, "POINT")),
-            text_rows_step("layer-1", [text_row(1, "Yalnız yazı", (5, 5), 2.5, 0),
+        case("Yalnız yazı tutan katman yazı tablosu olur, yerinde, adıyla ve kimliğiyle", [
+            step(gpkg("yazilar", "yazi.gpkg"), migrated("yazilar", tmp("yazi.gpkg"), 2, "POINT", "yazilar")),
+            text_rows_step("yazilar", [text_row(1, "Yalnız yazı", (5, 5), 2.5, 0),
                                        text_row(2, "Ada 101", (20, 10), 1.8, 33.5, "middleCenter", 0.8)]),
-            gone("yazilar", "yazi2.gpkg")]),
+            reads("yazilar", "Yazılar", "yazilar", "yazi2.gpkg")]),
         # A layer without a declared geometry writes a column of any geometry, as the export does.
         case("Nokta ve yazı: yazılar yanındaki tabloya, katmanı onun üstünde", [
             step(gpkg("yazili", "yazili.gpkg"), migrated(
-                "yazili", tmp("yazili.gpkg"), 1, "GEOMETRY",
-                texts={"layer": "layer-2", "table": "yazili_yazilar", "written": 1})),
-            rows_step("layer-1", [{"key": 1, "attrs": {"no": "1"}, "wkt": f"POINT ({coords([(0, 0)])})"}], ("no",)),
-            text_rows_step("layer-2", [text_row(1, "Not", (5, 5), 2.5, 0)])]),
+                "yazili", tmp("yazili.gpkg"), 1, "GEOMETRY", "yazili",
+                texts={"layer": "layer-1", "table": "yazili_yazilar", "written": 1})),
+            rows_step("yazili", [{"key": 1, "attrs": {"no": "1"}, "wkt": f"POINT ({coords([(0, 0)])})"}], ("no",)),
+            text_rows_step("layer-1", [text_row(1, "Not", (5, 5), 2.5, 0)])]),
         case("plan yazıları da sayar", [
             step(gpkg("yazili", "yazili-plan.gpkg"), migrated(
-                "yazili", tmp("yazili-plan.gpkg"), 1, "GEOMETRY", layer="",
+                "yazili", tmp("yazili-plan.gpkg"), 1, "GEOMETRY", "",
                 texts={"layer": "", "table": "yazili_yazilar", "written": 1}), op="plan")]),
         case("Yazının tablonun tutmadığı ayrıntısı söylenir (zemin)", [
             step(gpkg("zeminli", "zeminli.gpkg"), migrated(
-                "zeminli", tmp("zeminli.gpkg"), 1, "POINT",
-                texts={"layer": "layer-2", "table": "zeminli_yazilar", "written": 1},
+                "zeminli", tmp("zeminli.gpkg"), 1, "POINT", "zeminli",
+                texts={"layer": "layer-1", "table": "zeminli_yazilar", "written": 1},
                 warnings=[{"code": "text_details_left",
                            "message": "1 yazının stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı "
                                       "tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı "
@@ -285,7 +306,7 @@ def cases():
                            "path": "layer"}]))]),
         case("Ret: yazıların tablosu var", [
             step(gpkg("yazilar", "yazivar.gpkg", table="yazili_yazilar"),
-                 migrated("yazili_yazilar", tmp("yazivar.gpkg"), 2, "POINT")),
+                 migrated("yazili_yazilar", tmp("yazivar.gpkg"), 2, "POINT", "yazilar")),
             step(gpkg("yazili", "yazivar.gpkg"), refused(
                 "target_exists", "“yazili_yazilar” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
         case("Ret: tabloya yazılamayan nesne kaybolurdu (ölçü)", [step(gpkg("olculu", "olculu.gpkg"), refused(
@@ -303,8 +324,9 @@ def document():
         "commandVersion": 1,
         "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; yazılar "
                  "kendi tablolarına; retler (ADR 9107 §8, ADR 9114 §2)",
-        "note": "ADR 9107 §8. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu "
-                "cad.layers.rows ile okunur, katmanın gittiği ikinci bir taşımanın reddiyle görülür.",
+        "note": "ADR 9107 §8, ADR 9321. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu "
+                "cad.layers.rows ile okunur; katmanın kimliğiyle yerinde kaldığı ikinci bir taşımanın reddiyle, onu "
+                "anan ağın değişmemesiyle ve geri almayla görülür.",
         "setup": SETUP,
         "cases": cases(),
     }

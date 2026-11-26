@@ -620,6 +620,9 @@ mod gpkg_open_tests;
 #[path = "gis/layer_migrate_tests.rs"]
 mod layer_migrate_tests;
 #[cfg(test)]
+#[path = "gis/layer_migrate_many_tests.rs"]
+mod layer_migrate_many_tests;
+#[cfg(test)]
 #[path = "gis/project_store_tests.rs"]
 mod project_store_tests;
 #[cfg(test)]

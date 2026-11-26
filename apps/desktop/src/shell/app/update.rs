@@ -189,9 +189,11 @@ impl App {
         let held = self.window_over();
         let view = self.viewpoint();
         // What an import brings into a CBS project goes into its tables (docs/adr/9196 §2): the layers its data would
-        // keep in the project file before and after an import window's message. A run's output layers are the run's
-        // (its sink writes a table); the save asks for them.
-        let in_file = matches!(message, Message::Exchange(_)).then(|| self.data_held_in_file());
+        // keep in the project file before and after an import window's message. While the project's data has no place
+        // yet, a run's or a tool's output layers ask for the place once too (docs/adr/9321); else the save asks for them.
+        let watch = matches!(message, Message::Exchange(_))
+            || (!matches!(message, Message::Viewport(_)) && self.data_place_unasked());
+        let in_file = watch.then(|| self.data_held_in_file());
         let task = self.handle(message);
         if let Some(before) = in_file {
             let new: Vec<(String, String)> =
