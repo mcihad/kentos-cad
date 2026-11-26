@@ -387,10 +387,35 @@ impl App {
             }
             Event::Palette(p) => w.palette = p,
             Event::DropPublish => {}
+            // Değer listeleri from the designer comes back to it as it was (docs/adr/9322).
             Event::OpenDomains => {
                 self.gis.forms_window = Some(w);
-                return self.open_domains();
+                return self.open_domains_for(None);
             }
+            Event::NewDomainForField => {
+                let target = self.chosen_list_field(&w, &fields);
+                self.gis.forms_window = Some(w);
+                return self.open_domains_for(target);
+            }
+            Event::LinkDomain(domain) => {
+                let Some((layer, field, _, _)) = self.chosen_list_field(&w, &fields) else {
+                    return Task::none();
+                };
+                // The layer field linked through the same command as Alanlar's Projenin listesi; the draft's list from
+                // another layer dropped, the field's list now the project's.
+                if let Err(why) = self.link_field_domain(&layer, &field, &domain) {
+                    self.warn(why);
+                    return Task::none();
+                }
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.lookup = None;
+                        }
+                    });
+                }
+            }
+            Event::PropertiesScrolled(y) => w.properties_offset = y,
             Event::AddRelationItem(relation) => {
                 let form_layer = self.chosen_form().map(|f| f.layer.clone());
                 let r = self.document.as_ref().and_then(|d| {

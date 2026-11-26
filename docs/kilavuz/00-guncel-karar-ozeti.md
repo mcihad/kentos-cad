@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Form alanının seçenek kaynağı adlarıyla (27 Kasım 2026, CBS incelemesinin 3. maddesi;
+  [ADR 9322](../adr/9322-form-field-list-source.md)).**
+  - Formlar'da seçili alanın “Seçenek kaynağı”: katman alanının listesi (ne olduğu söylenir), alanın türündeki proje
+    listeleri (seçilince katman alanı `cad.domains.edit` `link` ile bağlanır), başka katman. Altında listenin özeti.
+  - Liste oluştur ve bağla: alanın adıyla yeni liste, Kaydet'te bağlanır. Formlar'dan açılan Değer listeleri tasarımcıya
+    aynı taslak, seçim ve kaydırma konumuyla döner. Uyarı satırı yerini tutar, ilk boş hücre işaretlenir.
+
 - **Kaydet bekleyen bütün katmanları tek pencerede taşır; taşınan katman kimliğini korur (27 Kasım 2026, CBS
   incelemesinin 15. maddesi; [ADR 9321](../adr/9321-one-save-moves-every-held-layer.md)).**
   - `cad.layers.migrate` artık yeni katman eklemez: nesneler tabloya geçer ve katmanın kendisi aynı kimlikle tabloyu

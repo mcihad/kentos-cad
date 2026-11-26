@@ -64,6 +64,14 @@ struct FromField {
     field: String,
 }
 
+/// A list made in the window for a form's field (Liste oluştur ve bağla, docs/adr/9322): linked to it on Kaydet.
+#[derive(Debug, Clone, PartialEq)]
+struct Bind {
+    layer: String,
+    field: String,
+    id: String,
+}
+
 /// The window.
 #[derive(Debug, Clone, Default)]
 pub struct Window {
@@ -76,6 +84,10 @@ pub struct Window {
     pub recode: BTreeMap<String, BTreeMap<String, String>>,
     /// İçe aktar replaces a list of an id the project has (docs/adr/0439 §7).
     pub replace: bool,
+    /// Opened from Formlar: Kaydet and Vazgeç go back to the designer as it was (docs/adr/9322).
+    pub(crate) back: bool,
+    /// The new list linked to a form's field on Kaydet.
+    bind: Option<Bind>,
 }
 
 #[derive(Debug, Clone)]
@@ -133,9 +145,62 @@ impl App {
             from: Vec::new(),
             recode: BTreeMap::new(),
             replace: false,
+            back: false,
+            bind: None,
         });
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Domains));
         Task::none()
+    }
+
+    /// Değer listeleri from Formlar (docs/adr/9322): Kaydet and Vazgeç come back to the designer as it was. With a
+    /// field (its layer, key, label and kind), a new list of the field's kind named after it is made and chosen, linked
+    /// to the field on Kaydet (Liste oluştur ve bağla).
+    pub(crate) fn open_domains_for(&mut self, field: Option<(String, String, String, LayerFieldKind)>) -> Task<Message> {
+        let task = self.open_domains();
+        let Some(w) = self.gis.domains.as_mut() else {
+            return task;
+        };
+        w.back = true;
+        if let Some((layer, key, label, kind)) = field {
+            let mut name = label.clone();
+            let mut n = 2;
+            while w.domains.iter().any(|d| d.name.to_lowercase() == name.to_lowercase()) {
+                name = format!("{label} {n}");
+                n += 1;
+            }
+            let ids: Vec<&str> = w.domains.iter().map(|d| d.id.as_str()).collect();
+            let id = domain_id_of(&name, &ids);
+            w.domains.push(FieldDomain {
+                id: id.clone(),
+                name,
+                description: None,
+                kind,
+                values: Some(vec![FieldChoice::new("", "")]),
+                min: None,
+                max: None,
+                max_exclusive: false,
+                min_exclusive: false,
+                unit: None,
+            });
+            w.chosen = Some(w.domains.len() - 1);
+            w.bind = Some(Bind { layer, field: key, id });
+        }
+        task
+    }
+
+    /// The window closed: back to the designer where it was when it was opened from there, else nothing on screen.
+    fn close_domains(&mut self, back: bool) -> Task<Message> {
+        self.gis.domains = None;
+        if !back || self.gis.forms_window.is_none() {
+            self.dialog = None;
+            return Task::none();
+        }
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Forms));
+        let y = self.gis.forms_window.as_ref().map_or(0.0, |w| w.properties_offset);
+        iced::widget::operation::scroll_to(
+            iced::widget::Id::new(crate::forms::designer_view::PROPERTIES_SCROLL),
+            iced::widget::scrollable::AbsoluteOffset { x: 0.0, y },
+        )
     }
 
     pub(crate) fn domains_event(&mut self, event: Event) -> Task<Message> {
@@ -306,8 +371,8 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.gis.domains = None;
-                self.dialog = None;
+                let back = w.back;
+                return self.close_domains(back);
             }
             Event::Save => return self.save_domains(),
         }
@@ -409,11 +474,13 @@ impl App {
         let Some(w) = self.gis.domains.clone() else {
             return Task::none();
         };
-        let edits = Self::domain_edits(&w);
+        let mut edits = Self::domain_edits(&w);
+        // Liste oluştur ve bağla: the new list linked to the form's field in the same step (docs/adr/9322).
+        if let Some(b) = w.bind.as_ref().filter(|b| w.domains.iter().any(|d| d.id == b.id)) {
+            edits.push(DomainsOp::Link { layer: b.layer.clone(), field: b.field.clone(), domain: Some(b.id.clone()) });
+        }
         if edits.is_empty() {
-            self.gis.domains = None;
-            self.dialog = None;
-            return Task::none();
+            return self.close_domains(w.back);
         }
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
@@ -449,18 +516,19 @@ impl App {
         for w in warnings {
             self.warn(w.message);
         }
-        self.gis.domains = None;
-        self.dialog = None;
         let n = w.domains.len();
+        let bound = w.bind.as_ref().and_then(|b| w.domains.iter().find(|d| d.id == b.id)).map(|d| d.name.clone());
         self.say(
             Level::Success,
-            if n == 0 {
-                "Projenin değer listeleri kaldırıldı.".to_owned()
-            } else {
-                format!("{n} değer listesi kaydedildi; bağlı alanlar güncellendi.")
+            match (n, bound) {
+                (0, _) => "Projenin değer listeleri kaldırıldı.".to_owned(),
+                (_, Some(name)) => {
+                    format!("{n} değer listesi kaydedildi; “{name}” listesi formun alanına bağlandı.")
+                }
+                _ => format!("{n} değer listesi kaydedildi; bağlı alanlar güncellendi."),
             },
         );
-        Task::none()
+        self.close_domains(w.back)
     }
 
     /// Whether the window holds changes Kaydet has not written.
@@ -724,7 +792,21 @@ impl App {
             .into(),
             Some(d) => {
                 let kept = w.kept.iter().find(|o| o.id == d.id);
-                let uses = self.domain_use_words(&d.id);
+                let mut uses = self.domain_use_words(&d.id);
+                // The form's field it is made for, linked on Kaydet (docs/adr/9322).
+                if let Some(b) = w.bind.as_ref().filter(|b| b.id == d.id)
+                    && let Some(doc) = &self.document
+                {
+                    let layers = doc.model.layers();
+                    let node = layers.get(&b.layer);
+                    let field = node
+                        .and_then(|n| n.fields.iter().find(|f| f.key() == b.field))
+                        .map_or(b.field.clone(), |f| f.label().to_owned());
+                    uses.push(format!(
+                        "{} › {field} (Kaydet'te bağlanır)",
+                        node.map_or(b.layer.as_str(), |n| n.name.as_str())
+                    ));
+                }
                 let recode = w.recode.get(&d.id).cloned().unwrap_or_default();
                 editor(d, kept, uses, recode)
             }
@@ -754,9 +836,16 @@ impl App {
             typography::scaled(520.0)
         });
         let mut frame = Frame::new(TITLE).fill(body);
-        if let Some(why) = &problem {
-            frame = frame.push(words::text_line(Kind::Warn, why.clone()));
-        }
+        // The warning's line keeps its room whether it says something or not: the window does not jump as codes are
+        // typed (docs/adr/9322).
+        frame = frame.push(
+            container(match &problem {
+                Some(why) => words::text_line(Kind::Warn, why.clone()),
+                None => space::vertical().height(1).into(),
+            })
+            .height(typography::scaled(24.0))
+            .align_y(Center),
+        );
         frame = frame.footer(
             row![
                 words::ghost(REMOVE, at.map(|_| msg(Event::Remove))),
@@ -872,18 +961,23 @@ fn editor<'a>(
                 ]
                 .spacing(6),
             );
+            // The first code or label left empty is marked where it is (docs/adr/9322).
+            let gap = values.iter().position(|c| c.code.trim().is_empty() || c.label.trim().is_empty());
             for (i, c) in values.iter().enumerate() {
                 let retired = c.retired;
+                let here = gap == Some(i);
                 rows = rows.push(
                     row![
                         container(
-                            kentos_ui::widget::text_field("", &c.code)
+                            kentos_ui::widget::text_field("Kod", &c.code)
                                 .on_input(move |t| msg(Event::Code(i, t)))
+                                .style(style::field::validated(here && c.code.trim().is_empty()))
                         )
                         .width(Length::Fixed(140.0)),
                         container(
-                            kentos_ui::widget::text_field("", &c.label)
+                            kentos_ui::widget::text_field("Etiket", &c.label)
                                 .on_input(move |t| msg(Event::Label(i, t)))
+                                .style(style::field::validated(here && c.label.trim().is_empty()))
                         )
                         .width(Length::Fixed(240.0)),
                         container(words::check(

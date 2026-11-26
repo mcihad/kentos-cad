@@ -867,6 +867,7 @@ impl App {
                     left: 4.0,
                 }))
                 .id(PROPERTIES_SCROLL)
+                .on_scroll(|v| msg(Event::PropertiesScrolled(v.absolute_offset().y)))
                 .height(Fill)
                 .into();
             }
@@ -888,6 +889,7 @@ impl App {
             left: 4.0,
         }))
         .id(PROPERTIES_SCROLL)
+        .on_scroll(|v| msg(Event::PropertiesScrolled(v.absolute_offset().y)))
         .height(Fill)
         .into()
     }
@@ -1053,30 +1055,57 @@ impl App {
         )
     }
 
-    /// A field's list from another layer (docs/adr/0404 §1): Kendi değerleri or a layer, its key
-    /// (Kimlik: the object's persistent id), its label, the chain's matches and the filter.
+    /// A field's Seçenek kaynağı (docs/adr/0404 §1, 9322), each source by name: the layer field's own list (what it is
+    /// said: a project list it is linked to, its own codes, none), a project list of its kind (linking the layer field
+    /// to it), another layer (its key, Kimlik: the object's persistent id, its label, the chain's matches and the
+    /// filter). Under it what the list holds and Liste oluştur ve bağla.
     pub(super) fn lookup_rows<'a>(
         &'a self,
         id: &str,
         f: &kentos_commands::FormField,
         error: Option<String>,
     ) -> Element<'a, Message> {
+        use crate::forms::designer::lists::{FieldList, list_summary, list_words};
         let layers = self.form_layers();
+        let field = self
+            .chosen_form()
+            .and_then(|form| self.layer_fields_of(&form.layer).into_iter().find(|x| x.key() == f.field));
+        let lists = field.as_ref().map(|x| self.lists_for(x.kind)).unwrap_or_default();
+        let now = field.as_ref().map(|x| self.field_list(x, &lists));
+        let linked = match &now {
+            Some(FieldList::Linked(d)) => Some((*d).clone()),
+            _ => None,
+        };
+        let own = match &now {
+            Some(FieldList::Linked(d)) => format!("Katman alanının listesi · {} (proje listesi)", d.name),
+            Some(FieldList::Own(n)) => format!("Katman alanının listesi · kendi {n} kodu"),
+            _ => "Katman alanının listesi · liste yok".to_owned(),
+        };
+        let mut names = vec![Choice::new(own)];
+        names.extend(lists.iter().map(|d| Choice::new(format!("Proje listesi: {}", list_words(d)))));
+        names.extend(layers.iter().map(|(_, n)| Choice::new(format!("Başka katmandan: {n}"))));
         let at = f
             .lookup
             .as_ref()
             .and_then(|l| layers.iter().position(|(lid, _)| *lid == l.layer))
-            .map_or(0, |i| i + 1);
-        let mut names = vec![Choice::new("Alanın kendi değerleri")];
-        names.extend(layers.iter().map(|(_, n)| Choice::new(n.clone())));
+            .map_or(0, |i| 1 + lists.len() + i);
+        let list_ids: Vec<String> = lists.iter().map(|d| d.id.clone()).collect();
         let picks = layers.clone();
-        let pick_layer = Select::new(names, Some(at), move |i| {
-            msg(Event::LookupLayer((i > 0).then(|| picks[i - 1].0.clone())))
+        let pick_source = Select::new(names, Some(at), move |i| match i {
+            0 => msg(Event::LookupLayer(None)),
+            i if i <= list_ids.len() => msg(Event::LinkDomain(list_ids[i - 1].clone())),
+            i => msg(Event::LookupLayer(picks.get(i - 1 - list_ids.len()).map(|(l, _)| l.clone()))),
         });
-        let mut col =
-            Column::new()
-                .spacing(8)
-                .push(words::field("Değer listesi", pick_layer, error));
+        let mut col = Column::new().spacing(8).push(words::field("Seçenek kaynağı", pick_source, error));
+        if f.lookup.is_none()
+            && let Some(x) = &field
+        {
+            col = col.push(label::caption(list_summary(x, linked.as_ref())).style(muted));
+        }
+        col = col.push(words::ghost(
+            "Liste oluştur ve bağla…",
+            (field.is_some() && f.lookup.is_none()).then(|| msg(Event::NewDomainForField)),
+        ));
         let Some(l) = &f.lookup else {
             return col.into();
         };

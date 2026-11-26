@@ -216,6 +216,8 @@ pub struct Window {
     /// A field's sections in the third column (Genel, Değer, Kurallar, Denetimler, Diğer) folded or opened away from
     /// their default: Genel open, the rest folded.
     pub(crate) toggled_sections: std::collections::BTreeSet<&'static str>,
+    /// The properties pane's offset: the designer comes back from Değer listeleri where it was (docs/adr/9322).
+    pub(crate) properties_offset: f32,
 }
 
 /// Veri kaynağına sütun ekle, asked in the designer (docs/adr/9318): the data layer, the field its new column becomes,
@@ -288,6 +290,14 @@ pub enum Event {
     Palette(Palette),
     AddRelationItem(String),
     OpenDomains,
+    /// Seçenek kaynağı › Proje listesi (docs/adr/9322): the chosen field's layer field linked to a project list
+    /// (`cad.domains.edit`'s `link`); the draft's list from another layer dropped.
+    LinkDomain(String),
+    /// Liste oluştur ve bağla (docs/adr/9322): Değer listeleri on a new list for the chosen field, linked to it on Kaydet;
+    /// the designer comes back as it was.
+    NewDomainForField,
+    /// The properties pane scrolled: its offset, restored when the designer comes back.
+    PropertiesScrolled(f32),
     /// The section library (docs/adr/0441 §1): the chosen item kept under the name typed, a kept
     /// section put where the chosen item is.
     SectionName(String),
@@ -1575,9 +1585,15 @@ mod tests {
 
 mod step;
 
+pub(crate) mod lists;
+
 #[cfg(test)]
 #[path = "new_field_tests.rs"]
 mod new_field_tests;
+
+#[cfg(test)]
+#[path = "list_source_tests.rs"]
+mod list_source_tests;
 
 #[cfg(test)]
 #[path = "source_columns_tests.rs"]
