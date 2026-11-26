@@ -13,6 +13,8 @@
     olarak da yazılır (`cad.entities.set`'in `nameText`'i, adım “Ad değiştir”).
   - Nokta adları düğmesi CBS'de Nokta etiketleri oldu (`view.pointLabels`, öntanımlı kapalı): her noktayı adıyla
     etiketler, yazıya dokunmaz.
+  - Sahibin kararıyla şimdilik kalanlar: ortak işlem araçlarının “etiket” sözcükleri (nesnenin adı anlamında) ve Stil
+    yöneticisinin İçe aktar'ı (sembol kitaplığı) her modülde durur.
 
 - **Yeni Harita projesinin Nokta katmanı, balastro (26 Kasım 2026, sahibin isteği;
   [ADR 9315](../adr/9315-harita-point-layer-balastro.md)).**

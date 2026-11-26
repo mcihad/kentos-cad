@@ -112,7 +112,7 @@
   - Kenar uzunluklarını yaz zaten yazı yazar.
 - **Ortak araçlar** (`SHARED`) bir nesnenin adını “boşsa etiket” diye okur. CAD'de bu, noktanın adıdır.
   - Örnekler: Delaunay üçgenlemesinin köşe adları, Öznitelik hesapla'nın “Etiketi de güncelle” seçeneği.
-  - Metinleri CBS ile ortak olduğu için değişmedi. Açık kalan madde aşağıdadır.
+  - Metinleri CBS ile ortak olduğu için değişmedi; sahip şimdilik kalmasını istedi (aşağıda).
 - Uzaklık araçları (matris, merkez, en kısa çizgi, komşular) yalnız CBS'dedir (ADR 9310).
 
 ### 6. Modüller
@@ -134,13 +134,14 @@
 
 - Her kanal aynı komutu çağırır. Doğrulama, plan ve adım aynıdır.
 
-## Açık
+## Şimdilik kalanlar
+
+Sahip 26 Kasım 2026'da ikisi için “Şimdilik kalsın” dedi. Sahip yeniden açmadıkça önerilmez.
 
 - Ortak işlem araçlarının metinlerinde “etiket”, nesnenin adı anlamında geçiyor (“boşsa etiket”, “Etiketi de
-  güncelle”). CAD'de bunlar noktanın adıdır. CBS ile ortak metinler modüle göre ayrılırsa CAD'de “ad” denebilir;
-  sahibin kararına bırakıldı.
+  güncelle”). CAD'de bunlar noktanın adıdır. CBS ile ortak metinler modüle göre ayrılırsa CAD'de “ad” denebilir.
 - Stil yöneticisinin İçe aktar'ı (sembol kitaplığına `.kstil`, resim, pano) her modülde duruyor. Katman stili
-  dosyası değildir, sembol kitaplığıdır; sahibin kararına bırakıldı.
+  dosyası değildir, sembol kitaplığıdır.
 
 ## Doğrulama
 
