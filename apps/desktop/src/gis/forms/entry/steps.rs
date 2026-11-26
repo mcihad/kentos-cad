@@ -16,6 +16,30 @@ impl App {
     }
 
     pub(super) fn entry_event(&mut self, preview: bool, event: Event) -> Task<Message> {
+        // Düzenle on a row read while its layer is not edited (the CBS review's 2nd item): the layer's session started,
+        // the same row opened for editing in its form; a session refused says why and the form stays as it was.
+        if matches!(event, Event::EditRow) {
+            if preview {
+                return Task::none();
+            }
+            // An object's record: the same form editable.
+            if let Some(e) = self.gis.form_entry.as_mut().filter(|e| e.edit_slot.is_some()) {
+                e.read_only = false;
+                e.read_why = None;
+                e.edit_slot = None;
+                return Task::none();
+            }
+            let Some((layer, key)) = self.gis.form_entry.as_ref().and_then(|e| e.edit_row.clone()) else {
+                return Task::none();
+            };
+            let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&layer));
+            if !editing && let Err(why) = self.data_session(kentos_commands::SessionAction::Start, vec![layer.clone()]) {
+                self.warn(why);
+                return Task::none();
+            }
+            self.gis.form_entry = None;
+            return self.open_form_on_row(layer, key);
+        }
         let slot = if preview {
             &mut self.gis.form_preview
         } else {
@@ -25,6 +49,7 @@ impl App {
             return Task::none();
         };
         match event {
+            Event::EditRow => {}
             Event::Query(key, text) => {
                 e.queries.insert(key.clone(), text);
                 e.pages.remove(&key);

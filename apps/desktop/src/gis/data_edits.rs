@@ -221,7 +221,7 @@ pub(crate) fn counts_words(added: usize, changed: usize, deleted: usize) -> Stri
 
 impl App {
     /// `cad.layers.session` on the open drawing; its refusal's sentence.
-    fn data_session(&mut self, action: SessionAction, layers: Vec<String>) -> Result<LayersSessionDone, String> {
+    pub(crate) fn data_session(&mut self, action: SessionAction, layers: Vec<String>) -> Result<LayersSessionDone, String> {
         let Some(doc) = self.document.as_mut() else {
             return Err("Açık çizim yok.".into());
         };

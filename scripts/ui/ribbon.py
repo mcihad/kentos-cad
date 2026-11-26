@@ -567,7 +567,8 @@ CAD = [
         # building's data is its objects' own. Charts are CBS's (Veri › Tablo).
         P("Veri", "featureTable", [S("data.featureTable", MAP), S("layer.fields", MAP), S("data.statistics", MAP),
             S("data.compare"), S("data.search")],
-          overflow=[W("data.forms", MAP), W("data.formEdit", MAP), W("data.relations", MAP), W("data.joinViews", MAP),
+          overflow=[W("data.forms", MAP), W("data.formOpen", MAP), W("data.formEdit", MAP), W("data.relations", MAP),
+            W("data.joinViews", MAP),
             W("data.formAudit", MAP), "data.unmark", W("data.sources", MAP)]),
         # İşlemler's toolbox and models are a map's (docs/adr/0802): a building keeps İfadeyle seç and Konuma göre seç.
         P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus"), S("processing.toolbox", MAP),
@@ -636,7 +637,7 @@ GIS = [
             "layer.info", "layer.dataset", "file.import.maplibre", "file.export.maplibre"]),
         P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart"), S("parcels.check")],
           overflow=["readjustment.distribute", "chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
-        P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
+        P("Form", "forms", [S("data.forms"), S("data.formOpen"), S("data.formEdit"), S("data.relations")],
           overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
             "data.layerRules", "data.layerIndexes", "data.domains", "data.duplicate"]),
         # A CBS project's data is its tables (docs/adr/9196 §2): a table is added as a data layer, never bound; the

@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Kaydın formu okumak için açılır (26 Kasım 2026, CBS incelemesinin 2. maddesi;
+  [ADR 9319](../adr/9319-a-records-form-for-reading.md)).**
+  - Düzenleme oturumu kapalı yazılabilir katmanda Formla düzenle kaydı kaynağından okur ve formunda okumak için açar;
+    satır alınmaz. Formdaki Düzenle oturumu başlatır, aynı satırı alıp düzenlemeye açar.
+  - Öznitelik formunu aç (`data.formOpen`, salt okuma): CBS'de Veri › Form, Harita'da Veri taşması, Öznitelikler'in
+    Form menüsü. Tablonun Form düğmesi seçili satırın formunu açar.
+  - Açık: formu olmayan katmana alanlardan geçici form; harita sağ tık menüsü ve Bilgi sonucu.
+
 - **Veri katmanının tablosu ve alanları birlikte (26 Kasım 2026, CBS incelemesinin 1. maddesi;
   [ADR 9318](../adr/9318-data-layer-columns.md)).**
   - `cad.layers.columns` v1: `add` tabloya boş bırakılabilir sütun ekler (GeoPackage'ta yazılabilir dosya, PostgreSQL'de

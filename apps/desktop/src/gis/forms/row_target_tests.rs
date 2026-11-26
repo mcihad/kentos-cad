@@ -88,15 +88,21 @@ fn taken(app: &App, id: &str) -> usize {
 fn a_row_chosen_in_the_table_opens_its_record_through_the_form() {
     let (mut app, id) = with_form("form-satir", false);
     app.gis.features.data.choose_rows(&id, [22].into());
-    // Not being edited: said, with the way to open it.
+    // Not being edited (the CBS review's 2nd item): the row shown in its form for reading, nothing taken; Düzenle starts
+    // the layer's session and opens the same row for editing.
     form_edit(&mut app);
-    assert!(app.gis.form_entry.is_none());
-    let said = crate::files_testing::last_said(&app);
-    assert!(said.contains("düzenlemeye açık değil; 22 anahtarlı kaydı formla düzenlemek için"), "{said}");
-    // Being edited: the row read, taken and its record opened.
-    let _ = app.data_edits_event(Event::Start(id.clone()));
-    form_edit(&mut app);
+    let entry = app.gis.form_entry.as_ref().expect("the form opens for reading");
+    assert!(entry.read_only && entry.edit_row == Some((id.clone(), 22)));
+    let why = entry.read_why.clone().unwrap_or_default();
+    assert!(why.contains("düzenlemeye açık değil: 22 anahtarlı kayıt yalnız okunuyor"), "{why}");
+    let title = app.entry_title(entry);
+    assert!(title.contains("· fid 22 · salt okunur"), "the head names the row as read: {title}");
+    assert_eq!(taken(&app, &id), 0, "nothing taken to read it");
+    form_event(&mut app, FormEvent::EditRow);
     let entry = app.gis.form_entry.as_ref().expect("the form opens");
+    assert!(!entry.read_only, "open for editing now");
+    let title = app.entry_title(entry);
+    assert!(!title.contains("salt okunur"), "{title}");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let uid = doc.taken_uid(&id, 22).expect("the row taken");
     assert_eq!(entry.uid_text(), uid.to_string(), "the record is the taken row's");
@@ -207,12 +213,12 @@ fn on_postgresql_a_row_chosen_in_the_table_opens_its_record_through_the_form() {
     let (mut app, id) = with_form_on(&pg, &t);
     app.gis.features.data.choose_rows(&id, [22].into());
     form_edit(&mut app);
-    assert!(app.gis.form_entry.is_none());
-    let said = crate::files_testing::last_said(&app);
-    assert!(said.contains("düzenlemeye açık değil; 22 anahtarlı kaydı formla düzenlemek için"), "{said}");
-    let _ = app.data_edits_event(Event::Start(id.clone()));
-    form_edit(&mut app);
+    let entry = app.gis.form_entry.as_ref().expect("the form opens for reading");
+    assert!(entry.read_only && entry.edit_row == Some((id.clone(), 22)));
+    assert_eq!(taken(&app, &id), 0, "nothing taken to read it");
+    form_event(&mut app, FormEvent::EditRow);
     let entry = app.gis.form_entry.as_ref().expect("the form opens");
+    assert!(!entry.read_only, "open for editing now");
     let uid = app.document.as_ref().expect("a drawing").model.taken_uid(&id, 22).expect("the row taken");
     assert_eq!(entry.uid_text(), uid.to_string(), "the record is the taken row's");
     app.gis.form_entry = None;
@@ -314,6 +320,36 @@ fn on_postgresql_ten_switches_between_same_named_tables_write_the_chosen_one_alo
 }
 
 /// The picture (`.run/gui-evidence/kullanim-9149/`): the 22nd row chosen in the table, its record open in the form.
+/// The CBS review's 2nd item: the attribute table's Form opens the chosen row's form (for reading while the layer is not
+/// edited); Öznitelik formunu aç reads it even while the layer is edited, nothing taken, and Düzenle opens it for editing.
+#[test]
+fn the_tables_form_and_oznitelik_formunu_ac_open_the_row_for_reading() {
+    let (mut app, id) = with_form("form-oku", false);
+    app.gis.features.data.choose_rows(&id, [7].into());
+    app.gis.features.layer = Some(id.clone());
+    app.command_expanded = true;
+    app.bottom_tab = crate::bottom::BottomTab::Table;
+    let task = app.update(crate::app::Message::Gis(crate::gis::Event::Features(crate::features::Event::Pane(
+        crate::features::Pane::Form,
+    ))));
+    drive(&mut app, task);
+    let entry = app.gis.form_entry.as_ref().expect("the table's Form opens the row");
+    assert!(entry.read_only && entry.edit_row == Some((id.clone(), 7)));
+    app.gis.form_entry = None;
+    // Being edited: Öznitelik formunu aç still only reads it.
+    let _ = app.data_edits_event(Event::Start(id.clone()));
+    let task = app.run("data.formOpen");
+    drive(&mut app, task);
+    let entry = app.gis.form_entry.as_ref().expect("the form opens for reading");
+    assert!(entry.read_only);
+    assert_eq!(entry.read_why.as_deref(), Some(crate::forms::row_target::VIEWED));
+    assert_eq!(taken(&app, &id), 0, "nothing taken to read it");
+    form_event(&mut app, FormEvent::EditRow);
+    assert!(app.gis.form_entry.as_ref().is_some_and(|e| !e.read_only), "Düzenle opens it for editing");
+    assert_eq!(taken(&app, &id), 1);
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9149/`): the 22nd row chosen in the table, its record open in the form.
 #[test]
 #[ignore = "pictures for the owner"]
 fn screens() {
@@ -334,6 +370,25 @@ fn read_only_screens() {
         let (mut app, id) = with_form("form-salt-okunur-resim", true);
         app.gis.features.data.choose_rows(&id, [22].into());
         form_edit(&mut app);
+        app
+    });
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9319/`): a row of a layer not being edited in its form for reading, with
+/// Düzenle; the Veri tab's Form panel with Öznitelik formunu aç.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib row_target_tests::reading_screens -- --ignored --nocapture"]
+fn reading_screens() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9319", "01-okumak-icin-acilan-kayit", || {
+        let (mut app, id) = with_form("resim-okuma", false);
+        app.gis.features.data.choose_rows(&id, [22].into());
+        form_edit(&mut app);
+        app
+    });
+    crate::files_testing::usage_shots("9319", "02-veri-form-paneli", || {
+        let (mut app, _) = with_form("resim-serit", false);
+        let _ = app.update(crate::app::Message::RibbonTab("data"));
         app
     });
 }

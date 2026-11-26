@@ -2947,6 +2947,12 @@
         ]
        },
        {
+        "command": "data.formOpen",
+        "works": [
+         "map"
+        ]
+       },
+       {
         "command": "data.formEdit",
         "works": [
          "map"
@@ -3956,6 +3962,10 @@
       "items": [
        {
         "command": "data.forms",
+        "size": "small"
+       },
+       {
+        "command": "data.formOpen",
         "size": "small"
        },
        {

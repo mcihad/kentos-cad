@@ -295,6 +295,8 @@ impl App {
             read_only: false,
             read_why: None,
             row: None,
+            edit_row: None,
+            edit_slot: None,
             source_rows: Default::default(),
             source_rows_asked: 0,
             source_rows_said: Vec::new(),

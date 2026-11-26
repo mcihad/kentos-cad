@@ -854,8 +854,12 @@ impl App {
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
             Event::Pane(pane) => {
-                // A data layer's row opens its form with Formla düzenle (docs/adr/9166): the table stays, said why.
+                // A data layer's one chosen row opens its form (the CBS review's 2nd item): for editing while its layer is
+                // edited, for reading with Düzenle otherwise; without a chosen row or a form the table stays, said why.
                 if pane == Pane::Form && self.data_table_layer().is_some() {
+                    if let Some((layer, key)) = self.data_form_target() {
+                        return self.open_form_on_row(layer, key);
+                    }
                     self.say(kentos_interaction::Level::Info, data_bar::off::FORM);
                     return Task::none();
                 }

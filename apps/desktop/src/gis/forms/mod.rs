@@ -44,8 +44,9 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 12] = [
+pub const COMMANDS: [&str; 13] = [
     "data.forms",
+    "data.formOpen",
     "data.formEdit",
     "data.relations",
     "data.joinViews",
@@ -93,6 +94,7 @@ impl App {
     pub(crate) fn forms_command(&mut self, id: &str) -> Task<Message> {
         match id {
             "data.forms" => self.open_forms(None),
+            "data.formOpen" => return self.open_form_view(),
             "data.formEdit" => return self.open_form_entry(),
             "data.relations" => self.open_relations(),
             "data.joinViews" => self.open_joins(),
@@ -294,6 +296,41 @@ impl App {
     }
 
     /// Formla düzenle: the chosen object's record through its layer's form.
+    /// Öznitelik formunu aç (the CBS review's 2nd item): the chosen record's form for reading, nothing taken, written or
+    /// put on it, Düzenle one press away. A data row chosen in the table or on the map is read from its source; else the
+    /// chosen object's record.
+    fn open_form_view(&mut self) -> Task<Message> {
+        if self.document.is_none() {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        }
+        if self.selection.is_empty()
+            && let Some((layer, key)) = self.data_form_target()
+        {
+            return self.open_form_on_row_as(layer, key, true);
+        }
+        let Some((slot, layer)) = self.form_target() else {
+            self.say(
+                Level::Warn,
+                "Formunu açmak için formu olan bir katmandan tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne.",
+            );
+            return Task::none();
+        };
+        let Some(form) = self.form_of_layer(&layer) else {
+            return Task::none();
+        };
+        if self.withdrawn_said(&form) {
+            return Task::none();
+        }
+        let task = self.open_entry(slot, &form);
+        if let Some(e) = self.gis.form_entry.as_mut() {
+            e.read_only = true;
+            e.read_why = Some(crate::forms::row_target::VIEWED.into());
+            e.edit_slot = Some(slot);
+        }
+        task
+    }
+
     fn open_form_entry(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");

@@ -11,6 +11,9 @@ use iced::Task;
 use crate::app::{App, Message};
 use crate::gis;
 
+/// What a record opened for reading says (Öznitelik formunu aç).
+pub(crate) const VIEWED: &str = "Kayıt okumak için açıldı; Düzenle aynı formu bu kayıtta düzenlemeye açar.";
+
 /// A row read for its form: the ask it answers, the layer, the key, the form, the rows or why not, and whether it is
 /// only shown (a read-only connection's) rather than taken.
 #[derive(Debug, Clone)]
@@ -27,6 +30,8 @@ pub struct RowTaken {
     pub over: Option<String>,
     /// Why the row's form only reads it ([`crate::forms::entry::Entry::read_why`]).
     pub read_why: Option<String>,
+    /// Shown because its layer is not being edited: the form offers Düzenle, which opens the same row for editing.
+    pub edit: bool,
 }
 
 impl App {
@@ -41,6 +46,11 @@ impl App {
 
     /// Formla düzenle on a table's row (see the module).
     pub(crate) fn open_form_on_row(&mut self, layer: String, key: i64) -> Task<Message> {
+        self.open_form_on_row_as(layer, key, false)
+    }
+
+    /// The row's form; `view` (Öznitelik formunu aç): for reading whatever its layer's session, Düzenle offered.
+    pub(crate) fn open_form_on_row_as(&mut self, layer: String, key: i64, view: bool) -> Task<Message> {
         let Some(form) = self.form_of_layer(&layer) else {
             return Task::none();
         };
@@ -50,28 +60,34 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
         };
-        // Taken already: its object's record, the same pending change.
+        // Taken already: its object's record, the same pending change (only read when asked to view it).
         if let Some(slot) = doc.model.taken_uid(&layer, key).and_then(|u| doc.model.slot_of(u)) {
-            return self.open_entry(slot, &form);
+            let task = self.open_entry(slot, &form);
+            if view && let Some(e) = self.gis.form_entry.as_mut() {
+                e.read_only = true;
+                e.read_why = Some(VIEWED.into());
+                e.edit_slot = Some(slot);
+            }
+            return task;
         }
         let Some(node) = doc.model.layers().get(&layer).cloned() else {
             return Task::none();
         };
         // A read-only connection's row: read and shown, not taken; no edit session needed.
-        let shown = node.data.as_ref().is_some_and(|d| d.read_only);
-        if !shown && !doc.model.editing(&layer) {
-            let why = format!(
-                "“{}” düzenlemeye açık değil; {key} anahtarlı kaydı formla düzenlemek için önce katmanın düzenleme oturumunu başlatın.",
+        let read_only = node.data.as_ref().is_some_and(|d| d.read_only);
+        // A layer not being edited (the CBS review's 2nd item): the row is read and shown in its form the same way,
+        // nothing taken, no default put on it; Düzenle starts the layer's session and opens the same row for editing.
+        let not_editing = !read_only && !doc.model.editing(&layer);
+        let shown = read_only || not_editing || view;
+        let read_why = if not_editing {
+            Some(format!(
+                "“{}” düzenlemeye açık değil: {key} anahtarlı kayıt yalnız okunuyor. Düzenle, katmanın düzenlemesini başlatır ve kaydı bu formda düzenlemeye açar.",
                 node.name
-            );
-            self.warn(why.clone());
-            self.toast(
-                kentos_ui::widget::Toast::info("Katman düzenlemeye kapalı")
-                    .body(why)
-                    .action("Düzenlemeyi başlat", crate::data_edits::event(crate::data_edits::Event::Start(layer))),
-            );
-            return Task::none();
-        }
+            ))
+        } else {
+            (view && !read_only).then(|| VIEWED.to_owned())
+        };
+        let edit = !read_only && (not_editing || view);
         self.gis.form_row_asked += 1;
         let asked = self.gis.form_row_asked;
         let settings = doc.model.settings().clone();
@@ -86,7 +102,8 @@ impl App {
                     rows,
                     shown,
                     over: None,
-                    read_why: None,
+                    read_why,
+                    edit,
                 })))
             },
         )
@@ -120,7 +137,14 @@ impl App {
             };
             let nested = self.nest_over(t.over.is_some());
             let task = self.open_entry_row(&t.layer, t.key, e, &t.form);
-            self.read_why_of_opened(nested, t.read_why);
+            if t.edit {
+                if let Some(entry) = self.gis.form_entry.as_mut() {
+                    entry.read_why = t.read_why.clone();
+                    entry.edit_row = Some((t.layer.clone(), t.key));
+                }
+            } else {
+                self.read_why_of_opened(nested, t.read_why);
+            }
             return task;
         }
         let Some(doc) = self.document.as_mut() else {

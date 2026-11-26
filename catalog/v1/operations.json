@@ -1961,6 +1961,14 @@
       ],
       "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; iş akışının adımları cad.forms.transition'dır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403, 0428)."
     },
+    "data.formOpen": {
+      "level": "query",
+      "via": [
+        "cad.layers.rows",
+        "cad.forms.validate"
+      ],
+      "note": "Kaydı formunda okumak için açar, hiçbir şey yazmaz: veri satırı cad.layers.rows ile kaynağından okunur; formun denetimi cad.forms.validate'in çekirdeğidir. Düzenle, data.formEdit'in yoluna geçer (ADR 9319)."
+    },
     "data.duplicate": {
       "level": "semantic",
       "via": [

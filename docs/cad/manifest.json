@@ -2351,6 +2351,23 @@
    "tests": 0
   },
   {
+   "id": "data.formOpen",
+   "kind": "command",
+   "title": "Öznitelik formunu aç",
+   "level": "query",
+   "via": [
+    "cad.layers.rows",
+    "cad.forms.validate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.rows, kentos.cad.forms.validate",
+   "mcp": "cad.layers.rows, cad.forms.validate",
+   "note": "Kaydı formunda okumak için açar, hiçbir şey yazmaz: veri satırı cad.layers.rows ile kaynağından okunur; formun denetimi cad.forms.validate'in çekirdeğidir. Düzenle, data.formEdit'in yoluna geçer (ADR 9319).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.forms",
    "kind": "command",
    "title": "Formlar…",

@@ -148,8 +148,9 @@ impl App {
             });
             let mut named =
                 format!("{} · {}{}", e.screen.object.kind, e.screen.object.layer, key.unwrap_or_default());
-            // A read-only connection says so where the record is named (docs/adr/9159).
-            if self.read_only_source(&e.screen.layer).is_some() {
+            // A record only read says so where it is named: a read-only connection's (docs/adr/9159), a row of a layer
+            // not being edited or opened to be read (docs/adr/9319), a related item offered for reading.
+            if e.read_only || self.read_only_source(&e.screen.layer).is_some() {
                 named.push_str(" · salt okunur");
             }
             named
@@ -223,6 +224,10 @@ impl App {
                 "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.".to_owned()
             });
             body = body.push(words::summary(vec![words::text_line(Kind::Info, why)]));
+            // Its layer not being edited: Düzenle opens the same row for editing (the CBS review's 2nd item).
+            if (e.edit_row.is_some() || e.edit_slot.is_some()) && !e.preview {
+                body = body.push(words::primary("Düzenle", Some(e.msg(Event::EditRow))));
+            }
         } else if let Some(why) = self.entry_lock_words(e).filter(|_| locked) {
             // Which of them it is (docs/adr/9125): the role, the archive, the layer's lock.
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));

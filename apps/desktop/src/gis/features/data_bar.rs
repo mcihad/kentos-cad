@@ -24,7 +24,7 @@ fn msg(e: Event) -> Message {
 /// Why a tool is off on a data layer's table, and what to do instead.
 pub(crate) mod off {
     pub const FORM: &str =
-        "Veri katmanında satırın formu Formla düzenle ile açılır: satırı seçip Veri sekmesinde Formla düzenle'ye basın.";
+        "Formu açmak için tablodan tek bir satır seçin; katmanın formu yoksa Veri › Formlar'da bir form yapın.";
     pub const CALCULATE: &str =
         "Veri katmanında alan hesabı yok: düzenleme oturumunda hücreye çift tıklayıp değeri yazın.";
     pub const COPY: &str = "Veri katmanının satırları kaynaktan sayfa sayfa okunur, panoya kopyalanmaz. Satırları bir dosyaya yazmak için Dışa aktar'ı kullanın.";

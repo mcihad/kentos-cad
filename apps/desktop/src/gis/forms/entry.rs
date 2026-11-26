@@ -206,6 +206,11 @@ pub struct Entry {
     /// The source row shown and not taken (a read-only connection's: docs/adr/9159): its key field and key. The record
     /// is not in the drawing; nothing of it is written.
     pub(crate) row: Option<(String, i64)>,
+    /// The source row only read because its layer is not being edited (CBS review's 2nd item): its layer and key, which
+    /// Düzenle opens for editing in the same form; none where editing is not open to it.
+    pub(crate) edit_row: Option<(String, i64)>,
+    /// An object's record opened for reading (Öznitelik formunu aç): Düzenle makes the same form editable.
+    pub(crate) edit_slot: Option<kentos_domain::Slot>,
     /// The rows its related items over data layers read from their sources (docs/adr/9165), by layer; the ask they
     /// answer and, by layer, why a source could not be read.
     pub(crate) source_rows: kentos_native_application::forms_source::SourceRows,
@@ -260,6 +265,9 @@ impl fmt::Debug for Entry {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Düzenle on a row read while its layer is not being edited: the layer's session started, the same row opened for
+    /// editing in the same form.
+    EditRow,
     /// The record and the form as they are now, what was typed kept (docs/adr/0438 §7).
     Reload,
     /// The lists' sources as a question (its number) found them (docs/adr/0763).

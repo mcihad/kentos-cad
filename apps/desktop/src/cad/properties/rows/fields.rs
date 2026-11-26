@@ -21,6 +21,11 @@ pub(super) fn form_rows(settings: &kentos_commands::ProjectSettings, layer: &str
     };
     let items = vec![
         Choice::Command {
+            label: "Öznitelik formunu aç",
+            icon: Icon::Info,
+            id: "data.formOpen",
+        },
+        Choice::Command {
             label: "Formla düzenle",
             icon: Icon::Properties,
             id: "data.formEdit",

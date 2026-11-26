@@ -469,6 +469,7 @@ impl App {
                     shown,
                     over: Some(over),
                     read_why,
+                    edit: false,
                 })))
             },
         )
