@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Veri tablosunda kodlu alan listesiyle (27 Kasım 2026, CBS incelemesinin 4. maddesi, ilk dilim;
+  [ADR 9323](../adr/9323-data-table-typed-cells.md)).**
+  - Veri katmanının tablosu listesi ya da evet/hayırı olan alanı çizim tablosunun liste düzenleyicisiyle açar.
+    Kullanımdan kalkan kod yalnız onu tutan satıra sunulur; alt tür ve bağımlı değerler daraltır.
+  - Reddedilen değer hücrede yazılanla kalır, yanında nedeni görünür.
+
 - **Form alanının seçenek kaynağı adlarıyla (27 Kasım 2026, CBS incelemesinin 3. maddesi;
   [ADR 9322](../adr/9322-form-field-list-source.md)).**
   - Formlar'da seçili alanın “Seçenek kaynağı”: katman alanının listesi (ne olduğu söylenir), alanın türündeki proje

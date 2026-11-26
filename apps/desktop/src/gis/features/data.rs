@@ -100,6 +100,8 @@ pub struct DataTable {
     /// The cell being edited (docs/adr/9103 §5): the row's key and the field, with the text typed.
     editing: Option<(i64, String)>,
     edit_text: String,
+    /// Why the cell's value was refused, said beside it while it stays open (docs/adr/9323).
+    edit_error: Option<String>,
     /// The last edit sent to take its row: an answer to an earlier one is stale.
     edit_asked: u64,
     /// The reads started, as a test answers them (the core's tests and a module package's, `testing`).
@@ -130,6 +132,8 @@ pub enum DataEvent {
     Input(String),
     /// Enter: the value written into the layer's edit session.
     Enter,
+    /// A listed field's code chosen in its cell (docs/adr/9323): written as Enter writes a typed value; empty for none.
+    Choose(String),
     /// Esc, or a press elsewhere: the edit given up.
     Cancel,
     /// The row of an edit read to be taken: the edit's number, the key, the field, the value, the row read or why not.
@@ -230,6 +234,12 @@ impl DataTable {
     #[cfg(test)]
     pub(crate) fn cell_editing(&self) -> Option<(i64, String, String)> {
         self.editing.clone().map(|(k, f)| (k, f, self.edit_text.clone()))
+    }
+
+    /// Why the open cell's value was refused.
+    #[cfg(test)]
+    pub(crate) fn cell_error(&self) -> Option<String> {
+        self.edit_error.clone()
     }
 
     /// The rows pressed if they are of this layer (Seçilenleri farklı kaydet, docs/adr/9106): none of another's.
@@ -446,7 +456,12 @@ impl App {
         }
         if matches!(
             event,
-            DataEvent::Edit(..) | DataEvent::Input(_) | DataEvent::Enter | DataEvent::Cancel | DataEvent::Taken(..)
+            DataEvent::Edit(..)
+            | DataEvent::Input(_)
+            | DataEvent::Enter
+            | DataEvent::Choose(_)
+            | DataEvent::Cancel
+            | DataEvent::Taken(..)
         ) {
             return self.data_cell_event(event);
         }
@@ -525,7 +540,12 @@ impl App {
                 }
             }
             // A cell's edit: data_cell_event above.
-            DataEvent::Edit(..) | DataEvent::Input(_) | DataEvent::Enter | DataEvent::Cancel | DataEvent::Taken(..) => {}
+            DataEvent::Edit(..)
+            | DataEvent::Input(_)
+            | DataEvent::Enter
+            | DataEvent::Choose(_)
+            | DataEvent::Cancel
+            | DataEvent::Taken(..) => {}
         }
         Task::none()
     }
@@ -559,15 +579,22 @@ impl App {
                 let data = &mut self.gis.features.data;
                 data.editing = Some((key, field));
                 data.edit_text = shown;
+                data.edit_error = None;
                 crate::points::focus_field()
             }
             DataEvent::Input(text) => {
                 self.gis.features.data.edit_text = text;
+                self.gis.features.data.edit_error = None;
                 Task::none()
             }
             DataEvent::Cancel => {
                 self.gis.features.data.editing = None;
+                self.gis.features.data.edit_error = None;
                 Task::none()
+            }
+            DataEvent::Choose(code) => {
+                self.gis.features.data.edit_text = code;
+                self.data_cell_event(DataEvent::Enter)
             }
             DataEvent::Enter => {
                 let data = &mut self.gis.features.data;
@@ -575,12 +602,13 @@ impl App {
                     return Task::none();
                 };
                 let text = std::mem::take(&mut data.edit_text);
+                data.edit_error = None;
                 let value = (!text.trim().is_empty()).then_some(text);
                 let Some(doc) = self.document.as_ref() else {
                     return Task::none();
                 };
                 if let Some(uid) = doc.model.taken_uid(&node.id, key) {
-                    self.write_data_cell(uid, field, value);
+                    self.write_data_cell(uid, key, field, value);
                     return Task::none();
                 }
                 let settings = doc.model.settings().clone();
@@ -607,7 +635,7 @@ impl App {
                 match doc.model.take_data_rows(&node.id, rows) {
                     Ok(uids) => {
                         if let Some(uid) = uids.into_iter().flatten().next() {
-                            self.write_data_cell(uid, field, value);
+                            self.write_data_cell(uid, key, field, value);
                         }
                     }
                     Err(refusal) => self.warn(refusal.0),
@@ -618,8 +646,9 @@ impl App {
         }
     }
 
-    /// The value written to a taken row's object, as Öznitelik tablosu writes a drawing's (blank takes it away).
-    fn write_data_cell(&mut self, uid: kentos_domain::Uuid, field: String, value: Option<String>) {
+    /// The value written to a taken row's object, as Öznitelik tablosu writes a drawing's (blank takes it away). A
+    /// refused value keeps the cell open with what was typed and its reason beside it (docs/adr/9323).
+    fn write_data_cell(&mut self, uid: kentos_domain::Uuid, key: i64, field: String, value: Option<String>) {
         let input = kentos_commands::EntitiesSetProperties {
             line_pattern: None,
             line_type: None,
@@ -631,7 +660,7 @@ impl App {
             color: None,
             line_weight: None,
             symbol: None,
-            attrs: Some([(field, value)].into_iter().collect()),
+            attrs: Some([(field.clone(), value.clone())].into_iter().collect()),
             label: None,
             unlink: false,
             name_text: false,
@@ -643,7 +672,11 @@ impl App {
             return;
         };
         if let Err(why) = super::write_attribute(&mut doc.model, input) {
-            self.warn(why);
+            self.warn(why.clone());
+            let data = &mut self.gis.features.data;
+            data.editing = Some((key, field));
+            data.edit_text = value.unwrap_or_default();
+            data.edit_error = Some(why);
         }
     }
 
@@ -772,6 +805,14 @@ impl App {
                 .unwrap_or_default();
         let editing = data.editing.clone();
         let edit_text = data.edit_text.clone();
+        let edit_error = data.edit_error.clone();
+        // A listed field's cell edits through the drawing's table's list editor (docs/adr/9323): its fields, the
+        // layer's subtypes and contingent values narrow what is offered.
+        let defs: HashMap<String, kentos_commands::LayerField> =
+            node.fields.iter().map(|f| (f.name.clone(), f.clone())).collect();
+        let all_fields = node.fields.clone();
+        let subtypes = node.subtypes.clone();
+        let contingents = node.contingents.clone();
         let field_count = fields.len() + 1;
         let shown_new = fields.clone();
         let table = Table::new(columns)
@@ -825,15 +866,62 @@ impl App {
                         let mut cells: Vec<Element<'_, Message>> = vec![kentos_ui::widget::table::number(r.key.to_string()).into()];
                         for (j, f) in shown.iter().enumerate() {
                             if editing.as_ref().is_some_and(|(k, e)| *k == key && e == f) {
-                                cells.push(crate::points::cell::edit_box(
-                                    &edit_text,
-                                    false,
-                                    kentos_ui::widget::table::cell_pads(j + 1, field_count),
-                                    |t| msg(DataEvent::Input(t)),
-                                    msg(DataEvent::Enter),
-                                    msg(DataEvent::Cancel),
-                                    msg(DataEvent::Cancel),
-                                ));
+                                let def = defs.get(f).filter(|d| {
+                                    d.kind == kentos_commands::LayerFieldKind::Boolean
+                                        || d.values.as_ref().is_some_and(|v| !v.is_empty())
+                                });
+                                let cell: Element<'_, Message> = match def {
+                                    Some(d) => {
+                                        let raw = super::pending_rows::cell_raw(
+                                            changed_by_key.get(&key).map(|(now, row)| (&**now, &**row)),
+                                            &r.attrs,
+                                            f,
+                                        )
+                                        .unwrap_or_default();
+                                        let offered = kentos_commands::offered_on(
+                                            subtypes.as_ref(),
+                                            &contingents,
+                                            &all_fields,
+                                            d,
+                                            |n| r.attrs.get(n).cloned(),
+                                        );
+                                        let (choices, codes, at) = super::view::choices_of(d, &raw, offered);
+                                        kentos_ui::widget::Cell::new(
+                                            kentos_ui::widget::select::Select::new(choices, at, move |k| {
+                                                msg(DataEvent::Choose(codes[k].clone()))
+                                            })
+                                            .cell(),
+                                        )
+                                        .into()
+                                    }
+                                    None => crate::points::cell::edit_box(
+                                        &edit_text,
+                                        false,
+                                        kentos_ui::widget::table::cell_pads(j + 1, field_count),
+                                        |t| msg(DataEvent::Input(t)),
+                                        msg(DataEvent::Enter),
+                                        msg(DataEvent::Cancel),
+                                        msg(DataEvent::Cancel),
+                                    ),
+                                };
+                                // A refused value: its reason beside the cell, the value kept to be put right.
+                                let cell = match &edit_error {
+                                    Some(why) => row![
+                                        container(cell).width(Fill),
+                                        kentos_ui::widget::tip(
+                                            kentos_ui::icon::icon(kentos_ui::icon::Icon::Warning)
+                                                .size(13.0)
+                                                .tone(kentos_ui::icon::Tone::Warning),
+                                            kentos_ui::widget::Tip::new("Değer yazılmadı").body(why.clone()),
+                                            iced::widget::tooltip::Position::Top,
+                                        ),
+                                    ]
+                                    .spacing(4)
+                                    .align_y(Center)
+                                    .into(),
+                                    None => cell,
+                                };
+                                cells.push(cell);
                                 continue;
                             }
                             // A value never written apart from an empty text, a code by its label (docs/adr/9188).
@@ -955,3 +1043,6 @@ impl App {
 #[cfg(test)]
 #[path = "closed_cell_tests.rs"]
 mod closed_cell_tests;
+#[cfg(test)]
+#[path = "typed_cell_tests.rs"]
+mod typed_cell_tests;

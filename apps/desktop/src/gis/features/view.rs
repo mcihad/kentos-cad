@@ -78,8 +78,8 @@ pub(super) fn bar_gap<'a>() -> Element<'a, Message> {
 const BAR_ONE_ROW: f32 = 1240.0;
 
 /// A list editor's choices for a field: none, then its codes by their labels,
-/// or yes and no; with the one written now.
-fn choices_of(
+/// or yes and no; with the one written now. The drawing's table and a data layer's (docs/adr/9323) share it.
+pub(super) fn choices_of(
     f: &LayerField,
     value: &str,
     offered: Vec<kentos_commands::FieldChoice>,
