@@ -44,6 +44,18 @@ class LayerTypes(unittest.TestCase):
         node = next(n for n in doc.layers() if n.id == parcels)
         self.assertEqual(node.geometry, "area")
 
+    def test_a_cbs_refusal_names_a_data_layer_and_offers_no_layer_of_any_kind(self) -> None:
+        # docs/adr/9320: a CBS project's objects are rows of tables of one kind; a CAD project may make the layer mixed.
+        for workspace, way in [("gis", "Nesneyi türüne uyan bir veri katmanına yazın."),
+                               ("cad", "ya da katmanın türünü Karışık yapın.")]:
+            doc = cad.Document.new("Açıklama", workspace=workspace, srid=5256)
+            notes = cad.layers.edit(doc, operation="add", name="Açıklama", geometry="annotation").layer
+            with self.assertRaises(CommandFailed) as refused:
+                cad.point.create(doc, layer_id=notes, p=(500000, 4320000))
+            self.assertEqual(refused.exception.code, "layer_geometry_mismatch")
+            self.assertTrue(refused.exception.message.endswith(way), refused.exception.message)
+            self.assertEqual("Karışık" in refused.exception.message, workspace == "cad")
+
     def test_auto_select_is_the_projects_setting(self) -> None:
         doc = cad.Document.new("Seçim", srid=5256)
         # A project not asked its type selects as it did: any layer's objects.

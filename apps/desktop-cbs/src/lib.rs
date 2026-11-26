@@ -51,6 +51,9 @@ mod conditions_tab_tests;
 #[path = "tests/features_tab_tests.rs"]
 mod features_tab_tests;
 #[cfg(test)]
+#[path = "tests/points_target_tab_tests.rs"]
+mod points_target_tab_tests;
+#[cfg(test)]
 #[path = "tests/search_tab_tests.rs"]
 mod search_tab_tests;
 #[cfg(test)]

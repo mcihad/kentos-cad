@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Nokta satırının katmanı baştan bulunur (27 Kasım 2026, CBS incelemesinin 11. maddesi;
+  [ADR 9320](../adr/9320-point-row-target-layer.md)).**
+  - Noktalar › Satır ekle açılınca satırın katmanı bulunur ve tablonun üstünde, listede gösterilir. CAD'de nokta alan
+    çizim katmanı, CBS'de yazılabilir nokta tablosu olur; salt okunur kaynak listelenmez.
+  - Uygun katman yoksa Nokta katmanı oluştur, oturum kapalıysa Düzenlemeyi başlat aynı satırdadır. Enter reddedilince
+    yazılanlar satırda kalır. CBS'de Nokta katmanı oluştur `ad`, `kod` ve Z'li tablo yapar ve oturumunu açar.
+  - Tür uyuşmazlığının ret iletisi CBS'de Karışık önermez, veri katmanını önerir (ortak denetim; her kanal).
+
 - **Kaydın formu okumak için açılır (26 Kasım 2026, CBS incelemesinin 2. maddesi;
   [ADR 9319](../adr/9319-a-records-form-for-reading.md)).**
   - Düzenleme oturumu kapalı yazılabilir katmanda Formla düzenle kaydı kaynağından okur ve formunda okumak için açar;

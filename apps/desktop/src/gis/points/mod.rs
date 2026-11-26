@@ -45,6 +45,9 @@ pub(crate) mod cell;
 pub mod edit;
 #[cfg(test)]
 mod display_tests;
+pub(crate) mod target;
+#[cfg(test)]
+mod target_tests;
 #[cfg(test)]
 mod tests;
 mod view;
@@ -103,6 +106,14 @@ pub mod texts {
     pub const IMPORT_HINT: &str = "Koordinat listesinden nokta alır; adları çizimde de varsa Çift noktaları ayıkla Aynı ad ile açılır";
     pub const GROUPS_HINT: &str = "Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.";
     pub const DRAFT: &str = "Yeni";
+    /// Above the table while a row is drafted (docs/adr/9320).
+    pub const DRAFT_LAYER: &str = "Yeni satırın katmanı";
+    pub const NO_POINT_LAYER: &str = "Nokta yazılabilecek katman yok.";
+    pub const CREATE_LAYER: &str = "Nokta katmanı oluştur";
+    pub const START_EDITING: &str = "Düzenlemeyi başlat";
+    pub const DRAFT_CLOSED: &str = "Düzenlemeye kapalı; satır yazılmaz.";
+    pub const DRAFT_TO_EDITS: &str = "Enter satırı katmanın düzenlemesine yazar; tabloya Değişiklikleri kaydet ile geçer.";
+    pub const DRAFT_TO_LAYER: &str = "Enter satırı bu katmana yazar.";
     pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da İşlemler ▾ › İçe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
 }
@@ -261,6 +272,12 @@ pub enum Event {
     Cancel,
     /// Satır ekle.
     AddRow,
+    /// The layer chosen for the row in the list above the table (docs/adr/9320).
+    DraftLayer(String),
+    /// Nokta katmanı oluştur: no layer takes the row; a point layer made for it (a table in a CBS project).
+    CreateLayer,
+    /// Düzenlemeyi başlat: the row's data layer opened for editing.
+    StartEditing,
     /// Sil: the selected points deleted.
     Remove,
     /// İşlemler ▾: an operation's window over the target rows.
@@ -604,8 +621,28 @@ impl App {
             Event::AddRow => {
                 if self.gis.points.draft.is_none() {
                     self.gis.points.draft = Some(Draft::default());
+                    // The row's layer is found now and shown above the table (docs/adr/9320): a row no layer takes
+                    // says so before anything is typed.
+                    if let Some(why) = self.document.as_ref().and_then(|d| target::refusal(&d.model, self.draft_target().as_ref())) {
+                        self.warn(why);
+                    }
                 }
                 return self.edit_cell(Some((Target::Draft, EditColumn::Name)));
+            }
+            Event::DraftLayer(id) => {
+                self.keep_typed();
+                if let Some(d) = self.gis.points.draft.as_mut() {
+                    d.layer = Some(id);
+                }
+                return self.focus_draft();
+            }
+            Event::CreateLayer => return self.create_point_layer_for_row(),
+            Event::StartEditing => {
+                self.keep_typed();
+                if let Some(choice) = self.draft_target().filter(|c| c.closed) {
+                    let _ = self.data_edits_event(crate::data_edits::Event::Start(choice.id));
+                }
+                return self.focus_draft();
             }
             Event::Remove => return self.update(Message::Run("tool.erase")),
             Event::Batch(kind) => return self.open_point_batch(kind),
@@ -753,11 +790,17 @@ impl App {
                         Task::none()
                     }
                     Some(Walk::Down) => {
-                        let layer = self
-                            .document
-                            .as_ref()
-                            .map(|doc| doc.model.layers().active().to_owned())
-                            .unwrap_or_default();
+                        // The row's layer as found when it opened (docs/adr/9320); none, or one closed for editing,
+                        // keeps what was typed and says the way out.
+                        let choice = self.draft_target();
+                        let Some(doc) = self.document.as_ref() else {
+                            return Task::none();
+                        };
+                        if let Some(why) = target::refusal(&doc.model, choice.as_ref()) {
+                            self.warn(format!("{why}{}", target::KEPT));
+                            return self.edit_cell(Some((target, col)));
+                        }
+                        let layer = choice.map(|c| c.id).unwrap_or_default();
                         let color = self.draft.color_text();
                         let Some(doc) = self.document.as_mut() else {
                             return Task::none();
@@ -767,10 +810,11 @@ impl App {
                             self.warn(line);
                         }
                         match out.next {
-                            // Written: the next row, its name one more, its Y open.
+                            // Written: the next row, its name one more, its Y open, on the layer chosen.
                             Some(next) => {
                                 self.gis.points.draft = Some(Draft {
                                     name: next,
+                                    layer: d.layer.clone(),
                                     ..Draft::default()
                                 });
                                 self.edit_cell(Some((Target::Draft, EditColumn::East)))

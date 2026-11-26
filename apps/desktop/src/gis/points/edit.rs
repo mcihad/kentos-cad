@@ -330,7 +330,7 @@ pub fn write_cell(
     }
 }
 
-/// Satır ekle's row: its cells as typed.
+/// Satır ekle's row: its cells as typed, and the layer chosen for it above the table (none: found as `target.rs` says).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Draft {
     pub name: String,
@@ -338,6 +338,7 @@ pub struct Draft {
     pub north: String,
     pub z: String,
     pub code: String,
+    pub layer: Option<String>,
 }
 
 /// A draft written: what came of it, and the next draft's name (Artır's;
@@ -390,18 +391,49 @@ pub fn write_draft(
     };
     let name = js_trim(&d.name).to_owned();
     let code = js_trim(&d.code).to_owned();
-    let said = if !name.is_empty() && named(doc, &name, None) {
+    let mut said = if !name.is_empty() && named(doc, &name, None) {
         vec![same_name(&name)]
     } else {
         Vec::new()
     };
+    let mut attrs = BTreeMap::new();
+    if !code.is_empty() {
+        attrs.insert("Kod".to_owned(), code.clone());
+    }
+    // A data layer's table keeps the name and the code in its columns of those names and the elevation in its
+    // geometry's Z (docs/adr/9320); what it has no place for is said once the row is written.
+    if let Some(node) = doc.layers().get(layer_id).filter(|n| n.data.is_some()) {
+        let (name_column, code_column) = super::target::columns(&node.fields);
+        let mut lost = Vec::new();
+        for (value, column, words) in [(&name, name_column, "ad sütunu"), (&code, code_column, "kod sütunu")] {
+            match column {
+                _ if value.is_empty() => {}
+                Some(column) => {
+                    attrs.insert(column, value.clone());
+                }
+                None => lost.push(words),
+            }
+        }
+        if z.is_some() && !node.data.as_ref().and_then(|d| d.geometry.as_ref()).is_some_and(|g| g.z) {
+            lost.push("geometride kot (Z)");
+        }
+        if !lost.is_empty() {
+            let column = lost.iter().any(|w| w.ends_with("sütunu"));
+            said.push(format!(
+                "{PREFIX}“{}” tablosunda {} yok; değişiklikler kaydedilince bunlar tabloya yazılmaz.{}",
+                node.name,
+                lost.join(", "),
+                if column { " Sütunu Alanlar'da ekleyebilirsiniz." } else { "" }
+            ));
+        }
+    }
     let input = PointCreate {
         layer_id: layer_id.to_owned(),
         p: kentos_commands::Vec2 { x, y },
         z,
         label: (!name.is_empty()).then(|| name.clone()),
         color: color.map(str::to_owned),
-        attrs: (!code.is_empty()).then(|| BTreeMap::from([("Kod".to_owned(), code.clone())])),
+        attrs: (!attrs.is_empty()).then_some(attrs),
         expected_revision: None,
         symbol: None,
         // A survey's new row writes its name as a text that follows the point, as the point tool does (docs/adr/9314).

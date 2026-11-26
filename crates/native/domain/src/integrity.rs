@@ -126,10 +126,17 @@ impl Document {
                 // A layer of texts holds texts: its rows are drawn and edited as the texts they say (docs/adr/9114 §4).
                 && !(after.kind() == "text" && node.data.as_ref().is_some_and(|d| d.text.is_some()))
             {
+                // A CBS project's objects are rows of tables of one kind (docs/adr/9196 §2, 9320): the way out is a data
+                // layer of the object's kind, never a layer made of any kind.
+                let way = if self.settings().project_type() == Some(kentos_contracts::Workspace::Gis) {
+                    "Nesneyi türüne uyan bir veri katmanına yazın."
+                } else {
+                    "Nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın."
+                };
                 out.push(Fault {
                     uid: change.uid,
                     message: format!(
-                        "“{}” bir {}; {} bu katmana yazılmaz. Nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın.",
+                        "“{}” bir {}; {} bu katmana yazılmaz. {way}",
                         node.name,
                         holds.layer_words(),
                         kentos_contracts::kind_words(after.kind())

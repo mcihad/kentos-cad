@@ -120,6 +120,7 @@ fn a_local_project_edits_its_points_in_its_unit() {
             north: "250".into(),
             z: "12.5".into(),
             code: String::new(),
+            layer: None,
         },
         "nokta",
         None,
@@ -416,6 +417,7 @@ fn every_edit_is_written_as_the_reference_writes_it() {
                 north: text(&a["north"]),
                 z: text(&a["z"]),
                 code: text(&a["code"]),
+                layer: None,
             };
             let active = text(&c["active"]);
             let out = write_draft(&mut doc, &d, &active, None);

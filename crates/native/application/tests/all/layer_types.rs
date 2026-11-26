@@ -81,6 +81,26 @@ fn a_typed_layer_takes_only_its_kind() {
     assert_eq!(doc.get(Slot(1)).map(|e| e.base().layer_id.clone()).as_deref(), Some("yol"));
 }
 
+/// The refusal's way out (docs/adr/9320): a CBS project's objects are rows of tables of one kind, so it names a data
+/// layer of the kind and never offers the layer made of any kind; a CAD project may still make it Karışık.
+#[test]
+fn a_cbs_refusal_names_a_data_layer_and_a_cad_one_may_make_the_layer_karisik() {
+    let point = json!({"layerId": "parsel", "p": {"x": 487003.0, "y": 4420003.0}});
+    let mut gis = drawing();
+    let refused = run(&mut gis, "cad.point.create", point.clone());
+    let message = refused["error"]["message"].as_str().unwrap_or_default().to_owned();
+    assert_eq!(refused["error"]["code"], "layer_geometry_mismatch", "{refused}");
+    assert!(message.ends_with("nokta bu katmana yazılmaz. Nesneyi türüne uyan bir veri katmanına yazın."), "{message}");
+    assert!(!message.contains("Karışık"), "{message}");
+    let mut cad = drawing();
+    let mut settings = cad.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
+    cad.set_settings(settings);
+    let refused = run(&mut cad, "cad.point.create", point);
+    let message = refused["error"]["message"].as_str().unwrap_or_default();
+    assert!(message.ends_with("ya da katmanın türünü Karışık yapın."), "{message}");
+}
+
 #[test]
 fn a_layers_type_is_set_only_when_its_objects_fit() {
     let mut doc = drawing();

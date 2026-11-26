@@ -62,6 +62,9 @@ pub(crate) struct NewLayerWindow {
     srid: Option<u32>,
     fields: Vec<NewField>,
     said: Option<String>,
+    /// Opened by Noktalar's Nokta katmanı oluştur (docs/adr/9320): the table made becomes the new row's layer, its edit
+    /// session open.
+    for_point_row: bool,
 }
 
 /// What the window says.
@@ -189,8 +192,22 @@ impl App {
             srid: None,
             fields: vec![NewField { name: String::new(), kind: LayerFieldKind::Text, length: String::new() }],
             said: None,
+            for_point_row: false,
         });
         self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::LayerCreate));
+    }
+
+    /// Noktalar's Nokta katmanı oluştur (docs/adr/9320): the window for a table of points whose columns keep what the
+    /// row has, `ad` and `kod`, and whose geometry keeps the elevation (Z).
+    pub(crate) fn open_point_table_for_rows(&mut self) {
+        self.open_layer_create(kentos_commands::LayerGeometry::Point);
+        if let Some(w) = self.gis.layer_create.as_mut() {
+            w.z = true;
+            w.fields = ["ad", "kod"]
+                .map(|name| NewField { name: name.to_owned(), kind: LayerFieldKind::Text, length: String::new() })
+                .to_vec();
+            w.for_point_row = true;
+        }
     }
 
     pub(crate) fn layer_create_event(&mut self, event: Event) -> Task<Message> {
@@ -311,6 +328,10 @@ impl App {
                     words.push_str(" Katman araması onu gizliyor; görmek için aramayı temizleyin.");
                 }
                 self.say(kentos_interaction::Level::Success, words);
+                // Made for Noktalar's new row: its layer, opened for editing (docs/adr/9320).
+                if w.for_point_row {
+                    return self.point_table_made(&output.layer);
+                }
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
                 if let Some(w) = self.gis.layer_create.as_mut() {

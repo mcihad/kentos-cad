@@ -268,7 +268,7 @@ impl App {
                 bar_button(
                     "plus",
                     texts::ADD,
-                    "Tablonun sonunda yeni satır: Ad, Y, X, Z ve Kod yazılır, Enter etkin katmana yazar ve sonrakini açar.",
+                    "Tablonun sonunda yeni satır: Ad, Y, X, Z ve Kod yazılır, Enter satırı tablonun üstünde gösterilen katmana yazar ve sonrakini açar.",
                     Some(msg(Event::AddRow)),
                 ),
                 bar_button(
@@ -399,6 +399,9 @@ impl App {
         let editing = panel.editing;
         let text = panel.text.clone();
         let draft = panel.draft.clone();
+        // The draft's layer, named in its Katman cell as above the table (docs/adr/9320).
+        let draft_target = draft.as_ref().and_then(|_| self.draft_target());
+        let draft_layer = draft_target.as_ref().map_or_else(String::new, |c| c.name.clone());
         let count = shown.len() + usize::from(draft.is_some());
         // The cell at row `i`, column `j`: the editor's field when it is edited, its value else.
         let cell =
@@ -474,7 +477,7 @@ impl App {
                         d.north,
                         d.z,
                         d.code,
-                        String::new(),
+                        draft_layer.clone(),
                     ];
                     return TableLine::new(
                         values
@@ -533,9 +536,54 @@ impl App {
             } else {
                 texts::NO_MATCH
             });
-        iced::widget::column![bar, kentos_ui::widget::horizontal_divider(), table]
-            .width(Fill)
-            .height(Fill)
-            .into()
+        let mut body = iced::widget::column![bar, kentos_ui::widget::horizontal_divider()];
+        if panel.draft.is_some() {
+            body = body.push(self.draft_target_line(&doc.model, draft_target));
+        }
+        body.push(table).width(Fill).height(Fill).into()
     }
+
+    /// Above the table while a row is drafted (docs/adr/9320): the layer it is written to, chosen among those that
+    /// take it, and what holds it back: no such layer (Nokta katmanı oluştur), a data layer closed for editing
+    /// (Düzenlemeyi başlat).
+    fn draft_target_line(
+        &self,
+        doc: &kentos_domain::Document,
+        chosen: Option<super::target::Choice>,
+    ) -> Element<'_, Message> {
+        let choices = super::target::choices(doc);
+        let mut line = row![label::muted(texts::DRAFT_LAYER)].spacing(10).align_y(Center);
+        if choices.is_empty() {
+            line = line
+                .push(icon(Icon::Warning).size(14.0).tone(Tone::Warning))
+                .push(label::body(texts::NO_POINT_LAYER))
+                .push(one_line_button(texts::CREATE_LAYER, msg(Event::CreateLayer)));
+        } else {
+            let names: Vec<Choice> = choices.iter().map(|c| Choice::new(c.name.clone())).collect();
+            let ids: Vec<String> = choices.iter().map(|c| c.id.clone()).collect();
+            let at = chosen.as_ref().and_then(|c| ids.iter().position(|id| *id == c.id));
+            let select = Select::new(names, at, move |i| msg(Event::DraftLayer(ids.get(i).cloned().unwrap_or_default())));
+            line = line.push(container(select).width(Length::Fixed(200.0)));
+            // The list names the layer; the words say what Enter does with it.
+            line = match &chosen {
+                Some(c) if c.closed => line
+                    .push(icon(Icon::Warning).size(14.0).tone(Tone::Warning))
+                    .push(label::body(texts::DRAFT_CLOSED))
+                    .push(one_line_button(texts::START_EDITING, msg(Event::StartEditing))),
+                Some(c) if c.data => line.push(label::muted(texts::DRAFT_TO_EDITS)),
+                Some(_) => line.push(label::muted(texts::DRAFT_TO_LAYER)),
+                None => line,
+            };
+        }
+        container(line).padding([4, 10]).width(Fill).into()
+    }
+}
+
+/// A secondary button whose words stay on one line in a narrow panel.
+fn one_line_button(words: &'static str, on: Message) -> Element<'static, Message> {
+    button(label::body(words).wrapping(iced::widget::text::Wrapping::None))
+        .on_press(on)
+        .padding(kentos_ui::theme::metrics::action())
+        .style(style::button::secondary)
+        .into()
 }

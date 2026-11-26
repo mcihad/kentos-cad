@@ -95,6 +95,31 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     }
     let geometry = active.geometry?;
     let kind = kinds.iter().find(|k| !geometry.admits(k))?;
+    // A CBS project draws its objects on data layers alone (docs/adr/9196 §2, 9320): the way out is a data layer of the
+    // kind, never the active layer made a layer of any kind.
+    if doc.settings().project_type() == Some(kentos_commands::Workspace::Gis) {
+        let data = layers.leaves().into_iter().find(|n| {
+            !layers.is_locked(&n.id)
+                && n.data.as_ref().is_some_and(|d| {
+                    !d.read_only
+                        && d.geometry.as_ref().is_some_and(|g| {
+                            data_geometry(&g.type_name).is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
+                        })
+                })
+        });
+        let way = match data {
+            Some(n) => format!("“{}” veri katmanını etkin yapın.", n.name),
+            None => "Nesneler veri katmanlarına çizilir: Harita ▸ Veri ekle ile bir tablo ya da Veri ▸ Yeni katman ile \
+                     türüne uyan yeni bir katman ekleyin."
+                .to_owned(),
+        };
+        return Some(format!(
+            "Etkin katman “{}” bir {}; {} bu katmana yazılmaz. {way}",
+            active.name,
+            geometry.layer_words(),
+            kentos_commands::kind_words(kind)
+        ));
+    }
     let fits = |n: &kentos_commands::LayerNode| {
         n.kind == LayerNodeType::Layer
             && n.service.is_none()
@@ -105,12 +130,12 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     let leaves = layers.leaves();
     let typed = leaves.iter().find(|n| fits(n) && n.geometry.is_some());
     let other = typed.or_else(|| leaves.iter().find(|n| fits(n)));
-    // An annotation layer and no layer of the kind, a new CBS project's start (docs/adr/9302): its objects go to a
-    // data layer, never into the annotation turned into a drawing layer.
+    // An annotation layer and no layer of the kind: its objects go to a layer of their own, never into the annotation
+    // turned into a drawing layer.
     if other.is_none() && geometry == LayerGeometry::Annotation {
         return Some(format!(
-            "Etkin katman “{}” bir açıklama katmanı; {} bu katmana yazılmaz. Nesneler veri katmanlarına çizilir: \
-             Harita ▸ Veri ekle ile bir tablo ya da Veri ▸ Yeni katman ile yeni bir katman ekleyin.",
+            "Etkin katman “{}” bir açıklama katmanı; {} bu katmana yazılmaz. Katmanlar panelinde Yeni katman ile türüne \
+             uyan bir katman ekleyip etkin yapın.",
             active.name,
             kentos_commands::kind_words(kind)
         ));
@@ -128,7 +153,7 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
 }
 
 /// The layer type a data layer's table geometry holds (OGC's name); none for a geometry of every kind.
-fn data_geometry(type_name: &str) -> Option<LayerGeometry> {
+pub(crate) fn data_geometry(type_name: &str) -> Option<LayerGeometry> {
     match type_name {
         "POINT" | "MULTIPOINT" => Some(LayerGeometry::Point),
         "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => {

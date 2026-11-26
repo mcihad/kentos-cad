@@ -521,7 +521,7 @@ mod project_store;
 #[path = "gis/gpkg_open.rs"]
 mod gpkg_open;
 #[path = "gis/layer_create.rs"]
-mod layer_create;
+pub mod layer_create;
 #[path = "gis/layer_migrate.rs"]
 mod layer_migrate;
 #[path = "gis/db_connections.rs"]
