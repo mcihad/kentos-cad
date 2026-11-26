@@ -524,6 +524,8 @@ pub enum Message {
     Attachment(crate::attachments::Event),
     /// Bilgi's card over the drawing (info_card.rs, docs/adr/0225 §5).
     InfoCard(crate::info_card::Event),
+    /// Ölçü kutusu: Kopyala and × (measure_box.rs, docs/adr/9328).
+    MeasureBox(crate::measure_box::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
     /// Görünümler's window (views.rs, docs/adr/0285 §1).
@@ -979,6 +981,9 @@ pub struct App {
     pub(crate) overlap_layers: Vec<String>,
     /// The last write the bonds refused (docs/adr/0790 §2): its card over the drawing offers the way through.
     pub(crate) bonds_refused: Option<kentos_commands::CommandError>,
+    /// The last measurement of Mesafe ölç, Alan hesapla, Açı ölç and Koordinat oku, shown in its box while its tool runs
+    /// (measure_box.rs, docs/adr/9328).
+    pub(crate) measured: Option<kentos_interaction::measured::Measurement>,
     /// Seçim süzgeci's kinds, as `kentos_interaction::selectable::bit`s: the
     /// session's, every kind at first (docs/adr/0187 §5).
     pub(crate) select_kinds: u32,

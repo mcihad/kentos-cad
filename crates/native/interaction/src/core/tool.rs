@@ -1476,6 +1476,9 @@ pub struct Context<'a> {
     /// The last write the architectural bonds refused (docs/adr/0790 §2), with its bonds in the way: the host shows it
     /// with its way through (Bağı kaldır, Bu iki bağı kaldır) until a write goes through or it is closed.
     pub refused: &'a mut Option<kentos_commands::CommandError>,
+    /// The last measurement, for the host's box (docs/adr/9328): Mesafe ölç, Alan hesapla, Açı ölç and Koordinat oku
+    /// set it as they say it in the log.
+    pub measured: &'a mut Option<crate::measured::Measurement>,
 }
 
 impl Context<'_> {

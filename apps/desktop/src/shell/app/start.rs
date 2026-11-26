@@ -192,6 +192,7 @@ impl App {
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
             overlap_layers: Vec::new(),
             bonds_refused: None,
+            measured: None,
             select_kinds: kentos_interaction::selectable::ALL,
             locks: kentos_interaction::LockState::default(),
             ucs_history: crate::ucs::UcsHistory::default(),

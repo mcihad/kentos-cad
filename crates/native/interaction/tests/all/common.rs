@@ -59,6 +59,8 @@ pub struct Bench {
     pub overlap_layers: Vec<String>,
     /// The last write the bonds refused (docs/adr/0790 §2).
     pub refused: Option<kentos_commands::CommandError>,
+    /// The last measurement for the host's box (docs/adr/9328).
+    pub measured: Option<kentos_interaction::measured::Measurement>,
     /// The digitizing locks (docs/adr/0166).
     pub locks: LockState,
     /// The object template drawn with (docs/adr/0176 §3): what new objects take.
@@ -91,6 +93,7 @@ impl Bench {
             shift: false,
             overlap_layers: Vec::new(),
             refused: None,
+            measured: None,
             views: Vec::new(),
             tracking: ObjectTracking::new(),
             locks: LockState::default(),
@@ -123,6 +126,7 @@ impl Bench {
             template: self.template.as_ref(),
             level: self.level.as_deref(),
             refused: &mut self.refused,
+            measured: &mut self.measured,
         };
         act(&mut self.session, &mut cx)
     }

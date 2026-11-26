@@ -156,6 +156,9 @@ pub mod construction;
 pub mod continuation;
 #[path = "viewer_tools/coordinate.rs"]
 pub mod coordinate;
+// Ölçü kutusu: the last measurement as the host's box shows it (docs/adr/9328).
+#[path = "viewer_tools/measured.rs"]
+pub mod measured;
 #[path = "viewer_tools/coordinate_labels.rs"]
 pub mod coordinate_labels;
 #[path = "core/copy_base.rs"]

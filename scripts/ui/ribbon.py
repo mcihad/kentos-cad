@@ -177,7 +177,9 @@ def survey_tab(cad):
     if not cad:
         # The survey computations (karne, poligon, kutupsal alım, kestirme, ağ dengelemesi, aplikasyon) are KentOS
         # Harita's (docs/adr/0802): a CBS project keeps its points, its recorded measures and fitting.
+        # Hızlı ölçüm (docs/adr/9328): Harita › Sorgu's four measures, the same commands, first on a map's Ölçme.
         return T("survey", "Ölçme", [
+            P("Hızlı ölçüm", "measure", [L("tool.measure"), S("tool.area"), S("tool.measureAngle"), S("crs.query")]),
             P("Noktalar", "point", [L("point.editor"), S("map.featuresCode"), S("crs.points"), S("file.import.gnss"),
                 S("cogo.check"), S("cogo.update"), S("survey.baselines")], overflow=["asbuilt.check"]),
             P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),

@@ -296,6 +296,7 @@ impl App {
                 template: self.template_work.template.as_ref().map(|run| &run.stamp),
                 level: level.as_deref(),
                 refused: &mut self.bonds_refused,
+                measured: &mut self.measured,
             },
         );
         // A drawing tool's one new object on a layer with a form: its form opens (docs/adr/0403 §4).

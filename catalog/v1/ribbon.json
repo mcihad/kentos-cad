@@ -4261,6 +4261,28 @@
     "label": "Ölçme",
     "panels": [
      {
+      "label": "Hızlı ölçüm",
+      "icon": "measure",
+      "items": [
+       {
+        "command": "tool.measure",
+        "size": "large"
+       },
+       {
+        "command": "tool.area",
+        "size": "small"
+       },
+       {
+        "command": "tool.measureAngle",
+        "size": "small"
+       },
+       {
+        "command": "crs.query",
+        "size": "small"
+       }
+      ]
+     },
+     {
       "label": "Noktalar",
       "icon": "point",
       "items": [

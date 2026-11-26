@@ -1038,6 +1038,17 @@ impl Path {
             }
         }
         cx.say(Level::Info, text);
+        let rows: Vec<(String, String)> = self.pts[1..]
+            .iter()
+            .enumerate()
+            .map(|(i, &q)| {
+                let ray = [Ring { pts: vec![first, q], bulges: None }];
+                let length = measured_on_ellipsoid(&ray, false, cx).unwrap_or_else(|| f.length(dist(first, q)));
+                let length = length.trim_start_matches("Elipsoit üstünde: uzunluk ").to_owned();
+                (format!("{}. ışın", i + 1), format!("{length}, {} {}", f.direction_name().to_lowercase(), f.direction(bearing_grad(first, q))))
+            })
+            .collect();
+        *cx.measured = Some(crate::measured::rays(cx.doc.settings(), &f, &rows));
     }
 
     /// İçine tıkla: the region around `p` is measured, as a ring drawn is.
@@ -1055,6 +1066,10 @@ impl Path {
             format!("Alan {}   Çevre {}", f.area(net_area(&region)), f.length(perimeter(&region)))
         });
         cx.say(Level::Success, text);
+        let (area, around) = area_and_perimeter(&rings, net_area(&region), perimeter(&region), cx);
+        let mut m = crate::measured::area(cx.doc.settings(), &f, area, around);
+        m.rows.extend(second_rows(&rings, true, cx));
+        *cx.measured = Some(m);
         say_second(&rings, true, cx);
         self.measured = Some(region);
     }
@@ -1408,6 +1423,9 @@ impl Path {
                     ),
                 };
                 cx.say(Level::Success, text);
+                let mut m = crate::measured::path(cx.doc.settings(), &cx.format(), &pts, bulges.as_deref());
+                m.rows.extend(second_rows(std::slice::from_ref(&path), false, cx));
+                *cx.measured = Some(m);
                 say_second(&[path], false, cx);
             }
             Shape::MeasureArea => {
@@ -1422,6 +1440,15 @@ impl Path {
                     format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter))
                 });
                 cx.say(Level::Success, text);
+                let (area, perimeter) = area_and_perimeter(
+                    std::slice::from_ref(&ring),
+                    bulge_ring_area(&pts, bulges.as_deref()).abs(),
+                    bulge_path_length(&pts, bulges.as_deref(), true),
+                    cx,
+                );
+                let mut m = crate::measured::area(cx.doc.settings(), &cx.format(), area, perimeter);
+                m.rows.extend(second_rows(std::slice::from_ref(&ring), true, cx));
+                *cx.measured = Some(m);
                 say_second(&[ring], true, cx);
                 self.measured = Some(Region {
                     outer: Ring { pts, bulges },
@@ -1851,6 +1878,31 @@ fn measured_on_ellipsoid(rings: &[Ring], closed: bool, cx: &Context<'_>) -> Opti
         Ok((length, _)) => format!("Elipsoit üstünde: uzunluk {}", f.length(length)),
         Err(()) => ground::UNREACHED.to_owned(),
     })
+}
+
+/// An area and its perimeter as the box says them: on a geographic project's ellipsoid, else on the plane as given.
+fn area_and_perimeter(rings: &[Ring], area: f64, perimeter: f64, cx: &Context<'_>) -> (f64, f64) {
+    match ground::on_geographic_ellipsoid(cx.doc.settings(), rings, true) {
+        Some(Ok((length, Some(on_ellipsoid)))) => (on_ellipsoid, length),
+        _ => (area, perimeter),
+    }
+}
+
+/// [`say_second`]'s lines as the box's rows (docs/adr/9328): the ellipsoid's and the ground's measures of a projected
+/// project with a ground height, and the second system's.
+fn second_rows(rings: &[Ring], closed: bool, cx: &Context<'_>) -> Vec<(String, String)> {
+    let f = cx.format();
+    let mut lines = ground::lines(cx.doc.settings(), rings, closed, &f);
+    if let Some(second) = Second::of(cx.doc.settings()) {
+        lines.push(second.measures_line(rings, closed, &f));
+    }
+    lines
+        .into_iter()
+        .map(|l| match l.split_once(": ") {
+            Some((what, value)) => (what.to_owned(), value.to_owned()),
+            None => (String::new(), l),
+        })
+        .collect()
 }
 
 fn say_second(rings: &[Ring], closed: bool, cx: &mut Context<'_>) {

@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Ölçme › Hızlı ölçüm ve ölçü kutusu (27 Kasım 2026, CBS incelemesinin 10. maddesi;
+  [ADR 9328](../adr/9328-quick-measure-box.md)).**
+  - CBS'nin Ölçme sekmesi Mesafe ölç, Alan hesapla, Açı ölç ve Koordinat oku ile başlar; komutlar Harita › Sorgu'nunkiyle
+    aynıdır.
+  - Son ölçü, aracı çalıştıkça çizim alanının sol altındaki kutuda durur: parçalar ve toplam, alan ve çevre, açı, Y
+    (doğu) ve X (kuzey); birim adıyla, hesap yolu, sistem, Kopyala.
+
 - **Tek ölçek yazımı; Tümünü göster ve Genel bakış veri katmanının kapsamını kaynaktan alır (27 Kasım 2026, CBS
   incelemesinin 7. ve 8. maddeleri; [ADR 9327](../adr/9327-one-scale-and-data-extents.md)).**
   - Durum çubuğu, rozetler ve Ölçek yaz… ölçeği tek biçimde yazar: 1'in altı `N:1`, `1:0` çıkmaz. Ölçek çubuğu mm ve µm

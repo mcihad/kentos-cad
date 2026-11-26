@@ -480,6 +480,9 @@ mod polyline_scenes;
 #[path = "tests/query_tests.rs"]
 mod query_tests;
 #[cfg(test)]
+#[path = "tests/measure_box_tests.rs"]
+mod measure_box_tests;
+#[cfg(test)]
 #[path = "gis/range_server.rs"]
 mod range_server;
 #[cfg(test)]

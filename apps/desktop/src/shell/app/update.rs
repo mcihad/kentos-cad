@@ -709,6 +709,7 @@ impl App {
             Message::DocTabs(event) => return self.doc_tabs_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
+            Message::MeasureBox(event) => return self.measure_box_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::Views(event) => return self.views_event(event),
             Message::Propose(event) => return self.propose_event(event),

@@ -228,6 +228,8 @@ pub mod hover_card;
 pub mod icons;
 #[path = "cad/info_card.rs"]
 mod info_card;
+#[path = "cad/measure_box.rs"]
+mod measure_box;
 #[path = "shell/input.rs"]
 mod input;
 #[path = "shell/keys.rs"]

@@ -145,6 +145,8 @@ impl Tool for CrsQuery {
             cx.say(Level::Info, line);
         }
         cx.say(Level::Info, text);
+        // The box's rows past the point's own (docs/adr/9328): its UCS and second system values.
+        let mut more = Vec::new();
         // In the drawing's UCS too, when it is not the world's (docs/adr/0261 §4).
         let frame = cx.frame();
         if !frame.is_world() {
@@ -156,6 +158,7 @@ impl Tool for CrsQuery {
                 f.north_label(),
                 f.coord(u.y)
             );
+            more.push(("UCS".to_owned(), format!("{}={}, {}={}", f.east_label(), f.coord(u.x), f.north_label(), f.coord(u.y))));
             cx.say(Level::Info, line);
         }
         // The second coordinate system's values, and how sure they are (docs/adr/0167 §2, §5).
@@ -164,6 +167,7 @@ impl Tool for CrsQuery {
                 Ok(t) => {
                     let reading = second.reading(t.point, &f, cx.draft.geographic);
                     let sure = second.accuracy(&t);
+                    more.push((second.short(), format!("{reading} ({sure})")));
                     cx.say(
                         Level::Info,
                         format!("{}: {reading} ({sure})", second.short()),
@@ -175,6 +179,7 @@ impl Tool for CrsQuery {
                 ),
             }
         }
+        *cx.measured = Some(crate::measured::point(cx.doc.settings(), &f, p.world, z, more));
         // The rasters' values under the point, said once read (docs/adr/0204 §8).
         cx.view_changes
             .push(crate::tool::ViewChange::RasterValues(p.world));

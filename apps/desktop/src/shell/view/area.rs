@@ -283,6 +283,8 @@ impl App {
                         .extend(self.hover_card_view().map(still))
                         // Bilgi's card beside the object clicked (info_card.rs, docs/adr/0225 §5).
                         .extend(self.info_card_view().map(still))
+                        // Ölçü kutusu at the lower left while a measuring tool runs (measure_box.rs, docs/adr/9328).
+                        .extend(self.measure_box_view())
                         // A changed external reference's card (xrefs_watch.rs, docs/adr/0349 §3).
                         .extend(self.xref_notice_view())
                         // A write the bonds refused, with its way through (bond_notice.rs, docs/adr/0790 §2).
