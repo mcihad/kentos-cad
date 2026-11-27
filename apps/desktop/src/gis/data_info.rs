@@ -173,7 +173,8 @@ pub fn row_at(node: &LayerNode, settings: &ProjectSettings, at: Vec2, reach: f64
     Ok(rows_at(node, settings, at, reach)?.into_iter().next())
 }
 
-/// The first row found under `at` among `nodes` (the shown data layers, the top one first).
+/// The first row found under `at` among `nodes` (the shown data layers, the top one first): the tests' question.
+#[cfg(test)]
 pub fn ask(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Option<Found>, Vec<String>) {
     let (rows, said) = ask_all(nodes, settings, at, reach);
     (rows.into_iter().next(), said)

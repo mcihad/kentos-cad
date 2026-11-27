@@ -21,7 +21,7 @@ checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
 [[package]]
 name = "acadrust"
 version = "0.6.8"
-source = "git+https://github.com/mcihad/acadrust.git?branch=main#265cc683d22d3a5b97d3a904a05b29201a79f36f"
+source = "git+https://github.com/mcihad/acadrust.git?branch=main#c781de4168c53d3092eed1544924e76ccbd60cf0"
 dependencies = [
  "anyhow",
  "bitflags 2.13.2",
