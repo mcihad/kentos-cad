@@ -34,6 +34,8 @@ const KEPT: usize = 40;
 pub mod words {
     pub const READING: &str = "Kaynaktan okunuyor…";
     pub const SOURCE: &str = "süzgeç ve sıra kaynakta";
+    /// A new row's action: its record's form.
+    pub const ENTER_ATTRS: &str = "Öznitelikleri gir";
     pub const HERE: &str = "süzgeç burada soruldu";
     pub const NONE: &str = "Kaynakta soruya uyan satır yok.";
     /// The question refused, its reason where the rows would be.
@@ -122,6 +124,8 @@ pub enum DataEvent {
     Press(i64, bool),
     /// A new row not saved yet pressed: its object chosen in the drawing (docs/adr/9111 §1).
     PressNew(kentos_domain::Uuid),
+    /// Öznitelikleri gir on a new row (docs/adr/9346): its object chosen and its record's form opened.
+    EnterNew(kentos_domain::Uuid),
     /// Enter in Ara or İfade süzgeci: what is typed is asked.
     Apply,
     /// Seçime yakınlaş: the selected rows framed.
@@ -454,6 +458,13 @@ impl App {
             }
             return Task::none();
         }
+        if let DataEvent::EnterNew(uid) = event {
+            let Some(slot) = self.document.as_ref().and_then(|d| d.model.slot_of(uid)) else {
+                return Task::none();
+            };
+            self.selection.set([slot]);
+            return self.run("data.formEdit");
+        }
         if matches!(
             event,
             DataEvent::Edit(..)
@@ -521,7 +532,7 @@ impl App {
                     Err(why) => data.error = Some(why),
                 }
             }
-            DataEvent::Zoom | DataEvent::PressNew(_) => {}
+            DataEvent::Zoom | DataEvent::PressNew(_) | DataEvent::EnterNew(_) => {}
             DataEvent::Apply => {
                 data.search = self.gis.features.search.trim().to_owned();
                 data.filter = self.gis.features.filter.trim().to_owned();
@@ -712,6 +723,12 @@ impl App {
         ))
     }
 
+    /// What the table's foot says of a layer's rows its source does not have yet (docs/adr/9346).
+    pub(crate) fn data_unwritten_words(&self, layer: &str) -> Option<String> {
+        let c = self.document.as_ref()?.model.data_changes(layer);
+        (!c.is_empty()).then(|| unwritten_words(c.added.len(), c.changed.len(), c.deleted.len()))
+    }
+
     /// The fields the table shows: the page's (else the layer's), less those Sütunlar hides, as on a drawing layer's
     /// table (docs/adr/9166), and less those the caller's role does not read (docs/adr/9150, 9188).
     pub(crate) fn data_shown_fields(&self, node: &LayerNode) -> Vec<String> {
@@ -819,8 +836,25 @@ impl App {
             .horizontal()
             .virtualized(count, move |i| {
                 if let Some((uid, e)) = added.get(i) {
-                    let mut cells: Vec<Element<'_, Message>> =
-                        vec![kentos_ui::widget::table::text(words::NEW).style(kentos_ui::style::text::warning).into()];
+                    // Öznitelikleri gir beside “yeni”: the new record's form (docs/adr/9346), its words in the tip.
+                    let enter = kentos_ui::widget::tip(
+                        iced::widget::button(
+                            kentos_ui::icon::icon(crate::icons::from_web(Some("formEdit")))
+                                .size(14.0)
+                                .tone(kentos_ui::icon::Tone::Accent),
+                        )
+                        .padding([0, 2])
+                        .style(kentos_ui::style::button::flat)
+                        .on_press(msg(DataEvent::EnterNew(*uid))),
+                        kentos_ui::widget::Tip::from(words::ENTER_ATTRS),
+                        iced::widget::tooltip::Position::Bottom,
+                    );
+                    let mut cells: Vec<Element<'_, Message>> = vec![
+                        row![kentos_ui::widget::table::text(words::NEW).style(kentos_ui::style::text::warning), enter]
+                            .spacing(6)
+                            .align_y(Center)
+                            .into(),
+                    ];
                     cells.extend(shown_new.iter().map(|f| {
                         kentos_ui::widget::table::text(e.base().attrs.get(f).cloned().unwrap_or_default()).into()
                     }));
@@ -969,13 +1003,8 @@ impl App {
                 (None, Some(0)) => words::NONE.to_owned(),
                 (None, _) => words::READING.to_owned(),
             });
-        // Being edited: what waits to be saved.
-        let session = changes.as_ref().map(|c| {
-            format!(
-                " · düzenleniyor; kaydedilmemiş: {}",
-                crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
-            )
-        });
+        // Being edited: said; what waits for the source has its own line with Kaynağa yaz (docs/adr/9346).
+        let session = changes.as_ref().map(|_| " · düzenleniyor".to_owned());
         // The pending rows listed while the source is unread are said as such (docs/adr/9151).
         let waiting = changes
             .as_ref()
@@ -1021,6 +1050,21 @@ impl App {
         // The fields the caller's role does not read, named (docs/adr/9150, 9188).
         let withheld = self.withheld_fields(&node.id);
         let mut foot = row![status].align_y(Center).padding([2, 8]).spacing(12);
+        // The rows the source does not have yet, and the way to write them (the same Kaynağa yaz as everywhere).
+        if let Some(c) = changes.as_ref().filter(|c| !c.is_empty() && !offline) {
+            foot = foot.push(
+                label::caption(unwritten_words(c.added.len(), c.changed.len(), c.deleted.len()))
+                    .style(kentos_ui::style::text::warning),
+            );
+            foot = foot.push(
+                iced::widget::button(label::caption(crate::data_edits::WRITE))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(kentos_ui::style::button::secondary)
+                    .on_press(Message::Gis(crate::gis::Event::DataPending(crate::data_pending::Event::Save(vec![
+                        node.id.clone(),
+                    ])))),
+            );
+        }
         // The layer's fields its table does not have (docs/adr/9318): the others are read, these shown empty.
         if !data.missing.is_empty() {
             let names = data.missing.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
@@ -1046,3 +1090,12 @@ mod closed_cell_tests;
 #[cfg(test)]
 #[path = "typed_cell_tests.rs"]
 mod typed_cell_tests;
+
+/// “2 kayıt kaynağa yazılmadı (1 satır eklendi, 1 satır değişti)”.
+fn unwritten_words(added: usize, changed: usize, deleted: usize) -> String {
+    format!(
+        "{} kayıt kaynağa yazılmadı ({})",
+        added + changed + deleted,
+        crate::data_edits::counts_words(added, changed, deleted)
+    )
+}

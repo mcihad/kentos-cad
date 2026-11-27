@@ -807,7 +807,7 @@ impl App {
                 // form's Kaydet is not the source's.
                 match self.waiting_words_of(&written_uid) {
                     Some(waiting) if done.committed.is_none() && !done.changes.is_empty() => {
-                        self.say(Level::Info, format!("{said} {waiting}"));
+                        self.say(Level::Info, format!("Değişiklik hazırlandı: kayıt katmanın düzenlemesinde. {waiting}"));
                     }
                     _ => self.say(Level::Success, said),
                 }

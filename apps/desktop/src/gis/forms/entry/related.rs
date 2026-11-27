@@ -470,6 +470,7 @@ impl App {
                     over: Some(over),
                     read_why,
                     edit: false,
+                    default: false,
                 })))
             },
         )

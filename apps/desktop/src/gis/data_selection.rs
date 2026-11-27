@@ -3,6 +3,10 @@
 //! interface's thread) and their outlines drawn over the drawing in the selection's colour; Seçime yakınlaş frames
 //! them. The rows are not the drawing's: the drawing's selection is left as it is. Öznitelikler and Koordinat listesi
 //! show the same rows, by their layer and key, read without taking them (docs/adr/9326).
+//!
+//! The rows are read again when the layer's changes are written to the source or let go (docs/adr/9346): until the
+//! answer comes Öznitelikler says it reads them again, not the old values as the source's. A row taken into the edit
+//! session shows its value waiting to be written, said so, as the table shows it.
 
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -34,6 +38,10 @@ pub(crate) struct DataSelection {
     /// The rows read, in the keys' order the source answered (docs/adr/9326).
     rows: Vec<SourceRow>,
     asked: u64,
+    /// The sources' writes the rows were read after ([`kentos_domain::Document::data_written`]).
+    written: u64,
+    /// The rows are read again after a write: shown, said as being read.
+    stale: bool,
 }
 
 /// What the read said.
@@ -54,13 +62,22 @@ impl App {
             let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
             (!keys.is_empty()).then(|| (n.id.clone(), keys))
         });
+        let written = self.document.as_ref().map_or(0, |d| d.model.data_written());
         let sel = &mut self.gis.data_selection;
-        if sel.of == wanted {
+        let same = sel.of == wanted;
+        if same && (wanted.is_none() || sel.written == written) {
             return Task::none();
         }
         sel.of = wanted.clone();
-        sel.outlines = None;
-        sel.rows.clear();
+        sel.written = written;
+        if same {
+            // Written or let go: the same rows read again, the old values said as such until they come.
+            sel.stale = true;
+        } else {
+            sel.outlines = None;
+            sel.rows.clear();
+            sel.stale = false;
+        }
         sel.asked += 1;
         let (Some(node), Some((layer, keys)), Some(doc)) = (node, wanted, self.document.as_ref()) else {
             return Task::none();
@@ -105,6 +122,7 @@ impl App {
                     let objects: Vec<kentos_commands::Entity> = rows.iter().filter_map(|r| r.object.clone()).collect();
                     self.gis.data_selection.outlines = Some(Approved::of(&objects, asked));
                     self.gis.data_selection.rows = rows;
+                    self.gis.data_selection.stale = false;
                     // An export's Seçili takes them (shell/exchange/source_rows.rs).
                     self.export_sources_read();
                 }
@@ -131,15 +149,27 @@ impl App {
     }
 
     /// The first selected source row in words for Öznitelikler (docs/adr/9326): the heading with how many rows, the
-    /// layer and the key, the values by the layer's fields (a code by its label), and what is said under them.
+    /// layer and the key, the values by the layer's fields (a code by its label), and what is said under them. A row
+    /// taken into the edit session shows its values waiting to be written (docs/adr/9346), as the table does; rows read
+    /// again after a write are said so.
     pub(crate) fn source_row_lines(&self) -> Option<(String, Vec<(String, String)>, String)> {
         let (layer, rows) = self.selected_source_rows()?;
-        let node = self.document.as_ref()?.model.layers().get(layer)?;
+        let doc = &self.document.as_ref()?.model;
+        let node = doc.layers().get(layer)?;
         let first = rows.first()?;
+        let waiting = doc
+            .taken_objects(layer)
+            .into_iter()
+            .find(|(k, _)| *k == first.key)
+            .map(|(_, e)| e.base().attrs.clone())
+            .filter(|now| *now != first.attrs);
+        let deleted = doc.deleted_keys(layer).contains(&first.key)
+            || doc.taken_uid(layer, first.key).is_some_and(|u| doc.slot_of(u).is_none());
+        let attrs = waiting.as_ref().unwrap_or(&first.attrs);
         let key = node.data.as_ref().map_or("anahtar", |d| d.key.as_str());
         let mut lines = vec![("Katman".to_owned(), node.name.clone()), (key.to_owned(), first.key.to_string())];
         for f in &node.fields {
-            let raw = first.attrs.get(&f.name).cloned().unwrap_or_default();
+            let raw = attrs.get(&f.name).cloned().unwrap_or_default();
             let shown = if f.values.as_ref().is_some_and(|v| !v.is_empty()) && !raw.is_empty() {
                 kentos_commands::display_value(f, &raw)
             } else {
@@ -147,8 +177,17 @@ impl App {
             };
             lines.push((f.label().to_owned(), shown));
         }
-        let many = if rows.len() > 1 { "İlki gösteriliyor. ".to_owned() } else { String::new() };
-        Some((format!("Veri satırı ({})", rows.len()), lines, format!("{many}Kaynaktan okundu; çizime alınmadı.")))
+        let many = if rows.len() > 1 { "İlki gösteriliyor. " } else { "" };
+        let state = if self.gis.data_selection.stale {
+            "Kaynaktan yeniden okunuyor…"
+        } else if deleted {
+            "Silinecek: kaynağa yazılmadı."
+        } else if waiting.is_some() {
+            "Bekleyen değişiklik: kaynağa yazılmadı."
+        } else {
+            "Kaynaktan okundu; çizime alınmadı."
+        };
+        Some((format!("Veri satırı ({})", rows.len()), lines, format!("{many}{state}")))
     }
 
     /// Whether a data layer's selected rows are outlined on the map (Seçime yakınlaştır frames them).

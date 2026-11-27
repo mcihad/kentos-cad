@@ -55,13 +55,16 @@ fn a_new_row_is_listed_first_in_the_table_and_its_fields_open_after_it_is_drawn(
     let _ = app.data_edits_event(Event::Start(id.clone()));
     app.docks.close(Panel::Properties);
 
-    // Drawn by a tool: no form on the layer, so the new row is chosen and Öznitelikler shows its fields.
+    // Drawn by a tool: no form on the layer, so the layer gets the form of its fields and the new row opens in it
+    // (the second round's T8, docs/adr/9346).
     let slot = draw(&mut app, &id, 486_400.0, 4_420_100.0);
     app.selection.clear();
     app.form_on_create = Some(slot);
     let _ = app.open_form_on_create();
     assert_eq!(app.selection.ids(), vec![slot]);
-    assert!(app.docks.is_shown(Panel::Properties), "Öznitelikler shown");
+    assert!(app.gis.form_entry.is_some(), "the new record's form");
+    app.gis.form_entry = None;
+    app.dialog = None;
 
     // Turned off with the forms (Çizimden sonra formu aç): nothing opens.
     let _ = app.settings.choose(&[(crate::forms::ON_CREATE, serde_json::Value::Bool(false))]);

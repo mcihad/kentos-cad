@@ -733,7 +733,7 @@ impl App {
                     );
                     session = if modified {
                         format!(
-                            "\nDüzenleniyor; kaydedilmemiş: {}",
+                            "\nDüzenleniyor; kaynağa yazılmadı: {}",
                             crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
                         )
                     } else {

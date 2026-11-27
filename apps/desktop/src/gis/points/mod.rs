@@ -112,7 +112,7 @@ pub mod texts {
     pub const CREATE_LAYER: &str = "Nokta katmanı oluştur";
     pub const START_EDITING: &str = "Düzenlemeyi başlat";
     pub const DRAFT_CLOSED: &str = "Düzenlemeye kapalı; satır yazılmaz.";
-    pub const DRAFT_TO_EDITS: &str = "Enter satırı katmanın düzenlemesine yazar; tabloya Kaynağa kaydet ile geçer.";
+    pub const DRAFT_TO_EDITS: &str = "Enter satırı katmanın düzenlemesine yazar; tabloya Kaynağa yaz ile geçer.";
     pub const DRAFT_TO_LAYER: &str = "Enter satırı bu katmana yazar.";
     pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da İşlemler ▾ › İçe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";

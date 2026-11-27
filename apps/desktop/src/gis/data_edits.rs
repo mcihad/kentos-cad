@@ -205,6 +205,12 @@ pub(crate) fn event(e: Event) -> Message {
     message(e)
 }
 
+/// The three steps a data layer's change goes through, named alike on every surface (docs/adr/9346): a form's
+/// Değişikliği hazırla puts it in the layer's edit session; Projeyi kaydet writes the project file; Kaynağa yaz writes
+/// the rows to their source.
+pub(crate) const PREPARE: &str = "Değişikliği hazırla";
+pub(crate) const WRITE: &str = "Kaynağa yaz";
+
 /// “1 yeni, 2 değişen, 1 silinen satır”: what a layer writes, its zero counts left out.
 pub(crate) fn counts_words(added: usize, changed: usize, deleted: usize) -> String {
     let parts: Vec<String> = [(added, "yeni"), (changed, "değişen"), (deleted, "silinen")]
@@ -313,7 +319,7 @@ impl App {
                         }
                         let name = self.data_layer_name(&id);
                         self.output(format!(
-                            "“{name}” düzenlemeye açıldı ve etkin katman yapıldı. Çizilen nesneler ve değiştirilen satırlar Kaydet'e kadar katmanda bekler."
+                            "“{name}” düzenlemeye açıldı ve etkin katman yapıldı. Çizilen nesneler ve değiştirilen satırlar Kaynağa yaz'a kadar katmanda bekler; proje dosyası ayrıca Projeyi kaydet ile kaydedilir."
                         ));
                     }
                     Err(why) => self.warn(why),
@@ -674,15 +680,20 @@ impl App {
                             self.gis.data_edits.gone.remove(&w.layer);
                             // The source answered: checked now (docs/adr/9163).
                             self.gis.data_edits.verified.insert(w.layer.clone(), now_ms());
-                            said.push(format!("“{}”: {words}", w.name));
+                            let place = self
+                                .document
+                                .as_ref()
+                                .and_then(|d| d.model.layers().get(&w.layer).and_then(|n| n.data.clone()))
+                                .map_or("kaynağa", |d| if d.driver == "gpkg" { "GeoPackage'a" } else { "veritabanına" });
+                            said.push(format!("“{}”: {words} {place} yazıldı", w.name));
                         }
                         Err(why) => self.warn(why),
                     }
                 }
                 if !said.is_empty() {
                     let names: Vec<String> = group.iter().map(|w| format!("“{}”", w.name)).collect();
-                    let title = format!("{} kaydedildi", names.join(", "));
-                    let body = format!("{} kaynağa yazıldı.", said.join("; "));
+                    let title = format!("{} kaynağa yazıldı", names.join(", "));
+                    let body = format!("{}.", said.join("; "));
                     self.say(kentos_interaction::Level::Success, format!("{title}: {body}"));
                     self.toast_saved(title, body);
                 }

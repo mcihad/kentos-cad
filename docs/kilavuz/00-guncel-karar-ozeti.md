@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Kayıt akışı: Öznitelikler bekleyen değeri gösterir, formu olmayan katmanın varsayılan formu, üç eylemin adı, yeni
+  kaydın formu (27 Kasım 2026, T5–T8; [ADR 9346](../adr/9346-record-flow-inspector-default-form-and-write-names.md)).**
+  - Öznitelikler düzenlenen satırın bekleyen değerini söyleyerek gösterir; Kaynağa yaz'dan sonra satırı yeniden okur.
+  - Formu olmayan katmanın satırı alanlarından kurulan varsayılan formla okunur, projeye form yazılmaz; Düzenle ve
+    yeni çizilen kayıt katmana alanlarının formunu verir. Salt okunur pencere “Kayıt formu · … · Salt okunur”dur.
+  - Adlar: Değişikliği hazırla (form), Projeyi kaydet, Kaynağa yaz (`layer.editSave`). Tablonun altı yazılmamış
+    kayıtları sayar ve Kaynağa yaz'ı sunar; yeni satırda Öznitelikleri gir vardır.
+
 - **İfadeyle seç bütün kapsamlarda veri katmanlarını okur; seçimin sonucu katman katman saklanır (27 Kasım 2026,
   ikinci turun T3 ve T4 maddeleri; [ADR 9345](../adr/9345-expression-select-over-data-layers-and-results-by-layer.md)).**
   - İfadeyle seç Tümü, Görünen ve Seçili'de veri katmanlarının satırlarını Konuma göre seç'in kopyasında dener.

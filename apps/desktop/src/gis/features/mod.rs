@@ -860,7 +860,12 @@ impl App {
                     if let Some((layer, key)) = self.data_form_target() {
                         return self.open_form_on_row(layer, key);
                     }
-                    self.say(kentos_interaction::Level::Info, data_bar::off::FORM);
+                    // A new row chosen (its object in the drawing): its record's form, as Öznitelikleri gir.
+                    if self.one_object_layer().is_some_and(|l| Some(l) == self.data_table_layer().map(|n| n.id)) {
+                        return self.run("data.formEdit");
+                    }
+                    let rows = self.data_rows_chosen();
+                    self.say(kentos_interaction::Level::Info, crate::forms::row_target::choose_one(rows));
                     return Task::none();
                 }
                 if pane != Pane::Form && !self.docked_form_may_leave() {

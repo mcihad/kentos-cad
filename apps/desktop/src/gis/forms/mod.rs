@@ -191,6 +191,14 @@ impl App {
             .then_some((slot, layer))
     }
 
+    /// The layer of the one object chosen in the drawing.
+    pub(crate) fn one_object_layer(&self) -> Option<String> {
+        let [slot] = self.selection.ids()[..] else {
+            return None;
+        };
+        Some(self.document.as_ref()?.model.get(slot)?.base().layer_id.clone())
+    }
+
     /// The object a drawing tool has just written opens its form (docs/adr/0403 §4): when the
     /// preference is on, no window is open and the object's layer has a published form; the record
     /// opens as a new one, its defaults and calculations already written by the drawing's step.
@@ -212,8 +220,18 @@ impl App {
             .find(|f| f.layer == layer && !f.releases.is_empty())
             .map(|f| f.id.clone())
             .filter(|_| self.settings.bool(ON_CREATE) && self.dialog.is_none());
+        // A new row of a data layer being edited (the second round's T8, docs/adr/9346): its form opens at once, the
+        // layer's own (its draft too), else the form of its fields, which the layer gets, said so.
+        let form = form.or_else(|| {
+            (self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer))
+                .then(|| self.ensure_layer_form(&layer))
+                .flatten()
+        });
         match form {
-            Some(id) => self.open_entry(slot, &id),
+            Some(id) => {
+                self.selection.set([slot]);
+                self.open_entry(slot, &id)
+            }
             None => {
                 // A new row of a data layer being edited, with fields and no form: the row chosen and Öznitelikler shown,
                 // its values typed there at once, as a GIS opens the layer's fields after a feature is drawn
@@ -310,10 +328,18 @@ impl App {
             return self.open_form_on_row_as(layer, key, true);
         }
         let Some((slot, layer)) = self.form_target() else {
-            self.say(
-                Level::Warn,
-                "Formunu açmak için formu olan bir katmandan tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne.",
-            );
+            if let Some(layer) = self.one_object_layer() {
+                self.say(
+                    Level::Warn,
+                    format!(
+                        "“{}” katmanının formu yok. Formla düzenle katmanın alanlarından bir form kurar; ya da Veri › Formlar'da bir form yapın.",
+                        self.form_layer_name(&layer)
+                    ),
+                );
+                return Task::none();
+            }
+            let rows = if self.selection.is_empty() { self.data_rows_chosen() } else { self.selection.len() };
+            self.say(Level::Warn, crate::forms::row_target::choose_one(rows));
             return Task::none();
         };
         let Some(form) = self.form_of_layer(&layer) else {
@@ -372,13 +398,15 @@ impl App {
             {
                 return self.open_form_on_row(layer, key);
             }
-            let chosen = self.selection.len();
-            let why = if chosen != 1 {
-                "Formla düzenlemek için bir nesne seçin."
-            } else {
-                "Seçili nesnenin katmanının formu yok. Formlar penceresinden katmana bir form oluşturun."
-            };
-            self.say(Level::Warn, why);
+            // One object of a layer without a form: the layer gets the form of its fields, said (docs/adr/9346).
+            if let (Some(layer), Some(&slot)) = (self.one_object_layer(), self.selection.ids().first()) {
+                return match self.ensure_layer_form(&layer) {
+                    Some(id) => self.open_entry(slot, &id),
+                    None => Task::none(),
+                };
+            }
+            let rows = if self.selection.is_empty() { self.data_rows_chosen() } else { self.selection.len() };
+            self.say(Level::Warn, crate::forms::row_target::choose_one(rows));
             return Task::none();
         };
         match self.form_of_layer(&layer) {

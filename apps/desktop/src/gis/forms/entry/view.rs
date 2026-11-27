@@ -4,6 +4,17 @@
 use super::*;
 use crate::gis;
 
+/// Whether the record's form has tabs: a long form, which keeps the window's height.
+fn tabs_shown(e: &Entry) -> bool {
+    e.body.items.iter().any(|i| matches!(i, FormItem::Tab { .. }))
+}
+
+/// A short form's page as tall as its items (a row each) and the room round them (docs/adr/9346).
+fn short_height(e: &Entry) -> f32 {
+    let rows = e.body.walk().len().max(1);
+    typography::scaled(56.0 + 44.0 * rows as f32)
+}
+
 impl App {
     pub(crate) fn form_entry_view(&self) -> Element<'_, Message> {
         let Some(e) = &self.gis.form_entry else {
@@ -12,11 +23,9 @@ impl App {
         let name = e.name_in();
         // One size a form, whether what is typed is saved or not (docs/adr/0746).
         let key = format!("{TITLE} · {name}");
-        let title = if e.dirty() {
-            format!("{key} ●")
-        } else {
-            key.clone()
-        };
+        // A record only read says so in the window's name (docs/adr/9346): not “Formla düzenle”.
+        let shown = if e.read_only { format!("Kayıt formu · {name} · Salt okunur") } else { key.clone() };
+        let title = if e.dirty() { format!("{shown} ●") } else { shown };
         // The pages take what the window has when it was given a size of its own (docs/adr/0746), else they
         // are 460 high (at 12 px text), less in a low window: the footer is always in sight (docs/adr/0749).
         let sized = kentos_ui::widget::sizable::sizes::get(&key).is_some();
@@ -26,13 +35,11 @@ impl App {
         if let Some(tabs) = tabs {
             head = head.push(tabs);
         }
+        // A short form is as tall as its fields (docs/adr/9346), a long one scrolls in 460.
+        let tall = if sized { f32::INFINITY } else { typography::scaled(460.0) };
         let page = container(page.unwrap_or_else(|| space::vertical().into()))
-            .height(Fill)
-            .max_height(if sized {
-                f32::INFINITY
-            } else {
-                typography::scaled(460.0)
-            });
+            .height(if sized || tabs_shown(e) { iced::Length::Fill } else { iced::Length::Fixed(short_height(e).min(tall)) })
+            .max_height(tall);
         let frame = Frame::new(title)
             .push(head)
             .fill(page)
@@ -466,10 +473,20 @@ impl App {
                 ));
             }
         }
+        // A data layer's record goes into its edit session, not yet to its source: named so (docs/adr/9346).
+        let save = if self.entry_on_data_layer(e) { crate::data_edits::PREPARE } else { SAVE };
         footer.push(words::primary(
-            SAVE,
+            save,
             (!locked && !by_state).then(|| e.msg(Event::Save)),
         ))
+    }
+
+    /// Whether the record is a data layer's row (its change waits in the layer's edit session).
+    pub(super) fn entry_on_data_layer(&self, e: &Entry) -> bool {
+        self.document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&e.screen.layer).map(|n| n.data.is_some()))
+            .unwrap_or(false)
     }
 
     pub(super) fn entry_locked(&self, e: &Entry) -> bool {
@@ -656,7 +673,7 @@ impl App {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {
-            Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(SAVE | crate::data_edits::PREPARE) => Some(msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(FIRST_ISSUE | NEXT_ISSUE) => Some(msg(Event::FirstIssue)),
             Control::Press(DISCARD) => Some(msg(Event::Discard)),
