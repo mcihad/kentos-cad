@@ -8,9 +8,12 @@
 //! layer's (docs/adr/9114 §2, layers_migrate_texts.rs); a layer of texts only becomes that table, in its place. A layer
 //! holding what no table holds (a dimension, a block, a hatch …) is refused before anything is written: removing the
 //! layer would lose them. Counted first by a dry run of the export (nothing written).
+//!
+//! A table there already (docs/adr/9339) is refused unless `existing` says to make it again (`replaceLayer`) or to add
+//! the rows to it (`append`); the texts' table beside it goes the same way.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateTarget, DataLayer, Entity, ExportFormat, LayerDataOperation, LayerField,
+    CommandResult, CommandWarning, CreateTarget, DataLayer, Entity, ExportExisting, ExportFormat, LayerDataOperation, LayerField,
     LayerNodeType, LayersData, LayersExport, LayersMigrate, LayersMigrated, MigratedTexts, TextEntity,
 };
 use kentos_domain::{Document, ServedBy, Slot};
@@ -34,6 +37,7 @@ fn export_of(input: &LayersMigrate) -> LayersExport {
         address: (!gpkg).then(|| input.address.clone().unwrap_or_default()),
         schema: (!gpkg).then(|| input.schema.clone().unwrap_or_else(|| "public".to_owned())),
         name: input.table.as_deref().map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned),
+        existing: input.existing.filter(|e| *e != ExportExisting::Refuse),
         ..LayersExport::default()
     }
 }
@@ -57,6 +61,13 @@ fn checked(doc: &Document, input: &LayersMigrate) -> Result<(), Stop> {
             return Err(fail(codes::NO_TARGET, "Tablonun yapılacağı veritabanı verilmedi (address).".into(), "address"));
         }
         _ => {}
+    }
+    if input.existing == Some(ExportExisting::OverwriteFile) {
+        return Err(fail(
+            codes::INVALID_OPTION,
+            "Taşımada dosyanın üstüne yazılmaz (existing: overwriteFile): kaynağın öbür tabloları silinirdi. Var olan tablo için replaceLayer ya da append verin.".into(),
+            "existing",
+        ));
     }
     let node = doc
         .layers()
@@ -138,7 +149,8 @@ fn counted<'d>(doc: &'d Document, input: &LayersMigrate, export: &'d LayersExpor
         tables.push(&table);
     }
     tables.extend(texts_table.iter());
-    for name in tables {
+    let refused = matches!(input.existing, None | Some(ExportExisting::Refuse));
+    for name in tables.into_iter().filter(|_| refused) {
         if table_there(export, name)? {
             return Err(fail(
                 codes::TARGET_EXISTS,
@@ -329,15 +341,22 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
     let texts_written = match &texts_table {
         Some(t) if !cx.dry() => {
             let refs: Vec<&TextEntity> = list.iter().collect();
-            match texts::write(&address, gpkg, t, srid, &settings, &refs) {
+            match texts::write(&address, gpkg, t, srid, &settings, &refs, input.existing) {
                 Ok(n) => n,
                 Err(why) => {
-                    if main.is_some() {
+                    // A table made for the move is taken back; one there before (replaced, added to) is not dropped.
+                    let made = matches!(input.existing, None | Some(ExportExisting::Refuse));
+                    if main.is_some() && made {
                         texts::take_back(&address, &table, gpkg && !file_there);
                     }
+                    let kept = if made {
+                        "Katmanın tablosu geri alındı; hiçbir şey taşınmadı"
+                    } else {
+                        "Katmanın tablosuna yazılanlar kaynakta kaldı; katman çizimde kaldı"
+                    };
                     return fail(
                         codes::SOURCE_UNREACHABLE,
-                        format!("Yazılar “{t}” tablosuna yazılamadı: {why}. Katmanın tablosu geri alındı; hiçbir şey taşınmadı."),
+                        format!("Yazılar “{t}” tablosuna yazılamadı: {why}. {kept}."),
                         "layer",
                     )
                     .into();

@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **CBS'de Seçilenleri kaydet kopyanın türünü sorar; seçim GeoPackage'ıyla birlikte CBS projesi olur (27 Kasım 2026,
+  27 Kasım CBS incelemesinin 1. maddesi; [ADR 9339](../adr/9339-cbs-selection-copy-with-its-geopackage.md)).**
+  - “CBS projesi ve GeoPackage”: seçilenler proje dosyasıyla aynı adlı GeoPackage'a tablo olarak yazılır, kopya
+    açılınca doğrudan kaydedilir. “Çizim kopyası” nesneleri proje dosyasında tutar.
+  - Aynı adlı tablo için Yeni tablo, Üzerine yaz ve Ekle vardır; `cad.layers.migrate` aynı seçenekleri `existing`
+    ile alır (`overwriteFile` reddedilir).
+
 - **GeoJSON dışa aktar ve Paketle veri katmanlarının kaynak satırlarını kapsar (27 Kasım 2026, 27 Kasım CBS
   incelemesinin 2. ve 5. maddeleri; [ADR 9338](../adr/9338-export-and-package-data-layer-rows.md)).**
   - GeoJSON'un Seçili, Görünen katmanlar ve Tümü kapsamları veri katmanlarının satırlarını kaynaktan okuyup sayar;

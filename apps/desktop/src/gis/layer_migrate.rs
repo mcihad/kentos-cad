@@ -121,6 +121,7 @@ impl MigrateWindow {
                 if s.is_empty() { "public".to_owned() } else { s.to_owned() }
             }),
             table: Some(row.table.trim().to_owned()).filter(|t| !t.is_empty()),
+            existing: None,
         }
     }
 }
@@ -204,6 +205,7 @@ impl App {
                 address: (target == CreateTarget::Postgis).then(|| place.clone()),
                 schema: (target == CreateTarget::Postgis).then(|| schema.clone().unwrap_or_else(|| "public".to_owned())),
                 table: None,
+                existing: None,
             };
             match kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                 CommandResult::Completed { output, .. } => moved.push(format!("“{name}” → “{}”", output.table)),

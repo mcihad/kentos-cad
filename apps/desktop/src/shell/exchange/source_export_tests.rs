@@ -37,6 +37,9 @@ const B84: (f64, f64) = (35.849_123_239_7, 39.914_531_183_8);
 /// The GeoPackage of the review in `dir`: three tables in EPSG:5256.
 pub(super) fn qa_gpkg(dir: &Path, name: &str) -> PathBuf {
     let path = dir.join(name);
+    // Made anew: a picture's two themes make it twice.
+    kentos_data::registry().forget(&path.display().to_string());
+    let _ = std::fs::remove_file(&path);
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
     let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
     let mut tx = source.begin().expect("begin");

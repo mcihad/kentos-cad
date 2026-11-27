@@ -106,7 +106,8 @@ fn rows(texts: &[&TextEntity], system: Option<&TableSystem>) -> Result<Vec<NewFe
 }
 
 /// Writes the texts' table into the source at `address` (a GeoPackage made when it is not there): made and filled in
-/// one transaction. Its rows written, or why not; a GeoPackage it made is removed when it fails.
+/// one transaction; one there already made again (`replaceLayer`) or added to (`append`, docs/adr/9339). Its rows
+/// written, or why not; a GeoPackage it made is removed when it fails.
 pub(crate) fn write(
     address: &str,
     gpkg: bool,
@@ -114,6 +115,7 @@ pub(crate) fn write(
     srid: Option<u32>,
     settings: &ProjectSettings,
     texts: &[&TextEntity],
+    existing: Option<kentos_commands::ExportExisting>,
 ) -> Result<u64, String> {
     let path = std::path::Path::new(address);
     let made = gpkg && !path.exists();
@@ -128,10 +130,12 @@ pub(crate) fn write(
         let system = TableSystem::of(settings, srid)?;
         let rows = rows(texts, system.as_ref())?;
         let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
+        let there = !made && source.tables().map_err(|e| e.to_string())?.iter().any(|t| t.name == table);
+        let append = there && existing == Some(kentos_commands::ExportExisting::Append);
+        let replace = there && existing == Some(kentos_commands::ExportExisting::ReplaceLayer);
         let mut tx = source.begin().map_err(|e| e.to_string())?;
-        let done = tx
-            .create_table(&new_table(table, srid), false)
-            .and_then(|()| tx.insert(table, &rows).map(|_| ()));
+        let made_table = if append { Ok(()) } else { tx.create_table(&new_table(table, srid), replace) };
+        let done = made_table.and_then(|()| tx.insert(table, &rows).map(|_| ()));
         match done {
             Ok(()) => tx.commit().map_err(|e| e.to_string()).map(|()| rows.len() as u64),
             Err(e) => {

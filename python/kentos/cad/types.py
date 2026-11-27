@@ -59336,15 +59336,21 @@ class LayersMigrate(_Model):
     it, its rows drawn as texts, goes above the layer's (a layer of texts only: in its place, with its name). A text's
     style, mask, curve, scales, link to an object or paragraph formats are not written: said as `text_details_left`.
 
+    A table there already (docs/adr/9339): refused (`existing` absent or `refuse`), made again (`replaceLayer`: dropped
+    first, the source's other tables kept) or added to (`append`: the rows after the table's own, a field the table has
+    no column for left out and said); the texts' table beside it alike. The layer reads the whole table afterwards.
+
     Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without
-    `path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
+    `path`, `postgis` without `address`), `invalid_option` (`existing: overwriteFile`: the file's other tables would
+    go), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
     `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table, or the texts' table, is
-    there), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches
+    there and `existing` refuses it), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches
     or anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their
     count and the first's kind are said).
     Attributes:
         layer: The drawing layer (its id).
         address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+        existing: A table there already: `refuse` (absent), `replaceLayer` or `append`; `overwriteFile` is refused.
         path: `gpkg`: the GeoPackage file.
         schema: `postgis`: the schema; none: `public`.
         table: The table's name; none: the layer's name made a table name.
@@ -59352,6 +59358,7 @@ class LayersMigrate(_Model):
     layer: str
     target: CreateTarget | CreateTargetName
     address: str | None | Unset = UNSET
+    existing: ExportExisting | ExportExistingName | None | Unset = UNSET
     path: str | None | Unset = UNSET
     schema: str | None | Unset = UNSET
     table: str | None | Unset = UNSET
@@ -59362,6 +59369,8 @@ class LayersMigrate(_Model):
         out["target"] = _enum_out(self.target)
         if self.address is not UNSET:
             out["address"] = self.address
+        if self.existing is not UNSET:
+            out["existing"] = None if self.existing is None else _enum_out(self.existing)
         if self.path is not UNSET:
             out["path"] = self.path
         if self.schema is not UNSET:
@@ -59376,6 +59385,7 @@ class LayersMigrate(_Model):
             layer=data["layer"],
             target=_enum_in(CreateTarget, data["target"]),
             address=data.get("address", UNSET),
+            existing=UNSET if "existing" not in data else None if data["existing"] is None else _enum_in(ExportExisting, data["existing"]),
             path=data.get("path", UNSET),
             schema=data.get("schema", UNSET),
             table=data.get("table", UNSET),

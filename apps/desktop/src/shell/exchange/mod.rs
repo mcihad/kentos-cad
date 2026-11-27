@@ -61,6 +61,10 @@ pub(crate) mod field_send;
 mod field_send_tests;
 mod geojson_export;
 pub(crate) mod source_rows;
+pub(crate) mod selection_save;
+#[cfg(test)]
+#[path = "selection_save_tests.rs"]
+mod selection_save_tests;
 #[cfg(test)]
 #[path = "source_export_tests.rs"]
 mod source_export_tests;
@@ -210,6 +214,8 @@ pub enum Window {
     /// GIS türevi dışa aktar and GIS türevini denetle (docs/adr/0530).
     GisExport(gis_export::State),
     GisCheck(gis_check::State),
+    /// Seçilenleri kaydet in a CBS project: the copy's kind asked (docs/adr/9339).
+    SelectionSave(selection_save::State),
 }
 
 #[derive(Debug, Clone)]
@@ -248,6 +254,9 @@ pub enum Event {
     SheetPublish(sheet_publish::Event),
     PermitSet(permit_set::Event),
     GisExport(gis_export::Event),
+    SelectionSave(selection_save::Event),
+    /// A CBS project's selection written, or why not (docs/adr/9339).
+    SelectionSaved(Result<String, String>),
     GisCheck(gis_check::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
@@ -631,6 +640,8 @@ impl App {
             Event::PermitSet(e) => self.permit_set_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
+            Event::SelectionSave(e) => self.selection_save_event(e),
+            Event::SelectionSaved(done) => self.selection_saved(done),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -693,6 +704,7 @@ impl App {
             Some(Window::MeshQuery(s)) => self.mesh_view(s),
             Some(Window::GisExport(s)) => self.gis_export_view(s),
             Some(Window::GisCheck(s)) => self.gis_check_view(s),
+            Some(Window::SelectionSave(s)) => self.selection_save_view(s),
             Some(Window::PdfImport(s)) => self.pdf_import_view(s),
             None => iced::widget::text("").into(),
         }

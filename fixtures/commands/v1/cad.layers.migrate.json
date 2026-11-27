@@ -1581,6 +1581,290 @@
    ]
   },
   {
+   "name": "Var olan tabloya eklenir (append): satırlar tablonunkilerin ardından, katman bütün tabloyu okur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ekle.gpkg",
+      "table": "ortak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "direkler",
+       "table": "ortak",
+       "address": "$tmp:tasi/ekle.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "su_vanalari",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ekle.gpkg",
+      "table": "ortak",
+      "existing": "append"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "su_vanalari",
+       "table": "ortak",
+       "address": "$tmp:tasi/ekle.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "su_vanalari",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Sağlam"
+         },
+         "wkt": "POINT (600000 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Bakımda"
+         },
+         "wkt": "POINT (600010 4410005)"
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "no": "3",
+          "durum": "Arızalı"
+         },
+         "wkt": "POINT (600020 4410010)"
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "no": "1",
+          "durum": "Sağlam"
+         },
+         "wkt": "POINT (600000 4410000)"
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "no": "2",
+          "durum": "Bakımda"
+         },
+         "wkt": "POINT (600010 4410005)"
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "no": "3",
+          "durum": "Arızalı"
+         },
+         "wkt": "POINT (600020 4410010)"
+        }
+       ],
+       "offset": 0,
+       "total": 6,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan tablo yeniden yapılır (replaceLayer): yalnız taşınan satırlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yerine.gpkg",
+      "table": "ortak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "direkler",
+       "table": "ortak",
+       "address": "$tmp:tasi/yerine.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "su_vanalari",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yerine.gpkg",
+      "table": "ortak",
+      "existing": "replaceLayer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "su_vanalari",
+       "table": "ortak",
+       "address": "$tmp:tasi/yerine.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "su_vanalari",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Sağlam"
+         },
+         "wkt": "POINT (600000 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Bakımda"
+         },
+         "wkt": "POINT (600010 4410005)"
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "no": "3",
+          "durum": "Arızalı"
+         },
+         "wkt": "POINT (600020 4410010)"
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "existing: refuse var olan tabloyu reddeder",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ret.gpkg",
+      "table": "ortak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "direkler",
+       "table": "ortak",
+       "address": "$tmp:tasi/ret.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "su_vanalari",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ret.gpkg",
+      "table": "ortak",
+      "existing": "refuse"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: taşımada dosyanın üstüne yazılmaz (overwriteFile)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg",
+      "existing": "overwriteFile"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_option",
+       "message": "Taşımada dosyanın üstüne yazılmaz (existing: overwriteFile): kaynağın öbür tabloları silinirdi. Var olan tablo için replaceLayer ya da append verin.",
+       "path": "existing"
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Ret: boş katman",
    "steps": [
     {

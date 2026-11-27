@@ -276,6 +276,24 @@ def cases():
             step(gpkg("direkler", "var.gpkg", table="ortak"), migrated("ortak", tmp("var.gpkg"), 3, "POINT", "direkler")),
             step(gpkg("hatlar", "var.gpkg", table="ortak"), refused(
                 "target_exists", "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
+        # docs/adr/9339: a table there already, made again or added to; the layer reads the whole table.
+        case("Var olan tabloya eklenir (append): satırlar tablonunkilerin ardından, katman bütün tabloyu okur", [
+            step(gpkg("direkler", "ekle.gpkg", table="ortak"), migrated("ortak", tmp("ekle.gpkg"), 3, "POINT", "direkler")),
+            step(gpkg("su_vanalari", "ekle.gpkg", table="ortak", existing="append"),
+                 migrated("ortak", tmp("ekle.gpkg"), 3, "POINT", "su_vanalari")),
+            rows_step("su_vanalari", pole_rows() + [dict(r, key=r["key"] + 3) for r in pole_rows()])]),
+        case("Var olan tablo yeniden yapılır (replaceLayer): yalnız taşınan satırlar", [
+            step(gpkg("direkler", "yerine.gpkg", table="ortak"), migrated("ortak", tmp("yerine.gpkg"), 3, "POINT", "direkler")),
+            step(gpkg("su_vanalari", "yerine.gpkg", table="ortak", existing="replaceLayer"),
+                 migrated("ortak", tmp("yerine.gpkg"), 3, "POINT", "su_vanalari")),
+            rows_step("su_vanalari", pole_rows())]),
+        case("existing: refuse var olan tabloyu reddeder", [
+            step(gpkg("direkler", "ret.gpkg", table="ortak"), migrated("ortak", tmp("ret.gpkg"), 3, "POINT", "direkler")),
+            step(gpkg("su_vanalari", "ret.gpkg", table="ortak", existing="refuse"), refused(
+                "target_exists", "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
+        case("Ret: taşımada dosyanın üstüne yazılmaz (overwriteFile)", [step(gpkg("direkler", "x.gpkg", existing="overwriteFile"), refused(
+            "invalid_option", "Taşımada dosyanın üstüne yazılmaz (existing: overwriteFile): kaynağın öbür tabloları silinirdi. "
+                              "Var olan tablo için replaceLayer ya da append verin.", "existing"))]),
         case("Ret: boş katman", [step(gpkg("bos", "bos.gpkg"), refused(
             "nothing_to_export", "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.", "layer"))]),
         # docs/adr/9114 §2: a layer's texts in a table of their own.

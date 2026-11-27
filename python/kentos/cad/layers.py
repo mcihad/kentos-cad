@@ -2629,6 +2629,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
         layer: str,
         target: CreateTarget | CreateTargetName,
         address: str | None | Unset = UNSET,
+        existing: ExportExisting | ExportExistingName | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         schema: str | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -2651,6 +2652,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
             layer: The drawing layer (its id).
             target:
             address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+            existing: A table there already: `refuse` (absent), `replaceLayer` or `append`; `overwriteFile` is refused.
             path: `gpkg`: the GeoPackage file.
             schema: `postgis`: the schema; none: `public`.
             table: The table's name; none: the layer's name made a table name.
@@ -2670,6 +2672,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
             layer=layer,
             target=target,
             address=address,
+            existing=existing,
             path=path,
             schema=schema,
             table=table,
@@ -2683,6 +2686,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
         layer: str,
         target: CreateTarget | CreateTargetName,
         address: str | None | Unset = UNSET,
+        existing: ExportExisting | ExportExistingName | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         schema: str | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -2694,6 +2698,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
             layer=layer,
             target=target,
             address=address,
+            existing=existing,
             path=path,
             schema=schema,
             table=table,
@@ -2707,6 +2712,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
         layer: str,
         target: CreateTarget | CreateTargetName,
         address: str | None | Unset = UNSET,
+        existing: ExportExisting | ExportExistingName | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         schema: str | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -2718,6 +2724,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
             layer=layer,
             target=target,
             address=address,
+            existing=existing,
             path=path,
             schema=schema,
             table=table,
@@ -2731,6 +2738,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
         layer: str,
         target: CreateTarget | CreateTargetName,
         address: str | None | Unset = UNSET,
+        existing: ExportExisting | ExportExistingName | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         schema: str | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -2747,6 +2755,7 @@ class _LayersMigrate(LocalCommand[LayersMigrate, LayersMigrated, LayersMigrated]
             layer=layer,
             target=target,
             address=address,
+            existing=existing,
             path=path,
             schema=schema,
             table=table,

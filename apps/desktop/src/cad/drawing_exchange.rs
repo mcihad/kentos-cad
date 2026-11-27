@@ -9,7 +9,6 @@
 use std::collections::BTreeSet;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::AtomicBool;
 
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, button, container, row, scrollable, text};
@@ -292,106 +291,11 @@ fn first_checked(rows: &[Row]) -> BTreeSet<String> {
         .collect()
 }
 
-fn stem(path: &Path) -> String {
-    path.file_stem()
-        .map_or_else(|| "Çizim".to_owned(), |s| s.to_string_lossy().into_owned())
-}
-
 fn file_name(path: &Path) -> String {
     path.file_name()
         .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
 }
 
-/// The selection's drawing written to `path` (docs/adr/0193 §1): what to say, or why not.
-pub fn write_selection(
-    drawing: &DocumentSnapshotV2,
-    uids: &[EntityId],
-    path: &Path,
-) -> Result<String, String> {
-    let made = exchange::selection(drawing, uids, &stem(path))
-        .map_err(|why| format!("Seçilenler yazılamadı: {why}"))?;
-    crate::saving::write_watched(
-        &made,
-        path,
-        &AtomicBool::new(false),
-        &mut |_| {},
-        &crate::saving::Faults::NONE,
-    )
-    .map_err(|e| match e {
-        crate::saving::SaveError::Failed(why) => format!("Seçilenler yazılamadı: {why}"),
-        crate::saving::SaveError::Stopped => "Seçilenler yazılamadı: kayıt durduruldu.".to_owned(),
-    })?;
-    let (hatches, dimensions) = lost_ties(drawing, uids);
-    let mut lost = Vec::new();
-    if hatches > 0 {
-        lost.push(format!("{hatches} tarama"));
-    }
-    if dimensions > 0 {
-        lost.push(format!("{dimensions} ölçü"));
-    }
-    let lost = if lost.is_empty() {
-        String::new()
-    } else {
-        format!(
-            " Kaynak nesneleri seçilmediği için {} dosyada bağsız (ilişkisiz) kaldı; bağ kalsın istiyorsanız kaynaklarını da seçip yeniden kaydedin.",
-            lost.join(" ve ")
-        )
-    };
-    Ok(format!(
-        "Seçilenler kaydedildi: {} nesne, {} blok → “{}”. Açık çizim değişmedi.{lost}",
-        made.entities.len(),
-        made.blocks.len(),
-        file_name(path)
-    ))
-}
-
-/// How many of the chosen hatches and dimensions are tied to objects not chosen (their ties do not go into the file):
-/// a hatch by its boundary objects, a dimension by the objects its points are on.
-pub(crate) fn lost_ties(drawing: &DocumentSnapshotV2, uids: &[EntityId]) -> (usize, usize) {
-    use kentos_commands::Entity;
-    let chosen: std::collections::HashSet<String> = uids.iter().map(|u| u.to_string()).collect();
-    // Every “uid” string under a value (a dimension's references).
-    fn named(v: &serde_json::Value, out: &mut Vec<String>) {
-        match v {
-            serde_json::Value::Object(m) => {
-                for (k, x) in m {
-                    match (k.as_str(), x) {
-                        ("uid", serde_json::Value::String(u)) => out.push(u.clone()),
-                        _ => named(x, out),
-                    }
-                }
-            }
-            serde_json::Value::Array(a) => a.iter().for_each(|x| named(x, out)),
-            _ => {}
-        }
-    }
-    let (mut hatches, mut dimensions) = (0, 0);
-    for (e, uid) in drawing.entities.iter().zip(&drawing.uids) {
-        if !chosen.contains(&uid.to_string()) {
-            continue;
-        }
-        match e {
-            Entity::Hatch(h) => {
-                if h.assoc.as_ref().is_some_and(|a| {
-                    a.outer.iter().chain(&a.bounds).chain(&a.islands).any(|id| !chosen.contains(&id.to_string()))
-                }) {
-                    hatches += 1;
-                }
-            }
-            Entity::Dimension(d) => {
-                if let Some(refs) = &d.refs {
-                    let mut ids = Vec::new();
-                    named(&serde_json::to_value(refs).unwrap_or_default(), &mut ids);
-                    if ids.iter().any(|id| !chosen.contains(id)) {
-                        dimensions += 1;
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    (hatches, dimensions)
-}
 
 impl App {
     pub(crate) fn drawing_exchange_command(&mut self, id: &str) -> Task<Message> {
@@ -404,6 +308,22 @@ impl App {
                 if self.selection.is_empty() {
                     self.warn("Seçilenleri dosyaya kaydet: önce kaydedilecek nesneleri seçin.");
                     return Task::none();
+                }
+                // A CBS project's copy (docs/adr/9339): its kind asked first, its tables in a GeoPackage beside it.
+                if let Some(doc) = &self.document {
+                    let uids: Vec<EntityId> = self
+                        .selection
+                        .ids()
+                        .iter()
+                        .filter_map(|s| doc.model.uid(*s))
+                        .map(|u| EntityId(*u.as_bytes()))
+                        .collect();
+                    let drawing = doc.model.to_snapshot_v2();
+                    let held = crate::exchange::selection_save::held_layers(&drawing, &uids);
+                    if !held.is_empty() {
+                        self.selection_save_open(uids, drawing, held);
+                        return Task::none();
+                    }
                 }
                 if let Picker::File(path) = &self.picker {
                     return Task::done(msg(Event::SaveTo(Some(path.clone()))));
@@ -501,7 +421,7 @@ impl App {
                 let drawing = doc.model.to_snapshot_v2();
                 // Off the window's thread, as a save is (saving.rs).
                 return iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
-                    let done = write_selection(&drawing, &uids, &path);
+                    let done = crate::exchange::selection_save::write_selection(&drawing, &uids, &path);
                     let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                         &mut out,
                         msg(Event::Saved(done)),
@@ -1179,7 +1099,7 @@ mod lost_tie_tests {
         let hu = doc.uid(h).expect("a uid");
         let snapshot = doc.to_snapshot_v2();
         let id = |u: kentos_domain::Uuid| kentos_commands::EntityId::parse(&u.to_string()).expect("an id");
-        assert_eq!(super::lost_ties(&snapshot, &[id(hu)]), (1, 0));
-        assert_eq!(super::lost_ties(&snapshot, &[id(hu), id(cu)]), (0, 0));
+        assert_eq!(crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu)]), (1, 0));
+        assert_eq!(crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu), id(cu)]), (0, 0));
     }
 }
