@@ -6,6 +6,11 @@
 //!   keys, the control point is not; the drawing's selection stays empty.
 //! - Uzaklıkta 6 m: the control point too, said apart; the table shows the layer with most rows.
 //! - The window counts the rows: no “uygun nesne yok”.
+//! - The result kept by layer (docs/adr/9345): the card offers `koseler` 3 and `kontrol` 1; choosing `kontrol` shows
+//!   its row in the table without running again, and `koseler` comes back with its three. Layers in the tree's order.
+//! - İfadeyle seç Tümü (docs/adr/9345): the line names the layers it takes and those without a field the condition
+//!   reads; `kontrol` renamed `koseler` into the group Senaryo 1, `ad = 'A' veya ad = 'K'` gives key 1 of each, told
+//!   apart by the group's path and the layer's id.
 //!
 //! Picture: the CBS package's `location_data_tests::screens` (İşlemler is CBS's panel).
 
@@ -125,8 +130,8 @@ fn near_takes_the_control_point_too_and_says_its_layer() {
     };
     assert_eq!(
         text,
-        "4 nesne ilişkiyi sağladı; “koseler” katmanında 3 satır tabloda seçildi (anahtar: 1, 2, 3); “kontrol” katmanında 1 \
-         satır da sağladı (tabloda görmek için Seçilecek nesneler'de o katmanı seçin)."
+        "4 nesne ilişkiyi sağladı: “kontrol” 1, “koseler” 3. Tabloda “koseler”: 3 satır seçili (anahtar: 1, 2, 3). Öbür \
+         katmanınkini formun başından tabloda açın; işlem yeniden çalışmaz."
     );
     // 4 m: the control point stays out again.
     event(&mut app, Event::Value("distance".into(), json!(4)));
@@ -135,4 +140,102 @@ fn near_takes_the_control_point_too_and_says_its_layer() {
         panic!("{:?}", status(&app));
     };
     assert!(text.starts_with("3 nesne ilişkiyi sağladı"), "{text}");
+}
+
+#[test]
+fn the_result_is_kept_by_layer_and_another_layer_shows_without_running_again() {
+    let (mut app, _) = opened("konum-katmanlar");
+    event(&mut app, Event::Value("relation".into(), json!("near")));
+    event(&mut app, Event::Value("distance".into(), json!(6)));
+    event(&mut app, Event::Run);
+    let koseler = crate::data_layers_tests::node(&app, "koseler").expect("koseler").id.clone();
+    let kontrol = crate::data_layers_tests::node(&app, "kontrol").expect("kontrol").id.clone();
+    let results = app.gis.processing.dialog.as_ref().and_then(|w| w.layer_results.clone()).expect("kept by layer");
+    let each: Vec<(&str, usize)> = results.layers.iter().map(|l| (l.label.as_str(), l.keys.len())).collect();
+    // In the tree's order, as Katmanlar lists them.
+    assert_eq!(each, vec![("kontrol", 1), ("koseler", 3)]);
+    assert_eq!(results.shown.as_deref(), Some(koseler.as_str()));
+    // Nothing runs again: the drawing is not touched, the kept result is shown.
+    let before = app.document.as_ref().map(|d| d.model.generation());
+    event(&mut app, Event::ResultLayer(kontrol.clone()));
+    assert_eq!(app.document.as_ref().map(|d| d.model.generation()), before, "nothing written");
+    assert_eq!(app.gis.features.data.selected_layer(), Some(kontrol.as_str()));
+    assert_eq!(app.gis.features.data.selected, BTreeSet::from([1]));
+    assert_eq!(app.data_table_layer().map(|n| n.id), Some(kontrol.clone()));
+    let RunStatus::Ok { text, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert!(text.contains("Tabloda “kontrol”: 1 satır seçili (anahtar: 1)"), "{text}");
+    event(&mut app, Event::ResultLayer(koseler.clone()));
+    assert_eq!(app.gis.features.data.selected, BTreeSet::from([1, 2, 3]));
+    // A value changed: the card goes with the line.
+    event(&mut app, Event::Value("distance".into(), json!(4)));
+    assert!(app.gis.processing.dialog.as_ref().is_some_and(|w| w.layer_results.is_none()));
+}
+
+/// The triangle's project with `kontrol` renamed `koseler` into the group Senaryo 1, İfadeyle seç open on Tümü.
+fn expression(tag: &str) -> (App, String, String) {
+    let (mut app, _) = opened(tag);
+    let koseler = crate::data_layers_tests::node(&app, "koseler").expect("koseler").id.clone();
+    let kontrol = crate::data_layers_tests::node(&app, "kontrol").expect("kontrol").id.clone();
+    {
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        model.rename_layer(&kontrol, "koseler");
+        let group = model.add_layer(kentos_domain::NewLayer::group("Senaryo 1"), None, false).expect("a group");
+        model.move_layer(&kontrol, Some(&group), None).expect("into the group");
+    }
+    let task = app.update(Message::Run("processing.run.selection.byExpression"));
+    drive(&mut app, task);
+    event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
+    let task = app.data_rows_tasks();
+    drive(&mut app, task);
+    (app, koseler, kontrol)
+}
+
+#[test]
+fn the_expression_over_every_layer_reads_the_rows_and_tells_same_named_layers_apart() {
+    let (mut app, koseler, kontrol) = expression("ifade-tumu");
+    event(&mut app, Event::Value("condition".into(), json!("ad = 'A' veya ad = 'K'")));
+    let window = app.gis.processing.dialog.as_ref().expect("the window");
+    let input = window.inputs.get("input").expect("the input's line");
+    assert_eq!(input.count, 5, "{}", input.description);
+    assert!(
+        input.description.contains("Kapsamdaki veri katmanları: koseler (3), ucgen (1), Senaryo 1 / koseler (1)."),
+        "{}",
+        input.description
+    );
+    assert!(!window.input_empty(), "Çalıştır is on");
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert!(text.starts_with("2 nesne koşulu sağladı: “koseler” 1, “Senaryo 1 / koseler” 1."), "{text}");
+    let results = app.gis.processing.dialog.as_ref().and_then(|w| w.layer_results.clone()).expect("kept by layer");
+    let each: Vec<(&str, Vec<i64>)> =
+        results.layers.iter().map(|l| (l.layer.as_str(), l.keys.iter().copied().collect())).collect();
+    assert_eq!(each, vec![(koseler.as_str(), vec![1]), (kontrol.as_str(), vec![1])]);
+    event(&mut app, Event::ResultLayer(kontrol.clone()));
+    assert_eq!(app.gis.features.data.selected_layer(), Some(kontrol.as_str()));
+    assert_eq!(app.gis.features.data.selected, BTreeSet::from([1]));
+}
+
+#[test]
+fn a_field_a_layer_lacks_is_said_with_the_rule() {
+    let (mut app, _, _) = expression("ifade-eksik-alan");
+    event(&mut app, Event::Value("condition".into(), json!("durum = 'x' veya ad = 'A'")));
+    let window = app.gis.processing.dialog.as_ref().expect("the window");
+    let input = window.inputs.get("input").expect("the input's line");
+    assert!(
+        input.description.contains(
+            "Alanı olmayan katmanda değeri boş sayılır, eşitlik sağlanmaz: koseler (durum); ucgen (durum); Senaryo 1 / \
+             koseler (durum)."
+        ),
+        "{}",
+        input.description
+    );
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert!(text.starts_with("1 nesne koşulu sağladı; “koseler” katmanında 1 satır tabloda seçildi (anahtar: 1)"), "{text}");
 }
