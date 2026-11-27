@@ -725,7 +725,9 @@ ARCH_WITH_FOOTINGS = 40
 ARCH_WITH_RAFTS = 41
 # Architecture data 42 (docs/adr/8173): a profile, a beam's band covering a wall (`covering`).
 ARCH_WITH_PROFILES = 42
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_PROFILES), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 43 (docs/adr/8174): the site's natural and graded ground, terrain surfaces by their ids.
+ARCH_WITH_GROUND = 43
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_GROUND), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -12905,7 +12907,10 @@ class _Schema:
                          **({"site": (self.fields({"parcel": (self.text, False),
                                                     "edges": (self.array(self.fields({"kind": (self.enum(("front", "back", "public")), False),
                                                                                       "setback": (self.float, False)})), False),
-                                                    "datum": (self.float, False), "envelope": (self.text, False)}), False)}
+                                                    "datum": (self.float, False), "envelope": (self.text, False),
+                                                    # Architecture data 43 (docs/adr/8174): the natural and the graded ground.
+                                                    **({"naturalGround": (self.text, False), "gradedGround": (self.text, False)}
+                                                       if self.arch_version >= ARCH_WITH_GROUND else {})}), False)}
                             if self.site_plan else {}),
                          # Schema 225 (docs/adr/8034): the municipality's regulation.
                          **({"localRules": (self.enum(("sivas",)), False)} if self.local_rules else {}),
@@ -12936,6 +12941,11 @@ class _Schema:
                     self.fail("bad_value", "bahçe mesafesi sıfırdan büyük, en çok 100 m olur")
             if "datum" in site and not (math.isfinite(site["datum"]) and abs(site["datum"]) <= 10000):
                 self.fail("bad_value", "±0,00 kotu en çok ±10 000 m olur")
+            for key in ("naturalGround", "gradedGround"):
+                if key in site and not site[key].strip():
+                    self.fail("bad_value", "zeminin yüzey kimliği boş olamaz")
+            if "naturalGround" in site and site.get("naturalGround") == site.get("gradedGround"):
+                self.fail("bad_value", "tabii ve tesviye zemin aynı yüzey olamaz")
         if "cutHeight" in a and not (math.isfinite(a["cutHeight"]) and CUT_HEIGHT_RANGE[0] <= a["cutHeight"] <= CUT_HEIGHT_RANGE[1]):
             self.fail("bad_value", "planın kesme yüksekliği 0,3 ile 3 m arasında olur")
         ids, names = set(), set()

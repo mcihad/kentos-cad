@@ -76,7 +76,7 @@ pub use schemas::*;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_PROFILES),
+    ("arch", "mimari", ARCH_WITH_GROUND),
     ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -451,6 +451,19 @@ pub fn uses_rafts(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// moulding, a coping), in the drawing. Version 42 holds versions 1–41's data too. The document schema stays as it is.
 pub const ARCH_WITH_PROFILES: u16 = 42;
 
+/// Architecture data version 43 (docs/adr/8174): the site plan's natural and graded ground (`naturalGround`,
+/// `gradedGround`: terrain surfaces by their ids). Version 43 holds versions 1–42's data too.
+pub const ARCH_WITH_GROUND: u16 = 43;
+
+/// Whether `doc` holds architecture data 43 ([`ARCH_WITH_GROUND`]): a site ground.
+pub fn uses_ground(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .is_some_and(|s| s.natural_ground.is_some() || s.graded_ground.is_some())
+}
+
 /// Whether `doc` holds architecture data 42 ([`ARCH_WITH_PROFILES`]): a profile.
 pub fn uses_profiles(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     uses_profiles_in(doc.entities.iter())
@@ -630,7 +643,7 @@ fn uses_shaft_vents_in<'a>(
     objects.any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 42 for a profile, 41 for a raft, 40 for a footing, 39 for kitchen storey or filler placement, 38 for an electrical
+/// The architecture data version `doc` needs: 43 for a site ground, 42 for a profile, 41 for a raft, 40 for a footing, 39 for kitchen storey or filler placement, 38 for an electrical
 /// appliance card, 37 for a ceiling view recipe, 36 for individual slab edge links,
 /// 35 for a building's own plan notes, 34 for a plan note of the
 /// projections or basements, 33 for one of the
@@ -660,7 +673,9 @@ fn arch_version_of<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
 ) -> u16 {
-    if uses_profiles_in(objects.clone()) {
+    if uses_ground(doc) {
+        ARCH_WITH_GROUND
+    } else if uses_profiles_in(objects.clone()) {
         ARCH_WITH_PROFILES
     } else if uses_rafts_in(doc, objects.clone()) {
         ARCH_WITH_RAFTS

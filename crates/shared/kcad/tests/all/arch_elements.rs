@@ -494,3 +494,25 @@ fn a_profile_round_trips_under_arch_data_42() {
     let refused = kentos_kcad::encode(&baseless).expect_err("a profile stands at its base");
     assert!(refused.message.contains("Profilin"), "{}", refused.message);
 }
+
+#[test]
+fn a_site_s_ground_round_trips_under_arch_data_43() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_ground(&doc));
+    // The site's natural and graded ground (docs/adr/8174): terrain surfaces by their ids.
+    let arch = doc.settings.arch.get_or_insert_with(Default::default);
+    let site = arch.site.get_or_insert_with(Default::default);
+    site.datum = Some(1285.4);
+    site.natural_ground = Some("tabii".into());
+    site.graded_ground = Some("tesviye".into());
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_GROUND);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grounds read back");
+    // One surface cannot be both: the earthwork is their difference.
+    let mut same = doc.clone();
+    if let Some(s) = same.settings.arch.as_mut().and_then(|a| a.site.as_mut()) {
+        s.graded_ground = Some("tabii".into());
+    }
+    let refused = kentos_kcad::encode(&same).expect_err("one surface is not both grounds");
+    assert!(refused.message.contains("aynı yüzey"), "{}", refused.message);
+}

@@ -92,6 +92,7 @@ fn declare_in(doc: &mut Document) {
         edges: vec![edge(K::Front), edge(K::Side), edge(K::Back), edge(K::Side)],
         datum: Some(1285.4),
         envelope: None,
+        ..Default::default()
     });
     doc.set_settings(settings);
     let uids = |doc: &Document, keep: &dyn Fn(&kentos_commands::Entity) -> bool| -> Vec<String> {

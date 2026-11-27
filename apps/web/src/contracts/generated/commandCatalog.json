@@ -214658,6 +214658,20 @@
             "null"
           ]
         },
+        "gradedGround": {
+          "description": "Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): the terrain surface the parcel is graded to, by its id;\nabsent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "naturalGround": {
+          "description": "Tabii zemin (docs/adr/8174; PAİY 4: \"arazinin hafredilmemiş veya doldurulmamış hali\", 57/2-a): the terrain\nsurface it is, by its id among the project's surfaces; its heights absolute, as `datum` is. Absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "parcel": {
           "type": [
             "string",

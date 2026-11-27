@@ -35,6 +35,8 @@ use sha2::{Digest, Sha256};
 
 #[path = "sections/frame.rs"]
 mod frame;
+#[path = "sections/ground.rs"]
+mod ground;
 use frame::{SlabAt, beam, column};
 pub use frame::MEMBER_ELEMENT;
 
@@ -328,7 +330,7 @@ pub fn model(doc: &Document) -> Model {
     if !doc.entities().any(|e| matches!(e, Entity::Roof(_))) {
         m.left.insert((Left::Roof, None));
     }
-    m.left.insert((Left::NaturalGround, None));
+    if !ground::natural_known(doc) { m.left.insert((Left::NaturalGround, None)); }
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
     // The building's floors: a covering is none (docs/adr/8070 §10).
     let slabs: Vec<SlabAt> = entities
@@ -2558,11 +2560,8 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
     if bx0 > bx1 {
         (bx0, bx1) = (0.0, frame.length);
     }
-    // The graded ground at ±0.00 (EK-4 4.30), past the building on both sides, not across what is cut.
-    let ground = (bx0 - 2.0, bx1 + 2.0);
-    for (a, b) in uncut(&s.cut, ground, 0.0) {
-        out.line("MM-CVRE-TESVIYE", P::new(a, 0.0), P::new(b, 0.0), HEAVY);
-    }
+    // The ground (EK-4 4.30, docs/adr/8174), past the building on both sides, not across what is cut.
+    ground::draw(doc, frame, &s.cut, (bx0 - 2.0, bx1 + 2.0), &mut out);
     // The storeys' levels at the left (EK-4 Şekil 4.3): the line, the triangle on it, the words over it.
     let mut marks: Vec<(f64, Option<&str>)> = m.levels.iter().map(|l| (l.2, None)).collect();
     if let Some(top) = m

@@ -101916,10 +101916,16 @@ class SitePlan(_Model):
     Attributes:
         datum: ±0.00's absolute elevation, m. Unit: elevation.
         envelope: Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.
+        graded_ground: Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): the terrain surface the parcel is graded to, by its id;
+            absent: none.
+        natural_ground: Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a): the terrain
+            surface it is, by its id among the project's surfaces; its heights absolute, as `datum` is. Absent: none.
     """
     datum: float | None | Unset = UNSET
     edges: list[SiteEdge] | Unset = UNSET
     envelope: str | None | Unset = UNSET
+    graded_ground: str | None | Unset = UNSET
+    natural_ground: str | None | Unset = UNSET
     parcel: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -101930,6 +101936,10 @@ class SitePlan(_Model):
             out["edges"] = [e0.to_json() for e0 in self.edges]
         if self.envelope is not UNSET:
             out["envelope"] = self.envelope
+        if self.graded_ground is not UNSET:
+            out["gradedGround"] = self.graded_ground
+        if self.natural_ground is not UNSET:
+            out["naturalGround"] = self.natural_ground
         if self.parcel is not UNSET:
             out["parcel"] = self.parcel
         return out
@@ -101940,6 +101950,8 @@ class SitePlan(_Model):
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             edges=[SiteEdge.from_json(e0) for e0 in data["edges"]] if "edges" in data else UNSET,
             envelope=data.get("envelope", UNSET),
+            graded_ground=data.get("gradedGround", UNSET),
+            natural_ground=data.get("naturalGround", UNSET),
             parcel=data.get("parcel", UNSET),
         )
 

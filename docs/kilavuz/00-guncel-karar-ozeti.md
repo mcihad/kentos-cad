@@ -75,6 +75,12 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12 1. bölüm; [ADR 8174](../adr/8174-site-ground.md)).**
+  - `SitePlan.naturalGround/gradedGround`: `settings.road.surfaces`'taki yüzeylerin kimlikleri; `datum` ile kesitte
+    ±0.00'a göre. Kesit yüzeyin kesin kesitini çizer: tabii `MM-CVRE-TABII` kesikli, tesviye `MM-CVRE-TESVIYE` kalın;
+    yoksa eskisi gibi düz ±0.00. `road.terrains.*`'ın kapısı değişmedi (başka modüllerin 30 durum dosyası).
+    `mod-arch` → `terrain`. Mimari verisi 43. Kalan: tzk/tsk işareti, hafriyat, zemini kuran araç.
+
 - **Duvar profili: kaplama olan kiriş bandı (27 Kasım 2026, MB-11; [ADR 8173](../adr/8173-wall-profiles.md)).**
   - `BeamFields.covering`: cephe silmesi MOLDING "Cephe silmesi" (EK-2 Cephe, `MM-CEPH-…`), harpuşta COPING (`MM-HARP-…`);
     IFC `IfcCovering`, `MM-KPL-…`. Yapı değil: duvarı kesmez, birleşime girmez, kirişler çizelgesinde yok. Kattan

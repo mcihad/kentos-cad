@@ -494,6 +494,9 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
     if arch < crate::ARCH_WITH_RAFTS && crate::uses_rafts(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "radye mimari veri sürümü 41 gerektirir"));
     }
+    if arch < crate::ARCH_WITH_GROUND && crate::uses_ground(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "vaziyetin tabii ve tesviye zemini mimari veri sürümü 43 gerektirir"));
+    }
     if arch < crate::ARCH_WITH_PROFILES && crate::uses_profiles(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "duvar profili (silme, harpuşta) mimari veri sürümü 42 gerektirir"));
     }

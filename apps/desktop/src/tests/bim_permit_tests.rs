@@ -101,6 +101,7 @@ pub fn declared_building() -> App {
             edges: vec![edge(K::Front), edge(K::Side), edge(K::Back), edge(K::Side)],
             datum: Some(1285.4),
             envelope: None,
+            ..Default::default()
         });
         doc.set_settings(settings);
     }
