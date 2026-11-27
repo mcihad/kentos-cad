@@ -1,7 +1,8 @@
 //! A tile's edges (docs/adr/8120): the lines drawn over a body's faces where two of them meet at an angle, the way a
 //! drawing outlines what it shows. Found once, when the tile's content is uploaded, from its own triangles: a body's
-//! (a source mesh's) corners joined by their float32 positions (a flat body's faces each have their own vertices),
-//! each edge with the normals of the faces on it. An edge is drawn when one face has it (an open body's rim), when more
+//! (a source mesh's) corners joined where they lie within [`WELD`] of each other (a flat body's faces each have their
+//! own vertices, and float32 corners that should meet may part by a hair, docs/adr/8171 §2.3), each edge with the
+//! normals of the faces on it. An edge is drawn when one face has it (an open body's rim), when more
 //! than two do (where a body's parts meet), or when its two faces turn by at least the crease angle; a face split in
 //! triangles, or a corridor's strips on a gentle curve, stay one surface. Two bodies are never joined: a wall's end
 //! against another wall keeps both outlines. A smooth body (the terrain: its vertices carry normals) has none.
@@ -13,11 +14,37 @@ use kentos_scene3d::Content;
 /// The least angle between two faces, degrees, for the edge between them to be drawn.
 pub const CREASE_DEGREES: f32 = 25.0;
 
+/// Corners of one body closer than this are one, metres (a tile's positions are metres about its origin). Joined only
+/// when their bits were the same, a face whose two triangles' corners parted in the last bits had its diagonal drawn
+/// as two open edges: a dotted line across a flat roof, flickering as the view turned (docs/adr/8171 §1 B4).
+pub const WELD: f32 = 5e-5;
+
 /// `c`'s edges as pairs of indices into its vertices, in the order its triangles first meet them.
 pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
     let cos = crease_degrees.to_radians().cos();
-    // A corner by its body and its position's bits.
-    let mut corners: HashMap<(u32, [u32; 3]), u32> = HashMap::new();
+    // A corner by its body and the weld's cell it lies in; the cells about it are searched for one within the weld.
+    let mut cells: HashMap<(u32, [i32; 3]), Vec<(u32, [f32; 3])>> = HashMap::new();
+    let mut count = 0u32;
+    let mut corner_of = |body: u32, at: [f32; 3]| -> u32 {
+        let cell = at.map(|v| (v / WELD).floor() as i32);
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    let near = cells.get(&(body, [cell[0] + dx, cell[1] + dy, cell[2] + dz]));
+                    for (id, q) in near.into_iter().flatten() {
+                        let d = [q[0] - at[0], q[1] - at[1], q[2] - at[2]];
+                        if d[0] * d[0] + d[1] * d[1] + d[2] * d[2] <= WELD * WELD {
+                            return *id;
+                        }
+                    }
+                }
+            }
+        }
+        let id = count;
+        count += 1;
+        cells.entry((body, cell)).or_default().push((id, at));
+        id
+    };
     // An edge by its body and its two corners: one pair of its vertex indices and its faces' normals.
     let mut index: HashMap<(u32, u32, u32), usize> = HashMap::new();
     let mut edges: Vec<(u32, u32, Vec<[f32; 3]>)> = Vec::new();
@@ -30,11 +57,11 @@ pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
         let Some(n) = normal(c.positions[tri[0] as usize], c.positions[tri[1] as usize], c.positions[tri[2] as usize]) else {
             continue;
         };
-        let mut corner = |i: u32| {
-            let next = corners.len() as u32;
-            *corners.entry((body, c.positions[i as usize].map(f32::to_bits))).or_insert(next)
-        };
-        let ids = [corner(tri[0]), corner(tri[1]), corner(tri[2])];
+        let ids = [
+            corner_of(body, c.positions[tri[0] as usize]),
+            corner_of(body, c.positions[tri[1] as usize]),
+            corner_of(body, c.positions[tri[2] as usize]),
+        ];
         for (a, b) in [(0, 1), (1, 2), (2, 0)] {
             if ids[a] == ids[b] {
                 continue;
@@ -102,6 +129,24 @@ mod tests {
     #[test]
     fn a_box_has_its_twelve_edges_and_no_diagonal() {
         assert_eq!(edges_of(&[cube(0.0, 1.0)], false), 12);
+    }
+
+    /// A box whose faces' two triangles each have their own corners, parted by up to 0.02 mm as float32 corners that
+    /// should meet may be (docs/adr/8171 §1 B4): still its twelve edges, no face's diagonal drawn.
+    #[test]
+    fn a_face_whose_triangles_part_by_a_hair_draws_no_diagonal() {
+        let (v, t) = cube(3.0, 1.0);
+        let (mut vertices, mut triangles) = (Vec::new(), Vec::new());
+        for (k, tri) in t.iter().enumerate() {
+            let shift = if k % 2 == 0 { 0.0 } else { 2e-5 };
+            let at = vertices.len() as u32;
+            vertices.extend(tri.iter().map(|&i| {
+                let p = v[i as usize];
+                [p[0] + shift, p[1] - shift / 2.0, p[2]]
+            }));
+            triangles.push([at, at + 1, at + 2]);
+        }
+        assert_eq!(edges_of(&[(vertices, triangles)], false), 12);
     }
 
     #[test]

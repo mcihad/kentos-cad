@@ -63,12 +63,14 @@ ekran kartına yükler (`crates/model-view-ui`, `crates/render/scene3d`).
   ayrık olabildiğini söylüyor.
 - Halka kapanmazsa o gövdenin kapağı hiç çizilmez ("açık kabuğun kapağı yok"). Gövde kesitte içi boş kalır.
 
-### B4. Kenar çizgisi düz yüzün köşegenini çiziyor
+### B4. Kenar çizgisi köşeleri bit eşitliğiyle birleştiriyor
 
-- Kenar çizgileri köşeleri float32 bitleri birebir aynıysa birleştiriyor (`crates/render/scene3d/src/edges.rs`).
-- Bir yüzün iki üçgeninin köşeleri son bitte ayrıksa, köşegen iki ayrı "açık kenar" sayılır ve çizilir. Düz çatı
-  yüzünde noktalı bir köşegen görünüyor (`cati-kosegeni.png`).
-- Çizgi yüzle aynı derinlikte olduğundan döndürürken noktaları yer değiştiriyor.
+- Kenar çizgileri köşeleri yalnız float32 bitleri birebir aynıysa birleştiriyordu (`crates/render/scene3d/src/edges.rs`).
+  Bir yüzün iki üçgeninin köşeleri son bitte ayrıksa köşegen iki ayrı "açık kenar" sayılıp çizilir.
+- **Düzeltme (MB-03'te ölçüldü):** gerçek pencerede düz çatıda görülen noktalı köşegen (`cati-kosegeni.png`) bu değil.
+  Kenar çizgisi ve ortam gölgesi olmayan Hızlı kalitede de görünüyor. Ekran kartıyla çekilen ekran dışı resimde ise
+  yok. Gerçek pencere sınaması Xvfb'de yazılımsal Vulkan'la (lavapipe) çiziyor; çizgi onun izi. Kenar kaynağı yine
+  toleranslı yapıldı, çünkü IFC'den dönen gövdelerde ayrık köşe olabiliyor (`caps.rs`'in `MEET` notu).
 
 ### B5. Her değişiklikte bütün sahne yeniden yükleniyor
 

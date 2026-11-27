@@ -18,7 +18,8 @@ Araştırma raporunun §3'ü. Özetle:
   birleşimleri iki ya da üç kez sayıyor.
 - **B2:** Kesit sürüklenirken kapak bilerek kaldırılıyor; gövdeler içi boş görünüyor.
 - **B3:** Kapak halkası 1e-7 m ile zincirleniyor; float32 gövdede kopup kapak hiç çizilmeyebiliyor.
-- **B4:** Kenar çizgisi köşeleri bitleri birebir aynıysa birleştiriyor; düz yüzün köşegeni çiziliyor.
+- **B4:** Kenar çizgisi köşeleri bitleri birebir aynıysa birleştiriyor; ayrık köşeli yüzün köşegeni kenar sayılabilir.
+  (Gerçek pencerede çatıda görülen noktalı köşegen bu değil: Xvfb'nin yazılımsal Vulkan'ının izi, MB-03.)
 - **B5:** Her değişiklikte bütün sahne yeni kimliklerle yeniden yükleniyor; eski parçalar ekran kartında kalıyor.
 - **B6:** Keskin dönen kirişin gönyesi bandı kendini kestiriyor; 3B'de uç kayboluyor.
 
@@ -159,4 +160,18 @@ Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölç�
 - **Bedel:** kapak her adımda hesaplanır. ADR 8131 K310'un ölçüsü (release, 9 600 gövde): yatay kesit 19,8 ms. Bina
   ölçeğinde gövde sayısı yüzlerle olduğundan adım başına birkaç milisaniye. Çok büyük modelde sürükleme bu kadar
   yavaşlar; kalite için kabul edildi ([kalite hızdan önce](9222-quality-is-not-traded-for-speed.md)).
+
+### MB-03 (27 Kasım 2026)
+
+- **Kenar kaynağı** (`crates/render/scene3d/src/edges.rs`, `WELD` 0,05 mm): bir gövdenin köşeleri bu uzaklıkta birdir.
+  Komşu hücreler aranır, ızgara çizgisi iki köşenin arasına düşse de birleşir. İki gövde yine hiç birleşmez.
+- **Sınama:** `a_face_whose_triangles_part_by_a_hair_draws_no_diagonal`: her yüzünün iki üçgeni kendi köşeli ve
+  0,02 mm'ye dek ayrık kutu yine 12 kenar. Önceki dört kenar sınaması da aynen geçti.
+- **Tanının düzeltilmesi:** gerçek pencerede düz çatıdaki noktalı köşegen kaynaktan sonra da duruyordu. Üç kalitede
+  aynı açıdan çekildi; Hızlı'da (kenar yok, ortam gölgesi yok, tek örnek) da var. Ekran kartıyla çekilen ekran dışı
+  resimde yok (`once/01-kuzeydogu.png`). Gerçek pencere sınaması Xvfb'de lavapipe ile çiziyor; çizgi onun izi.
+  Model tarafında da bakıldı: çatının üst yüzü tek gövdede iki üçgen. O kotta yüzü olan öbür gövdeler yalnız emsal
+  zonları; onlar öntanımlı olarak gizli.
+- **Kalan:** gerçek ekran kartında gerçek pencere bu makinede çekilemiyor (Xvfb'de DRI3 yok). Sahip kendi ekranında
+  köşegen görürse ayrıca bakılır.
 
