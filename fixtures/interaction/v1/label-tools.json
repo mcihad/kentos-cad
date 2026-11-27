@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "label-tools",
-  "title": "Etiket araçları (ADR 0212 §4), label-engine.kcad üzerinde, 4 numaralı parselin elle sabitlenmiş numarasıyla: Etiketi taşı yeni yerine sabitler, açısı kalır; Etiketi döndür yazılan 35°'yi verir, Ctrl+Z 20°'ye döndürür; Etiketi sabitle sabit etiketi değiştirmez, Çöz (Ç) iğneyi kaldırır, Ctrl+Z geri getirir; Etiketi gizle iğneyi yerinde gizler, Göster (G) açıkken soluk etikete tıklamak yeniden gösterir; Esc çıkar; Etiketler penceresinde Parsel Kurallı'dan Tek etiket'e geçer, Kaydet tek adımda yazar, Ctrl+Z geri alır",
+  "title": "Etiket araçları (ADR 0212 §4), label-engine.kcad üzerinde, 4 numaralı parselin elle sabitlenmiş numarasıyla: Etiketi taşı yeni yerine sabitler, açısı kalır; Etiketi döndür yazılan 35°'yi verir, Ctrl+Z 20°'ye döndürür; Etiketi sabitle sabit etiketi değiştirmez, Çöz (Ç) iğneyi kaldırır, Ctrl+Z geri getirir; Etiketi gizle iğneyi yerinde gizler, Göster (G) açıkken soluk etikete tıklamak yeniden gösterir; Esc çıkar; Etiketler penceresinde Parsel Kurallı'dan Tek etiket'e geçer, Tamam tek adımda uygular, Ctrl+Z geri alır",
   "source": "docs/adr/0212",
   "covers": [
     "GIS-16"
@@ -318,13 +318,13 @@
     },
     {
       "dialog": "Etiketler",
-      "press": "Kaydet",
+      "press": "Tamam",
       "note": "cad.layers.labels, adım “Etiketler”",
       "expect": {
         "dialog": null,
         "canUndo": true,
         "logged": [
-          "“Parsel” katmanının etiketlemesi yazıldı."
+          "“Parsel” katmanının etiketlemesi uygulandı."
         ]
       }
     },

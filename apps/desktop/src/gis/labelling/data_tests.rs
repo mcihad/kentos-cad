@@ -171,3 +171,129 @@ fn a_label_tools_click_on_a_data_label_says_why_and_what_to_use() {
         assert!(said.contains("Etiketler › Yerleşim"), "{said}");
     }
 }
+
+/// The second round's T25 and T27 (docs/adr/9357) on the municipal `bakim` points: a new label of a point layer goes
+/// around its symbol, its Nokta placement first; Uygula then Tamam with nothing changed says the labelling once.
+#[test]
+fn a_point_layers_new_label_goes_around_and_apply_then_tamam_says_it_once() {
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::municipal("etiket-nokta");
+    let mut app = app_with_drawing();
+    let id = app
+        .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+        .expect("added")
+        .remove(0);
+    let task = app.open_labelling(Some(id.clone()));
+    drive(&mut app, task);
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+    let w = app.gis.labelling.as_ref().expect("the window");
+    assert_eq!(w.current().point, Some(kentos_commands::PointLabelMode::Around), "around its symbol");
+    send(&mut app, Event::Type(Key::Template, "{kod}".into()));
+    let said = |app: &App| app.log.lines().filter(|l| l.text.contains("etiketlemesi")).count();
+    send(&mut app, Event::Apply);
+    assert_eq!(said(&app), 1);
+    assert!(app.log.lines().any(|l| l.text == "“bakim” katmanının etiketlemesi uygulandı."));
+    send(&mut app, Event::Save);
+    assert_eq!(said(&app), 1, "Tamam after Uygula says nothing more");
+    assert!(app.dialog.is_none(), "closed");
+}
+
+/// The second round's T24 (docs/adr/9357): with only a data layer's labels on the map (the drawing's layers hidden), a
+/// label tool says at once why it takes none of them, in a notice with Yerleşim ayarlarını aç, which opens Etiketler on
+/// Yerleşim.
+#[test]
+fn a_label_tool_says_at_once_when_only_data_labels_are_on_the_map() {
+    let (mut app, id) = bound("etiket-arac-bas");
+    let task = app.open_labelling(Some(id.clone()));
+    drive(&mut app, task);
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+    send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
+    let rows = match &app.gis.labelling.as_ref().expect("the window").rows {
+        Some(Ok(doc)) => (**doc).clone(),
+        other => panic!("the rows: {other:?}"),
+    };
+    send(&mut app, Event::Save);
+    app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+    {
+        let model = &mut app.document.as_mut().expect("open").model;
+        let drawing: Vec<String> =
+            model.layers().leaves().iter().filter(|l| l.data.is_none()).map(|l| l.id.clone()).collect();
+        for l in drawing {
+            model.set_layer_visible(&l, false);
+        }
+    }
+    let task = app.update(Message::Run("tool.labelPin"));
+    drive(&mut app, task);
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.starts_with("Haritadaki etiketler veri katmanının (“parseller”)"), "{said}");
+    let (title, action) = {
+        let (_, toast, _) = app.toasts.iter().last().expect("a notice");
+        (toast.title().to_owned(), toast.action_of().map(|(l, m)| (l.to_owned(), m.clone())))
+    };
+    assert_eq!(title, "Veri katmanının etiketi");
+    let (label, open) = action.expect("its action");
+    assert_eq!(label, "Yerleşim ayarlarını aç");
+    let task = app.update(open);
+    drive(&mut app, task);
+    let w = app.gis.labelling.as_ref().expect("Etiketler open");
+    assert_eq!((w.layer.as_str(), w.tab), (id.as_str(), crate::labelling::form::Tab::Place));
+}
+
+/// The pictures of the second round's T22, T24 and T25 (`.run/gui-evidence/kullanim-9357/`): Kurallı at the window's
+/// first size with its tools, Ad and Koşul in sight; a point layer's label around its symbol in the preview; a label
+/// tool's notice with only data labels on the map.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib labelling::data_tests::screens_9357 -- --ignored --nocapture"]
+fn screens_9357() {
+    crate::drawing_fonts::load();
+    let points = |tag: &str| {
+        crate::data_layers::register();
+        let path = crate::data_layers_tests::municipal(tag);
+        let mut app = app_with_drawing();
+        let id = app
+            .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+            .expect("added")
+            .remove(0);
+        let task = app.open_labelling(Some(id.clone()));
+        drive(&mut app, task);
+        (app, id)
+    };
+    crate::files_testing::usage_shots("9357", "01-kurali-siniflar", || {
+        let (mut app, _) = points("resim-kurali");
+        send(&mut app, Event::Mode(kentos_commands::LabelsMode::Rules));
+        send(&mut app, Event::Add);
+        send(&mut app, Event::Type(Key::When, "mahalle = 'M1'".into()));
+        app
+    });
+    crate::files_testing::usage_shots("9357", "02-nokta-onizleme", || {
+        let (mut app, _) = points("resim-nokta");
+        send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+        send(&mut app, Event::Type(Key::Template, "{kod}".into()));
+        send(&mut app, Event::Tab(crate::labelling::form::Tab::Place));
+        app
+    });
+    crate::files_testing::usage_shots("9357", "04-etiket-araci", || {
+        let (mut app, id) = bound("resim-etiket-arac");
+        let task = app.open_labelling(Some(id.clone()));
+        drive(&mut app, task);
+        send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+        send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
+        let rows = match &app.gis.labelling.as_ref().expect("the window").rows {
+            Some(Ok(doc)) => (**doc).clone(),
+            other => panic!("the rows: {other:?}"),
+        };
+        send(&mut app, Event::Save);
+        app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+        {
+            let model = &mut app.document.as_mut().expect("open").model;
+            let drawing: Vec<String> =
+                model.layers().leaves().iter().filter(|l| l.data.is_none()).map(|l| l.id.clone()).collect();
+            for l in drawing {
+                model.set_layer_visible(&l, false);
+            }
+        }
+        let task = app.update(Message::Run("tool.labelPin"));
+        drive(&mut app, task);
+        app
+    });
+}

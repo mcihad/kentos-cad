@@ -95,6 +95,37 @@ impl App {
                 .unwrap_or_else(|| space().into()),
         };
         let title = format!("Katman stili: {}", node.map_or("", |n| n.name.as_str()));
+        // Which layer this is (the second round's T26): its whole path in the tree and, for a data layer, its file or
+        // database and table; two layers of one name are told apart. Kopyala copies the path.
+        let path = model.layers().path(&window.layer);
+        let source = node.and_then(|n| n.data.as_ref()).map(|d| {
+            let place = d
+                .address
+                .rsplit(['/', '\\'])
+                .next()
+                .filter(|_| d.driver == "gpkg")
+                .map_or_else(|| d.address.split('@').next_back().unwrap_or(&d.address).to_owned(), str::to_owned);
+            format!("{place} › {}", d.table)
+        });
+        let whom = row![
+            label::caption(match &source {
+                Some(s) => format!("Katman: {path} · Kaynak: {s}"),
+                None => format!("Katman: {path}"),
+            })
+            .style(style::text::muted)
+            .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
+            .width(Fill),
+            kentos_ui::widget::tip(
+                iced::widget::button(kentos_ui::icon::icon(crate::icons::from_web(Some("copy"))).size(14.0))
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
+                    .style(style::button::ghost)
+                    .on_press(Message::LayerStyle(Event::CopyPath)),
+                kentos_ui::widget::Tip::new("Katmanın yolunu kopyala"),
+                iced::widget::tooltip::Position::Top,
+            ),
+        ]
+        .spacing(6)
+        .align_y(Center);
         let name = node.map_or(String::new(), |n| n.name.clone());
         // Katman çizimi under the panel (docs/adr/0226 §3, §4): the drawing's other layers to mask.
         let others: Vec<(String, String)> = model
@@ -111,6 +142,7 @@ impl App {
         ]
         .spacing(16);
         let base = Dialog::new(title)
+            .push(whom)
             .push(top)
             .scroll_fill(container(body).padding([0, 4]).width(Fill))
             .push(horizontal_divider())

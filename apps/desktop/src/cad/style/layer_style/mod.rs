@@ -246,6 +246,8 @@ pub enum RuleEdit {
 pub enum Event {
     /// Opens the window for a layer (Katmanlar's menu), or the active one.
     Open(Option<String>),
+    /// The layer's path to the clipboard (the second round's T26).
+    CopyPath,
     Kind(Kind),
     /// → or ← with no field holding the keyboard: the next or the previous kind (the web's segmented control).
     Step(bool),
@@ -430,9 +432,40 @@ pub struct LayerStyleWindow {
     /// What the source said of a field, and whether a read is under way.
     pub(super) source: Option<source_values::SourceValues>,
     pub(super) reading: bool,
+    /// The layer's fields' value lists (field → code → label, the second round's T23): a category made from a code is
+    /// named by its label.
+    pub(super) value_labels: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
 }
 
+/// The category of the rows without a value (the second round's T23).
+pub(crate) const NO_VALUE: &str = "Değer yok";
+
 impl LayerStyleWindow {
+    /// The categories made from values named (the second round's T23): a code of the field's value list by its label
+    /// (its code stays what matches); the rows without a value, when there are, in a category of their own, “Değer
+    /// yok”, drawn rather than left to Diğer değerler.
+    fn name_categories(&mut self, empty: u64) {
+        let field = self.categorized.expr.trim().trim_matches('"').to_owned();
+        if let Some(labels) = self.value_labels.get(&field) {
+            for k in &mut self.categorized.categories {
+                if k.label == k.value
+                    && let Some(label) = labels.get(&k.value)
+                {
+                    k.label = label.clone();
+                }
+            }
+        }
+        // A field's rows without a value: an expression's empty results ($alan of a line) are not rows of a field.
+        let bare = !field.is_empty() && field.chars().all(|c| c.is_alphanumeric() || c == '_');
+        if bare && empty > 0 && !self.categorized.categories.iter().any(|k| k.value.is_empty()) {
+            let n = self.categorized.categories.len();
+            let mut k = kentos_native_style::classify::new_category(n, &self.present);
+            k.value = String::new();
+            k.label = NO_VALUE.to_owned();
+            self.categorized.categories.push(k);
+        }
+    }
+
     /// The window of layer `id`, with the style it has; a group has none.
     pub fn open(doc: &kentos_domain::Document, id: &str) -> Result<Self, &'static str> {
         let node = doc
@@ -512,6 +545,14 @@ impl LayerStyleWindow {
             data: node.data.clone(),
             source: None,
             reading: false,
+            value_labels: node
+                .fields
+                .iter()
+                .filter_map(|f| {
+                    let list = f.values.as_ref().filter(|v| !v.is_empty())?;
+                    Some((f.name.clone(), list.iter().map(|c| (c.code.clone(), c.label.clone())).collect()))
+                })
+                .collect(),
         };
         // A data layer's classes are made by one of its table's fields: a text one for categories, a number one for
         // classes (its objects are not in the drawing to guess from).
@@ -959,6 +1000,11 @@ impl LayerStyleWindow {
                             source_values::Then::Classify => {
                                 self.categorized.categories =
                                     categories_of(&found, &self.present, &self.categorized.categories);
+                                let empty: u64 = self
+                                    .source
+                                    .as_ref()
+                                    .map_or(0, |s| s.groups.iter().filter(|(v, _)| v.as_deref().is_none_or(str::is_empty)).map(|(_, n)| n).sum());
+                                self.name_categories(empty);
                                 self.typed.clear();
                                 let words = texts::found(found.len());
                                 self.say(if more { format!("{words} {}", source_values::MORE) } else { words }, more);
@@ -983,12 +1029,16 @@ impl LayerStyleWindow {
                 }
             }
             Event::Classify => {
-                let found = unique_values(&self.values(src).values);
+                let evaluated = self.values(src);
+                let values = &evaluated.values;
+                let found = unique_values(values);
                 if found.is_empty() {
                     self.say(texts::NO_VALUES, true);
                 } else {
                     self.categorized.categories =
                         categories_of(&found, &self.present, &self.categorized.categories);
+                    let empty = values.iter().filter(|v| v.as_deref().is_none_or(|v| v.trim().is_empty())).count() as u64;
+                    self.name_categories(empty);
                     self.typed.clear();
                     self.say(texts::found(found.len()), false);
                 }
@@ -1072,6 +1122,7 @@ impl LayerStyleWindow {
             Event::Symbol(at, class, symbol) => self.put_symbol(&at, class, symbol),
             Event::Thematic(e) => self.thematic(e, src),
             Event::Open(_)
+            | Event::CopyPath
             | Event::OpenBuilder(_)
             | Event::Close
             | Event::Apply
@@ -1602,14 +1653,20 @@ impl App {
             Event::Apply => {
                 window.apply(&mut doc.model);
             }
-            // Tamam writes the style and closes the window; the notice says it was written.
+            // Tamam writes the style and closes the window; the notice names the layer by its path (T26).
             Event::Done => {
                 window.asking = false;
+                let path = doc.model.layers().path(&window.layer);
                 if window.apply(&mut doc.model) {
                     self.styles.layer_style = None;
                     self.dialog = None;
-                    self.toast_saved("Katman stili uygulandı", "Ctrl+Z geri alır.");
+                    self.toast_saved("Katman stili uygulandı", &format!("“{path}” katmanına; Ctrl+Z geri alır."));
                 }
+            }
+            Event::CopyPath => {
+                let path = doc.model.layers().path(&window.layer);
+                self.say(kentos_interaction::Level::Success, format!("Katmanın yolu panoya kopyalandı: {path}"));
+                return iced::clipboard::write(path);
             }
             e => {
                 let src = Source {

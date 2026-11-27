@@ -128,6 +128,9 @@ pub struct Host<'a> {
     pub view_scale: f64,
     /// The fields the template's picker offers (docs/adr/9145).
     pub fields: &'a [String],
+    /// What the layer holds, when it is known (“point”, “polyline”, “polygon”): its own placement first (the second
+    /// round's T25).
+    pub kind: Option<&'static str>,
 }
 
 /// A change of a control applied to the style (the web's patches, field for field).
@@ -781,8 +784,8 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
     } else {
         LabelPosition::On
     });
-    vec![
-        row_of(
+    let mut kinds: Vec<(&str, Element<'a, Message>)> = vec![
+        ("point", row_of(
             "Nokta",
             choice(
                 &["Çevresinde", "Üstünde"],
@@ -790,8 +793,8 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
                 |i| msg(Event::Edit(Edit::Point(POINTS[i]))),
             ),
             Some("Çevresinde: sağ üst, sol üst … sekiz yerden boş olan."),
-        ),
-        row_of(
+        )),
+        ("polyline", row_of(
             "Çizgi",
             choice(
                 &["Paralel", "Kıvrık", "Yatay", "Eş yükselti"],
@@ -799,8 +802,8 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
                 |i| msg(Event::Edit(Edit::Line(LINES[i]))),
             ),
             Some("Eş yükselti: kıvrık, üstü yokuş yukarı, kot çoklu çizginin ilk kotu."),
-        ),
-        row_of(
+        )),
+        ("polygon", row_of(
             "Alan",
             choice(
                 &["Yatay", "Eğik", "Çevre", "Sınır", "Parsel", "Köşe"],
@@ -810,7 +813,15 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
             Some(
                 "Parsel: yalnız içine; sığmazsa yığar, kısaltır, küçültür. Sınır: kenar boyunca içeride.",
             ),
-        ),
+        )),
+    ];
+    // The layer's own kind first: a point layer's Nokta, then the others.
+    if let Some(at) = h.kind.and_then(|k| kinds.iter().position(|(kind, _)| *kind == k)) {
+        let own = kinds.remove(at);
+        kinds.insert(0, own);
+    }
+    let mut out: Vec<Element<'a, Message>> = kinds.into_iter().map(|(_, row)| row).collect();
+    out.extend([
         row_of(
             "Konum",
             choice(
@@ -864,7 +875,8 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
             .spacing(4),
             None,
         ),
-    ]
+    ]);
+    out
 }
 
 const SHAPES: [LabelShape; 3] = [LabelShape::Rect, LabelShape::Round, LabelShape::Ellipse];

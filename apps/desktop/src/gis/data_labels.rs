@@ -131,6 +131,57 @@ impl App {
             .and_then(|d| doc.model.layers().get(&d.layer).map(|n| n.name.clone()))
     }
 
+    /// A label tool started with only data layers' labels on the map (the second round's T24): said at once, with the
+    /// way to place a row's label (Yerleşim ayarlarını aç) in a notice read whole; the rule's condition is in the same
+    /// window. A drawing layer's labels there too: the tool works on them, a data layer's label clicked is said there.
+    pub(crate) fn label_tool_note(&mut self) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let layers = doc.model.layers();
+        let drawing_labels = layers.leaves().iter().any(|l| l.data.is_none() && l.style.labels_on() && layers.is_visible(&l.id));
+        let data: Vec<String> = self
+            .gis
+            .data_labels
+            .iter()
+            .filter(|d| d.labelled && layers.is_visible(&d.layer))
+            .map(|d| d.layer.clone())
+            .collect();
+        if drawing_labels || data.is_empty() {
+            return;
+        }
+        let names: Vec<String> = data.iter().filter_map(|id| layers.get(id).map(|n| format!("“{}”", n.name))).collect();
+        let words = format!(
+            "Haritadaki etiketler veri katmanının ({}): kaynağın satırlarından yerleşir, tek tek taşınmaz, döndürülmez, \
+             sabitlenmez ve gizlenmez. Yerleri için Yerleşim ayarlarını, bir satırın etiketini göstermemek için etiket \
+             kuralını kullanın.",
+            names.join(", ")
+        );
+        self.say(kentos_interaction::Level::Warn, words.clone());
+        self.data_label_toast(&data[0], words);
+    }
+
+    /// The notice of a data layer's label with its way on (T24): read whole, not cut in the status bar; Yerleşim
+    /// ayarlarını aç opens the layer's Etiketler on Yerleşim (Kurallı and its conditions are there too).
+    pub(crate) fn data_label_toast(&mut self, layer: &str, words: String) {
+        use crate::labelling::{Event, msg};
+        self.toast(
+            kentos_ui::widget::Toast::info("Veri katmanının etiketi")
+                .body(words)
+                .action("Yerleşim ayarlarını aç", msg(Event::OpenAt(layer.to_owned(), crate::labelling::form::Tab::Place))),
+        );
+    }
+
+    /// The labelled data layer under `at`, by id (T24): the notice's actions open its window.
+    pub(crate) fn data_label_layer_under(&self, at: kentos_interaction::Vec2, tol: f64) -> Option<String> {
+        self.gis
+            .data_labels
+            .iter()
+            .filter(|d| d.labelled)
+            .find(|d| d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some())
+            .map(|d| d.layer.clone())
+    }
+
     /// Why a label tool takes no data layer's label, and what to use instead (docs/adr/9341).
     pub(crate) fn data_label_words(layer: &str) -> String {
         format!(

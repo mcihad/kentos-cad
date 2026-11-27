@@ -438,7 +438,12 @@ impl App {
             && let Some(at) = self.viewport.cursor
             && let Some(layer) = self.data_label_under(at, self.draft.pick_aperture)
         {
-            self.say(kentos_interaction::Level::Warn, App::data_label_words(&layer));
+            let words = App::data_label_words(&layer);
+            self.say(kentos_interaction::Level::Warn, words.clone());
+            // Read whole with its ways on (the second round's T24), the tool going on.
+            if let Some(id) = self.data_label_layer_under(at, self.draft.pick_aperture) {
+                self.data_label_toast(&id, words);
+            }
         }
         Some(out)
     }
@@ -487,6 +492,13 @@ impl App {
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));
+            // A label tool with only data layers' labels on the map says so at once (the second round's T24).
+            {
+                use kentos_interaction::label_tools::{HIDE_ID, MOVE_ID, PIN_ID, ROTATE_ID};
+                if [MOVE_ID, ROTATE_ID, PIN_ID, HIDE_ID].contains(&id) {
+                    self.label_tool_note();
+                }
+            }
             if !self.session.settings(&self.format()).is_empty() {
                 self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
                 return crate::tool_settings::reveal();

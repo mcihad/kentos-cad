@@ -25,7 +25,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
-use iced::{Bottom, Center, Element, Fill, Length, Task};
+use iced::{Bottom, Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, LabelClass, LabelObstacle, LabelPlacement, LabelStyle, LabelsMode, LabelsReport,
     LayerLabels, LayerNodeType, LayersLabels, ObstacleKind, default_label, layer_labels_problem,
@@ -55,7 +55,8 @@ const LAYER: &str = "Katman";
 const LABELLING: &str = "Etiketleme";
 const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
-const SAVE: &str = "Kaydet";
+/// Applies and closes (the second round's T27): the project file is written by Projeyi kaydet, not here.
+const SAVE: &str = "Tamam";
 const REPORT: &str = "Denetle";
 const REPORT_AT: &str = "Denetle ölçeği";
 /// The template's field picker (docs/adr/9145).
@@ -142,6 +143,9 @@ pub(crate) struct ReportScope {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// The window opened on a layer at a tab (Yerleşim ayarlarını aç): the label tools' way on from a data layer's
+    /// label (the second round's T24).
+    OpenAt(String, Tab),
     Layer(usize),
     Mode(LabelsMode),
     Class(usize),
@@ -268,6 +272,38 @@ impl App {
             .map(|n| n.id.clone())
     }
 
+    /// What a layer holds (the second round's T25): its table's geometry, else most of its objects' kind (“point”,
+    /// “polyline”, “polygon”); none when it is not known.
+    fn labelling_kind(&self, layer: &str) -> Option<&'static str> {
+        let doc = self.document.as_ref()?;
+        let node = doc.model.layers().get(layer)?;
+        if let Some(t) = node.data.as_ref().and_then(|d| d.geometry.as_ref()).map(|g| g.type_name.to_ascii_uppercase()) {
+            return if t.contains("POINT") {
+                Some("point")
+            } else if t.contains("LINE") || t.contains("CURVE") {
+                Some("polyline")
+            } else if t.contains("POLYGON") || t.contains("SURFACE") {
+                Some("polygon")
+            } else {
+                None
+            };
+        }
+        let objects: Vec<&str> = doc.model.by_layer(layer).take(200).map(|e| e.kind()).collect();
+        ["point", "polyline", "polygon"]
+            .into_iter()
+            .find(|k| objects.iter().filter(|o| **o == *k).count() * 2 > objects.len() && !objects.is_empty())
+    }
+
+    /// A point layer's symbol colour for the preview (T25); none for another layer.
+    fn labelling_point_symbol(&self, layer: &str) -> Option<iced::Color> {
+        if self.labelling_kind(layer) != Some("point") {
+            return None;
+        }
+        let node = self.document.as_ref()?.model.layers().get(layer)?;
+        let palette = crate::viewport::palette(self.canvas());
+        Some(palette.resolve(&node.style.color).map_or_else(|| crate::view::hex_color(&node.style.color), crate::view::rgba_color))
+    }
+
     /// The style a layer's single label starts from: its own, else its objects' most common kind's default.
     fn starting_label(&self, layer: &str) -> LabelStyle {
         let Some(doc) = &self.document else {
@@ -281,7 +317,26 @@ impl App {
         {
             return own;
         }
-        let mut counts: Vec<(&'static str, usize)> = Vec::new();
+        // A data layer's rows are its source's: its table's geometry says what it labels (the second round's T25).
+        let table_kind = doc
+            .model
+            .layers()
+            .get(layer)
+            .and_then(|n| n.data.as_ref())
+            .and_then(|d| d.geometry.as_ref())
+            .map(|g| g.type_name.to_ascii_uppercase())
+            .and_then(|t| {
+                if t.contains("POINT") {
+                    Some("point")
+                } else if t.contains("LINE") || t.contains("CURVE") {
+                    Some("polyline")
+                } else if t.contains("POLYGON") || t.contains("SURFACE") {
+                    Some("polygon")
+                } else {
+                    None
+                }
+            });
+        let mut counts: Vec<(&'static str, usize)> = table_kind.map(|k| vec![(k, 1)]).unwrap_or_default();
         for e in doc.model.by_layer(layer).take(2000) {
             let kind = e.kind();
             match counts.iter_mut().find(|(k, _)| *k == kind) {
@@ -296,7 +351,15 @@ impl App {
                 most = Some((kind, n));
             }
         }
-        most.and_then(|(kind, _)| default_label(kind))
+        // A new point label goes around its symbol, its edge taken into account (T25); a saved one stays as it is.
+        most.and_then(|(kind, _)| {
+            default_label(kind).map(|mut s| {
+                if kind == "point" {
+                    s.point = Some(kentos_commands::PointLabelMode::Around);
+                }
+                s
+            })
+        })
             .unwrap_or_else(|| LabelStyle {
                 placement: LabelPlacement::Center,
                 size: 10.0,
@@ -505,6 +568,16 @@ impl App {
     }
 
     pub(crate) fn labelling_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::OpenAt(layer, tab) => {
+                let task = self.open_labelling(Some(layer));
+                if let Some(w) = self.gis.labelling.as_mut() {
+                    w.tab = tab;
+                }
+                return task;
+            }
+            _ => {}
+        }
         let Some(mut w) = self.gis.labelling.take() else {
             return Task::none();
         };
@@ -646,7 +719,7 @@ impl App {
             Event::Apply | Event::Save => {
                 self.labelling_check(&mut w);
                 let save = matches!(event, Event::Save);
-                if w.ready && self.write_labelling(&w) && save {
+                if w.ready && self.write_labelling(&w, save) && save {
                     self.dialog = None;
                     return Task::none();
                 }
@@ -684,6 +757,7 @@ impl App {
                 self.dialog = None;
                 return Task::none();
             }
+            Event::OpenAt(..) => {}
         }
         self.labelling_check(&mut w);
         self.gis.labelling = Some(w);
@@ -908,9 +982,10 @@ impl App {
         out
     }
 
-    /// Writes the labelling through `cad.layers.labels` and says what it did; whether it went (or
-    /// nothing changed).
-    fn write_labelling(&mut self, w: &Window) -> bool {
+    /// Writes the labelling through `cad.layers.labels` and says what it did, once (the second round's T27): applied, on
+    /// the map and in the open project; Tamam after Uygula with nothing changed closes without a word. Whether it went
+    /// (or nothing changed).
+    fn write_labelling(&mut self, w: &Window, closing: bool) -> bool {
         let Some(doc) = self.document.as_mut() else {
             return false;
         };
@@ -924,9 +999,9 @@ impl App {
                 if output.changed {
                     self.announce(
                         Level::Success,
-                        format!("“{name}” katmanının etiketlemesi yazıldı."),
+                        format!("“{name}” katmanının etiketlemesi uygulandı."),
                     );
-                } else {
+                } else if !closing {
                     self.announce(
                         Level::Info,
                         format!("“{name}” katmanının etiketlemesi zaten böyle."),
@@ -981,6 +1056,7 @@ impl App {
             dictionary: &w.dictionary,
             view_scale: self.viewport.camera.screen_scale(),
             fields: &w.fields,
+            kind: self.labelling_kind(&w.layer),
         };
         let tabs = Tabs::new(
             form::TABS.map(|(_, words)| TabFace::new(words).closable(false)),
@@ -1038,7 +1114,7 @@ impl App {
                 .unwrap_or(kentos_commands::DrawingFont::Barlow);
             frame = frame.push(words::field(
                 PREVIEW,
-                crate::labels::example(text, w.current().clone(), colors, font),
+                crate::labels::example(text, w.current().clone(), colors, font, self.labelling_point_symbol(&w.layer)),
                 None,
             ));
         }
@@ -1117,12 +1193,14 @@ impl App {
         );
         column![
             label::caption("Sınıflar"),
+            // The list takes the room left (the second round's T22): its tools, Ad and Koşul stay in sight at the
+            // window's first size.
             container(
                 scrollable(list)
                     .direction(style::field::body_scrollbar())
-                    .height(Length::Shrink)
+                    .height(Fill)
             )
-            .height(typography::scaled(200.0))
+            .height(Fill)
             .width(Fill)
             .style(style::container::field_box),
             tools,
@@ -1138,6 +1216,7 @@ impl App {
         ]
         .spacing(6)
         .width(typography::scaled(CLASSES_WIDTH))
+        .height(Fill)
         .into()
     }
 

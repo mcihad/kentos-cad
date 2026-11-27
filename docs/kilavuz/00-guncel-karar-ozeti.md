@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Etiketler ve Katman stili pencereleri (27 Kasım 2026, T22–T27;
+  [ADR 9357](../adr/9357-labels-and-layer-style-windows-second-round.md)).**
+  - Kurallı sınıf listesi esner, araçları, Ad ve Koşul altta sabit. Etiketler'in son düğmesi “Tamam”; Uygula tek
+    bildirim, Uygula'dan sonra Tamam sessiz.
+  - Değerlerden sınıfla değer listeli kodu etiketiyle adlandırır; alanın boş kayıtları “Değer yok” sınıfında çizilir.
+  - Etiket araçları yalnız veri katmanı etiketleri varken baştan söyler (Yerleşim ayarlarını aç). Yeni nokta etiketi
+    Çevresinde, önizleme sembolle; Katman stili katmanın yolunu ve kaynağını gösterir.
+
 - **Formun Uygula'sı, varsayılan formla düzenleme, veri katmanına yakınlaştırma, tablo süzgeci, Katman özelliklerinin
   eylemleri (27 Kasım 2026, T7 takip, T16–T21;
   [ADR 9356](../adr/9356-form-apply-default-form-editing-zoom-filter-layer-properties.md)).**

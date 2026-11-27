@@ -202,6 +202,7 @@ pub(crate) struct DataConditions {
 
 impl DataTable {
     /// The İfade süzgeci asked (Enter), as the mark under the table shows it.
+    #[cfg(test)]
     pub(crate) fn asked_filter(&self) -> &str {
         &self.filter
     }
