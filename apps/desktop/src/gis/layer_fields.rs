@@ -13,7 +13,7 @@
 //! refuses them ([`crate::layering::TREE_LOCKED`]).
 
 use crate::gis;
-use iced::widget::{Column, button, container, row, text};
+use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, FieldChoice, FieldRename, LayerEditOperation, LayerField, LayerFieldKind,
@@ -23,9 +23,6 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_edit};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -47,19 +44,6 @@ const REFRESH: &str = "Kaynak şemasını yenile";
 /// The fields' lists and ranges written into the data layer's table (docs/adr/9324).
 const RULES: &str = "Kuralları kaynağa yaz";
 
-/// The table's columns: header and width (logical pixels), each wide enough for its header in the strong caption
-/// face with the cell's padding (a narrower one ran Uzunluk / Basamak over Zorunlu).
-const HEADS: [(&str, f32); 9] = [
-    ("Ad", 130.0),
-    ("Takma ad", 120.0),
-    ("Tür", 130.0),
-    ("Uzunluk / Basamak", 128.0),
-    ("Zorunlu", 72.0),
-    ("Varsayılan", 100.0),
-    ("En az", 80.0),
-    ("En çok", 80.0),
-    ("Değer listesi", 100.0),
-];
 
 /// A field as the window edits it: every value as typed, and the name it had
 /// when the window opened (none: new). The web's `FieldRow`.
@@ -1139,515 +1123,6 @@ impl App {
         .into()
     }
 
-    pub(crate) fn layer_fields_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.gis.layer_fields, &self.document) else {
-            return text("").into();
-        };
-        let domains = self
-            .document
-            .as_ref()
-            .map(|d| d.model.settings().domains.clone())
-            .unwrap_or_default();
-        let cell_width = |j: usize| Length::Fixed(typography::scaled(HEADS[j].1));
-        let head = kentos_ui::widget::table::band(HEADS.iter().enumerate().fold(
-            row![].spacing(6),
-            |r, (j, (h, _))| {
-                r.push(
-                    container(kentos_ui::widget::table::title(*h))
-                        .padding([0, 8])
-                        .width(cell_width(j)),
-                )
-            },
-        ));
-        let input = |i: usize, cell: Cell, value: &str, label_words: &'static str, on: bool| {
-            let field = kentos_ui::widget::text_field(label_words, value).id(cell_id(i, cell));
-            let field = if on {
-                field.on_input(move |t| msg(Event::Type(i, cell, t)))
-            } else {
-                field
-            };
-            Element::from(field)
-        };
-        let mut rows = Column::new().spacing(4);
-        for (i, r) in w.rows.iter().enumerate() {
-            let sized = matches!(r.kind, LayerFieldKind::Text | LayerFieldKind::Decimal);
-            let ranged = r.kind.is_number() || r.kind.is_temporal();
-            let listed = matches!(
-                r.kind,
-                LayerFieldKind::Text
-                    | LayerFieldKind::Integer
-                    | LayerFieldKind::BigInt
-                    | LayerFieldKind::Decimal
-            );
-            let kind = Select::new(
-                LayerFieldKind::ALL.iter().map(|k| Choice::new(k.label())),
-                LayerFieldKind::ALL.iter().position(|k| *k == r.kind),
-                move |k| msg(Event::Kind(i, k)),
-            );
-            let must = check_box(
-                if r.required {
-                    Check::Checked
-                } else {
-                    Check::Unchecked
-                },
-                Some(msg(Event::Required(i, !r.required))),
-            );
-            let linked = r
-                .domain
-                .as_ref()
-                .and_then(|id| domains.iter().find(|d| d.id == *id));
-            let list_words = match (linked, &r.values) {
-                (Some(d), _) => format!("↗ {}", d.name),
-                (None, Some(v)) if !v.is_empty() => format!("Liste ({})", v.len()),
-                _ => "Liste…".to_owned(),
-            };
-            // A field linked to a project's range takes its bounds from it (docs/adr/0430).
-            let ranged = ranged && r.domain.is_none();
-            let list = button(
-                kentos_ui::widget::Elided::new(list_words)
-                    .size(typography::body())
-                    .width(Length::Fixed(typography::scaled(HEADS[8].1) - 18.0)),
-            )
-            .style(style::button::secondary)
-            .padding(kentos_ui::theme::metrics::action_small())
-            .on_press_maybe(listed.then(|| msg(Event::OpenList(i))));
-            let line = row![
-                container(input(i, Cell::Name, &r.name, "Ad", true)).width(cell_width(0)),
-                container(input(i, Cell::Alias, &r.alias, "Takma ad", true)).width(cell_width(1)),
-                container(kind).width(cell_width(2)),
-                container(input(i, Cell::Size, &r.size, "", sized)).width(cell_width(3)),
-                container(must).width(cell_width(4)).center_x(cell_width(4)),
-                container(input(i, Cell::Default, &r.default, "", true)).width(cell_width(5)),
-                container(input(i, Cell::Min, &r.min, "", ranged)).width(cell_width(6)),
-                container(input(i, Cell::Max, &r.max, "", ranged)).width(cell_width(7)),
-                container(list).width(cell_width(8)),
-            ]
-            .spacing(6)
-            .align_y(Center);
-            let chosen = w.chosen == Some(i);
-            rows = rows.push(
-                kentos_ui::widget::focus_watch::focus_watch(
-                    button(line)
-                        .on_press(msg(Event::Choose(i)))
-                        .padding([2, 4])
-                        .style(style::button::table_row(chosen, false)),
-                )
-                .on_focus(move |on| msg(Event::Focused(i, on))),
-            );
-        }
-        if w.rows.is_empty() {
-            rows = rows.push(
-                container(label::muted(
-                    "Alan yok: katmanın öznitelikleri serbest. Alan ekle ya da Verilerden al ile ekleyin.",
-                ))
-                .padding(8),
-            );
-        }
-        // As tall as its rows, at most 300 px; 200 px while the places of a field are listed under it.
-        let most = if w.chosen.is_some() { 200.0 } else { 300.0 };
-        let rows_height = (w.rows.len().max(3) as f32 * 36.0 + 8.0).min(most);
-        // A window narrower than the columns scrolls them sideways, header and rows together, rather than cutting the
-        // last column off.
-        let table = container(
-            iced::widget::scrollable(
-                Column::new()
-                    .push(container(head).padding([4, 8]))
-                    .push(kentos_ui::widget::horizontal_divider())
-                    .push(
-                        iced::widget::scrollable(rows)
-                            .height(Length::Fixed(typography::scaled(rows_height))),
-                    ),
-            )
-            .direction(iced::widget::scrollable::Direction::Horizontal(
-                iced::widget::scrollable::Scrollbar::new(),
-            ))
-            .width(Fill),
-        )
-        .style(style::container::field_box)
-        .width(Fill);
-        let tool = |glyph: &str, words: &'static str, on: Option<Message>| {
-            button(
-                row![icon(from_web(Some(glyph))).size(14.0), label::body(words)]
-                    .spacing(6)
-                    .align_y(Center),
-            )
-            .style(style::button::secondary)
-            .padding(kentos_ui::theme::metrics::action())
-            .on_press_maybe(on)
-        };
-        let chosen = w.chosen;
-        let n = w.rows.len();
-        let actions = row![
-            tool("plus", ADD, Some(msg(Event::Add))),
-            tool("erase", REMOVE, chosen.map(|_| msg(Event::Remove))),
-            tool(
-                "chevronUp",
-                UP,
-                chosen.filter(|&i| i > 0).map(|_| msg(Event::Up))
-            ),
-            tool(
-                "chevronDown",
-                DOWN,
-                chosen.filter(|&i| i + 1 < n).map(|_| msg(Event::Down))
-            ),
-            iced::widget::space::horizontal(),
-            tool("fieldsFromData", FROM_DATA, Some(msg(Event::FromData))),
-            tool("conversion", MIGRATE, Some(msg(Event::Migrate))),
-        ]
-        .spacing(8)
-        .align_y(Center);
-        // A data layer's fields follow its table (docs/adr/9318).
-        let data_layer = self
-            .document
-            .as_ref()
-            .and_then(|d| d.model.layers().get(&w.layer))
-            .is_some_and(|n| n.data.is_some());
-        let actions = if data_layer {
-            actions
-                .push(tool("blockSync", REFRESH, Some(msg(Event::Refresh))))
-                .push(tool("domains", RULES, Some(msg(Event::Rules))))
-        } else {
-            actions
-        };
-        // The chosen row's Tekil, ends left out and unit (docs/adr/0438 §3, §4).
-        let extras: Element<'_, Message> = match chosen.and_then(|i| w.rows.get(i)) {
-            Some(r) => {
-                let ranged = (r.kind.is_number() || r.kind.is_temporal()) && r.domain.is_none();
-                let mut line = row![
-                    label::strong(r.name.clone()),
-                    words::check(
-                        r.unique,
-                        "Tekil",
-                        (r.kind != LayerFieldKind::Boolean).then(|| msg(Event::Unique(!r.unique)))
-                    ),
-                    words::check(
-                        r.min_exclusive,
-                        "En az hariç",
-                        (ranged && !r.min.trim().is_empty())
-                            .then(|| msg(Event::MinExclusive(!r.min_exclusive)))
-                    ),
-                    words::check(
-                        r.max_exclusive,
-                        "En çok hariç",
-                        (ranged && !r.max.trim().is_empty())
-                            .then(|| msg(Event::MaxExclusive(!r.max_exclusive)))
-                    ),
-                    kentos_ui::widget::tip(
-                        words::check(
-                            r.withheld,
-                            "Dışarı verilmez",
-                            Some(msg(Event::Withheld(!r.withheld)))
-                        ),
-                        kentos_ui::widget::Tip::new(
-                            "Değerleri çizimde kalır: atlas, tablonun kopyası ve dosyası, istatistik, grafik ve komut kaydı onu dışarıda bırakır."
-                        ),
-                        iced::widget::tooltip::Position::Top,
-                    ),
-                ]
-                .spacing(16)
-                .align_y(Center);
-                if r.kind.is_number() {
-                    line = line.push(label::body("Birim")).push(
-                        container(
-                            kentos_ui::widget::text_field("m², kg …", &r.unit)
-                                .on_input(|t| msg(Event::Unit(t))),
-                        )
-                        .width(Length::Fixed(typography::scaled(90.0))),
-                    );
-                }
-                // What the bound table's column says (docs/adr/0753): written by binding and reading, shown here; and
-                // its one-column unique constraint (docs/adr/0755 §5).
-                let unique = doc
-                    .model
-                    .settings()
-                    .sources
-                    .iter()
-                    .find(|s| s.layer == w.layer)
-                    .is_some_and(|link| unique_in_table(link, &r.name));
-                // A data layer's list or range: the project's rule, and the table's too when its source keeps it
-                // (docs/adr/9324).
-                let ruled = r.values.as_ref().is_some_and(|v| !v.is_empty())
-                    || (r.kind.is_number() && (!r.min.trim().is_empty() || !r.max.trim().is_empty()));
-                let database = doc
-                    .model
-                    .layers()
-                    .get(&w.layer)
-                    .and_then(|n| n.data.as_ref())
-                    .is_some_and(|d| d.driver == "postgis");
-                let rule = w.source_rules.as_ref().filter(|_| ruled).map(|kept| {
-                    if kept.contains(&r.name) && database {
-                        "Kural: proje ve kaynak. KentOS yazarken denetler; veritabanı da başka programların yazdığını \
-                         denetler."
-                            .to_owned()
-                    } else if kept.contains(&r.name) {
-                        "Kural: proje ve kaynak. KentOS yazarken denetler; GeoPackage kuralı şema uzantısında tutar, \
-                         başka programlar okur."
-                            .to_owned()
-                    } else {
-                        format!(
-                            "Kural: yalnız proje. KentOS yazarken denetler; tabloda kural yok, başka programlar \
-                             denetlenmeden yazar. {RULES} ile tabloya da yazın."
-                        )
-                    }
-                });
-                let said = [
-                    column_said(r.column.as_ref()),
-                    unique.then(|| "Tabloda tekil: tablonun tekil kısıtı değerin başka bir kayıtta olmasına izin vermez.".to_owned()),
-                    rule,
-                ]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>();
-                if said.is_empty() {
-                    line.into()
-                } else {
-                    iced::widget::column![line, label::muted(said.join(" "))]
-                        .spacing(6)
-                        .into()
-                }
-            }
-            None => {
-                label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.")
-                    .into()
-            }
-        };
-        // The bound table's constraints (docs/adr/0755 §6).
-        let held: Element<'_, Message> = match doc
-            .model
-            .settings()
-            .sources
-            .iter()
-            .find(|s| s.layer == w.layer)
-            .filter(|s| !s.checks.is_empty() || s.uniques.iter().any(|u| u.columns.len() > 1))
-        {
-            Some(link) => {
-                let fields = doc
-                    .model
-                    .layers()
-                    .get(&w.layer)
-                    .map(|n| n.fields.clone())
-                    .unwrap_or_default();
-                let mut list = Column::new()
-                    .spacing(4)
-                    .push(label::strong("Tablonun kısıtları"));
-                for (said, judged) in constraints_said(link, &fields) {
-                    list = list.push(
-                        row![
-                            container(label::body(said)).width(Fill),
-                            label::muted(judged)
-                        ]
-                        .spacing(12)
-                        .align_y(Center),
-                    );
-                }
-                container(list)
-                    .padding([8, 10])
-                    .style(style::container::field_box)
-                    .width(Fill)
-                    .into()
-            }
-            None => iced::widget::space().into(),
-        };
-        let usage =
-            iced::widget::column![extras, policy_box(w), self.field_usage_box(w), held].spacing(10);
-        let problem = problem_of(&w.rows);
-        let renamed = renames_of(&w.rows).len();
-        let line = match (&w.said, &problem) {
-            (Some((kind, text)), _) => words::text_line(*kind, text.clone()),
-            (None, Some(p)) => words::text_line(Kind::Error, p.clone()),
-            (None, None) if w.rows.is_empty() => words::text_line(
-                Kind::Ok,
-                "Alan yok: katmanın öznitelikleri serbest.".to_owned(),
-            ),
-            (None, None) => words::text_line(
-                Kind::Ok,
-                if renamed > 0 {
-                    format!(
-                        "{n} alan; {renamed} alanın adı değişiyor, değerleri yeni adla taşınacak."
-                    )
-                } else {
-                    format!("{n} alan.")
-                },
-            ),
-        };
-        let path = doc.model.layers().path(&w.layer);
-        let ready = problem.is_none() && w.changed();
-        // The body scrolls in a low window, the buttons stay in sight (docs/adr/0749, 0753).
-        let main = Frame::new(FIELDS_TITLE)
-            .scroll(
-                Column::new()
-                    .spacing(10)
-                    .push(label::muted(format!("Katman: {path}")))
-                    .push(table)
-                    .push(actions)
-                    .push(usage)
-                    .push(words::summary(vec![line])),
-            )
-            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-            .width(1040.0)
-            .modal(msg(Event::Cancel));
-        let Some(c) = &w.choices else {
-            return main;
-        };
-        let name = w
-            .rows
-            .get(c.row)
-            .map(|r| r.name.clone())
-            .unwrap_or_default();
-        let mut list = Column::new().spacing(4).push(
-            row![
-                container(label::caption("Kod")).width(Length::Fixed(100.0)),
-                container(label::caption("Etiket")).width(Length::Fixed(150.0)),
-                container(label::caption("Açıklama")).width(Length::Fixed(170.0)),
-                container(label::caption("Geçerlilik başı")).width(Length::Fixed(108.0)),
-                container(label::caption("sonu")).width(Length::Fixed(108.0)),
-                label::caption("Kalktı"),
-            ]
-            .spacing(6),
-        );
-        // Projenin listesi (docs/adr/0430): the project's lists of this field's kind.
-        let row_kind = w.rows.get(c.row).map(|r| r.kind);
-        let fitting: Vec<&kentos_commands::FieldDomain> = domains
-            .iter()
-            .filter(|d| Some(d.kind) == row_kind)
-            .collect();
-        let linked = c
-            .domain
-            .as_ref()
-            .and_then(|id| fitting.iter().find(|d| d.id == *id).copied());
-        let own = linked.is_none();
-        for (i, choice) in c.list.iter().enumerate() {
-            let (code, label_text) = (&choice.code, &choice.label);
-            let retired = choice.retired;
-            let code_input = kentos_ui::widget::text_field("", code);
-            let label_input = kentos_ui::widget::text_field("", label_text);
-            // What the value means and the days it holds (docs/adr/0438 §5).
-            let typed = |placeholder: &'static str, value: &str, on: fn(usize, String) -> Event| {
-                let field = kentos_ui::widget::text_field(placeholder, value);
-                if own {
-                    field.on_input(move |t| msg(on(i, t)))
-                } else {
-                    field
-                }
-            };
-            let shown_day = |d: &Option<String>| {
-                d.as_deref().map_or_else(String::new, |d| {
-                    kentos_commands::display_value(&LayerField::new("gün", LayerFieldKind::Date), d)
-                })
-            };
-            list = list.push(
-                row![
-                    container(if own {
-                        code_input.on_input(move |t| msg(Event::ListCode(i, t)))
-                    } else {
-                        code_input
-                    })
-                    .width(Length::Fixed(100.0)),
-                    container(if own {
-                        label_input.on_input(move |t| msg(Event::ListLabel(i, t)))
-                    } else {
-                        label_input
-                    })
-                    .width(Length::Fixed(150.0)),
-                    container(typed(
-                        "",
-                        choice.description.as_deref().unwrap_or(""),
-                        Event::ListDescription
-                    ))
-                    .width(Length::Fixed(170.0)),
-                    container(typed("GG.AA.YYYY", &shown_day(&choice.from), Event::ListFrom))
-                        .width(Length::Fixed(108.0)),
-                    container(typed("GG.AA.YYYY", &shown_day(&choice.until), Event::ListUntil))
-                        .width(Length::Fixed(108.0)),
-                    kentos_ui::widget::tip(
-                        words::check(retired, "", own.then(|| msg(Event::ListRetired(i, !retired)))),
-                        kentos_ui::widget::Tip::new("Kullanımdan kalktı").body(
-                            "Tutan kayıtta kalır ve görünür; yeni seçimde sunulmaz, formla yeniden yazılmaz."
-                        ),
-                        iced::widget::tooltip::Position::Top,
-                    ),
-                    button(icon(kentos_ui::icon::Icon::Close).size(12.0))
-                        .style(style::button::subtle)
-                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
-                        .on_press_maybe(own.then(|| msg(Event::ListRemove(i)))),
-                ]
-                .spacing(6)
-                .align_y(Center),
-            );
-        }
-        let ids: Vec<String> = fitting.iter().map(|d| d.id.clone()).collect();
-        let mut offered = vec![Choice::new("Alanın kendi listesi")];
-        offered.extend(fitting.iter().map(|d| {
-            Choice::new(if d.coded() {
-                format!("{} ({} kod)", d.name, d.values.as_ref().map_or(0, Vec::len))
-            } else {
-                format!(
-                    "{} ({} – {})",
-                    d.name,
-                    d.min.as_deref().unwrap_or("…"),
-                    d.max.as_deref().unwrap_or("…")
-                )
-            })
-        }));
-        let now = match &c.domain {
-            None => Some(0),
-            Some(id) => ids.iter().position(|x| x == id).map(|p| p + 1),
-        };
-        let pick = Select::new(offered, now, move |k| {
-            msg(Event::ListDomain(k.checked_sub(1).map(|k| ids[k].clone())))
-        });
-        let mut body = Column::new().spacing(10).push(words::field(
-            "Projenin listesi",
-            container(pick).width(320),
-            Some(match linked {
-                Some(d) => format!(
-                    "Kodlar “{}” listesinindir; Değer listeleri penceresinde düzenlenir, bağlı bütün alanlar izler.",
-                    d.name
-                ),
-                None if fitting.is_empty() => {
-                    "Projede bu türde değer listesi yok; Değer listeleri penceresinden ekleyin.".to_owned()
-                }
-                None => "Bir liste seçilirse alan ona bağlanır; liste değişince alan da değişir.".to_owned(),
-            }),
-        ));
-        if linked.is_some_and(|d| !d.coded()) {
-            let d = linked.unwrap_or_else(|| unreachable!());
-            body = body.push(label::caption(format!(
-                "Aralık: {} – {}",
-                d.min.as_deref().unwrap_or("…"),
-                d.max.as_deref().unwrap_or("…")
-            )));
-        } else {
-            body = body
-                .push(label::caption(
-                    "Nesneye kod yazılır, tabloda ve formda etiketi gösterilir; etiket yazılırsa kodu yazılır.",
-                ))
-                .push(list);
-            if own {
-                body = body.push(tool("plus", "Değer ekle", Some(msg(Event::ListAdd))));
-            }
-        }
-        // A text field may hold several of its values (docs/adr/0408 §1).
-        if w.rows
-            .get(c.row)
-            .is_some_and(|r| r.kind == LayerFieldKind::Text)
-        {
-            body = body.push(words::check(
-                c.multiple,
-                "Birden çok değer seçilebilir",
-                Some(msg(Event::ListMultiple(!c.multiple))),
-            ));
-        }
-        let sub = Frame::new(format!("Değer listesi · {name}"))
-            .push(body)
-            .action(words::secondary(CANCEL, Some(msg(Event::ListCancel))))
-            .action(words::primary("Tamam", Some(msg(Event::ListOk))))
-            .width(820.0)
-            .modal(msg(Event::ListCancel));
-        iced::widget::stack![main, sub].into()
-    }
-
     /// The window's controls by their words (a trace's `dialog` step): the
     /// chosen row's fields by their headers (Ad, Takma ad, Varsayılan, En
     /// az, En çok, Uzunluk / Basamak), its Zorunlu box, a row by its number,
@@ -1698,71 +1173,6 @@ impl App {
     }
 }
 
-/// Bölünce and Birleşince of the chosen row (docs/adr/0419): only what its kind takes.
-fn policy_box<'a>(w: &Window) -> Element<'a, Message> {
-    use kentos_commands::{MergePolicy, SplitPolicy};
-    let Some((i, r)) = w.chosen.and_then(|i| w.rows.get(i).map(|r| (i, r))) else {
-        return iced::widget::space().into();
-    };
-    let units = matches!(r.kind, LayerFieldKind::Integer | LayerFieldKind::BigInt)
-        || (r.kind == LayerFieldKind::Decimal && !r.size.trim().is_empty());
-    let number = r.kind.is_number();
-    let splits: Vec<SplitPolicy> = SplitPolicy::ALL
-        .into_iter()
-        .filter(|p| *p != SplitPolicy::Ratio || units)
-        .collect();
-    let merges: Vec<MergePolicy> = MergePolicy::ALL
-        .into_iter()
-        .filter(|p| match p {
-            MergePolicy::Sum => units,
-            MergePolicy::Min | MergePolicy::Max => number,
-            _ => true,
-        })
-        .collect();
-    let split_at = splits
-        .iter()
-        .position(|p| Some(*p) == r.split.or(Some(SplitPolicy::Copy)));
-    let merge_at = merges
-        .iter()
-        .position(|p| Some(*p) == r.merge.or(Some(MergePolicy::First)));
-    let split = {
-        let picks = splits.clone();
-        Select::new(
-            splits.iter().map(|p| Choice::new(p.label())),
-            split_at,
-            move |k| {
-                let p = picks[k];
-                msg(Event::Split(i, (p != SplitPolicy::Copy).then_some(p)))
-            },
-        )
-    };
-    let merge = {
-        let picks = merges.clone();
-        Select::new(
-            merges.iter().map(|p| Choice::new(p.label())),
-            merge_at,
-            move |k| {
-                let p = picks[k];
-                msg(Event::Merge(i, (p != MergePolicy::First).then_some(p)))
-            },
-        )
-    };
-    row![
-        words::field(
-            "Nesne bölününce",
-            container(split).width(Length::Fixed(220.0)),
-            None
-        ),
-        words::field(
-            "Nesneler birleşince",
-            container(merge).width(Length::Fixed(180.0)),
-            None
-        ),
-    ]
-    .spacing(16)
-    .align_y(iced::Alignment::End)
-    .into()
-}
 
 impl App {
     /// The layer's values written in their fields' canonical texts through `cad.fields.migrate`, as one
@@ -1826,6 +1236,13 @@ impl App {
     }
 }
 
+#[path = "layer_fields_view.rs"]
+mod layer_fields_view;
+
+#[cfg(test)]
+#[path = "layer_fields_tests.rs"]
+mod layer_fields_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1868,8 +1285,8 @@ mod tests {
         *found.lock().expect("a lock")
     }
 
-    /// GIS-003: a click into the second row's name box chooses that row at once, so Tekil below is its own; saved, only
-    /// the second field changed. With `KENTOS_SHOTS=1` the picture goes to `.run/gui-evidence/gis-003/`.
+    /// GIS-003: a press on the second field in the list chooses it at once, so Tekil in the settings is its own; saved,
+    /// only the second field changed. With `KENTOS_SHOTS=1` the picture goes to `.run/gui-evidence/gis-003/`.
     #[test]
     fn a_click_into_a_rows_box_chooses_that_row() {
         use kentos_ui::snapshot::Input;
@@ -1889,9 +1306,12 @@ mod tests {
         let mut shot = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
         let mut update = |app: &mut crate::app::App, m| drop(app.update(m));
         shot.settle(&mut app, crate::app::App::view, &mut update);
-        let at = box_at(&mut shot, &app, cell_id(1, Cell::Name)).expect("the second row's name box");
+        // The list's second field pressed (docs/adr/9349): its settings are the form's, its name box there.
+        let at = crate::files_testing::find_text(&mut shot, &app, "bank_sayisi").expect("the second field in the list");
         shot.input(&mut app, crate::app::App::view, &mut update, Input::Click(at.center()));
         assert_eq!(app.gis.layer_fields.as_ref().expect("open").chosen, Some(1), "the clicked row is chosen");
+        shot.settle(&mut app, crate::app::App::view, &mut update);
+        assert!(box_at(&mut shot, &app, cell_id(1, Cell::Name)).is_some(), "its name box in the settings");
         crate::files_testing::evidence(&mut shot, &app, "gis-003", "ikinci-satir-secili");
         let _ = app.update(msg(Event::Unique(true)));
         let _ = app.update(msg(Event::Save));
@@ -1899,15 +1319,6 @@ mod tests {
         let fields = &doc.layers().get(&layer).expect("the layer").fields;
         let unique: Vec<(&str, bool)> = fields.iter().map(|f| (f.name.as_str(), f.unique)).collect();
         assert_eq!(unique, [("park_kodu", true), ("bank_sayisi", true)]);
-    }
-
-    /// UR-063: every header fits its column at the interface's caption size, its 8 px padding either side.
-    #[test]
-    fn every_header_fits_its_column() {
-        for (head, width) in HEADS {
-            let words = typography::measured_width(head, typography::caption(), true);
-            assert!(words + 16.0 <= width, "{head}: {words} + 16 > {width}");
-        }
     }
 
     #[test]

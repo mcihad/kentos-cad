@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Alanlar penceresi liste ve ayarlar oldu (27 Kasım 2026, sahibin sözü;
+  [ADR 9349](../adr/9349-alanlar-list-and-settings.md)).**
+  - Dokuz sütunlu düzenlenebilir ızgara yerine solda alan listesi (ad, takma ad, tür, işaretler), sağda seçili
+    alanın tek formu: Genel, Değerler, Nesne işlemleri, Kaynak, Kullanıldığı yerler. Türün almadığı ayar görünmez.
+  - Listenin altında Alan ekle, Yukarı, Aşağı, Sil; seyrek eylemler Diğer ▾'de. Görünüm `layer_fields_view.rs`'de.
+
 - **Tablo yeni alanı hemen okur, etiketle aranır, ifade oluşturucu kaynağın satırlarını okur, tablo katman süzgecini
   izler; Parsel alan denetimi (27 Kasım 2026, T11–T15;
   [ADR 9348](../adr/9348-table-fields-label-search-builder-rows-scope-and-parcel-check.md)).**
