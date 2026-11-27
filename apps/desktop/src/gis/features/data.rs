@@ -742,6 +742,7 @@ impl App {
     }
 
     /// What the table's foot says of a layer's rows its source does not have yet (docs/adr/9346).
+    #[cfg(test)]
     pub(crate) fn data_unwritten_words(&self, layer: &str) -> Option<String> {
         let c = self.document.as_ref()?.model.data_changes(layer);
         (!c.is_empty()).then(|| unwritten_words(c.added.len(), c.changed.len(), c.deleted.len()))
