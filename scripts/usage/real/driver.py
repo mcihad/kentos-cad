@@ -218,7 +218,9 @@ def fit(title, region=None):
             if name:
                 seen.append(name)
             if name == title:
-                w.configure(x=x, y=y, width=width, height=height)
+                # Over the others too, as a click on it would bring it (a second window, 3B görünüm, stays over the
+                # first otherwise).
+                w.configure(x=x, y=y, width=width, height=height, stack_mode=X.Above)
                 # No window manager gives the keyboard to the window: give it as one would.
                 w.set_input_focus(X.RevertToParent, X.CurrentTime)
                 d.sync()

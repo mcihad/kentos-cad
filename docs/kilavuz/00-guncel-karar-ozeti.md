@@ -75,6 +75,15 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **3B görünüm paftada (27 Kasım 2026, MB-13; [ADR 8175](../adr/8175-3d-view-on-sheet.md)).**
+  - Görüntüleyicide Aksonometri (`OrbitCamera::axonometric`): ortografik, hedefte perspektifle aynı boy; göz modelin
+    önünde (`uzaklık + erişim + 1 m`). IFC görüntüleyicisinde de.
+  - 3B penceresinde Paftaya koy: görünüm olduğu gibi (izdüşüm, yön, kesit, kapaklar; işaret, ölçü ve tutamaç yok,
+    seçim önce bırakılır) ekran dışı GPU çizicisiyle (`kentos_ui::snapshot`) uzun kenarı 2400 piksel, kendi iş
+    parçacığında; PNG 4 MB'ı aşarsa 1800/1350. Öndeki paftaya Resim öğesi olarak (`Designer::place_picture`): sol
+    yarı, sonra sağ yarı, sonra orta; tek adım "3B görünüm". Resim canlı değil (pafta çekirdeği GPU'ya bağlanamaz).
+  - Gerçek pencere sürücüsünün `fit`'i pencereyi öne de alır.
+
 - **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12; [ADR 8174](../adr/8174-site-ground.md)).**
   - `SitePlan.naturalGround/gradedGround`: vaziyetin kendi zemini, `SiteGround { layers }` (kotlu ölçü noktalarının
     katmanları); yüzey okunurken kurulur. `settings.road.surfaces`'ta DEĞİL: Mimari projesi yol ayarı tutamaz,

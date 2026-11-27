@@ -1569,3 +1569,19 @@ fn element_schedule_screens() {
         shot(&mut app, "1-cizelgeler");
     }
 }
+
+/// 3B görünüm paftada (docs/adr/8175): Aksonometri turns the window's camera orthographic; Paftaya koy with no sheet in
+/// front places nothing and says what to do.
+#[test]
+fn aksonometri_turns_the_camera_and_paftaya_koy_asks_for_a_sheet_in_front() {
+    let mut app = open(building());
+    let _ = app.update(Message::Run("scene3d.view"));
+    send(&mut app, W::Viewer(kentos_model_view_ui::Message::Axonometric));
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    assert!(matches!(b.viewer.camera().projection, kentos_scene3d::Projection::Orthographic { .. }));
+    assert!(!app.sheets.is_active());
+    send(&mut app, W::ToSheet);
+    let said = app.log.last().expect("said");
+    assert_eq!(said.level, kentos_interaction::Level::Warn);
+    assert_eq!(said.text, "Önde pafta yok: önce 3B görünümün konacağı paftayı açın.");
+}

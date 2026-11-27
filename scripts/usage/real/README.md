@@ -53,7 +53,7 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 
 | Satır | Ne yapar |
 |---|---|
-| `fit KentOS Mimari` | O başlıklı pencereyi ekranı kaplayacak biçimde büyütür ve klavyeyi ona verir (pencere yöneticisi yok). Dosyayla açılan pencerenin başlığı dosyanın adını da taşır: `fit KentOS Mimari — Kesme` |
+| `fit KentOS Mimari` | O başlıklı pencereyi ekranı kaplayacak biçimde büyütür, öbür pencerelerin önüne alır ve klavyeyi ona verir (pencere yöneticisi yok). Dosyayla açılan pencerenin başlığı dosyanın adını da taşır: `fit KentOS Mimari — Kesme`; değişmiş dosyanın başlığı sonunda • taşır: `fit KentOS Mimari — Kesme •` |
 | `fit BAŞLIK X Y GEN YÜK` | Aynı pencereyi ekranın o bölgesine koyar (sol üst köşesi X Y, genişliği, yüksekliği) ve klavyeyi ona verir. Geniş bir ekran yan yana iki ekranın yerini tutar: `KENTOS_REAL_SIZE=2880x900` ile `fit KentOS GIS — Vitrin 0 0 1440 900` soldaki, `fit Tampon — KentOS GIS 1440 0 1440 900` sağdaki ekrandır ([ADR 8060](../../../docs/adr/8060-secondary-os-windows.md)). Son dört sözcük sayıysa bölgedir; sayıyla biten bir başlık bu yüzden yazılamaz |
 | `wait MS` | Bekler |
 | `move X Y` | İmleci aradaki noktalardan geçirerek götürür |

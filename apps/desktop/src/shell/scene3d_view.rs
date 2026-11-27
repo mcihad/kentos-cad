@@ -139,7 +139,10 @@ impl App {
     /// What the window holds: a building's viewer, else the road's strip, scene and bar.
     fn scene3d_body<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         match &w.building {
-            Some(b) => b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), vec![b.storeys_menu()])),
+            Some(b) => b.viewer.layout(self.viewer_host(
+                |m| msg(Event::Viewer(m)),
+                vec![b.storeys_menu(), crate::scene3d_sheet::sheet_button()],
+            )),
             None => column![self.scene3d_strip(w), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
         }
     }
