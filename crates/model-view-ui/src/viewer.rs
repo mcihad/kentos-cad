@@ -651,7 +651,7 @@ impl Viewer {
             })
             .collect();
         let count = sources.len();
-        self.scene = Arc::new(Scene::of(sources, count));
+        self.scene = Arc::new(Scene::after(sources, count, Some(&self.scene)));
         self.shown = shown;
         self.recap();
         self.measuring.forget_edges();
@@ -682,7 +682,7 @@ impl Viewer {
             })
             .collect();
         let count = sources.len();
-        self.caps = Some(Arc::new(Scene::of(sources, count)));
+        self.caps = Some(Arc::new(Scene::after(sources, count, self.caps.as_deref())));
     }
 
     fn refresh_rows(&mut self) {

@@ -175,3 +175,21 @@ Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölç�
 - **Kalan:** gerçek ekran kartında gerçek pencere bu makinede çekilemiyor (Xvfb'de DRI3 yok). Sahip kendi ekranında
   köşegen görürse ayrıca bakılır.
 
+### MB-04 (27 Kasım 2026)
+
+- **İçerikten kimlik** (`crates/model-view-ui/src/scene.rs`, `Scene::after`).
+  - Her döşeme parçasının ekran kartına giden verisinin (köken, konumlar, parçalar, normaller, indeksler, aralıklar)
+    özeti çıkarılır.
+  - Yeni sahnede önceki sahnedekiyle bayt bayt aynı olan parça onun kimliğini alır. Çizici onu yüklü bulur, yeniden
+    yüklemez, kenarını yeniden hesaplamaz.
+  - Parça kimlikle bulunur (`index`). Görüntüleyici modeli ve kesit yüzünü önceki sahnesinden sonra kurar.
+- **Bırakma:** çizici, görünümün sahnesi değişince yalnız artık hiçbir sahnede olmayan kimlikleri ekran kartından
+  bırakır (`Pipeline::drawn`).
+- **Ölçüm** (`tests/timing.rs`, `KENTOS_IFC_LARGE=.run/ifc-buyuk/kesit-binasi-x120.ifc`, hata ayıklama derlemesi):
+  - 11 400 nesne, 8 160 gövde, 368 640 üçgen, 16 parça.
+  - Bir duvar seçilince 16 parçadan 12'si kimliğini korudu, 4'ü yeniden yüklenir. Önceden 16'sının hepsi yeni
+    kimlikle yükleniyordu.
+- **Sınama:** `a_scene_made_again_keeps_the_ids_of_the_tiles_it_did_not_change`. 2 km arayla iki kutu, her biri bir
+  parça. Aynısı yeniden kurulunca iki kimlik korunur; ikincisi seçilince yalnız onun parçası yeni kimlik alır. Her
+  parça kimliğiyle bulunur.
+
