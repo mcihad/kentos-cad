@@ -221,25 +221,19 @@ impl App {
             .map(|f| f.id.clone())
             .filter(|_| self.settings.bool(ON_CREATE) && self.dialog.is_none());
         // A new row of a data layer being edited (the second round's T8, docs/adr/9346): its form opens at once, the
-        // layer's own (its draft too), else the form of its fields, which the layer gets, said so.
-        let form = form.or_else(|| {
-            (self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer))
-                .then(|| self.ensure_layer_form(&layer))
-                .flatten()
-        });
+        // layer's own (its draft too), else the default form of its fields; the layer gets no form (T17).
+        let new_row = self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer);
+        let form = form.or_else(|| new_row.then(|| self.form_of_layer(&layer)).flatten());
         match form {
             Some(id) => {
                 self.selection.set([slot]);
                 self.open_entry(slot, &id)
             }
+            None if new_row => {
+                self.selection.set([slot]);
+                self.open_entry_default(slot, &layer)
+            }
             None => {
-                // A new row of a data layer being edited, with fields and no form: the row chosen and Öznitelikler shown,
-                // its values typed there at once, as a GIS opens the layer's fields after a feature is drawn
-                // (docs/adr/9111 §2). Drafting › Çizimden sonra formu aç turns it off with the forms.
-                if self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer) {
-                    self.selection.set([slot]);
-                    self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
-                }
                 // No form takes the new object: a required field it left empty is said now, not found later.
                 if let Some(note) = self.required_left_empty(slot) {
                     self.warn(note);
@@ -398,12 +392,10 @@ impl App {
             {
                 return self.open_form_on_row(layer, key);
             }
-            // One object of a layer without a form: the layer gets the form of its fields, said (docs/adr/9346).
+            // One object of a layer without a form: its default form, built from the layer's fields (docs/adr/9346); the
+            // layer gets no form (T17).
             if let (Some(layer), Some(&slot)) = (self.one_object_layer(), self.selection.ids().first()) {
-                return match self.ensure_layer_form(&layer) {
-                    Some(id) => self.open_entry(slot, &id),
-                    None => Task::none(),
-                };
+                return self.open_entry_default(slot, &layer);
             }
             let rows = if self.selection.is_empty() { self.data_rows_chosen() } else { self.selection.len() };
             self.say(Level::Warn, crate::forms::row_target::choose_one(rows));

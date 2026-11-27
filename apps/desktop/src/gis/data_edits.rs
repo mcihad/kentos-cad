@@ -206,9 +206,11 @@ pub(crate) fn event(e: Event) -> Message {
 }
 
 /// The three steps a data layer's change goes through, named alike on every surface (docs/adr/9346): a form's
-/// Değişikliği hazırla puts it in the layer's edit session; Projeyi kaydet writes the project file; Kaynağa yaz writes
-/// the rows to their source.
-pub(crate) const PREPARE: &str = "Değişikliği hazırla";
+/// Uygula puts it in the layer's edit session (the second round's T7 follow-up: “hazırla” said neither result);
+/// Projeyi kaydet writes the project file; Kaynağa yaz writes the rows to their source.
+pub(crate) const PREPARE: &str = "Uygula";
+/// Beside a data layer's form's Uygula: where the change goes, and how it reaches the source.
+pub(crate) const PREPARE_NOTE: &str = "Değişiklik katmanda bekler. Veri kaynağına yazmak için Kaynağa yaz'ı kullanın.";
 pub(crate) const WRITE: &str = "Kaynağa yaz";
 
 /// “1 yeni, 2 değişen, 1 silinen satır”: what a layer writes, its zero counts left out.

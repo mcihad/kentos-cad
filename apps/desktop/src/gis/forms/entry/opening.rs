@@ -53,6 +53,32 @@ impl App {
         Task::batch([sources, self.ask_entry_rows()])
     }
 
+    /// Formla düzenle on `slot` of `layer`, a layer without a form (the second round's T17): through its default form,
+    /// built from its fields in a copy of the drawing, editable; the project gets no form. Kaydet writes the values
+    /// with `cad.entities.set` (steps.rs `save_default_entry`).
+    pub(crate) fn open_entry_default(&mut self, slot: Slot, layer: &str) -> Task<Message> {
+        let Some((copy, f)) = self.default_form_copy(layer) else {
+            return Task::none();
+        };
+        let Some(uid) = copy.uid(slot).map(|u| u.to_string()) else {
+            return Task::none();
+        };
+        let (moment, user) = self.form_moment();
+        let screen = match record_screen(&copy, &f.id, &uid, true, moment.as_deref(), user.as_deref()) {
+            Ok(s) => s,
+            Err(error) => {
+                self.say(Level::Warn, error.message);
+                return Task::none();
+            }
+        };
+        let mut entry = self.entry_of(&f, f.draft.clone(), true, uid, screen, moment, user, false, BTreeMap::new());
+        entry.default_of = Some(layer.to_owned());
+        entry.read_why = None;
+        self.gis.form_entry = Some(entry);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
+        Task::none()
+    }
+
     /// A read-only connection's row in its form (docs/adr/9159): `e` as its source holds it, shown and not taken; the
     /// form opens for reading, with no last values and nothing to write.
     pub(crate) fn open_entry_row(
@@ -308,6 +334,7 @@ impl App {
             row: None,
             edit_row: None,
             edit_slot: None,
+            default_of: None,
             source_rows: Default::default(),
             source_rows_asked: 0,
             source_rows_said: Vec::new(),

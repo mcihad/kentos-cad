@@ -115,18 +115,18 @@ impl App {
         } else {
             space::horizontal().width(0).into()
         };
-        let filters = row![
-            pane,
-            container(self.layer_select(rows)).width(Length::Fixed(250.0)),
+        // One flowing line of controls and actions (the second round's T18): a narrow panel wraps them, İfade süzgeci is
+        // never cut off.
+        let filters: [Element<'a, Message>; 8] = [
+            pane.into(),
+            container(self.layer_select(rows)).width(Length::Fixed(250.0)).into(),
             self.pinned_chip(rows),
             self.edit_state_badge(&layer),
             scope,
-            container(search).width(Length::Fixed(170.0)),
-            container(show).width(Length::Fixed(150.0)),
-            container(filter).width(Length::Fixed(240.0)),
-        ]
-        .spacing(8)
-        .align_y(Center);
+            container(search).width(Length::Fixed(170.0)).into(),
+            container(show).width(Length::Fixed(150.0)).into(),
+            container(filter).width(Length::Fixed(240.0)).into(),
+        ];
         // Sütunlar ▾: the source's fields, each shown or hidden in the table.
         let hidden = self.hidden_columns(rows.layer.as_deref());
         let named: Vec<String> = self
@@ -225,7 +225,7 @@ impl App {
         .spacing(2)
         .align_y(Center);
         // The layer drawn on, when the table shows another (docs/adr/9129): both are read, neither is taken for the other.
-        let mut bar = row![filters, space::horizontal(), actions].spacing(8).align_y(Center);
+        let mut bar = iced::widget::Row::with_children(filters).push(actions).spacing(8).align_y(Center);
         // Said with what each is for (docs/adr/9326): the table's selection is its layer's rows; the drawing tools draw
         // on the target.
         if let Some(t) = self.table_target_words(rows) {

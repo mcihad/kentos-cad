@@ -7,8 +7,10 @@
 //! (docs/adr/9176).
 //!
 //! A layer without a form (docs/adr/9346): its row is shown for reading through a default form built from its fields,
-//! in a copy of the drawing; the project gets no form for it. Düzenle, or a row opened for editing, makes that form
-//! the layer's own as Formlar's Yeni form does, said so; it is then designed in Veri › Formlar.
+//! in a copy of the drawing; the project gets no form for it. Düzenle, or a row opened for editing, opens the same
+//! default form for editing (the second round's T17): the row is taken into the layer's edit session and Uygula writes
+//! its values there as the table writes a cell; the project's forms do not change. A form of the layer's own is made in
+//! Veri › Formlar.
 
 use iced::Task;
 
@@ -20,8 +22,8 @@ pub(crate) const VIEWED: &str = "Kayıt okumak için açıldı; Düzenle aynı f
 
 /// What a record shown through its layer's default form says.
 pub(crate) const DEFAULT_FORM: &str =
-    "Katmanın formu yok: kayıt alanlarından kurulan varsayılan formla gösteriliyor. Düzenle bu formu katmana ekler; \
-     Veri › Formlar'da tasarlanır.";
+    "Katmanın formu yok: kayıt alanlarından kurulan varsayılan formla gösteriliyor. Düzenle aynı formla düzenlemeye \
+     açar, katmana form eklenmez; katmanın kendi formu Veri › Formlar'da oluşturulur.";
 
 /// What the one-record actions say without one row or object chosen (Formu aç, Formla düzenle, the table's Form).
 pub(crate) fn choose_one(rows: usize) -> String {
@@ -70,22 +72,6 @@ impl App {
         self.gis.features.data.selected_layer().map_or(0, |l| self.gis.features.data.selected_of(l).len())
     }
 
-    /// The layer's form, made from its fields when it has none, as Formlar's Yeni form makes it, said so; none when
-    /// the project's forms may not change (said why).
-    pub(crate) fn ensure_layer_form(&mut self, layer: &str) -> Option<String> {
-        if let Some(form) = self.form_of_layer(layer) {
-            return Some(form);
-        }
-        let name = format!("{} formu", self.form_layer_name(layer));
-        let made = self.edit_forms(kentos_commands::FormsOp::Create { id: None, name, layer: layer.to_owned(), body: None })?;
-        let form = made.form?;
-        self.say(
-            kentos_interaction::Level::Success,
-            format!("“{}” katmanın alanlarından oluşturuldu ve katmana eklendi; Veri › Formlar'da tasarlanır.", form.name),
-        );
-        Some(form.id)
-    }
-
     /// The layer's default form in a copy of the drawing (see the module): the copy and the form; none without the
     /// drawing or the layer.
     pub(crate) fn default_form_copy(&self, layer: &str) -> Option<(kentos_domain::Document, kentos_commands::ProjectForm)> {
@@ -111,19 +97,10 @@ impl App {
 
     /// The row's form; `view` (Öznitelik formunu aç): for reading whatever its layer's session, Düzenle offered.
     pub(crate) fn open_form_on_row_as(&mut self, layer: String, key: i64, view: bool) -> Task<Message> {
-        let Some(doc) = self.document.as_ref() else {
-            return Task::none();
-        };
-        let read_only = doc.model.layers().get(&layer).and_then(|n| n.data.as_ref()).is_some_and(|d| d.read_only);
-        let shown_only = read_only || view || !doc.model.editing(&layer);
-        // Without a form: shown through the default form; opened for editing, the layer gets it.
+        // Without a form: shown, and edited, through the default form; the layer gets no form (T17).
         let (form, default) = match self.form_of_layer(&layer) {
             Some(form) => (form, false),
-            None if shown_only => (String::new(), true),
-            None => match self.ensure_layer_form(&layer) {
-                Some(form) => (form, false),
-                None => return Task::none(),
-            },
+            None => (String::new(), true),
         };
         if !default && self.withdrawn_said(&form) {
             return Task::none();
@@ -133,10 +110,10 @@ impl App {
         };
         // Taken already: its object's record, the same pending change (only read when asked to view it).
         if let Some(slot) = doc.model.taken_uid(&layer, key).and_then(|u| doc.model.slot_of(u)) {
-            let task = self.open_entry(slot, &form);
+            let task = if default { self.open_entry_default(slot, &layer) } else { self.open_entry(slot, &form) };
             if view && let Some(e) = self.gis.form_entry.as_mut() {
                 e.read_only = true;
-                e.read_why = Some(VIEWED.into());
+                e.read_why = Some(if default { format!("{DEFAULT_FORM} {VIEWED}") } else { VIEWED.into() });
                 e.edit_slot = Some(slot);
             }
             return task;
@@ -250,7 +227,11 @@ impl App {
                 if self.nest_over(t.over.is_some()) {
                     self.selection.set([slot]);
                 }
-                self.open_entry(slot, &t.form)
+                if t.default {
+                    self.open_entry_default(slot, &t.layer)
+                } else {
+                    self.open_entry(slot, &t.form)
+                }
             }
             None => Task::none(),
         }

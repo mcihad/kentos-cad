@@ -6,6 +6,7 @@
 //!   the active layer and lets it follow.
 //! - Göster is the layer's: Seçililer chosen on one layer is not carried to a layer come to for the first time, and
 //!   comes back on its layer.
+//! - T18 (docs/adr/9356): the asked İfade süzgeci is marked under the table and taken off there.
 
 use crate::app::{App, Message};
 use crate::data_layers_tests::{municipal, node};
@@ -77,6 +78,36 @@ fn tablo_opens_the_active_layer_and_seciler_stays_with_its_layer() {
     // The active layer made mahalleler: the table follows it.
     app.document.as_mut().expect("open").model.set_active_layer(&mahalleler);
     assert_eq!(table_layer(&app).as_deref(), Some(mahalleler.as_str()));
+}
+
+/// The asked İfade süzgeci under the table (the second round's T18): marked beside the count, × takes it off.
+#[test]
+fn the_asked_filter_is_marked_under_the_table_and_taken_off_there() {
+    let (mut app, bakim, _) = opened("tablo-suzgec");
+    run(&mut app, "data.featureTable");
+    assert_eq!(table_layer(&app).as_deref(), Some(bakim.as_str()));
+    ev(&mut app, Event::Filter("fid > 2".into()));
+    ev(&mut app, Event::Data(crate::features::data::DataEvent::Apply));
+    assert_eq!(app.gis.features.data.asked_filter(), "fid > 2");
+    ev(&mut app, Event::Data(crate::features::data::DataEvent::ClearFilter));
+    assert_eq!(app.gis.features.data.asked_filter(), "");
+    assert_eq!(app.gis.features.filter, "");
+}
+
+/// The picture of T18 (`.run/gui-evidence/kullanim-9356/`): the bar wrapped whole, the asked filter marked under the
+/// table.
+#[test]
+#[ignore = "pictures"]
+fn filter_picture() {
+    crate::files_testing::usage_shots("9356", "02-tablo-suzgec", || {
+        let (mut app, _, mahalleler) = opened("tablo-suzgec-resim");
+        run(&mut app, "data.featureTable");
+        ev(&mut app, Event::Layer(mahalleler.clone()));
+        ev(&mut app, Event::Filter("mahalle = 'M2'".into()));
+        ev(&mut app, Event::Data(crate::features::data::DataEvent::Apply));
+        crate::data_layers_tests::answer_pages(&mut app);
+        app
+    });
 }
 
 /// The picture (`.run/gui-evidence/kullanim-9355/`): the table pinned to mahalleler while bakim is active.

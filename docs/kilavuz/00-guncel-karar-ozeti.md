@@ -4,6 +4,18 @@
 
 ## 0. Güncel karar özeti
 
+- **Formun Uygula'sı, varsayılan formla düzenleme, veri katmanına yakınlaştırma, tablo süzgeci, Katman özelliklerinin
+  eylemleri (27 Kasım 2026, T7 takip, T16–T21;
+  [ADR 9356](../adr/9356-form-apply-default-form-editing-zoom-filter-layer-properties.md)).**
+  - Veri katmanı formunun düğmesi “Uygula”; yanında “Değişiklik katmanda bekler …”. Adlar: Uygula (form), Projeyi
+    kaydet, Kaynağa yaz.
+  - Formu olmayan katmanın kaydı düzenlerken de varsayılan formla açılır, `cad.entities.set` ile yazılır; projeye form
+    eklenmez.
+  - Katmana yakınlaştır veri katmanında hep açık; kapsam okunuyorsa bekler, yoksa nedenini söyler.
+  - Tablo çubuğu tek akan satır, sarılır; sorulan İfade süzgeci altta × ile.
+  - Katman özellikleri: bölüm eylemi (Yolu kopyala, Stil ayarlarını aç, Alanları aç, Formları aç), tema rengi adıyla,
+    ↑ ↓ / Tab / Enter / Esc.
+
 - **Ağ sonuçlarının birimleri; Tablo etkin katmanı açar; Hizmet alanı ayarları panelde (27 Kasım 2026, T33–T35;
   [ADR 9355](../adr/9355-network-results-units-table-follows-active-service-area-settings.md)).**
   - Bir dakikanın altındaki süre saniyeyle (“Süre 2.16 sn”); sonuç sütunları birimli (“Uzunluk (m)”, “Süre (sn)”,
@@ -69,7 +81,7 @@
   - Öznitelikler düzenlenen satırın bekleyen değerini söyleyerek gösterir; Kaynağa yaz'dan sonra satırı yeniden okur.
   - Formu olmayan katmanın satırı alanlarından kurulan varsayılan formla okunur, projeye form yazılmaz; Düzenle ve
     yeni çizilen kayıt katmana alanlarının formunu verir. Salt okunur pencere “Kayıt formu · … · Salt okunur”dur.
-  - Adlar: Değişikliği hazırla (form), Projeyi kaydet, Kaynağa yaz (`layer.editSave`). Tablonun altı yazılmamış
+  - Adlar: Uygula (form; önce “Değişikliği hazırla”, ADR 9356), Projeyi kaydet, Kaynağa yaz (`layer.editSave`). Tablonun altı yazılmamış
     kayıtları sayar ve Kaynağa yaz'ı sunar; yeni satırda Öznitelikleri gir vardır.
 
 - **İfadeyle seç bütün kapsamlarda veri katmanlarını okur; seçimin sonucu katman katman saklanır (27 Kasım 2026,

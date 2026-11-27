@@ -934,6 +934,29 @@ impl App {
             {
                 return task;
             }
+            // Katman özellikleri (the second round's T21): ↑ ↓ Home End its sections, Tab its ring, Enter what has the
+            // ring, Esc closes and gives the layer tree the keyboard.
+            if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::LayerProperties))
+                && !press.modifiers.control()
+                && !press.modifiers.alt()
+            {
+                use crate::layer_properties::Key;
+                let key = match press.named() {
+                    Some(Named::ArrowUp) => Some(Key::Up),
+                    Some(Named::ArrowDown) => Some(Key::Down),
+                    Some(Named::Home) => Some(Key::Home),
+                    Some(Named::End) => Some(Key::End),
+                    Some(Named::Tab) => Some(Key::Tab(press.modifiers.shift())),
+                    Some(Named::Enter) => Some(Key::Enter),
+                    _ => None,
+                };
+                if let Some(key) = key {
+                    return self.update(crate::layer_properties::key(key));
+                }
+                if press.named() == Some(Named::Escape) {
+                    return self.update(crate::layer_properties::close_by_key());
+                }
+            }
             // The signing window over Portal dosyaları: Esc is its own Kapat, so the server's open request is given up
             // (cloud/portal/esign.rs, docs/adr/9002 §7).
             if self.dialog == Some(crate::app::Dialog::Portal)

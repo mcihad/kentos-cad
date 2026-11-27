@@ -85,6 +85,9 @@ pub(crate) struct DataExtents {
     /// Tümünü göster asked while boxes were read: the view it left, fitted again once they are in if it is still there,
     /// and whether it said it waits for them.
     fit_after: RefCell<Option<(Viewpoint, bool)>>,
+    /// Katmana yakınlaştır asked while the layer's box was read (the second round's T16): the layer and the view it
+    /// left; framed once the box is in, if the view is still there.
+    zoom_after: RefCell<Option<(String, Viewpoint)>>,
 }
 
 #[derive(Debug, Clone)]
@@ -347,7 +350,76 @@ impl App {
         let arrived = &self.gis.data_extents.arrived;
         arrived.set(arrived.get() + 1);
         self.fit_once_boxes_read();
+        self.zoom_once_box_read();
         Task::none()
+    }
+
+    /// Katmana yakınlaştır's wait for a box being read (T16): the layer framed when no box below it is read any more,
+    /// if the view is still where the click left it.
+    fn zoom_once_box_read(&mut self) {
+        let Some((layer, left)) = self.gis.data_extents.zoom_after.borrow().clone() else {
+            return;
+        };
+        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(&layer).cloned()) else {
+            *self.gis.data_extents.zoom_after.borrow_mut() = None;
+            return;
+        };
+        if self.data_layers_below(&node).iter().any(|n| matches!(self.data_extent_of(&n.id), Some(Extent::Reading))) {
+            return;
+        }
+        *self.gis.data_extents.zoom_after.borrow_mut() = None;
+        if self.viewpoint() == left {
+            self.zoom_to_layer(&layer);
+        }
+    }
+
+    /// The data layers at or below `node`.
+    pub(crate) fn data_layers_below(&self, node: &LayerNode) -> Vec<LayerNode> {
+        let mut out = Vec::new();
+        let mut stack = vec![node];
+        while let Some(n) = stack.pop() {
+            if n.data.is_some() {
+                out.push(n.clone());
+            }
+            stack.extend(n.children.iter());
+        }
+        out
+    }
+
+    /// Katmana yakınlaştır on data layers with no box to frame (T16): what each says, read now or not; the box being
+    /// read is waited for and framed when it comes. Whether it waits.
+    pub(crate) fn zoom_without_box(&mut self, node: &LayerNode) -> bool {
+        let layers = self.data_layers_below(node);
+        let mut reading = Vec::new();
+        for n in &layers {
+            if n.data.as_ref().is_some_and(|d| d.geometry.is_none()) {
+                self.say(
+                    Level::Info,
+                    format!("“{}” tablosunun geometri sütunu yok; haritada yeri olmadığı için yakınlaştırılmaz.", n.name),
+                );
+                continue;
+            }
+            match self.data_extent_of(&n.id) {
+                Some(Extent::Reading) => reading.push(n.name.clone()),
+                Some(Extent::Read(None)) => self.say(
+                    Level::Info,
+                    format!("“{}” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok.", n.name),
+                ),
+                Some(Extent::Failed(why)) => {
+                    self.say(Level::Warn, format!("“{}” katmanının kapsamı okunamadı: {why}", n.name))
+                }
+                _ => {}
+            }
+        }
+        if reading.is_empty() {
+            return false;
+        }
+        self.say(
+            Level::Info,
+            format!("“{}” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır.", reading.join("”, “")),
+        );
+        *self.gis.data_extents.zoom_after.borrow_mut() = Some((node.id.clone(), self.viewpoint()));
+        true
     }
 
     /// Tümünü göster's second fit: once no shown layer's box is read any more, the view is fitted again on what the

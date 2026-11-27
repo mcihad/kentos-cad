@@ -399,7 +399,7 @@ fn reading_screens() {
 }
 
 #[test]
-fn a_layer_without_a_form_shows_its_row_through_the_default_form_and_duzenle_gives_it_one() {
+fn a_layer_without_a_form_shows_its_row_through_the_default_form_and_duzenle_edits_it_without_a_form() {
     crate::data_layers::register();
     let address = parcels("form-varsayilan", 40).display().to_string();
     let mut app = app_with_drawing();
@@ -420,13 +420,34 @@ fn a_layer_without_a_form_shows_its_row_through_the_default_form_and_duzenle_giv
     assert_eq!(entry.edit_row, Some((id.clone(), 22)));
     assert!(app.entry_title(entry).contains("salt okunur"), "{}", app.entry_title(entry));
     assert!(app.project_forms().is_empty(), "no form written to the project to read a row");
-    // Düzenle: the layer gets the form of its fields and the row opens in it for editing.
+    // Düzenle, then Vazgeç (the second round's T17): the row opens for editing in the same default form; the project
+    // gets no form, nothing waits.
+    let (forms, revision) = (app.project_forms().len(), app.document.as_ref().map(|d| d.model.settings().forms.len()));
     form_event(&mut app, FormEvent::EditRow);
-    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1);
     let entry = app.gis.form_entry.as_ref().expect("the row's form for editing");
     assert!(!entry.read_only);
+    assert_eq!(entry.default_of.as_deref(), Some(id.as_str()), "the default form");
+    assert_eq!(app.project_forms().len(), forms, "no form added");
+    form_event(&mut app, FormEvent::Cancel);
+    assert!(app.gis.form_entry.is_none());
+    assert_eq!(app.document.as_ref().map(|d| d.model.settings().forms.len()), revision, "the project's forms unchanged");
+    assert_eq!(app.data_unwritten_words(&id), None, "nothing waits");
+    // Opened again for reading (the row taken into the session now): Düzenle makes the default form editable; a value
+    // and Uygula: the row waits in the layer's session; still no form.
+    app.gis.features.data.choose_rows(&id, [22].into());
+    let task = app.run("data.formOpen");
+    drive(&mut app, task);
+    let entry = app.gis.form_entry.as_ref().expect("the row's form");
+    assert!(entry.read_only && entry.default_of.is_some(), "read in the default form, Düzenle offered");
+    form_event(&mut app, FormEvent::EditRow);
+    assert!(app.gis.form_entry.as_ref().is_some_and(|e| !e.read_only), "editable");
+    form_event(&mut app, FormEvent::Value("kullanim".into(), "Okul".into()));
+    form_event(&mut app, FormEvent::Save);
+    assert!(app.gis.form_entry.is_none(), "closed");
+    assert!(app.project_forms().is_empty(), "no form added");
     let said = crate::files_testing::last_said(&app);
-    assert!(said.contains("katmanın alanlarından oluşturuldu"), "{said}");
+    assert!(said.starts_with("Değişiklik uygulandı: kayıt katmanda bekler."), "{said}");
+    assert_eq!(app.data_unwritten_words(&id).as_deref(), Some("1 kayıt kaynağa yazılmadı (1 değişen satır)"));
 }
 
 #[test]
@@ -455,9 +476,8 @@ fn a_new_row_drawn_opens_its_form_and_ozniteliklari_gir_opens_it_again() {
     drive(&mut app, task);
     let entry = app.gis.form_entry.as_ref().expect("the new record's form");
     assert!(!entry.read_only, "for entering its values");
-    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1, "the layer got the form of its fields");
-    let said = crate::files_testing::last_said(&app);
-    assert!(said.contains("katmanın alanlarından oluşturuldu"), "{said}");
+    assert_eq!(entry.default_of.as_deref(), Some(id.as_str()), "the default form of its fields");
+    assert!(app.project_forms().is_empty(), "the layer gets no form (T17)");
     // Closed: Öznitelikleri gir on its row opens it again, through the same form.
     app.gis.form_entry = None;
     app.dialog = None;
@@ -465,7 +485,7 @@ fn a_new_row_drawn_opens_its_form_and_ozniteliklari_gir_opens_it_again() {
     let task = app.data_table_event(crate::features::data::DataEvent::EnterNew(uid));
     drive(&mut app, task);
     assert!(app.gis.form_entry.as_ref().is_some_and(|e| !e.read_only), "opened again");
-    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1, "no second form");
+    assert!(app.project_forms().is_empty(), "still no form");
     // The table's foot: what its source does not have yet, beside Kaynağa yaz.
     assert_eq!(app.data_unwritten_words(&id).as_deref(), Some("1 kayıt kaynağa yazılmadı (1 yeni satır)"));
 }
@@ -521,6 +541,27 @@ fn record_screens() {
         let task = app.data_selection_tasks();
         drive(&mut app, task);
         app.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
+        app
+    });
+}
+
+/// The pictures of the second round's T7 follow-up and T17 (`.run/gui-evidence/kullanim-9356/`): a row of a layer
+/// without a form edited in its default form, Uygula beside where the change goes.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib row_target_tests::apply_screens -- --ignored --nocapture"]
+fn apply_screens() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9356", "01-form-uygula", || {
+        crate::data_layers::register();
+        let address = parcels("resim-uygula", 12).display().to_string();
+        let mut app = app_with_drawing();
+        app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+        let id = node(&app, "parseller").expect("the layer").id.clone();
+        app.gis.features.data.choose_rows(&id, [7].into());
+        let task = app.run("data.formOpen");
+        drive(&mut app, task);
+        form_event(&mut app, FormEvent::EditRow);
+        form_event(&mut app, FormEvent::Value("kullanim".into(), "Okul".into()));
         app
     });
 }

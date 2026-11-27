@@ -695,6 +695,10 @@ impl App {
                 name.is_some_and(|n| e.after.get(&n) != e.before.get(&n))
             })
             .collect();
+        // The layer's default form (T17): the values written as the table writes a cell; no form is added.
+        if e.default_of.is_some() {
+            return self.save_default_entry(values);
+        }
         let input = FormsSubmit {
             form: e.form.clone(),
             draft: e.draft,
@@ -807,7 +811,7 @@ impl App {
                 // form's Kaydet is not the source's.
                 match self.waiting_words_of(&written_uid) {
                     Some(waiting) if done.committed.is_none() && !done.changes.is_empty() => {
-                        self.say(Level::Info, format!("Değişiklik hazırlandı: kayıt katmanın düzenlemesinde. {waiting}"));
+                        self.say(Level::Info, format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}"));
                     }
                     _ => self.say(Level::Success, said),
                 }
@@ -819,6 +823,55 @@ impl App {
             }
             None => self.go_to_first_issue(),
         }
+    }
+
+    /// Uygula on a record shown through its layer's default form (the second round's T17): its changed values written
+    /// with `cad.entities.set` as Öznitelik tablosu writes a cell (the layer's rules ask them); a data layer's row waits
+    /// in its edit session. The project's forms do not change.
+    fn save_default_entry(&mut self, values: BTreeMap<String, String>) -> Task<Message> {
+        let Some(uid) = self.gis.form_entry.as_ref().map(|e| e.uid.clone()) else {
+            return Task::none();
+        };
+        if values.is_empty() {
+            self.say(Level::Info, "Kayıtta değişiklik yok.");
+            return self.entry_closed();
+        }
+        if let Some(locked) = self.records_locked() {
+            self.warn(locked);
+            return Task::none();
+        }
+        let input = kentos_commands::EntitiesSetProperties {
+            line_pattern: None,
+            line_type: None,
+            line_type_scale: None,
+            transparency: None,
+            wipeout: None,
+            uids: vec![uid.clone()],
+            layer_id: None,
+            color: None,
+            line_weight: None,
+            symbol: None,
+            attrs: Some(values.into_iter().map(|(k, v)| (k, (!v.trim().is_empty()).then_some(v))).collect()),
+            label: None,
+            unlink: false,
+            name_text: false,
+            operation: kentos_commands::PropertiesOperation::Attributes,
+            expected_revision: None,
+            attachments: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        if let Err(why) = crate::features::write_attribute(&mut doc.model, input) {
+            self.warn(format!("Kayıt yazılamadı: {why}"));
+            return Task::none();
+        }
+        let back = self.entry_closed();
+        match self.waiting_words_of(&uid) {
+            Some(waiting) => self.say(Level::Info, format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}")),
+            None => self.say(Level::Success, "Kayıt yazıldı."),
+        }
+        back
     }
 
     /// Kaydet on many records: the values typed go to every one through `cad.forms.fill`.

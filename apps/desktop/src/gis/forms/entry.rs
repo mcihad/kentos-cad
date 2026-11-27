@@ -213,6 +213,9 @@ pub struct Entry {
     pub(crate) edit_row: Option<(String, i64)>,
     /// An object's record opened for reading (Öznitelik formunu aç): Düzenle makes the same form editable.
     pub(crate) edit_slot: Option<kentos_domain::Slot>,
+    /// The record's form is its layer's default one, built from the layer's fields and not in the project (the second
+    /// round's T17): its layer. Kaydet writes the record's values as the table writes a cell; no form is added.
+    pub(crate) default_of: Option<String>,
     /// The rows its related items over data layers read from their sources (docs/adr/9165), by layer; the ask they
     /// answer and, by layer, why a source could not be read.
     pub(crate) source_rows: kentos_native_application::forms_source::SourceRows,

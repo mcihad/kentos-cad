@@ -133,6 +133,8 @@ pub enum DataEvent {
     EnterNew(kentos_domain::Uuid),
     /// Enter in Ara or İfade süzgeci: what is typed is asked.
     Apply,
+    /// × on the asked İfade süzgeci's mark under the table (the second round's T18): the filter taken off and asked.
+    ClearFilter,
     /// Seçime yakınlaş: the selected rows framed.
     Zoom,
     /// A cell double-clicked while the layer is being edited: the row's key and the field.
@@ -199,6 +201,11 @@ pub(crate) struct DataConditions {
 }
 
 impl DataTable {
+    /// The İfade süzgeci asked (Enter), as the mark under the table shows it.
+    pub(crate) fn asked_filter(&self) -> &str {
+        &self.filter
+    }
+
     /// The conditions asked, taken out: the table asks none until others are put.
     pub(super) fn take_conditions(&mut self) -> DataConditions {
         DataConditions {
@@ -555,6 +562,13 @@ impl App {
                 data.search = self.gis.features.search.trim().to_owned();
                 data.filter = self.gis.features.filter.trim().to_owned();
                 // The same question refused before is asked again.
+                if data.error.is_some() {
+                    data.asked = None;
+                }
+            }
+            DataEvent::ClearFilter => {
+                self.gis.features.filter.clear();
+                data.filter.clear();
                 if data.error.is_some() {
                     data.asked = None;
                 }
@@ -1077,6 +1091,25 @@ impl App {
         // The fields the caller's role does not read, named (docs/adr/9150, 9188).
         let withheld = self.withheld_fields(&node.id);
         let mut foot = row![status].align_y(Center).padding([2, 8]).spacing(12);
+        // The İfade süzgeci asked, beside the count (the second round's T18): read and taken off here though the bar
+        // has wrapped it out of sight.
+        if !data.filter.is_empty() {
+            foot = foot.push(
+                container(
+                    row![
+                        label::caption(format!("İfade süzgeci: {}", data.filter)),
+                        iced::widget::button(kentos_ui::icon::icon(crate::icons::from_web(Some("close"))).size(12.0))
+                            .padding(kentos_ui::theme::metrics::icon_small(12.0))
+                            .style(kentos_ui::style::button::ghost)
+                            .on_press(Message::Gis(crate::gis::Event::Features(super::Event::Data(DataEvent::ClearFilter)))),
+                    ]
+                    .spacing(4)
+                    .align_y(Center),
+                )
+                .padding([0, 6])
+                .style(kentos_ui::style::container::badge),
+            );
+        }
         // The rows the source does not have yet, and the way to write them (the same Kaynağa yaz as everywhere).
         if let Some(c) = changes.as_ref().filter(|c| !c.is_empty() && !offline) {
             foot = foot.push(

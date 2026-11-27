@@ -122,6 +122,37 @@ fn tumunu_goster_frames_the_rows_a_layer_made_empty_was_written_since() {
     assert!(b.min_x < 486_510.0 && 486_910.0 < b.max_x, "{b:?}");
 }
 
+/// Katmana yakınlaştır before the box is read (the second round's T16): offered on a data layer whatever its box; the
+/// click waits for the box being read and frames it when it comes; a table without rows says so.
+#[test]
+fn katmana_yakinlastir_waits_for_the_box_and_says_why_there_is_none() {
+    let mut app = data_only();
+    let layer = empty_layer(&mut app, "kapsam-bekle");
+    write_point(&mut app, &layer, 486_510.0, 4_420_210.0);
+    write_point(&mut app, &layer, 486_910.0, 4_420_510.0);
+    let n = node(&app, "yeni").expect("the layer").clone();
+    // Its box not read since the rows were written, and the layer kept none: offered all the same.
+    assert!(!app.data_box_below(&n), "no box yet");
+    assert!(app.data_layer_below(&n), "the menu offers it");
+    app.viewport.camera.zoom_at(0.01, 500.0, 350.0);
+    app.zoom_to_layer(&layer);
+    assert_eq!(last_said(&app), "“yeni” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır.");
+    let task = app.data_extents_tasks();
+    drive(&mut app, task);
+    let b = app.viewport.camera.visible_bounds();
+    for (px, py) in [(486_510.0, 4_420_210.0), (486_910.0, 4_420_510.0)] {
+        assert!(b.min_x < px && px < b.max_x && b.min_y < py && py < b.max_y, "{px} {py} in {b:?}");
+    }
+    // A table without rows: said once its box is read, the view kept.
+    let empty = empty_layer(&mut app, "kapsam-bos");
+    let before = app.viewport.camera.visible_bounds();
+    app.zoom_to_layer(&empty);
+    let task = app.data_extents_tasks();
+    drive(&mut app, task);
+    assert_eq!(last_said(&app), "“yeni” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok.");
+    assert_eq!(app.viewport.camera.visible_bounds(), before);
+}
+
 #[test]
 fn genel_bakis_draws_a_data_only_project_and_says_why_it_is_empty() {
     let mut app = data_only();

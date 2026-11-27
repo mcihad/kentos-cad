@@ -1254,7 +1254,7 @@ impl App {
 
 /// Writes an attribute through `cad.entities.set` (“Değiştir”): its
 /// warnings, or why it was refused.
-pub(super) fn write_attribute(
+pub(crate) fn write_attribute(
     model: &mut kentos_domain::Document,
     input: EntitiesSetProperties,
 ) -> Result<(), String> {

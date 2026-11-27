@@ -148,8 +148,9 @@ impl App {
                     } else {
                         "Gruba yakınlaştır"
                     },
-                    // A data layer frames its table's box (docs/adr/9101 §5): it holds no objects.
-                    (self.objects_below(node) > 0 || self.data_box_below(node))
+                    // A data layer frames its table's box (docs/adr/9101 §5): it holds no objects. Offered while the box
+                    // is read too (T16): the click waits for it, or says why there is none.
+                    (self.objects_below(node) > 0 || self.data_box_below(node) || self.data_layer_below(node))
                         .then(|| event(Event::ZoomTo(id.clone()))),
                 )
                 .icon(icon("zoomSelection"));

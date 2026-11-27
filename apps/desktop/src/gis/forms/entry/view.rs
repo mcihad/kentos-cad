@@ -406,9 +406,18 @@ impl App {
         if warnings > 0 {
             footer = footer.push(words::text_line(Kind::Warn, format!("{warnings} uyarı")));
         }
-        footer = footer
-            .push(space::horizontal().width(Fill))
-            .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))));
+        // A data layer's record: what Uygula does, where it goes (T7 follow-up), in the room the buttons leave.
+        footer = if self.entry_on_data_layer(e) && !locked {
+            footer.push(
+                label::caption(crate::data_edits::PREPARE_NOTE)
+                    .style(style::text::muted)
+                    .wrapping(iced::widget::text::Wrapping::Word)
+                    .width(Fill),
+            )
+        } else {
+            footer.push(space::horizontal().width(Fill))
+        }
+        .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))));
         // Adım adım (docs/adr/0437): Geri and İleri; Kaydet and the workflow's steps on the last step.
         if e.body.steps {
             let last = e.shown_tabs().len().saturating_sub(1);

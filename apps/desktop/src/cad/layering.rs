@@ -491,6 +491,11 @@ impl App {
         // A data layer, or a group of them, frames its tables' boxes as their sources say them now (docs/adr/9101 §5,
         // 9327): rows written since the layer was added are in them.
         let boxes = self.data_boxes_below(&node);
+        // No box yet (T16): a box being read is waited for, a table without rows or geometry said.
+        if boxes.is_empty() && !self.data_layers_below(&node).is_empty() && self.objects_below(&node) == 0 {
+            self.zoom_without_box(&node);
+            return;
+        }
         if let Some(b) = union(&boxes) {
             self.navigating(|app| {
                 app.zoom_to_bounds(&kentos_commands::Bounds {
@@ -973,6 +978,11 @@ impl App {
     /// Whether a data layer at or below `node` has a box to frame.
     pub(crate) fn data_box_below(&self, node: &LayerNode) -> bool {
         !self.data_boxes_below(node).is_empty()
+    }
+
+    /// Whether a data layer is at or below `node`.
+    pub(crate) fn data_layer_below(&self, node: &LayerNode) -> bool {
+        !self.data_layers_below(node).is_empty()
     }
 }
 

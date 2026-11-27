@@ -11,6 +11,16 @@
 //! - **Formlar:** the layer's forms with their releases.
 //!
 //! Nothing here writes: every value is read from the drawing and, for the row count, from the source.
+//!
+//! The second round's T19–T21 (docs/adr/9356):
+//!
+//! - **One way on:** Kaynak copies its file or address (Yolu kopyala); Stil, Alanlar and Formlar open their windows on
+//!   this layer (Stil ayarlarını aç, Alanları aç, Formları aç). The summary stays for reading.
+//! - **A theme's colour by its name:** “fg” reads “Tema ön planı” with the colour it is now, said to follow the theme;
+//!   a colour of its own by its hex.
+//! - **Keys:** the list has the keyboard when the window opens, drawn with a ring: ↑ ↓ Home End choose a section; Tab
+//!   (Shift+Tab) goes from the list to the section's action and Kapat; Enter presses what has the ring; Esc closes and
+//!   gives the layer tree the keyboard on the layer.
 
 use iced::widget::{Column, button, column, container, row, space, text};
 use iced::{Center, Element, Fill, Length, Task};
@@ -66,18 +76,72 @@ impl Section {
     }
 }
 
-/// The window: the layer and the section shown.
+/// What has the keyboard's ring (T21).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Focus {
+    #[default]
+    List,
+    Action,
+    Close,
+}
+
+/// The window: the layer, the section shown and what has the keyboard.
 #[derive(Debug, Clone)]
 pub struct Window {
     pub layer: String,
     pub section: Section,
+    pub focus: Focus,
+}
+
+/// A section's one way on (T19).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Action {
+    CopyPath,
+    Style,
+    Fields,
+    Forms,
+}
+
+impl Action {
+    fn words(self) -> &'static str {
+        match self {
+            Action::CopyPath => "Yolu kopyala",
+            Action::Style => "Stil ayarlarını aç",
+            Action::Fields => "Alanları aç",
+            Action::Forms => "Formları aç",
+        }
+    }
+
+    fn glyph(self) -> &'static str {
+        match self {
+            Action::CopyPath => "copy",
+            Action::Style => "layerStyle",
+            Action::Fields => "layerFields",
+            Action::Forms => "formEdit",
+        }
+    }
+}
+
+/// A key the window takes (T21).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Key {
+    Up,
+    Down,
+    Home,
+    End,
+    Tab(bool),
+    Enter,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
     Open(String),
     Show(Section),
+    Act(Action),
+    Key(Key),
+    /// Esc or Kapat: `keys`, from the keyboard (the layer tree gets it on the layer).
     Close,
+    CloseByKey,
 }
 
 fn msg(e: Event) -> Message {
@@ -87,6 +151,27 @@ fn msg(e: Event) -> Message {
 /// The menu's message for `layer`.
 pub(crate) fn open(layer: String) -> Message {
     msg(Event::Open(layer))
+}
+
+/// A key pressed while the window is open (input.rs).
+pub(crate) fn key(k: Key) -> Message {
+    msg(Event::Key(k))
+}
+
+/// Esc while the window is open (input.rs): closed, the layer tree given the keyboard on the layer.
+pub(crate) fn close_by_key() -> Message {
+    msg(Event::CloseByKey)
+}
+
+/// A theme's colour by its name in a layer's style (T20): the drawing's own words; none for a colour of its own.
+fn theme_color_words(token: &str) -> Option<&'static str> {
+    match token {
+        "fg" => Some("Tema ön planı"),
+        "fg-dim" => Some("Tema ön planı, soluk"),
+        "ink" => Some("Çizim mürekkebi"),
+        "paper" => Some("Kâğıt (arka plan)"),
+        _ => None,
+    }
 }
 
 /// A layer's kind in words.
@@ -138,22 +223,130 @@ impl App {
     pub(crate) fn layer_properties_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open(layer) => {
-                self.gis.layer_properties = Some(Window { layer, section: Section::General });
+                self.gis.layer_properties = Some(Window { layer, section: Section::General, focus: Focus::List });
                 self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerProperties));
             }
             Event::Show(section) => {
                 if let Some(w) = self.gis.layer_properties.as_mut() {
                     w.section = section;
+                    w.focus = Focus::List;
                 }
             }
-            Event::Close => {
-                self.gis.layer_properties = None;
-                if self.dialog == Some(Dialog::Gis(gis::GisDialogKind::LayerProperties)) {
-                    self.dialog = None;
-                }
-            }
+            Event::Act(action) => return self.layer_properties_act(action),
+            Event::Key(k) => return self.layer_properties_key(k),
+            Event::Close => self.layer_properties_close(false),
+            Event::CloseByKey => self.layer_properties_close(true),
         }
         Task::none()
+    }
+
+    /// The window closed; from the keyboard, the layer tree gets it on the layer (T21).
+    fn layer_properties_close(&mut self, keys: bool) {
+        let layer = self.gis.layer_properties.take().map(|w| w.layer);
+        if self.dialog == Some(Dialog::Gis(gis::GisDialogKind::LayerProperties)) {
+            self.dialog = None;
+        }
+        if keys && let Some(id) = layer {
+            self.selected_layer = Some(id.clone());
+            self.layers_follow = false;
+            self.layer_reveal = Some(id);
+            self.layers_keyboard = true;
+        }
+    }
+
+    /// The section's way on (T19): the path copied, or the layer's own window opened on it (this one closes).
+    fn layer_properties_act(&mut self, action: Action) -> Task<Message> {
+        let Some(id) = self.gis.layer_properties.as_ref().map(|w| w.layer.clone()) else {
+            return Task::none();
+        };
+        if action == Action::CopyPath {
+            let Some(path) = self.layer_properties_path(&id) else {
+                return Task::none();
+            };
+            self.say(kentos_interaction::Level::Success, format!("Yol panoya kopyalandı: {path}"));
+            return iced::clipboard::write(path);
+        }
+        self.layer_properties_close(false);
+        match action {
+            Action::Style => {
+                self.open_layer_style(Some(id));
+                Task::none()
+            }
+            Action::Fields => self.open_layer_fields(&id),
+            Action::Forms => {
+                self.open_forms_for_layer(&id);
+                Task::none()
+            }
+            Action::CopyPath => Task::none(),
+        }
+    }
+
+    /// The keys (T21): ↑ ↓ Home End the sections, Tab the ring round the list, the action and Kapat, Enter what has it.
+    fn layer_properties_key(&mut self, k: Key) -> Task<Message> {
+        let Some(w) = self.gis.layer_properties.as_ref() else {
+            return Task::none();
+        };
+        let action = self.layer_properties_action(w.section, &w.layer);
+        let (section, focus) = (w.section, w.focus);
+        let at = Section::ALL.iter().position(|s| *s == section).unwrap_or(0);
+        let last = Section::ALL.len() - 1;
+        let to = |i: usize| Section::ALL[i.min(last)];
+        let ring = |f: Focus, back: bool| {
+            let order: Vec<Focus> =
+                [Focus::List, Focus::Action, Focus::Close].into_iter().filter(|f| *f != Focus::Action || action.is_some()).collect();
+            let i = order.iter().position(|o| *o == f).unwrap_or(0);
+            let n = order.len();
+            order[if back { (i + n - 1) % n } else { (i + 1) % n }]
+        };
+        match k {
+            Key::Up | Key::Down | Key::Home | Key::End => {
+                let next = match k {
+                    Key::Up => to(at.saturating_sub(1)),
+                    Key::Down => to(at + 1),
+                    Key::Home => Section::ALL[0],
+                    _ => Section::ALL[last],
+                };
+                if let Some(w) = self.gis.layer_properties.as_mut() {
+                    w.section = next;
+                    w.focus = Focus::List;
+                }
+            }
+            Key::Tab(back) => {
+                if let Some(w) = self.gis.layer_properties.as_mut() {
+                    w.focus = ring(focus, back);
+                }
+            }
+            Key::Enter => match focus {
+                Focus::Action => return action.map_or_else(Task::none, |a| self.layer_properties_act(a)),
+                Focus::Close => self.layer_properties_close(true),
+                Focus::List => {}
+            },
+        }
+        Task::none()
+    }
+
+    /// A section's one way on for `layer` (T19); none where it has none.
+    fn layer_properties_action(&self, section: Section, layer: &str) -> Option<Action> {
+        match section {
+            Section::Source => self.layer_properties_path(layer).map(|_| Action::CopyPath),
+            Section::Style => Some(Action::Style),
+            Section::Fields => Some(Action::Fields),
+            Section::Forms => Some(Action::Forms),
+            Section::General | Section::Crs => None,
+        }
+    }
+
+    /// The layer's file or address as Kaynak shows it (no password); none for a layer of the project file.
+    fn layer_properties_path(&self, layer: &str) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let node = doc.model.layers().get(layer)?;
+        if let Some(d) = &node.data {
+            return Some(shown_address(&d.address));
+        }
+        if let Some(s) = &node.service {
+            return Some(shown_address(&s.url));
+        }
+        doc.model.settings().sources.iter().find(|s| s.layer == layer).map(|s| shown_address(&s.path))
     }
 
     pub(crate) fn layer_properties_view(&self) -> Element<'_, Message> {
@@ -185,19 +378,43 @@ impl App {
         ]
         .spacing(12)
         .align_y(Center);
+        // The keyboard's ring (T21): round the chosen section while the list has the keys, else round the action or
+        // Kapat.
+        let ring = |on: bool| {
+            move |theme: &iced::Theme| {
+                let t = kentos_ui::theme::Tokens::of(theme);
+                style::container::outline(if on { t.accent } else { iced::Color::TRANSPARENT }, 2.0)(theme)
+            }
+        };
         let list = Section::ALL.iter().fold(Column::new().spacing(2).padding([6, 6]), |list, s| {
+            let chosen = w.section == *s;
             list.push(
-                button(
-                    row![icon(from_web(Some(s.glyph()))).size(15.0).tone(Tone::Muted), label::body(s.title())]
-                        .spacing(10)
-                        .align_y(Center),
+                container(
+                    button(
+                        row![icon(from_web(Some(s.glyph()))).size(15.0).tone(Tone::Muted), label::body(s.title())]
+                            .spacing(10)
+                            .align_y(Center),
+                    )
+                    .width(Fill)
+                    .padding([7, 10])
+                    .style(style::button::list_item(chosen))
+                    .on_press(msg(Event::Show(*s))),
                 )
-                .width(Fill)
-                .padding([7, 10])
-                .style(style::button::list_item(w.section == *s))
-                .on_press(msg(Event::Show(*s))),
+                .padding(1)
+                .style(ring(chosen && w.focus == Focus::List)),
             )
         });
+        let list = column![
+            list,
+            space::vertical(),
+            container(
+                label::caption("↑ ↓ bölüm · Tab eylem ve Kapat · Enter basar · Esc kapatır")
+                    .style(style::text::muted)
+                    .wrapping(iced::widget::text::Wrapping::Word),
+            )
+            .padding([4, 10]),
+        ]
+        .height(Fill);
         let details: Element<'_, Message> = match w.section {
             Section::General => self.properties_general(node, kind),
             Section::Source => self.properties_source(node, kind),
@@ -206,11 +423,32 @@ impl App {
             Section::Fields => self.properties_fields(node),
             Section::Forms => self.properties_forms(node),
         };
-        let details = column![label::strong(w.section.title()), details].spacing(12).padding([10, 18]);
+        // The section's one way on, beside its title (T19).
+        let mut title = row![container(label::strong(w.section.title())).width(Fill)].spacing(8).align_y(Center);
+        if let Some(a) = self.layer_properties_action(w.section, &w.layer) {
+            title = title.push(
+                container(
+                    button(
+                        row![icon(from_web(Some(a.glyph()))).size(14.0), label::caption(a.words())]
+                            .spacing(6)
+                            .align_y(Center),
+                    )
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::secondary)
+                    .on_press(msg(Event::Act(a))),
+                )
+                .padding(1)
+                .style(ring(w.focus == Focus::Action)),
+            );
+        }
+        let details = column![title, details].spacing(12).padding([10, 18]);
+        let close = container(crate::exchange::words::secondary("Kapat", Some(msg(Event::Close))))
+            .padding(1)
+            .style(ring(w.focus == Focus::Close));
         Frame::new(TITLE)
             .push(column![head, ListDetails::new(list, details).list_width(200.0).height(380.0)].spacing(16))
-            .status(label::caption("Bilgi içindir; değiştirmek için katmanın menüsündeki pencereleri kullanın.").style(style::text::muted))
-            .action(crate::exchange::words::secondary("Kapat", Some(msg(Event::Close))))
+            .status(label::caption("Bilgi içindir; her bölümün eylemi kendi penceresini bu katmanda açar.").style(style::text::muted))
+            .action(close)
             .width(760.0)
             .modal(msg(Event::Close))
     }
@@ -331,11 +569,20 @@ impl App {
     fn properties_style<'a>(&self, node: &LayerNode) -> Element<'a, Message> {
         let s = &node.style;
         let kind = s.renderer.as_ref().and_then(|r| r.get("type")).and_then(|t| t.as_str());
-        let swatch = |hex: &str| {
-            let color = crate::view::hex_color(hex);
+        // A theme's colour by its name with the colour it is now, a colour of its own by its hex (T20): the swatch is the
+        // drawing's own colour on this canvas.
+        let palette = crate::viewport::palette(self.canvas());
+        let swatch = |c: &str| {
+            let resolved = palette.resolve(c);
+            let color = resolved.map_or_else(|| crate::view::hex_color(c), crate::view::rgba_color);
+            let hex = resolved.map_or_else(|| c.to_uppercase(), |r| format!("#{:02X}{:02X}{:02X}", r.0[0], r.0[1], r.0[2]));
+            let words = match theme_color_words(c) {
+                Some(name) => format!("{name} ({hex}, temaya göre değişir)"),
+                None => hex,
+            };
             row![
                 container(space().width(14).height(14)).style(style::container::swatch(color)),
-                label::body(hex.to_owned())
+                label::body(words).wrapping(iced::widget::text::Wrapping::WordOrGlyph)
             ]
             .spacing(8)
             .align_y(Center)
