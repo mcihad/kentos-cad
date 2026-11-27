@@ -181,3 +181,37 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/9331: a file whose baseline names a station with no K or N line is refused with the line and the line to
+/// add, and the window says it.
+#[test]
+fn a_station_without_its_line_is_said_with_the_line_to_add() {
+    let mut app = opened(None);
+    let _ = app.update(Message::Run("survey.baselines"));
+    let text = std::fs::read_to_string(sample()).expect("the sample");
+    // The sample with C's station line taken out: its baselines name C still.
+    let without: String = text.lines().filter(|l| !l.trim_start().starts_with("N;C")).map(|l| format!("{l}\n")).collect();
+    let path = crate::files_testing::scratch("ag-eksik").join("ag.txt");
+    std::fs::write(&path, &without).expect("written");
+    app.baselines_file(path);
+    let why = app.modules.map().baselines.answer.clone().expect("an answer").expect_err("refused");
+    assert!(why.contains("satırdaki bazın") && why.contains("“C”"), "{why}");
+    assert!(why.contains("“N;C”") && why.contains("“K;C;X;Y;Z”"), "{why}");
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9331/03-gnss-eksik-istasyon`).
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop-map baselines_window_tests::screens_9331 -- --ignored --nocapture"]
+fn screens_9331() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9331", "03-gnss-eksik-istasyon", || {
+        let mut app = opened(None);
+        let _ = app.update(Message::Run("survey.baselines"));
+        let text = std::fs::read_to_string(sample()).expect("the sample");
+        let without: String = text.lines().filter(|l| !l.trim_start().starts_with("N;C")).map(|l| format!("{l}\n")).collect();
+        let path = crate::files_testing::scratch("ag-eksik-resim").join("ag.txt");
+        std::fs::write(&path, &without).expect("written");
+        app.baselines_file(path);
+        app
+    });
+}

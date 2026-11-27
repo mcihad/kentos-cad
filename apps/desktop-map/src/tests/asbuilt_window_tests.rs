@@ -765,3 +765,96 @@ fn no_tolerance_judges_no_conformity() {
     let back = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
     assert_eq!((back.within, back.outside, back.untoleranced), (judged.within, judged.outside, 0), "the first classing again");
 }
+
+/// The shared drawing with its measured points' name field written `ad`, as the review's layer had it.
+fn opened_lowercase() -> App {
+    let mut setup = cases()["setup"].clone();
+    for e in setup["entities"].as_array_mut().expect("entities") {
+        if e["layerId"] == "olcum"
+            && let Some(attrs) = e["attrs"].as_object_mut()
+            && let Some(name) = attrs.remove("Ad")
+        {
+            attrs.insert("ad".into(), name);
+        }
+    }
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
+        iced::Point::ORIGIN,
+        iced::Size::new(1000.0, 700.0),
+    ))));
+    app
+}
+
+/// docs/adr/9331: the name field is the measured layer's own (`ad`, guessed, where the window once wrote “Ad” and
+/// named nothing); a field the points lack shows each row by its object's id, says why and the CSV writes the same;
+/// a row pressed takes the map to its point.
+#[test]
+fn the_name_field_is_the_layers_and_a_row_goes_to_its_point() {
+    let mut app = opened_lowercase();
+    let _ = app.update(Message::Run("asbuilt.check"));
+    let s = &app.modules.map().asbuilt;
+    assert_eq!(s.field, "ad", "{:?}", s.name_fields);
+    assert!(s.name_fields.contains(&"Hassasiyet".to_owned()), "{:?}", s.name_fields);
+    limits(&mut app);
+    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert!(r.points.iter().all(|p| !p.name.is_empty()), "every row named");
+    assert!(r.points.iter().any(|p| p.name == "P1"));
+    // A field the points lack: their ids, and why.
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Field("Kod".into()))));
+    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
+    let first = &r.points[0];
+    assert!(first.name.is_empty());
+    let shown = crate::asbuilt_window::shown_name(first);
+    assert!(shown.starts_with('#') && shown.len() == 9, "{shown}");
+    let csv = crate::asbuilt_window::csv(&r);
+    assert!(csv.lines().nth(1).is_some_and(|l| l.starts_with(&format!("{shown};{}", first.uid))), "{csv}");
+    // Back to `ad`; a row pressed: the map goes to its point, the row marked.
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Field("ad".into()))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Show(Show::All))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Row(1))));
+    let s = &app.modules.map().asbuilt;
+    assert_eq!(s.chosen, Some(1));
+    let r = s.answer.clone().expect("an answer").expect("checked");
+    let uid: kentos_domain::Uuid = r.points[1].uid.parse().expect("a uid");
+    let doc = &app.document.as_ref().expect("open").model;
+    let at = match doc.get(doc.slot_of(uid).expect("its slot")) {
+        Some(kentos_commands::Entity::Point(p)) => p.p,
+        other => panic!("a point, not {other:?}"),
+    };
+    let c = app.viewport.camera.world_center();
+    assert!((c.x - at.x).abs() < 0.5 && (c.y - at.y).abs() < 0.5, "{c:?} {at:?}");
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9331/`): the name field the layer's `ad`, a row pressed and the map on
+/// its point; a field the points lack, the rows by their ids and why.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop-map asbuilt_window_tests::screens_9331 -- --ignored --nocapture"]
+fn screens_9331() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9331", "01-ad-alani-ve-satir", || {
+        let mut app = opened_lowercase();
+        let _ = app.update(Message::Run("asbuilt.check"));
+        limits(&mut app);
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Show(Show::All))));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Row(1))));
+        app
+    });
+    crate::files_testing::usage_shots("9331", "02-adsiz-satirlar", || {
+        let mut app = opened_lowercase();
+        // The measured points without any name: their ids, and why.
+        for slot in app.document.as_ref().expect("open").model.by_layer("olcum").map(|e| kentos_domain::Slot(e.base().id)).collect::<Vec<_>>() {
+            let doc = app.document.as_mut().expect("open");
+            if let Some(mut e) = doc.model.get(slot).cloned() {
+                e.base_mut().attrs.remove("ad");
+                doc.model.update(slot, e);
+            }
+        }
+        let _ = app.update(Message::Run("asbuilt.check"));
+        limits(&mut app);
+        app
+    });
+}

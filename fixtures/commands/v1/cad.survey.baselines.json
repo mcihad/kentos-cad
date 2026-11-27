@@ -5260,6 +5260,29 @@
      }
     }
    ]
+  },
+  {
+   "name": "Metinde baz ucunun istasyon satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "text": "K;A;4104012.32;2665176.76;4078628.36\n# baz\nB;A;N1;1;2;3;1e-6;0;0;1e-6;0;1e-6\n"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_station",
+       "message": "3. satırdaki bazın bitişi “N1”: dosyada onun K ya da N satırı yok. Yeni bir istasyonsa “N;N1”, bilinen bir noktaysa “K;N1;X;Y;Z” satırını ekleyin.",
+       "path": "text"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
   }
  ]
 }

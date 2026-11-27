@@ -38,7 +38,7 @@ use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
-use crate::road_dialog::{col, num, sheet};
+use crate::road_dialog::{col, num, sheet, sheet_chosen};
 use crate::style::fields;
 use crate::traces::Control;
 
@@ -116,6 +116,10 @@ pub struct State {
     /// The reviewer's statement and the review's name (docs/adr/5220), and the project's reviews.
     pub review: crate::asbuilt_review_form::ReviewForm,
     pub reviews: Vec<kentos_commands::AsbuiltReviewRow>,
+    /// The measured layer's fields its points' names can be read from (docs/adr/9331), in their first point's order.
+    pub name_fields: Vec<String>,
+    /// The result row pressed, among the ones shown: the map went to its point.
+    pub chosen: Option<usize>,
 }
 
 /// The jobs' words, in the kind's order (docs/adr/3620).
@@ -160,6 +164,49 @@ pub enum Event {
     Keep,
     Remove,
     Close,
+    /// A result row pressed, among the ones shown (docs/adr/9331): the map goes to its measured point.
+    Row(usize),
+}
+
+/// A measured point's name as the table and the CSV say it (docs/adr/9331): its name, or its object's id when the name
+/// field is empty for it (“#1a2b3c4d”), so that a row is still found and named.
+pub fn shown_name(p: &AsbuiltPoint) -> String {
+    id_or_name(&p.name, &p.uid)
+}
+
+/// A name, or for none its object's id's first eight characters after a #.
+fn id_or_name(name: &str, uid: &str) -> String {
+    if name.is_empty() {
+        format!("#{}", uid.chars().take(8).collect::<String>())
+    } else {
+        name.to_owned()
+    }
+}
+
+/// The fields of `layer`'s points (docs/adr/9331): its own fields first, then the attributes its points carry, each once.
+pub fn name_fields(model: &kentos_domain::Document, layer: &str) -> Vec<String> {
+    let mut out: Vec<String> =
+        model.layers().get(layer).map(|n| n.fields.iter().map(|f| f.name.clone()).collect()).unwrap_or_default();
+    for e in model.by_layer(layer).filter(|e| matches!(e, Entity::Point(_))) {
+        for key in e.base().attrs.keys() {
+            if !out.contains(key) {
+                out.push(key.clone());
+            }
+        }
+    }
+    out
+}
+
+/// The field a layer's points are named by, guessed: the one called Ad (case and Turkish marks aside), else one that
+/// says name or point, else none (the check's own Ad).
+pub fn guess_name_field(fields: &[String]) -> String {
+    let fold = |s: &str| kentos_native_application::import_apply::fold_turkish(s);
+    fields
+        .iter()
+        .find(|f| fold(f) == "AD")
+        .or_else(|| fields.iter().find(|f| ["NOKTA", "NAME", "ISIM", "ADI"].iter().any(|w| fold(f).contains(w))))
+        .cloned()
+        .unwrap_or_default()
 }
 
 fn msg(e: Event) -> Message {
@@ -255,6 +302,7 @@ fn opt(v: &str) -> Option<String> {
 
 /// The table as CSV (metres as computed).
 pub fn csv(r: &AsbuiltChecked) -> String {
+    // A point without a name goes out by its object's id, as the table shows it (docs/adr/9331).
     let watch = watched(r);
     #[allow(clippy::type_complexity)]
     let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) =
@@ -267,7 +315,7 @@ pub fn csv(r: &AsbuiltChecked) -> String {
     for p in &r.points {
         out.push_str(&format!(
             "{};{};{};{};{};{};{};{};{};{};{};{};{};{}\n",
-            p.name,
+            shown_name(p),
             p.uid,
             p.design_name.as_deref().unwrap_or(""),
             p.by.as_deref().unwrap_or(""),
@@ -372,6 +420,7 @@ pub(crate) trait AsbuiltWindowApp {
     fn open_asbuilt(&mut self) -> Task<Message>;
     fn asbuilt_save(&mut self, path: PathBuf);
     fn asbuilt_event(&mut self, event: Event) -> Task<Message>;
+    fn asbuilt_row(&mut self, i: usize) -> Task<Message>;
     fn asbuilt_view(&self) -> Element<'_, Message>;
     fn asbuilt_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
@@ -390,7 +439,8 @@ impl AsbuiltWindowApp for App {
             design: opt(&s.design),
             surface: unless(opt(&s.surface)),
             lines: unless(opt(&s.lines)),
-            field: opt(&s.field),
+            // The check's own name field (Ad) goes unsaid, as a script leaves it.
+            field: opt(&s.field).filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
             search: if watch { None } else { limit(&s.search, "Arama yarıçapı")? },
             horizontal: limit(&s.horizontal, "Yatay tolerans")?,
             vertical: limit(&s.vertical, "Düşey tolerans")?,
@@ -446,7 +496,8 @@ impl AsbuiltWindowApp for App {
             design: opt(&s.design),
             lines: opt(&s.lines),
             surface: opt(&s.surface),
-            field: opt(&s.field),
+            // The check's own name field (Ad) goes unsaid, as a script leaves it.
+            field: opt(&s.field).filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
             horizontal: limit(&s.horizontal, "Yatay tolerans")?,
             vertical: limit(&s.vertical, "Düşey tolerans")?,
             quality: limit(&s.quality, "Kalite sınırı")?,
@@ -489,6 +540,8 @@ impl AsbuiltWindowApp for App {
     }
 
     fn asbuilt_run(&mut self) {
+        // A new answer's rows: none of them pressed yet.
+        self.modules.map_mut().asbuilt.chosen = None;
         let input = self.asbuilt_input();
         // Docs/adr/5220: the epochs' days for Grafik.
         self.modules.map_mut().asbuilt.days = match &input {
@@ -566,10 +619,15 @@ impl AsbuiltWindowApp for App {
             .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
             .unwrap_or_default();
         let surface = find(&surfaces, &["tasarım", "tasarim", "proje"]).unwrap_or_default();
+        // The name field from the measured layer's own fields (docs/adr/9331), never a word typed that it lacks.
+        let fields = name_fields(&doc.model, &measured);
+        let field = guess_name_field(&fields);
         self.modules.map_mut().asbuilt = State {
             layers,
             line_layers,
             surfaces,
+            name_fields: fields,
+            field,
             measured,
             design,
             lines,
@@ -594,9 +652,23 @@ impl AsbuiltWindowApp for App {
     }
 
     fn asbuilt_event(&mut self, event: Event) -> Task<Message> {
+        // Another measured layer: its fields, and its name field guessed again (docs/adr/9331).
+        let fields = match (&event, &self.document) {
+            (Event::Measured(v), Some(doc)) => Some(name_fields(&doc.model, v)),
+            _ => None,
+        };
+        if let Event::Row(i) = event {
+            return self.asbuilt_row(i);
+        }
         let s = &mut self.modules.map_mut().asbuilt;
         match event {
-            Event::Measured(v) => s.measured = v,
+            Event::Measured(v) => {
+                s.measured = v;
+                if let Some(fields) = fields {
+                    s.field = guess_name_field(&fields);
+                    s.name_fields = fields;
+                }
+            }
             Event::Design(v) => s.design = v,
             Event::Kind(k) => s.kind = k.min(2),
             Event::Control(v) => s.control = v,
@@ -722,8 +794,32 @@ impl AsbuiltWindowApp for App {
                 self.dialog = None;
                 return Task::none();
             }
+            Event::Row(_) => return Task::none(),
         }
         self.asbuilt_run();
+        Task::none()
+    }
+
+    /// A result row pressed (docs/adr/9331): the map goes to its measured point, one step of the view's history; the
+    /// row stays marked.
+    fn asbuilt_row(&mut self, i: usize) -> Task<Message> {
+        let s = &self.modules.map().asbuilt;
+        let Some(Ok(r)) = &s.answer else {
+            return Task::none();
+        };
+        let uid = r.points.iter().filter(|p| s.show == Show::All || p.status != "within").nth(i).map(|p| p.uid.clone());
+        let Some(uid) = uid else {
+            return Task::none();
+        };
+        self.modules.map_mut().asbuilt.chosen = Some(i);
+        let slot = self
+            .document
+            .as_ref()
+            .and_then(|d| uid.parse::<kentos_domain::Uuid>().ok().and_then(|u| d.model.slot_of(u)));
+        match slot {
+            Some(slot) => self.navigating(|app| app.zoom_to_objects(&[f64::from(slot.0)])),
+            None => self.warn(format!("{TITLE}: “{uid}” kimlikli nokta çizimde yok; sonuç eski olabilir, yeniden denetleyin.")),
+        }
         Task::none()
     }
 
@@ -754,7 +850,22 @@ impl AsbuiltWindowApp for App {
                 row![
                     container(fields::select_owned(s.layers.clone(), &s.measured, |v| msg(Event::Measured(v)))).width(200),
                     label::caption("Ad alanı"),
-                    text(&s.field, "Ad", Event::Field, 100.0)
+                    // The measured layer's own fields (docs/adr/9331): a word typed that the layer lacks named nothing.
+                    container(fields::select_owned(
+                        {
+                            // The layer's fields; a field it lacks (or none chosen) shown as it is, never as another.
+                            let mut options: Vec<(String, String)> =
+                                s.name_fields.iter().map(|f| (f.clone(), f.clone())).collect();
+                            if !s.name_fields.contains(&s.field) {
+                                let shown = if s.field.is_empty() { "—".to_owned() } else { format!("{} (katmanda yok)", s.field) };
+                                options.insert(0, (s.field.clone(), shown));
+                            }
+                            options
+                        },
+                        &s.field,
+                        |v| msg(Event::Field(v)),
+                    ))
+                    .width(140)
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -970,7 +1081,11 @@ impl AsbuiltWindowApp for App {
                 if !r.missing.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
-                        format!("Ölçülmeyen: {}.", r.missing.iter().map(|m| m.name.as_str()).collect::<Vec<_>>().join(", ")),
+                        // A design point without a name by its object's id, as a row's (docs/adr/9331).
+                        format!(
+                            "Ölçülmeyen: {}.",
+                            r.missing.iter().map(|m| id_or_name(&m.name, &m.uid)).collect::<Vec<_>>().join(", ")
+                        ),
                     ));
                 }
                 lines.push(words::text_line(
@@ -989,6 +1104,19 @@ impl AsbuiltWindowApp for App {
                 for p in r.points.iter().filter(|p| s.show == Show::All || p.status != "within") {
                     rows.push(if watch { watch_row(p) } else { point_row(p) });
                 }
+                // Points without a name in the field chosen (docs/adr/9331): shown by their ids, and why.
+                let unnamed = r.points.iter().filter(|p| p.name.is_empty()).count();
+                if unnamed > 0 {
+                    let field = if s.field.is_empty() { "Ad" } else { s.field.as_str() };
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "{unnamed} noktanın “{field}” alanı boş: satırları nesne kimliğiyle (#…) gösterildi, eşleme \
+                             adsız yapılır. Ad alanını katmanın alanlarından seçin."
+                        ),
+                    ));
+                }
+                lines.push(words::text_line(Kind::Info, "Bir satıra basınca harita o noktaya gider."));
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
@@ -1019,7 +1147,8 @@ impl AsbuiltWindowApp for App {
                 col("İşaretler", 160.0),
             ]
         };
-        let table = sheet(columns, rows, "Bu süzgeçte nokta yok.", 260.0);
+        // A row pressed goes to its point on the map (docs/adr/9331).
+        let table = sheet_chosen(columns, rows, "Bu süzgeçte nokta yok.", 260.0, s.chosen, |i| msg(Event::Row(i)));
         // Docs/adr/4420: a monitoring job's series: each point's horizontal movement from its first epoch at every
         // epoch (— where it was not measured or before it), its last height movement and its mean rates.
         // Docs/adr/4840: with a line or thresholds, a choice between the movements and each mark's line and state.
@@ -1116,7 +1245,7 @@ impl AsbuiltWindowApp for App {
 fn watch_row(p: &AsbuiltPoint) -> Vec<String> {
     let o = |v: Option<f64>| v.map(mm).unwrap_or_default();
     vec![
-        p.name.clone(),
+        shown_name(p),
         o(p.de),
         o(p.dn),
         o(p.dh),
@@ -1130,7 +1259,7 @@ fn watch_row(p: &AsbuiltPoint) -> Vec<String> {
 fn point_row(p: &AsbuiltPoint) -> Vec<String> {
     let o = |v: Option<f64>| v.map(mm).unwrap_or_default();
     vec![
-        p.name.clone(),
+        shown_name(p),
         p.design_name.clone().unwrap_or_default(),
         o(p.de),
         o(p.dn),

@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Uygulama kontrolünün ad alanı katmandan, satır noktaya götürür; GNSS ağında eksik istasyon satırıyla (27 Kasım 2026,
+  CBS incelemesinin 14. maddesi; [ADR 9331](../adr/9331-asbuilt-names-and-gnss-missing-station.md)).**
+  - Ad alanı ölçülen katmanın alanlarından seçilir ve tahmin edilir (`ad`); adı olmayan satır `#kimlik` ile gösterilir,
+    CSV aynısını yazar. Satıra basınca harita noktaya gider.
+  - Metinle verilen GNSS ağında K/N satırı olmayan baz ucu, satırı ve eklenecek “N;C” ya da “K;C;X;Y;Z” ile söylenir.
+
 - **CBS'de Oturt seçimsiz açılınca etkin katmanla başlar (27 Kasım 2026, CBS incelemesinin 13. maddesi;
   [ADR 9330](../adr/9330-fit-scope-starts-on-a-layer.md)).**
   - Kapsam nesnesi olan kilitsiz etkin katmandır; Tümü yalnız seçilince. Uygula'nın yanında “Uygula: 1 katman, 3

@@ -8,6 +8,7 @@ use kentos_commands::{
     RobustRounds, SurveyBaselines, SurveyBaselinesAdjusted,
 };
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssStation};
+use kentos_geometry_core::survey::adjust::name_key;
 use kentos_geometry_core::survey::adjust::robust::{Method, Robust};
 
 use crate::ExecutionContext;
@@ -28,8 +29,15 @@ fn number(s: &str, line: usize) -> Result<f64, Stop> {
 /// The stations and baselines of a text (docs/adr/1380 §2): `K;ad;X;Y;Z[;sX;sY;sZ]`, `N;ad[;X;Y;Z]`,
 /// `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`; `#` a remark; `;`, `,` or tabs between the values.
 pub(crate) fn read_text(text: &str) -> Result<(Vec<BaselineStation>, Vec<BaselineVector>), Stop> {
+    read_lines(text).map(|(stations, baselines, _)| (stations, baselines))
+}
+
+/// [`read_text`] with the line each baseline was read from.
+#[allow(clippy::type_complexity)]
+fn read_lines(text: &str) -> Result<(Vec<BaselineStation>, Vec<BaselineVector>, Vec<usize>), Stop> {
     let mut stations = Vec::new();
     let mut baselines = Vec::new();
+    let mut lines = Vec::new();
     for (i, raw) in text.lines().enumerate() {
         let line = i + 1;
         let t = raw.trim();
@@ -67,11 +75,35 @@ pub(crate) fn read_text(text: &str) -> Result<(Vec<BaselineStation>, Vec<Baselin
                     d: [v[0], v[1], v[2]],
                     cov: [v[3], v[4], v[5], v[6], v[7], v[8]],
                 });
+                lines.push(line);
             }
             _ => return Err(bad()),
         }
     }
-    Ok((stations, baselines))
+    Ok((stations, baselines, lines))
+}
+
+/// A text's baseline whose end the text gives no K or N line for, said with its line and the line to add
+/// (docs/adr/9331): the core says the station alone, and the user looked for it in a file of hundreds of lines.
+fn missing_station(stations: &[BaselineStation], baselines: &[BaselineVector], lines: &[usize]) -> Option<Stop> {
+    let known: std::collections::HashSet<String> = stations.iter().map(|s| name_key(&s.name)).collect();
+    for (b, line) in baselines.iter().zip(lines) {
+        for (end, name) in [("başlangıcı", &b.from), ("bitişi", &b.to)] {
+            if known.contains(&name_key(name)) {
+                continue;
+            }
+            let n = name.trim();
+            return Some(fail(
+                codes::UNKNOWN_STATION,
+                format!(
+                    "{line}. satırdaki bazın {end} “{n}”: dosyada onun K ya da N satırı yok. Yeni bir istasyonsa “N;{n}”, \
+                     bilinen bir noktaysa “K;{n};X;Y;Z” satırını ekleyin."
+                ),
+                "text",
+            ));
+        }
+    }
+    None
 }
 
 fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
@@ -84,7 +116,11 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
                     "text",
                 ));
             }
-            read_text(text)?
+            let (stations, baselines, lines) = read_lines(text)?;
+            if let Some(stop) = missing_station(&stations, &baselines, &lines) {
+                return Err(stop);
+            }
+            (stations, baselines)
         }
         None => (input.stations.clone(), input.baselines.clone()),
     };

@@ -407,6 +407,12 @@ def cases():
                 "1. satırda “x” bir sayı değil (ondalıktan önce nokta).", "text"),
         refused("Metinde eksik satır", {"text": "# ağ\nB;A;B;1;2;3\n"}, "invalid_input",
                 "2. satır okunamadı: K, N ya da B ile başlayıp değerleri tam olmalı.", "text"),
+        # docs/adr/9331: a text's baseline whose end has no K or N line: its line and the line to add.
+        refused("Metinde baz ucunun istasyon satırı yok", {"text": "K;A;4104012.32;2665176.76;4078628.36\n"
+                                                                    "# baz\nB;A;N1;1;2;3;1e-6;0;0;1e-6;0;1e-6\n"},
+                "unknown_station",
+                "3. satırdaki bazın bitişi “N1”: dosyada onun K ya da N satırı yok. Yeni bir istasyonsa “N;N1”, "
+                "bilinen bir noktaysa “K;N1;X;Y;Z” satırını ekleyin.", "text"),
     ]
     return out
 
