@@ -150,6 +150,8 @@ impl App {
     /// Vazgeç on the question: the window it came from comes back.
     pub(crate) fn unsaved_declined(&mut self, then: Then) {
         self.cloud.leave_failure = None;
+        // Aç's file chosen: the drawing stays, the file is not opened later by another Aç.
+        self.open_after_leave = None;
         match then {
             Then::OpenCloud { .. } if self.cloud.catalog.is_some() => {
                 self.dialog = Some(Dialog::Catalog);
@@ -170,6 +172,29 @@ impl App {
     /// What the question asks before `then` (the drawing on screen decides).
     pub(crate) fn unsaved_question(&self, then: Then) -> Question {
         let name = self.document.as_ref().map_or("", |d| d.name()).to_owned();
+        // Closing with drawings set aside in their tabs unsaved (docs/adr/9347): every one named; the one on screen with
+        // them when it has changes too.
+        if let (Then::Close(_), false) = (then, self.doc_tabs.unsaved().is_empty()) {
+            // By the names their tabs show (two of one project name told apart by their files).
+            let mut docs: Vec<&crate::document::Document> = self.doc_tabs.parked.iter().map(|p| &p.document).collect();
+            docs.extend(self.document.as_ref());
+            let titles = crate::doc_tabs::tab_titles(&docs);
+            let names: Vec<String> = docs
+                .iter()
+                .zip(&titles)
+                .filter(|(d, _)| d.dirty() && !d.is_database())
+                .map(|(_, t)| format!("“{t}”"))
+                .collect();
+            return Question {
+                title: "Kaydedilmemiş değişiklikler var",
+                message: format!("{} çizimde kaydedilmemiş değişiklik var: {}.", names.len(), names.join(", ")),
+                detail: "Kaydetmeden çık hepsinin değişikliklerini bırakır. Saklamak için Vazgeç'e basıp her sekmede Kaydet'i \
+                         kullanın; sonra pencereyi yeniden kapatın."
+                    .to_owned(),
+                confirm: "Kaydetmeden çık",
+                keep: None,
+            };
+        }
         let action = match then {
             Then::Close(_) => "çıkarsanız",
             Then::SignOut => "oturumu kapatırsanız",

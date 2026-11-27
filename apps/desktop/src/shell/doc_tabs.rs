@@ -888,3 +888,7 @@ mod same_file_tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
+
+#[cfg(test)]
+#[path = "doc_tabs_tests.rs"]
+mod doc_tabs_tests;

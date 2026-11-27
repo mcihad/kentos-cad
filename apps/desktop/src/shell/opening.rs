@@ -522,7 +522,12 @@ impl App {
             // A file already open (on screen or in a tab) is shown, not opened twice: two copies saved over each other
             // lost the first one's work without a word.
             Event::Picked(Some(path)) | Event::PickedTab(Some(path)) if self.show_open_file(&path) => {}
-            Event::Picked(Some(path)) => return self.start_opening(path, Purpose::File),
+            // Aç replaces the drawing on screen: asked about now that a file was chosen (docs/adr/9347); Vazgeç leaves
+            // it as it was.
+            Event::Picked(Some(path)) => {
+                self.open_after_leave = Some(path);
+                return self.leave(crate::app::Then::Open);
+            }
             Event::PickedTab(Some(path)) => return self.start_opening(path, Purpose::Tab),
             Event::Picked(None) | Event::PickedTab(None) => {}
             Event::Progress { id, stage } => {

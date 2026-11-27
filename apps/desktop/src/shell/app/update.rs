@@ -929,12 +929,9 @@ impl App {
                         "{name} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
                     ));
                 } else if !unsaved.is_empty() {
-                    // A drawing set aside in its tab is not asked about from here: it is brought in front first.
-                    self.warn(format!(
-                        "Sekmelerdeki {} çizimde kaydedilmemiş değişiklik var ({}): o sekmeye geçip kaydedin ya da Çizimi kapat ile kapatın, sonra pencereyi yeniden kapatın.",
-                        unsaved.len(),
-                        unsaved.join(", ")
-                    ));
+                    // Drawings set aside in their tabs with changes: asked in a question that names them (the owner's
+                    // word of 27 November 2026, docs/adr/9347), not said only in the history while the window stays.
+                    self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
                 } else {
                     // Unsent cloud work to its draft first, else the question (cloud/leaving.rs).
                     return self.leave(Then::Close(window));

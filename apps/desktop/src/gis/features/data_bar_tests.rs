@@ -69,3 +69,59 @@ fn screens() {
         app
     });
 }
+
+/// The second round's T9 (docs/adr/9347): two layers being edited. The table's bar says the shown layer's session and
+/// lists both under Düzenlenen katmanlar, one press making a layer the active one and the table's; Düzenlemeyi başlat's
+/// tip names the active layer, what waits on it and that the other stays open.
+#[test]
+fn two_sessions_are_named_and_one_press_goes_to_either() {
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::municipal("iki-oturum");
+    let address = path.display().to_string();
+    let mut app = crate::files_testing::app_with_drawing();
+    for table in ["bakim", "mahalleler"] {
+        app.add_data_layers(vec![crate::data_layers::describe(&address, table).expect("described")]).expect("added");
+    }
+    let bakim = node(&app, "bakim").expect("bakim").id.clone();
+    let mahalleler = node(&app, "mahalleler").expect("mahalleler").id.clone();
+    let _ = app.data_edits_event(crate::data_edits::Event::Start(bakim.clone()));
+    let tip = app.edit_tip("layer.edit").expect("its tip");
+    assert!(tip.starts_with("Etkin katman “bakim” düzenleniyor; kaynağa yazılmamış kaydı yok."), "{tip}");
+    let _ = app.data_edits_event(crate::data_edits::Event::Start(mahalleler.clone()));
+    let tip = app.edit_tip("layer.edit").expect("its tip");
+    assert!(tip.contains("Düzenlemeyi bitir yalnız bu katmanı kapatır. Düzenlenen öbür katmanlar açık kalır: “bakim”."), "{tip}");
+    // Düzenlenen katmanlar: bakim one press away, the active layer and the table's.
+    ev(&mut app, Event::EditedLayer(bakim.clone()));
+    let active = app.document.as_ref().map(|d| d.model.layers().active().to_owned());
+    assert_eq!(active.as_deref(), Some(bakim.as_str()));
+    assert_eq!(app.gis.features.layer.as_deref(), Some(bakim.as_str()));
+    let _ = std::fs::remove_file(&path);
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9347/01-duzenlenen-katmanlar`): two layers being edited, the table on one.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib data_bar_tests::sessions_screens -- --ignored --nocapture"]
+fn sessions_screens() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9347", "01-duzenlenen-katmanlar", || {
+        crate::data_layers::register();
+        let path = crate::data_layers_tests::municipal("iki-oturum-resim");
+        let address = path.display().to_string();
+        let mut app = crate::files_testing::app_with_drawing();
+        for table in ["bakim", "mahalleler"] {
+            app.add_data_layers(vec![crate::data_layers::describe(&address, table).expect("described")]).expect("added");
+        }
+        let bakim = node(&app, "bakim").expect("bakim").id.clone();
+        let mahalleler = node(&app, "mahalleler").expect("mahalleler").id.clone();
+        let _ = app.data_edits_event(crate::data_edits::Event::Start(mahalleler));
+        let _ = app.data_edits_event(crate::data_edits::Event::Start(bakim.clone()));
+        app.gis.features.layer = Some(bakim);
+        app.command_expanded = true;
+        app.bottom_tab = crate::bottom::BottomTab::Table;
+        let _ = app.update(Message::BottomResized(240.0));
+        let task = app.data_table_event(crate::features::data::DataEvent::Range(0, 12));
+        crate::files_testing::drive(&mut app, task);
+        crate::data_layers_tests::answer_pages(&mut app);
+        app
+    });
+}

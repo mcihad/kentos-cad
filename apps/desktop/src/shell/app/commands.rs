@@ -143,7 +143,13 @@ impl App {
         }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
-            "file.open" => return self.leave(Then::Open),
+            // The file chosen first; the drawing on screen asked about only once there is one to open in its place
+            // (the second round's T10, docs/adr/9347).
+            "file.open" => {
+                // A file chosen for an earlier Aç whose leaving was not answered is not opened by this one.
+                self.open_after_leave = None;
+                return self.open();
+            }
             "file.recover" => return self.recover_file(),
             "file.start" => self.open_start(),
             // A cloud project saves to the server (cloud/file.rs); Farklı kaydet writes a local file.

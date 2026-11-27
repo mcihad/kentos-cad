@@ -86,8 +86,26 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
         };
         let geometry = table?;
         let kind = kinds.iter().find(|k| !geometry.admits(k))?;
+        // The geometry, not the session, keeps it off: a layer of the kind is named, one being edited first
+        // (docs/adr/9347).
+        let fitting = |n: &kentos_commands::LayerNode| {
+            n.id != active.id
+                && n.data.as_ref().is_some_and(|d| {
+                    !d.read_only
+                        && d.geometry.as_ref().is_some_and(|g| {
+                            data_geometry(&g.type_name).is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
+                        })
+                })
+        };
+        let leaves = layers.leaves();
+        let fits: Vec<&kentos_commands::LayerNode> = leaves.iter().copied().filter(|n| fitting(n)).collect();
+        let way = match fits.iter().find(|n| doc.editing(&n.id)).or_else(|| fits.first()) {
+            Some(n) if doc.editing(&n.id) => format!("“{}” düzenleniyor ve bu türü alır: onu etkin yapın.", n.name),
+            Some(n) => format!("“{}” bu türü alır: onu etkin yapıp düzenlemesini başlatın.", n.name),
+            None => "Türüne uyan bir veri katmanını etkin yapın.".to_owned(),
+        };
         return Some(format!(
-            "Etkin katman “{}” bir {}; {} bu katmana yazılmaz. Türüne uyan bir veri katmanını etkin yapın.",
+            "Etkin katman “{}” bir {}; {} bu katmana yazılmaz (geometri türü uymuyor). {way}",
             active.name,
             geometry.layer_words(),
             kentos_commands::kind_words(kind)

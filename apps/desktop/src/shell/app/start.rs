@@ -222,6 +222,7 @@ impl App {
             ifc_viewer: None,
             space_merging: None,
             form_on_create: None,
+            open_after_leave: None,
             annotation_styles: None,
             table_style_window: None,
             sheet_set: None,

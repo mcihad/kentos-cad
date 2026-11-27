@@ -36,6 +36,38 @@ pub(crate) mod off {
 }
 
 impl App {
+    /// The table's layer's edit session beside its name (the second round's T9, docs/adr/9347): Düzenleniyor or
+    /// Düzenlemeye kapalı; with more than one layer edited, Düzenlenen katmanlar ▾ lists them, each one press away
+    /// (made the active layer and the table's).
+    fn edit_state_badge<'a>(&self, layer: &str) -> Element<'a, Message> {
+        let Some(doc) = self.document.as_ref().map(|d| &d.model) else {
+            return space::horizontal().width(0).into();
+        };
+        let edited = doc.edited_layers();
+        let editing = doc.editing(layer);
+        let words = if editing { "Düzenleniyor" } else { "Düzenlemeye kapalı" };
+        let tone = if editing { kentos_ui::style::text::accent } else { kentos_ui::style::text::muted };
+        if edited.len() < 2 {
+            return kentos_ui::label::caption(words).style(tone).into();
+        }
+        let named: Vec<(String, String)> =
+            edited.iter().map(|l| (l.clone(), self.data_layer_name(l))).collect();
+        let current = layer.to_owned();
+        bar_menu(
+            from_web(Some("edit")),
+            Some(format!("{words} · düzenlenen {} katman", edited.len())),
+            "Düzenlenen katmanlar".to_owned(),
+            "Düzenlemesi açık katmanlar: birine basmak onu etkin katman ve tablonun katmanı yapar.",
+            move || {
+                let mut menu = Menu::new().header("Düzenlenen katmanlar");
+                for (id, name) in &named {
+                    menu = menu.check(name.clone(), *id == current, Some(msg(Event::EditedLayer(id.clone()))));
+                }
+                menu
+            },
+        )
+    }
+
     /// The bar over a data layer's table (see the module).
     pub(super) fn data_layer_bar<'a>(&self, rows: &Rows) -> Element<'a, Message> {
         let panel = &self.gis.features;
@@ -65,6 +97,7 @@ impl App {
         let filters = row![
             pane,
             container(self.layer_select(rows)).width(Length::Fixed(250.0)),
+            self.edit_state_badge(&layer),
             container(search).width(Length::Fixed(170.0)),
             container(show).width(Length::Fixed(150.0)),
             container(filter).width(Length::Fixed(240.0)),

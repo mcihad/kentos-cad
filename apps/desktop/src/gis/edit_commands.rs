@@ -111,6 +111,38 @@ impl App {
         }
     }
 
+    /// Düzenlemeyi başlat's tip while it can run (the second round's T9, docs/adr/9347): the layer it acts on and its
+    /// session, with what waits for its source; the other layers being edited, which it leaves as they are.
+    pub(crate) fn edit_tip(&self, id: &str) -> Option<String> {
+        if id != TOGGLE || self.edit_why(TOGGLE).is_some() {
+            return None;
+        }
+        let (node, _) = self.edit_target()?;
+        let doc = &self.document.as_ref()?.model;
+        let others: Vec<String> = doc
+            .edited_layers()
+            .into_iter()
+            .filter(|l| *l != node.id)
+            .map(|l| format!("“{}”", self.data_layer_name(&l)))
+            .collect();
+        let mut out = if doc.editing(&node.id) {
+            let c = doc.data_changes(&node.id);
+            let waiting = c.added.len() + c.changed.len() + c.deleted.len();
+            let rows = if waiting == 0 {
+                "kaynağa yazılmamış kaydı yok".to_owned()
+            } else {
+                format!("{waiting} kaydı kaynağa yazılmadı")
+            };
+            format!("Etkin katman “{}” düzenleniyor; {rows}. Düzenlemeyi bitir yalnız bu katmanı kapatır.", node.name)
+        } else {
+            format!("Etkin katman “{}” düzenlemeye kapalı. Düzenlemeyi başlat onu açar.", node.name)
+        };
+        if !others.is_empty() {
+            out.push_str(&format!(" Düzenlenen öbür katmanlar açık kalır: {}.", others.join(", ")));
+        }
+        Some(out)
+    }
+
     /// Whether the active layer is being edited: Düzenlemeyi başlat's lit state; none for any other command.
     pub(crate) fn edit_checked(&self, id: &str) -> Option<bool> {
         (id == TOGGLE).then(|| {

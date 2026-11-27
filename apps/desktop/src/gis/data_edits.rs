@@ -793,6 +793,23 @@ impl App {
                 ))
             })
             .collect();
+        // Stopping one layer leaves the other sessions open: said with their names (docs/adr/9347).
+        let still: Vec<String> = match ask.after {
+            After::Stop => self
+                .document
+                .as_ref()
+                .map(|d| d.model.edited_layers())
+                .unwrap_or_default()
+                .into_iter()
+                .filter(|l| !ask.layers.contains(l))
+                .map(|l| format!("“{}”", self.data_layer_name(&l)))
+                .collect(),
+            _ => Vec::new(),
+        };
+        let mut detail = detail;
+        if !still.is_empty() {
+            detail.push(format!("Düzenlenen öbür katmanlar açık kalır: {}.", still.join(", ")));
+        }
         let title = match ask.after {
             After::Stop => "Düzenlemeyi bitir",
             After::Leave(_) => "Kaynağa yazılmamış katman değişiklikleri",

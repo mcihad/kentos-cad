@@ -473,9 +473,11 @@ impl App {
                 None => button,
             };
             // An off command that says why has the reason in its tip (the web's `whyDisabled`).
-            let tip_of = match self.why_disabled(command.id) {
-                Some(why) => Tip::new(command.title).body(why),
-                None => tip(command),
+            // Düzenlemeyi başlat names its layer and the other sessions (edit_commands.rs, docs/adr/9347).
+            let tip_of = match (self.why_disabled(command.id), self.edit_tip(command.id)) {
+                (Some(why), _) => Tip::new(command.title).body(why),
+                (None, Some(body)) => Tip::new(command.title).body(body),
+                (None, None) => tip(command),
             };
             button
                 .on_press_maybe(enabled(command).filter(|_| self.available(command.id)))

@@ -157,6 +157,8 @@ pub(crate) fn walk(shift: bool) -> Walk {
 pub enum Event {
     /// Katman ▾: a layer by id.
     Layer(String),
+    /// Düzenlenen katmanlar ▾: an edited layer made the active one and the table's (docs/adr/9347).
+    EditedLayer(String),
     /// The Form view's “… için form oluştur” (GIS-026): the designer's new form on this layer.
     NewFormFor(String),
     Search(String),
@@ -853,6 +855,13 @@ impl App {
             Event::ZoomSelection => self.navigating(Self::zoom_selection),
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
+            // Düzenlenen katmanlar ▾ (data_bar.rs, docs/adr/9347): the layer made the active one and the table's.
+            Event::EditedLayer(id) => {
+                if let Some(doc) = self.document.as_mut() {
+                    doc.model.set_active_layer(&id);
+                }
+                return self.features_event(Event::Layer(id));
+            }
             Event::Pane(pane) => {
                 // A data layer's one chosen row opens its form (the CBS review's 2nd item): for editing while its layer is
                 // edited, for reading with Düzenle otherwise; without a chosen row or a form the table stays, said why.

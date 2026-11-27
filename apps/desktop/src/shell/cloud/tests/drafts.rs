@@ -154,8 +154,13 @@ fn a_viewer_is_told_once_and_leaving_asks() {
         .filter(|t| t.starts_with("Bu projeyi yalnız görüntüleyebilirsiniz"))
         .count();
     assert_eq!(told, 1);
+    // Aç: the file first, then the question (docs/adr/9347).
     let _ = app.run("file.open");
+    assert_eq!(app.dialog, None, "nothing asked before a file is chosen");
+    let chosen = dir.join("baska.kcad");
+    let _ = app.update(crate::app::Message::Opening(crate::opening::Event::Picked(Some(chosen.clone()))));
     assert_eq!(app.dialog, Some(Dialog::Unsaved(Then::Open)));
+    assert_eq!(app.open_after_leave.as_deref(), Some(chosen.as_path()));
     let q = app.unsaved_question(Then::Open);
     assert!(
         q.detail.contains("yalnız görüntüleme yetkiniz var"),
@@ -163,6 +168,9 @@ fn a_viewer_is_told_once_and_leaving_asks() {
         q.detail
     );
     assert_eq!(q.confirm, "Göndermeden aç");
+    // Vazgeç: the drawing stays and the file is not kept for a later Aç.
+    let _ = app.update(crate::app::Message::DialogClosed);
+    assert!(app.open_after_leave.is_none());
     let _ = std::fs::remove_dir_all(dir);
 }
 

@@ -1045,6 +1045,8 @@ pub struct App {
     pub space_merging: Option<(kentos_commands::SpacesEdit, String)>,
     /// The object a drawing tool has just written: its form opens (forms/mod.rs, docs/adr/0403 §4).
     pub(crate) form_on_create: Option<kentos_domain::Slot>,
+    /// Aç's file, chosen before the drawing on screen is left for it (docs/adr/9347); dropped when the leaving is not.
+    pub(crate) open_after_leave: Option<PathBuf>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Tablo stilleri (table_style_window.rs, docs/adr/1127 §4).
@@ -1268,8 +1270,12 @@ impl App {
         theme::theme(self.mode, self.accent)
     }
 
-    /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs).
+    /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs). Once the drawing on screen is
+    /// left for a file already chosen (Aç: the file first, docs/adr/9347), that file.
     pub(crate) fn open(&mut self) -> Task<Message> {
+        if let Some(path) = self.open_after_leave.take() {
+            return self.start_opening(path, Purpose::File);
+        }
         self.open_into(Purpose::File)
     }
 
@@ -1277,6 +1283,11 @@ impl App {
     pub(crate) fn open_into(&mut self, purpose: Purpose) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
+            // Aç replaces the drawing on screen: asked about first, as a file chosen in the dialog (docs/adr/9347).
+            if matches!(purpose, Purpose::File) {
+                self.open_after_leave = Some(path);
+                return self.leave(Then::Open);
+            }
             return self.start_opening(path, purpose);
         }
         // A program with data layers opens a GeoPackage as a project too (docs/adr/9116).

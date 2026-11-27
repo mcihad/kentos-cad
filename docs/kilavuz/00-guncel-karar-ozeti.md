@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Düzenleme hedefi ve oturumlar söylenir; Aç önce dosyayı sorar; kaydedilmemiş sekmeyle kapatma soruyla (27 Kasım
+  2026, T9, T10 ve sahibin sözü; [ADR 9347](../adr/9347-edit-target-sessions-file-first-open-and-close-question.md)).**
+  - Düzenlemeyi başlat/bitir'in ipucu etkin katmanı, bekleyenini ve açık kalan öbür oturumları söyler. Tablonun çubuğu
+    oturumu gösterir; birden çok oturumda “Düzenlenen katmanlar ▾” her katmana tek basışla götürür.
+  - Aç önce dosyayı seçtirir, kaydetme sorusu ondan sonradır. Başka sekmede kaydedilmemiş çizim varken pencere
+    kapatılınca soru hepsini adlarıyla sayar.
+
 - **Kayıt akışı: Öznitelikler bekleyen değeri gösterir, formu olmayan katmanın varsayılan formu, üç eylemin adı, yeni
   kaydın formu (27 Kasım 2026, T5–T8; [ADR 9346](../adr/9346-record-flow-inspector-default-form-and-write-names.md)).**
   - Öznitelikler düzenlenen satırın bekleyen değerini söyleyerek gösterir; Kaynağa yaz'dan sonra satırı yeniden okur.
