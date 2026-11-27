@@ -15,10 +15,72 @@ use kentos_geometry_core::geom::region::{
 
 use super::*;
 
-/// A column between the structure under it and the structure over its storey.
+/// A slab as the section measures it: its rings, its top, its layers' thicknesses over and under its structure, its
+/// structure's thickness.
+pub(super) struct SlabAt {
+    pub(super) rings: Vec<Vec<P>>,
+    pub(super) top: f64,
+    pub(super) over: f64,
+    pub(super) thickness: f64,
+}
+
+impl SlabAt {
+    pub(super) fn holds(&self, at: P) -> bool {
+        let mut odd = false;
+        for r in &self.rings {
+            let n = r.len();
+            for i in 0..n {
+                let (a, b) = (r[i], r[(i + 1) % n]);
+                if (a.y > at.y) != (b.y > at.y)
+                    && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
+                {
+                    odd = !odd;
+                }
+            }
+        }
+        odd
+    }
+
+    pub(super) fn structure_top(&self) -> f64 {
+        self.top - self.over
+    }
+}
+
+/// A footing a column stands on (docs/adr/8172 §3.2): its band, its top and its storey.
+pub(super) struct Seat {
+    at: SlabAt,
+    level: Option<String>,
+}
+
+/// The footings of the model, the seats of the columns over them.
+pub(super) fn seats(doc: &Document, entities: &[(Uuid, &Entity)]) -> Vec<Seat> {
+    use kentos_geometry_core::entity::Shape;
+    entities
+        .iter()
+        .filter_map(|(_, e)| match e {
+            Entity::Beam(b) if b.beam.role.is_footing() => Some(&*b.beam),
+            _ => None,
+        })
+        .filter_map(|b| {
+            let top = doc.beam_top(b)?;
+            let Shape::Beam { pts, beam } = kentos_formats::arch_elements::core_beam(b) else {
+                return None;
+            };
+            let ring = kentos_geometry_core::geom::beam::band(&pts, &beam);
+            (ring.len() >= 3).then(|| Seat {
+                at: SlabAt { rings: vec![ring], top, over: 0.0, thickness: 0.0 },
+                level: b.arch.level.clone(),
+            })
+        })
+        .collect()
+}
+
+/// A column between the structure under it and the structure over its storey; over a footing of its storey it stands
+/// on the footing's top (docs/adr/8172 §3.2), as a frame's column goes down to its footing.
 pub(super) fn column(
     c: &kentos_commands::ColumnFields,
     slabs: &[SlabAt],
+    seats: &[Seat],
     owner: Option<String>,
     m: &mut Model,
 ) {
@@ -41,6 +103,13 @@ pub(super) fn column(
         .filter(|s| s.holds(centre) && (s.top - floor).abs() <= 0.5)
         .map(SlabAt::structure_top)
         .fold(floor, kentos_geometry_core::jsmath::js_min);
+    // Down to the highest footing under its middle, of its storey, below where it would stand.
+    let bottom = seats
+        .iter()
+        .filter(|f| f.level == c.arch.level && f.at.top <= bottom && f.at.holds(centre))
+        .map(|f| f.at.top)
+        .reduce(kentos_geometry_core::jsmath::js_max)
+        .unwrap_or(bottom);
     let Some(h) = height else {
         m.left.insert((Left::NoHeight, owner));
         return;

@@ -225,8 +225,10 @@ fn footings_stand_under_the_floor_and_are_the_ifc_s_footings() {
     // The pad 1.5 × 1.5 × 0.5 whole; the strip 5.25 × 0.6 × 0.5 less the pad's crossing (it was drawn after).
     assert!((volume(&m, &uid[1]) - 1.5 * 1.5 * 0.5).abs() < 1e-9);
     assert!((volume(&m, &uid[2]) - 5.25 * 0.6 * 0.5).abs() < 1e-9, "{}", volume(&m, &uid[2]));
-    // The column on the floor over them, whole: 0.09 × 3.
-    assert!((volume(&m, &uid[0]) - 0.09 * 3.0).abs() < 1e-9);
+    // The column over the pad stands on its top (ADR 8172 §3.2), whole: from −0.30 to its storey's top, 0.09 × 3.30.
+    let (b, t) = heights(&m, solid(&uid[0]));
+    assert!((b + 0.3).abs() < 1e-12 && (t - 3.0).abs() < 1e-12, "{b}–{t}");
+    assert!((volume(&m, &uid[0]) - 0.09 * 3.3).abs() < 1e-9, "{}", volume(&m, &uid[0]));
     let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
     assert_eq!(written.footings, 2);
     let text = kentos_ifc::building::write(&building);
@@ -235,4 +237,25 @@ fn footings_stand_under_the_floor_and_are_the_ifc_s_footings() {
     assert!(footings.iter().any(|l| l.ends_with(".PAD_FOOTING.);") && l.contains("'MM-TML-")), "{footings:?}");
     assert!(footings.iter().any(|l| l.ends_with(".STRIP_FOOTING.);")), "{footings:?}");
     assert_eq!(text.matches("Qto_FootingBaseQuantities").count(), 2);
+}
+
+#[test]
+fn a_column_goes_down_to_its_own_storey_s_footing_only() {
+    let (doc, uid) = building(json!([
+        // Over the pad on its storey: down to the pad's top.
+        {"kind": "column", "at": {"x": 0.0, "y": 0.0}, "width": 0.3, "depth": 0.3, "arch": {"level": "zemin"}},
+        // Beside it, off the pad: on the floor.
+        {"kind": "column", "at": {"x": 4.0, "y": 0.0}, "width": 0.3, "depth": 0.3, "arch": {"level": "zemin"}},
+        // Over it a storey up: on its own floor.
+        {"kind": "column", "at": {"x": 0.0, "y": 0.0}, "width": 0.3, "depth": 0.3, "arch": {"level": "k1"}},
+        {"kind": "beam", "pts": [{"x": -0.75, "y": 0.0}, {"x": 0.75, "y": 0.0}], "width": 1.5, "height": 0.5,
+         "role": "padFooting", "baseOffset": -0.8, "arch": {"level": "zemin"}}
+    ]));
+    let m = model(&doc);
+    shares_none(&doc, &m);
+    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    let bottom = |owner: &str| heights(&m, solid(owner)).0;
+    assert!((bottom(&uid[0]) + 0.3).abs() < 1e-12, "{}", bottom(&uid[0]));
+    assert!(bottom(&uid[1]).abs() < 1e-12, "{}", bottom(&uid[1]));
+    assert!((bottom(&uid[2]) - 3.0).abs() < 1e-12, "{}", bottom(&uid[2]));
 }

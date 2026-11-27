@@ -2977,6 +2977,36 @@
       "status": "implemented"
     },
     {
+      "id": "tool.footingPad",
+      "title": "Tekil temel",
+      "icon": "footingPad",
+      "description": "Tıklanan yere bir tekil temel koyar; bir kolona tıklanınca temeli kolonun altına ortalar ve kolonla döndürür. Genişlik (E), Boy (B), Yükseklik (Y: temelin kalınlığı), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Açı (D: kolonsuz temelin dönüşü), Numara (N: T101 gibi; her birinden sonra ilerler). 150 × 150 cm, 50 cm yükseklik ve −0,80 m ile başlar: tepesi döşemenin 30 cm altında. Kesitte, 3B'de ve IFC'de (IfcFooting, PAD_FOOTING) görünür; üstündeki kolon temelin tepesinde başlar. Etkin kata, MM-TEML-TEKIL katmanına yazılır.",
+      "aliases": [
+        "TEKILTEMEL",
+        "TEKİLTEMEL",
+        "TEMEL",
+        "FOOTING",
+        "PADFOOTING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.footingStrip",
+      "title": "Sürekli temel",
+      "icon": "footingStrip",
+      "description": "Eksenin noktalarına bir sürekli temel çizer: duvarların ya da kolon sıralarının altındaki bant; Enter yazar. Genişlik (E), Yükseklik (Y: temelin kalınlığı), Hiza (H: orta, sol, sağ), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Numara (N). 60 cm genişlik, 50 cm yükseklik ve −0,80 m ile başlar. Kesitte, 3B'de ve IFC'de (IfcFooting, STRIP_FOOTING) görünür. Etkin kata, MM-TEML-SUREKLI katmanına yazılır.",
+      "aliases": [
+        "SUREKLITEMEL",
+        "SÜREKLİTEMEL",
+        "STRIPFOOTING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.roof",
       "title": "Çatı",
       "icon": "roof",
@@ -5624,6 +5654,8 @@
     "covering": "<path d=\"M2.5 6.5 10 2.5l7.5 4-7.5 4z\"/><path d=\"M2.5 11.5 10 15.5l7.5-4\" stroke-width=\"1\"/><path d=\"M2.5 14 10 18l7.5-4\" stroke-width=\"1\"/>",
     "post": "<rect x=\"8.5\" y=\"3.5\" width=\"3\" height=\"13\"/><path d=\"M4.5 16.5h11M6.5 3.5h7\"/>",
     "rail": "<rect x=\"2.5\" y=\"8.5\" width=\"15\" height=\"3\"/><path d=\"M6 11.5v4M14 11.5v4\" stroke-width=\"1\"/>",
+    "footingPad": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"6.5\" y=\"6.5\" width=\"7\" height=\"7\"/><path d=\"M6.5 6.5l7 7M13.5 6.5l-7 7\" stroke-width=\"0.9\"/>",
+    "footingStrip": "<path d=\"M7 18V7h11M10.5 18v-7.5H18\"/><path d=\"M3 18V3h15M14.5 18v-3.5H18\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/>",
     "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",
     "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",

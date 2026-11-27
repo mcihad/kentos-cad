@@ -434,12 +434,16 @@ CAD = [
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
             # Kolon ▾ and Kiriş ▾ hold their members, Dikme and Kayıt (docs/adr/8070 §8); Çatı ▾ its parts.
+            # Kiriş ▾ holds the footings too (docs/adr/8172): in the model a beam's role, and the tab has its 30
+            # buttons (DESIGN.md §7.3.1).
             {"key": "archColumns", "size": "small", "split": [
                 {"command": "tool.column", "title": "Kolon", "label": "Kolon"},
                 {"command": "tool.post", "title": "Kolon", "label": "Dikme"},
             ]}, {"key": "archBeams", "size": "small", "split": [
                 {"command": "tool.beam", "title": "Kiriş", "label": "Kiriş"},
                 {"command": "tool.rail", "title": "Kiriş", "label": "Kayıt"},
+                {"command": "tool.footingPad", "title": "Kiriş", "label": "Tekil temel"},
+                {"command": "tool.footingStrip", "title": "Kiriş", "label": "Sürekli temel"},
             ]}, {"key": "archRoofs", "size": "small", "split": [
                 {"command": "tool.roof", "title": "Çatı", "label": "Çatı"},
                 {"command": "tool.roofChimney", "title": "Çatı", "label": "Çatı bacası"},

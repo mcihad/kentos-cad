@@ -504,6 +504,8 @@ mod space_sources;
 pub mod arch_tools;
 #[path = "arch/beam_tools.rs"]
 pub mod beam_tools;
+#[path = "arch/footing_tools.rs"]
+pub mod footing_tools;
 #[path = "arch/railing_tools.rs"]
 pub mod railing_tools;
 #[path = "arch/roof_part_tools.rs"]

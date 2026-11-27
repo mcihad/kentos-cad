@@ -21,6 +21,8 @@
     { "name": "RM", "command": "tool.ramp" },
     { "name": "KR", "command": "tool.beam" },
     { "name": "KY", "command": "tool.rail" },
+    { "name": "TT", "command": "tool.footingPad" },
+    { "name": "ST", "command": "tool.footingStrip" },
     { "name": "CT", "command": "tool.roof" },
     { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },

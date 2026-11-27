@@ -292,6 +292,8 @@ edge-lengths
 edge-shift
 edgematch
 edit
+edits-review
+edits-rollback
 element-detach
 element-push
 element-reset
@@ -366,8 +368,11 @@ flow-direction
 focal-stats
 folder
 folder-add
+footing-pad
+footing-strip
 form-audit
 form-edit
+form-open
 forms
 fourth-corner
 freeze
@@ -1295,7 +1300,7 @@ view-elevation
 view-fills
 view-next
 view-point-codes
-view-point-names
+view-point-labels
 view-previous
 view-refs
 view-section

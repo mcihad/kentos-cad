@@ -2362,6 +2362,20 @@
       ],
       "note": "Kiriş'in ekseni ve ölçüleri, kattan yüksekliği, malzemesi ve eleman tipi (kullanıcı tanımlı “Kayıt”) komuta verilir; gövdesi ve IFC'deki sınıfı komutun ve modelin (ADR 8070 §8)."
     },
+    "tool.footingPad": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Temelin ortası, ölçüleri, kattan yüksekliği, dönüşü ve numarası komuta verilir; kolona tıklanınca ortayı ve dönüşü kolondan araç alır. Temelin yeri, kesiti, 3B'si ve IFC sınıfı komutun ve modelin (ADR 8172)."
+    },
+    "tool.footingStrip": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kattan yükseklik ve numara komuta verilir; temelin yeri, kesiti, 3B'si ve IFC sınıfı komutun ve modelin (ADR 8172)."
+    },
     "tool.railing": {
       "level": "semantic",
       "via": [

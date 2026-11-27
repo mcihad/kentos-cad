@@ -35,7 +35,7 @@ use sha2::{Digest, Sha256};
 
 #[path = "sections/frame.rs"]
 mod frame;
-use frame::{beam, column};
+use frame::{SlabAt, beam, column};
 pub use frame::MEMBER_ELEMENT;
 
 /// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
@@ -318,37 +318,6 @@ fn floor_of(
         .map_or((0.0, None), |l| (l.2, l.3))
 }
 
-/// A slab as the section measures it: its rings, its top, its layers' thicknesses over and under its structure, its
-/// structure's thickness.
-struct SlabAt {
-    rings: Vec<Vec<P>>,
-    top: f64,
-    over: f64,
-    thickness: f64,
-}
-
-impl SlabAt {
-    fn holds(&self, at: P) -> bool {
-        let mut odd = false;
-        for r in &self.rings {
-            let n = r.len();
-            for i in 0..n {
-                let (a, b) = (r[i], r[(i + 1) % n]);
-                if (a.y > at.y) != (b.y > at.y)
-                    && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
-                {
-                    odd = !odd;
-                }
-            }
-        }
-        odd
-    }
-
-    fn structure_top(&self) -> f64 {
-        self.top - self.over
-    }
-}
-
 /// The model's solids for a section (docs/adr/8042 §3).
 pub fn model(doc: &Document) -> Model {
     let mut m = Model {
@@ -383,6 +352,7 @@ pub fn model(doc: &Document) -> Model {
             }
         })
         .collect();
+    let seats = frame::seats(doc, &entities);
     walls(doc, &entities, &mut m);
     // The voids (docs/adr/0708: shafts, a stair's or a gallery's opening; no floor in them), each with its id.
     let voids: Vec<(String, &kentos_commands::SpaceFields)> = entities
@@ -396,7 +366,7 @@ pub fn model(doc: &Document) -> Model {
         let owner = Some(uid.to_string());
         match e {
             Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &voids, &mut m),
-            Entity::Column(c) => column(&c.column, &slabs, owner, &mut m),
+            Entity::Column(c) => column(&c.column, &slabs, &seats, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
             Entity::Railing(r) => railing(&r.railing, owner, &mut m),

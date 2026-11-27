@@ -10,6 +10,7 @@ mod cad_axes_names;
 mod arrange;
 mod beam_tool;
 mod curtain_wall_tool;
+mod footing_tools;
 mod member_tools;
 mod covering_tool;
 mod roof_part_tool;

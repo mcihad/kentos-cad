@@ -36,6 +36,7 @@ pub mod ids;
 mod math;
 pub mod mesh;
 pub mod naming;
+mod plane;
 pub mod quality;
 pub mod quantities;
 #[cfg(feature = "read")]

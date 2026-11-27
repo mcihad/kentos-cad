@@ -12805,6 +12805,38 @@
    "tests": 0
   },
   {
+   "id": "tool.footingPad",
+   "kind": "command",
+   "title": "Tekil temel",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Temelin ortası, ölçüleri, kattan yüksekliği, dönüşü ve numarası komuta verilir; kolona tıklanınca ortayı ve dönüşü kolondan araç alır. Temelin yeri, kesiti, 3B'si ve IFC sınıfı komutun ve modelin (ADR 8172).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.footingStrip",
+   "kind": "command",
+   "title": "Sürekli temel",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kattan yükseklik ve numara komuta verilir; temelin yeri, kesiti, 3B'si ve IFC sınıfı komutun ve modelin (ADR 8172).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.fourthCorner",
    "kind": "tool",
    "title": "Dördüncü köşe",

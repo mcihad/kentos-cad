@@ -474,6 +474,8 @@
         "tool.fillet",
         "tool.filletAll",
         "tool.flue",
+        "tool.footingPad",
+        "tool.footingStrip",
         "tool.fourthCorner",
         "tool.grid",
         "tool.gridNumber",

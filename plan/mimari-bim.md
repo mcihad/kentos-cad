@@ -40,7 +40,7 @@ resmî belgesi, Türkiye mevzuatı).
 
 | Madde | Araç | Dayanak |
 |---|---|---|
-| MB-10 | **Temel:** tekil, sürekli, radye. Kesitte, görünüşte ve metrajda; IFC'de `IfcFooting`. **1. bölüm yapıldı (ADR 8172): tekil ve sürekli temel kirişin rolü; model, kesit, 3B, IFC, dosya (Mimari verisi 40). Kalan: araç ve şerit, radye.** | Dijital Hazırlama Yön. EK-5 Tablo 5.1 sıra 34; EK-6 Tablo 6.34; EK-2 Tablo 2.3 TEML; PAİY 57/2-a-6'nın kesitleri |
+| MB-10 | **Temel:** tekil, sürekli, radye. Kesitte, görünüşte ve metrajda; IFC'de `IfcFooting`. **1. bölüm yapıldı (ADR 8172): tekil ve sürekli temel kirişin rolü; model, kesit, 3B, IFC, dosya (Mimari verisi 40). 2. bölüm yapıldı (ADR 8172 §5): Tekil temel ve Sürekli temel araçları Kiriş ▾'in altında; tekil temel tıklanan kolonun altına ortalanır. Kalan: radye.** | Dijital Hazırlama Yön. EK-5 Tablo 5.1 sıra 34; EK-6 Tablo 6.34; EK-2 Tablo 2.3 TEML; PAİY 57/2-a-6'nın kesitleri |
 | MB-11 | **Duvar profili:** parapet, harpuşta, söve, denizlik, silme, oyuk. Duvar boyunca, cephede ve kesitte görünür. | Piyasada duvar silmesi ve oyuğu (Revit), karmaşık profil (Archicad) |
 | MB-12 | **Arazi ve kazı-dolgu:** Mimari vaziyette arazi yüzeyi, bina oturumu, tesviye. Kesitte tabii ve tesviye zemin; kazı-dolgu hacmi. | PAİY vaziyet ve kesit gerekleri (madde araştırmasında doğrulanacak) |
 | MB-13 | **3B görünüm paftada:** aksonometri, perspektif, kesit perspektifi. | Piyasada hepsinde |

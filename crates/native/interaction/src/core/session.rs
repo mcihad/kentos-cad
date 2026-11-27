@@ -138,6 +138,9 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/8041 §1: Kiriş.
     crate::beam_tools::BEAM_ID,
     crate::beam_tools::RAIL_ID,
+    // docs/adr/8172: Tekil temel, Sürekli temel.
+    crate::footing_tools::PAD_ID,
+    crate::footing_tools::STRIP_ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
@@ -583,6 +586,8 @@ impl Session {
             arch_tools::RAMP_ID => Box::new(arch_tools::FlightTool::ramp()),
             crate::beam_tools::BEAM_ID => Box::new(crate::beam_tools::BeamTool::new()),
             crate::beam_tools::RAIL_ID => Box::new(crate::beam_tools::BeamTool::rail()),
+            crate::footing_tools::PAD_ID => Box::new(crate::footing_tools::FootingTool::pad()),
+            crate::footing_tools::STRIP_ID => Box::new(crate::footing_tools::FootingTool::strip()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
             crate::roof_part_tools::CHIMNEY_ID => {
