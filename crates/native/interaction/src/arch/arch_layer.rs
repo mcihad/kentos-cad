@@ -423,7 +423,21 @@ pub fn writing(
         style: kind.style(),
         ..NewLayer::layer(name.clone())
     };
-    if let Err(refusal) = cx.doc.add_layer(layer, None, false) {
+    // The rooms' layer stays under the others (docs/adr/8176 §3.4): a colour plan fills the rooms where their layer is,
+    // over what lies on a layer under it. A new kind's layer opens over the rooms' when the drawing has it at the top.
+    let rooms = (*kind != Kind::Space)
+        .then(|| {
+            let name = Kind::Space.layer_name();
+            cx.doc.layers().leaves().into_iter().find(|l| l.name == name).map(|l| l.id.clone())
+        })
+        .flatten()
+        .and_then(|id| cx.doc.layers().place_of(&id))
+        .and_then(|(group, at)| group.is_none().then_some(at));
+    let added = match rooms {
+        Some(at) => cx.doc.add_layer_at(layer, None, Some(at), None, false),
+        None => cx.doc.add_layer(layer, None, false),
+    };
+    if let Err(refusal) = added {
         cx.doc.cancel_group(group);
         cx.say(Level::Warn, refusal.to_string());
         return false;

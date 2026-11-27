@@ -274,6 +274,54 @@
    "tests": 0
   },
   {
+   "id": "arch.colorPlan.off",
+   "kind": "command",
+   "title": "Renk planı: Kapalı",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.colorPlan.unit",
+   "kind": "command",
+   "title": "Renk planı: Bağımsız bölüm",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.colorPlan.usage",
+   "kind": "command",
+   "title": "Renk planı: Kullanım",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.deliveries",
    "kind": "command",
    "title": "Teslim kaydı",
@@ -12029,6 +12077,23 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.colorLegend",
+   "kind": "command",
+   "title": "Renk planı lejandı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Renk planı lejandı: başlık, her satırın düz taramalı örneği, çerçevesi ve yazısı, toplam; Renk planı öznitelikli eski lejant silinir (ADR 8176 §3.3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.column",

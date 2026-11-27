@@ -752,6 +752,8 @@ pub fn read(
         deliveries: choices.map_or_else(Vec::new, |a| a.deliveries.clone()),
         underlays: choices.map_or_else(Vec::new, |a| a.underlays.clone()),
         element_types: choices.map_or_else(Vec::new, |a| a.element_types.clone()),
+        // Mahal ▸ Renk planı's (docs/adr/8176): this window does not edit it, it keeps it.
+        color_plan: choices.and_then(|a| a.color_plan),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

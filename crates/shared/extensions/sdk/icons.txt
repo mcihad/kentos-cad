@@ -177,9 +177,13 @@ cloud-upload
 cogo-check
 cogo-update
 color
+color-legend
 color-mode-color
 color-mode-gray
 color-mode-mono
+color-plan-off
+color-plan-unit
+color-plan-usage
 color-relief
 column
 columns

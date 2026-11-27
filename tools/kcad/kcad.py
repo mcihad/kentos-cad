@@ -725,9 +725,11 @@ ARCH_WITH_FOOTINGS = 40
 ARCH_WITH_RAFTS = 41
 # Architecture data 42 (docs/adr/8173): a profile, a beam's band covering a wall (`covering`).
 ARCH_WITH_PROFILES = 42
-# Architecture data 43 (docs/adr/8174): the site's natural and graded ground, terrain surfaces by their ids.
+# Architecture data 43 (docs/adr/8174): the site's natural and graded ground, each its survey's layers.
 ARCH_WITH_GROUND = 43
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_GROUND), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 44 (docs/adr/8176): the plan's colour plan (`colorPlan`, its scheme).
+ARCH_WITH_COLOR_PLAN = 44
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_COLOR_PLAN), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -12917,7 +12919,10 @@ class _Schema:
                          # Schema 225 (docs/adr/8034): the municipality's regulation.
                          **({"localRules": (self.enum(("sivas",)), False)} if self.local_rules else {}),
                          # Schema 226 (docs/adr/8035): the building's sprinkler system.
-                         **({"sprinklers": (self.only_true, False)} if self.sprinklers else {})})(v)
+                         **({"sprinklers": (self.only_true, False)} if self.sprinklers else {}),
+                         # Architecture data 44 (docs/adr/8176): the colour plan.
+                         **({"colorPlan": (self.fields({"scheme": (self.enum(("usage", "unit")), True)}), False)}
+                            if self.arch_version >= ARCH_WITH_COLOR_PLAN else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         if "zoning" in a:

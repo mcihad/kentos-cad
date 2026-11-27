@@ -75,6 +75,17 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **Mahal renk planı (28 Kasım 2026, MB-14 1. bölüm; [ADR 8176](../adr/8176-room-colour-plan.md)).**
+  - `ArchSettings.colorPlan` (`usage` | `unit`), Mimari verisi 44. Belge: `space_fills`, `color_legend`,
+    `covered_layers`. Kullanım: yazılı kullanım adı geçer, yoksa ad (`room_names`) gruplara (sabit renkli); bölüm:
+    program sırası, eklenti bölümünün, ortak/dış alan birer, atanmamış dolgusuz. Renkler kaymaz.
+  - Dolgu mahalin geometri deposundaki ilk parçası (`set_space_fills`, yalnız değişen yeniden çizilir): canlı, kendi
+    katında, paftada basılır. **Çizim sırası mahalin katmanınındır**: üstteki mahal katmanı kapıları örter (ölçüldü);
+    yeni EK-4 katmanları MM-XXXX-MAHAL'in üstüne açılır, açılışta örtülen katmanlar adlarıyla söylenir. Masaüstü düz
+    taramayı saydam çizmiyor (gözlendi); saydamlık çözüm değil.
+  - Şeritte Mahal bölmesi (sekme 30 düğme, menü en çok 6 öğe): şemalar anahtar; lejant aracı RL (düz nesneler, tek
+    lejant). Plan notları `plan_note.rs`'e taşındı (`arch.rs` boyutu); etiketli mahal eşitlemesi `space_sync.rs`'e.
+
 - **3B görünüm paftada (27 Kasım 2026, MB-13; [ADR 8175](../adr/8175-3d-view-on-sheet.md)).**
   - Görüntüleyicide Aksonometri (`OrbitCamera::axonometric`): ortografik, hedefte perspektifle aynı boy; göz modelin
     önünde (`uzaklık + erişim + 1 m`). IFC görüntüleyicisinde de.

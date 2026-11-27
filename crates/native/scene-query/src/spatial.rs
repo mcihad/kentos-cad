@@ -66,6 +66,9 @@ use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_geometry_core::Vec2;
 
 /// The geometry store and where it stands in the document's changes.
+#[path = "space_sync.rs"]
+mod space_sync;
+
 #[derive(Default)]
 pub struct Spatial {
     store: Store,
@@ -360,7 +363,7 @@ impl Spatial {
         self.store.set_blocks(core_blocks_in(&self.blocks, drawing_font(doc.settings().drawing_font)));
         // Before the objects: a tagged space is drawn without its label at once.
         self.tagged_spaces.clear();
-        self.sync_tagged_spaces(doc);
+        self.sync_spaces(doc);
         let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
         // The objects' records and their pieces on the machine's cores (docs/adr/1066 §4), put in their order.
         let threads = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8);
@@ -779,7 +782,7 @@ impl Spatial {
                         .map(|e| (f64::from(e.base().id), e.base().look.wipeout.is_some())),
                 );
                 self.sync_text_labelled(doc);
-                self.sync_tagged_spaces(doc);
+                self.sync_spaces(doc);
                 self.mark = mark;
                 self.revision = Some(doc.revision());
                 self.sync_layers_of(doc);
@@ -1324,17 +1327,6 @@ impl Spatial {
     /// How many objects on shown layers have a time, and their extent (the slider's range).
     pub fn time_summary(&self) -> (usize, Option<(f64, f64)>) {
         self.store.time_summary()
-    }
-
-    /// Sends the spaces that have a tag when they differ from those sent last: they draw no label of their own, their
-    /// tag is it (docs/adr/0344's 27 October addendum).
-    fn sync_tagged_spaces(&mut self, doc: &Document) {
-        let now = doc.tagged_spaces();
-        if now != self.tagged_spaces {
-            let ids: Vec<f64> = now.iter().map(|slot| f64::from(slot.0)).collect();
-            self.store.set_tagged_spaces(&ids);
-            self.tagged_spaces = now;
-        }
     }
 
     /// Sends the objects whose label a text writes when they differ from

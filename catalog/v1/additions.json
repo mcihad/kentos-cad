@@ -3454,6 +3454,65 @@
       "status": "implemented"
     },
     {
+      "id": "arch.colorPlan.off",
+      "title": "Renk planı: Kapalı",
+      "short": "Kapalı",
+      "icon": "colorPlanOff",
+      "description": "Mahal renk planını kapatır: mahaller dolgusuz çizilir.",
+      "aliases": [
+        "RENKPLANIKAPALI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.colorPlan.usage",
+      "title": "Renk planı: Kullanım",
+      "short": "Kullanım",
+      "icon": "colorPlanUsage",
+      "description": "Planın mahallerini kullanımlarına göre renkle doldurur: yazılı kullanım, yoksa adın okunduğu grup (oturma, yatma, mutfak, ıslak hacim, dolaşım, teknik hacim, açık alan, şaft ve boşluk); gruba girmeyen bir kullanım kendi rengini alır, ikisi de yoksa Diğer. Her renk her katta ve lejantta aynıdır; dolgu mahalin çizgilerinin altındadır ve paftada da basılır. Aynı şema yeniden seçilince plan kapanır. Projenin ayarıdır (cad.settings.set).",
+      "aliases": [
+        "RENKPLANI",
+        "RENKPLANIKULLANIM",
+        "MAHALRENK",
+        "MAHALRENKLERI",
+        "COLORFILL"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.colorPlan.unit",
+      "title": "Renk planı: Bağımsız bölüm",
+      "short": "Bağımsız bölüm",
+      "icon": "colorPlanUnit",
+      "description": "Planın mahallerini programdaki bağımsız bölümlerine göre renkle doldurur: her bölüm programdaki sırasıyla bir renk, eklenti kendi bölümünün rengi; ortak alanlar bir, dış alanlar bir renk; bölüme atanmamış mahal dolgusuz. Aynı şema yeniden seçilince plan kapanır. Projenin ayarıdır (cad.settings.set).",
+      "aliases": [
+        "RENKPLANIBOLUM",
+        "BAGIMSIZBOLUMRENK",
+        "BAĞIMSIZBÖLÜMRENK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.colorLegend",
+      "title": "Renk planı lejandı",
+      "short": "Lejant",
+      "icon": "colorLegend",
+      "description": "Renk planının etkin kattaki lejandını tıklanan yere çizer: başlık (şema ve kat), her renk için dolgulu örnek, mahal sayısı ve alanı, toplam. Lejant katmanına (MM-XXXX-LEJANT) tek geri alma adımında; yeniden çizilince eskisinin yerini alır. Renk planı kapalıyken bunu söyler.",
+      "aliases": [
+        "RENKLEJANDI",
+        "RENKPLANILEJANDI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.escapeRoutes",
       "title": "Kaçış yolları",
       "short": "Kaçış yolları",
@@ -6053,6 +6112,10 @@
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
     "groundLevel": "<circle cx=\"5\" cy=\"10\" r=\"2.2\"/><path d=\"M1.5 10h7M5 6.5v7\" stroke-width=\"1\"/><path d=\"M10.5 7.5h7M10.5 12.5h7\"/>",
+    "colorPlanOff": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1\"/><path d=\"M3.5 15.5 16.5 4.5\" stroke-width=\"1\"/>",
+    "colorPlanUsage": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"6.5\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"10\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13M2.5 10h7.5\" stroke-width=\"1\"/>",
+    "colorPlanUnit": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1.4\"/><path d=\"M2.5 10h7.5M10 8h7.5\" stroke-width=\"1\"/>",
+    "colorLegend": "<rect x=\"2.5\" y=\"3\" width=\"6\" height=\"4\" fill=\"currentColor\" fill-opacity=\".45\"/><rect x=\"2.5\" y=\"8\" width=\"6\" height=\"4\" fill=\"currentColor\" fill-opacity=\".2\"/><rect x=\"2.5\" y=\"13\" width=\"6\" height=\"4\"/><path d=\"M11 5h6.5M11 10h6.5M11 15h6.5\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "walkRoute": "<circle cx=\"3.8\" cy=\"15.8\" r=\"1.8\"/><circle cx=\"16.2\" cy=\"4.2\" r=\"1.8\"/><path d=\"M5.6 15.8h5.5a2 2 0 0 0 2-2V6.2a2 2 0 0 1 2-2\"/>",
     "slabEdgeBind": "<path d=\"M2 9.5l7.5 4.2 8.5-5-7.5-4.2L2 9.5v3.8l7.5 4.2 8.5-5V8.7M9.5 13.7v3.8\"/><path d=\"M5 5.2l5.5-3.2 4.9 2.7\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.1\"/>",

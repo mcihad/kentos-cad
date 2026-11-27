@@ -28,6 +28,7 @@
     { "name": "HP", "command": "tool.coping" },
     { "name": "AZ", "command": "tool.siteGround" },
     { "name": "ZK", "command": "tool.groundLevel" },
+    { "name": "RL", "command": "tool.colorLegend" },
     { "name": "CT", "command": "tool.roof" },
     { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },

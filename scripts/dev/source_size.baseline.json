@@ -35,7 +35,7 @@
   "crates/shared/commands/src/catalog/gis.rs": 3499,
   "crates/shared/commands/src/catalog/mod.rs": 3230,
   "crates/shared/commands/src/catalog/road.rs": 2634,
-  "crates/shared/contracts/src/arch/arch.rs": 3457,
+  "crates/shared/contracts/src/arch/arch.rs": 3228,
   "crates/shared/contracts/src/core/codes.rs": 3385,
   "crates/shared/contracts/src/core/entity.rs": 2319,
   "crates/shared/contracts/src/gis/fields.rs": 2210,

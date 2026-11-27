@@ -2561,6 +2561,35 @@
       ],
       "note": "Zemin kotu: kot simgesi (daire ve haç) ve iki yazı, “tzk 849.85 (-5.65)” ve “tsk 850.10 (-4.40)”, simgeler katmanına tek adımda; değerler aracın vaziyet zemininden okuduğudur, yazılar kendileri (ADR 8174 §7)."
     },
+    "arch.colorPlan.off": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176)."
+    },
+    "arch.colorPlan.usage": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176)."
+    },
+    "arch.colorPlan.unit": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176)."
+    },
+    "tool.colorLegend": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create",
+        "cad.entities.delete"
+      ],
+      "note": "Renk planı lejandı: başlık, her satırın düz taramalı örneği, çerçevesi ve yazısı, toplam; Renk planı öznitelikli eski lejant silinir (ADR 8176 §3.3)."
+    },
     "tool.escapeRoutes": {
       "level": "semantic",
       "via": [

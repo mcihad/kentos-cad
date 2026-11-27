@@ -95,6 +95,9 @@ pub fn store_for_viewport(
             .map(|s| f64::from(s.0))
             .collect::<Vec<_>>(),
     );
+    // The colour plan's fills (docs/adr/8176): a sheet's map draws them as the plan does.
+    let fills: Vec<(f64, String)> = doc.space_fills().into_iter().map(|(id, c)| (f64::from(id), c.to_owned())).collect();
+    store.set_space_fills(&fills);
     store
         .put_many(doc.entities().filter_map(|e| {
             crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale), doc.settings())

@@ -1620,6 +1620,20 @@ CloudReturnsName = Literal["all", "first", "last", "single"]
 """The names of :class:`CloudReturns`, for a plain string."""
 
 
+class ColorScheme(_StrEnum):
+    """What a colour plan colours the rooms by.
+
+    - ``usage``: Kullanım: the room's use as written, else the group its name reads as (oturma, yatma, ıslak hacim …).
+    - ``unit``: Bağımsız bölüm: the program's unit the room belongs to (a flat, a common area, an outdoor area).
+    """
+    USAGE = "usage"
+    UNIT = "unit"
+
+
+ColorSchemeName = Literal["usage", "unit"]
+"""The names of :class:`ColorScheme`, for a plain string."""
+
+
 class ColumnAnchor(_StrEnum):
     """Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its
     box before its turn, left and right across its width, bottom and top along its depth.
@@ -18322,6 +18336,8 @@ class ArchSettings(_Model):
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
             level). Absent: its ground level (the one at elevation 0, else its first).
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
+        color_plan: Mahal renk planı (docs/adr/8176; `.kcad` Mimari data 44): the plan's rooms filled by a scheme's colours. Absent:
+            none.
         cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
@@ -18374,6 +18390,7 @@ class ArchSettings(_Model):
     """
     active_level: str | None | Unset = UNSET
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
+    color_plan: ColorPlan | None | Unset = UNSET
     cut_height: float | None | Unset = UNSET
     deliveries: list[Delivery] | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
@@ -18410,6 +18427,8 @@ class ArchSettings(_Model):
             out["activeLevel"] = self.active_level
         if self.audit_exceptions is not UNSET:
             out["auditExceptions"] = [e0.to_json() for e0 in self.audit_exceptions]
+        if self.color_plan is not UNSET:
+            out["colorPlan"] = None if self.color_plan is None else self.color_plan.to_json()
         if self.cut_height is not UNSET:
             out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
         if self.deliveries is not UNSET:
@@ -18475,6 +18494,7 @@ class ArchSettings(_Model):
         return cls(
             active_level=data.get("activeLevel", UNSET),
             audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
+            color_plan=UNSET if "colorPlan" not in data else None if data["colorPlan"] is None else ColorPlan.from_json(data["colorPlan"]),
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             deliveries=[Delivery.from_json(e0) for e0 in data["deliveries"]] if "deliveries" in data else UNSET,
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
@@ -26828,6 +26848,23 @@ class CodedClass(_Model):
             moved=data["moved"],
             lines=data["lines"],
             areas=data["areas"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColorPlan(_Model):
+    """A colour plan: its scheme."""
+    scheme: ColorScheme | ColorSchemeName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scheme"] = _enum_out(self.scheme)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColorPlan:
+        return cls(
+            scheme=_enum_in(ColorScheme, data["scheme"]),
         )
 
 
@@ -149385,6 +149422,9 @@ __all__ = [
     "CollectLeaderEdit",
     "CollinearConstraintRule",
     "ColorPaperPlotColor",
+    "ColorPlan",
+    "ColorScheme",
+    "ColorSchemeName",
     "ColumnAlignTableEdit",
     "ColumnAnchor",
     "ColumnAnchorName",

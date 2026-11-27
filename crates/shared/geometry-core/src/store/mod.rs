@@ -363,6 +363,8 @@ pub struct Store {
     text_labelled: IdSet,
     /// The spaces that have a tag (`set_tagged_spaces`, docs/adr/0344's 27 October addendum): drawn without their label.
     tagged_spaces: IdSet,
+    /// The spaces' fills by the colour plan (`set_space_fills`, docs/adr/8176): each its colour, drawn under its rings.
+    space_fills: IdMap<String>,
     /// The times of the temporal layers' timed objects (`set_times`, docs/adr/0210 §4); a timeless or
     /// another layer's object has none.
     times: IdMap<crate::time::Time>,
@@ -929,7 +931,7 @@ impl Store {
                 crate::geom::arch::pieces_in(shape, view)
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2); a slab's edge at its level.
-            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view),
+            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view, None),
             // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2) the view's detail and scale show
             // (docs/adr/8010); a flue's cross, and the outline of one plan does not cut dashed (docs/adr/0719 §2).
             Shape::Opening { place, opening, .. } => {
@@ -995,13 +997,15 @@ impl Store {
 
     /// Pieces as an object's expansion, its box grown around them.
     /// A space's rings and, when `label`, its label at the view's scale (docs/adr/0342 §2); a slab's edge at the view's
-    /// level (docs/adr/8011).
+    /// level (docs/adr/8011). With `fill` (the colour plan's, docs/adr/8176) a room is filled under its rings first, solid
+    /// and in that colour, its curved edges exact; a slab never.
     fn space_pieces(
         &self,
         parts: &[crate::geom::arrangement::Area],
         space: &crate::geom::space::Spec,
         label: bool,
         view: crate::geom::wall::View,
+        fill: Option<&str>,
     ) -> Vec<crate::block::Piece> {
         // A slab of the level above (docs/adr/8012, step 3): its rings dashed and narrow.
         let stroke = if space.slab.as_ref().is_some_and(|l| l.overhead) {
@@ -1013,18 +1017,28 @@ impl Store {
         } else {
             Default::default()
         };
-        crate::geom::space::pieces_with_view(parts, space, view, label)
+        let piece = |shape, color: Option<String>, stroke: crate::block::PieceStroke| crate::block::Piece {
+            shape,
+            color,
+            line_weight: None,
+            by_layer: Vec::new(),
+            gates: Vec::new(),
+            stroke,
+            attribute: None,
+            annotation_origin: None,
+        };
+        // As every solid hatch is drawn (docs/adr/8176 §3.4): where its room's layer is among the layers, the rooms' layer
+        // kept under the others.
+        let fills = fill.filter(|_| space.slab.is_none()).map_or_else(Vec::new, |color| {
+            parts.iter().map(|a| piece(space_fill(a), Some(color.to_owned()), Default::default())).collect()
+        });
+        fills
             .into_iter()
-            .map(|shape| crate::block::Piece {
-                shape,
-                color: None,
-                line_weight: None,
-                by_layer: Vec::new(),
-                gates: Vec::new(),
-                stroke: stroke.clone(),
-                attribute: None,
-                annotation_origin: None,
-            })
+            .chain(
+                crate::geom::space::pieces_with_view(parts, space, view, label)
+                    .into_iter()
+                    .map(|shape| piece(shape, None, stroke.clone())),
+            )
             .collect()
     }
 
@@ -1094,9 +1108,13 @@ impl Store {
                 }
                 self.expanded_of(pieces, b)
             }
-            Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
+            Shape::Space { parts, space }
+                if self.tagged_spaces.contains(&id.to_bits()) || self.space_fills.contains_key(&id.to_bits()) =>
+            {
                 let b = entity_bounds_in(shape, self.font);
-                let pieces = self.space_pieces(parts, space, false, view);
+                let label = !self.tagged_spaces.contains(&id.to_bits());
+                let fill = self.space_fills.get(&id.to_bits()).map(String::as_str);
+                let pieces = self.space_pieces(parts, space, label, view, fill);
                 self.expanded_of(self.with_line_group(shape, pieces, view), b)
             }
             // One section with a wall's layer of its material (docs/adr/8041 §2): that layer's look, its outline where
@@ -1216,6 +1234,38 @@ impl Store {
                 let id = it.id;
                 self.loosen(s);
                 // A space a tag came to or left draws its own label or not (docs/adr/0344): its source the same.
+                self.redrew(id);
+            }
+        }
+        self.maybe_rebuild();
+    }
+
+    /// The spaces' fills by the colour plan (docs/adr/8176), each id with its colour; none: no colour plan. Replaces
+    /// the fills sent before; the spaces whose fill came, went or changed are drawn again. `clear` empties it with the
+    /// objects.
+    pub fn set_space_fills(&mut self, fills: &[(f64, String)]) {
+        let now: IdMap<String> = fills.iter().map(|(id, c)| (id.to_bits(), c.clone())).collect();
+        let mut changed: Vec<u64> = now.iter().filter(|(k, c)| self.space_fills.get(*k) != Some(*c)).map(|(k, _)| *k).collect();
+        changed.extend(self.space_fills.keys().filter(|k| !now.contains_key(*k)));
+        self.space_fills = now;
+        for key in changed {
+            let Some(&s) = self.by_id.get(&key) else {
+                continue;
+            };
+            let fresh = self.slots[s as usize]
+                .as_ref()
+                .filter(|it| matches!(it.shape, Shape::Space { .. }))
+                .map(|it| {
+                    let (x, b) = self.expansion_of(it.id, &it.shape);
+                    let veiled = x.as_deref().and_then(|x| self.veil(x));
+                    (x, b, veiled)
+                });
+            if let (Some(it), Some((expanded, bounds, veiled))) = (self.slots[s as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = veiled;
+                let id = it.id;
+                self.loosen(s);
                 self.redrew(id);
             }
         }
@@ -1759,3 +1809,21 @@ pub(crate) fn padded(b: Bounds, extra: f64) -> Bounds {
 
 #[cfg(test)]
 mod tests;
+
+/// A room's fill (docs/adr/8176): a solid hatch over its outer ring less its holes, its exact loops kept when an edge
+/// is curved.
+fn space_fill(a: &crate::geom::arrangement::Area) -> Shape {
+    let curved = std::iter::once(&a.outer).chain(&a.holes).any(|r| r.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)));
+    Shape::Hatch {
+        ring: a.outer.pts.clone(),
+        holes: (!a.holes.is_empty()).then(|| a.holes.iter().map(|h| h.pts.clone()).collect()),
+        pattern: Box::new(crate::entity::HatchPattern::user("solid", 0.0, 1.0)),
+        assoc: None,
+        boundary: curved.then(|| {
+            std::iter::once(&a.outer)
+                .chain(&a.holes)
+                .map(|r| crate::entity::HatchLoop { pts: r.pts.clone(), bulges: r.bulges.clone(), curves: None })
+                .collect()
+        }),
+    }
+}

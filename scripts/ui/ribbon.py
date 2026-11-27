@@ -466,11 +466,15 @@ CAD = [
                 {"command": "tool.ramp", "title": "Merdiven", "label": "Rampa"},
                 {"command": "tool.railing", "title": "Merdiven", "label": "Korkuluk"},
             ]}]),
-        # Döşeme (docs/adr/0722) beside the rooms it covers.
+        # Döşeme (docs/adr/0722) beside the rooms it covers. Renk planı (docs/adr/8176) with the rooms it fills: each
+        # scheme on, and off again when chosen again (Kapalı by its name), and the legend; the tab has its 30 buttons.
         P("Mahal", "space", [{"key": "archSpaces", "size": "large", "split": [
                 {"command": "tool.space", "title": "Mahal", "label": "Mahal"},
                 {"command": "tool.spaceDiscover", "title": "Mahal", "label": "Toplu mahal bul"},
                 {"command": "tool.spaceSeparator", "title": "Mahal", "label": "Mahal ayırıcı"},
+                {"command": "arch.colorPlan.usage", "title": "Mahal", "label": "Renk planı: Kullanım"},
+                {"command": "arch.colorPlan.unit", "title": "Mahal", "label": "Renk planı: Bağımsız bölüm"},
+                {"command": "tool.colorLegend", "title": "Mahal", "label": "Renk planı lejandı"},
             ]}, {"key": "archSlabs", "size": "small", "split": [
                 {"command": "tool.slab", "title": "Döşeme", "label": "Döşeme"},
                 {"command": "tool.covering", "title": "Döşeme", "label": "Kaplama"},

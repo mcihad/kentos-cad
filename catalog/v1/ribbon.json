@@ -2218,6 +2218,21 @@
           "command": "tool.spaceSeparator",
           "title": "Mahal",
           "label": "Mahal ayırıcı"
+         },
+         {
+          "command": "arch.colorPlan.usage",
+          "title": "Mahal",
+          "label": "Renk planı: Kullanım"
+         },
+         {
+          "command": "arch.colorPlan.unit",
+          "title": "Mahal",
+          "label": "Renk planı: Bağımsız bölüm"
+         },
+         {
+          "command": "tool.colorLegend",
+          "title": "Mahal",
+          "label": "Renk planı lejandı"
          }
         ]
        },

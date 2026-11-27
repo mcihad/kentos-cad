@@ -128,3 +128,14 @@ fn tur_switches_the_kind_and_its_sizes_and_a_drawn_moulding_takes_its_points() {
     assert_eq!(k.pts.len(), 2);
     assert_eq!(b.session.tool_id(), "moulding", "Enter writes it and the tool stays on");
 }
+
+/// The rooms' layer stays under the others (docs/adr/8176 §3.4): a colour plan's fill is drawn where it is. A new kind's
+/// layer opens over it, here the moulding's over MM-XXXX-MAHAL at the top of the tree.
+#[test]
+fn a_new_kind_s_layer_opens_over_the_rooms_layer() {
+    let mut b = building("moulding");
+    b.doc.add_layer_at(kentos_domain::NewLayer::layer("MM-XXXX-MAHAL"), None, Some(0), None, false).expect("a layer");
+    b.click(2.0, 4.0);
+    let at = |name: &str| b.doc.layers().leaves().iter().position(|l| l.name == name).expect(name);
+    assert!(at("MM-CEPH-SILME") < at("MM-XXXX-MAHAL"), "over the rooms' layer");
+}

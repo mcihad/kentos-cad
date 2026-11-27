@@ -584,6 +584,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "parts" => "Parçalar",
         "usage" | "usages" => "Kullanım",
         "levels" => "Katlar",
+        "colorPlan" => "Renk planı",
         "phases" => "Tadilat durumları",
         "bothSides" => "İki yana",
         "boundaries" => "Sınırlar",

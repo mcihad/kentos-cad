@@ -209,3 +209,39 @@ fn a_tagged_space_is_drawn_without_its_label() {
     store.set_tagged_spaces(&[]);
     assert_eq!(texts(&store), 1);
 }
+
+/// The colour plan's fill (docs/adr/8176): a filled room's first piece is a solid hatch over its outline in the fill's
+/// colour, under its rings; the fills sent again without it, the room is drawn as before. A room put again while filled
+/// keeps its fill; a tagged room's fill comes without its label.
+#[test]
+fn a_filled_space_is_drawn_solid_under_its_rings() {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::arrangement::Area;
+    use kentos_geometry_core::store::Store;
+    let ring = |pts: &[(f64, f64)]| Ring { pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(), bulges: None };
+    let room = Area {
+        outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 3.0), (0.0, 3.0)]),
+        holes: vec![ring(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 2.0)])],
+    };
+    let shape = Shape::Space { parts: vec![room], space: space::Spec::default() };
+    let first = |s: &Store| {
+        let x = s.get(1.0).and_then(|it| it.expanded.clone()).expect("expanded");
+        (x.shapes[0].clone(), x.colors[0].clone(), x.shapes.iter().filter(|p| matches!(p, Shape::Text { .. })).count())
+    };
+    let mut store = Store::new();
+    store.put(1.0, "0", false, shape.clone());
+    let (plain, _, labels) = first(&store);
+    assert!(!matches!(plain, Shape::Hatch { .. }) && labels == 1, "no fill without a colour plan");
+    store.set_space_fills(&[(1.0, "#FDB462".to_owned())]);
+    let (fill, color, labels) = first(&store);
+    let Shape::Hatch { ring, holes, pattern, .. } = fill else { panic!("a hatch first, under the rings") };
+    assert_eq!((pattern.kind.as_str(), color.as_deref(), labels), ("solid", Some("#FDB462"), 1));
+    assert_eq!((ring.len(), holes.map(|h| h.len())), (4, Some(1)), "its outline less its hole");
+    store.put(1.0, "0", false, shape.clone());
+    assert!(matches!(first(&store).0, Shape::Hatch { .. }), "put again while filled");
+    store.set_tagged_spaces(&[1.0]);
+    let (fill, _, labels) = first(&store);
+    assert!(matches!(fill, Shape::Hatch { .. }) && labels == 0, "tagged and filled");
+    store.set_space_fills(&[]);
+    assert!(!matches!(first(&store).0, Shape::Hatch { .. }), "the fills gone");
+}

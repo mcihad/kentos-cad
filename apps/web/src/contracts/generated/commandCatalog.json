@@ -128223,6 +128223,17 @@
           },
           "type": "array"
         },
+        "colorPlan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ColorPlan"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Mahal renk planı (docs/adr/8176; `.kcad` Mimari data 44): the plan's rooms filled by a scheme's colours. Absent:\nnone."
+        },
         "cutHeight": {
           "description": "The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).",
           "format": "double",
@@ -137894,6 +137905,34 @@
         "areas"
       ],
       "type": "object"
+    },
+    "ColorPlan": {
+      "additionalProperties": false,
+      "description": "A colour plan: its scheme.",
+      "properties": {
+        "scheme": {
+          "$ref": "#/$defs/ColorScheme"
+        }
+      },
+      "required": [
+        "scheme"
+      ],
+      "type": "object"
+    },
+    "ColorScheme": {
+      "description": "What a colour plan colours the rooms by.",
+      "oneOf": [
+        {
+          "const": "usage",
+          "description": "Kullanım: the room's use as written, else the group its name reads as (oturma, yatma, ıslak hacim …).",
+          "type": "string"
+        },
+        {
+          "const": "unit",
+          "description": "Bağımsız bölüm: the program's unit the room belongs to (a flat, a common area, an outdoor area).",
+          "type": "string"
+        }
+      ]
     },
     "ColumnAnchor": {
       "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",

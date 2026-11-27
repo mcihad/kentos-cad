@@ -14,6 +14,7 @@ mod footing_tools;
 mod member_tools;
 mod profile_tools;
 mod ground_tool;
+mod color_legend;
 mod covering_tool;
 mod roof_part_tool;
 mod railing_tool;

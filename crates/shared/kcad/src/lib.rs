@@ -76,7 +76,7 @@ pub use schemas::*;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_GROUND),
+    ("arch", "mimari", ARCH_WITH_COLOR_PLAN),
     ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -455,6 +455,15 @@ pub const ARCH_WITH_PROFILES: u16 = 42;
 /// `gradedGround`: each its survey's layers). Version 43 holds versions 1–42's data too.
 pub const ARCH_WITH_GROUND: u16 = 43;
 
+/// Architecture data version 44 (docs/adr/8176): the plan's colour plan (`colorPlan`, its scheme). Version 44 holds
+/// versions 1–43's data too.
+pub const ARCH_WITH_COLOR_PLAN: u16 = 44;
+
+/// Whether `doc` holds architecture data 44 ([`ARCH_WITH_COLOR_PLAN`]): a colour plan.
+pub fn uses_color_plan(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(|a| a.color_plan.is_some())
+}
+
 /// Whether `doc` holds architecture data 43 ([`ARCH_WITH_GROUND`]): a site ground.
 pub fn uses_ground(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings
@@ -673,7 +682,9 @@ fn arch_version_of<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
 ) -> u16 {
-    if uses_ground(doc) {
+    if uses_color_plan(doc) {
+        ARCH_WITH_COLOR_PLAN
+    } else if uses_ground(doc) {
         ARCH_WITH_GROUND
     } else if uses_profiles_in(objects.clone()) {
         ARCH_WITH_PROFILES

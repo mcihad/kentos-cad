@@ -47,6 +47,11 @@ impl ModuleParts for Architecture {
             app.set_phase_view(phase);
             return Some(Task::none());
         }
+        // Mahal ▸ Renk planı's schemes (arch_project.rs, docs/adr/8176).
+        if let Some(scheme) = id.strip_prefix("arch.colorPlan.") {
+            app.set_color_plan(scheme);
+            return Some(Task::none());
+        }
         match id {
             // Mimari denetim (arch_audit.rs, docs/adr/0703).
             "arch.audit" => return Some(app.open_arch_audit()),
@@ -287,6 +292,9 @@ impl ModuleParts for Architecture {
     }
 
     fn checked(&self, app: &App, id: &str) -> Option<bool> {
+        if let Some(scheme) = id.strip_prefix("arch.colorPlan.") {
+            return Some(crate::arch_project::scheme_name(app.color_plan()) == scheme);
+        }
         let phase = id.strip_prefix("arch.phase.")?;
         Some(app.phase_view().name() == phase)
     }
