@@ -198,6 +198,17 @@
       "status": "implemented"
     },
     {
+      "id": "tool.readElevation",
+      "title": "Kot oku",
+      "short": "Kot oku",
+      "icon": "crsQuery",
+      "description": "Tıklanan (kenetli) noktanın ya da çizgi, alan köşesinin kotunu, Y ve X'iyle iletiye ve ölçü kutusuna yazar; kotu olmayan yerde nedenini söyler, altta yükseklik rasteri varsa değerini de. Her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz: kot noktası eklemek için Kot noktası ekle kullanılır. Harita, Yol ve CBS'de.",
+      "aliases": ["KOTOKU", "KOTSOR"],
+      "shortcuts": [],
+      "category": "Harita",
+      "status": "implemented"
+    },
+    {
       "id": "survey.baselines",
       "title": "GNSS baz ağı…",
       "short": "GNSS ağı",

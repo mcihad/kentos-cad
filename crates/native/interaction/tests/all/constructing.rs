@@ -739,6 +739,40 @@ fn a_snapped_point_with_an_elevation_says_it() {
     assert_eq!(b.session.tool_id(), "select");
 }
 
+/// Kot oku (docs/adr/9335): the elevation of the point clicked first, beside its place; where nothing with an
+/// elevation is, why; nothing is written; the rasters under the click are asked as Koordinat oku asks them.
+#[test]
+fn kot_oku_says_a_points_elevation_first_and_writes_nothing() {
+    let mut b = Bench::on(EMPTY);
+    with_point(&mut b, [5.0, 5.0], Some(12.5));
+    b.start("readElevation");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kot oku: kotu okunacak noktaya ya da köşeye tıklayın [Esc: bitir]"
+    );
+    let count = b.doc.len();
+    let before = b.log.len();
+    b.click(5.02, 5.02);
+    let said = b.said(before);
+    assert!(
+        said.contains(&(Level::Success, "Kot oku: Z=12.500 (Y=487005.000, X=4420005.000)")),
+        "{said:?}"
+    );
+    assert!(matches!(b.views.last(), Some(kentos_interaction::ViewChange::RasterValues(_))));
+    // A place without an elevation: why, and what to do.
+    let before = b.log.len();
+    b.click(30.0, 30.0);
+    let said = b.said(before);
+    assert!(
+        said.iter().any(|(level, t)| *level == Level::Warn
+            && t.starts_with("Kot oku: tıklanan yerin kotu yok (Y=487030.000, X=4420030.000).")
+            && t.contains("Kotlu bir noktaya ya da köşeye kenetleyin")),
+        "{said:?}"
+    );
+    assert_eq!(b.doc.len(), count, "nothing written");
+    assert!(b.session.is_running(), "it stays for the next click");
+}
+
 // ── A locked layer ──────────────────────────────────────────────────────────
 
 #[test]

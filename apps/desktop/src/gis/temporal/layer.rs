@@ -4,7 +4,9 @@
 //! (Yok), Birikimli; the fields offered are the layer's own and its objects'
 //! attribute names. What the values give is said as they are chosen: how
 //! many objects have a time, how many have none, values that do not read as
-//! a date, the range. Kaydet writes through `cad.layers.time` (one step
+//! a date, the range, that the objects without a time always show and that the clock is UTC (docs/adr/9335). The
+//! fields holding dates come first, each with how many and one of them as read; the window opens on the one holding
+//! the most. Kaydet writes through `cad.layers.time` (one step
 //! “Zaman ayarları”); Zamanı kaldır takes the setting away. Kayıt başlangıcı
 //! and Kayıt bitişi (Yok) are the versions' system time (docs/adr/0537): when
 //! each was recorded and superseded, what Bilinen gün asks.
@@ -33,7 +35,7 @@ const CUMULATIVE: &str = "Birikimli (başlangıçtan sonra hep görünür)";
 const NONE_END: &str = "Yok (anlık)";
 const NONE: &str = "Yok";
 
-/// The window: the layer and the setting as chosen (an empty name: none).
+/// The window: the layer and the setting as chosen (an empty name: none), and the layer's fields as offered.
 #[derive(Debug, Clone)]
 pub struct Window {
     layer: String,
@@ -43,6 +45,28 @@ pub struct Window {
     cumulative: bool,
     recorded_start: String,
     recorded_end: String,
+    fields: Vec<TimeField>,
+}
+
+/// A field as Zaman ayarları offers it (docs/adr/9335): how many of the objects' values read as moments, how many it
+/// fills, and the first that reads, as read. The fields holding dates come first.
+#[derive(Debug, Clone)]
+struct TimeField {
+    name: String,
+    dates: usize,
+    filled: usize,
+    sample: Option<f64>,
+}
+
+impl TimeField {
+    /// What its choice says under its name: its dates and one of them as read (UTC), or why it holds none.
+    fn detail(&self) -> String {
+        match self.sample {
+            Some(t) => format!("{} tarih · ör. {} UTC", self.dates, time::show(t, Unit::Minute)),
+            None if self.filled == 0 => "boş".to_owned(),
+            None => format!("tarih değil ({} değer)", self.filled),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -113,20 +137,65 @@ impl App {
         out
     }
 
-    /// The window's fields for `layer`: its own setting, else the first name that looks like a date's.
+    /// The layer's fields with what their values read as (docs/adr/9335): those holding dates first, the most first,
+    /// the others in their order.
+    fn time_fields(&self, layer: &str) -> Vec<TimeField> {
+        let mut fields: Vec<TimeField> = self
+            .attribute_names(layer)
+            .into_iter()
+            .map(|name| TimeField {
+                name,
+                dates: 0,
+                filled: 0,
+                sample: None,
+            })
+            .collect();
+        if let Some(doc) = &self.document {
+            for e in doc.model.by_layer(layer) {
+                let attrs = &e.base().attrs;
+                for f in &mut fields {
+                    match attrs.get(&f.name).map(|v| time::read(v)) {
+                        Some(time::Read::Moment(t)) => {
+                            f.dates += 1;
+                            f.filled += 1;
+                            f.sample.get_or_insert(t);
+                        }
+                        Some(time::Read::Unreadable) => f.filled += 1,
+                        Some(time::Read::Empty) | None => {}
+                    }
+                }
+            }
+        }
+        // Stable: equal counts keep their order.
+        fields.sort_by_key(|f| std::cmp::Reverse(f.dates));
+        fields
+    }
+
+    /// The window's fields for `layer`: its own setting, else the field holding the most dates (a name that looks like
+    /// a start's first among equals), else the first name that looks like a date's.
     fn time_layer_load(&self, layer: String) -> Window {
         let own = self
             .document
             .as_ref()
             .and_then(|d| d.model.layers().get(&layer))
             .and_then(|n| n.time.clone());
-        let names = self.attribute_names(&layer);
+        let fields = self.time_fields(&layer);
         let looks = |n: &str| {
             let n = n.to_lowercase();
-            ["tarih", "baslangic", "başlangıç", "start", "date"]
+            ["tarih", "baslangic", "başlangıç", "start", "date", "zaman", "time"]
                 .iter()
                 .any(|w| n.contains(w))
         };
+        let most = fields.first().map_or(0, |f| f.dates);
+        let guess = fields
+            .iter()
+            .filter(|f| f.dates == most)
+            .find(|f| looks(&f.name))
+            .or_else(|| fields.first().filter(|_| most > 0))
+            .or_else(|| fields.iter().find(|f| looks(&f.name)))
+            .or_else(|| fields.first())
+            .map(|f| f.name.clone())
+            .unwrap_or_default();
         match own {
             Some(t) => Window {
                 layer,
@@ -136,20 +205,17 @@ impl App {
                 cumulative: t.cumulative,
                 recorded_start: t.recorded_start.unwrap_or_default(),
                 recorded_end: t.recorded_end.unwrap_or_default(),
+                fields,
             },
             None => Window {
-                start: names
-                    .iter()
-                    .find(|n| looks(n))
-                    .or_else(|| names.first())
-                    .cloned()
-                    .unwrap_or_default(),
+                start: guess,
                 layer,
                 end: String::new(),
                 key: String::new(),
                 cumulative: false,
                 recorded_start: String::new(),
                 recorded_end: String::new(),
+                fields,
             },
         }
     }
@@ -180,7 +246,7 @@ impl App {
         let Some(w) = self.gis.time.layer.clone() else {
             return Task::none();
         };
-        let names = self.attribute_names(&w.layer);
+        let names: Vec<String> = w.fields.iter().map(|f| f.name.clone()).collect();
         let named = |i: usize| names.get(i).cloned().unwrap_or_default();
         let mut next = w.clone();
         match event {
@@ -278,7 +344,7 @@ impl App {
     /// What the chosen setting gives, line by line, and whether Kaydet may write.
     fn time_layer_summary(&self, w: &Window) -> (bool, Vec<(Kind, String)>) {
         let Some(t) = w.chosen() else {
-            let words = if self.attribute_names(&w.layer).is_empty() {
+            let words = if w.fields.is_empty() {
                 "Katmanın nesnelerinde öznitelik yok; önce tarihleri bir alana yazın."
             } else {
                 "Nesnelerin başlangıç tarihini tutan alanı seçin."
@@ -321,6 +387,21 @@ impl App {
                 s.timeless
             ),
         )];
+        // What the slider does with the objects without a time, and what the clock means (docs/adr/9335).
+        if s.timeless > 0 {
+            lines.push((
+                Kind::Info,
+                format!("{} zamansız nesne sürgü açıkken de hep görünür.", s.timeless),
+            ));
+        }
+        if s.timed > 0 {
+            lines.push((
+                Kind::Info,
+                "Saatler UTC'dir: “Z” ya da “+03:00” gibi dilimi yazılan değer UTC'ye çevrilir, dilimsiz değer \
+                 yazıldığı gibi alınır."
+                    .to_owned(),
+            ));
+        }
         if s.unreadable > 0 {
             lines.push((
                 Kind::Warn,
@@ -345,8 +426,10 @@ impl App {
             return text("").into();
         };
         let layers = self.time_layers();
-        let names = self.attribute_names(&w.layer);
+        let names: Vec<String> = w.fields.iter().map(|f| f.name.clone()).collect();
         let picked = |v: &str| names.iter().position(|n| n == v);
+        // A date field's choice says how many dates it holds and one of them as read (docs/adr/9335).
+        let dated = |f: &TimeField| Choice::new(f.name.clone()).detail(f.detail());
         let layer_choices: Vec<Choice> = layers
             .iter()
             .map(|id| Choice::new(self.layer_path(id)))
@@ -356,12 +439,12 @@ impl App {
             layers.iter().position(|id| *id == w.layer),
             |i| msg(Event::Layer(i)),
         );
-        let start_choices: Vec<Choice> = names.iter().map(|n| Choice::new(n.clone())).collect();
+        let start_choices: Vec<Choice> = w.fields.iter().map(dated).collect();
         let start = Select::new(start_choices, picked(&w.start), |i| msg(Event::Start(i)))
             .placeholder("Seçin");
         let with_none = |first: &str| -> Vec<Choice> {
             std::iter::once(Choice::new(first.to_owned()))
-                .chain(names.iter().map(|n| Choice::new(n.clone())))
+                .chain(w.fields.iter().map(dated))
                 .collect()
         };
         let end = Select::new(
@@ -465,7 +548,7 @@ impl App {
         let Some(w) = &self.gis.time.layer else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
-        let names = self.attribute_names(&w.layer);
+        let names: Vec<String> = w.fields.iter().map(|f| f.name.clone()).collect();
         let index = |words: &str| {
             names
                 .iter()
@@ -500,3 +583,7 @@ impl App {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "layer_tests.rs"]
+mod tests;

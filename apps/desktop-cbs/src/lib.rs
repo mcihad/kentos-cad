@@ -45,6 +45,9 @@ mod address_tab_tests;
 #[path = "tests/buffer_side_tests.rs"]
 mod buffer_side_tests;
 #[cfg(test)]
+#[path = "tests/elevation_tests.rs"]
+mod elevation_tests;
+#[cfg(test)]
 #[path = "tests/charts_tab_tests.rs"]
 mod charts_tab_tests;
 #[cfg(test)]

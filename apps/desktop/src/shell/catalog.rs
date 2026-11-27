@@ -36,6 +36,8 @@ const OPERATIONS: &str = include_str!("../../../../catalog/v1/operations.json");
 /// alignments go by.
 const DESKTOP_TITLES: &[(&str, &str)] = &[
     ("view.commandSearch", "Menülerde ara"),
+    // It adds one; a point's elevation is read with Kot oku (docs/adr/9335).
+    ("tool.spot", "Kot noktası ekle"),
     ("sheet.alignTo.page", "Sayfanın ortasına hizala"),
     ("sheet.alignTo.margins", "Kenar boşluklarının ortasına hizala"),
     ("sheet.alignTo.selection", "Seçimin ortasına hizala"),
@@ -46,6 +48,10 @@ const DESKTOP_TITLES: &[(&str, &str)] = &[
 const DESKTOP_ICONS: &[(&str, &str)] = &[("tool.point", "pointDot")];
 
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
+    (
+        "tool.spot",
+        "Tıklanan yere, yazılan kot değeriyle bir kot noktası ekler (Kot noktaları katmanına, kotu yazısıyla). Bir noktanın ya da köşenin kotunu yalnız okumak için Kot oku kullanılır.",
+    ),
     (
         "file.open",
         "KCAD, DWG, DXF, NCZ çizimini ya da GeoPackage'ı doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. GeoPackage'ın içindeki proje açılır; projesi yoksa tabloları bellekte bir CBS projesi olarak açılır ve dosyaya bir şey yazılmaz, ilk Kaydet projeyi dosyanın içinde saklamayı önerir. Mevcut projeye eklemek için İçe aktar kullanın.",

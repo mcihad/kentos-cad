@@ -295,7 +295,8 @@ CAD = [
         # The surface's drainage (plan/road.md Y16, docs/adr/0929): the Drenaj window.
         P("Drenaj", "drainageEditor", [L("drainage.editor"), L("pipes.check")], works=MAP_ROAD),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
-        P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.overlap"),
+        # Kot noktası ekle and the read-only Kot oku side by side (docs/adr/9335).
+        P("Arazi", "contours", [L("tool.spot"), S("tool.readElevation"), S("pointcloud.region"), S("pointcloud.overlap"),
             S("pointcloud.register"), S("pointcloud.network"), S("pointcloud.place"), S("pointcloud.profile")],
           overflow=["mesh.query"], works=ROAD),
     ], works=MAP_ROAD),
@@ -349,7 +350,7 @@ CAD = [
         # A parcel's edge lengths and its sheet of corner numbers, edges and area are a map's writing (docs/adr/0802).
         P("Plan yazıları", "coordinateLabel", [S("tool.coordinateLabel"), S("tool.coordinateVertices"),
             S("tool.stationLabels"), S("map.edgeLengths"), S("tool.spot"), S("tool.vertexPoints")],
-          overflow=["processing.model.builtin.parcelSheet"]),
+          overflow=["tool.readElevation", "processing.model.builtin.parcelSheet"]),
         P("Topoloji", "topologyCheck", [S("topology.check"), S("topology.rules"), S("draft.topology")]),
     ], works=MAP),
     survey_tab(True),
@@ -662,7 +663,7 @@ GIS = [
         P("Ağ analizi", "networks", [S("network.manage"), S("tool.netRoute"), S("tool.netServiceArea"),
             S("tool.netTrace")], overflow=["pipes.check", "network.subnetworks", "linearRef.eventLinks"]),
         # A point cloud's own tools are its contextual tab's (ctx.pointcloud).
-        P("Arazi", "contours", [S("tool.spot"), S("mesh.query")]),
+        P("Arazi", "contours", [S("tool.spot"), S("tool.readElevation"), S("mesh.query")]),
         P("Zaman ve senaryo", "timeSlider", [S("time.slider"), S("time.layer"), S("scenario.create"),
             S("scenario.compare"), S("scenario.impact"), S("data.compare")],
           overflow=["time.sensors", "tool.timeVersion", "tool.timeEnd", "time.compare", "scenario.show",

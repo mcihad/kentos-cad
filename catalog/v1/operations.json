@@ -945,6 +945,9 @@
     "crs.query": {
       "level": "query"
     },
+    "tool.readElevation": {
+      "level": "query"
+    },
     "crs.points": {
       "level": "geometry",
       "via": [

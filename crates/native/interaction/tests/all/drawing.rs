@@ -347,7 +347,7 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
     b.click(-4.0, -4.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Kot noktası: kot değerini yazın (m)"
+        "Kot noktası ekle: kot değerini yazın (m)"
     );
     assert!(b.type_text("12.3456"));
     let Entity::Point(p) = b.newest() else {
@@ -397,7 +397,7 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
         b.last_text(),
         Some(
             format!(
-                "“{name}” katmanı kilitli; Kot noktası bu katmana yazar. Kilidi Katmanlar panelinden açın."
+                "“{name}” katmanı kilitli; Kot noktası ekle bu katmana yazar. Kilidi Katmanlar panelinden açın."
             )
             .as_str()
         )
@@ -405,7 +405,7 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
     assert_eq!(b.doc.len(), count);
     assert_eq!(
         b.session.prompt().text(),
-        "Kot noktası: nokta konumunu belirtin"
+        "Kot noktası ekle: nokta konumunu belirtin"
     );
 }
 

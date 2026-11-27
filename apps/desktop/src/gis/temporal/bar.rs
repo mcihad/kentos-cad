@@ -146,7 +146,13 @@ impl App {
         ]
         .spacing(2)
         .align_y(Center);
-        let when = container(label::body(s.label()).font(typography::ui_strong()))
+        // The moments are UTC (docs/adr/9335): said beside a clock.
+        let moment = if matches!(s.step.unit, Unit::Second | Unit::Minute | Unit::Hour) {
+            format!("{} UTC", s.label())
+        } else {
+            s.label()
+        };
+        let when = container(label::body(moment.clone()).font(typography::ui_strong()))
             .width(Length::Shrink)
             .padding([0, 4]);
         let track = slider(0.0..=s.last.max(0) as f64, s.position as f64, |v| {
@@ -155,7 +161,7 @@ impl App {
         .step(1.0)
         .width(Fill);
         let [first, last] = s.ends();
-        let show = shown(width, &s.label(), [&first, &last], self.time_recorded());
+        let show = shown(width, &moment, [&first, &last], self.time_recorded());
         let mut middle = row![].spacing(8).align_y(Center).width(Fill);
         if show.ends {
             middle = middle.push(label::caption(first).style(kentos_ui::style::text::muted));

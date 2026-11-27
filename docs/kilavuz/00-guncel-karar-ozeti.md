@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Zaman ayarları tarih tutan alanı önerir ve UTC'yi söyler; Kot noktası ekle ile Kot oku ayrılır; Mesh sor meshini
+  sorar (27 Kasım 2026, CBS incelemesinin 19. maddesi;
+  [ADR 9335](../adr/9335-time-field-elevation-read-and-mesh-prerequisite.md)).**
+  - Zaman ayarları alanları değerlerinden okunan tarihlerle sıralar, örneğini gösterir, en çok tutanla açılır.
+    Zamansız nesnelerin hep göründüğünü ve saatlerin UTC olduğunu söyler; sürgü anın yanına “UTC” yazar.
+  - Kot noktası'nın adı Kot noktası ekle'dir; yanında salt okunur Kot oku (`tool.readElevation`) kenetlenen noktanın
+    kotunu söyler.
+  - Mesh sor sorulan meshi seçtirir; mesh yoksa nedenini ve Mesh ekle…'yi gösterir; yeri Y (doğu), X (kuzey) sorar.
+
 - **Ağ analizleri işlem geçmişine girer, açtıkları katman neyden üretildiğini taşır (27 Kasım 2026, CBS incelemesinin
   18. maddesi; [ADR 9334](../adr/9334-network-analyses-in-processing-history.md)).**
   - En kısa yol, Hizmet alanı ve Şebeke izleme yazınca ya da seçince İşlemler › Geçmiş'e işlem araçlarının kaydıyla

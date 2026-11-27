@@ -14127,6 +14127,20 @@
    "tests": 1
   },
   {
+   "id": "tool.readElevation",
+   "kind": "command",
+   "title": "Kot oku",
+   "level": "query",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.readable",
    "kind": "tool",
    "title": "Okunur yap",

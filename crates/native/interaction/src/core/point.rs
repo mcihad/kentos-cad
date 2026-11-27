@@ -55,9 +55,10 @@ use crate::tool::{
 /// The point tool's id: its command is `tool.point`.
 pub const ID: &str = "point";
 pub const LABEL: &str = "Nokta";
-/// The spot elevation tool's id: its command is `tool.spot` (docs/adr/0057).
+/// The spot elevation tool's id: its command is `tool.spot` (docs/adr/0057). Its name says that it adds one: a point's
+/// elevation is read with Kot oku (docs/adr/9335).
 pub const SPOT_ID: &str = "spot";
-pub const SPOT_LABEL: &str = "Kot noktası";
+pub const SPOT_LABEL: &str = "Kot noktası ekle";
 /// The layer spot elevations go on (the web's `LAYERS.spot`, the project template's).
 pub const SPOT_LAYER: &str = "kot";
 /// Düzelt's undo step (docs/adr/0152 §3).

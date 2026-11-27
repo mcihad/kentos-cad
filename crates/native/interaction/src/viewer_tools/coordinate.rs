@@ -5,7 +5,8 @@
 //! a vertex of a line, a polyline or an area (docs/adr/0142): `, Z=12.500`.
 //! With a second coordinate system the point is said in it too, with how
 //! sure the values are (docs/adr/0167 §2, §5): `ED50 TM30: Y=…, X=… (±2.1
-//! m, …)`. A snapped click says what it snapped to, its object and its place on it (docs/adr/0272 §3):
+//! m, …)`. Kot oku is the same reading with the elevation first (docs/adr/9335): `Kot oku: Z=12.500 (Y=…, X=…)`, or
+//! why the click has none; the rasters under it are said as ever. A snapped click says what it snapped to, its object and its place on it (docs/adr/0272 §3):
 //! `Kenet: Uç nokta · Çizgi 0192f3e7 · başlangıç`. Beside the cursor the same numbers follow it. Nothing is
 //! written; Esc, Enter or a quick right click ends.
 
@@ -23,10 +24,16 @@ use kentos_geometry_core::store::snap::SnapHit;
 /// The tool's id; its command is `crs.query` (a menu command, Harita › Koordinatlar).
 pub const ID: &str = "crsQuery";
 pub const LABEL: &str = "Koordinat oku";
+/// Kot oku (docs/adr/9335): the same reading with the elevation first, beside Kot noktası ekle; its command is
+/// `tool.readElevation`. Nothing is written.
+pub const ELEVATION_ID: &str = "readElevation";
+pub const ELEVATION_LABEL: &str = "Kot oku";
 
-/// Koordinat oku.
+/// Koordinat oku, and Kot oku.
 #[derive(Clone, Debug, Default)]
 pub struct CrsQuery {
+    /// Kot oku: the elevation said first, or why the click has none.
+    elevation_first: bool,
     /// Where the pointer is, and its elevation when it stands on a point that has one.
     hover: Option<(Vec2, Option<f64>)>,
     /// The pointer's place in the second coordinate system: its name and values.
@@ -41,9 +48,17 @@ impl CrsQuery {
         Self::default()
     }
 
+    /// Kot oku (docs/adr/9335).
+    pub fn elevation() -> Self {
+        Self {
+            elevation_first: true,
+            ..Self::default()
+        }
+    }
+
     /// The elevation of the point, or of the vertex of a line, a polyline or
     /// an area, a snap stands on (docs/adr/0142).
-    fn elevation(snap: Option<SnapHit>, cx: &Context<'_>) -> Option<f64> {
+    fn elevation_at(snap: Option<SnapHit>, cx: &Context<'_>) -> Option<f64> {
         let hit = snap?;
         if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) {
             return None;
@@ -100,14 +115,17 @@ impl CrsQuery {
 
 impl Tool for CrsQuery {
     fn id(&self) -> &'static str {
-        ID
+        if self.elevation_first { ELEVATION_ID } else { ID }
     }
 
     fn label(&self) -> &'static str {
-        LABEL
+        if self.elevation_first { ELEVATION_LABEL } else { LABEL }
     }
 
     fn prompt(&self) -> Prompt {
+        if self.elevation_first {
+            return Prompt::new(ELEVATION_LABEL, "kotu okunacak noktaya ya da köşeye tıklayın").note("Esc: bitir");
+        }
         Prompt::new(LABEL, "okunacak noktaya tıklayın").note("Esc: bitir")
     }
 
@@ -122,14 +140,14 @@ impl Tool for CrsQuery {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.format = cx.format();
-        self.hover = Some((p.world, Self::elevation(p.snap, cx)));
+        self.hover = Some((p.world, Self::elevation_at(p.snap, cx)));
         self.hover_second = Self::second_lines(p.world, cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let f = cx.format();
         self.format = f;
-        let z = Self::elevation(p.snap, cx);
+        let z = Self::elevation_at(p.snap, cx);
         let mut text = format!(
             "{}={}, {}={}",
             f.east_label(),
@@ -143,6 +161,24 @@ impl Tool for CrsQuery {
         // What it snapped to first, the coordinates after it as before (docs/adr/0272 §3).
         if let Some(line) = Self::snap_line(p, cx) {
             cx.say(Level::Info, line);
+        }
+        // Kot oku: the elevation first, or why there is none here (docs/adr/9335).
+        if self.elevation_first {
+            let at = format!("{}={}, {}={}", f.east_label(), f.coord(p.world.x), f.north_label(), f.coord(p.world.y));
+            match z {
+                Some(z) => cx.say(Level::Success, format!("{ELEVATION_LABEL}: Z={} ({at})", f.length_bare(z))),
+                None => cx.say(
+                    Level::Warn,
+                    format!(
+                        "{ELEVATION_LABEL}: tıklanan yerin kotu yok ({at}). Kotlu bir noktaya ya da köşeye kenetleyin; \
+                         altta yükseklik rasteri varsa değeri ayrıca söylenir."
+                    ),
+                ),
+            }
+            *cx.measured = Some(crate::measured::point(cx.doc.settings(), &f, p.world, z, Vec::new()));
+            cx.view_changes.push(crate::tool::ViewChange::RasterValues(p.world));
+            self.last = Some(p.world);
+            return;
         }
         cx.say(Level::Info, text);
         // The box's rows past the point's own (docs/adr/9328): its UCS and second system values.

@@ -283,6 +283,7 @@ pub const TOOLS: &[&str] = &[
     meeting::ID,
     angle::ID,
     coordinate::ID,
+    coordinate::ELEVATION_ID,
     // docs/adr/0207 §7: Nokta bulutu XYZ sor.
     cloud_query::ID,
     dimension_chain::CONTINUE_ID,
@@ -386,6 +387,7 @@ pub const TRANSPARENT: &[&str] = &[
     path::MEASURE_ID,
     angle::ID,
     coordinate::ID,
+    coordinate::ELEVATION_ID,
     crate::view_twist::ID,
 ];
 
@@ -769,6 +771,7 @@ impl Session {
             meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),
             angle::ID => Box::new(crate::angle::MeasureAngle::new()),
             coordinate::ID => Box::new(crate::coordinate::CrsQuery::new()),
+            coordinate::ELEVATION_ID => Box::new(crate::coordinate::CrsQuery::elevation()),
             cloud_query::ID => Box::new(crate::cloud_query::CloudQuery::new()),
             crate::network::route::ID => Box::new(crate::network::route::NetRoute::new()),
             crate::network::area::ID => Box::new(crate::network::area::NetArea::new()),

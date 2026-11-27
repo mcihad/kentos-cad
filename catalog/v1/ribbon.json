@@ -569,6 +569,10 @@
         "size": "large"
        },
        {
+        "command": "tool.readElevation",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.region",
         "size": "small"
        },
@@ -1028,6 +1032,7 @@
        }
       ],
       "overflow": [
+       "tool.readElevation",
        "processing.model.builtin.parcelSheet"
       ]
      },
@@ -4175,6 +4180,10 @@
       "items": [
        {
         "command": "tool.spot",
+        "size": "small"
+       },
+       {
+        "command": "tool.readElevation",
         "size": "small"
        },
        {

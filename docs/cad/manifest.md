@@ -21,17 +21,17 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | geometry | 1 | 5 | 1 | 2 | 9 |
 | processing | 0 | 132 | 25 | 2 | 159 |
 | none | 0 | 14 | 5 | 2 | 21 |
-| query | 12 | 31 | 2 | 9 | 54 |
+| query | 12 | 32 | 2 | 9 | 55 |
 | session | 24 | 72 | 60 | 11 | 167 |
 | host | 5 | 24 | 14 | 1 | 44 |
-| **toplam** | 327 | 534 | 155 | 79 | 1095 |
+| **toplam** | 327 | 535 | 155 | 79 | 1096 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 1016 satırdan 39'i: geometry 7, none 19, processing 3, query 10.
+CBS'ye özgü olmayan 1017 satırdan 40'i: geometry 7, none 19, processing 3, query 11.
 
 ### Sonucu çağıran hesaplar (geometry) — 7
 
@@ -77,7 +77,7 @@ CBS'ye özgü olmayan 1016 satırdan 39'i: geometry 7, none 19, processing 3, qu
 | `map.contours` | Eşyükselti üret… | none | — |  |
 | `map.edgeLengths` | Kenar ölçülerini yaz… | shared | — |  |
 
-### Okuma, Python'da yok (query) — 10
+### Okuma, Python'da yok (query) — 11
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -89,6 +89,7 @@ CBS'ye özgü olmayan 1016 satırdan 39'i: geometry 7, none 19, processing 3, qu
 | `service.info` | Servis bilgisi | shared | — |  |
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
+| `tool.readElevation` | Kot oku | shared | — |  |
 | `tool.stakeout` | Aplikasyon | none | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
 

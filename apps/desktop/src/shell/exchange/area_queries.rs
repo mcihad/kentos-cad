@@ -76,7 +76,7 @@ pub struct Clouds {
 
 impl Clouds {
     /// The ids the command reads: none for all.
-    fn uids(&self) -> Vec<String> {
+    pub(super) fn uids(&self) -> Vec<String> {
         match self.chosen {
             0 => Vec::new(),
             i => self.all.get(i - 1).map(|c| vec![c.0.clone()]).unwrap_or_default(),
@@ -143,6 +143,8 @@ pub struct ProfileState {
 #[derive(Debug)]
 pub struct MeshState {
     pub units: Units,
+    /// The drawing's meshes the window reads (docs/adr/9335): with more than one, all or one of them.
+    pub meshes: Clouds,
     pub mode: MeshMode,
     pub x: String,
     pub y: String,
@@ -296,6 +298,36 @@ fn clouds_of(app: &App) -> Clouds {
     Clouds { all, chosen: 0 }
 }
 
+/// The drawing's meshes (docs/adr/9335), each by its label, else its file's name, else its layer's, with the dataset
+/// and the mesh it shows.
+fn meshes_of(app: &App) -> Clouds {
+    let Some(doc) = &app.document else {
+        return Clouds::default();
+    };
+    let all = doc
+        .model
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::Raster(r) => {
+                let set = r.raster.dataset.as_ref()?;
+                let mesh = set.mesh.as_deref()?;
+                let label = r.base.label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+                let file = r.raster.file.as_deref().or(r.raster.url.as_deref()).map(|f| {
+                    std::path::Path::new(f)
+                        .file_name()
+                        .map_or_else(|| f.to_owned(), |n| n.to_string_lossy().into_owned())
+                });
+                let name = label.map(str::to_owned).or(file).unwrap_or_else(|| {
+                    doc.model.layers().get(&r.base.layer_id).map_or_else(|| "Mesh".to_owned(), |l| l.name.clone())
+                });
+                Some((u.to_string(), format!("“{name}” · {} · ağ {mesh}", set.variable)))
+            }
+            _ => None,
+        })
+        .collect();
+    Clouds { all, chosen: 0 }
+}
+
 /// Points per square metre with three significant digits below one (0.00237), else three decimals.
 fn density(d: f64) -> String {
     if d >= 1.0 || d <= 0.0 || !d.is_finite() {
@@ -382,6 +414,7 @@ impl App {
         };
         self.open_window(Window::MeshQuery(MeshState {
             units: self.area_units(),
+            meshes: meshes_of(self),
             mode,
             x,
             y,
@@ -435,6 +468,11 @@ impl App {
                     }
                     Some(Window::CloudProfile(s)) => {
                         s.clouds.chosen = i;
+                        s.result = None;
+                    }
+                    // Mesh sor's mesh (docs/adr/9335): all, or one of them.
+                    Some(Window::MeshQuery(s)) => {
+                        s.meshes.chosen = i;
                         s.result = None;
                     }
                     _ => {}
@@ -660,7 +698,7 @@ impl App {
                         let input = MeshesRegion {
                             ring: shape.ring.clone(),
                             holes: shape.holes.clone(),
-                            uids: Vec::new(),
+                            uids: s.meshes.uids(),
                             time,
                             variables: Vec::new(),
                             faces: s.faces,
@@ -694,7 +732,7 @@ impl App {
                         let input = MeshesProfile {
                             path: path.clone(),
                             step,
-                            uids: Vec::new(),
+                            uids: s.meshes.uids(),
                             time,
                             variables: Vec::new(),
                             drawing,
@@ -718,12 +756,12 @@ impl App {
                 }
                 let (x, y) = (parse(&s.x), parse(&s.y));
                 let (Some(x), Some(y)) = (x, y) else {
-                    s.result = Some(Outcome::Mesh(Err("Yerin X ve Y'si sayı olmalı.".into())));
+                    s.result = Some(Outcome::Mesh(Err("Yerin Y'si (doğu) ve X'i (kuzey) sayı olmalı.".into())));
                     return Task::none();
                 };
                 let input = MeshesQuery {
                     at: Vec2 { x, y },
-                    uids: Vec::new(),
+                    uids: s.meshes.uids(),
                     time,
                     variables: Vec::new(),
                     series: s.series,
@@ -804,6 +842,9 @@ impl App {
 
     pub(super) fn mesh_view<'a>(&'a self, s: &'a MeshState) -> Element<'a, Message> {
         let mut body = Column::new().spacing(12);
+        // The mesh read first: without one, why and the way to add one (docs/adr/9335).
+        let (has_mesh, mesh) = mesh_field(&s.meshes);
+        body = body.push(mesh);
         body = body.push(words::field(
             "Sorulan",
             Segmented::new(
@@ -819,13 +860,14 @@ impl App {
         ));
         let ready = match s.mode {
             MeshMode::Place => {
+                // Y (doğu) before X (kuzey), as Ölçme writes a place (docs/adr/9335).
                 body = body.push(words::field(
-                    "X (doğu)",
+                    "Y (doğu)",
                     input("500012", &s.x, Event::X),
                     None,
                 ));
                 body = body.push(words::field(
-                    "Y (kuzey)",
+                    "X (kuzey)",
                     input("4420010", &s.y, Event::Y),
                     None,
                 ));
@@ -879,7 +921,7 @@ impl App {
             MeshMode::Path => {}
         }
         body = body.push(result_view(s.result.as_ref(), s.running, &s.units));
-        window("Mesh sor", body, ready && !s.running, s.result.is_some())
+        window("Mesh sor", body, ready && has_mesh && !s.running, s.result.is_some())
     }
 }
 
@@ -942,6 +984,31 @@ fn cloud_field(c: &Clouds) -> (bool, Element<'_, Message>) {
         .into(),
     };
     (!c.all.is_empty(), words::field("Nokta bulutu", body, None))
+}
+
+/// The meshes Mesh sor reads (docs/adr/9335): with none, why Çalıştır waits and Mesh ekle…; with one, its name; with
+/// more, Tüm meshler or one of them.
+fn mesh_field(m: &Clouds) -> (bool, Element<'_, Message>) {
+    let body: Element<'_, Message> = match m.all.len() {
+        0 => Column::new()
+            .spacing(6)
+            .push(words::text_line(
+                Line::Warn,
+                "Projede mesh yok: sorulacak bir mesh olmadan Çalıştır bekler. UGRID NetCDF ya da 2DM dosyasını Mesh \
+                 ekle ile ekleyin.",
+            ))
+            .push(words::secondary("Mesh ekle…", Some(Message::Run("mesh.add"))))
+            .into(),
+        1 => words::text_line(Line::Info, m.all[0].1.clone()),
+        n => Select::new(
+            std::iter::once(Choice::new(format!("Tüm meshler ({n})")))
+                .chain(m.all.iter().map(|(_, name)| Choice::new(name.clone()))),
+            Some(m.chosen),
+            |i| event(Event::Cloud(i)),
+        )
+        .into(),
+    };
+    (!m.all.is_empty(), words::field("Mesh", body, None))
 }
 
 fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Units) -> Element<'a, Message> {

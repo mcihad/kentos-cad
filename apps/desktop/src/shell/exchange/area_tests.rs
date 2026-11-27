@@ -175,6 +175,34 @@ fn a_width_that_is_not_a_number_is_said() {
     );
 }
 
+/// Mesh sor's meshes (the CBS review's 19th item, docs/adr/9335): the drawing's meshes named in the window by their
+/// files, Tüm meshler first (every mesh asked, as before); one chosen, only it is asked; a drawing without one leaves
+/// Çalıştır waiting and offers Mesh ekle.
+#[test]
+fn mesh_sor_names_its_mesh_and_says_when_there_is_none() {
+    let mut app = crate::files_testing::app_with_drawing();
+    run(&mut app, "mesh.query");
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    assert!(s.meshes.all.is_empty(), "no mesh: Çalıştır waits");
+    let mut app = crate::files_testing::app_with_drawing();
+    opened(&mut app, "cad.meshes.query.json", Vec::new());
+    run(&mut app, "mesh.query");
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    assert!(s.meshes.all.len() > 1, "{:?}", s.meshes.all);
+    assert!(s.meshes.all.iter().all(|(_, name)| name.starts_with('“') && name.contains(" · ağ ")), "{:?}", s.meshes.all);
+    assert!(s.meshes.uids().is_empty(), "Tüm meshler: every mesh is asked");
+    let first = s.meshes.all[0].0.clone();
+    send(&mut app, Event::Area(A::Cloud(1)));
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    assert_eq!(s.meshes.uids(), [first], "the one chosen");
+}
+
 #[test]
 fn the_mesh_window_finds_the_face_and_the_values_at_a_moment() {
     let mut app = app_with_drawing();
@@ -476,4 +504,23 @@ fn screens() {
             }
         }
     }
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9335/`): Mesh sor without a mesh, why Çalıştır waits and Mesh ekle…; with
+/// the drawing's meshes, Tüm meshler and the place as Y (doğu), X (kuzey).
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib area_tests::screens_9335 -- --ignored --nocapture"]
+fn screens_9335() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9335", "04-mesh-yok", || {
+        let mut app = app_with_drawing();
+        run(&mut app, "mesh.query");
+        app
+    });
+    crate::files_testing::usage_shots("9335", "05-mesh-sor", || {
+        let mut app = app_with_drawing();
+        opened(&mut app, "cad.meshes.query.json", Vec::new());
+        run(&mut app, "mesh.query");
+        app
+    });
 }
