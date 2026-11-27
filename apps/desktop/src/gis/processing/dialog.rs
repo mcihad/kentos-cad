@@ -10,7 +10,7 @@ use kentos_domain::Slot;
 use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::{default_values, restore_values};
 use kentos_processing::{
-    Defaults, InputSummary, Issue, Outcome, OutputKind, ParamKind, Registry, Runner, Scene, Target,
+    Defaults, InputSummary, Issue, Outcome, OutputKind, ParamDef, ParamKind, Registry, Runner, Scene, Target,
     Tool, Values,
 };
 use serde_json::{Value, json};
@@ -652,6 +652,41 @@ impl ToolDialog {
             }
             Outcome::Stopped { message, .. } => self.status = RunStatus::Error(message),
         }
+    }
+
+    /// How a parameter that acts on only some of its input's objects stands (docs/adr/9333): how many it acts on and
+    /// how many the input holds; none while the input holds nothing or is a file's rows.
+    pub(super) fn acting(&self, def: &ParamDef) -> Option<(usize, usize)> {
+        let a = def.acts_on.as_ref()?;
+        let input = self.inputs.get(&a.input).filter(|i| i.count > 0 && !i.rows)?;
+        Some((input.acting.get(&def.name).copied().unwrap_or(0), input.count))
+    }
+
+    /// What is said under such a parameter: why its other choices are off while the input holds none of its objects;
+    /// how many a choice other than theirs reaches when the input holds others too.
+    pub(super) fn acting_note(&self, def: &ParamDef) -> Option<String> {
+        let a = def.acts_on.as_ref()?;
+        let (n, all) = self.acting(def)?;
+        if n == 0 {
+            let mut none = a.none.chars();
+            let first = none.next().map(|c| kentos_processing::text::tr_upper(&c.to_string())).unwrap_or_default();
+            return Some(format!("{first}{}; nesneler {}.", none.as_str(), a.others));
+        }
+        let ParamKind::Choice { options } = &def.kind else {
+            return None;
+        };
+        let value = self.values.get(&def.name).and_then(Value::as_str)?;
+        if n == all || a.otherwise.as_deref() == Some(value) {
+            return None;
+        }
+        let chosen = options.iter().find(|o| o.value == value)?;
+        Some(format!(
+            "{} yalnız {}; öbür {} nesne {}.",
+            chosen.label,
+            a.some.replace("{n}", &n.to_string()),
+            all - n,
+            a.others
+        ))
     }
 
     /// The problem shown under a field: live for touched fields, all of

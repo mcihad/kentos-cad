@@ -13,35 +13,64 @@ use crate::app::{App, Message};
 use crate::files_testing::drive;
 use crate::gis;
 
-/// A GIS drawing in `srid` with “Yol ekseni” (a 100 m road axis, east–west) and “Alanlar” (an area whose ring crosses
-/// itself, a bow tie).
-fn open(srid: u32) -> App {
+/// A GIS drawing in `srid` with these layers (id, name, geometry; none for a layer of any kind), empty.
+fn drawing(srid: u32, layers: &[(&str, &str, &str)]) -> App {
     let mut drawing: serde_json::Value =
         serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
     drawing["settings"]["srid"] = json!(srid);
     drawing["settings"]["workspace"] = json!("gis");
     let layer = |id: &str, name: &str, geometry: &str| {
-        json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
-                "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [],
-                "geometry": geometry })
+        let mut layer = json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false,
+                "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+                "children": [] });
+        if !geometry.is_empty() {
+            layer["geometry"] = json!(geometry);
+        }
+        layer
     };
-    drawing["layers"].as_array_mut().expect("layers").extend([layer("yol", "Yol ekseni", "line"), layer("alanlar", "Alanlar", "area")]);
+    drawing["layers"].as_array_mut().expect("layers").extend(layers.iter().map(|(id, name, geometry)| layer(id, name, geometry)));
     let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    let create = |app: &mut App, layer: &str, geometry: serde_json::Value| {
-        let input = serde_json::from_value(json!({ "layerId": layer, "objects": [{ "geometry": geometry }] })).expect("an input");
-        let doc = app.document.as_mut().expect("a drawing");
-        let done = kentos_native_application::create::execute(
-            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            input,
-        );
-        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
-    };
-    let p = |x: f64, y: f64| json!({ "x": 500_000.0 + x, "y": 4_400_000.0 + y });
+    app
+}
+
+/// An object on `layer`.
+fn create(app: &mut App, layer: &str, geometry: serde_json::Value) {
+    let input = serde_json::from_value(json!({ "layerId": layer, "objects": [{ "geometry": geometry }] })).expect("an input");
+    let doc = app.document.as_mut().expect("a drawing");
+    let done = kentos_native_application::create::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        input,
+    );
+    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+}
+
+/// A place `x`, `y` metres from the drawings' origin (500000, 4400000).
+fn p(x: f64, y: f64) -> serde_json::Value {
+    json!({ "x": 500_000.0 + x, "y": 4_400_000.0 + y })
+}
+
+/// A GIS drawing in `srid` with “Yol ekseni” (a 100 m road axis, east–west) and “Alanlar” (an area whose ring crosses
+/// itself, a bow tie).
+fn open(srid: u32) -> App {
+    let mut app = drawing(srid, &[("yol", "Yol ekseni", "line"), ("alanlar", "Alanlar", "area")]);
     create(&mut app, "yol", json!({ "kind": "line", "a": p(0.0, 0.0), "b": p(100.0, 0.0) }));
     create(&mut app, "alanlar", json!({ "kind": "polygon", "pts": [p(0.0, 50.0), p(10.0, 60.0), p(10.0, 50.0), p(0.0, 60.0)] }));
+    app
+}
+
+/// The CBS review's points (docs/adr/9333): “qa_noktalar” with three points 30 m apart, and “Karışık” (a layer of any
+/// kind) with the same three points and a 100 m line drawn west to east 50 m north of them.
+fn points() -> App {
+    let mut app = drawing(5256, &[("noktalar", "qa_noktalar", "point"), ("karisik", "Karışık", "")]);
+    for layer in ["noktalar", "karisik"] {
+        for i in 0..3 {
+            create(&mut app, layer, json!({ "kind": "point", "p": p(30.0 * f64::from(i), 0.0) }));
+        }
+    }
+    create(&mut app, "karisik", json!({ "kind": "line", "a": p(0.0, 50.0), "b": p(100.0, 50.0) }));
     app
 }
 
@@ -165,6 +194,72 @@ fn a_result_name_a_layer_has_writes_into_that_layer_and_the_record_says_so() {
     let r = last_record(&app);
     assert!(r.words.iter().any(|w| w.ends_with("“Tampon” (var olan katmana yazıldı)")), "{:?}", r.words);
     assert!(r.words.iter().any(|w| w == "Uzaklık: 20 m"), "{:?}", r.words);
+}
+
+/// Tampon's Yan as it acts (the CBS review's 17th item, docs/adr/9333): the window's Yan with its input's count and what
+/// it says.
+fn yan(app: &App) -> (Option<(usize, usize)>, Option<usize>, Option<String>) {
+    let w = app.gis.processing.dialog.as_ref().expect("the window");
+    let side = w.tool.parameters.iter().find(|p| p.name == "side").expect("Yan");
+    let kentos_processing::ParamKind::Choice { options } = &side.kind else {
+        panic!("Yan is a choice");
+    };
+    (w.acting(side), super::fields::only_choice(side, options, w), w.acting_note(side))
+}
+
+#[test]
+fn yan_is_off_for_points_and_the_record_says_it_was_not_used() {
+    let mut app = points();
+    tampon(&mut app, "noktalar", 10.0, "Tampon");
+    event(&mut app, Event::Value("side".into(), json!("left")));
+    // Sol and Sağ off: only İki yan is left, and why is said.
+    assert_eq!(
+        yan(&app),
+        (Some((0, 3)), Some(0), Some("Girdide çizgi yok; nesneler iki yandan alınır.".to_owned()))
+    );
+    run(&mut app);
+    let made = results(&app, "Tampon");
+    let [(_, boxes)] = &made[..] else { panic!("one result layer: {made:?}") };
+    assert_eq!(boxes.len(), 3, "a record for each point: {boxes:?}");
+    let close = |a: f64, b: f64| (a - b).abs() < 1e-6;
+    for (i, b) in boxes.iter().enumerate() {
+        let x = 500_000.0 + 30.0 * i as f64;
+        assert!(close(b[0], x - 10.0) && close(b[2], x + 10.0), "a disc of 10 m about its point: {b:?}");
+        assert!(close(b[1], 4_399_990.0) && close(b[3], 4_400_010.0), "{b:?}");
+    }
+    let r = last_record(&app);
+    assert_eq!((r.status, r.records_in, r.records_out), (Status::Ok, 3, 3));
+    assert!(
+        r.words.iter().any(|w| w == "Yan: kullanılmadı (girdide çizgi yok; nesneler iki yandan alınır)"),
+        "{:?}",
+        r.words
+    );
+    assert!(!r.words.iter().any(|w| w.starts_with("Yan: Sol")), "{:?}", r.words);
+}
+
+#[test]
+fn yan_on_points_and_a_line_says_what_it_reaches() {
+    let mut app = points();
+    tampon(&mut app, "karisik", 10.0, "Tampon");
+    // İki yan says nothing more: every object is buffered from both sides.
+    assert_eq!(yan(&app), (Some((1, 4)), None, None));
+    event(&mut app, Event::Value("side".into(), json!("left")));
+    assert_eq!(
+        yan(&app),
+        (Some((1, 4)), None, Some("Sol yalnız 1 çizgide; öbür 3 nesne iki yandan alınır.".to_owned()))
+    );
+    run(&mut app);
+    let made = results(&app, "Tampon");
+    let [(_, boxes)] = &made[..] else { panic!("one result layer: {made:?}") };
+    assert_eq!(boxes.len(), 4, "three discs and the line's strip: {boxes:?}");
+    // The line drawn west to east: its left is the north, its ends flat.
+    let close = |a: f64, b: f64| (a - b).abs() < 1e-6;
+    assert!(
+        boxes.iter().any(|b| close(b[0], 500_000.0) && close(b[1], 4_400_050.0) && close(b[2], 500_100.0) && close(b[3], 4_400_060.0)),
+        "{boxes:?}"
+    );
+    let r = last_record(&app);
+    assert!(r.words.iter().any(|w| w == "Yan: Sol (1 çizgide; öbür 3 nesne iki yandan alınır)"), "{:?}", r.words);
 }
 
 /// The picture (`.run/gui-evidence/kullanim-9179/`): İşlemler's Geçmiş after the road's buffer was written twice into

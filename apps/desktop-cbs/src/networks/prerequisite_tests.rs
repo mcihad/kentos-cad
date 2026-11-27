@@ -6,13 +6,13 @@
 use crate::app::{App, Message};
 use crate::files_testing::drive;
 
-fn send(app: &mut App, message: Message) {
+pub(super) fn send(app: &mut App, message: Message) {
     let task = app.update(message);
     drive(app, task);
 }
 
 /// A CBS project in EPSG:5256 whose one line layer `qa_yollar` holds the three roads, without a network.
-fn roads() -> App {
+pub(super) fn roads() -> App {
     let mut app = crate::files_testing::app_with_drawing();
     let mut o = crate::tools_scenes::Objects::new();
     let (e, n) = (crate::tools_scenes::E, crate::tools_scenes::N);
@@ -37,12 +37,21 @@ fn roads() -> App {
     app
 }
 
-fn prompt(app: &App) -> String {
+pub(super) fn prompt(app: &App) -> String {
     app.session.prompt().text()
 }
 
-fn settings(app: &App) -> Vec<(String, String)> {
+pub(super) fn settings(app: &App) -> Vec<(String, String)> {
     app.session.settings(&app.format()).into_iter().map(|s| (s.label.into_owned(), s.value)).collect()
+}
+
+/// A click at a place of the world (the drawing's own system).
+pub(super) fn click(app: &mut App, x: f64, y: f64) {
+    let [sx, sy] = app.viewport.camera.world_to_screen(kentos_interaction::Vec2::new(x, y));
+    let at = iced::Point::new(sx as f32, sy as f32);
+    for e in [crate::viewport::Event::Moved(at), crate::viewport::Event::Pressed(at), crate::viewport::Event::Released(at)] {
+        send(app, Message::Viewport(e));
+    }
 }
 
 #[test]
@@ -69,11 +78,7 @@ fn en_kisa_yol_offers_the_layer_and_shows_its_network_from_the_start() {
     assert_eq!(rows[3], ("Bağlanma".to_owned(), "uçlarda".to_owned()));
     // A → B: the direct road, 50 m.
     for (x, y) in [(500_000.0, 4_320_000.0), (500_030.0, 4_320_040.0)] {
-        let [sx, sy] = app.viewport.camera.world_to_screen(kentos_interaction::Vec2::new(x, y));
-        let at = iced::Point::new(sx as f32, sy as f32);
-        for e in [crate::viewport::Event::Moved(at), crate::viewport::Event::Pressed(at), crate::viewport::Event::Released(at)] {
-            send(&mut app, Message::Viewport(e));
-        }
+        click(&mut app, x, y);
     }
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(prompt(&app).contains("Uzunluk 50.000 m"), "{} / {:?}", prompt(&app), &log[log.len().saturating_sub(4)..]);

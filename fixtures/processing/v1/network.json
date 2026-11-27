@@ -125,11 +125,11 @@
      "profile": "",
      "date": "",
      "layer": {
-      "newName": "Hizmet alanı"
+      "newName": "Yaklaşık hizmet alanı"
      },
      "lines": false,
      "linesLayer": {
-      "newName": "Hizmet alanı çizgileri"
+      "newName": "Ulaşılan yollar"
      }
     }
    }
@@ -761,8 +761,8 @@
     "undo": "Hizmet alanları",
     "layers": [
      {
-      "id": "islem-hizmet-alani",
-      "name": "Hizmet alanı",
+      "id": "islem-yaklasik-hizmet-alani",
+      "name": "Yaklaşık hizmet alanı",
       "style": {
        "color": "#1976D2",
        "lineType": "continuous",
@@ -774,7 +774,7 @@
     "addedShapes": [
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -788,7 +788,7 @@
      },
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -842,8 +842,8 @@
     "undo": "Hizmet alanları",
     "layers": [
      {
-      "id": "islem-hizmet-alani",
-      "name": "Hizmet alanı",
+      "id": "islem-yaklasik-hizmet-alani",
+      "name": "Yaklaşık hizmet alanı",
       "style": {
        "color": "#1976D2",
        "lineType": "continuous",
@@ -855,7 +855,7 @@
     "addedShapes": [
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -869,7 +869,7 @@
      },
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -923,8 +923,8 @@
     "undo": "Hizmet alanları",
     "layers": [
      {
-      "id": "islem-hizmet-alani",
-      "name": "Hizmet alanı",
+      "id": "islem-yaklasik-hizmet-alani",
+      "name": "Yaklaşık hizmet alanı",
       "style": {
        "color": "#1976D2",
        "lineType": "continuous",
@@ -933,8 +933,8 @@
       }
      },
      {
-      "id": "islem-hizmet-alani-cizgileri",
-      "name": "Hizmet alanı çizgileri",
+      "id": "islem-ulasilan-yollar",
+      "name": "Ulaşılan yollar",
       "style": {
        "color": "#1565C0",
        "lineType": "continuous",
@@ -945,7 +945,7 @@
     "addedShapes": [
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -959,7 +959,7 @@
      },
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -973,7 +973,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -986,7 +986,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -999,7 +999,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1012,7 +1012,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1025,7 +1025,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1038,7 +1038,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1051,7 +1051,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1064,7 +1064,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1077,7 +1077,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1132,8 +1132,8 @@
     "undo": "Hizmet alanları",
     "layers": [
      {
-      "id": "islem-hizmet-alani",
-      "name": "Hizmet alanı",
+      "id": "islem-yaklasik-hizmet-alani",
+      "name": "Yaklaşık hizmet alanı",
       "style": {
        "color": "#1976D2",
        "lineType": "continuous",
@@ -1142,8 +1142,8 @@
       }
      },
      {
-      "id": "islem-hizmet-alani-cizgileri",
-      "name": "Hizmet alanı çizgileri",
+      "id": "islem-ulasilan-yollar",
+      "name": "Ulaşılan yollar",
       "style": {
        "color": "#1565C0",
        "lineType": "continuous",
@@ -1154,7 +1154,7 @@
     "addedShapes": [
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1168,7 +1168,7 @@
      },
      {
       "kind": "polygon",
-      "layerId": "islem-hizmet-alani",
+      "layerId": "islem-yaklasik-hizmet-alani",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1182,7 +1182,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1195,7 +1195,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1208,7 +1208,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1221,7 +1221,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1234,7 +1234,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1247,7 +1247,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1260,7 +1260,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
@@ -1273,7 +1273,7 @@
      },
      {
       "kind": "polyline",
-      "layerId": "islem-hizmet-alani-cizgileri",
+      "layerId": "islem-ulasilan-yollar",
       "attrs": {
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",

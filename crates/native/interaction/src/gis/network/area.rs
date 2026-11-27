@@ -5,8 +5,10 @@
 //! Aralıklar (R) are rising numbers in the cost's unit; Yön (Y) from or to the
 //! facilities; Biçim (B) discs or rings; Birleşik (İ) one area a band for all
 //! facilities or one each; Çizgiler (Ç) writes the lines too. Enter writes
-//! the areas to Hizmet alanı (and the lines to Hizmet alanı çizgileri) in one
-//! step.
+//! the areas to Yaklaşık hizmet alanı (and the lines to Ulaşılan yollar) in one
+//! step. The breaks and Kenar payı come first on the line and stand in the
+//! tool's settings from the start; the areas are said to be the lines'
+//! surroundings, the lines the reach (docs/adr/9333).
 
 use std::collections::BTreeMap;
 
@@ -419,15 +421,17 @@ impl NetArea {
         if write_results(LABEL, &writes, cx).is_none() {
             return;
         }
-        let also = if self.seen.lines {
-            format!(" ve {lines} çizgi")
+        // What the areas are and where the reach itself is (docs/adr/9333).
+        let trim = cx.format().length(self.seen.trim);
+        let said = if self.seen.lines {
+            format!("{LABEL}: {count} yaklaşık alan ve {lines} ulaşılan yol parçası yazıldı; alan, yolların {trim} çevresidir.")
         } else {
-            String::new()
+            format!(
+                "{LABEL}: {count} yaklaşık alan yazıldı; alan, ulaşılan yolların {trim} çevresidir. Ulaşılan yollar \
+                 için Çizgiler (Ç) seçeneğini açın."
+            )
         };
-        cx.say(
-            Level::Success,
-            format!("{LABEL}: {count} alan{also} yazıldı."),
-        );
+        cx.say(Level::Success, said);
         self.base.points.clear();
         self.changed(cx);
     }
@@ -486,16 +490,22 @@ impl Tool for NetArea {
             format!("{count} tesis; hesaplanıyor")
         };
         let cost = n.cost_names()[self.seen.cost].to_owned();
+        // The breaks and the margin first (docs/adr/9333): a narrow line folds its last options into Diğer, and the
+        // network and its cost stand in the tool's settings too. Engel before the shape's options, so that its
+        // “sonraki tıklama” stays in sight.
         let prompt = Prompt::new(LABEL, step)
+            .option_with("Aralıklar", "R", self.breaks_text())
+            .option_with("Kenar payı", "K", f.length(self.seen.trim))
             .option_with("Ağ", "A", n.name.clone())
-            .option_with("Maliyet", "M", cost);
+            .option_with("Maliyet", "M", cost)
+            .option_with("Çizgiler", "Ç", on(self.seen.lines));
         let prompt = if self.base.barrier_next {
             prompt.option_with("Engel", "E", "sonraki tıklama")
         } else {
             prompt.option("Engel", "E")
         };
         let prompt = prompt
-            .option_with("Aralıklar", "R", self.breaks_text())
+            .option_with("Biçim", "B", if self.seen.rings { "halka" } else { "disk" })
             .option_with(
                 "Yön",
                 "Y",
@@ -505,10 +515,7 @@ impl Tool for NetArea {
                     "tesisten"
                 },
             )
-            .option_with("Biçim", "B", if self.seen.rings { "halka" } else { "disk" })
-            .option_with("Birleşik", "İ", on(!self.seen.separate))
-            .option_with("Kenar payı", "K", f.length(self.seen.trim))
-            .option_with("Çizgiler", "Ç", on(self.seen.lines));
+            .option_with("Birleşik", "İ", on(!self.seen.separate));
         let prompt = Base::access_options(
             Base::time_option(prompt, n, self.seen.time),
             n,
@@ -526,9 +533,35 @@ impl Tool for NetArea {
         self.base.points.len()
     }
 
-    /// The network as it is, from the start (docs/adr/9332): its name, cost and unit, how its lines join.
+    /// The network as it is, from the start (docs/adr/9332): its name, cost and unit, how its lines join; then the
+    /// breaks, the margin, whether the lines are written, and what the areas are (docs/adr/9333).
     fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
-        Base::settings(self.seen.network.as_ref(), self.seen.cost, self.seen.offer.as_ref(), format)
+        use crate::tool_settings::Setting;
+        let mut rows = Base::settings(self.seen.network.as_ref(), self.seen.cost, self.seen.offer.as_ref(), format);
+        if self.seen.network.is_none() {
+            return rows;
+        }
+        rows.push(Setting::text("serviceBreaks", "Aralıklar", self.breaks_text()).read_only());
+        rows.push(Setting::text("serviceTrim", "Kenar payı", format.length(self.seen.trim)).read_only());
+        rows.push(
+            Setting::text("serviceLines", "Çizgiler", if self.seen.lines { "yazılır" } else { "yazılmaz" })
+                .read_only(),
+        );
+        let mut note = Setting::text(
+            "serviceAreaNote",
+            "Alan",
+            format!(
+                "Alan, ulaşılan yolların {} çevresidir; yaklaşıktır, “{}” katmanına yazılır. Ağda ulaşılan yollar \
+                 Çizgiler açıkken “{}” katmanına yazılır.",
+                format.length(self.seen.trim),
+                AREA_LAYER.name,
+                AREA_LINES_LAYER.name
+            ),
+        )
+        .read_only();
+        note.note = true;
+        rows.push(note);
+        rows
     }
 
     /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the

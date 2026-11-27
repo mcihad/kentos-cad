@@ -6,9 +6,12 @@
 //! with its ends flat; rings are the bands between (k − 1)·d and k·d. The
 //! pieces and their joins are the core's (`ops::geoprocess::buffer`).
 
+use kentos_commands::Entity;
 use kentos_commands::fields::{LayerField, LayerFieldKind};
 use kentos_geometry_core::ops::geoprocess::buffer::Side;
 use kentos_geometry_core::ops::geoprocess::calls::buffer_run;
+use kentos_geometry_core::ops::geoprocess::{Class, class_of};
+use kentos_native_application::geometry::shape;
 use serde_json::{Value, json};
 
 use super::{
@@ -17,9 +20,19 @@ use super::{
 use crate::builtin::queries::attr;
 use crate::text::{js_number, js_trim};
 use crate::types::{
-    ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved,
+    ActsOn, ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved,
     RunContext, RunResult, Target, Tool, Values,
 };
+
+/// Whether Yan acts on an object (docs/adr/9333): a path as the core takes it (a line, a polyline, an arc, an open
+/// ellipse or curve); areas and points are buffered from both sides whatever it says.
+fn is_path(e: &Entity) -> bool {
+    match e.kind() {
+        "line" | "polyline" | "arc" => true,
+        "ellipse" | "spline" => matches!(class_of(&shape(e)), Class::Paths(_)),
+        _ => false,
+    }
+}
 
 pub fn tool() -> Tool {
     Tool {
@@ -76,7 +89,15 @@ pub fn tool() -> Tool {
                 },
             )
             .default_value(json!("both"))
-            .describe("Yalnız çizgilerde; alanlar ve noktalar iki yandan alınır."),
+            .describe("Yalnız çizgilerde; alanlar ve noktalar iki yandan alınır.")
+            .acts_on(ActsOn {
+                input: "input".into(),
+                object: is_path,
+                none: "girdide çizgi yok".into(),
+                some: "{n} çizgide".into(),
+                others: "iki yandan alınır".into(),
+                otherwise: Some("both".into()),
+            }),
             ParamDef::new(
                 "rings",
                 "Halka sayısı",

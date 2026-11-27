@@ -786,7 +786,7 @@ impl App {
         }) {
             Some((ParamKind::Features { kinds, .. }, Some(fv))) => {
                 let kinds = kinds.as_deref();
-                let summary = features::summarize_features(&fv, kinds, &look);
+                let summary = features::summarize_features(&fv, kinds, &look, &[]);
                 let set = features::resolve_features(&fv, kinds, &look);
                 // A raster's bands are named, not previewed on objects (docs/adr/0233 §3).
                 let slots = if kentos_processing::runner::only_rasters(&set.entities) {

@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Hizmet alanı yaklaşık alanı ulaşılan yollardan ayırır; Tampon'un Yan'ı çizgisiz girdide kapanır (27 Kasım 2026,
+  CBS incelemesinin 17. maddesi; [ADR 9333](../adr/9333-service-area-reach-and-buffer-side.md)).**
+  - Hizmet alanının aralıkları, kenar payı ve çizgileri komut satırında öne alındı ve aracın ayarlarında baştan durur.
+    Alanlar “Yaklaşık hizmet alanı”na, ulaşılan yollar “Ulaşılan yollar”a yazılır; işlem aracının öntanımlıları da.
+  - İşlem parametresi girdinin yalnız bazı nesnelerinde etkili olabilir (`ActsOn`). Çizgisiz girdide Tampon'un Sol ve
+    Sağ'ı kapanır; geçmiş “Yan: kullanılmadı (girdide çizgi yok; …)” yazar, karışık girdide kaç çizgiye uygulandığını.
+
 - **Ağ araçları ağı baştan gösterir ve hemen görür (27 Kasım 2026, CBS incelemesinin 16. maddesi;
   [ADR 9332](../adr/9332-network-tools-see-the-network.md)).**
   - En kısa yol, Hizmet alanı ve Şebeke izleme, araç açıkken kaydedilen ağı görür ve ilk adıma döner. Ağ, maliyet ve

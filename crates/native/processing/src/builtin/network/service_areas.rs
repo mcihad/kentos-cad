@@ -1,6 +1,7 @@
 //! Hizmet alanları (the web's `builtin/network/serviceAreas.ts`; docs/adr/0209 §6): the facilities of a layer and the
 //! network within each break of the chosen cost, as Hizmet alanı draws it: the areas (the reached lines' buffers, Kenar
-//! payı wide; discs or rings; merged or one each) and, when asked, the lines.
+//! payı wide; discs or rings; merged or one each) and, when asked, the lines. Their layers are named as the tool's
+//! (docs/adr/9333): Yaklaşık hizmet alanı, Ulaşılan yollar.
 
 use std::collections::BTreeMap;
 
@@ -91,9 +92,9 @@ pub fn tool() -> Tool {
             time_param(),
             profile_param(),
             date_param(),
-            layer_param_styled("layer", "Çıktı katmanı", "Hizmet alanı", "#1976D2", 0.25, Some("#1976D233"), Some("Bu adda katman yoksa oluşturulur.")),
+            layer_param_styled("layer", "Çıktı katmanı", "Yaklaşık hizmet alanı", "#1976D2", 0.25, Some("#1976D233"), Some("Bu adda katman yoksa oluşturulur.")),
             ParamDef::new("lines", "Ulaşılan yollar", ParamKind::Boolean).default_value(json!(false)).describe("Aralıklarda ulaşılan yollar da yazılır."),
-            layer_param_styled("linesLayer", "Yolların katmanı", "Hizmet alanı çizgileri", "#1565C0", 0.35, None, None).shown_when(lines_on),
+            layer_param_styled("linesLayer", "Yolların katmanı", "Ulaşılan yollar", "#1565C0", 0.35, None, None).shown_when(lines_on),
         ],
         outputs: vec![OutputDef::new("areas", "Alanlar", OutputKind::Features), OutputDef::new("count", "Alan sayısı", OutputKind::Number)],
         targets: vec![Target::Client, Target::Worker],

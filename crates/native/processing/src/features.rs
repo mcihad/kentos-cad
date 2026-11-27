@@ -266,6 +266,9 @@ pub struct InputSummary {
     /// The rasters' names in the run's order (docs/adr/0233 §2, §3): a value
     /// or a comparison a raster's rows (docs/adr/0237 §9).
     pub rasters: Vec<String>,
+    /// How many of the objects each parameter that acts on only some of them acts on, by the parameter's name
+    /// ([`crate::types::ActsOn`], docs/adr/9333).
+    pub acting: BTreeMap<String, usize>,
 }
 
 /// A chosen file's table as a field parameter reads it: its rows, and its
@@ -286,12 +289,10 @@ pub fn summarize_file(header: &[String], rows: &[Vec<&str>]) -> InputSummary {
         fields.push((name.clone(), filled));
     }
     InputSummary {
-        rasters: Vec::new(),
         count: rows.len(),
-        description: String::new(),
-        by_kind: Vec::new(),
         fields,
         rows: true,
+        ..InputSummary::default()
     }
 }
 
@@ -373,6 +374,7 @@ pub fn summarize_features(
     value: &FeaturesValue,
     kinds: Option<&[String]>,
     host: &dyn Scene,
+    acts: &[(&str, fn(&Entity) -> bool)],
 ) -> InputSummary {
     let candidates = fitting(value, kinds, host);
     let mut by_kind: Vec<(String, usize)> = Vec::new();
@@ -417,6 +419,10 @@ pub fn summarize_features(
         Ordering::Equal => compare_tr(&a.0, &b.0),
         other => other,
     });
+    let acting = acts
+        .iter()
+        .map(|(name, acts)| ((*name).to_owned(), set.entities.iter().filter(|e| acts(e)).count()))
+        .collect();
     InputSummary {
         count: set.entities.len(),
         description: set.description,
@@ -424,6 +430,7 @@ pub fn summarize_features(
         fields,
         rows: false,
         rasters: names,
+        acting,
     }
 }
 

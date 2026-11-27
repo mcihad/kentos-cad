@@ -313,6 +313,25 @@ impl ShownWhen {
     }
 }
 
+/// The objects of a features input a parameter acts on, when it does not act on all of them (Tampon's Yan acts on
+/// paths only, docs/adr/9333). While the input holds none of them the dialog leaves only `otherwise` and says why; when
+/// it holds some and others the dialog says how many the chosen value reaches; the run's words say the same.
+#[derive(Clone)]
+pub struct ActsOn {
+    /// The features input.
+    pub input: String,
+    /// Whether it acts on an object.
+    pub object: fn(&Entity) -> bool,
+    /// Why it does nothing while the input holds none of them (“girdide çizgi yok”).
+    pub none: String,
+    /// The ones it acts on, counted: `{n}` (“{n} çizgide”).
+    pub some: String,
+    /// What every other object gets (“iki yandan alınır”).
+    pub others: String,
+    /// The choice they get (Tampon's “both”): the only one left while the input holds none.
+    pub otherwise: Option<String>,
+}
+
 /// A parameter: its name (the key in the values), what the dialog shows and
 /// how its value is checked.
 #[derive(Clone)]
@@ -337,6 +356,8 @@ pub struct ParamDef {
     /// A string rendered with the shared colour picker; true also offers CAD inheritance choices.
     /// The parameter's wire value remains a colour string (or null when optional).
     pub color_picker: Option<bool>,
+    /// It acts on only some of a features input's objects ([`ActsOn`]).
+    pub acts_on: Option<ActsOn>,
 }
 
 impl ParamDef {
@@ -353,7 +374,14 @@ impl ParamDef {
             picks: None,
             allow_empty: false,
             color_picker: None,
+            acts_on: None,
         }
+    }
+
+    /// It acts on only some of a features input's objects (docs/adr/9333).
+    pub fn acts_on(mut self, acts: ActsOn) -> Self {
+        self.acts_on = Some(acts);
+        self
     }
 
     /// An input that may hold no object (Veri aktar's target layer, which a run may only add to,

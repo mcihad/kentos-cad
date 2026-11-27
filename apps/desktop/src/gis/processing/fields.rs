@@ -414,6 +414,17 @@ pub(super) fn color_choice<'a>(value: &str, inheritance: bool, color: &dyn Fn(&s
 }
 
 /// A choice: up to three short options as buttons, else a list with each one's hint.
+/// The one option left of a choice acting on objects its input does not hold (docs/adr/9333): the one the others
+/// get; none while the choice reaches something or the input is not read.
+pub(super) fn only_choice(def: &ParamDef, options: &[EnumOption], window: &ToolDialog) -> Option<usize> {
+    window
+        .acting(def)
+        .filter(|(n, _)| *n == 0)
+        .and(def.acts_on.as_ref())
+        .and_then(|a| a.otherwise.as_deref())
+        .and_then(|o| options.iter().position(|x| x.value == o))
+}
+
 fn choice<'a>(
     def: &'a ParamDef,
     options: &'a [EnumOption],
@@ -421,7 +432,8 @@ fn choice<'a>(
 ) -> Element<'a, Message> {
     let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("");
-    let chosen = options.iter().position(|o| o.value == value);
+    let only = only_choice(def, options, env.window);
+    let chosen = only.or_else(|| options.iter().position(|o| o.value == value));
     let name = def.name.clone();
     let values: Vec<String> = options.iter().map(|o| o.value.clone()).collect();
     let short = options.len() <= 3 && options.iter().all(|o| o.label.chars().count() <= 22);
@@ -434,7 +446,7 @@ fn choice<'a>(
             .iter()
             .map(|o| o.hint.clone().unwrap_or_default())
             .collect();
-        return Segmented::new(
+        return Segmented::new_with(
             buttons,
             Option_(
                 chosen.unwrap_or(0),
@@ -443,6 +455,7 @@ fn choice<'a>(
                     .map_or("", |o| o.label.as_str()),
             ),
             move |o| ev(Event::Value(name.clone(), json!(values[o.0]))),
+            move |o| only.is_none_or(|k| k == o.0),
         )
         .hints(hints)
         .width(Fill)

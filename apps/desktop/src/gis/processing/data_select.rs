@@ -142,7 +142,7 @@ impl App {
             by_kind: Vec::new(),
             fields: node.fields.iter().map(|f| (f.name.clone(), count)).collect(),
             rows: true,
-            rasters: Vec::new(),
+            ..kentos_processing::InputSummary::default()
         })
     }
 

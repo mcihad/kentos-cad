@@ -404,6 +404,10 @@ fn field_row<'a>(
     if let Some(whole) = super::sink::whole_row(window, &def.name) {
         control_col = control_col.push(whole);
     }
+    // A parameter acting on only some of its input's objects (docs/adr/9333): which ones, and what the others get.
+    if let Some(note) = window.acting_note(def) {
+        control_col = control_col.push(label::caption(note).style(style::text::muted));
+    }
     if let Some(issue) = window.issue_of(&def.name) {
         control_col = control_col.push(
             row![

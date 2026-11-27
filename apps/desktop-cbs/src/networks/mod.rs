@@ -19,6 +19,8 @@ mod tests;
 mod terminal_tests;
 #[cfg(test)]
 mod prerequisite_tests;
+#[cfg(test)]
+mod service_area_tests;
 pub(crate) mod edge_fit;
 #[cfg(test)]
 mod edge_fit_tests;

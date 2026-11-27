@@ -1,6 +1,6 @@
 //! The layers the network tools write their results to (docs/adr/0209 §5–§7;
-//! the web's `tools/resultLayer.ts`): Rota, Hizmet alanı and its lines, En
-//! yakın tesis. A layer of that name (compared trimmed and Turkish-folded, as
+//! the web's `tools/resultLayer.ts`): Rota, Yaklaşık hizmet alanı and Ulaşılan
+//! yollar (docs/adr/9333), En yakın tesis. A layer of that name (compared trimmed and Turkish-folded, as
 //! İşlemler's new layers are) is written to; without one it is opened, with
 //! its own look, at the top of the tree, in the write's undo step. The objects
 //! take the layer's look (no colour of their own).
@@ -33,14 +33,16 @@ pub const ROUTE_LAYER: ResultLayer = ResultLayer {
     weight: 0.5,
     fill: None,
 };
+/// The areas are the reached lines' surroundings, Kenar payı wide: an approximation, named so (docs/adr/9333).
 pub const AREA_LAYER: ResultLayer = ResultLayer {
-    name: "Hizmet alanı",
+    name: "Yaklaşık hizmet alanı",
     color: "#1976D2",
     weight: 0.25,
     fill: Some("#1976D233"),
 };
+/// The network's reached lines and parts of lines: the reach itself.
 pub const AREA_LINES_LAYER: ResultLayer = ResultLayer {
-    name: "Hizmet alanı çizgileri",
+    name: "Ulaşılan yollar",
     color: "#1565C0",
     weight: 0.35,
     fill: None,

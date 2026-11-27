@@ -78,7 +78,7 @@ pub use runner::{
     Job, Level, LogLine, Outcome, Prepared, RunRecord, Runner, Status, WORKER_THRESHOLD,
 };
 pub use types::{
-    ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef, OutputKind,
+    ActsOn, ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef, OutputKind,
     ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind, ShownWhen,
     Target, TargetLayer, Tool, Values,
 };

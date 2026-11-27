@@ -164,6 +164,19 @@ struct Input {
     ids: Vec<Slot>,
     description: String,
     layer: Option<String>,
+    /// How many of its objects each parameter that acts on only some of them acts on ([`crate::types::ActsOn`]).
+    acting: BTreeMap<String, usize>,
+}
+
+/// The parameters that act on only some of `input`'s objects, with their rule (docs/adr/9333).
+fn acting_on<'t>(tool: &'t Tool, input: &str) -> Vec<(&'t str, fn(&Entity) -> bool)> {
+    tool.parameters
+        .iter()
+        .filter_map(|q| {
+            let a = q.acts_on.as_ref().filter(|a| a.input == input)?;
+            Some((q.name.as_str(), a.object))
+        })
+        .collect()
 }
 
 /// A layer the run creates on apply: its name, its look and the layer it goes right above or below.
@@ -184,6 +197,16 @@ impl Job {
                 Some(crate::types::DefaultValue::Value(v)) => Some(v.clone()),
                 _ => None,
             });
+            // A parameter that acts on only some of its input's objects (docs/adr/9333): not used when the input held
+            // none of them; when it held others too, a choice other than theirs says how many it reached.
+            let acted = p.acts_on.as_ref().and_then(|a| {
+                let input = self.inputs.get(&a.input).filter(|i| !i.ids.is_empty())?;
+                Some((a, input.acting.get(&p.name).copied().unwrap_or(0), input.ids.len()))
+            });
+            if let Some((a, 0, _)) = acted {
+                out.push(format!("{}: kullanılmadı ({}; nesneler {})", p.label, a.none, a.others));
+                continue;
+            }
             match &p.kind {
                 ParamKind::Features { .. } => {
                     if let Some(i) = self.inputs.get(&p.name) {
@@ -202,7 +225,13 @@ impl Job {
                         .and_then(serde_json::Value::as_str)
                         .and_then(|v| options.iter().find(|o| o.value == v))
                     {
-                        out.push(format!("{}: {}", p.label, o.label));
+                        let reach = acted
+                            .filter(|(a, n, all)| n < all && a.otherwise.as_deref() != Some(o.value.as_str()))
+                            .map(|(a, n, all)| {
+                                format!(" ({}; öbür {} nesne {})", a.some.replace("{n}", &n.to_string()), all - n, a.others)
+                            })
+                            .unwrap_or_default();
+                        out.push(format!("{}: {}{reach}", p.label, o.label));
                     }
                 }
                 ParamKind::Layer { .. } => {
@@ -511,7 +540,7 @@ impl Runner {
                     if let Some(fv) = values.get(&p.name).and_then(FeaturesValue::read) {
                         out.insert(
                             p.name.clone(),
-                            summarize_features(&fv, kinds.as_deref(), scene),
+                            summarize_features(&fv, kinds.as_deref(), scene, &acting_on(tool, &p.name)),
                         );
                     }
                 }
@@ -790,12 +819,17 @@ impl Runner {
                             });
                             continue;
                         }
+                        let acting = acting_on(tool, &p.name)
+                            .into_iter()
+                            .map(|(name, acts)| (name.to_owned(), entities.iter().filter(|e| acts(e)).count()))
+                            .collect();
                         inputs.insert(
                             p.name.clone(),
                             Input {
                                 ids: entities.iter().map(|e| Slot(e.base().id)).collect(),
                                 description: set.description,
                                 layer: set.layer_id,
+                                acting,
                             },
                         );
                     }

@@ -239,10 +239,10 @@ def build():
             tesis = ", ".join(names) if f is None else names[f]
             start = breaks[a["band"] - 1] if ring and a["band"] > 0 else 0.0
             attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Başlangıç": shown(start, DECIMALS), "Bitiş": shown(breaks[a["band"]], DECIMALS)}
-            shapes.append({"kind": "polygon", "layerId": layer_id("Hizmet alanı"), "attrs": attrs, "parts": a[key + "Parts"], "holes": a[key + "Holes"], "area": a[key]})
-        new_layers = [new_layer("Hizmet alanı", AREA_STYLE)]
+            shapes.append({"kind": "polygon", "layerId": layer_id("Yaklaşık hizmet alanı"), "attrs": attrs, "parts": a[key + "Parts"], "holes": a[key + "Holes"], "area": a[key]})
+        new_layers = [new_layer("Yaklaşık hizmet alanı", AREA_STYLE)]
         if lines_too:
-            new_layers.append(new_layer("Hizmet alanı çizgileri", LINES_STYLE))
+            new_layers.append(new_layer("Ulaşılan yollar", LINES_STYLE))
             plain = lambda v: ("%.6f" % v).rstrip("0").rstrip(".")  # noqa: E731
             # The lines in the core's order: by facility, band, piece and where they start (the reference sorts them so).
             for line in got["lines"]:
@@ -250,7 +250,7 @@ def build():
                 tesis = ", ".join(names) if f is None else names[f]
                 lo = breaks[line["band"] - 1] if line["band"] > 0 else 0.0
                 attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Aralık": f"{plain(lo)}–{plain(breaks[line['band']])}"}
-                shapes.append({"kind": "polyline", "layerId": layer_id("Hizmet alanı çizgileri"), "attrs": attrs, "parts": 1, "holes": 0, "length": abs(line["b"] - line["a"])})
+                shapes.append({"kind": "polyline", "layerId": layer_id("Ulaşılan yollar"), "attrs": attrs, "parts": 1, "holes": 0, "length": abs(line["b"] - line["a"])})
         n_areas = len(got["areas"])
         roads = f" ({len(got['lines'])} yol)" if lines_too else ""
         summary = f"{len(facilities)} tesisin {len(breaks)} aralıkta {n_areas} hizmet alanı yazıldı{roads}; “Yollar” ağında Uzunluk."
@@ -295,7 +295,7 @@ def build():
         "network.odMatrix": {"network": first, "origins": active, "destinations": active, "count": None, "cutoff": None, "reach": 100, "time": "", "profile": "", "date": "", "lines": False,
                              "layer": {"newName": "Maliyet matrisi"}},
         "network.serviceAreas": {"network": first, "facilities": active, "breaks": "500 1000 1500", "direction": "from", "shape": "disc", "merged": True, "trim": 50,
-                                 "reach": 100, "time": "", "profile": "", "date": "", "layer": {"newName": "Hizmet alanı"}, "lines": False, "linesLayer": {"newName": "Hizmet alanı çizgileri"}},
+                                 "reach": 100, "time": "", "profile": "", "date": "", "layer": {"newName": "Yaklaşık hizmet alanı"}, "lines": False, "linesLayer": {"newName": "Ulaşılan yollar"}},
     }
     defaults = {"lengthDecimals": DECIMALS, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim",
                 "measureHeightMm": 2, "networks": [NETWORK]}
