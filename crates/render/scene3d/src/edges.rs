@@ -19,11 +19,14 @@ pub const CREASE_DEGREES: f32 = 25.0;
 /// as two open edges: a dotted line across a flat roof, flickering as the view turned (docs/adr/8171 §1 B4).
 pub const WELD: f32 = 5e-5;
 
+/// A body's corners by the weld's cell they lie in: each its id and its place.
+type Cells = HashMap<(u32, [i32; 3]), Vec<(u32, [f32; 3])>>;
+
 /// `c`'s edges as pairs of indices into its vertices, in the order its triangles first meet them.
 pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
     let cos = crease_degrees.to_radians().cos();
     // A corner by its body and the weld's cell it lies in; the cells about it are searched for one within the weld.
-    let mut cells: HashMap<(u32, [i32; 3]), Vec<(u32, [f32; 3])>> = HashMap::new();
+    let mut cells: Cells = HashMap::new();
     let mut count = 0u32;
     let mut corner_of = |body: u32, at: [f32; 3]| -> u32 {
         let cell = at.map(|v| (v / WELD).floor() as i32);

@@ -30,8 +30,8 @@ Karar: [ADR 8171](../docs/adr/8171-mimari-3d-section-quality-and-missing-tools.m
 | MB-02 | **Kesit yüzü her zaman.** Sürüklerken de kapak var. Halka zinciri gövdenin float32 aralığına toleranslı. Kapak, modelin parçalarından ayrı küçük bir katmanda kurulur; model yeniden yüklenmez. | Sürükleme filminde içi boş gövde yok. Float32 köşeli gövde kapağını alır (sınama). **Yapıldı (ADR 8171 §3).** |
 | MB-03 | **Kenar çizgisi.** Köşeler toleransla birleşir; ayrık köşeli düz yüzün köşegeni çizilmez. | Kutunun 12 kenarı yine 12, ayrık köşelide de. **Yapıldı (ADR 8171 §3). Çatıdaki noktalı köşegen bu değilmiş: test ekranının yazılımsal Vulkan'ı.** |
 | MB-04 | **Kararlı parçalar.** Parça kimliği içeriğinden gelir: değişmeyen parça yeniden yüklenmez, kenarı yeniden hesaplanmaz. Sahneden çıkan parça hemen bırakılır. | Seçimde yalnız seçilenin parçası yüklenir (sayaç). Ekran kartındaki bayt büyümez. **Yapıldı (ADR 8171 §3): 8 160 gövdede seçim 16 parçanın 4'ünü yükler.** |
-| MB-05 | **Keskin köşe.** Kiriş ve duvar bandında gönye sınırı; sınırı aşan köşe pahlanır, bant kendini kesmez. | 16°'lik kiriş 3B'de bütün; plan, kesit ve IFC aynı bant. |
-| MB-06 | **Saydam yüzler.** Mahal ve açıklık hacimleri duvar ve döşeme yüzleriyle yarışmaz. | Filmde mahal yüzü titremez. |
+| MB-05 | **Keskin köşe.** Kiriş ve duvar bandında gönye sınırı; sınırı aşan köşe pahlanır, bant kendini kesmez. | 16°'lik kiriş 3B'de bütün; plan, kesit ve IFC aynı bant. **Kapandı: kusur yok, gövde eksiksiz (ADR 8171 §3).** |
+| MB-06 | **Saydam yüzler.** Mahal ve açıklık hacimleri duvar ve döşeme yüzleriyle yarışmaz. | Filmde mahal yüzü titremez. **Kapandı: ekran kartında yarış yok (ADR 8171 §3).** |
 
 ## Faz B — Eksik araçlar
 
@@ -52,6 +52,5 @@ resmî belgesi, Türkiye mevzuatı).
 
 ## Durum
 
-- [x] MB-01 … MB-04
-- [ ] MB-05, MB-06
+- [x] MB-01 … MB-06 (MB-05 ve MB-06'da kusur yeniden üretilemedi)
 - [ ] MB-10 … MB-18

@@ -21,7 +21,7 @@ Araştırma raporunun §3'ü. Özetle:
 - **B4:** Kenar çizgisi köşeleri bitleri birebir aynıysa birleştiriyor; ayrık köşeli yüzün köşegeni kenar sayılabilir.
   (Gerçek pencerede çatıda görülen noktalı köşegen bu değil: Xvfb'nin yazılımsal Vulkan'ının izi, MB-03.)
 - **B5:** Her değişiklikte bütün sahne yeni kimliklerle yeniden yükleniyor; eski parçalar ekran kartında kalıyor.
-- **B6:** Keskin dönen kirişin gönyesi bandı kendini kestiriyor; 3B'de uç kayboluyor.
+- **B6:** Keskin dönen kirişin ucu kayboluyor gibi görünmüştü; MB-05'te gövdenin eksiksiz olduğu ölçüldü (tanı yanlıştı).
 
 ## §2 Karar
 
@@ -74,8 +74,8 @@ birleştirilmez (ADR 8120).
 
 ### §2.5 Keskin köşe (MB-05)
 
-Kiriş bandının gönyesi sınırlanır. Sınırı aşan köşe pahlanır; bant kendini kesmez. Plan, kesit ve IFC aynı bandı
-kullanır.
+Gönye sınırı getirilmedi: keskin dönen kirişin gövdesi eksiksiz çıktı (§3 MB-05). Uzun gönye ucu geometrinin
+kendisidir. Sahip pahlı köşe isterse ayrı bir karar olur.
 
 ### §2.6 Eksik araçlar (Faz B)
 
@@ -192,4 +192,14 @@ Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölç�
 - **Sınama:** `a_scene_made_again_keeps_the_ids_of_the_tiles_it_did_not_change`. 2 km arayla iki kutu, her biri bir
   parça. Aynısı yeniden kurulunca iki kimlik korunur; ikincisi seçilince yalnız onun parçası yeni kimlik alır. Her
   parça kimliğiyle bulunur.
+
+### MB-05 ve MB-06 (27 Kasım 2026): yeniden üretilemedi, kod değişmedi
+
+- **MB-05, keskin kiriş:** 3B gövdesinin üst yüzü 3,69 m², x 21,00–29,88, y 1,38–3,62. Tepeden yakın çekimde iki kol
+  doğuda gönyeyle birleşiyor. "Kayıp" sanılan yer kirişin tasarım gereği ayrık batı uçlarıydı.
+- **MB-06, saydam yüzler:** mahaller açıkken 1,20 m'lik yatay kesitte, yakın çekimde ve iki yakın açıdan çekildi
+  (ekran kartı). Döşemelerin üstünde yüz yarışından nokta yok. Merdiven dibindeki hafif lekelenme Kaliteli'nin ortam
+  gölgesinin örnekleme deseni.
+- **Kalan:** sahip kendi ekranında döndürürken hâlâ titreme görürse ekranın kaydı ya da resmi istenecek. Bu makinede
+  gerçek pencere yalnız yazılımsal Vulkan'la çizilebiliyor.
 

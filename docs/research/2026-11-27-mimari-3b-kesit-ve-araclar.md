@@ -86,10 +86,14 @@ ekran kartına yükler (`crates/model-view-ui`, `crates/render/scene3d`).
   - Bir karede en çok 64 MiB yükleniyor. Daha büyük modelde kalan parçaların yeri bir sonraki kareye dek boş kalıyor:
     seçince ya da kesiti bırakınca modelin parçaları bir an kayboluyor.
 
-### B6. Keskin dönen kirişin ucu kayboluyor
+### B6. Keskin dönen kirişin ucu (tanı düzeltildi)
 
-Üç noktalı kirişin 16°'lik dönüşünde gönye ucu çok uzuyor ve bant kendini kesiyor. 3B'de iki kolu birleşmeden bitiyor
-(`keskin-kiris.png`). Planda doğru görünüyor.
+İlk bakışta üç noktalı kirişin 16°'lik dönüşünde iki kolu 3B'de birleşmeden bitiyor gibi görünmüştü
+(`keskin-kiris.png`). MB-05'te ölçüldü:
+- kirişin 3B gövdesi eksiksiz: üst yüzü 3,69 m², doğuda gönye ucuna dek (x 29,88) uzanıyor;
+- tepeden yakın çekimde iki kol doğuda sivri gönyeyle birleşiyor.
+
+Resimde ayrık görünen uçlar kirişin batı uçlarıydı; onlar tasarım gereği ayrık. Kusur yok.
 
 ### Ekran dışı resimde neden görünmedi
 
@@ -171,8 +175,8 @@ Plan [plan/mimari-bim.md](../../plan/mimari-bim.md):
   - MB-02: hareket sırasında da kesit yüzü ve kopmayan halka.
   - MB-03: kenar çizgisi.
   - MB-04: değişmeyen parça yeniden yüklenmez.
-  - MB-05: keskin köşe.
-  - MB-06: saydam yüzler.
+  - MB-05: keskin köşe (ölçümde kusur çıkmadı).
+  - MB-06: saydam yüzler (ölçümde kusur çıkmadı).
 - **Faz B: eksik araçlar,** Türkiye'deki ruhsat ve uygulama projesinin gereğine göre sıralı.
   - MB-10: temel.
   - MB-11: duvar profili.
