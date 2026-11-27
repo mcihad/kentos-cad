@@ -49,6 +49,7 @@ resmî belgesi, Türkiye mevzuatı).
 | MB-16 | **Serbest biçimli eleman:** kütle ve morph. | Archicad Morph, Revit kütle |
 | MB-17 | **Yürüyen merdiven ve bant:** `IfcTransportElement`. | EK-5 Tablo 5.1 sıra 64 |
 | MB-18 | **Kazık:** `IfcPile`. | EK-5 Tablo 5.1 sıra 44 |
+| MB-19 | **Bodrum kat tesviye zemine göre:** emsale girmeyen, bütün cepheleri toprak altındaki bodrum katlar (`buried_levels`), çıkmanın alt kotu ve rampa dolgusu vaziyetin tesviye zemini varken ona göre okunur; bugün tesviye zemin ±0,00 sayılıyor (ADR 8174 Kalanlar). | PAİY 22/1-k, 4 (bodrum kat) |
 
 ## Durum
 
