@@ -2222,7 +2222,7 @@
       "id": "layer.edit",
       "title": "Düzenleme oturumu",
       "icon": "edit",
-      "description": "Etkin veri katmanının düzenleme oturumunu açar ya da kapatır. Açıkken katmana çizilir, nesneleri ve öznitelikleri değiştirilir; değişiklikler Değişiklikleri kaydet'e kadar katmanda bekler. Kaydedilmemiş değişikliği olan katmanın oturumu kapanırken sorulur. Salt okunur bağlantıdan gelen katman açılmaz. cad.layers.session'ın start ve stop işlemleri.",
+      "description": "Etkin veri katmanının düzenleme oturumunu açar ya da kapatır. Açıkken katmana çizilir, nesneleri ve öznitelikleri değiştirilir; değişiklikler Kaynağa yaz'a kadar katmanda bekler. Kaydedilmemiş değişikliği olan katmanın oturumu kapanırken sorulur. Salt okunur bağlantıdan gelen katman açılmaz. cad.layers.session'ın start ve stop işlemleri.",
       "aliases": [
         "DUZENLEMEOTURUMU",
         "DUZENLEMEYIBASLAT",
@@ -2234,8 +2234,8 @@
     },
     {
       "id": "layer.editSave",
-      "title": "Katman değişikliklerini kaynağa kaydet",
-      "short": "Kaynağa kaydet",
+      "title": "Katman değişikliklerini kaynağa yaz",
+      "short": "Kaynağa yaz",
       "icon": "sourceWrite",
       "description": "Düzenlenen bütün veri katmanlarının değişikliklerini kaynaklarına yazar: yeni satırlar eklenir, değişenler güncellenir, silinenler silinir. Kaynak bir katmanın yazmasını reddederse o katmanın değişiklikleri katmanda kalır ve nedeni söylenir. Katmanlar düzenlemeye açık kalır. cad.layers.session'ın save işlemi.",
       "aliases": [

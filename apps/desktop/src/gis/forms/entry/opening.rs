@@ -68,20 +68,33 @@ impl App {
         let Some(f) = self.project_forms().iter().find(|f| f.id == form).cloned() else {
             return Task::none();
         };
+        let model = doc.model.clone();
+        self.open_entry_row_in(&model, f, layer, key, e)
+    }
+
+    /// [`Self::open_entry_row`] through the form `f` of `model` (the drawing, or its copy holding a layer's default
+    /// form: row_target.rs).
+    pub(crate) fn open_entry_row_in(
+        &mut self,
+        model: &kentos_domain::Document,
+        f: kentos_commands::ProjectForm,
+        layer: &str,
+        key: i64,
+        e: &kentos_commands::Entity,
+    ) -> Task<Message> {
         let (body, draft) = match f.releases.last() {
             Some(r) => (r.body.clone(), false),
             None => (f.draft.clone(), true),
         };
         let (moment, user) = self.form_moment();
-        let screen = match row_screen(&doc.model, &f.id, e, key, moment.as_deref(), user.as_deref(), &Default::default()) {
+        let screen = match row_screen(model, &f.id, e, key, moment.as_deref(), user.as_deref(), &Default::default()) {
             Ok(s) => s,
             Err(error) => {
                 self.say(Level::Warn, error.message);
                 return Task::none();
             }
         };
-        let field = doc
-            .model
+        let field = model
             .layers()
             .get(layer)
             .and_then(|n| n.data.as_ref())
@@ -93,9 +106,7 @@ impl App {
         entry.row = Some((field, key));
         entry.new_record = false;
         entry.values.clear();
-        if let Some(doc) = &self.document {
-            entry.recompute(&doc.model);
-        }
+        entry.recompute(model);
         for (key, content) in entry.notes.iter_mut() {
             if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
                 *content = text_editor::Content::with_text(entry.after.get(&f.name).map_or("", String::as_str));

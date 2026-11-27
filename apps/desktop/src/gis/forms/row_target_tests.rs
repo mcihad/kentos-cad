@@ -4,6 +4,11 @@
 //! opens, no second copy. A read-only connection's row opens in its form for reading, its head saying so, nothing
 //! taken or written; ten switches between same-named tables write the chosen one alone (docs/adr/9159). On a real
 //! PostgreSQL (`KENTOS_DATA_PG`) the same, the read-only binding an account that may only read (its real right).
+//!
+//! The second round's T6 (docs/adr/9346): a layer without a form shows its row through the default form of its fields,
+//! for reading and said so, the project getting no form; Düzenle gives the layer that form and opens the row in it.
+//! T8: a polygon drawn on the layer being edited opens its new record's form at once; closed, Öznitelikleri gir on its
+//! table row opens it again through the same form.
 
 use crate::app::App;
 use crate::data_edits::Event;
@@ -389,6 +394,133 @@ fn reading_screens() {
     crate::files_testing::usage_shots("9319", "02-veri-form-paneli", || {
         let (mut app, _) = with_form("resim-serit", false);
         let _ = app.update(crate::app::Message::RibbonTab("data"));
+        app
+    });
+}
+
+#[test]
+fn a_layer_without_a_form_shows_its_row_through_the_default_form_and_duzenle_gives_it_one() {
+    crate::data_layers::register();
+    let address = parcels("form-varsayilan", 40).display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+    let id = node(&app, "parseller").expect("the layer").id.clone();
+    // Nothing chosen: the same words on every entry.
+    let task = app.run("data.formOpen");
+    drive(&mut app, task);
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.contains("Formu açmak için tek bir kayıt seçin"), "{said}");
+    app.gis.features.data.choose_rows(&id, [22].into());
+    let task = app.run("data.formOpen");
+    drive(&mut app, task);
+    let entry = app.gis.form_entry.as_ref().expect("the row's default form");
+    assert!(entry.read_only, "for reading");
+    let why = entry.read_why.clone().unwrap_or_default();
+    assert!(why.starts_with("Katmanın formu yok: kayıt alanlarından kurulan varsayılan formla gösteriliyor."), "{why}");
+    assert_eq!(entry.edit_row, Some((id.clone(), 22)));
+    assert!(app.entry_title(entry).contains("salt okunur"), "{}", app.entry_title(entry));
+    assert!(app.project_forms().is_empty(), "no form written to the project to read a row");
+    // Düzenle: the layer gets the form of its fields and the row opens in it for editing.
+    form_event(&mut app, FormEvent::EditRow);
+    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1);
+    let entry = app.gis.form_entry.as_ref().expect("the row's form for editing");
+    assert!(!entry.read_only);
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.contains("katmanın alanlarından oluşturuldu"), "{said}");
+}
+
+#[test]
+fn a_new_row_drawn_opens_its_form_and_ozniteliklari_gir_opens_it_again() {
+    crate::data_layers::register();
+    let address = parcels("form-yeni-kayit", 4).display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+    let id = node(&app, "parseller").expect("the layer").id.clone();
+    let _ = app.data_edits_event(Event::Start(id.clone()));
+    // A polygon written on the layer as a drawing tool writes it, then the step after it.
+    let input = serde_json::from_value(serde_json::json!({
+        "layerId": id,
+        "objects": [{ "geometry": { "kind": "polygon", "pts": [
+            { "x": 0.0, "y": 0.0 }, { "x": 10.0, "y": 0.0 }, { "x": 10.0, "y": 10.0 }
+        ] }, "attrs": {} }]
+    }))
+    .expect("an input");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let made = kentos_native_application::create::execute(&mut kentos_native_application::ExecutionContext::new(doc), input);
+    assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+    let slot = doc.by_layer(&id).next().map(|e| kentos_domain::Slot(e.base().id)).expect("the new row");
+    let uid = doc.uid(slot).expect("its id");
+    app.form_on_create = Some(slot);
+    let task = app.open_form_on_create();
+    drive(&mut app, task);
+    let entry = app.gis.form_entry.as_ref().expect("the new record's form");
+    assert!(!entry.read_only, "for entering its values");
+    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1, "the layer got the form of its fields");
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.contains("katmanın alanlarından oluşturuldu"), "{said}");
+    // Closed: Öznitelikleri gir on its row opens it again, through the same form.
+    app.gis.form_entry = None;
+    app.dialog = None;
+    app.selection.clear();
+    let task = app.data_table_event(crate::features::data::DataEvent::EnterNew(uid));
+    drive(&mut app, task);
+    assert!(app.gis.form_entry.as_ref().is_some_and(|e| !e.read_only), "opened again");
+    assert_eq!(app.project_forms().iter().filter(|f| f.layer == id).count(), 1, "no second form");
+    // The table's foot: what its source does not have yet, beside Kaynağa yaz.
+    assert_eq!(app.data_unwritten_words(&id).as_deref(), Some("1 kayıt kaynağa yazılmadı (1 yeni satır)"));
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9346/`): a row of a layer without a form in its default form, for reading;
+/// the layer being edited with a cell changed and a new row: the table's foot with Kaynağa yaz, Öznitelikleri gir on
+/// the new row, and Öznitelikler showing the waiting value.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib row_target_tests::record_screens -- --ignored --nocapture"]
+fn record_screens() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9346", "01-varsayilan-form", || {
+        crate::data_layers::register();
+        let address = parcels("resim-varsayilan-form", 12).display().to_string();
+        let mut app = app_with_drawing();
+        app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+        let id = node(&app, "parseller").expect("the layer").id.clone();
+        app.gis.features.data.choose_rows(&id, [7].into());
+        let task = app.run("data.formOpen");
+        drive(&mut app, task);
+        app
+    });
+    crate::files_testing::usage_shots("9346", "02-bekleyen-tablo", || {
+        crate::data_layers::register();
+        let address = parcels("resim-bekleyen", 12).display().to_string();
+        let mut app = app_with_drawing();
+        app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+        let id = node(&app, "parseller").expect("the layer").id.clone();
+        let _ = app.data_edits_event(Event::Start(id.clone()));
+        let input = serde_json::from_value(serde_json::json!({
+            "layerId": id,
+            "objects": [{ "geometry": { "kind": "polygon", "pts": [
+                { "x": 486_400.0, "y": 4_420_100.0 }, { "x": 486_420.0, "y": 4_420_100.0 }, { "x": 486_420.0, "y": 4_420_120.0 }
+            ] }, "attrs": {} }]
+        }))
+        .expect("an input");
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let _ = kentos_native_application::create::execute(&mut kentos_native_application::ExecutionContext::new(doc), input);
+        app.gis.features.layer = Some(id.clone());
+        app.command_expanded = true;
+        app.bottom_tab = crate::bottom::BottomTab::Table;
+        let _ = app.update(crate::app::Message::BottomResized(260.0));
+        let send = |app: &mut App, e: crate::features::data::DataEvent| {
+            let task = app.data_table_event(e);
+            drive(app, task);
+        };
+        send(&mut app, crate::features::data::DataEvent::Range(0, 12));
+        crate::data_layers_tests::answer_pages(&mut app);
+        send(&mut app, crate::features::data::DataEvent::Edit(3, "kullanim".into()));
+        send(&mut app, crate::features::data::DataEvent::Input("Ticaret".into()));
+        send(&mut app, crate::features::data::DataEvent::Enter);
+        send(&mut app, crate::features::data::DataEvent::Press(3, false));
+        let task = app.data_selection_tasks();
+        drive(&mut app, task);
+        app.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
         app
     });
 }

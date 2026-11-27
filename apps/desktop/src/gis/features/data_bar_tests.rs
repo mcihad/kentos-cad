@@ -33,7 +33,7 @@ fn form_says_how_a_rows_form_opens_and_the_table_stays() {
     assert_eq!(app.gis.features.pane, crate::features::Pane::Table);
     let said = crate::files_testing::last_said(&app);
     // No row chosen: the way to a row's form is said (the CBS review's 2nd item opens a chosen row's form).
-    assert!(said.contains("Formu açmak için tablodan tek bir satır seçin"), "{said}");
+    assert!(said.contains("Formu açmak için tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne"), "{said}");
 }
 
 #[test]

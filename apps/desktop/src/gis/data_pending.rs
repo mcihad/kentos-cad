@@ -256,8 +256,8 @@ impl App {
         let layer = doc.model.slot_of(uid).and_then(|s| doc.model.get(s)).map(|e| e.base().layer_id.clone())?;
         let w = self.data_waiting().into_iter().find(|w| w.layer == layer)?;
         Some(format!(
-            "Değer “{}” katmanında bekliyor, kaynağa yazılmadı: {}. Kaynağa yazmak için durum çubuğundaki “Kaynağa \
-             yazılmadı”ya ya da katmanın menüsünde Kaynağa kaydet'e tıklayın.",
+            "Değer “{}” katmanında bekliyor, kaynağa yazılmadı: {}. Kaynağa yazmak için tablonun altındaki Kaynağa \
+             yaz'a, durum çubuğundaki “Kaynağa yazılmadı”ya ya da katmanın menüsünde Kaynağa yaz'a tıklayın.",
             w.name,
             crate::data_edits::counts_words(w.added, w.changed, w.deleted)
         ))
