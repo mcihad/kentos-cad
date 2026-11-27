@@ -131,7 +131,9 @@ impl ModuleProfile for Gis {
             | E::Add
             | E::Duplicate
             | E::Merge
-            | E::Remove => true,
+            | E::Remove
+            // A CBS layer's summary (docs/adr/9350).
+            | E::Properties => true,
         }
     }
 

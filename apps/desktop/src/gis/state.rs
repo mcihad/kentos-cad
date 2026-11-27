@@ -83,6 +83,8 @@ pub struct GisUiState {
     pub(crate) data_profile: Option<crate::data_profile::Window>,
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     pub(crate) source_status: Option<crate::source_status::Window>,
+    /// Katman özellikleri's window (layer_properties.rs, docs/adr/9350).
+    pub(crate) layer_properties: Option<crate::layer_properties::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi kartı ve eylemler (layer_info.rs).
@@ -218,6 +220,8 @@ pub enum Event {
     DataProfile(crate::data_profile::Event),
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     SourceStatus(crate::source_status::Event),
+    /// Katman özellikleri (layer_properties.rs, docs/adr/9350).
+    LayerProperties(crate::layer_properties::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// Bilgi kartı ve eylemler (layer_info.rs).
@@ -309,6 +313,8 @@ pub enum GisDialogKind {
     DataProfile,
     /// Kaynak durumu (source_status.rs, docs/adr/0543); the window is `GisUiState::source_status`.
     SourceStatus,
+    /// Katman özellikleri (layer_properties.rs, docs/adr/9350); the window is `GisUiState::layer_properties`.
+    LayerProperties,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `GisUiState::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `GisUiState::layer_filter`.
@@ -431,6 +437,7 @@ impl App {
             Event::LayerTranslate(event) => return self.layer_translate_event(event),
             Event::DataProfile(event) => return self.data_profile_event(event),
             Event::SourceStatus(event) => return self.source_status_event(event),
+            Event::LayerProperties(event) => return self.layer_properties_event(event),
             Event::LayerFilter(event) => return self.layer_filter_event(event),
             Event::LayerInfo(event) => return self.layer_info_event(event),
             Event::DatasetInfo(event) => return self.dataset_info_event(event),
@@ -484,6 +491,7 @@ impl App {
             GisDialogKind::LayerTranslate => self.layer_translate_view(),
             GisDialogKind::DataProfile => self.data_profile_view(),
             GisDialogKind::SourceStatus => self.source_status_view(),
+            GisDialogKind::LayerProperties => self.layer_properties_view(),
             GisDialogKind::LayerFields => self.layer_fields_view(),
             GisDialogKind::LayerFilter => self.layer_filter_view(),
             GisDialogKind::FieldsWrite => self.features_write_view(),

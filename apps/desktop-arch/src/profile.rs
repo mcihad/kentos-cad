@@ -136,7 +136,7 @@ impl ModuleProfile for Architecture {
             | E::Kind
             | E::Crs
             | E::Source
-            | E::Scenario => false,
+            | E::Scenario | E::Properties => false,
         }
     }
 

@@ -70,6 +70,17 @@ impl App {
         Some(Rows::Reading)
     }
 
+    /// A data layer's rows as read, for the shell's exports (shell/exchange, docs/adr/9344) without naming this core's
+    /// types: `Some(Ok(rows))` read, `Some(Err(why))` unreadable, `None` while read (asked: read after this message) and
+    /// for another layer.
+    pub(crate) fn data_rows_read(&self, layer: &str) -> Option<Result<Arc<Vec<(i64, Entity)>>, String>> {
+        match self.data_rows_of(layer)? {
+            Rows::Ready(rows) => Some(Ok(rows)),
+            Rows::Failed(why) => Some(Err(why)),
+            Rows::Reading => None,
+        }
+    }
+
     /// A data layer's rows as the drawing has them now: the source's rows it does not hold, then its own (taken and new
     /// in the edit session); none while they are read, why when they could not be; none at all for another layer.
     pub(crate) fn data_layer_rows(&self, layer: &str) -> Option<Result<Option<Vec<Entity>>, String>> {

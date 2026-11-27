@@ -1,5 +1,5 @@
 //! The drawing as the file exports write it (docs/adr/9344): every data layer's rows, as the tables read them
-//! (data_rows.rs: whole, off the interface's thread, kept for the drawing as it is), put among the drawing's objects on
+//! (`App::data_rows_read`: whole, off the interface's thread, kept for the drawing as it is), put among the drawing's objects on
 //! their layers, the layers' links taken off. GeoPackage, Shapefile, CSV, FlatGeobuf, GeoParquet and GML dışa aktar
 //! count and write on it, so a project of data layers writes its rows and not empty tables. The rows the drawing holds
 //! (taken or new in the edit session) are its objects already and are not put in twice. While a source is read the
@@ -55,7 +55,8 @@ impl App {
         if nodes.is_empty() {
             return None;
         }
-        let read: Vec<Option<crate::data_rows::Rows>> = nodes.iter().map(|n| self.data_rows_of(&n.id)).collect();
+        let read: Vec<Option<Result<std::sync::Arc<Vec<(i64, Entity)>>, String>>> =
+            nodes.iter().map(|n| self.data_rows_read(&n.id)).collect();
         let stamp: Stamp = (
             doc.session,
             doc.model.generation(),
@@ -65,7 +66,7 @@ impl App {
                 .zip(&read)
                 .map(|(n, r)| {
                     let address = n.data.as_ref().map(|d| format!("{}\u{0}{}", d.address, d.table)).unwrap_or_default();
-                    (n.id.clone(), address, matches!(r, Some(crate::data_rows::Rows::Ready(_))))
+                    (n.id.clone(), address, matches!(r, Some(Ok(_))))
                 })
                 .collect(),
         );
@@ -80,7 +81,7 @@ impl App {
         let (mut reading, mut failed) = (Vec::new(), Vec::new());
         for (node, r) in nodes.iter().zip(read) {
             match r {
-                Some(crate::data_rows::Rows::Ready(all)) => {
+                Some(Ok(all)) => {
                     let held = doc.model.data_hidden(&node.id);
                     let (keys, objects): (Vec<i64>, Vec<Entity>) =
                         all.iter().filter(|(k, _)| !held.contains(k)).map(|(k, e)| (*k, e.clone())).unzip();
@@ -93,8 +94,8 @@ impl App {
                         Err(_) => failed.push((node.name.clone(), "çizimde yer kalmadı".to_owned())),
                     }
                 }
-                Some(crate::data_rows::Rows::Failed(why)) => failed.push((node.name.clone(), why)),
-                _ => reading.push(node.name.clone()),
+                Some(Err(why)) => failed.push((node.name.clone(), why)),
+                None => reading.push(node.name.clone()),
             }
         }
         let made = Rc::new(SourceCopy { doc: copy, rows, reading, failed });

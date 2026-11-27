@@ -20,7 +20,7 @@ use crate::scenes::{Objects, layer, open_edited};
 /// The table of docs/adr/9195 §5: each entry, the words its presence is read by, the modules that have it (M Mimari,
 /// H Harita, Y Yol, C CBS) and the kinds of layer it is about (d çizim, a açıklama, v veri tablosu, b bağlı,
 /// s servis, r raster, n nokta bulutu, g grup).
-const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
+const TABLE: [(LayerEntry, &str, &str, &str); 43] = [
     (LayerEntry::Activate, "Etkin katman yap", "MHYC", "davbrn"),
     (
         LayerEntry::Visibility,
@@ -84,6 +84,8 @@ const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
         "dabrn",
     ),
     (LayerEntry::Remove, "Sil", "MHYC", "davbsrng"),
+    // A CBS layer's summary for reading, the last entry (docs/adr/9350).
+    (LayerEntry::Properties, "Katman özellikleri…", "C", "davbsrn"),
 ];
 
 /// The project's layers: one of each kind, its id, its name in the tree and the kind it is.

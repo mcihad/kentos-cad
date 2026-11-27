@@ -378,6 +378,13 @@ impl App {
                 // The web's `formatChord`: Delete is “Del”, Space “Boşluk”.
                 .shortcut("Del");
         }
+        // Katman özellikleri… last (the owner's word of 27 November 2026, docs/adr/9350): the layer's summary.
+        if has(LayerEntry::Properties) && is_layer {
+            menu = menu
+                .separator()
+                .item("Katman özellikleri…", crate::layer_properties::open(node.id.clone()))
+                .icon(icon("info"));
+        }
         menu
     }
 }

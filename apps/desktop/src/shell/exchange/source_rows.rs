@@ -161,10 +161,10 @@ impl App {
             .into_iter()
             .filter(|l| l.data.is_some())
             .map(|node| {
-                let rows = match self.data_rows_of(&node.id) {
-                    None | Some(crate::data_rows::Rows::Reading) => Rows::Reading,
-                    Some(crate::data_rows::Rows::Failed(why)) => Rows::Failed(why),
-                    Some(crate::data_rows::Rows::Ready(read)) => {
+                let rows = match self.data_rows_read(&node.id) {
+                    None => Rows::Reading,
+                    Some(Err(why)) => Rows::Failed(why),
+                    Some(Ok(read)) => {
                         let held = doc.model.data_hidden(&node.id);
                         let rows: Vec<Entity> =
                             read.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).collect();

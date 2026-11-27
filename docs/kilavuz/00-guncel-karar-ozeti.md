@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **CBS katman menüsünün sonunda Katman özellikleri (27 Kasım 2026, sahibin sözü;
+  [ADR 9350](../adr/9350-layer-properties-summary.md)).**
+  - Bilgi amaçlı pencere: solda Genel, Kaynak, Koordinat sistemi, Stil, Alanlar, Formlar; sağda ad–değer özeti.
+    Bağlantı, tablo, satır (kaynağın sayımı), sistemler, çizim biçimi, alanlar ve formlar okunur; hiçbir şey yazılmaz.
+  - `LayerEntry::Properties` yalnız CBS'de, grup dışındaki türlerde; matris sınaması her hücreyi sınar.
+
 - **Alanlar penceresi liste ve ayarlar oldu (27 Kasım 2026, sahibin sözü;
   [ADR 9349](../adr/9349-alanlar-list-and-settings.md)).**
   - Dokuz sütunlu düzenlenebilir ızgara yerine solda alan listesi (ad, takma ad, tür, işaretler), sağda seçili

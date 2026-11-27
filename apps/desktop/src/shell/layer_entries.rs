@@ -100,11 +100,13 @@ pub enum LayerEntry {
     Merge,
     /// Sil.
     Remove,
+    /// Katman özellikleri… (docs/adr/9350): the layer's summary for reading, the menu's last entry.
+    Properties,
 }
 
 impl LayerEntry {
     /// Every entry, in the menu's order.
-    pub const ALL: [LayerEntry; 42] = [
+    pub const ALL: [LayerEntry; 43] = [
         LayerEntry::Activate,
         LayerEntry::Visibility,
         LayerEntry::Lock,
@@ -147,6 +149,7 @@ impl LayerEntry {
         LayerEntry::Duplicate,
         LayerEntry::Merge,
         LayerEntry::Remove,
+        LayerEntry::Properties,
     ];
 
     /// The kinds of layer the entry is about (docs/adr/9195 §5). No arm stands for the rest: a new entry is placed
@@ -209,6 +212,8 @@ impl LayerEntry {
             // cloud.
             LayerEntry::Snap => &[Drawing, Annotation, Data, Bound, Group],
             LayerEntry::Scenario => &[Group],
+            // A layer's summary: a group has no source, style or fields of its own.
+            LayerEntry::Properties => &[Drawing, Annotation, Data, Bound, Service, Raster, PointCloud],
         }
     }
 }

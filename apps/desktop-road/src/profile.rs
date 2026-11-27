@@ -129,7 +129,7 @@ impl ModuleProfile for Road {
             | E::Statistics
             | E::Chart
             | E::Kind
-            | E::Scenario => false,
+            | E::Scenario | E::Properties => false,
         }
     }
 

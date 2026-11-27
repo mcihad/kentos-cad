@@ -135,7 +135,7 @@ impl ModuleProfile for Map {
             | E::Time
             | E::Chart
             | E::Kind
-            | E::Scenario => false,
+            | E::Scenario | E::Properties => false,
         }
     }
 

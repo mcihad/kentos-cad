@@ -330,6 +330,7 @@ impl App {
                 layer_translate: None,
                 data_profile: None,
                 source_status: None,
+                layer_properties: None,
                 layer_filter: None,
                 layer_info: None,
                 dataset_info: None,

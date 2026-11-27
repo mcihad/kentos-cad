@@ -196,6 +196,8 @@ mod data_profile;
 mod data_profile_names;
 #[path = "gis/source_status.rs"]
 mod source_status;
+#[path = "gis/layer_properties.rs"]
+mod layer_properties;
 #[path = "gis/source_trouble.rs"]
 mod source_trouble;
 #[path = "cad/drawing_standard.rs"]
