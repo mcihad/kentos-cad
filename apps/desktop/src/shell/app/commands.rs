@@ -952,7 +952,8 @@ impl App {
             "edit.autoSelect" => doc.is_some(),
             "file.openReport" => self.open_report().is_some(),
             // Seçilenleri kaydet writes the selection: off without one, its tip saying why (docs/adr/9342).
-            "file.saveSelection" => !self.selection.is_empty(),
+            // A data layer's rows chosen in its table are a selection too (docs/adr/9344).
+            "file.saveSelection" => !self.selection.is_empty() || self.gis.features.data.selected_layer().is_some(),
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             // A selection tool that takes none of the selected kinds (UR-007).
@@ -1013,8 +1014,8 @@ impl App {
             "view.zoomLayer" if self.zoom_layer_target().is_none() => Some(
                 "Katmanlar'da nesnesi olan bir katman seçin ya da onu etkin yapın; boş katman sığdırılmaz.".to_owned(),
             ),
-            "file.saveSelection" if self.selection.is_empty() => Some(
-                "Önce kaydedilecek nesneleri seçin: çizimde bir ya da daha çok nesne. Seçilenler yeni bir projeye yazılır."
+            "file.saveSelection" if !self.available("file.saveSelection") => Some(
+                "Önce kaydedilecek nesneleri seçin: çizimde nesneler ya da bir veri katmanının tablosunda satırlar. Seçilenler yeni bir projeye yazılır."
                     .to_owned(),
             ),
             "file.openReport" if self.open_report().is_none() => Some(

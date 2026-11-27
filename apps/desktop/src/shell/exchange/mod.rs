@@ -61,6 +61,10 @@ pub(crate) mod field_send;
 mod field_send_tests;
 mod geojson_export;
 pub(crate) mod source_rows;
+pub(crate) mod source_copy;
+#[cfg(test)]
+#[path = "source_formats_tests.rs"]
+mod source_formats_tests;
 pub(crate) mod selection_save;
 #[cfg(test)]
 #[path = "file_menu_tests.rs"]

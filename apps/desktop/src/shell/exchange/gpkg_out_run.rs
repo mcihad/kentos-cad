@@ -50,7 +50,8 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let copy = doc.model.reading_copy();
+        // The data layers' rows written too (docs/adr/9344).
+        let copy = self.source_copy().map_or_else(|| doc.model.reading_copy(), |c| c.doc.reading_copy());
         let run = RUNS.fetch_add(1, Ordering::Relaxed) + 1;
         let stop = Arc::new(AtomicBool::new(false));
         if let Some(Window::GpkgOut(s)) = &mut self.exchange {

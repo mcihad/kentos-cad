@@ -172,9 +172,49 @@ fn copy_table(
     Ok((file, read, rows))
 }
 
+/// The file exports that write the project's layers (docs/adr/9344): a data layer's rows go too, read from its source,
+/// for every channel alike (the window, Python, MCP, an agent).
+const WRITES_LAYERS: [&str; 7] = [
+    kentos_commands::FILE_EXPORT_GPKG,
+    kentos_commands::FILE_EXPORT_SHP,
+    kentos_commands::FILE_EXPORT_CSV,
+    kentos_commands::FILE_EXPORT_FGB,
+    kentos_commands::FILE_EXPORT_PARQUET,
+    kentos_commands::FILE_EXPORT_GML,
+    kentos_commands::FILE_EXPORT_XYZ,
+];
+
+/// A file command run on the drawing with its data layers' rows when it writes the project's layers; as it is
+/// otherwise. A source that cannot be read refuses the export with its layer's name: nothing is written.
+pub(crate) fn typed_with_rows(
+    doc: &Document,
+    command: &str,
+    op: CallOp,
+    input: Value,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(kentos_commands::CommandResult<Value>, Option<kentos_commands::FileEffect>), String> {
+    if WRITES_LAYERS.contains(&command) && doc.layers().leaves().iter().any(|l| l.data.is_some()) {
+        match rows_said(doc, "layers", "Dışa aktarma yapılmadı, hiçbir dosya yazılmadı. Kaynağa ulaşın ya da katmanı dışarıda bırakın.") {
+            Ok(Some(open)) => return crate::file_commands::run_typed_with_progress(&open, command, op, input, progress),
+            Ok(None) => {}
+            Err(refused) => return Ok((kentos_commands::CommandResult::Failed { error: *refused }, None)),
+        }
+    }
+    crate::file_commands::run_typed_with_progress(doc, command, op, input, progress)
+}
+
 /// The drawing as its open files hold it: every data layer's rows read from its source, the layers the copy's own
 /// (their links gone); none without a data layer. A source that cannot be read refuses, its layer named.
 pub(crate) fn with_rows(doc: &Document) -> Result<Option<Document>, Refused> {
+    rows_said(
+        doc,
+        "exchange",
+        "Devir dosyaları bu katmanın satırlarını taşıyamaz; paket yapılmadı, hiçbir dosya yazılmadı. Kaynağa ulaşın ya da devir dosyalarını kaldırın.",
+    )
+}
+
+/// [`with_rows`], a refusal at `path` saying `then` after why the source could not be read.
+fn rows_said(doc: &Document, path: &str, then: &str) -> Result<Option<Document>, Refused> {
     let nodes: Vec<kentos_commands::LayerNode> =
         doc.layers().leaves().into_iter().filter(|l| l.data.is_some()).cloned().collect();
     if nodes.is_empty() {
@@ -184,20 +224,13 @@ pub(crate) fn with_rows(doc: &Document) -> Result<Option<Document>, Refused> {
     for node in &nodes {
         let held = doc.data_hidden(&node.id);
         let read = kentos_native_application::data_write::all_rows(node, doc.settings(), &held, &|| false).map_err(|why| {
-            refuse(
-                codes::SOURCE_UNREACHABLE,
-                format!(
-                    "“{}” veri katmanının kaynağı okunamadı: {why}. Devir dosyaları bu katmanın satırlarını taşıyamaz; paket yapılmadı, hiçbir dosya yazılmadı. Kaynağa ulaşın ya da devir dosyalarını kaldırın.",
-                    node.name
-                ),
-                "exchange",
-            )
+            refuse(codes::SOURCE_UNREACHABLE, format!("“{}” veri katmanının kaynağı okunamadı: {why}. {then}", node.name), path)
         })?;
         rows.extend(read.rows.into_iter().map(|(_, e)| e));
     }
     let mut snapshot = doc.to_snapshot_v2();
     unlink(&mut snapshot.layers);
-    let fail = |why: String| refuse(codes::FILE_UNWRITABLE, format!("devir dosyalarının projesi kurulamadı: {why}"), "exchange");
+    let fail = |why: String| refuse(codes::FILE_UNWRITABLE, format!("satırlarıyla çizim kurulamadı: {why}"), path);
     let mut open = Document::from_snapshot_v2(snapshot).map_err(fail)?;
     open.add_many(rows, "Paketle").map_err(|_| fail("çizimde yer kalmadı".into()))?;
     Ok(Some(open))
