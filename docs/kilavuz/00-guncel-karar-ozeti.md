@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Tablo yeni alanı hemen okur, etiketle aranır, ifade oluşturucu kaynağın satırlarını okur, tablo katman süzgecini
+  izler; Parsel alan denetimi (27 Kasım 2026, T11–T15;
+  [ADR 9348](../adr/9348-table-fields-label-search-builder-rows-scope-and-parcel-check.md)).**
+  - Alan eklenince açık tablo yeniden okunur, başlıkta takma ad yazar. Ara, listeli alanın etiketini koda çevirir (her
+    kanal: `cad.layers.rows`).
+  - Oluşturucu veri katmanında satırları kaynaktan okur; değerler “Çınar (M1)”. Tablo öntanımlı olarak süzülmüş
+    katmanı gösterir, “Kaynağın tümü” ayrı seçimdir.
+  - CBS Veri'nin Standart paneli “Denetim” oldu; “Parsel alan denetimi” orada, İmar denetiminin yanında.
+
 - **Düzenleme hedefi ve oturumlar söylenir; Aç önce dosyayı sorar; kaydedilmemiş sekmeyle kapatma soruyla (27 Kasım
   2026, T9, T10 ve sahibin sözü; [ADR 9347](../adr/9347-edit-target-sessions-file-first-open-and-close-question.md)).**
   - Düzenlemeyi başlat/bitir'in ipucu etkin katmanı, bekleyenini ve açık kalan öbür oturumları söyler. Tablonun çubuğu

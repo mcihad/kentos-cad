@@ -3963,10 +3963,6 @@
        {
         "command": "data.chart",
         "size": "small"
-       },
-       {
-        "command": "parcels.check",
-        "size": "small"
        }
       ],
       "overflow": [
@@ -4097,7 +4093,7 @@
       ]
      },
      {
-      "label": "Standart",
+      "label": "Denetim",
       "icon": "standardsCheck",
       "items": [
        {
@@ -4110,6 +4106,10 @@
        },
        {
         "command": "zoning.check",
+        "size": "small"
+       },
+       {
+        "command": "parcels.check",
         "size": "small"
        }
       ],

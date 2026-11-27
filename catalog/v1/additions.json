@@ -146,7 +146,7 @@
     {
       "id": "parcels.check",
       "title": "Parsel alan denetimi…",
-      "short": "Alan denetimi",
+      "short": "Parsel alan denetimi",
       "icon": "parcelArea",
       "description": "Parsellerin hesap alanını tapu alanıyla karşılaştırır (cad.parcels.check): fark ve yanılma sınırı (Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik 2022, Madde 8(2), arşiv onaylı geometri tablosu); kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte, yinelenen ve kimliksiz parseller. Salt okunur; Dışındakileri seç ve CSV kaydet. Harita ve CBS'de.",
       "aliases": [

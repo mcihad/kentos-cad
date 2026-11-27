@@ -1419,9 +1419,11 @@ fn the_drawing_standard_is_kentos_mimaris() {
         standart(Module::Map, "manage").expect("Yönet › Standart"),
         ["layer.impact"]
     );
+    // CBS's is Veri › Denetim, with Parsel alan denetimi (docs/adr/9348).
+    let denetim = with_app(|| program(Some(Module::Gis)), |app| panel_commands(app, "data", "Denetim"));
     assert_eq!(
-        standart(Module::Gis, "data").expect("Veri › Standart"),
-        ["profile.window", "map.catalogReport", "zoning.check", "lineTypes.manage", "layer.impact"]
+        denetim.expect("Veri › Denetim"),
+        ["profile.window", "map.catalogReport", "zoning.check", "parcels.check", "lineTypes.manage", "layer.impact"]
     );
 }
 

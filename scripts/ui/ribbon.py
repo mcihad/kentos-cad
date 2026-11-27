@@ -647,7 +647,7 @@ GIS = [
             S("layer.filter"), S("layer.crs")],
           overflow=["layer.filterFromSelection", "layer.filterClear", "layer.reproject", "layer.showAll",
             "layer.info", "layer.dataset", "file.import.maplibre", "file.export.maplibre"]),
-        P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart"), S("parcels.check")],
+        P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart")],
           overflow=["readjustment.distribute", "chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
         P("Form", "forms", [S("data.forms"), S("data.formOpen"), S("data.formEdit"), S("data.relations")],
           overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
@@ -662,7 +662,10 @@ GIS = [
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("layer.info")]),
         # A project's hatch patterns serve CAD's hatch objects (docs/adr/0802); CBS fills areas by a layer's symbol. A
         # CBS project's standard is its data profile; the drawing standard (Mimari ofis) is KentOS Mimari's.
-        P("Standart", "standardsCheck", [S("profile.window"), S("map.catalogReport"), S("zoning.check")],
+        # Denetim: the data standard and the plan's and parcels' checks; Parsel alan denetimi beside the zoning check
+        # (the second round's T15, docs/adr/9348), a parcel tool rather than a check of a table's fields.
+        P("Denetim", "standardsCheck", [S("profile.window"), S("map.catalogReport"), S("zoning.check"),
+            S("parcels.check")],
           overflow=["lineTypes.manage", "layer.impact"]),
         P("Stil", "styles", [L("style.manager"), S("data.search"), S("data.unmark")],
           overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),

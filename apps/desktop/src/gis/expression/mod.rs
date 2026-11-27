@@ -134,8 +134,26 @@ pub struct Listed {
     pub chosen: Option<usize>,
 }
 
+/// A data layer's rows the builder previews on (docs/adr/9348): put in a copy of the drawing with their shapes in a
+/// store of their own; none while they are read; why when they cannot be.
+#[derive(Clone)]
+pub struct RowsOf {
+    pub layer: String,
+    pub read: Result<Option<std::sync::Arc<(kentos_domain::Document, kentos_geometry_core::store::Store)>>, String>,
+}
+
+/// What the builder says of a data layer's rows.
+pub(crate) mod rows_words {
+    pub const READING: &str = "Kaynağın satırları okunuyor…";
+    pub const FAILED: &str = "Kaynak okunamadı:";
+}
+
 /// The builder while it is open.
 pub struct Builder {
+    /// A data layer's rows, read from its source (docs/adr/9348); none for the drawing's objects.
+    pub rows: Option<RowsOf>,
+    /// The listed fields' choices by field: a value shows as “Yeşil Alan (Y)”, its code goes into the expression.
+    pub choices: std::collections::HashMap<String, Vec<kentos_commands::FieldChoice>>,
     pub target: Target,
     /// The field's label, beside the title.
     pub context: String,
@@ -394,6 +412,8 @@ impl Builder {
         let mut content = text_editor::Content::with_text(value);
         content.perform(Action::Move(text_editor::Motion::DocumentEnd));
         let mut b = Builder {
+            rows: None,
+            choices: std::collections::HashMap::new(),
             target,
             context,
             content,
@@ -693,6 +713,17 @@ impl Builder {
         };
     }
 
+    /// [`Self::preview_on`] over the data layer's rows when the builder reads them (docs/adr/9348): while they are
+    /// read, or when they cannot be, said so; the drawing's objects otherwise.
+    pub fn preview_with(&mut self, doc: Option<&kentos_domain::Document>, store: &kentos_geometry_core::store::Store) {
+        match self.rows.as_ref().map(|r| r.read.clone()) {
+            Some(Ok(Some(copy))) => self.preview_on(Some(&copy.0), &copy.1),
+            Some(Ok(None)) => self.preview = Preview::Note(rows_words::READING.into()),
+            Some(Err(why)) => self.preview = Preview::Note(format!("{} {why}", rows_words::FAILED)),
+            None => self.preview_on(doc, store),
+        }
+    }
+
     /// Whether the builder is asking the drawing for an object.
     pub fn is_picking(&self) -> bool {
         self.picking.is_some()
@@ -976,13 +1007,22 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let slots: Vec<Slot> = doc
-            .model
-            .by_layer(layer)
-            .take(5000)
-            .map(|e| Slot(e.base().id))
-            .collect();
-        let counts = layer_field_counts(&doc.model, layer);
+        let node = doc.model.layers().get(layer).cloned();
+        // A data layer's objects are its source's rows (docs/adr/9348).
+        let (rows, slots) = match node.as_ref().filter(|n| n.data.is_some()) {
+            Some(_) => {
+                let (rows, slots) = self.builder_rows(layer);
+                (Some(rows), slots)
+            }
+            None => (None, doc.model.by_layer(layer).take(5000).map(|e| Slot(e.base().id)).collect()),
+        };
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let counts = match rows.as_ref().and_then(|r| r.read.clone().ok().flatten()) {
+            Some(copy) => layer_field_counts(&copy.0, layer),
+            None => layer_field_counts(&doc.model, layer),
+        };
         let unit = reading_unit(doc.model.settings());
         let mut builder = Builder::new(
             target,
@@ -991,8 +1031,79 @@ impl App {
             attribute_fields(&counts, Vec::new(), false, unit),
             Objects { slots },
         );
-        builder.preview_on(Some(&doc.model), self.spatial.store());
+        builder.rows = rows;
+        builder.choices = node
+            .iter()
+            .flat_map(|n| n.fields.iter())
+            .filter_map(|f| f.values.clone().filter(|v| !v.is_empty()).map(|v| (f.name.clone(), v)))
+            .collect();
+        builder.preview_with(Some(&doc.model), self.spatial.store());
         self.show_builder(builder)
+    }
+
+    /// A data layer's rows for the builder (docs/adr/9348): read whole off the interface's thread (data_rows.rs), put
+    /// with the layer's objects in the drawing (rows taken into its edit session) in a copy, and their shapes in a store
+    /// of their own; at most 5 000. While they are read, none; asked for here, so the read starts.
+    fn builder_rows(&self, layer: &str) -> (RowsOf, Vec<Slot>) {
+        let read = self.data_rows_of(layer);
+        let Some(doc) = self.document.as_ref() else {
+            return (RowsOf { layer: layer.to_owned(), read: Ok(None) }, Vec::new());
+        };
+        let all = match read {
+            Some(crate::data_rows::Rows::Ready(all)) => all,
+            Some(crate::data_rows::Rows::Failed(why)) => {
+                return (RowsOf { layer: layer.to_owned(), read: Err(why) }, Vec::new());
+            }
+            _ => return (RowsOf { layer: layer.to_owned(), read: Ok(None) }, Vec::new()),
+        };
+        let held = doc.model.data_hidden(layer);
+        let mut copy = doc.model.clone();
+        let mut slots: Vec<Slot> = copy.by_layer(layer).map(|e| Slot(e.base().id)).collect();
+        let objects: Vec<kentos_commands::Entity> =
+            all.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).take(5000).collect();
+        if let Ok(added) = copy.add_many(objects, "İfade") {
+            slots.extend(added);
+        }
+        slots.truncate(5000);
+        let mut store = kentos_geometry_core::store::Store::new();
+        store.put_many(slots.iter().filter_map(|s| copy.get(*s).map(|e| (*s, e))).map(|(s, e)| {
+            (f64::from(s.0), layer, false, kentos_processing::geometry::record(e).3)
+        }));
+        (RowsOf { layer: layer.to_owned(), read: Ok(Some(std::sync::Arc::new((copy, store)))) }, slots)
+    }
+
+    /// A data layer's rows came (data_rows.rs): the builder waiting for them counts and previews on them.
+    pub(crate) fn builder_rows_read(&mut self, layer: &str) {
+        let waiting = self
+            .gis
+            .builder
+            .as_ref()
+            .and_then(|b| b.rows.as_ref())
+            .is_some_and(|r| r.layer == layer && !matches!(r.read, Ok(Some(_))));
+        if !waiting {
+            return;
+        }
+        let (rows, slots) = self.builder_rows(layer);
+        // The fields counted on the rows now (Alanlar ve değerler, the help's “… nesnede var”).
+        let schema = match (&rows.read, self.document.as_ref()) {
+            (Ok(Some(copy)), Some(doc)) => Some(attribute_fields(
+                &layer_field_counts(&copy.0, layer),
+                Vec::new(),
+                false,
+                reading_unit(doc.model.settings()),
+            )),
+            _ => None,
+        };
+        let doc = self.document.as_ref().map(|d| &d.model);
+        let store = self.spatial.store();
+        if let Some(b) = self.gis.builder.as_mut() {
+            b.objects = Objects { slots };
+            b.rows = Some(rows);
+            if let Some(schema) = schema {
+                b.schema = schema;
+            }
+            b.preview_with(doc, store);
+        }
     }
 
     /// Sembol tasarımcısı's ε beside an ƒ value: the builder on its expression, over the layer
@@ -1243,8 +1354,19 @@ impl App {
                 };
                 let field = help.title.clone();
                 let ty = help.field.map_or(FieldType::Text, |(ty, _)| ty);
-                let raw = b.objects.values(&field, (!all).then_some(10), &doc.model);
+                // A data layer's values are its rows' (docs/adr/9348).
+                let copy = b.rows.as_ref().and_then(|r| r.read.clone().ok().flatten());
+                let model = copy.as_ref().map_or(&doc.model, |c| &c.0);
+                let raw = b.objects.values(&field, (!all).then_some(10), model);
                 let mut items = core::values(&raw, ty);
+                // A listed field's code shown with its label: “Yeşil Alan (Y)”; the code is what goes in, quoted.
+                if let Some(choices) = b.choices.get(&field) {
+                    for item in &mut items {
+                        if let Some(c) = choices.iter().find(|c| c.code == item.text) {
+                            item.text = format!("{} ({})", c.label, c.code);
+                        }
+                    }
+                }
                 let total = items.len();
                 items.truncate(SHOWN);
                 b.listed = Some(Listed {
@@ -1324,7 +1446,7 @@ impl App {
         let store = self.spatial.store();
         let mut tasks = Vec::new();
         if let Some(b) = self.gis.builder.as_mut() {
-            b.preview_on(doc, store);
+            b.preview_with(doc, store);
             tasks.extend(b.follow());
         }
         if focus
@@ -1453,7 +1575,7 @@ impl App {
         let doc = self.document.as_ref().map(|d| &d.model);
         let store = self.spatial.store();
         if let Some(b) = self.gis.builder.as_mut() {
-            b.preview_on(doc, store);
+            b.preview_with(doc, store);
         }
         true
     }

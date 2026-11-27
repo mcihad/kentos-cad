@@ -66,6 +66,8 @@ struct Asked {
     view: Option<[i64; 4]>,
     /// Seçililer's keys.
     selected: Vec<i64>,
+    /// The layer's fields: one added or taken off asks again, the new column read at once (docs/adr/9348).
+    fields: Vec<String>,
 }
 
 /// The data layer's table.
@@ -97,6 +99,9 @@ pub struct DataTable {
     /// Ara and İfade süzgeci as Enter asked them.
     search: String,
     filter: String,
+    /// Kaynağın tümü (docs/adr/9348): the layer's Katman süzgeci left out, every row of the source shown; by default
+    /// the table shows the filtered layer.
+    pub(crate) source_all: bool,
     /// The stop switch of the question's reads.
     stop: Arc<AtomicBool>,
     /// The cell being edited (docs/adr/9103 §5): the row's key and the field, with the text typed.
@@ -327,11 +332,24 @@ impl App {
             layer: node.id.clone(),
             search: data.search.clone(),
             show: panel.show,
-            filter: data.filter.clone(),
+            filter: match (self.table_layer_filter(node), data.filter.trim()) {
+                (Some(layer), "") => layer,
+                (Some(layer), own) => format!("({layer}) ve ({own})"),
+                (None, _) => data.filter.clone(),
+            },
             order: data.order.clone(),
             view,
             selected,
+            fields: node.fields.iter().map(|f| f.name.clone()).collect(),
         }
+    }
+
+    /// The layer's Katman süzgeci the table applies (docs/adr/9348): none with Kaynağın tümü or without one.
+    pub(crate) fn table_layer_filter(&self, node: &LayerNode) -> Option<String> {
+        if self.gis.features.data.source_all {
+            return None;
+        }
+        node.filter.as_ref().and_then(|f| f.expression.clone()).filter(|t| !t.trim().is_empty())
     }
 
     /// After every message while the table shows a data layer: a new question starts again from its first page, and
@@ -759,8 +777,10 @@ impl App {
                     SortOrder::Ascending
                 }
             });
+            // The field's alias in the head (docs/adr/9348); sorting, conditions and writes go by its name.
+            let head = node.fields.iter().find(|d| &d.name == f).map_or_else(|| f.clone(), |d| d.label().to_owned());
             columns.push(
-                TableColumn::new(f.clone())
+                TableColumn::new(head)
                     .width(Length::Fixed(140.0))
                     .sortable(order, msg(DataEvent::Sort(f.clone()))),
             );
@@ -1024,7 +1044,7 @@ impl App {
             .style(kentos_ui::style::text::warning),
             (None, None) => label::caption(words::READING),
             (None, Some(n)) => label::caption(format!(
-                "{}{} · {}{}{}",
+                "{}{} · {}{}{}{}",
                 words::count(n),
                 // The rows read so far beside the table's count, while they are fewer (docs/adr/9142).
                 {
@@ -1038,6 +1058,12 @@ impl App {
                 match data.checked {
                     Some(RowsChecked::Here) => words::HERE,
                     _ => words::SOURCE,
+                },
+                // Which rows these are (docs/adr/9348): the filtered layer's, or the whole source's.
+                match (self.table_layer_filter(node), node.filter.as_ref().and_then(|f| f.expression.as_ref())) {
+                    (Some(f), _) => format!(" · katman süzgeci: {f}"),
+                    (None, Some(e)) if !e.trim().is_empty() => " · kaynağın tümü (katman süzgeci uygulanmadı)".to_owned(),
+                    _ => String::new(),
                 },
                 if selected.is_empty() {
                     String::new()

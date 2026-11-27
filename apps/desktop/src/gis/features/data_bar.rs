@@ -94,10 +94,32 @@ impl App {
         )
         .hints(["Tablonun satırları", off::FORM])
         .compact();
+        // Süzülen katman | Kaynağın tümü, while the layer has a Katman süzgeci (docs/adr/9348).
+        let filtered = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&layer))
+            .and_then(|n| n.filter.as_ref())
+            .and_then(|f| f.expression.as_ref())
+            .is_some_and(|e| !e.trim().is_empty());
+        let scope: Element<'a, Message> = if filtered {
+            let all = panel.data.source_all;
+            let select: Element<'a, Message> = Select::new(
+                [Choice::new("Süzülen katman"), Choice::new("Kaynağın tümü")],
+                Some(usize::from(all)),
+                |i| msg(Event::SourceAll(i == 1)),
+            )
+            .prefix("Kapsam")
+            .into();
+            container(select).width(Length::Fixed(220.0)).into()
+        } else {
+            space::horizontal().width(0).into()
+        };
         let filters = row![
             pane,
             container(self.layer_select(rows)).width(Length::Fixed(250.0)),
             self.edit_state_badge(&layer),
+            scope,
             container(search).width(Length::Fixed(170.0)),
             container(show).width(Length::Fixed(150.0)),
             container(filter).width(Length::Fixed(240.0)),

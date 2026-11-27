@@ -233,9 +233,12 @@ impl ParcelsCheckWindowApp for App {
         let mut rows = Vec::new();
         let mut outside = 0;
         match &s.answer {
+            // What the check needs, said where it found nothing (docs/adr/9348).
             Some(Ok(r)) if r.parcels.is_empty() => lines.push(words::text_line(
                 Kind::Warn,
-                "Denetlenecek parsel yok: parsel katmanında alan yok ya da seçimde alan yok.",
+                "Denetlenecek parsel yok. Denetim kapalı alanları okur: seçili alanları, seçim yoksa “parsel” katmanındakileri. \
+                 Her alanda Ada, Parsel ve “Tapu alanı (m²)” değeri olmalı; İl, İlçe ve Mahalle kimliği tamamlar. Parselleri \
+                 seçip denetimi yeniden açın.",
             )),
             Some(Ok(r)) => {
                 outside = r.outside;

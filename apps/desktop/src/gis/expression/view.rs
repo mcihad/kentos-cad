@@ -666,10 +666,15 @@ fn values(b: &Builder) -> Element<'_, Message> {
             out = out
                 .push(label::caption("Bu alanın nesnelerde değeri yok.").style(style::text::muted))
         }
+        // A data layer's rows (docs/adr/9348): read, unread, or none in its source.
         None if !any => {
-            out = out.push(
-                label::caption("Değerleri göstermek için nesne yok.").style(style::text::muted),
-            )
+            let words = match b.rows.as_ref().map(|r| &r.read) {
+                Some(Ok(None)) => super::rows_words::READING.to_owned(),
+                Some(Err(why)) => format!("{} {why}", super::rows_words::FAILED),
+                Some(Ok(Some(_))) => "Kaynağın tablosunda satır yok.".to_owned(),
+                None => "Değerleri göstermek için nesne yok.".to_owned(),
+            };
+            out = out.push(label::caption(words).style(style::text::muted))
         }
         None => {}
     }

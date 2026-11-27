@@ -51,6 +51,8 @@ pub(crate) mod role_fields;
 mod records;
 pub(crate) mod source;
 #[cfg(test)]
+mod scope_tests;
+#[cfg(test)]
 mod tests;
 pub(crate) mod view;
 pub(crate) mod whole;
@@ -159,6 +161,8 @@ pub enum Event {
     Layer(String),
     /// Düzenlenen katmanlar ▾: an edited layer made the active one and the table's (docs/adr/9347).
     EditedLayer(String),
+    /// Süzülen katman (false) or Kaynağın tümü (true) on a data layer with a Katman süzgeci (docs/adr/9348).
+    SourceAll(bool),
     /// The Form view's “… için form oluştur” (GIS-026): the designer's new form on this layer.
     NewFormFor(String),
     Search(String),
@@ -856,6 +860,7 @@ impl App {
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
             // Düzenlenen katmanlar ▾ (data_bar.rs, docs/adr/9347): the layer made the active one and the table's.
+            Event::SourceAll(all) => self.gis.features.data.source_all = all,
             Event::EditedLayer(id) => {
                 if let Some(doc) = self.document.as_mut() {
                     doc.model.set_active_layer(&id);

@@ -225,6 +225,37 @@ pub fn read(
     }
 }
 
+/// Ara's condition (docs/adr/9348): the words in any field, or a listed field's label holding them, by the codes the
+/// source keeps (the table shows “Yeşil Alan”, the source holds `Y`). Labels compare folded the Turkish way; codes that
+/// share a label all count; a number field's code is asked as its number.
+fn search_condition(
+    node: &kentos_commands::LayerNode,
+    schema: &kentos_data::Schema,
+    fields: &[String],
+    words: &str,
+) -> Condition {
+    let mut either = vec![Condition::Contains { fields: fields.to_vec(), text: words.to_owned() }];
+    let wanted = kentos_commands::fold(words);
+    for f in &node.fields {
+        let (Some(choices), Some(column)) = (f.values.as_ref(), schema.field(&f.name)) else {
+            continue;
+        };
+        let values: Vec<kentos_data::Value> = choices
+            .iter()
+            .filter(|c| kentos_commands::fold(&c.label).contains(&wanted))
+            .filter_map(|c| match column.kind {
+                kentos_data::FieldKind::Int { .. } => c.code.trim().parse().ok().map(kentos_data::Value::Int),
+                kentos_data::FieldKind::Real => c.code.trim().parse().ok().map(kentos_data::Value::Real),
+                _ => Some(kentos_data::Value::Text(c.code.clone())),
+            })
+            .collect();
+        if !values.is_empty() {
+            either.push(Condition::In { field: f.name.clone(), values });
+        }
+    }
+    if either.len() == 1 { either.remove(0) } else { Condition::Or(either) }
+}
+
 fn rows_of(
     node: &kentos_commands::LayerNode,
     settings: &kentos_commands::ProjectSettings,
@@ -254,10 +285,9 @@ fn rows_of(
         parts.push(Condition::Fids(keys.clone()));
     }
     if let Some(words) = input.search.as_deref().map(str::trim).filter(|w| !w.is_empty()) {
-        parts.push(Condition::Contains {
-            fields: asked.all_fields.clone(),
-            text: words.to_owned(),
-        });
+        // Only the table's columns: a field of the layer its table lacks (docs/adr/9318) is not asked.
+        let searched: Vec<String> = asked.all_fields.iter().filter(|f| schema.field(f).is_some()).cloned().collect();
+        parts.push(search_condition(node, &schema, &searched, words));
     }
     // The filter's part the source answers itself (docs/adr/9109): all of it when exact.
     let pushed = match asked.filter.as_ref().and_then(|f| f.expr()) {
