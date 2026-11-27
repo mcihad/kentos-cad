@@ -85,7 +85,7 @@ fn the_triangle_is_measured_into_the_box_with_its_units_way_and_system() {
     }
     key(&mut app, Named::Enter, Code::Enter);
     assert_eq!(rows(&app)[..2], [("Alan".to_owned(), f.area(600.0)), ("Çevre".to_owned(), f.length(120.0))]);
-    assert_eq!(app.measure_shown().map(|m| m.units.as_str()), Some("metre, metrekare"));
+    assert_eq!(app.measure_shown().map(|m| m.units), Some("metre, metrekare".to_owned()));
     // ×: put away until the next measurement.
     let _ = app.update(Message::MeasureBox(crate::measure_box::Event::Close));
     assert!(app.measure_box_view().is_none());
@@ -185,4 +185,60 @@ fn screens() {
     crate::files_testing::usage_shots("9328", "01-hizli-olcum-mesafe", || measured("tool.measure", true));
     crate::files_testing::usage_shots("9328", "02-alan", || measured("tool.area", true));
     crate::files_testing::usage_shots("9328", "03-aci", || measured("tool.measureAngle", false));
+}
+
+/// While measuring (docs/adr/9351): the box shows the measurement as it stands, said as going on; finished and the tool
+/// ended, the box stays; another tool puts it away. A measuring tool snaps to every shown data layer's rows.
+#[test]
+fn the_box_follows_the_measurement_and_stays_after_its_tool_ends() {
+    let mut app = project();
+    let f = app.format();
+    run(&mut app, "tool.measure");
+    assert!(app.measuring(), "Mesafe ölç measures: every shown data layer snaps");
+    at(&mut app, A);
+    at(&mut app, C);
+    let live = app.measure_live().expect("going on");
+    assert_eq!(live.rows[0], ("1. parça".to_owned(), f.length(30.0)));
+    assert!(app.measure_box_view().is_some(), "the box shows while measuring");
+    at(&mut app, B);
+    key(&mut app, Named::Enter, Code::Enter);
+    assert!(app.measure_live().is_none(), "finished");
+    // Esc: the tool ends, the box stays with the last measurement.
+    key(&mut app, Named::Escape, Code::Escape);
+    assert_eq!(app.session.tool_id(), "select");
+    let shown = app.measure_shown().expect("the box stays");
+    assert_eq!(shown.rows.iter().find(|(w, _)| w == "Toplam").map(|(_, v)| v.clone()), Some(f.length(70.0)));
+    assert!(!app.measuring());
+    // Alan hesapla: its ring as it stands.
+    run(&mut app, "tool.area");
+    at(&mut app, A);
+    at(&mut app, C);
+    at(&mut app, B);
+    let live = app.measure_live().expect("an area going on");
+    assert_eq!(live.rows[0], ("Alan".to_owned(), f.area(600.0)));
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9351/`): Mesafe ölç going on, and finished after its tool ended.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib measure_box_tests::live_screens -- --ignored --nocapture"]
+fn live_screens() {
+    crate::drawing_fonts::load();
+    crate::files_testing::usage_shots("9351", "01-mesafe-suruyor", || {
+        let mut app = project();
+        run(&mut app, "tool.measure");
+        for p in [A, C, B] {
+            at(&mut app, p);
+        }
+        app
+    });
+    crate::files_testing::usage_shots("9351", "02-mesafe-bitti", || {
+        let mut app = project();
+        run(&mut app, "tool.measure");
+        for p in [A, C, B] {
+            at(&mut app, p);
+        }
+        key(&mut app, Named::Enter, Code::Enter);
+        key(&mut app, Named::Escape, Code::Escape);
+        app
+    });
 }

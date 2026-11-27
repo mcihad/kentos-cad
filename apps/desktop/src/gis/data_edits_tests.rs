@@ -180,6 +180,30 @@ fn a_layer_being_edited_is_read_whole_and_kept_for_the_snap() {
     let _ = std::fs::remove_file(&path);
 }
 
+/// A measuring tool runs (docs/adr/9351): a layer neither edited nor labelled keeps its read's rows whole for the snap
+/// too, so Mesafe ölç lands on a parcel's corner.
+#[test]
+fn a_measuring_tool_keeps_every_shown_layer_for_the_snap() {
+    crate::data_layers::register();
+    let path = parcels("olcum-kenet", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let layer = node(&app, "parseller").expect("the layer").clone();
+    let view = crate::data_view::DataView::new();
+    view.snap_all(true);
+    let (_, _, doc) = read_whole_as(&view, &app, &layer, false).expect("kept while measuring");
+    assert_eq!(doc.len(), 40);
+    let spatial = kentos_interaction::Spatial::of(&doc);
+    let corner = parcel_point(30.0, 30.0);
+    let near = kentos_interaction::Vec2::new(corner.x + 0.2, corner.y - 0.15);
+    let endpoint = kentos_interaction::snap_kinds(|k| k == "snap.endpoint");
+    let hit = spatial.snap_ex(near, 0.5, endpoint, None, &Default::default()).expect("a snap");
+    assert_eq!((hit.point.x, hit.point.y), (corner.x, corner.y));
+    let _ = std::fs::remove_file(&path);
+}
+
 #[test]
 fn a_cell_of_an_edited_layer_takes_its_row_and_writes_the_value_into_the_session() {
     use crate::features::data::DataEvent;

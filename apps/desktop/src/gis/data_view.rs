@@ -102,6 +102,8 @@ pub struct DataView {
     told: Condvar,
     /// The faces ground-sized text markers are drawn as vectors with (docs/adr/9245): the style's images.
     text: Mutex<Option<Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>>>,
+    /// A measuring tool runs (docs/adr/9351): every shown layer keeps its rows for the snap, as one being edited does.
+    snap_all: std::sync::atomic::AtomicBool,
 }
 
 static SERVICE: OnceLock<DataView> = OnceLock::new();
@@ -128,7 +130,18 @@ impl DataView {
             fresh: Mutex::new(false),
             told: Condvar::new(),
             text: Mutex::new(None),
+            snap_all: std::sync::atomic::AtomicBool::new(false),
         }
+    }
+
+    /// While a measuring tool runs (docs/adr/9351): every shown data layer's rows kept whole for the snap.
+    pub fn snap_all(&self, on: bool) {
+        self.snap_all.store(on, Ordering::Relaxed);
+    }
+
+    /// Whether every shown data layer's rows are kept for the snap.
+    pub fn snaps_all(&self) -> bool {
+        self.snap_all.load(Ordering::Relaxed)
     }
 
     /// The faces the reads draw ground-sized text markers with as vectors (docs/adr/9245): the style's images.
@@ -582,6 +595,9 @@ impl DataView {
             }
         };
         let step = step_of(px_per_m);
+        // A measuring tool snaps to every shown layer's rows (docs/adr/9351), not only an edited one's.
+        let all = self.snaps_all();
+        let editing = |id: &str| all || editing(id);
         for node in nodes {
             let Some(data) = &node.data else {
                 continue;

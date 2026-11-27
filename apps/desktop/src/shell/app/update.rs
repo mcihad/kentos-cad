@@ -253,6 +253,11 @@ impl App {
             self.data_selection_tasks(),
             // The data layers' rows İstatistik and Grafik count, read from their sources (data_rows.rs, docs/adr/9130).
             self.data_rows_tasks(),
+            // A measuring tool snaps to every shown data layer's rows (measure_box.rs, docs/adr/9351).
+            {
+                crate::data_view::service().snap_all(self.measuring());
+                Task::none()
+            },
             // The data layers' fields İstatistik and Grafik count, counted by their sources (data_counts.rs, docs/adr/9181).
             self.data_counts_tasks(),
             // The data layers' rows the inspector says, counted by their sources (source_counts.rs, docs/adr/9340).

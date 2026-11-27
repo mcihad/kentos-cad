@@ -150,7 +150,7 @@ impl App {
         let shown = crate::data_view::service();
         self.gis.data_labels
             .iter()
-            .filter(|d| doc.model.editing(&d.layer) && shown.drawn_read(&d.layer) == Some(d.read))
+            .filter(|d| (shown.snaps_all() || doc.model.editing(&d.layer)) && shown.drawn_read(&d.layer) == Some(d.read))
             .filter_map(|d| self.session.snap(&d.spatial, at, view, draft, &self.tracking))
             .map(|mut hit| {
                 hit.id = kentos_geometry_core::store::snap::NO_OBJECT;

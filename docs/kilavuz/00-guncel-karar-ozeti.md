@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Ölçme araçları: ölçü kutusu ölçerken canlı, araç bitince kalır; ölçerken veri katmanlarına yakalama (27 Kasım 2026,
+  sahibin sözü; [ADR 9351](../adr/9351-measure-box-live-snap-and-stays.md)).**
+  - Mesafe ölç ve Alan hesapla'da kutu imlecin yakalanmış noktasıyla canlı (“sürüyor”); büyük toplam ve parça tablosu,
+    vitrindeki Ölçüm bölmesi gibi. Son ölçü araç bitince de kalır; başka araç ya da × kaldırır.
+  - Ölçme araçları çalışırken görünen bütün veri katmanlarının satırları yakalamaya girer (yalnız düzenlenen değil).
+
 - **CBS katman menüsünün sonunda Katman özellikleri (27 Kasım 2026, sahibin sözü;
   [ADR 9350](../adr/9350-layer-properties-summary.md)).**
   - Bilgi amaçlı pencere: solda Genel, Kaynak, Koordinat sistemi, Stil, Alanlar, Formlar; sağda ad–değer özeti.
