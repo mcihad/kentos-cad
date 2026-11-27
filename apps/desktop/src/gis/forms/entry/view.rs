@@ -230,11 +230,8 @@ impl App {
             let why = e.read_why.clone().unwrap_or_else(|| {
                 "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.".to_owned()
             });
+            // Düzenle, which opens the same row for editing (the CBS review's 2nd item), is the footer's, on its left.
             body = body.push(words::summary(vec![words::text_line(Kind::Info, why)]));
-            // Its layer not being edited: Düzenle opens the same row for editing (the CBS review's 2nd item).
-            if (e.edit_row.is_some() || e.edit_slot.is_some()) && !e.preview {
-                body = body.push(words::primary("Düzenle", Some(e.msg(Event::EditRow))));
-            }
         } else if let Some(why) = self.entry_lock_words(e).filter(|_| locked) {
             // Which of them it is (docs/adr/9125): the role, the archive, the layer's lock.
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
@@ -380,6 +377,17 @@ impl App {
                     OVERWRITE,
                     (!locked).then(|| e.msg(Event::Overwrite)),
                 ));
+        }
+        // A record opened for reading (docs/adr/9352): Düzenle at the footer's left, on the line of its other buttons; the
+        // right keeps Vazgeç alone, as nothing is written from here.
+        let editable = (e.edit_row.is_some() || e.edit_slot.is_some()) && !e.preview;
+        if e.read_only {
+            if editable {
+                footer = footer.push(words::primary(EDIT, Some(e.msg(Event::EditRow))));
+            }
+            return footer
+                .push(space::horizontal().width(Fill))
+                .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))));
         }
         if errors > 0 {
             // Where the last press went, then the next (docs/adr/0443 §6).
@@ -674,6 +682,7 @@ impl App {
         };
         Ok(match control {
             Control::Press(SAVE | crate::data_edits::PREPARE) => Some(msg(Event::Save)),
+            Control::Press(EDIT) => Some(msg(Event::EditRow)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(FIRST_ISSUE | NEXT_ISSUE) => Some(msg(Event::FirstIssue)),
             Control::Press(DISCARD) => Some(msg(Event::Discard)),

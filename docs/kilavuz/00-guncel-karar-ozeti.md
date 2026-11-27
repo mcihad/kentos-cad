@@ -4,6 +4,10 @@
 
 ## 0. Güncel karar özeti
 
+- **Okumak için açılan formda Düzenle alt çubuğun solunda (27 Kasım 2026, sahibin sözü;
+  [ADR 9352](../adr/9352-form-edit-button-in-the-footer.md)).** Sağda yalnız Vazgeç; yazılamayan kayıtta kapalı
+  kaydetme düğmesi gösterilmez.
+
 - **Ölçme araçları: ölçü kutusu ölçerken canlı, araç bitince kalır; ölçerken veri katmanlarına yakalama (27 Kasım 2026,
   sahibin sözü; [ADR 9351](../adr/9351-measure-box-live-snap-and-stays.md)).**
   - Mesafe ölç ve Alan hesapla'da kutu imlecin yakalanmış noktasıyla canlı (“sürüyor”); büyük toplam ve parça tablosu,

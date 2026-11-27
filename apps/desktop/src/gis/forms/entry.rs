@@ -63,6 +63,8 @@ use crate::traces::Control;
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Formla düzenle";
 const SAVE: &str = "Kaydı uygula";
+/// A record opened for reading: the same form opened for editing (docs/adr/9352).
+const EDIT: &str = "Düzenle";
 const RELOAD: &str = "Yeniden yükle";
 const OVERWRITE: &str = "Üzerine yaz";
 /// A new release's form opened with what was typed (docs/adr/0442 §2).
