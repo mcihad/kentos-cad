@@ -180,7 +180,7 @@ pub enum Event {
     CsvSaved(Option<PathBuf>),
 }
 
-fn message(e: Event) -> Message {
+pub(crate) fn message(e: Event) -> Message {
     Message::Gis(gis::Event::Calc(CalcEvent::Convert(e)))
 }
 
@@ -747,9 +747,12 @@ impl Form {
                                 .width(Fill)
                                 .style(style::container::bordered),
                         );
+                        // The target system and the operation apart (docs/adr/9330): an operation's code (EPSG:5261) read
+                        // beside the system's name was taken for the system's.
+                        lines.push((Line::Ok, format!("Hedef sistem: {}.", to.title)));
                         lines.push((
                             if c.exact { Line::Ok } else { Line::Info },
-                            format!("{}: {}.", to.name, c.accuracy),
+                            format!("Dönüşüm işlemi: {}.", c.accuracy),
                         ));
                         // docs/adr/3700: the areas of use the point lies beyond.
                         for note in area_notes(&from, &to, &datum_choices, &c) {
@@ -796,9 +799,9 @@ impl Form {
                     lines.push((
                         Line::Ok,
                         format!(
-                            "{} nokta dönüştürüldü. {}: {}.",
+                            "{} nokta dönüştürüldü. Hedef sistem: {}. Dönüşüm işlemi: {}.",
                             good.len(),
-                            to.name,
+                            to.title,
                             first.accuracy
                         ),
                     ));

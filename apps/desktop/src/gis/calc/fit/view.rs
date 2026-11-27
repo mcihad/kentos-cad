@@ -48,7 +48,9 @@ impl Form {
         }
         body = body.push(self.apply_row(model, selected));
         body = body.push(self.reach_line(model, selection));
-        let can_apply = self.plan(model, format).is_some() && self.has_targets(model, selected);
+        // A locked layer among the ones moved refuses the whole move (docs/adr/9330): Uygula waits.
+        let locked = !self.locked_in_reach(model, selection).is_empty();
+        let can_apply = self.plan(model, format).is_some() && self.has_targets(model, selected) && !locked;
         let can_report = self.method == Method::Points || self.plan(model, format).is_some();
         let mut dialog = Dialog::new(TITLE)
             .on_close(crate::calc::event(crate::calc::Event::Close))
@@ -68,6 +70,9 @@ impl Form {
             .width(980.0);
         if let Some(status) = &self.status {
             dialog = dialog.aside(label::caption(status.clone()).style(style::text::danger));
+        } else {
+            // What Uygula takes, beside it (docs/adr/9330): how many layers and objects.
+            dialog = dialog.aside(label::caption(self.reach_words(model, selection)).style(style::text::muted));
         }
         dialog.into()
     }
@@ -278,6 +283,24 @@ impl Form {
             .map(|l| format!("; hedef katman “{}” yerinde kalır", name(l)))
             .unwrap_or_default();
         let mut out = column![words::text_line(Line::Info, format!("Taşınacak: {}{held}.", said.join(", ")))].spacing(4);
+        // Before it runs (docs/adr/9330): a locked layer refuses the whole move; a data layer's rows are its source's.
+        let locked: Vec<String> = self.locked_in_reach(model, selection).iter().map(|l| format!("“{}”", name(l))).collect();
+        if !locked.is_empty() {
+            out = out.push(words::text_line(Line::Warn, super::words::locked_words(&locked)));
+        }
+        if self.scope == Scope::All {
+            let data: Vec<String> =
+                layers.leaves().into_iter().filter(|l| l.data.is_some()).map(|l| format!("“{}”", l.name)).collect();
+            if !data.is_empty() {
+                out = out.push(words::text_line(
+                    Line::Info,
+                    format!(
+                        "Veri katmanı: {}. Satırları kaynağındadır, oturtma onları taşımaz; düzenleme oturumunda alınanlar taşınır.",
+                        data.join(", ")
+                    ),
+                ));
+            }
+        }
         if target {
             let t = self.target.as_deref().map(name).unwrap_or_default();
             out = out.push(words::text_line(
@@ -286,6 +309,18 @@ impl Form {
             ));
         }
         out.into()
+    }
+}
+
+impl Form {
+    /// What Uygula takes in a few words, beside it (docs/adr/9330): “2 katman, 15 nesne”, “1 katman, 3 nesne”.
+    pub(super) fn reach_words(&self, model: &Model, selection: &[Slot]) -> String {
+        let (counts, _) = self.reach(model, selection);
+        let objects: usize = counts.iter().map(|(_, n)| n).sum();
+        if objects == 0 {
+            return "Uygulanacak nesne yok".to_owned();
+        }
+        format!("Uygula: {} katman, {objects} nesne", counts.len())
     }
 }
 

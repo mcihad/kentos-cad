@@ -320,7 +320,9 @@ impl App {
             self.gis.calc.traverse.sync(&doc.model);
         }
         if window == Window::Fit {
-            self.gis.calc.fit.sync(&doc.model, self.selection.len());
+            // A CBS project's Oturt starts on a layer, never on every object (docs/adr/9330).
+            let cbs = doc.model.settings().workspace == Some(kentos_commands::Workspace::Gis);
+            self.gis.calc.fit.sync(&doc.model, self.selection.len(), cbs);
         }
         if window == Window::RasterFit {
             self.gis

@@ -265,8 +265,9 @@ impl Form {
     /// What the drawing offers, read when the window opens (the web's
     /// `renderControls`): the layers holding named points, the chosen ones
     /// kept while they still hold some; the layer Uygula takes; Seçili with
-    /// nothing selected becomes Tümü.
-    pub fn sync(&mut self, model: &Model, selected: usize) {
+    /// nothing selected becomes the source points' layer, in a CBS project
+    /// (`cbs`) the active layer that has objects (docs/adr/9330), else Tümü.
+    pub fn sync(&mut self, model: &Model, selected: usize, cbs: bool) {
         self.named = named_layers(model);
         let held = |id: &Option<String>, named: &[(String, String, usize)]| {
             id.as_ref()
@@ -290,13 +291,23 @@ impl Form {
         {
             self.layer = Some(layers.active().to_owned());
         }
-        // Nothing selected (GIS-038): the source points' layer, the objects measured with them; Tümü only without one.
+        // Nothing selected (GIS-038): the source points' layer, the objects measured with them. A CBS project never
+        // starts on every object (docs/adr/9330): one measured layer fitted took the analyses' outputs and the other
+        // layers along; it starts on the active layer that has objects, else the first that has some and is not
+        // locked. Tümü only without one, and only when chosen.
         if self.scope == Scope::Selection && selected == 0 {
             match (&self.method, &self.source) {
                 (Method::Points, Some(source)) => {
                     self.scope = Scope::Layer;
                     self.layer = Some(source.clone());
                 }
+                _ if cbs => match movable_layer(model) {
+                    Some(layer) => {
+                        self.scope = Scope::Layer;
+                        self.layer = Some(layer);
+                    }
+                    None => self.scope = Scope::All,
+                },
                 _ => self.scope = Scope::All,
             }
         }
@@ -386,6 +397,13 @@ impl Form {
             }
         }
         best
+    }
+
+    /// The locked layers among the ones Uygula moves (docs/adr/9330): a locked layer's object refuses the whole move
+    /// (docs/adr/0047), so Uygula waits until it is unlocked or left out.
+    pub(super) fn locked_in_reach(&self, model: &Model, selection: &[Slot]) -> Vec<String> {
+        let layers = model.layers();
+        self.reach(model, selection).0.into_iter().map(|(id, _)| id).filter(|id| layers.is_locked(id)).collect()
     }
 
     /// The target points' layer Tümü leaves where it is (GIS-038): with control points, the layer they are fitted to,
@@ -647,4 +665,16 @@ fn transform_of(fit: &solver::Fit) -> Option<Transform> {
             h: p.try_into().ok()?,
         },
     })
+}
+
+/// The layer a CBS project's Oturt starts on with nothing selected (docs/adr/9330): the active layer when it has objects
+/// and is not locked, else the first layer in the tree's order that has; none when no layer has.
+fn movable_layer(model: &Model) -> Option<String> {
+    let layers = model.layers();
+    let movable = |id: &str| model.count(id) > 0 && !layers.is_locked(id);
+    let active = layers.active().to_owned();
+    if movable(&active) {
+        return Some(active);
+    }
+    layers.leaves().into_iter().map(|l| l.id.clone()).find(|id| movable(id))
 }

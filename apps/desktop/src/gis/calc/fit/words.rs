@@ -281,3 +281,12 @@ fn failure(e: FitError) -> &'static str {
         }
     }
 }
+
+/// The locked layers among the ones Uygula moves, said with the way out (docs/adr/9330): “Yerel ölçü” katmanı kilitli…
+pub(super) fn locked_words(names: &[String]) -> String {
+    let which = match names {
+        [one] => format!("{one} katmanı"),
+        many => format!("{} katmanları", many.join(", ")),
+    };
+    format!("{which} kilitli; kilitli katmanın nesnesi taşınmaz. Kilidini açın ya da kapsamdan çıkarın.")
+}

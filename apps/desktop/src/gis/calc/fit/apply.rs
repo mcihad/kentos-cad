@@ -90,6 +90,15 @@ impl App {
         ) else {
             return;
         };
+        // A locked layer among the ones moved refuses the whole move (docs/adr/0047, 9330): said before, not tried.
+        let locked = form.locked_in_reach(&doc.model, self.selection.ids());
+        if !locked.is_empty() {
+            let layers = doc.model.layers();
+            let names: Vec<String> =
+                locked.iter().map(|l| format!("“{}”", layers.get(l).map_or(l.as_str(), |n| n.name.as_str()))).collect();
+            self.gis.calc.fit.status = Some(super::words::locked_words(&names));
+            return;
+        }
         let copy = form.copy;
         let input = EntitiesTransform {
             uids: form.targets(&doc.model, self.selection.ids()),

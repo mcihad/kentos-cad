@@ -924,3 +924,102 @@ fn the_reach_line_on_the_screen() {
     assert!(!found.is_empty());
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-038-oturtma-kapsam");
 }
+
+/// docs/adr/9330: a CBS project's Oturt with nothing selected starts on the active layer that has objects, never on
+/// every object; what Uygula takes is said beside it; Parametrelerle's ΔY 10 m with Kopya moves copies of that layer's
+/// three points alone, and one undo takes them back.
+#[test]
+fn a_cbs_projects_oturt_starts_on_the_active_layer_and_moves_it_alone() {
+    use crate::tools_scenes::{E, N, Objects, open_edited};
+    let mut app = crate::files_testing::app_with_drawing();
+    let mut o = Objects::new();
+    for x in [0.0, 30.0, 60.0] {
+        o.point("parsel", [x, 0.0], None);
+    }
+    o.line("yol", [0.0, 10.0], [60.0, 10.0]);
+    o.line("cizim", [0.0, 20.0], [60.0, 20.0]);
+    open_edited(&mut app, o, |d| d["settings"]["workspace"] = serde_json::json!("gis"));
+    let doc = app.document.as_mut().expect("open");
+    assert!(doc.model.set_active_layer("parsel"));
+    app.gis.calc.fit.method = Method::Parameters;
+    let _ = app.run("transform.fit");
+    let doc = app.document.as_ref().expect("open");
+    let form = &app.gis.calc.fit;
+    assert_eq!((form.scope, form.layer.as_deref()), (Scope::Layer, Some("parsel")), "never Tümü");
+    assert_eq!(form.reach_words(&doc.model, &[]), "Uygula: 1 katman, 3 nesne");
+    calc(&mut app, Calc::Known(Field::Base, format!("{E},{N}")));
+    for (p, t) in [(Param::ScaleY, "1"), (Param::ScaleX, "1"), (Param::Rotation, "0"), (Param::ShiftY, "10"), (Param::ShiftX, "0")] {
+        fit(&mut app, Event::Param(p, t.into()));
+    }
+    fit(&mut app, Event::Copy(true));
+    fit(&mut app, Event::Apply);
+    let model = &app.document.as_ref().expect("open").model;
+    assert_eq!((model.count("parsel"), model.count("yol"), model.count("cizim")), (6, 1, 1), "copies of the layer alone");
+    let mut east: Vec<f64> = model
+        .by_layer("parsel")
+        .filter_map(|e| match e {
+            Entity::Point(p) => Some(p.p.x - E),
+            _ => None,
+        })
+        .collect();
+    east.sort_by(f64::total_cmp);
+    let want = [0.0, 10.0, 30.0, 40.0, 60.0, 70.0];
+    assert!(east.iter().zip(want).all(|(a, b)| (a - b).abs() < 1e-6), "{east:?}");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(app.document.as_ref().expect("open").model.count("parsel"), 3, "one undo");
+}
+
+/// docs/adr/9330: a locked layer among the ones moved is said before Uygula, which waits.
+#[test]
+fn a_locked_layer_in_reach_is_said_before_uygula() {
+    let mut app = matched();
+    app.document.as_mut().expect("open").model.toggle_layer_locked("yerel");
+    let doc = app.document.as_ref().expect("open");
+    let locked = app.gis.calc.fit.locked_in_reach(&doc.model, &[]);
+    assert_eq!(locked, ["yerel"]);
+    let words = super::words::locked_words(&["“Yerel ölçü”".to_owned()]);
+    assert!(words.starts_with("“Yerel ölçü” katmanı kilitli;"), "{words}");
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9330/`): a CBS project's Oturt with nothing selected, on its active layer
+/// with what Uygula takes beside it; the same with the layer locked, said before Uygula; Dönüştür's target system and
+/// operation apart.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib calc::fit::tests::screens_9330 -- --ignored --nocapture"]
+fn screens_9330() {
+    use crate::tools_scenes::{E, N, Objects, open_edited};
+    crate::drawing_fonts::load();
+    let scene = |locked: bool| {
+        let mut app = crate::files_testing::app_with_drawing();
+        let mut o = Objects::new();
+        for x in [0.0, 30.0, 60.0] {
+            o.point("parsel", [x, 0.0], None);
+        }
+        o.line("yol", [0.0, 10.0], [60.0, 10.0]);
+        open_edited(&mut app, o, |d| d["settings"]["workspace"] = serde_json::json!("gis"));
+        let doc = app.document.as_mut().expect("open");
+        doc.model.set_active_layer("parsel");
+        app.gis.calc.fit.method = Method::Parameters;
+        let _ = app.run("transform.fit");
+        calc(&mut app, Calc::Known(Field::Base, format!("{E},{N}")));
+        for (p, t) in [(Param::ScaleY, "1"), (Param::ScaleX, "1"), (Param::Rotation, "0"), (Param::ShiftY, "10"), (Param::ShiftX, "0")] {
+            fit(&mut app, Event::Param(p, t.into()));
+        }
+        if locked {
+            app.document.as_mut().expect("open").model.toggle_layer_locked("parsel");
+        }
+        app
+    };
+    crate::files_testing::usage_shots("9330", "01-oturt-etkin-katman", || scene(false));
+    crate::files_testing::usage_shots("9330", "02-oturt-kilitli", || scene(true));
+    crate::files_testing::usage_shots("9330", "03-donustur", || {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(Message::Run("crs.transform"));
+        let send = |app: &mut App, e: crate::calc::convert::Event| drop(app.update(crate::calc::convert::message(e)));
+        send(&mut app, crate::calc::convert::Event::From(crate::calc::convert::Pick::Srid(5256)));
+        send(&mut app, crate::calc::convert::Event::To(crate::calc::convert::Pick::Srid(4326)));
+        send(&mut app, crate::calc::convert::Event::A("500000".into()));
+        send(&mut app, crate::calc::convert::Event::B("4320000".into()));
+        app
+    });
+}

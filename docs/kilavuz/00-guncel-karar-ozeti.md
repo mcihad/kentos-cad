@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **CBS'de Oturt seçimsiz açılınca etkin katmanla başlar (27 Kasım 2026, CBS incelemesinin 13. maddesi;
+  [ADR 9330](../adr/9330-fit-scope-starts-on-a-layer.md)).**
+  - Kapsam nesnesi olan kilitsiz etkin katmandır; Tümü yalnız seçilince. Uygula'nın yanında “Uygula: 1 katman, 3
+    nesne”; kilitli katman önceden söylenir ve Uygula bekler; veri katmanının satırlarının taşınmadığı söylenir.
+  - Dönüştür'ün sonucu “Hedef sistem” ile “Dönüşüm işlemi”ni ayrı satırlarda söyler.
+
 - **Nokta ve GNSS içe almada yeni katman hep yenidir (27 Kasım 2026, CBS incelemesinin 12. maddesi;
   [ADR 9329](../adr/9329-import-new-layer-names.md)).**
   - Önerilen ad hiçbir katmanın değildir (`ad_2`…); var olan ad yolu söylenerek reddedilir, var olana ekleme Hedef
