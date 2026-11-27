@@ -100,6 +100,38 @@ impl Covering {
         }
     }
 
+    /// The covering an object is (docs/adr/8070 §10, 8173): a slab's plate or a beam's profile; none for the rest.
+    pub fn of(e: &crate::Entity) -> Option<&Covering> {
+        match e {
+            crate::Entity::Slab(s) => s.slab.covering.as_ref(),
+            crate::Entity::Beam(b) => b.beam.covering.as_ref(),
+            _ => None,
+        }
+    }
+
+    /// A facade moulding's name (docs/adr/8173): a `MOLDING` so named is the facade's band, drawn on EK-2's Cephe, not
+    /// a room's Kartonpiyer.
+    pub const FACADE_MOULDING: &'static str = "Silme";
+
+    /// EK-2 Tablo 2.3's element it is drawn on: its type's ([`Covering::element`]); a facade moulding the Cephe's.
+    pub fn element_of(&self) -> &'static str {
+        if self.predefined == "MOLDING" && self.name.as_deref() == Some(Self::FACADE_MOULDING) {
+            "CEPH"
+        } else {
+            Self::element(&self.predefined)
+        }
+    }
+
+    /// A facade moulding (silme, docs/adr/8173): `MOLDING` "Silme".
+    pub fn facade_moulding() -> Self {
+        Covering { predefined: "MOLDING".into(), name: Some(Self::FACADE_MOULDING.into()) }
+    }
+
+    /// A coping (harpuşta, docs/adr/8173): `COPING`, its type's word.
+    pub fn coping() -> Self {
+        Covering { predefined: "COPING".into(), name: None }
+    }
+
     /// The words its IFC name takes: its name, else its type's word.
     pub fn words(&self) -> String {
         self.name

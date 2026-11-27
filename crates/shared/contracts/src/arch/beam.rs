@@ -137,6 +137,12 @@ pub struct BeamFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub rise: Option<f64>,
+    /// A profile (docs/adr/8173): a band covering a wall — a facade moulding (silme), a coping (harpuşta) — written as
+    /// an `IfcCovering` of its type; absent: the frame's beam. It stands at its base (`baseOffset`) and is no
+    /// structure: walls, columns and slabs do not stop at it, the frame's joins pass it by.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub covering: Option<crate::Covering>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -274,6 +280,27 @@ impl BeamFields {
                 return Some((
                     "member".into(),
                     "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.".into(),
+                ));
+            }
+        }
+        // A profile (docs/adr/8173): a beam's band covering a wall, at its base; no member, lintel, bond beam or footing.
+        if let Some(c) = &self.covering {
+            if let Some(found) = c.problem() {
+                return Some(found);
+            }
+            if self.member.is_some() {
+                return Some(("covering".into(), "Profil eleman (kayıt) olamaz: biri ya da öbürü verilir.".into()));
+            }
+            if self.role != BeamRole::Beam {
+                return Some((
+                    "covering".into(),
+                    "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.".into(),
+                ));
+            }
+            if self.base_offset.is_none() {
+                return Some((
+                    "baseOffset".into(),
+                    "Profilin kattan yüksekliği verilmeli: profil katın döşemesinden o kadar yukarıda durur.".into(),
                 ));
             }
         }

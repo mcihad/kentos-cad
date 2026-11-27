@@ -132237,6 +132237,17 @@
             "null"
           ]
         },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A profile (docs/adr/8173): a band covering a wall — a facade moulding (silme), a coping (harpuşta) — written as\nan `IfcCovering` of its type; absent: the frame's beam. It stands at its base (`baseOffset`) and is no\nstructure: walls, columns and slabs do not stop at it, the frame's joins pass it by."
+        },
         "height": {
           "description": "Its height (kiriş yüksekliği), metres: its top to its underside, the slab within it (TBDY 2018 7.4.1.1 b).",
           "format": "double",
@@ -177513,6 +177524,17 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;\nabsent: the frame's beam. Only a beam's, with its base."
         },
         "height": {
           "description": "Its height, the slab within it (TBDY 2018 7.4.1.1 b).",

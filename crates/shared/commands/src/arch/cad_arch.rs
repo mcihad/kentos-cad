@@ -885,6 +885,11 @@ pub struct NewBeam {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub rise: Option<f64>,
+    /// A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;
+    /// absent: the frame's beam. Only a beam's, with its base.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub covering: Option<crate::Covering>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,

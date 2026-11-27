@@ -21637,6 +21637,9 @@ class BeamEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        covering: A profile (docs/adr/8173): a band covering a wall — a facade moulding (silme), a coping (harpuşta) — written as
+            an `IfcCovering` of its type; absent: the frame's beam. It stands at its base (`baseOffset`) and is no
+            structure: walls, columns and slabs do not stop at it, the frame's joins pass it by.
         justify: How it lies on its axis: its middle (absent), its left face or its right face, as a wall's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -21677,6 +21680,7 @@ class BeamEntity(Entity):
     base_offset: float | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -21713,6 +21717,8 @@ class BeamEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.justify is not UNSET:
             out["justify"] = _enum_out(self.justify)
         if self.label is not UNSET:
@@ -21763,6 +21769,7 @@ class BeamEntity(Entity):
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else UNSET,
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -66786,6 +66793,8 @@ class NewBeam(_Model):
         height: Its height, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
         base_offset: Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it
             hangs (a beam's). Not with an offset. Unit: length.
+        covering: A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;
+            absent: the frame's beam. Only a beam's, with its base.
         justify: How it lies on its axis; absent: centred.
         material: Its material; absent: Betonarme.
         member: A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
@@ -66802,6 +66811,7 @@ class NewBeam(_Model):
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     base_offset: float | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     material: str | None | Unset = UNSET
     member: Member | None | Unset = UNSET
@@ -66821,6 +66831,8 @@ class NewBeam(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.base_offset is not UNSET:
             out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.justify is not UNSET:
             out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.material is not UNSET:
@@ -66846,6 +66858,7 @@ class NewBeam(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             material=data.get("material", UNSET),
             member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),

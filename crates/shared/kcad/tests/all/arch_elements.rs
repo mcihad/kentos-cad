@@ -459,3 +459,38 @@ fn a_raft_round_trips_under_arch_data_41() {
     let refused = kentos_kcad::encode(&edged).expect_err("a raft has no edge");
     assert!(refused.message.contains("Radyenin"), "{}", refused.message);
 }
+
+#[test]
+fn a_profile_round_trips_under_arch_data_42() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_profiles(&doc));
+    let beam = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Beam(b) => Some(b),
+            _ => None,
+        })
+        .expect("a beam");
+    // A coping (docs/adr/8173): a band on a wall's top, written as an IfcCovering.
+    beam.beam.role = kentos_contracts::BeamRole::Beam;
+    beam.beam.member = None;
+    beam.beam.rise = None;
+    beam.beam.offset = 0.0;
+    beam.beam.base_offset = Some(1.0);
+    beam.beam.width = 0.35;
+    beam.beam.height = 0.05;
+    beam.beam.covering = Some(kentos_contracts::Covering::coping());
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PROFILES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the coping reads back");
+    // A profile stands at its base: without one it is refused while written.
+    let mut baseless = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) =
+        baseless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    {
+        b.beam.base_offset = None;
+    }
+    let refused = kentos_kcad::encode(&baseless).expect_err("a profile stands at its base");
+    assert!(refused.message.contains("Profilin"), "{}", refused.message);
+}

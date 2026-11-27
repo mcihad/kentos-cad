@@ -284,3 +284,39 @@ fn a_raft_is_the_ifc_s_base_slab_and_its_columns_stand_on_it() {
     assert_eq!(slabs.len(), 1, "{slabs:?}");
     assert!(slabs[0].ends_with(".BASESLAB.);") && slabs[0].contains("'MM-DSM-Radye"), "{}", slabs[0]);
 }
+
+#[test]
+fn a_profile_covers_a_wall_unjoined_and_is_the_ifc_s_covering() {
+    let (doc, uid) = building(json!([
+        // A parapet wall 1.00 m high and its coping: 5 cm past each face, 5 cm thick, on the wall's top.
+        {"kind": "wall", "pts": [{"x": 0.0, "y": 0.0}, {"x": 6.0, "y": 0.0}], "width": 0.25, "height": 1.0,
+         "arch": {"level": "zemin"}},
+        {"kind": "beam", "pts": [{"x": 0.0, "y": 0.0}, {"x": 6.0, "y": 0.0}], "width": 0.35, "height": 0.05,
+         "baseOffset": 1.0, "covering": {"predefined": "COPING"}, "arch": {"level": "zemin"}},
+        // A facade moulding along the wall's face at 0.60 m, 5 cm out, through a column it meets.
+        {"kind": "column", "at": {"x": 3.0, "y": -0.2}, "width": 0.3, "depth": 0.3, "arch": {"level": "zemin"}},
+        {"kind": "beam", "pts": [{"x": 0.0, "y": -0.125}, {"x": 6.0, "y": -0.125}], "width": 0.05, "height": 0.2,
+         "justify": "right", "baseOffset": 0.6, "covering": {"predefined": "MOLDING", "name": "Silme"},
+         "material": "Prekast beton", "arch": {"level": "zemin"}}
+    ]));
+    let m = model(&doc);
+    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    // On EK-2's Harpuşta and Cephe, by their material; the coping on the wall's top.
+    assert!(m.looks[solid(&uid[1])].layer.starts_with("MM-HARP-"), "{}", m.looks[solid(&uid[1])].layer);
+    assert!(m.looks[solid(&uid[3])].layer.starts_with("MM-CEPH-"), "{}", m.looks[solid(&uid[3])].layer);
+    let (b, t) = heights(&m, solid(&uid[1]));
+    assert!((b - 1.0).abs() < 1e-12 && (t - 1.05).abs() < 1e-12, "{b}–{t}");
+    // No structure: the column does not cut the moulding, the coping does not stop the wall.
+    assert!((volume(&m, &uid[3]) - 6.0 * 0.05 * 0.2).abs() < 1e-9, "{}", volume(&m, &uid[3]));
+    let Some(kentos_commands::Entity::Wall(w)) = doc.entities().find(|e| matches!(e, kentos_commands::Entity::Wall(_)))
+    else {
+        panic!("the wall")
+    };
+    assert_eq!(doc.wall_height(&w.wall), Some(1.0));
+    let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
+    assert_eq!((written.coverings, written.beams), (2, 0));
+    let text = kentos_ifc::building::write(&building);
+    let coverings: Vec<&str> = text.lines().filter(|l| l.contains("=IFCCOVERING(")).collect();
+    assert!(coverings.iter().any(|l| l.ends_with(".COPING.);") && l.contains("'MM-KPL-Harpu")), "{coverings:?}");
+    assert!(coverings.iter().any(|l| l.ends_with(".MOLDING.);") && l.contains("'MM-KPL-Silme")), "{coverings:?}");
+}

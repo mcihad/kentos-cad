@@ -76,7 +76,7 @@ pub use schemas::*;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_RAFTS),
+    ("arch", "mimari", ARCH_WITH_PROFILES),
     ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -447,6 +447,19 @@ pub fn uses_rafts(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     uses_rafts_in(doc, doc.entities.iter())
 }
 
+/// Architecture data version 42 (docs/adr/8173): a profile, a beam's band covering a wall (`covering`: a facade
+/// moulding, a coping), in the drawing. Version 42 holds versions 1–41's data too. The document schema stays as it is.
+pub const ARCH_WITH_PROFILES: u16 = 42;
+
+/// Whether `doc` holds architecture data 42 ([`ARCH_WITH_PROFILES`]): a profile.
+pub fn uses_profiles(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_profiles_in(doc.entities.iter())
+}
+
+fn uses_profiles_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>) -> bool {
+    objects.any(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.covering.is_some()))
+}
+
 fn uses_rafts_in<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
@@ -617,7 +630,7 @@ fn uses_shaft_vents_in<'a>(
     objects.any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 41 for a raft, 40 for a footing, 39 for kitchen storey or filler placement, 38 for an electrical
+/// The architecture data version `doc` needs: 42 for a profile, 41 for a raft, 40 for a footing, 39 for kitchen storey or filler placement, 38 for an electrical
 /// appliance card, 37 for a ceiling view recipe, 36 for individual slab edge links,
 /// 35 for a building's own plan notes, 34 for a plan note of the
 /// projections or basements, 33 for one of the
@@ -647,7 +660,9 @@ fn arch_version_of<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
 ) -> u16 {
-    if uses_rafts_in(doc, objects.clone()) {
+    if uses_profiles_in(objects.clone()) {
+        ARCH_WITH_PROFILES
+    } else if uses_rafts_in(doc, objects.clone()) {
         ARCH_WITH_RAFTS
     } else if uses_footings_in(doc, objects.clone()) {
         ARCH_WITH_FOOTINGS

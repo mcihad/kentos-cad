@@ -954,10 +954,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         if let Some(m) = member {
             object_type = m.object_type();
         }
-        // A covering (docs/adr/8070 §10; EK-6 Tablo 6.20): an IfcCovering of its type, its name's words.
-        if let Entity::Slab(sl) = e
-            && let Some(c) = &sl.slab.covering
-        {
+        // A covering (docs/adr/8070 §10), a profile (8173; EK-6 Tablo 6.20): an IfcCovering of its type, its words.
+        if let Some(c) = kentos_contracts::Covering::of(e) {
             let t = kentos_contracts::Covering::TYPES
                 .iter()
                 .find(|t| **t == c.predefined)

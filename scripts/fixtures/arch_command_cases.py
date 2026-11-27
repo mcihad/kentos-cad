@@ -408,6 +408,28 @@ MEMBER_TYPES = ["ARCH_SEGMENT", "BRACE", "CHORD", "COLLAR", "MEMBER", "MULLION",
                 "SUSPENSION_CABLE", "TIEBAR", "USERDEFINED"]
 
 
+# IFC 4.3's covering types (IfcCoveringTypeEnum, EK-6 Tablo 6.20's list), USERDEFINED last (ADR 8070 §10).
+COVERING_TYPES = ["CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING", "ROOFING",
+                  "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED"]
+
+
+def covering_problem(c, path):
+    """A profile's covering (ADR 8173): Covering::problem's rule and words, in its order."""
+    t = c["predefined"]
+    if t not in COVERING_TYPES:
+        return refusal("invalid_beam", f"“{t}” kaplamanın tiplerinden biri değil ({', '.join(COVERING_TYPES)}).",
+                       f"{path}.covering.predefined")
+    name = c.get("name")
+    if name is not None and (not name.strip() or name.strip() != name or len(name) > 120
+                             or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in name)):
+        return refusal("invalid_beam", "Kaplamanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+                       f"{path}.covering.name")
+    if t == "USERDEFINED" and name is None:
+        return refusal("invalid_beam", "Kullanıcı tanımlı kaplamanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad "
+                                       "verin ya da listeden bir tip seçin.", f"{path}.covering.name")
+    return None
+
+
 def member_problem(m, code, path):
     """A post's or a rail's type and name (docs/adr/8070 §8): Member::problem's rule and words, in its order."""
     if m is None:
@@ -1513,6 +1535,9 @@ def beam_fields(n):
     # A sloped member's rise (ADR 8130); 0 is level, not kept.
     if n.get("rise") is not None and n["rise"] != 0.0:
         f["rise"] = n["rise"]
+    # A profile's covering (ADR 8173).
+    if n.get("covering") is not None:
+        f["covering"] = n["covering"]
     if n.get("arch"):
         f["arch"] = n["arch"]
     return f
@@ -1552,6 +1577,19 @@ def beam_problem(f, path):
             return refusal("invalid_beam", "Temel eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
         if f.get("role", "beam") != "beam":
             return refusal("invalid_beam", "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
+    # A profile (ADR 8173): a beam's band covering a wall, at its base; no member, lintel, bond beam or footing.
+    c = f.get("covering")
+    if c is not None:
+        r = covering_problem(c, path)
+        if r:
+            return r
+        if f.get("member") is not None:
+            return refusal("invalid_beam", "Profil eleman (kayıt) olamaz: biri ya da öbürü verilir.", f"{path}.covering")
+        if f.get("role", "beam") != "beam":
+            return refusal("invalid_beam", "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.", f"{path}.covering")
+        if f.get("baseOffset") is None:
+            return refusal("invalid_beam", "Profilin kattan yüksekliği verilmeli: profil katın döşemesinden o kadar yukarıda "
+                                           "durur.", f"{path}.baseOffset")
     # A sloped member (ADR 8130): a member's alone, on a straight axis; never 0, at most ±10 m.
     r = f.get("rise")
     if r is not None:
@@ -2683,6 +2721,14 @@ def beam_cases():
             beam(pts=[P(4.25, 50), P(5.75, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8, tag="T2")["beams"][0]]}),
         ("renkli ve kalın sürekli temel", {**beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8), "color": "#806040",
                                            "lineWeight": 0.35}),
+        # Profiles (docs/adr/8173): a facade moulding along a wall's face, a coping on a wall's top.
+        ("cephe silmesi: 5 cm çıkıntı, 20 cm, kattan 2.90", beam(width=0.05, height=0.2, justify="right", baseOffset=2.9,
+                                                                 covering={"predefined": "MOLDING", "name": "Silme"})),
+        ("taş harpuşta: 35 cm, 5 cm, duvarın tepesinde", beam(width=0.35, height=0.05, baseOffset=1.0, material="Taş",
+                                                              covering={"predefined": "COPING"}, arch={"level": "zemin"})),
+        ("subasman silmesi, L eksen, kullanıcı tanımlı", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], width=0.03, height=0.5,
+                                                              justify="left", baseOffset=0.0,
+                                                              covering={"predefined": "USERDEFINED", "name": "Subasman silmesi"})),
     ]:
         c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
     life(c, BEAMS, beam(pts=[P(-0.75, 50), P(0.75, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8, tag="T101",
@@ -2727,6 +2773,17 @@ def beam_cases():
         ("tek noktalı temel reddedilir", beam(pts=[P(0, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8), {}),
         ("olmayan kattaki temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8,
                                                   arch={"level": "yok"}), {}),
+        # docs/adr/8173.
+        ("tabansız profil reddedilir", beam(width=0.05, height=0.2, covering={"predefined": "MOLDING", "name": "Silme"}), {}),
+        ("lento profil olamaz", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, covering={"predefined": "MOLDING"}), {}),
+        ("temel profil olamaz", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8, covering={"predefined": "COPING"}),
+         {}),
+        ("kayıt profil olamaz", beam(width=0.05, height=0.1, baseOffset=1.0, member={"predefined": "PURLIN"},
+                                     covering={"predefined": "MOLDING"}), {}),
+        ("listede olmayan profil tipi reddedilir", beam(width=0.05, height=0.2, baseOffset=1.0, covering={"predefined": "SILL"}), {}),
+        ("adsız kullanıcı tanımlı profil reddedilir", beam(width=0.05, height=0.2, baseOffset=1.0,
+                                                           covering={"predefined": "USERDEFINED"}), {}),
+        ("eğimli profil reddedilir", beam(width=0.05, height=0.2, baseOffset=1.0, covering={"predefined": "MOLDING"}, rise=0.5), {}),
     ])
     common_refusals(c, BEAMS, beam())
     return c.cases

@@ -723,7 +723,9 @@ ARCH_WITH_CASEWORK_PLACEMENT = 39
 ARCH_WITH_FOOTINGS = 40
 # Architecture data 41 (docs/adr/8172 §6): a raft, a slab of the raft role (`raft`).
 ARCH_WITH_RAFTS = 41
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_RAFTS), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 42 (docs/adr/8173): a profile, a beam's band covering a wall (`covering`).
+ARCH_WITH_PROFILES = 42
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_PROFILES), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -10243,16 +10245,7 @@ class _Schema:
     def slab_fields(self, v):
         """A slab's fields (schema 123, docs/adr/0722 §1), as the contract's JSON has them: each only when not its
         default (a floor, a top on its level, no edge runs, summed); then the contract's rule (`SlabFields::problem`)."""
-        def covering(x):
-            kinds = ("CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING",
-                     "ROOFING", "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED")
-            c = self.fields({"predefined": (self.enum(kinds), True), "name": (self.text, False)})(x)
-            name = c.get("name")
-            if name is not None and (not name or name.strip() != name or len(name) > 120 or any(unicodedata.category(ch) == "Cc" for ch in name)):
-                self.fail("bad_value", "Kaplama adı 1–120 karakter olmalı, kenar boşluğu veya denetim karakteri içeremez.")
-            if c["predefined"] == "USERDEFINED" and name is None:
-                self.fail("bad_value", "Kullanıcı tanımlı kaplama için ad gerekir.")
-            return c
+        covering = self.covering
 
         def not_default(read, default, words):
             def check(x):
@@ -10333,9 +10326,16 @@ class _Schema:
             return r
         # Schema 236 (docs/adr/8041 §3): its role and its base over its storey's floor.
         roles = {"role": (role, False), "baseOffset": (self.float, False)} if self.beam_roles else {}
+        # Architecture data 42 (docs/adr/8173): a profile, the band's covering.
+        profiles = {"covering": (self.covering, False)} if self.arch_version >= ARCH_WITH_PROFILES else {}
         f = self.fields({"pts": (self.array(self.jpoint), True), "width": (self.float, True), "height": (self.float, True),
                          "justify": (justify, False), "offset": (offset, False), **roles, "tag": (text, False),
-                         "material": (text, False), "arch": (self.arch_info, False)})(v)
+                         "material": (text, False), **profiles, "arch": (self.arch_info, False)})(v)
+        if "covering" in f:
+            if f.get("role", "beam") != "beam":
+                self.fail("bad_value", "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.")
+            if "baseOffset" not in f:
+                self.fail("bad_value", "Profilin kattan yüksekliği verilmeli: profil katın döşemesinden o kadar yukarıda durur.")
         pts = f["pts"]
         if not 2 <= len(pts) <= 1000:
             self.fail("bad_value", f"Kirişin ekseni en az iki, en çok 1000 noktadır; {len(pts)} verildi.")
@@ -10355,6 +10355,18 @@ class _Schema:
         if "offset" in f and not (math.isfinite(f["offset"]) and abs(f["offset"]) <= 10):
             self.fail("bad_value", "Kirişin kot farkı en çok ±10 m olmalı.")
         return f
+
+    def covering(self, x):
+        """A covering's type and name (docs/adr/8070 §10): a slab's plate, a beam's profile (docs/adr/8173)."""
+        kinds = ("CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING",
+                 "ROOFING", "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED")
+        c = self.fields({"predefined": (self.enum(kinds), True), "name": (self.text, False)})(x)
+        name = c.get("name")
+        if name is not None and (not name or name.strip() != name or len(name) > 120 or any(unicodedata.category(ch) == "Cc" for ch in name)):
+            self.fail("bad_value", "Kaplama adı 1–120 karakter olmalı, kenar boşluğu veya denetim karakteri içeremez.")
+        if c["predefined"] == "USERDEFINED" and name is None:
+            self.fail("bad_value", "Kullanıcı tanımlı kaplama için ad gerekir.")
+        return c
 
     def railing_fields(self, v):
         """A railing's fields (schema 242, docs/adr/8045 §3): its line (at least two points, three when closed, at most
