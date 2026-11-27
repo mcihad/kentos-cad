@@ -211,6 +211,9 @@ pub enum Mark {
 /// whether contents are still waiting for the GPU).
 pub struct SceneView {
     pub scene: Arc<Scene>,
+    /// A layer drawn with the scene: a section's caps (docs/adr/8131, 8171 §2.2), made again as the section moves while
+    /// the scene stays as it is; none: nothing over it.
+    pub caps: Option<Arc<Scene>>,
     pub camera: Camera,
     pub exaggeration: Exaggeration,
     pub styles: Arc<Vec<Style>>,
@@ -238,6 +241,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         .height(Fill);
     let program = Program {
         scene: v.scene,
+        caps: v.caps,
         camera: v.camera,
         exaggeration: v.exaggeration,
         styles: v.styles,
@@ -259,6 +263,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
 
 struct Program<'a, M> {
     scene: Arc<Scene>,
+    caps: Option<Arc<Scene>>,
     camera: Camera,
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
@@ -420,6 +425,7 @@ impl<M> shader::Program<M> for Program<'_, M> {
         Frame3d {
             view: state.view,
             scene: self.scene.clone(),
+            caps: self.caps.clone(),
             camera: self.camera,
             exaggeration: self.exaggeration,
             styles: self.styles.clone(),
@@ -458,6 +464,7 @@ impl<M> Program<'_, M> {
 pub struct Frame3d {
     view: u64,
     scene: Arc<Scene>,
+    caps: Option<Arc<Scene>>,
     camera: Camera,
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
@@ -487,11 +494,15 @@ pub struct Pipeline {
     format: wgpu::TextureFormat,
     renderers: HashMap<u64, Scene3dRenderer>,
     placed: HashMap<u64, Placed>,
+    /// The scenes each view drew last, by their contents' ids (the first and how many): a scene made again takes new
+    /// ids, and the one before's contents are let go of the GPU at once (docs/adr/8171 §2.4), not kept until the
+    /// budget is full.
+    drawn: HashMap<u64, Vec<(u64, usize)>>,
 }
 
 impl shader::Pipeline for Pipeline {
     fn new(_device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new() }
+        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new(), drawn: HashMap::new() }
     }
 }
 
@@ -503,6 +514,7 @@ impl shader::Primitive for Frame3d {
             for view in retired.drain(..) {
                 pipeline.renderers.remove(&view);
                 pipeline.placed.remove(&view);
+                pipeline.drawn.remove(&view);
             }
         }
         let size = viewport.physical_size();
@@ -516,21 +528,46 @@ impl shader::Primitive for Frame3d {
         let (bx, by, bw, bh) = (bounds.x * s, bounds.y * s, bounds.width * s, bounds.height * s);
         r.ensure_targets(device, bw.round().max(1.0) as u32, bh.round().max(1.0) as u32);
         let vp = Viewport { width: f64::from(bw.max(1.0)), height: f64::from(bh.max(1.0)) };
-        let h = &self.scene.chunked.hierarchy;
+        let scenes: Vec<&Scene> = std::iter::once(&*self.scene).chain(self.caps.as_deref()).collect();
+        // The contents of the scenes this view drew before and draws no more: let go.
+        let now_drawn: Vec<(u64, usize)> = scenes.iter().map(|s| (s.first, s.contents())).collect();
+        if let Some(before) = pipeline.drawn.insert(self.view, now_drawn.clone()) {
+            for (first, n) in before.into_iter().filter(|b| !now_drawn.contains(b)) {
+                for id in first..first + n as u64 {
+                    r.forget(id);
+                }
+            }
+        }
         let settings = Settings { max_screen_error: MAX_SCREEN_ERROR };
+        let content = |id: u64| scenes.iter().find_map(|s| s.content(id));
         // Select with what is resident, upload what it draws and asks for within the budgets, select again with what
         // is resident now, and draw that.
-        let first = select(h, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id));
-        let asked: Vec<&Content> = first
-            .draw
+        let first: Vec<_> = scenes
             .iter()
-            .chain(&first.wanted)
-            .filter_map(|&i| h.tiles[i as usize].content.and_then(|c| self.scene.content(c.id)))
+            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .collect();
+        let asked: Vec<&Content> = scenes
+            .iter()
+            .zip(&first)
+            .flat_map(|(s, sel)| {
+                let h = &s.chunked.hierarchy;
+                sel.draw.iter().chain(&sel.wanted).filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+            })
             .collect();
         r.load(device, &asked);
-        let now = select(h, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id));
-        let draws: Vec<&Content> =
-            now.draw.iter().filter_map(|&i| h.tiles[i as usize].content.and_then(|c| self.scene.content(c.id))).collect();
+        let now: Vec<_> = scenes
+            .iter()
+            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .collect();
+        let draws: Vec<&Content> = scenes
+            .iter()
+            .zip(&now)
+            .flat_map(|(s, sel)| {
+                let h = &s.chunked.hierarchy;
+                sel.draw.iter().filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+            })
+            .collect();
+        let wanted: usize = now.iter().map(|sel| sel.wanted.len()).sum();
         let stats = r.prepare(
             device,
             queue,
@@ -547,9 +584,9 @@ impl shader::Primitive for Frame3d {
                 clip: &self.planes,
             },
         );
-        self.pending.store(!now.wanted.is_empty(), Ordering::Relaxed);
+        self.pending.store(wanted > 0, Ordering::Relaxed);
         if let Ok(mut seen) = self.seen.lock() {
-            *seen = Seen { tiles: stats.tiles, triangles: stats.triangles, waiting: now.wanted.len(), resident: stats.resident_bytes };
+            *seen = Seen { tiles: stats.tiles, triangles: stats.triangles, waiting: wanted, resident: stats.resident_bytes };
         }
         let (vx, vy) = (bx.max(0.0), by.max(0.0));
         let (x1, y1) = ((bx + bw).min(size.width as f32), (by + bh).min(size.height as f32));

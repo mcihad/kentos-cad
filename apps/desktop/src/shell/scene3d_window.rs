@@ -256,9 +256,15 @@ impl Window {
         self.drawn().meshes().iter().filter(|m| m.owner.as_deref() == Some(key.as_str())).map(|m| m.part).collect()
     }
 
-    /// The parts its tiles carry.
+    /// The parts its tiles carry, a section's caps' layer with them (docs/adr/8171 §2.2).
     pub fn scene_parts(&self) -> Vec<u32> {
-        self.drawn().parts()
+        let mut parts = self.drawn().parts();
+        if let Some(caps) = self.building.as_ref().and_then(|b| b.viewer.caps()) {
+            parts.extend(caps.parts());
+            parts.sort_unstable();
+            parts.dedup();
+        }
+        parts
     }
 }
 

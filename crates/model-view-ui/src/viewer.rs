@@ -133,6 +133,11 @@ pub struct Viewer {
     pub stage: Stage,
     view: Option<View>,
     scene: Arc<Scene>,
+    /// The section's caps (docs/adr/8131): a layer of their own over the scene, made again as the section moves while
+    /// the scene stays (docs/adr/8171 §2.2); none without a section.
+    caps: Option<Arc<Scene>>,
+    /// The bodies the scene shows, kept for the caps.
+    shown: Vec<kentos_model_view::Source>,
     pub orbit: OrbitCamera,
     pub panel: Panel,
     open: BTreeSet<String>,
@@ -142,9 +147,6 @@ pub struct Viewer {
     pub legend: bool,
     pub see_through: bool,
     pub section: Section,
-    /// Whether the section plane is being dragged: its cut faces wait for its release (docs/adr/8131), the scene not
-    /// made again at each step.
-    cutting: bool,
     /// Whether the next click makes a plane parallel to the face it meets (docs/adr/8132), and the section's handle
     /// being dragged in the scene.
     pub facing: bool,
@@ -184,6 +186,8 @@ impl Viewer {
             stage: Stage::Reading { phase: "Dosya okunuyor".to_owned(), done: 0, total: 0 },
             view: None,
             scene: Arc::new(Scene::of(Vec::new(), 0)),
+            caps: None,
+            shown: Vec::new(),
             orbit: OrbitCamera { target: [0.0; 3], azimuth: 45.0, elevation: 30.0, distance: 10.0 },
             panel: Panel::Structure,
             open: BTreeSet::new(),
@@ -193,7 +197,6 @@ impl Viewer {
             legend: true,
             see_through: false,
             section: Section::None,
-            cutting: false,
             facing: false,
             gripped: None,
             picked: None,
@@ -277,6 +280,11 @@ impl Viewer {
 
     pub fn scene(&self) -> &Arc<Scene> {
         &self.scene
+    }
+
+    /// The section's caps: their own layer over the scene (none without a section).
+    pub fn caps(&self) -> Option<&Arc<Scene>> {
+        self.caps.as_ref()
     }
 
     /// The tree's rows as the panel shows them now.
@@ -428,7 +436,7 @@ impl Viewer {
                 let (lo, hi) = self.span(cut)?;
                 self.facing = false;
                 self.section = Section::Plane { cut, at: (lo + hi) / 2.0, flip: false };
-                self.rebuild();
+                self.recap();
             }
             Message::Boxed => {
                 let v = self.view.as_ref()?;
@@ -436,7 +444,7 @@ impl Viewer {
                 if !b.is_empty() {
                     self.facing = false;
                     self.section = Section::Box(section::about(&b));
-                    self.rebuild();
+                    self.recap();
                 }
             }
             // A click on a face is to make the plane: not to measure.
@@ -451,28 +459,21 @@ impl Viewer {
             Message::Uncut => {
                 self.section = Section::None;
                 self.facing = false;
-                self.cutting = false;
                 self.gripped = None;
-                self.rebuild();
+                self.recap();
             }
-            // Dragged: the cut faces go at the first step and come back at the release (docs/adr/8131).
+            // Dragged: the cut faces follow at every step (docs/adr/8171 §2.2); the scene stays as it is.
             Message::At(at) => {
                 if self.section.place().is_some() {
                     self.section.set_place(at);
-                    if !self.cutting {
-                        self.cutting = true;
-                        self.rebuild();
-                    }
+                    self.recap();
                 }
             }
-            Message::AtDone => {
-                self.cutting = false;
-                self.rebuild();
-            }
+            Message::AtDone => {}
             Message::Flip => {
                 if let Section::Plane { flip, .. } | Section::Face { flip, .. } = &mut self.section {
                     *flip = !*flip;
-                    self.rebuild();
+                    self.recap();
                 }
             }
             Message::Fold(title) => {
@@ -552,23 +553,14 @@ impl Viewer {
             Gesture::Pick(x, y, width, height) if self.measuring.on => self.measure_click(x, y, width, height),
             // Yüzden kesit: the face clicked gives the plane (docs/adr/8132).
             Gesture::Pick(x, y, width, height) if self.facing => self.face_click(x, y, width, height),
-            // A section's handle dragged: its plane or its box's face follows; the cut faces wait for the release.
+            // A section's handle dragged: its plane or its box's face follows, the cut faces with it.
             Gesture::Handle(i, along) => {
                 let b = self.view.as_ref()?.bounds();
                 self.section.moved(i, along, &b);
                 self.gripped = Some(i);
-                if !self.cutting {
-                    self.cutting = true;
-                    self.rebuild();
-                }
+                self.recap();
             }
-            Gesture::HandleDone(_) => {
-                self.gripped = None;
-                if self.cutting {
-                    self.cutting = false;
-                    self.rebuild();
-                }
-            }
+            Gesture::HandleDone(_) => self.gripped = None,
             Gesture::Size(width, height) => {
                 if width > 0.0 && height > 0.0 {
                     self.aspect = f64::from(width) / f64::from(height);
@@ -619,8 +611,7 @@ impl Viewer {
         if let Some(made) = made {
             self.section = made;
             self.facing = false;
-            self.cutting = false;
-            self.rebuild();
+            self.recap();
         }
     }
 
@@ -646,15 +637,38 @@ impl Viewer {
     fn rebuild(&mut self) {
         let Some(v) = &self.view else { return };
         let keys = &v.input().objects;
-        let mut shown = v.sources();
-        // A section's cut faces filled (docs/adr/8131): its planes in the sources' own space; not while it is dragged.
-        let planes = self.section.planes();
-        if !planes.is_empty() && !self.cutting {
-            let opaque = |p: u32| PARTS.get(p as usize).is_some_and(|(_, c)| c[3] >= 1.0);
-            let caps = kentos_model_view::caps::caps(&shown, &planes, parts::CAP, opaque);
-            shown.extend(caps);
-        }
+        let shown = v.sources();
         let sources: Vec<Source> = shown
+            .iter()
+            .map(|s| Source {
+                part: s.part,
+                name: s.name.clone(),
+                owner: Some(keys[s.object].key.clone()),
+                vertices: s.vertices.clone(),
+                triangles: s.triangles.clone(),
+                smooth: false,
+                through: s.through,
+            })
+            .collect();
+        let count = sources.len();
+        self.scene = Arc::new(Scene::of(sources, count));
+        self.shown = shown;
+        self.recap();
+        self.measuring.forget_edges();
+        self.refresh_rows();
+    }
+
+    /// The section's caps made again (docs/adr/8131, 8171 §2.2): where its planes cut the bodies that show, in a layer
+    /// of their own; none without a section. The scene is not made again: a section moved uploads its caps alone.
+    fn recap(&mut self) {
+        let planes = self.section.planes();
+        let Some(v) = self.view.as_ref().filter(|_| !planes.is_empty()) else {
+            self.caps = None;
+            return;
+        };
+        let keys = &v.input().objects;
+        let opaque = |p: u32| PARTS.get(p as usize).is_some_and(|(_, c)| c[3] >= 1.0);
+        let sources: Vec<Source> = kentos_model_view::caps::caps(&self.shown, &planes, parts::CAP, opaque)
             .into_iter()
             .map(|s| Source {
                 part: s.part,
@@ -663,14 +677,12 @@ impl Viewer {
                 vertices: s.vertices,
                 triangles: s.triangles,
                 // A cap is one flat fill: shaded smooth, its normals all alike, it has no edge lines over it.
-                smooth: s.part == parts::CAP,
-                through: s.through,
+                smooth: true,
+                through: false,
             })
             .collect();
         let count = sources.len();
-        self.scene = Arc::new(Scene::of(sources, count));
-        self.measuring.forget_edges();
-        self.refresh_rows();
+        self.caps = Some(Arc::new(Scene::of(sources, count)));
     }
 
     fn refresh_rows(&mut self) {
@@ -869,7 +881,8 @@ mod tests {
 
     /// Yüzden kesit and the handles (docs/adr/8132): after Yüzden kesit a click on the first cube's top makes a level
     /// cut a millimetre over it (nothing chosen), its handle at the model's middle pointing up; dragged half a metre
-    /// down it cuts both cubes, their caps waiting till it is let go. With no section, a click on the second cube's
+    /// down it cuts both cubes, their caps following it as it is dragged (docs/adr/8171 §2.2). With no section, a click
+    /// on the second cube's
     /// north face (seen from the north-east) makes an east–west cut a millimetre north of it, the south kept. A box
     /// about the chosen cube has six
     /// handles; its east one dragged a metre out takes the box's east face with it. Ölç and Yüzden kesit take turns.
@@ -877,7 +890,7 @@ mod tests {
     fn a_click_on_a_face_makes_a_plane_and_its_handles_drag_the_section() {
         use kentos_model_view::section::FACE_GAP;
         let mut v = loaded();
-        let capped = |v: &Viewer| v.scene().meshes().iter().filter(|m| m.part == parts::CAP).count();
+        let capped = |v: &Viewer| v.caps().map_or(0, |c| c.meshes().iter().filter(|m| m.part == parts::CAP).count());
         let _ = v.update(Message::FromFace);
         assert!(v.facing && v.handles().is_empty());
         assert_eq!(click_at(&mut v, [0.5, 0.5, 1.0]), None, "nothing chosen");
@@ -888,9 +901,9 @@ mod tests {
         assert_eq!(capped(&v), 0, "a millimetre over the top: nothing cut");
         let _ = v.update(Message::Gesture(Gesture::Handle(0, -0.5)));
         assert!((v.section.place().expect("a plane") - (0.5 + FACE_GAP)).abs() < 1e-12);
-        assert_eq!((v.gripped, capped(&v)), (Some(0), 0), "the caps wait while it is dragged");
+        assert_eq!((v.gripped, capped(&v)), (Some(0), 2), "both cubes cut and filled while it is dragged");
         let _ = v.update(Message::Gesture(Gesture::HandleDone(0)));
-        assert_eq!((v.gripped, capped(&v)), (None, 2), "both cubes cut and filled");
+        assert_eq!((v.gripped, capped(&v)), (None, 2), "and when let go");
         let _ = v.update(Message::Uncut);
         let _ = v.update(Message::FromFace);
         assert_eq!(click_at(&mut v, [3.5, 1.0, 0.5]), None);
@@ -917,25 +930,33 @@ mod tests {
     /// Kesit yüzü (docs/adr/8131): a level cut through both cubes fills each cut with a dark cap of its object; while
     /// the plane is dragged the caps wait, and come back when it is let go; none once the section is gone.
     #[test]
-    fn a_section_fills_what_it_cuts_and_waits_while_dragged() {
+    fn a_section_fills_what_it_cuts_also_while_dragged_and_leaves_the_scene_as_it_is() {
         let mut v = loaded();
         let capped = |v: &Viewer| -> Vec<Option<String>> {
-            v.scene().meshes().iter().filter(|m| m.part == parts::CAP).map(|m| m.owner.clone()).collect()
+            v.caps().map_or_else(Vec::new, |c| c.meshes().iter().filter(|m| m.part == parts::CAP).map(|m| m.owner.clone()).collect())
         };
         let cap = PARTS[parts::CAP as usize].0;
         assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
+        let scene = v.scene().clone();
         let _ = v.update(Message::Cut(Cut::Level));
         assert_eq!(v.swatches().last().map(|(name, _)| *name), Some(cap), "the legend names the caps' face");
         let owners = capped(&v);
         assert_eq!(owners.len(), 2, "{owners:?}");
         assert!(owners.iter().all(|o| o.as_deref().is_some_and(|k| k.starts_with("duvar"))), "{owners:?}");
-        let _ = v.update(Message::At(0.25));
-        assert!(capped(&v).is_empty(), "not while dragged");
-        let _ = v.update(Message::At(0.3));
+        // Dragged (docs/adr/8171 §2.2): the caps follow at every step, the scene is the one before (nothing uploaded
+        // again), and no cap lies in the scene itself.
+        for at in [0.25, 0.3] {
+            let _ = v.update(Message::At(at));
+            assert_eq!(capped(&v).len(), 2, "while dragged, at {at}");
+            assert!(Arc::ptr_eq(v.scene(), &scene), "the scene stays while the section moves");
+        }
         let _ = v.update(Message::AtDone);
-        assert_eq!(capped(&v).len(), 2, "back when let go");
+        assert_eq!(capped(&v).len(), 2, "when let go");
+        assert!(!v.scene().meshes().iter().any(|m| m.part == parts::CAP));
         let _ = v.update(Message::Uncut);
         assert!(capped(&v).is_empty());
+        assert!(v.caps().is_none());
+        assert!(Arc::ptr_eq(v.scene(), &scene));
         assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
     }
 }

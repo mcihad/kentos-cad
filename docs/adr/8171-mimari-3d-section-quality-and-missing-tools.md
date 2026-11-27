@@ -133,3 +133,30 @@ Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölç�
     (dosya sınırının üstündeydi, 3334 → 3240 satır), `joins`.
   - `sections.rs`: `Model::structure` (döşemelerin taşıyıcı plakaları), `joins`'in çağrısı.
   - `crates/shared/ifc/src/quantities.rs`: kolonun iki yükseklikli gövdesinin miktarları.
+
+### MB-02 (27 Kasım 2026)
+
+- **Kesit yüzü kendi katmanında:** görüntüleyicinin `caps` sahnesi (`crates/model-view-ui/src/viewer.rs` `recap`).
+  - Kesit kurulunca, kaydırıcının her adımında, tutamaç sürüklenirken, Öbür yanı'nda ve kesit kalkınca yalnız bu katman
+    yeniden kurulur. Model sahnesi kesitle hiç yeniden kurulmaz; önceden kesitin başında ve bırakılışında bütün model
+    yeniden yükleniyordu.
+  - Çizici iki sahneyi birlikte seçer ve çizer (`crates/model-view-ui/src/scene.rs` `Frame3d::prepare`).
+  - Görünümün önceki sahnesinin parçaları ekran kartından hemen bırakılır (`Pipeline::drawn`); sürüklerken her adımın
+    eski kapakları birikmez.
+- **Halka zinciri toleranslı** (`crates/shared/model-view/src/caps.rs`): segment uçları 0,05 mm içinde aynı düğümdür.
+  Düğüm, komşu hücreler aranarak bulunur; ızgara çizgisi iki ucun arasına düşse de birleşir. Önceden 1e-7 m'lik
+  yuvarlama yapılıyordu.
+- **Sınamalar:**
+  - `caps::tests::a_body_whose_corners_lie_a_hair_apart_is_capped_whole`: yüzlerinin köşeleri 0,02 mm'ye dek kaymış
+    blok tam kapaklanır (8 m²).
+  - `viewer::tests::a_section_fills_what_it_cuts_also_while_dragged_and_leaves_the_scene_as_it_is`: sürüklerken her
+    adımda iki kapak, sahne aynı nesne (`Arc::ptr_eq`), sahnede kapak yok.
+  - Tutamaç sınaması sürüklerken iki kapak bekler.
+  - `kentos-model-view` 24, `kentos-model-view-ui` 8, Mimari masaüstünün 3B ve IFC görüntüleyici sınamaları (16) ve
+    yolun 3B görünümü (3) geçti.
+- **Resim:** `.run/gui-evidence/mimari-bim/sonra/mb02-kesit-surukleme.png`. Gerçek pencere, yatay kesit sürüklenirken
+  aynı anlar: önce 2,96 m'de döşemeler içi boş ve iç üçgenlerin X çizgileri görünüyor; sonra kesit yüzü dolu.
+- **Bedel:** kapak her adımda hesaplanır. ADR 8131 K310'un ölçüsü (release, 9 600 gövde): yatay kesit 19,8 ms. Bina
+  ölçeğinde gövde sayısı yüzlerle olduğundan adım başına birkaç milisaniye. Çok büyük modelde sürükleme bu kadar
+  yavaşlar; kalite için kabul edildi ([kalite hızdan önce](9222-quality-is-not-traded-for-speed.md)).
+
