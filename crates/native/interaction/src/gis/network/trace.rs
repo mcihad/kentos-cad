@@ -15,7 +15,7 @@ use kentos_domain::{Related, Slot, Tie};
 use kentos_geometry_core::ops::network::{TraceAnswer, TraceKind};
 use kentos_geometry_core::tools::point_text::js_trim;
 
-use super::base::{Base, Changed, REACH_PX, no_network_words, outline, refusal_words, stroke};
+use super::base::{Base, Changed, REACH_PX, outline, refusal_words, stroke};
 use super::{Answer, NetworkQuestion, NetworkReply};
 use crate::Vec2;
 use crate::format::Format;
@@ -51,6 +51,8 @@ struct Seen {
     list: Vec<NetworkDef>,
     kind: Option<TraceKind>,
     format: Option<Format>,
+    /// The drawing's one line layer a network can be made of (docs/adr/9332).
+    offer: Option<(String, String)>,
 }
 
 /// A trace's answer with its lines and the lines no longer fed, as drawn.
@@ -83,6 +85,7 @@ impl NetTrace {
             list: Base::list(cx).to_vec(),
             kind: Some(cx.memory.network_trace),
             format: Some(cx.format()),
+            offer: Base::offer(cx),
         };
     }
 
@@ -225,7 +228,7 @@ impl Tool for NetTrace {
 
     fn prompt(&self) -> Prompt {
         let Some(n) = &self.seen.network else {
-            return Prompt::new(LABEL, no_network_words()).option("Ağlar", "G");
+            return Base::no_network_prompt(LABEL, self.seen.offer.as_ref());
         };
         let count = self.base.stops().len();
         let step = if let Some(p) = &self.base.problem {
@@ -258,6 +261,26 @@ impl Tool for NetTrace {
 
     fn point_count(&self) -> usize {
         self.base.points.len()
+    }
+
+    /// The network as it is, from the start (docs/adr/9332): its name and how its lines join.
+    fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
+        Base::settings(self.seen.network.as_ref(), 0, self.seen.offer.as_ref(), format)
+    }
+
+    /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the
+    /// trace starts over.
+    fn document_changed(&mut self, cx: &Context<'_>) {
+        let before = self.seen.network.clone();
+        self.look(cx);
+        if self.seen.network != before {
+            self.base.reset();
+            self.traced = None;
+            self.related.clear();
+            self.related_at.clear();
+            self.refusal = None;
+            self.waiting = None;
+        }
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {

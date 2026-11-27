@@ -13,7 +13,7 @@ use kentos_commands::NetworkKind;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::{Reorder, Routed};
 
-use super::base::{Base, Changed, REACH_PX, no_network_words, outline, refusal_words, stroke};
+use super::base::{Base, Changed, REACH_PX, outline, refusal_words, stroke};
 use super::result::{ROUTE_LAYER, ResultWrite, line_geometry, write_results};
 use super::{Answer, NetworkQuestion, NetworkReply};
 use crate::Vec2;
@@ -62,6 +62,8 @@ struct Seen {
     time: Option<u32>,
     profile: String,
     day: Option<i64>,
+    /// The drawing's one line layer a network can be made of (docs/adr/9332).
+    offer: Option<(String, String)>,
 }
 
 #[derive(Default)]
@@ -99,6 +101,7 @@ impl NetRoute {
             time: cx.memory.network_time,
             profile: cx.memory.network_profile.as_str().to_owned(),
             day: cx.memory.network_day,
+            offer: Base::offer(cx),
         };
     }
 
@@ -298,7 +301,7 @@ impl Tool for NetRoute {
 
     fn prompt(&self) -> Prompt {
         let Some((_, name)) = &self.seen.network else {
-            return Prompt::new(LABEL, no_network_words()).option("Ağlar", "G");
+            return Base::no_network_prompt(LABEL, self.seen.offer.as_ref());
         };
         let n = self.base.stops().len();
         let step = if let Some(p) = &self.base.problem {
@@ -350,6 +353,27 @@ impl Tool for NetRoute {
 
     fn point_count(&self) -> usize {
         self.base.points.len()
+    }
+
+    /// The network as it is, from the start (docs/adr/9332): its name, cost and unit, how its lines join.
+    fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
+        Base::settings(self.seen.def.as_ref(), self.seen.cost, self.seen.offer.as_ref(), format)
+    }
+
+    /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the
+    /// run starts over at its first stop. Before, a network saved in Ağlar left the tool saying there was none.
+    fn document_changed(&mut self, cx: &Context<'_>) {
+        let before = (self.seen.network.clone(), self.seen.def.clone());
+        self.look(cx);
+        if (self.seen.network.clone(), self.seen.def.clone()) != before {
+            self.base.reset();
+            self.route = None;
+            self.refusal = None;
+            self.tree = false;
+            self.band = None;
+            self.waiting = Waiting::default();
+            self.path_next = None;
+        }
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {

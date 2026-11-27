@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Ağ araçları ağı baştan gösterir ve hemen görür (27 Kasım 2026, CBS incelemesinin 16. maddesi;
+  [ADR 9332](../adr/9332-network-tools-see-the-network.md)).**
+  - En kısa yol, Hizmet alanı ve Şebeke izleme, araç açıkken kaydedilen ağı görür ve ilk adıma döner. Ağ, maliyet ve
+    birimi, tolerans ve bağlanma aracın ayarlarında baştan durur.
+  - Ağ yokken tek çizgi katmanı varsa “Katmandan ağ oluştur (O)” onu yol ağı yapar.
+
 - **Uygulama kontrolünün ad alanı katmandan, satır noktaya götürür; GNSS ağında eksik istasyon satırıyla (27 Kasım 2026,
   CBS incelemesinin 14. maddesi; [ADR 9331](../adr/9331-asbuilt-names-and-gnss-missing-station.md)).**
   - Ad alanı ölçülen katmanın alanlarından seçilir ve tahmin edilir (`ad`); adı olmayan satır `#kimlik` ile gösterilir,

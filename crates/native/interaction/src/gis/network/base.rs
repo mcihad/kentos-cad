@@ -106,6 +106,111 @@ impl Base {
             .or_else(|| list.first())
     }
 
+    /// The drawing's one line layer a network can be made of when the project has none (docs/adr/9332): its id and
+    /// name; none when there is no line layer, more than one, or a network already.
+    pub fn offer(cx: &Context<'_>) -> Option<(String, String)> {
+        if !Self::list(cx).is_empty() {
+            return None;
+        }
+        let layers = cx.doc.layers();
+        let lined: Vec<(String, String)> = layers
+            .leaves()
+            .into_iter()
+            .filter(|l| !layers.is_locked(&l.id))
+            .filter(|l| {
+                cx.doc.by_layer(&l.id).any(|e| {
+                    matches!(e, kentos_commands::Entity::Line(_) | kentos_commands::Entity::Polyline(_))
+                })
+            })
+            .map(|l| (l.id.clone(), l.name.clone()))
+            .collect();
+        match &lined[..] {
+            [one] => Some(one.clone()),
+            _ => None,
+        }
+    }
+
+    /// A road network made of `layer` as Ağlar's Yeni ağ makes one (docs/adr/9332): both ways, its ends joined within
+    /// the default tolerance, Süre at 50 km/sa; written by `cad.network.define`. Its definition, or why not.
+    pub fn make_of(layer: &str, layer_name: &str, cx: &mut Context<'_>) -> Result<NetworkDef, String> {
+        use kentos_commands::{CommandResult, NetworkDefine, NetworkDefineOperation};
+        let id = kentos_commands::next_network_id(Self::list(cx));
+        let name = format!("{layer_name} ağı");
+        let form = super::form::new_form(&id, &name, NetworkKind::Road, layer, |m| m);
+        let def = super::form::def_of(&form, |v| v)?;
+        let input = NetworkDefine {
+            operation: NetworkDefineOperation::Set,
+            network: Some(def.clone()),
+            id: None,
+            expected_revision: None,
+        };
+        match kentos_native_application::network_define::execute(
+            &mut kentos_native_application::ExecutionContext::new(cx.doc),
+            input,
+        ) {
+            CommandResult::Completed { .. } => Ok(def),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                Err(error.message)
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => Err("ağ yazılamadı".to_owned()),
+        }
+    }
+
+    /// The prompt without a network: Ağlar, and the layer a network can be made of (docs/adr/9332).
+    pub fn no_network_prompt(label: &'static str, offer: Option<&(String, String)>) -> crate::prompt::Prompt {
+        match offer {
+            Some((_, name)) => crate::prompt::Prompt::new(
+                label,
+                format!("projede ağ tanımlı değil; Ağlar ile tanımlayın ya da “{name}” katmanından ağ oluşturun"),
+            )
+            .option("Ağlar", "G")
+            .option("Katmandan ağ oluştur", "O"),
+            None => crate::prompt::Prompt::new(label, no_network_words()).option("Ağlar", "G"),
+        }
+    }
+
+    /// What the network is, for the tool's settings from the start (docs/adr/9332): its name, the cost with
+    /// its unit, how and within what its lines are joined; without one, how to make one.
+    pub fn settings(n: Option<&NetworkDef>, cost: usize, offer: Option<&(String, String)>, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::Setting;
+        let Some(n) = n else {
+            let words = match offer {
+                Some((_, name)) => format!(
+                    "Projede ağ yok. Ağlar (G) ile tanımlayın ya da “{name}” katmanından ağ oluşturun (O): iki yönlü, uçlarda bağlanır."
+                ),
+                None => "Projede ağ yok. Ağlar (G) ile yol ya da şebeke ağını tanımlayın.".to_owned(),
+            };
+            let mut note = Setting::text("network", "Ağ", words).read_only();
+            note.note = true;
+            return vec![note];
+        };
+        let names = Self::cost_names(n);
+        let unit = match cost {
+            0 => f.length_unit_name().to_owned(),
+            c => match n.costs.get(c - 1) {
+                Some(k) if k.kind == NetworkCostKind::Speed => "dakika".to_owned(),
+                Some(k) if !k.unit.is_empty() => k.unit.clone(),
+                _ => "birimsiz".to_owned(),
+            },
+        };
+        let joined = match n.connect {
+            kentos_commands::NetworkConnect::Ends => "uçlarda",
+            kentos_commands::NetworkConnect::Vertices => "köşelerde de",
+        };
+        // Short values: the panel is narrow.
+        vec![
+            Setting::text("network", "Ağ", n.name.clone()).read_only(),
+            Setting::text(
+                "networkCost",
+                "Maliyet",
+                format!("{}, {unit}", names.get(cost).map_or("Uzunluk", String::as_str)),
+            )
+            .read_only(),
+            Setting::text("networkTolerance", "Tolerans", f.length(n.tolerance)).read_only(),
+            Setting::text("networkJoin", "Bağlanma", joined).read_only(),
+        ]
+    }
+
     /// The network's costs' names, Uzunluk first.
     pub fn cost_names(n: &NetworkDef) -> Vec<String> {
         n.cost_names().into_iter().map(str::to_owned).collect()
@@ -277,6 +382,29 @@ impl Base {
             "G" => {
                 cx.view_changes.push(ViewChange::Command(MANAGE));
                 Some(Changed::Show)
+            }
+            // Katmandan ağ oluştur (docs/adr/9332): the drawing's one line layer made a road network, the tool on it.
+            "O" => {
+                let (layer, name) = Self::offer(cx)?;
+                match Self::make_of(&layer, &name, cx) {
+                    Ok(def) => {
+                        cx.memory.network = Name::new(&def.id).unwrap_or(Name::EMPTY);
+                        self.reset();
+                        cx.say(
+                            Level::Success,
+                            format!(
+                                "“{name}” katmanından “{}” yol ağı oluşturuldu: iki yönlü, uçlarda {} toleransla bağlanır. Ağlar ile değiştirebilirsiniz.",
+                                def.name,
+                                cx.format().length(def.tolerance)
+                            ),
+                        );
+                        Some(Changed::Network)
+                    }
+                    Err(why) => {
+                        cx.say(Level::Warn, format!("“{name}” katmanından ağ oluşturulamadı: {why}"));
+                        Some(Changed::Show)
+                    }
+                }
             }
             "P" if costs => {
                 let n = Self::network(cx, prefers)?;
