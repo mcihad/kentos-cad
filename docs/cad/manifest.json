@@ -12127,7 +12127,7 @@
   {
    "id": "tool.coping",
    "kind": "command",
-   "title": "Harpuşta",
+   "title": "Duvar harpuştası",
    "level": "semantic",
    "via": [
     "cad.beams.create"
@@ -13523,7 +13523,7 @@
   {
    "id": "tool.moulding",
    "kind": "command",
-   "title": "Silme",
+   "title": "Cephe silmesi",
    "level": "semantic",
    "via": [
     "cad.beams.create"

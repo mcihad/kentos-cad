@@ -3025,9 +3025,9 @@
     },
     {
       "id": "tool.moulding",
-      "title": "Silme",
+      "title": "Cephe silmesi",
       "icon": "moulding",
-      "description": "Cephe silmesi çizer: binanın içine tıklanınca duvarların dış yüzü boyunca dolanır ve dışa taşar; Sınır (S) Çiz ile ekseni nokta nokta verilir, Enter yazar. Tür (T: Silme, Harpuşta), Çıkıntı (E), Yükseklik (Y), Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği), Hiza (H: Çiz'de), Malzeme (M). 5 cm çıkıntı, 20 cm yükseklik ve 2,80 m ile başlar: 3 m'lik katın döşeme hizası. IFC'de kaplama (IfcCovering, MOLDING); yapı değildir. Etkin kata, MM-CEPH-SILME katmanına yazılır.",
+      "description": "Cephe silmesi (kat silmesi, subasman silmesi) çizer: binanın içine tıklanınca duvarların dış yüzü boyunca dolanır ve dışa taşar; Sınır (S) Çiz ile ekseni nokta nokta verilir, Enter yazar. Tür (T: Cephe silmesi, Duvar harpuştası), Çıkıntı (E), Yükseklik (Y), Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği), Hiza (H: Çiz'de), Malzeme (M). 5 cm çıkıntı, 20 cm yükseklik ve 2,80 m ile başlar: 3 m'lik katın döşeme hizası. IFC'de kaplama (IfcCovering, MOLDING); yapı değildir. Etkin kata, MM-CEPH-SILME katmanına yazılır.",
       "aliases": [
         "SILME",
         "KATSILMESI",
@@ -3045,9 +3045,9 @@
     },
     {
       "id": "tool.coping",
-      "title": "Harpuşta",
+      "title": "Duvar harpuştası",
       "icon": "coping",
-      "description": "Tıklanan duvarın tepesine harpuşta koyar: duvarın ortasında, her iki yüzden Taşma (E) kadar taşar; kapalı duvarda çevresinde dolanır. Tür (T), Yükseklik (Y: kalınlığı), Malzeme (M: Taş gibi; katmanın adı olur). 5 cm taşma ve 5 cm kalınlıkla başlar. Parapetin, bahçe duvarının başlığı; IFC'de kaplama (IfcCovering, COPING), duvarı kısaltmaz. Duvarın katına, MM-HARP-<malzeme> katmanına yazılır.",
+      "description": "Tıklanan duvarın tepesine duvar harpuştası koyar: duvarın ortasında, her iki yüzden Taşma (E) kadar taşar; kapalı duvarda çevresinde dolanır. Tür (T), Yükseklik (Y: kalınlığı), Malzeme (M: Taş gibi; katmanın adı olur). 5 cm taşma ve 5 cm kalınlıkla başlar. Parapetin, bahçe duvarının başlığı; IFC'de kaplama (IfcCovering, COPING), duvarı kısaltmaz. Duvarın katına, MM-HARP-<malzeme> katmanına yazılır.",
       "aliases": [
         "HARPUSTA",
         "HARPUŞTA",

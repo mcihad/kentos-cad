@@ -2723,7 +2723,7 @@ def beam_cases():
                                            "lineWeight": 0.35}),
         # Profiles (docs/adr/8173): a facade moulding along a wall's face, a coping on a wall's top.
         ("cephe silmesi: 5 cm çıkıntı, 20 cm, kattan 2.90", beam(width=0.05, height=0.2, justify="right", baseOffset=2.9,
-                                                                 covering={"predefined": "MOLDING", "name": "Silme"})),
+                                                                 covering={"predefined": "MOLDING", "name": "Cephe silmesi"})),
         ("taş harpuşta: 35 cm, 5 cm, duvarın tepesinde", beam(width=0.35, height=0.05, baseOffset=1.0, material="Taş",
                                                               covering={"predefined": "COPING"}, arch={"level": "zemin"})),
         ("subasman silmesi, L eksen, kullanıcı tanımlı", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], width=0.03, height=0.5,
@@ -2774,7 +2774,7 @@ def beam_cases():
         ("olmayan kattaki temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8,
                                                   arch={"level": "yok"}), {}),
         # docs/adr/8173.
-        ("tabansız profil reddedilir", beam(width=0.05, height=0.2, covering={"predefined": "MOLDING", "name": "Silme"}), {}),
+        ("tabansız profil reddedilir", beam(width=0.05, height=0.2, covering={"predefined": "MOLDING", "name": "Cephe silmesi"}), {}),
         ("lento profil olamaz", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, covering={"predefined": "MOLDING"}), {}),
         ("temel profil olamaz", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8, covering={"predefined": "COPING"}),
          {}),

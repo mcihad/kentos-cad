@@ -1,10 +1,10 @@
-//! Duvar profili (docs/adr/8173 §5): a facade moulding (Silme) or a coping (Harpuşta), its Tür (T); in the model a
-//! beam's band that is a covering.
+//! Duvar profili (docs/adr/8173 §5): a facade moulding (Cephe silmesi) or a coping (Duvar harpuştası), its Tür (T); in
+//! the model a beam's band that is a covering. Their full terms, not "Silme" alone, which reads as deleting.
 //!
-//! - Silme: Sınır (S) Dış yüzler finds the walls' outer outline round the click and runs the band round it, out of it;
+//! - Cephe silmesi: Sınır (S) Dış yüzler finds the walls' outer outline round the click and runs the band round it, out of it;
 //!   Çiz takes its axis point by point, Enter writes it. Çıkıntı (E) 5 cm, Yükseklik (Y) 20 cm and Kattan yükseklik (A)
 //!   2.80 until changed: a 3 m storey's floor band.
-//! - Harpuşta: a click on a wall puts it on the wall's top, along its middle, Taşma (E) past each face: 5 cm past, 5 cm
+//! - Duvar harpuştası: a click on a wall puts it on the wall's top, along its middle, Taşma (E) past each face: 5 cm past, 5 cm
 //!   thick until changed.
 //!
 //! Each on Etkin kat (a coping on its wall's), on its EK-2 layer: MM-CEPH-SILME, MM-HARP-<malzeme>.
@@ -23,9 +23,9 @@ use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool};
 use crate::tool_settings::Setting;
 
-/// Silme.
+/// Cephe silmesi.
 pub const MOULDING_ID: &str = "moulding";
-/// Harpuşta.
+/// Duvar harpuştası.
 pub const COPING_ID: &str = "coping";
 
 /// A moulding's projection, height and base until changed, metres (docs/adr/8173 §5.2).
@@ -54,7 +54,7 @@ enum Bound {
 /// Duvar profili.
 #[derive(Clone, Debug)]
 pub struct ProfileTool {
-    /// A coping (Harpuşta), else a moulding (Silme).
+    /// A coping (Duvar harpuştası), else a facade moulding (Cephe silmesi).
     coping: bool,
     bound: Bound,
     /// A moulding's projection; a coping's overhang past each face.
@@ -119,7 +119,7 @@ fn round_axis(ring: &[Vec2]) -> Option<Vec<Vec2>> {
 }
 
 impl ProfileTool {
-    /// Silme.
+    /// Cephe silmesi.
     pub fn moulding() -> Self {
         ProfileTool {
             coping: false,
@@ -138,7 +138,7 @@ impl ProfileTool {
         }
     }
 
-    /// Harpuşta.
+    /// Duvar harpuştası.
     pub fn coping() -> Self {
         let mut tool = Self::moulding();
         tool.set_coping(true);
@@ -146,7 +146,7 @@ impl ProfileTool {
     }
 
     fn name(&self) -> &'static str {
-        if self.coping { "Harpuşta" } else { "Silme" }
+        if self.coping { "Duvar harpuştası" } else { "Cephe silmesi" }
     }
 
     /// Its Tür taken, with that kind's sizes until changed.
@@ -213,7 +213,7 @@ impl ProfileTool {
             return Err("Nokta hiçbir duvar konturunun içinde değil; yapının içine tıklayın ya da Sınır'ı Çiz yapın.".into());
         };
         if part.outer.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0)) {
-            return Err("Eğrisel konturun silmesi çizilemiyor: Sınır'ı Çiz yapıp düz kenarlarla verin.".into());
+            return Err("Eğrisel konturun cephe silmesi çizilemiyor: Sınır'ı Çiz yapıp düz kenarlarla verin.".into());
         }
         let ring: Vec<Vec2> = part.outer.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         let axis = round_axis(&ring).ok_or("Duvar konturu kapalı bir halka değil.")?;
@@ -332,7 +332,7 @@ impl ProfileTool {
             points::written(result, cx).is_some()
         });
         if written {
-            let what = if self.coping { "Harpuşta kondu" } else { "Silme çizildi" };
+            let what = if self.coping { "Duvar harpuştası kondu" } else { "Cephe silmesi çizildi" };
             cx.say(Level::Success, format!("{what}: {}.", self.size()));
         }
     }
@@ -466,7 +466,7 @@ impl Tool for ProfileTool {
                 .option_with("Malzeme", "M", material);
         }
         let step = match (self.bound, self.pts.len()) {
-            (Bound::Outline, _) => "duvarların içine tıklayın: dış yüzler boyunca silme",
+            (Bound::Outline, _) => "duvarların içine tıklayın: dış yüzler boyunca cephe silmesi",
             (Bound::Draw, 0) => "ekseninin başına tıklayın",
             (Bound::Draw, 1) => "sonraki noktaya tıklayın",
             (Bound::Draw, _) => "sonraki noktaya tıklayın ya da Enter ile yazın",
@@ -598,7 +598,7 @@ impl Tool for ProfileTool {
             "T",
             "Tür",
             crate::tool_settings::choices(
-                &[("moulding", "Silme"), ("coping", "Harpuşta")],
+                &[("moulding", "Cephe silmesi"), ("coping", "Duvar harpuştası")],
                 if self.coping { "coping" } else { "moulding" },
             ),
         )];
@@ -632,9 +632,9 @@ impl Tool for ProfileTool {
             "P",
             "Yeri",
             if self.coping {
-                "Harpuşta tıklanan duvarın tepesine, ortasına oturur ve her iki yüzden taşma kadar taşar: parapetin, bahçe duvarının başlığı. IFC'de kaplama (IfcCovering, COPING); duvarı kısaltmaz."
+                "Duvar harpuştası tıklanan duvarın tepesine, ortasına oturur ve her iki yüzden taşma kadar taşar: parapetin, bahçe duvarının başlığı. IFC'de kaplama (IfcCovering, COPING); duvarı kısaltmaz."
             } else {
-                "Silme duvarların dış yüzü boyunca, katın döşemesinden kattan yükseklik kadar yukarıda dolanır; çıkıntısı kadar dışarı taşar: kat silmesi, subasman silmesi. IFC'de kaplama (IfcCovering, MOLDING)."
+                "Cephe silmesi duvarların dış yüzü boyunca, katın döşemesinden kattan yükseklik kadar yukarıda dolanır; çıkıntısı kadar dışarı taşar: kat silmesi, subasman silmesi. IFC'de kaplama (IfcCovering, MOLDING)."
             },
         ));
         out

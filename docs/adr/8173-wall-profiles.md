@@ -2,7 +2,9 @@
 
 - **Durum:** iki bölümü de kabul edildi ve uygulandı (27 Kasım 2026).
   - 1. bölüm: profil modelde, kesitte, 3B'de, IFC'de ve dosyada.
-  - 2. bölüm: Silme ve Harpuşta araçları, şeritte Baca ▾'in altında (§5).
+  - 2. bölüm: Cephe silmesi ve Duvar harpuştası araçları, şeritte Baca ▾'in altında (§5).
+  - Adlar (sahibin isteği, 27 Kasım 2026: "mühendislik terminolojisi isimleri olmalı"): araçlar mimarlıktaki tam
+    adlarıyla anılır. "Silme" tek başına bir programda silme işlemi (delete) gibi okunuyordu.
 - **Plan:** [plan/mimari-bim.md](../../plan/mimari-bim.md) MB-11. Karar: [ADR 8171](8171-mimari-3d-section-quality-and-missing-tools.md)
   §2.6.
 - **İstek** (sahip, 27 Kasım 2026): "mimari proje çizimlerinde birçok eksik aracımız var". Araştırma raporu (§5): duvar
@@ -66,7 +68,7 @@
   - Kattan yüksekliği (`baseOffset`) zorunlu: profil katın döşemesinden o kadar yukarıda durur, hiçbir döşemeden
     asılmaz.
   - Eğim almaz (eğimi yalnız eleman alır).
-- **Cephe silmesi** `MOLDING` ve adı "Silme"dir (`Covering::facade_moulding`). Adıyla Cephe'nin öğesine çizilir
+- **Cephe silmesi** `MOLDING` ve adı "Cephe silmesi"dir (`Covering::facade_moulding`). Adıyla Cephe'nin öğesine çizilir
   (`Covering::element_of`); başka adlı MOLDING (kartonpiyer) KARP'tadır.
 - **Harpuşta** `COPING`'dir (`Covering::coping`).
 
@@ -99,7 +101,7 @@
   - Harpuşta `MM-HARP-…`, silme `MM-CEPH-…` katmanında.
   - Harpuşta 1,00 ile 1,05 arasında, 1,00 m'lik parapetin tepesinde. Duvar 1,00 m kalır.
   - Kolonla kesişen silmenin hacmi bütün: 6 × 0,05 × 0,2.
-  - IFC'de iki `IfcCovering` (COPING, MOLDING), `MM-KPL-` adlı; kiriş sayısı 0.
+  - IFC'de iki `IfcCovering`: COPING `MM-KPL-Harpuşta`, MOLDING `MM-KPL-Cephe_silmesi`; kiriş sayısı 0.
 - **Dosya:** `arch_elements::a_profile_round_trips_under_arch_data_42`. Mimari verisi 42 ile aynen okunur; tabansız
   profil yazılırken reddedilir.
 - **Sınamalar:** sözleşme, alan, etkileşim, IFC (görünüm özelliğiyle 112), `kentos-kcad` (290), uygulamanın birleşim,
@@ -107,12 +109,13 @@
 
 ## §5 Araçlar (2. bölüm)
 
-### §5.1 Silme ve Harpuşta
+### §5.1 Cephe silmesi ve Duvar harpuştası
 
-Tek araç, iki türü (Tür T): **Silme** (`tool.moulding`, kısa adı SL) ve **Harpuşta** (`tool.coping`, HP). Temel
+Tek araç, iki türü (Tür T): **Cephe silmesi** (`tool.moulding`, kısa adı SL) ve **Duvar harpuştası** (`tool.coping`,
+HP). Temel
 araçlarında olduğu gibi şeritte iki ayrı öğedir.
 
-- **Silme:**
+- **Cephe silmesi:**
   - Sınır (S) **Dış yüzler**: binanın içine tıklanınca duvarların dış konturu bulunur (döşemenin "Dış yüzler"inin aynısı,
     `Document::slab_from_walls`). Bant onun çevresinde bir kez dolanır, dışa taşar.
   - Halka bir kenarının ortasından başlar ve oraya döner. İki uç düz bir kenarda uç uca birleşir, her köşe gönyelenir;
@@ -126,7 +129,7 @@ araçlarında olduğu gibi şeritte iki ayrı öğedir.
     - Kattan yükseklik (A).
     - Malzeme (M).
   - Öntanımlılar: 5 cm, 20 cm, 2,80 m. 3 m'lik katın döşeme hizasındaki kat silmesi.
-- **Harpuşta:**
+- **Duvar harpuştası:**
   - Duvara tıklanınca duvarın orta çizgisinde, tepesinde durur, her iki yüzden Taşma (E) kadar taşar.
   - Orta çizgi duvarın hizasından bulunur: sol yüzünden çizilen duvarın ortası çizgisinin sağındadır. Bunun için
     `geom::beam::side` dışa açıldı.
@@ -134,17 +137,18 @@ araçlarında olduğu gibi şeritte iki ayrı öğedir.
   - Kapalı duvarda halka olarak dolanır. Eğrisel duvar reddedilir.
   - Öntanımlılar: 5 cm taşma, 5 cm kalınlık.
   - Duvarın katına yazılır.
-- **İletiler:** "Silme çizildi: 5/20.", "Harpuşta kondu: 5 cm taşma, 5 cm.". Duvar yoksa "Burada duvar yok.".
+- **İletiler:** "Cephe silmesi çizildi: 5/20.", "Duvar harpuştası kondu: 5 cm taşma, 5 cm.". Duvar yoksa "Burada duvar yok.".
 - **Katmanlar:**
-  - Silme `MM-CEPH-SILME`.
-  - Harpuşta `MM-HARP-<malzeme>`: Taş verilince `MM-HARP-TAS`, malzeme yoksa `MM-HARP-GENEL`.
+  - Cephe silmesi `MM-CEPH-SILME`.
+  - Duvar harpuştası `MM-HARP-<malzeme>`: Taş verilince `MM-HARP-TAS`, malzeme yoksa `MM-HARP-GENEL`.
 
 ### §5.2 Şerit
 
-- **Yeri:** Mimari › Yerleştir'de Baca ▾ (Boşluk, Niş, Baca) menüsüne Silme ve Harpuşta eklendi. Duvarın içinde
+- **Yeri:** Mimari › Yerleştir'de Baca ▾ (Boşluk, Niş, Baca) menüsüne Cephe silmesi ve Duvar harpuştası eklendi. Duvarın içinde
   açılanların yanında, duvarın taşıdıkları.
 - **Ayrı düğme yok:** sekmede 30 düğme var.
-- **Simgeler:** duvar kesitinden dışa taşan bant (Silme) ve duvarın tepesinde iki yandan taşan başlık (Harpuşta).
+- **Simgeler:** duvar kesitinden dışa taşan bant (Cephe silmesi) ve duvarın tepesinde iki yandan taşan başlık (Duvar
+  harpuştası).
 - **Bulma:** komut aramasında SİLME, KAT SİLMESİ, HARPUŞTA, DUVAR PROFİLİ.
 
 ### §5.3 Kanıt (2. bölüm)

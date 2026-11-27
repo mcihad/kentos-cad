@@ -76,7 +76,7 @@ fn a_click_inside_the_walls_runs_a_moulding_round_their_outer_faces() {
     let area: f64 = k.pts.windows(2).map(|w| (w[0].x - E) * (w[1].y - N) - (w[1].x - E) * (w[0].y - N)).sum();
     assert!(area > 0.0, "counter-clockwise: its right, where it lies, is out of the building");
     assert_eq!(layer_of(&b), "MM-CEPH-SILME");
-    assert_eq!(b.last_text(), Some("Silme çizildi: 5/20."));
+    assert_eq!(b.last_text(), Some("Cephe silmesi çizildi: 5/20."));
     assert_eq!(k.arch.level.as_deref(), Some("zemin"));
 }
 
@@ -98,7 +98,7 @@ fn a_click_on_a_wall_puts_a_coping_on_its_top_past_each_face() {
     let ends: Vec<(f64, f64)> = k.pts.iter().map(|p| (p.x - E, p.y - N)).collect();
     assert_eq!(ends, vec![(5.0, 0.25), (5.0, 8.75)]);
     assert_eq!(layer_of(&b), "MM-HARP-GENEL");
-    assert_eq!(b.last_text(), Some("Harpuşta kondu: 5 cm taşma, 5 cm."));
+    assert_eq!(b.last_text(), Some("Duvar harpuştası kondu: 5 cm taşma, 5 cm."));
     // A stone coping: its material names its layer.
     assert!(b.run(|s, cx| s.configure("M", "Taş", cx)));
     b.click(11.875, 4.0);

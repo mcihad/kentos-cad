@@ -2911,7 +2911,7 @@
                 "baseOffset": 2.9,
                 "covering": {
                   "predefined": "MOLDING",
-                  "name": "Silme"
+                  "name": "Cephe silmesi"
                 }
               }
             ]
@@ -2965,7 +2965,7 @@
                 "baseOffset": 2.9,
                 "covering": {
                   "predefined": "MOLDING",
-                  "name": "Silme"
+                  "name": "Cephe silmesi"
                 }
               }
             },
@@ -5217,7 +5217,7 @@
                 "height": 0.2,
                 "covering": {
                   "predefined": "MOLDING",
-                  "name": "Silme"
+                  "name": "Cephe silmesi"
                 }
               }
             ]

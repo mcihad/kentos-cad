@@ -110,8 +110,8 @@ impl Covering {
     }
 
     /// A facade moulding's name (docs/adr/8173): a `MOLDING` so named is the facade's band, drawn on EK-2's Cephe, not
-    /// a room's Kartonpiyer.
-    pub const FACADE_MOULDING: &'static str = "Silme";
+    /// a room's Kartonpiyer. Its full term, not "Silme" alone, which a program's user reads as deleting.
+    pub const FACADE_MOULDING: &'static str = "Cephe silmesi";
 
     /// EK-2 Tablo 2.3's element it is drawn on: its type's ([`Covering::element`]); a facade moulding the Cephe's.
     pub fn element_of(&self) -> &'static str {
@@ -122,7 +122,7 @@ impl Covering {
         }
     }
 
-    /// A facade moulding (silme, docs/adr/8173): `MOLDING` "Silme".
+    /// A facade moulding (cephe silmesi, docs/adr/8173): `MOLDING` "Cephe silmesi".
     pub fn facade_moulding() -> Self {
         Covering { predefined: "MOLDING".into(), name: Some(Self::FACADE_MOULDING.into()) }
     }

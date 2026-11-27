@@ -296,7 +296,7 @@ fn a_profile_covers_a_wall_unjoined_and_is_the_ifc_s_covering() {
         // A facade moulding along the wall's face at 0.60 m, 5 cm out, through a column it meets.
         {"kind": "column", "at": {"x": 3.0, "y": -0.2}, "width": 0.3, "depth": 0.3, "arch": {"level": "zemin"}},
         {"kind": "beam", "pts": [{"x": 0.0, "y": -0.125}, {"x": 6.0, "y": -0.125}], "width": 0.05, "height": 0.2,
-         "justify": "right", "baseOffset": 0.6, "covering": {"predefined": "MOLDING", "name": "Silme"},
+         "justify": "right", "baseOffset": 0.6, "covering": {"predefined": "MOLDING", "name": "Cephe silmesi"},
          "material": "Prekast beton", "arch": {"level": "zemin"}}
     ]));
     let m = model(&doc);
@@ -318,5 +318,5 @@ fn a_profile_covers_a_wall_unjoined_and_is_the_ifc_s_covering() {
     let text = kentos_ifc::building::write(&building);
     let coverings: Vec<&str> = text.lines().filter(|l| l.contains("=IFCCOVERING(")).collect();
     assert!(coverings.iter().any(|l| l.ends_with(".COPING.);") && l.contains("'MM-KPL-Harpu")), "{coverings:?}");
-    assert!(coverings.iter().any(|l| l.ends_with(".MOLDING.);") && l.contains("'MM-KPL-Silme")), "{coverings:?}");
+    assert!(coverings.iter().any(|l| l.ends_with(".MOLDING.);") && l.contains("'MM-KPL-Cephe_silmesi")), "{coverings:?}");
 }

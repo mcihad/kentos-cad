@@ -2070,12 +2070,12 @@
          {
           "command": "tool.moulding",
           "title": "Boşluk",
-          "label": "Silme"
+          "label": "Cephe silmesi"
          },
          {
           "command": "tool.coping",
           "title": "Boşluk",
-          "label": "Harpuşta"
+          "label": "Duvar harpuştası"
          }
         ]
        },
@@ -7242,12 +7242,12 @@
         {
          "command": "tool.moulding",
          "title": "Boşluk",
-         "label": "Silme"
+         "label": "Cephe silmesi"
         },
         {
          "command": "tool.coping",
          "title": "Boşluk",
-         "label": "Harpuşta"
+         "label": "Duvar harpuştası"
         }
        ]
       }
