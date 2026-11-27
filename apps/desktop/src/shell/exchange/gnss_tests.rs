@@ -71,9 +71,11 @@ fn a_gpx_goes_in_as_named_points_on_the_drawing_in_one_undo_step() {
     gnss(&mut app, Gnss::Run);
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     assert_eq!(count(&app) - before, 9);
+    // What the preview said stays in the log (docs/adr/9329): the records not taken, with why.
     assert_eq!(
         last_said(&app),
-        "“sample.gpx”: 2 kayıt alınmadı (okunamayan ya da projenin sistemine çevrilemeyen); nedenleri içe aktarma penceresinde yazılıydı."
+        "“sample.gpx”: 2 kayıt alınmadı: Satır 20: konumu olmayan noktalar (1 nokta, fix none) okunmadı; Satır 21: konum \
+         (lat “39,93”, lon “35,84”) okunmuyor; nokta okunmadı."
     );
     // The corner falls on the drawing's corner (the sample's positions are
     // its TM36 coordinates through PROJ; EPSG's way from WGS 84 to TUREF is
@@ -306,4 +308,86 @@ fn positions_outside_the_projects_zone_are_said() {
         shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
         crate::files_testing::evidence(&mut shot, &app, "gis-034", "tm30-dilim-disi");
     }
+}
+
+/// The layers of the open drawing by name, with how many objects each holds.
+fn layers(app: &App) -> Vec<(String, usize)> {
+    let model = &app.document.as_ref().expect("open").model;
+    model.layers().leaves().into_iter().map(|l| (l.name.clone(), model.count(&l.id))).collect()
+}
+
+/// docs/adr/9329: a new layer is never one of the drawing's. The GPX's points go onto “sample”, its track onto a layer
+/// of its own, “sample_iz”; the NMEA log of the same name is offered “sample_2” and “sample_2_iz”; a name a layer has
+/// is refused with the way to it; the lines can go with the points. The new layers keep the file they came from, and a
+/// project written and opened again has them, their objects and their records.
+#[test]
+fn a_new_layer_is_never_one_of_the_drawings_and_the_lines_have_their_own() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(sample("sample.gpx"));
+    run(&mut app, "file.import.gnss");
+    gnss(&mut app, Gnss::Run);
+    let had = layers(&app);
+    assert!(had.contains(&("sample".to_owned(), 9)), "{had:?}");
+    assert!(had.contains(&("sample_iz".to_owned(), 1)), "{had:?}");
+    // The transformation and the heights are said after the import too.
+    let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(log.iter().any(|l| l.starts_with("“sample.gpx”: dönüşüm ")), "{log:?}");
+    assert!(log.iter().any(|l| l.contains("Kot elipsoit yüksekliğidir")), "{log:?}");
+    // The NMEA log of the same name: free names.
+    app.picker = Picker::File(sample("sample.nmea"));
+    run(&mut app, "file.import.gnss");
+    let s = window(&app);
+    assert_eq!((s.name_for_test(), s.lines_name_for_test()), ("sample_2", "sample_2_iz"));
+    // A name a layer has: refused with the way to it.
+    gnss(&mut app, Gnss::Name("SAMPLE".into()));
+    let before = layers(&app);
+    gnss(&mut app, Gnss::Run);
+    assert_eq!(layers(&app), before, "nothing taken");
+    assert!(matches!(app.exchange, Some(Window::GnssImport(_))), "the window stays");
+    // The lines with the points, onto a new layer.
+    gnss(&mut app, Gnss::Name("nmea".into()));
+    gnss(&mut app, Gnss::LinesTo(super::gnss_import::LinesTo::Points));
+    gnss(&mut app, Gnss::Run);
+    let now = layers(&app);
+    assert!(now.contains(&("nmea".to_owned(), 5)), "4 fixes and the line together: {now:?}");
+    // Its record: the format, the file, its SHA-256.
+    let model = &app.document.as_ref().expect("open").model;
+    let id = model.layers().leaves().into_iter().find(|l| l.name == "nmea").map(|l| l.id.clone()).expect("nmea");
+    let origin = model.layers().info_of(&id).and_then(|i| i.origin).expect("its origin");
+    assert_eq!(origin.driver, "nmea");
+    assert!(origin.address.ends_with("sample.nmea"), "{}", origin.address);
+    // Written and opened again: the layers, their objects and their records are there.
+    let path = crate::files_testing::scratch("gnss-yeniden").join("gnss.kcad");
+    crate::document::write(&model.to_snapshot_v2(), &path).expect("written");
+    let again = crate::document::Document::read(&path).expect("read again");
+    let leaves = again.model.layers().leaves();
+    let find = |name: &str| leaves.iter().find(|l| l.name == name).map(|l| (l.id.clone(), again.model.count(&l.id)));
+    assert_eq!(find("sample").map(|(_, n)| n), Some(9));
+    assert_eq!(find("sample_iz").map(|(_, n)| n), Some(1));
+    assert_eq!(find("nmea").map(|(_, n)| n), Some(5));
+    let (sample_id, _) = find("sample").expect("sample");
+    let kept = again.model.layers().info_of(&sample_id).and_then(|i| i.origin).expect("kept");
+    assert_eq!(kept.driver, "gpx");
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9329/`): the NMEA log of the same name as the GPX taken before, its free
+/// names offered and its lines' layer of their own; the name of a layer typed, refused with the way to it.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib gnss_tests::layer_screens -- --ignored --nocapture"]
+fn layer_screens() {
+    crate::drawing_fonts::load();
+    let prepared = |typed: Option<&str>| {
+        let mut app = app_with_drawing();
+        app.picker = Picker::File(sample("sample.gpx"));
+        run(&mut app, "file.import.gnss");
+        gnss(&mut app, Gnss::Run);
+        app.picker = Picker::File(sample("sample.nmea"));
+        run(&mut app, "file.import.gnss");
+        if let Some(name) = typed {
+            gnss(&mut app, Gnss::Name(name.into()));
+        }
+        app
+    };
+    crate::files_testing::usage_shots("9329", "01-bos-adlar", || prepared(None));
+    crate::files_testing::usage_shots("9329", "02-katmanin-adi", || prepared(Some("sample")));
 }

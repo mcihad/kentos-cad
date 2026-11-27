@@ -398,6 +398,75 @@ pub fn layer_named<'a>(doc: &'a Document, name: &str) -> Option<&'a LayerNode> {
         .find(|l| fold_turkish(&l.name) == key)
 }
 
+/// Whether two layer names are one as [`layer_named`] compares them (case and Turkish marks aside).
+pub fn same_layer_name(a: &str, b: &str) -> bool {
+    fold_turkish(a.trim()) == fold_turkish(b.trim())
+}
+
+/// A name for a new layer that no layer has (docs/adr/9329): `base`, else `base_2`, `base_3`…, compared as
+/// [`layer_named`] compares. An import window offers it, so that a new layer is never one of the drawing's.
+pub fn free_layer_name(doc: &Document, base: &str) -> String {
+    let base = base.trim();
+    let base = if base.is_empty() { "Katman" } else { base };
+    if layer_named(doc, base).is_none() {
+        return base.to_owned();
+    }
+    (2..)
+        .map(|n| format!("{base}_{n}"))
+        .find(|name| layer_named(doc, name).is_none())
+        .unwrap_or_else(|| base.to_owned())
+}
+
+/// The file an import window read, told to the layers it makes (docs/adr/9192, 9329): its format as a word (`gpx`,
+/// `nmea`, `ncn`), its path and its bytes.
+pub struct FileOrigin<'a> {
+    pub driver: &'a str,
+    pub path: &'a std::path::Path,
+    pub bytes: &'a [u8],
+}
+
+/// [`apply_import`] of an import window's file, each new layer told where its objects came from (the format, the
+/// file, its SHA-256, the time) in the import's one undo step. A file without a full path, or a format that is no
+/// word, records nothing.
+pub fn apply_file_import(
+    doc: &mut Document,
+    entities: Vec<Entity>,
+    plan: &ImportPlan,
+    origin: Option<FileOrigin<'_>>,
+) -> Result<Applied, String> {
+    let group = doc.begin_group(&plan.label);
+    let applied = match apply_import(doc, entities, Vec::new(), plan) {
+        Ok(applied) => applied,
+        Err(why) => {
+            doc.cancel_group(group);
+            return Err(why);
+        }
+    };
+    if let Some(o) = origin.filter(|o| o.path.is_absolute()) {
+        use sha2::{Digest, Sha256};
+        let sha256: String = Sha256::digest(o.bytes).iter().map(|b| format!("{b:02x}")).collect();
+        let now = crate::gis_derive::utc_now();
+        // To the second, as the record keeps it.
+        let at = format!("{}Z", now.get(..19).unwrap_or(&now));
+        for (id, _) in &applied.made {
+            let Some(mut info) = doc.layers().info_of(id) else {
+                continue;
+            };
+            info.origin = Some(kentos_commands::LayerOrigin {
+                driver: o.driver.to_owned(),
+                address: o.path.display().to_string(),
+                table: None,
+                sha256: Some(sha256.clone()),
+                at: at.clone(),
+            });
+            // A record the check refuses (a format that is no word) is left out rather than failing the import.
+            let _ = doc.set_layer_info(id, info, "Kaynağı");
+        }
+    }
+    doc.end_group(group);
+    Ok(applied)
+}
+
 /// An id no node of the tree has, readable from the name (`import-parsel-2`).
 fn fresh_id(name: &str, taken: &mut HashSet<String>) -> String {
     let mut slug = String::new();

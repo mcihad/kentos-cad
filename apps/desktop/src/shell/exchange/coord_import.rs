@@ -23,7 +23,8 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, overlay};
 use kentos_ui::{label, style};
 
-use super::apply::{self, ImportPlan, LayerTarget, layer_named};
+use super::apply::{self, ImportPlan, LayerTarget};
+use super::new_layer;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
@@ -257,8 +258,11 @@ impl App {
             _ => (CrsQuestion::new(srid), None),
         };
         let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
+        // A name no layer has (docs/adr/9329).
+        let base = words::base_name(&file.name);
+        let name = self.document.as_ref().map_or_else(|| base.clone(), |d| apply::free_layer_name(&d.model, &base));
         let state = State {
-            name: words::base_name(&file.name),
+            name,
             file,
             delimiter: CoordDelimiter::Auto,
             decimal: DecimalMark::Auto,
@@ -353,34 +357,20 @@ impl App {
         Task::none()
     }
 
-    /// Where the points go: an existing layer, or a new one (merged into a
-    /// layer of the same name if there is one).
-    fn coord_target(&self, s: &State) -> Option<LayerTarget> {
+    /// Where the points go: one of the drawing's layers, or a new one, or why there is none (docs/adr/9329).
+    fn coord_target(&self, s: &State) -> Result<LayerTarget, String> {
         if let Some(id) = &s.target {
-            return Some(LayerTarget::Existing(id.clone()));
+            return Ok(LayerTarget::Existing(id.clone()));
         }
-        let name = s.name.trim();
-        if name.is_empty() {
-            return None;
-        }
-        let doc = self.document.as_ref()?;
-        Some(match layer_named(&doc.model, name) {
-            Some(same) => LayerTarget::Existing(same.id.clone()),
-            None => LayerTarget::New {
-                frozen: None,
-                plot: None,
-                name: name.to_owned(),
-                style: Box::new(point_layer_style()),
-                visible: true,
-                locked: false,
-                fields: Vec::new(),
-            },
-        })
+        let Some(doc) = self.document.as_ref() else {
+            return Err(String::new());
+        };
+        new_layer::target(&doc.model, &s.name, point_layer_style(), "Hedef katman'dan")
     }
 
     /// Why the import cannot run now, if a reason must be said (a locked layer).
     fn coord_locked(&self, s: &State) -> Option<String> {
-        let Some(LayerTarget::Existing(id)) = self.coord_target(s) else {
+        let Ok(LayerTarget::Existing(id)) = self.coord_target(s) else {
             return None;
         };
         let doc = self.document.as_ref()?;
@@ -397,7 +387,7 @@ impl App {
             && !s.reading
             && s.read.as_ref().is_some_and(|r| r.points > 0)
             && s.crs.matches(&self.project_system())
-            && self.coord_target(s).is_some()
+            && self.coord_target(s).is_ok()
             && self.coord_locked(s).is_none()
     }
 
@@ -461,10 +451,11 @@ impl App {
         if id != s.reading_id {
             return Task::none();
         }
-        let (Some(target), Some(read)) = (self.coord_target(s), s.read.clone()) else {
+        let (Ok(target), Some(read)) = (self.coord_target(s), s.read.clone()) else {
             return Task::none();
         };
         let name = s.file.name.clone();
+        let file = s.file.clone();
         let for_table = s.for_table;
         let result = match result {
             Ok(result) => result,
@@ -486,10 +477,16 @@ impl App {
             layers: vec![(String::new(), target)],
             group: None,
         };
+        // The new layer keeps the file it came from (docs/adr/9192, 9329).
+        let driver = new_layer::format_word(&file.name);
+        let origin = match (&file.path, &driver) {
+            (Some(path), Some(driver)) => Some(apply::FileOrigin { driver, path, bytes: &file.bytes }),
+            _ => None,
+        };
         let Some(doc) = &mut self.document else {
             return Task::none();
         };
-        match apply::apply_import(&mut doc.model, result.entities, Vec::new(), &plan) {
+        match apply::apply_file_import(&mut doc.model, result.entities, &plan, origin) {
             Err(error) => {
                 if let Some(Window::CoordImport(s)) = &mut self.exchange {
                     s.importing = false;
@@ -823,7 +820,8 @@ impl App {
                 container(words::field(
                     "Yeni katmanın adı",
                     name,
-                    Some("Bu adda bir katman varsa noktalar ona eklenir.".to_owned()),
+                    // A name a layer has is said with the way to it (docs/adr/9329).
+                    Some(self.coord_target(s).err().filter(|why| !why.is_empty()).unwrap_or_else(|| new_layer::help("Hedef katman'dan"))),
                 ))
                 .width(Length::FillPortion(2)),
             );

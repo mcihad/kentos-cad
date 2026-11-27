@@ -72,6 +72,8 @@ mod parquet_exchange;
 #[cfg(test)]
 mod parquet_tests;
 mod gnss_import;
+// A new layer an import window makes, named free (docs/adr/9329).
+mod new_layer;
 #[cfg(test)]
 mod gnss_tests;
 pub(crate) mod gpkg;

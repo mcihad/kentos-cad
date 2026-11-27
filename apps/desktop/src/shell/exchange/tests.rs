@@ -184,24 +184,47 @@ fn a_workbook_in_the_coordinate_list_window_points_to_tablodan_nokta() {
     assert_eq!(count(&app), before, "nothing is imported");
 }
 
+/// docs/adr/9329: Yeni katman always makes a new layer. A name a layer has (“çizim”, the sample's “Çizim” without
+/// regard to case or Turkish marks) is refused with the way to that layer; picked in Hedef katman, the points go onto
+/// it. A new layer keeps the file it came from.
 #[test]
-fn a_coordinate_list_merges_into_the_layer_of_the_same_name() {
+fn a_coordinate_list_takes_a_layer_of_the_drawing_only_when_it_is_picked() {
     let mut app = app_with_drawing();
     app.picker = Picker::File(fixture("netcad.ncn"));
     run(&mut app, "file.import.ncn");
-    send(
-        &mut app,
-        Event::CoordImport(coord_import::Event::Name("çizim".into())),
-    );
+    let before = count(&app);
+    send(&mut app, Event::CoordImport(coord_import::Event::Name("çizim".into())));
+    send(&mut app, Event::CoordImport(coord_import::Event::Run));
+    assert_eq!(count(&app), before, "a name a layer has takes nothing");
+    let Some(Window::CoordImport(_)) = &app.exchange else {
+        panic!("the window stays open");
+    };
+    // Picked in Hedef katman: onto the drawing's “Çizim”.
+    let cizim = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .layers()
+        .leaves()
+        .iter()
+        .find(|l| l.name == "Çizim")
+        .map(|l| l.id.clone())
+        .expect("the sample's Çizim");
+    send(&mut app, Event::CoordImport(coord_import::Event::Target(Some(cizim))));
+    send(&mut app, Event::CoordImport(coord_import::Event::Run));
+    assert!(count(&app) > before);
+    assert!(last_said(&app).contains("“Çizim” katmanına alındı"), "{}", last_said(&app));
+    // The file's name offered next is free, and its new layer keeps where it came from.
+    app.picker = Picker::File(fixture("netcad.ncn"));
+    run(&mut app, "file.import.ncn");
     send(&mut app, Event::CoordImport(coord_import::Event::Run));
     let model = &app.document.as_ref().expect("open").model;
-    // The sample drawing's “Çizim” layer, found without regard to case or Turkish marks.
-    assert!(model.layers().leaves().iter().all(|l| l.name != "çizim"));
-    assert!(
-        last_said(&app).contains("“Çizim” katmanına alındı"),
-        "{}",
-        last_said(&app)
-    );
+    let made = model.layers().leaves().into_iter().find(|l| l.name == "netcad").expect("a new layer “netcad”");
+    let origin = model.layers().info_of(&made.id).and_then(|i| i.origin).expect("its origin");
+    assert_eq!(origin.driver, "ncn");
+    assert!(origin.address.ends_with("netcad.ncn"), "{}", origin.address);
+    assert_eq!(origin.sha256.as_deref().map(str::len), Some(64));
 }
 
 #[test]

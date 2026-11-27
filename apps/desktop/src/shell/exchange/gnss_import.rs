@@ -9,7 +9,11 @@
 //! unless the user unticks them (docs/adr/0222 §6). A project without a system
 //! takes none: GNSS positions have one, and they are never placed without it
 //! (CLAUDE.md §5). The points and lines go in as one undo step, onto a new
-//! layer or one of the drawing's.
+//! layer or one of the drawing's (docs/adr/9329): a new layer's name is one
+//! no layer has, and the lines go onto a layer of their own unless the user
+//! puts them with the points. The new layers keep the file they came from;
+//! the log keeps what the preview said (the transformation, the heights, the
+//! records not taken).
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -27,8 +31,9 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::{Dialog, overlay};
 
-use super::apply::{self, ImportPlan, LayerTarget, layer_named};
+use super::apply::{self, ImportPlan, LayerTarget};
 use super::coord_import::point_layer_style;
+use super::new_layer;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
@@ -76,11 +81,26 @@ pub struct State {
     /// The target layer's id; `None`: a new layer named `name`.
     target: Option<String>,
     name: String,
+    /// Where the routes and tracks go (docs/adr/9329).
+    lines_to: LinesTo,
+    /// Their new layer's name.
+    lines_name: String,
     status: Option<(bool, String)>,
     /// The points as they will be written, with the current choices; none
     /// while the file is read or the project has no system to take them.
     plan: Option<Arc<Plan>>,
 }
+
+/// Where a file's routes and tracks go: a new layer of their own, the points' layer, or one of the drawing's.
+#[derive(Debug, Clone, PartialEq)]
+pub enum LinesTo {
+    New,
+    Points,
+    Layer(String),
+}
+
+/// The key the lines go to their layer by in the import's plan; the points' is the empty one.
+const LINES_KEY: &str = "cizgiler";
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -95,6 +115,8 @@ pub enum Event {
     Start(String),
     Target(Option<String>),
     Name(String),
+    LinesTo(LinesTo),
+    LinesName(String),
     Another,
     Run,
 }
@@ -157,8 +179,20 @@ impl App {
             _ => None,
         };
         let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
+        // Names no layer has (docs/adr/9329): the file's, its lines' after it.
+        let base = words::base_name(&file.name);
+        let (name, lines_name) = match &self.document {
+            Some(d) => {
+                let name = apply::free_layer_name(&d.model, &base);
+                let lines = apply::free_layer_name(&d.model, &format!("{name}_iz"));
+                (name, lines)
+            }
+            None => (base.clone(), format!("{base}_iz")),
+        };
         let state = State {
-            name: words::base_name(&file.name),
+            name,
+            lines_to: LinesTo::New,
+            lines_name,
             file,
             read: None,
             failed: None,
@@ -220,6 +254,14 @@ impl App {
             }
             Event::Name(name) => {
                 s.name = name;
+                again = false;
+            }
+            Event::LinesTo(to) => {
+                s.lines_to = to;
+                again = false;
+            }
+            Event::LinesName(name) => {
+                s.lines_name = name;
                 again = false;
             }
             Event::Another | Event::Run => {}
@@ -299,42 +341,50 @@ impl App {
         };
     }
 
-    /// Where the points go: an existing layer, or a new one (merged into a
-    /// layer of the same name if there is one).
-    fn gnss_target(&self, s: &State) -> Option<LayerTarget> {
+    /// Where the points go: one of the drawing's layers, or a new one, or why there is none (docs/adr/9329).
+    fn gnss_target(&self, s: &State) -> Result<LayerTarget, String> {
         if let Some(id) = &s.target {
-            return Some(LayerTarget::Existing(id.clone()));
+            return Ok(LayerTarget::Existing(id.clone()));
         }
-        let name = s.name.trim();
-        if name.is_empty() {
+        let Some(doc) = self.document.as_ref() else {
+            return Err(String::new());
+        };
+        new_layer::target(&doc.model, &s.name, point_layer_style(), "Hedef katman'dan")
+    }
+
+    /// Where the lines go when they go apart from the points: their new layer or one of the drawing's, or why there is
+    /// none; none when there are no lines to take or they go with the points.
+    fn gnss_lines_target(&self, s: &State) -> Option<Result<LayerTarget, String>> {
+        if s.plan.as_ref().is_none_or(|p| p.lines.is_empty()) {
             return None;
         }
-        let doc = self.document.as_ref()?;
-        Some(match layer_named(&doc.model, name) {
-            Some(same) => LayerTarget::Existing(same.id.clone()),
-            None => LayerTarget::New {
-                frozen: None,
-                plot: None,
-                name: name.to_owned(),
-                style: Box::new(point_layer_style()),
-                visible: true,
-                locked: false,
-                fields: Vec::new(),
-            },
-        })
+        match &s.lines_to {
+            LinesTo::Points => None,
+            LinesTo::Layer(id) => Some(Ok(LayerTarget::Existing(id.clone()))),
+            LinesTo::New => {
+                let doc = self.document.as_ref()?;
+                if s.target.is_none() && apply::same_layer_name(&s.lines_name, &s.name) {
+                    return Some(Err(
+                        "Çizgilerin katmanının adı noktalarınkiyle aynı; başka bir ad yazın ya da Noktaların katmanı'nı seçin."
+                            .to_owned(),
+                    ));
+                }
+                let style = kentos_commands::LayerStyle { color: "ink".into(), ..kentos_domain::default_style() };
+                Some(new_layer::target(&doc.model, &s.lines_name, style, "Çizgilerin katmanı'ndan"))
+            }
+        }
     }
 
     /// Why the import cannot run now, if a reason must be said (a locked layer).
     fn gnss_locked(&self, s: &State) -> Option<String> {
-        let Some(LayerTarget::Existing(id)) = self.gnss_target(s) else {
-            return None;
-        };
         let doc = self.document.as_ref()?;
-        doc.model.layers().is_locked(&id).then(|| {
-            format!(
+        let lines = self.gnss_lines_target(s).and_then(Result::ok);
+        [self.gnss_target(s).ok(), lines].into_iter().flatten().find_map(|t| match t {
+            LayerTarget::Existing(id) if doc.model.layers().is_locked(&id) => Some(format!(
                 "“{}” katmanı kilitli; kilidini Katmanlar panelinden açın ya da başka bir katman seçin.",
                 self.layer_name(&id)
-            )
+            )),
+            _ => None,
         })
     }
 
@@ -343,7 +393,8 @@ impl App {
             && s.plan
                 .as_ref()
                 .is_some_and(|p| !p.placed.is_empty() || !p.lines.is_empty())
-            && self.gnss_target(s).is_some()
+            && self.gnss_target(s).is_ok()
+            && self.gnss_lines_target(s).is_none_or(|t| t.is_ok())
             && self.gnss_locked(s).is_none()
     }
 
@@ -354,27 +405,50 @@ impl App {
         if !self.gnss_can_import(s) {
             return;
         }
-        let (Some(target), Some(plan)) = (self.gnss_target(s), s.plan.clone()) else {
+        let (Ok(target), Some(plan)) = (self.gnss_target(s), s.plan.clone()) else {
             return;
         };
-        let name = s.file.name.clone();
-        let problems = s.read.as_ref().map_or(0, |r| r.problems.len());
-        let mut made = gnss::entities(&plan.placed);
-        made.extend(gnss::line_entities(&plan.lines));
-        let layer_name = match &target {
-            LayerTarget::New { name, .. } => name.clone(),
-            LayerTarget::Existing(id) => self.layer_name(id),
+        let lines_target = match self.gnss_lines_target(s) {
+            Some(Ok(t)) => Some(t),
+            Some(Err(_)) => return,
+            None => None,
         };
+        let name = s.file.name.clone();
+        let file = s.file.clone();
+        let report = self.gnss_report(s);
+        let mut made = gnss::entities(&plan.placed);
+        let mut lines = gnss::line_entities(&plan.lines);
+        if lines_target.is_some() {
+            for e in &mut lines {
+                e.base_mut().layer_id = LINES_KEY.to_owned();
+            }
+        }
+        made.extend(lines);
+        let named = |app: &App, t: &LayerTarget| match t {
+            LayerTarget::New { name, .. } => name.clone(),
+            LayerTarget::Existing(id) => app.layer_name(id),
+        };
+        let layer_name = named(self, &target);
+        let lines_name = lines_target.as_ref().map(|t| named(self, t));
+        let mut layers = vec![(String::new(), target)];
+        layers.extend(lines_target.map(|t| (LINES_KEY.to_owned(), t)));
         let import = ImportPlan {
             source_srid: None,
             label: format!("GNSS: {name}"),
-            layers: vec![(String::new(), target)],
+            layers,
             group: None,
+        };
+        let driver = new_layer::format_word(&file.name);
+        let origin = match (&file.path, &driver) {
+            (Some(path), Some(driver)) => {
+                Some(apply::FileOrigin { driver, path, bytes: &file.bytes })
+            }
+            _ => None,
         };
         let Some(doc) = &mut self.document else {
             return;
         };
-        match apply::apply_import(&mut doc.model, made, Vec::new(), &import) {
+        match apply::apply_file_import(&mut doc.model, made, &import, origin) {
             Err(error) => {
                 if let Some(Window::GnssImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
@@ -382,23 +456,28 @@ impl App {
             }
             Ok(applied) => {
                 self.zoom_to(&applied.slots);
-                let what = match (plan.placed.len(), plan.lines.len()) {
-                    (n, 0) => format!("{n} GNSS noktası"),
-                    (0, l) => format!("{l} GNSS çizgisi"),
-                    (n, l) => format!("{n} GNSS noktası ve {l} çizgi"),
+                let (n, l) = (plan.placed.len(), plan.lines.len());
+                let what = match (n, l, &lines_name) {
+                    (n, 0, _) => format!("{n} GNSS noktası “{layer_name}” katmanına"),
+                    (0, l, Some(to)) => format!("{l} GNSS çizgisi “{to}” katmanına"),
+                    (0, l, None) => format!("{l} GNSS çizgisi “{layer_name}” katmanına"),
+                    (n, l, Some(to)) => format!("{n} GNSS noktası “{layer_name}”, {l} çizgi “{to}” katmanına"),
+                    (n, l, None) => format!("{n} GNSS noktası ve {l} çizgi “{layer_name}” katmanına"),
                 };
-                self.say(
-                    Level::Success,
-                    format!(
-                        "“{name}”: {what} “{layer_name}” katmanına alındı{}. Tek adımda geri alınabilir.",
-                        if applied.created.is_empty() { "" } else { " (yeni katman)" }
-                    ),
-                );
-                let left = plan.skipped.len() + plan.lines_skipped.len() + problems;
-                if left > 0 {
-                    self.warn(format!(
-                        "“{name}”: {left} kayıt alınmadı (okunamayan ya da projenin sistemine çevrilemeyen); nedenleri içe aktarma penceresinde yazılıydı."
-                    ));
+                let made = match applied.created.len() {
+                    0 => String::new(),
+                    1 => " (yeni katman)".to_owned(),
+                    k => format!(" ({k} yeni katman)"),
+                };
+                self.say(Level::Success, format!("“{name}”: {what} alındı{made}. Tek adımda geri alınabilir."));
+                // What the preview said stays in the log (docs/adr/9329): the transformation, the heights, the records
+                // not taken with why.
+                for (warn, line) in report {
+                    if warn {
+                        self.warn(line);
+                    } else {
+                        self.say(Level::Info, line);
+                    }
                 }
                 self.close_exchange();
             }
@@ -567,14 +646,19 @@ impl App {
         &self,
         points: &[kentos_commands::GnssPoint],
     ) -> Option<Element<'a, Message>> {
+        self.gnss_zone_words(points).map(|(kind, words)| words::text_line(kind, words))
+    }
+
+    /// [`Self::gnss_zone_line`]'s words and kind.
+    fn gnss_zone_words(&self, points: &[kentos_commands::GnssPoint]) -> Option<(Line, String)> {
         if points.is_empty() {
             return None;
         }
         let srid = self.document.as_ref()?.settings().srid;
         let Some(area) = kentos_project::crs::area(srid) else {
-            return Some(words::text_line(
+            return Some((
                 Line::Info,
-                "Projenin sisteminin kullanım alanı bilinmiyor; konumların dilime uygunluğu denetlenmedi.",
+                "Projenin sisteminin kullanım alanı bilinmiyor; konumların dilime uygunluğu denetlenmedi.".to_owned(),
             ));
         };
         let out: Vec<&kentos_commands::GnssPoint> =
@@ -590,7 +674,7 @@ impl App {
         let zone = kentos_project::crs::system(srid)
             .and_then(|s| s.area.clone())
             .unwrap_or_else(|| area.name.clone());
-        Some(words::text_line(
+        Some((
             Line::Warn,
             format!(
                 "{} konum sistemin kullanım alanının dışında: boylamları {}–{}, sistemin alanı {zone}. Sayısal dönüşüm yapılır ama bu dilim o konumlar için seçilmemiş olabilir; projenin sistemini denetleyin.",
@@ -599,6 +683,36 @@ impl App {
                 deg(most),
             ),
         ))
+    }
+
+    /// What the preview said, for the log once the points are in (docs/adr/9329): the transformation and its accuracy,
+    /// what the elevations are, the positions outside the system's zone and the records not taken with why; a warning
+    /// is marked.
+    fn gnss_report(&self, s: &State) -> Vec<(bool, String)> {
+        let (Some(read), Some(plan)) = (&s.read, &s.plan) else {
+            return Vec::new();
+        };
+        let name = &s.file.name;
+        let mut out = Vec::new();
+        if let Some(way) = way_of(plan) {
+            out.push((way.ends_with("resmî dönüşüm değil"), format!("“{name}”: dönüşüm {way}.")));
+        }
+        if let Some(note) = heights_note(plan) {
+            out.push((false, format!("“{name}”: {note}")));
+        }
+        if let Some((kind, words)) = self.gnss_zone_words(&read.points) {
+            out.push((kind == Line::Warn, format!("“{name}”: {words}")));
+        }
+        let left: Vec<&LineError> = read.problems.iter().chain(&plan.skipped).chain(&plan.lines_skipped).collect();
+        if !left.is_empty() {
+            let mut reasons: Vec<String> =
+                left.iter().take(SHOWN_PROBLEMS).map(|e| e.message.trim_end_matches('.').to_owned()).collect();
+            if left.len() > SHOWN_PROBLEMS {
+                reasons.push(format!("… ve {} kayıt daha", left.len() - SHOWN_PROBLEMS));
+            }
+            out.push((true, format!("“{name}”: {} kayıt alınmadı: {}.", left.len(), reasons.join("; "))));
+        }
+        out
     }
 
     fn gnss_summary<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
@@ -638,13 +752,7 @@ impl App {
                         format!("{n} nokta ve {l} çizgi (rota ya da iz) alınacak."),
                     ),
                 });
-                let way = plan
-                    .placed
-                    .first()
-                    .map(|p| &p.attrs)
-                    .or_else(|| plan.lines.first().map(|l| &l.attrs))
-                    .and_then(|a| a.get("Dönüşüm"));
-                if let Some(way) = way {
+                if let Some(way) = way_of(plan) {
                     let kind = if way.ends_with("resmî dönüşüm değil") {
                         Line::Warn
                     } else {
@@ -652,22 +760,8 @@ impl App {
                     };
                     lines.push(words::text_line(kind, format!("Dönüşüm: {way}.")));
                 }
-                // The project says what its heights are (docs/adr/0519 §6): the plan says what the elevations became.
-                if let Some(note) = plan.heights.as_ref().filter(|_| n > 0) {
-                    lines.push(words::text_line(Line::Info, note.clone()));
-                } else if n > 0 {
-                    let bare = plan.placed.iter().filter(|p| p.z.is_none()).count();
-                    let heights = "Kot elipsoit yüksekliğidir (dosyadaki yükseklik ile geoit ayrımının toplamı); ortometrik yüksekliğe çevrilmez.";
-                    lines.push(words::text_line(
-                        Line::Info,
-                        if bare > 0 {
-                            format!(
-                                "{heights} {bare} noktanın elipsoit yüksekliği bilinmiyor: kotu boş, dosyadaki yüksekliği öznitelikte."
-                            )
-                        } else {
-                            heights.to_owned()
-                        },
-                    ));
+                if let Some(note) = heights_note(plan) {
+                    lines.push(words::text_line(Line::Info, note));
                 }
                 if !plan.skipped.is_empty() {
                     lines.push(problems(
@@ -713,8 +807,7 @@ impl App {
         };
         let layers = doc.model.layers();
         let leaves: Vec<String> = layers.leaves().iter().map(|l| l.id.clone()).collect();
-        let mut choices = vec![Choice::new("Yeni katman")];
-        choices.extend(leaves.iter().map(|id| {
+        let named = |id: &String| {
             let mark = if layers.is_locked(id) {
                 " (kilitli)"
             } else if !layers.is_visible(id) {
@@ -723,15 +816,16 @@ impl App {
                 ""
             };
             Choice::new(format!("{}{mark}", self.layer_path(id)))
-        }));
+        };
+        let mut choices = vec![Choice::new("Yeni katman")];
+        choices.extend(leaves.iter().map(named));
         let selected = match &s.target {
             None => Some(0),
             Some(id) => leaves.iter().position(|l| l == id).map(|i| i + 1),
         };
+        let points_leaves = leaves.clone();
         let pick = Select::new(choices, selected, move |i| {
-            event(Event::Target(
-                i.checked_sub(1).and_then(|k| leaves.get(k).cloned()),
-            ))
+            event(Event::Target(i.checked_sub(1).and_then(|k| points_leaves.get(k).cloned())))
         });
         let hidden = s
             .target
@@ -746,18 +840,83 @@ impl App {
             let name = kentos_ui::widget::text_field("Yeni katmanın adı", &s.name)
                 .on_input(|t| event(Event::Name(t)))
                 .on_submit(event(Event::Run));
-            let name = name;
+            // A name a layer has is said with the way to it (docs/adr/9329).
+            let help = self.gnss_target(s).err().filter(|why| !why.is_empty()).unwrap_or_else(|| new_layer::help("Hedef katman'dan"));
             parts = parts.push(
-                container(words::field(
-                    "Yeni katmanın adı",
-                    name,
-                    Some("Bu adda bir katman varsa noktalar ona eklenir.".to_owned()),
-                ))
-                .width(Length::FillPortion(2)),
+                container(words::field("Yeni katmanın adı", name, Some(help))).width(Length::FillPortion(2)),
             );
         }
-        parts.into()
+        let has_lines = s.plan.as_ref().is_some_and(|p| !p.lines.is_empty());
+        if !has_lines {
+            return parts.into();
+        }
+        // The routes and tracks: a layer of their own unless they go with the points (docs/adr/9329).
+        let mut choices = vec![Choice::new("Yeni katman"), Choice::new("Noktaların katmanı")];
+        choices.extend(leaves.iter().map(named));
+        let selected = match &s.lines_to {
+            LinesTo::New => Some(0),
+            LinesTo::Points => Some(1),
+            LinesTo::Layer(id) => leaves.iter().position(|l| l == id).map(|i| i + 2),
+        };
+        let pick = Select::new(choices, selected, move |i| {
+            event(Event::LinesTo(match i {
+                0 => LinesTo::New,
+                1 => LinesTo::Points,
+                k => leaves.get(k - 2).cloned().map_or(LinesTo::New, LinesTo::Layer),
+            }))
+        });
+        let mut lines = row![
+            container(words::field(
+                "Çizgilerin katmanı",
+                pick,
+                Some("Rotalar ve izler noktalardan ayrı bir katmanda durur.".to_owned()),
+            ))
+            .width(Length::FillPortion(3))
+        ]
+        .spacing(16);
+        if s.lines_to == LinesTo::New {
+            let name = kentos_ui::widget::text_field("Çizgilerin yeni katmanının adı", &s.lines_name)
+                .on_input(|t| event(Event::LinesName(t)))
+                .on_submit(event(Event::Run));
+            let help = match self.gnss_lines_target(s) {
+                Some(Err(why)) if !why.is_empty() => why,
+                _ => new_layer::help("Çizgilerin katmanı'ndan"),
+            };
+            lines = lines.push(
+                container(words::field("Çizgilerin yeni katmanının adı", name, Some(help)))
+                    .width(Length::FillPortion(2)),
+            );
+        }
+        column![parts, lines].spacing(10).into()
     }
+}
+
+/// The way the positions were moved into the project's system, as the plan's first object records it.
+fn way_of(plan: &Plan) -> Option<String> {
+    plan.placed
+        .first()
+        .map(|p| &p.attrs)
+        .or_else(|| plan.lines.first().map(|l| &l.attrs))
+        .and_then(|a| a.get("Dönüşüm"))
+        .cloned()
+}
+
+/// What the points' elevations are (docs/adr/0519 §6): the plan's words when the project says what its heights are,
+/// else that they are ellipsoidal heights; none without points.
+fn heights_note(plan: &Plan) -> Option<String> {
+    if plan.placed.is_empty() {
+        return None;
+    }
+    if let Some(note) = &plan.heights {
+        return Some(note.clone());
+    }
+    let bare = plan.placed.iter().filter(|p| p.z.is_none()).count();
+    let heights = "Kot elipsoit yüksekliğidir (dosyadaki yükseklik ile geoit ayrımının toplamı); ortometrik yüksekliğe çevrilmez.";
+    Some(if bare > 0 {
+        format!("{heights} {bare} noktanın elipsoit yüksekliği bilinmiyor: kotu boş, dosyadaki yüksekliği öznitelikte.")
+    } else {
+        heights.to_owned()
+    })
 }
 
 /// A warning line with the first problems and how many more.
@@ -787,6 +946,15 @@ impl State {
     /// How many of the file's records were not read.
     pub(super) fn problems(&self) -> usize {
         self.read.as_ref().map_or(0, |r| r.problems.len())
+    }
+
+    /// The new layers' names offered: the points', the lines'.
+    pub(super) fn name_for_test(&self) -> &str {
+        &self.name
+    }
+
+    pub(super) fn lines_name_for_test(&self) -> &str {
+        &self.lines_name
     }
 
     /// The file's positions as read (WGS 84).

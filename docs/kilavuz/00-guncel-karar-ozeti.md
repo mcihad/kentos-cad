@@ -4,6 +4,12 @@
 
 ## 0. Güncel karar özeti
 
+- **Nokta ve GNSS içe almada yeni katman hep yenidir (27 Kasım 2026, CBS incelemesinin 12. maddesi;
+  [ADR 9329](../adr/9329-import-new-layer-names.md)).**
+  - Önerilen ad hiçbir katmanın değildir (`ad_2`…); var olan ad yolu söylenerek reddedilir, var olana ekleme Hedef
+    katman'dan seçilir. GNSS'in rotaları ve izleri öntanımlı olarak kendi katmanına (`ad_iz`) gider.
+  - Günlüğe dönüşüm, yükseklik ve alınmayan kayıtlar nedenleriyle yazılır; katman dosyasının kaydını (ADR 9192) tutar.
+
 - **Ölçme › Hızlı ölçüm ve ölçü kutusu (27 Kasım 2026, CBS incelemesinin 10. maddesi;
   [ADR 9328](../adr/9328-quick-measure-box.md)).**
   - CBS'nin Ölçme sekmesi Mesafe ölç, Alan hesapla, Açı ölç ve Koordinat oku ile başlar; komutlar Harita › Sorgu'nunkiyle
