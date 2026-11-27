@@ -69,7 +69,8 @@
   seçiliyken “Yalnız ekranda görünen alandaki nesneler; gizli katmanlarınki alınmaz.” yazar.
 - **Katman yolu:** Denetçi'nin Katman satırı katmanı grup yoluyla söyler (“Kadastro / Parsel”); tablo ve menü de
   böyle söyler.
-- **Tümünü seç:** projedeki nesneden azını seçtiyse kaç tanesinin neden seçilmediğini söyler: “34 nesne seçildi:
+- **Tümünü seç:** projedeki nesneden azını seçtiyse, seçim süzgeci ya da Otomatik seçim nedenini söylemediyse, kaç
+  tanesinin neden seçilmediğini söyler (ADR 9343'te düzeltildi): “34 nesne seçildi:
   görünen ve seçilebilir katmanların nesneleri. Projedeki 37 nesneden 3 tanesi seçilmedi: gizli, donmuş ya da
   seçilemez katmanda ya da seçim süzgecinin dışında.”
 

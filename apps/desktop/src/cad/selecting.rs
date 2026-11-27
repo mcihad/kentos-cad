@@ -29,12 +29,14 @@ impl App {
             return;
         };
         let n = found.slots.len();
+        let said = found.left_out.kinds > 0 || found.left_out.layers > 0;
         self.selection.set(found.slots);
         self.say_filtered(found.left_out.kinds as usize);
         self.say_layers_left(found.left_out.layers as usize);
-        // The selected and the project's own apart (docs/adr/9341): what was not taken is said with its reasons.
+        // The selected and the project's own apart (docs/adr/9341): what was not taken is said with its reasons, unless
+        // the selection filter or Otomatik seçim said it already.
         let total = self.document.as_ref().map_or(n, |d| d.model.len());
-        if total > n {
+        if total > n && !said {
             self.output(format!(
                 "{n} nesne seçildi: görünen ve seçilebilir katmanların nesneleri. Projedeki {total} nesneden {} tanesi seçilmedi: gizli, donmuş ya da seçilemez katmanda ya da seçim süzgecinin dışında.",
                 total - n

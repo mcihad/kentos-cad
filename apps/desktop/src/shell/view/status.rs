@@ -331,7 +331,10 @@ impl App {
                         Readout::new(label::strong(crate::screen_scale::scale_words(self.view_scale())))
                         .icon(crate::icons::from_web(Some("plotScale")))
                         .tip(
-                            Tip::new("Ölçek").body("Görünümün ölçeği. Listeden seçin ya da yazın."),
+                            // The view's, apart from the drawing's output scale (docs/adr/9343).
+                            Tip::new("Görünüm ölçeği").body(
+                                "Ekrandaki görünümün ölçeği; yakınlaştırınca değişir. Çıktının ölçeği ayrıdır: Öznitelikler'de Çizim ölçeği, Proje ayarları › Ölçek. Listeden seçin ya da yazın.",
+                            ),
                         )
                         .menu(move || crate::screen_scale::scale_menu(&scales, &summary))
                         .into()

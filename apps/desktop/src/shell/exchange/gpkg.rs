@@ -676,11 +676,19 @@ impl App {
             words::field(
                 "Veri katmanı",
                 words::check(s.bind, "Dosyada bırak, veri katmanı olarak ekle".to_owned(), Some(event(Event::Bind))),
-                Some(
-                    "Tablolar bu dosyada kalır; satırları gerektikçe dosyadan okunur, düzenleme oturumuyla yazılır. \
-                     Kapalıyken İçe aktar onları projenin veri kaynağına tablo olarak yazar."
-                        .to_owned(),
-                ),
+                // What each way does, with the files' names (the CBS review of 27 November, 4th item; docs/adr/9343).
+                Some(if s.bind {
+                    format!(
+                        "Kaynağa bağla: tablolar “{}” dosyasında kalır; katmanlar onları okur, satırları düzenleme oturumuyla oraya yazılır.",
+                        s.file
+                    )
+                } else {
+                    format!(
+                        "Projeye kopyala: tablolar “{}” dosyasından {} tablo olarak yazılır; bu dosya bir daha okunmaz.",
+                        s.file,
+                        self.cbs_data_place_words()
+                    )
+                }),
             )
         });
         if s.bind && binds {

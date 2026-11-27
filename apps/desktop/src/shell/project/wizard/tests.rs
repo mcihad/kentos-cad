@@ -589,6 +589,8 @@ fn cbs_page_screens() {
         app
     };
     usage_shots("9302", "1-tek-sayfa", page);
+    // The page by its name and the two places said apart (docs/adr/9343).
+    usage_shots("9343", "03-yeni-proje-sayfasi", page);
     usage_shots("9302", "2-bos-proje", || {
         let mut app = page();
         let task = app.update(Message::Project(Box::new(ProjectEvent::New(Event::Next))));

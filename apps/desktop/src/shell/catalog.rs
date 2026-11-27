@@ -35,6 +35,8 @@ const OPERATIONS: &str = include_str!("../../../../catalog/v1/operations.json");
 /// the page, the margins or the selection at once (Hizala ▾, docs/adr/9305); the web chose there what the other
 /// alignments go by.
 const DESKTOP_TITLES: &[(&str, &str)] = &[
+    // It fits the selection, nearer or farther (the CBS review of 27 November, 8th item; docs/adr/9343).
+    ("view.zoomSelection", "Seçime sığdır"),
     ("view.commandSearch", "Menülerde ara"),
     // It adds one; a point's elevation is read with Kot oku (docs/adr/9335).
     ("tool.spot", "Kot noktası ekle"),

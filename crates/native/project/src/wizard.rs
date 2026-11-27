@@ -117,8 +117,9 @@ pub const WORKS: [Work; 3] = [
 
 /// What a new CBS project starts as, said on its page (docs/adr/9302): no layer. Layers are added from data sources
 /// or made as new tables; the first Kaydet asks where the project file goes (the owner's word of 24 November 2026).
-pub const CBS_START_NOTE: &str = "Proje boş açılır: katmanları Harita ▸ Veri ekle ile var olan tablolardan ya da \
-     Veri ▸ Yeni katman ile yeni tablolar olarak eklersiniz. Projenin nereye kaydedileceği ilk Kaydet'te sorulur.";
+pub const CBS_START_NOTE: &str = "Proje boş açılır. İki yeri vardır: proje dosyası (yapı, stiller, ayarlar) ilk \
+     Kaydet'te sorulan yere yazılır; katmanların verisi tablolarda durur. Harita ▸ Veri ekle var olan bir GeoPackage'ı ya \
+     da veritabanını bağlar ya da içine alır, Veri ▸ Yeni katman yeni bir tablo yapar.";
 
 /// What the wizard holds while it is open; what is not chosen follows the others.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]

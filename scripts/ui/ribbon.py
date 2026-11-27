@@ -229,7 +229,8 @@ def view_tab(cad):
                                                        ("Etkin kat", ["view.levels.up", "view.levels.down"])],
                                        works=ARCHITECTURE))
         panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
-            S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
+            S("tool.pan"), S("view.previous"), S("view.next")],
+            overflow=["view.zoomLayer", "view.zoomIn", "view.zoomOut", "view.extentCheck"]))
         # A building's queries (docs/adr/0802): KentOS Mimari has no Ölçme.
         panels.append(P("Sorgu", "measure", [QUERY_SPLIT], works=ARCHITECTURE))
     else:
@@ -590,9 +591,11 @@ CAD = [
 GIS = [
     file_tab(False),
     T("map", "Harita", [
+        # Katmana sığdır first in Gezinme ▾ (docs/adr/9343): scattered data framed by its layer, the panels beside
+        # kept open at 1440 px.
         P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.pan"), S("tool.zoomWindow"),
             S("view.zoomSelection"), S("view.previous"), S("view.next")],
-          overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]),
+          overflow=["view.zoomLayer", "view.zoomIn", "view.zoomOut", "view.extentCheck"]),
         P("Katman ekle", "layerAdd", [ADD_DATA, BASEMAPS, S("service.add"), S("service.feed"), S("source.postgis")],
           overflow=["service.info", "service.connections", "raster.stac", "raster.mosaic", "raster.gpkgRead"]),
         P("Seçim", "select", [SP("select", "large"), S("processing.run.selection.byExpression"),

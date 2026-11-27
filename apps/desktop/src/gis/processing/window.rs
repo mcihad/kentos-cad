@@ -672,7 +672,7 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
     }
     for action in line.actions {
         status = status.push(match action {
-            Action::Zoom => small("Seçime yakınlaştır", Event::Results),
+            Action::Zoom => small("Seçime sığdır", Event::Results),
             Action::Select => small("Sonuçları seç", Event::Results),
             Action::Undo => small("Geri al", Event::Undo),
             Action::Jobs => small("Sunucu işleri", Event::ServerJobs),

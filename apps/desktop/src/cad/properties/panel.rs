@@ -156,6 +156,16 @@ impl App {
             let at = panel.sections.len().min(1);
             panel.sections.insert(at, section);
         }
+        // Nothing selected: the view's scale beside the drawing's (docs/adr/9343), each by its name.
+        if selected.is_empty()
+            && let Some(section) = panel.sections.iter_mut().find(|s| s.id == "doc")
+            && let Some(at) = section.rows.iter().position(|r| r.label == "Çizim ölçeği")
+        {
+            section.rows.insert(
+                at + 1,
+                rows::Row::figure("Görünüm ölçeği", crate::screen_scale::scale_words(self.view_scale())),
+            );
+        }
         // Nothing selected, data layers in the project (docs/adr/9340): the drawing's own objects and the sources' rows
         // said apart, the rows counted by their sources.
         if selected.is_empty()

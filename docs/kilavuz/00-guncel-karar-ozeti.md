@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Yeni proje sayfası adını taşır, iki yer ayrılır; görünüm ölçeği çizim ölçeğinden ayrılır; Seçime sığdır ve
+  Katmana sığdır (27 Kasım 2026, 27 Kasım CBS incelemesinin 4. ve 8. maddeleri ve simgeler;
+  [ADR 9343](../adr/9343-project-page-name-scales-and-fit-commands.md)).**
+  - CBS'nin yeni proje sayfası “Proje adı ve koordinat sistemi”dir; notu proje dosyasının ve veri tablolarının yerini
+    ayırır. GeoPackage alımı bağlama ve kopyalamanın sonucunu dosya adlarıyla söyler.
+  - Durum çubuğu “Görünüm ölçeği”ni, Denetçi Çizim ölçeği ile Görünüm ölçeğini ayrı satırlarda gösterir. Seçime
+    yakınlaştır “Seçime sığdır” oldu; yeni Katmana sığdır (`view.zoomLayer`) Gezinme ▾'dedir.
+
 - **Dosya eylemleri önkoşullarını söyler; Veri ekle kaynak türlerine göre başlıklanır (27 Kasım 2026, 27 Kasım CBS
   incelemesinin 3. ve 9. maddeleri; [ADR 9342](../adr/9342-file-menu-prerequisites-and-add-data-groups.md)).**
   - Seçilenleri kaydet seçim yokken kapalıdır ve nedenini söyler. Aç ile Yeni sekmede aç sekmeyi, Açılış raporu

@@ -824,6 +824,17 @@
       "status": "implemented"
     },
     {
+      "id": "view.zoomLayer",
+      "title": "Katmana sığdır",
+      "short": "Katmana sığdır",
+      "icon": "zoomSelection",
+      "description": "Katmanlar'da seçili katmanın (seçili yoksa etkin katmanın) bütün nesnelerini ya da veri katmanının tablosunun kutusunu ekrana sığdırır; dağınık veride katmanı bulmak için. Seçim değişmez. Önceki görünüm geri getirir.",
+      "aliases": ["KATMANASIGDIR", "KATMANSIGDIR"],
+      "shortcuts": [],
+      "category": "Görünüm",
+      "status": "implemented"
+    },
+    {
       "id": "tool.arrayEdit",
       "title": "Diziyi düzenle",
       "icon": "arrayEdit",

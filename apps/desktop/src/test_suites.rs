@@ -438,6 +438,9 @@ mod module_screens;
 #[path = "tests/module_catalog_tests.rs"]
 mod module_catalog_tests;
 #[cfg(test)]
+#[path = "tests/scale_names_tests.rs"]
+mod scale_names_tests;
+#[cfg(test)]
 #[path = "tests/module_tests.rs"]
 mod module_tests;
 #[cfg(test)]

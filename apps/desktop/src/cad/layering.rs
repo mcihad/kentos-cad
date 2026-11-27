@@ -696,6 +696,16 @@ impl App {
     }
 
     /// How many objects a layer, or every layer below a group, holds.
+    /// Katmana sığdır's layer (docs/adr/9343): the one chosen in Katmanlar, else the active one, when it has something
+    /// to frame (objects, or a data layer's table box).
+    pub(crate) fn zoom_layer_target(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let layers = doc.model.layers();
+        let id = self.selected_layer.as_deref().filter(|id| layers.get(id).is_some()).unwrap_or(layers.active());
+        let node = layers.get(id)?;
+        (self.objects_below(node) > 0 || self.data_box_below(node)).then(|| id.to_owned())
+    }
+
     pub(crate) fn objects_below(&self, node: &LayerNode) -> usize {
         self.document
             .as_ref()

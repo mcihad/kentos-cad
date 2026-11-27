@@ -483,6 +483,12 @@ impl App {
             "view.splitAdd" => self.add_view(),
             "view.swipe" => self.toggle_swipe(),
             "view.zoomSelection" => self.navigating(Self::zoom_selection),
+            // Katmana sığdır (docs/adr/9343): the layer chosen in Katmanlar, else the active one.
+            "view.zoomLayer" => {
+                if let Some(id) = self.zoom_layer_target() {
+                    self.navigating(|app| app.zoom_to_layer(&id));
+                }
+            }
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => return self.open_shortcuts(),
@@ -908,6 +914,7 @@ impl App {
             "edit.deselect" => !self.selection.is_empty() || !self.gis.features.data.selected.is_empty(),
             // A data layer's selected rows are framed too (docs/adr/9133).
             "view.zoomSelection" => !self.selection.is_empty() || self.data_rows_outlined(),
+            "view.zoomLayer" => self.zoom_layer_target().is_some(),
             // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
@@ -1002,6 +1009,9 @@ impl App {
             id if id.starts_with("workspace.") && !self.available(id) => Some(
                 "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
                     .to_owned(),
+            ),
+            "view.zoomLayer" if self.zoom_layer_target().is_none() => Some(
+                "Katmanlar'da nesnesi olan bir katman seçin ya da onu etkin yapın; boş katman sığdırılmaz.".to_owned(),
             ),
             "file.saveSelection" if self.selection.is_empty() => Some(
                 "Önce kaydedilecek nesneleri seçin: çizimde bir ya da daha çok nesne. Seçilenler yeni bir projeye yazılır."

@@ -155,6 +155,22 @@ impl App {
             .collect()
     }
 
+    /// Where a CBS project's tables go, in words (docs/adr/9343): “qa.gpkg dosyasına”, “kent veritabanının public
+    /// şemasına”, or that the first Kaydet asks.
+    pub(crate) fn cbs_data_place_words(&self) -> String {
+        match self.cbs_data_place() {
+            Some((CreateTarget::Gpkg, path, _)) => {
+                let name = std::path::Path::new(&path).file_name().map_or(path.clone(), |n| n.to_string_lossy().into_owned());
+                format!("projenin veri yerine, “{name}” dosyasına")
+            }
+            Some((_, address, schema)) => {
+                let db = address.rsplit('/').next().unwrap_or(&address).to_owned();
+                format!("projenin veri yerine, “{db}” veritabanının {} şemasına", schema.as_deref().unwrap_or("public"))
+            }
+            None => "projenin veri yerine (ilk Kaydet'te sorulan GeoPackage'a)".to_owned(),
+        }
+    }
+
     /// Where a CBS project's tables are (docs/adr/9196 §2): the GeoPackage or schema it is kept in, else its first data
     /// layer's source, else the GeoPackage beside its file (the wizard's place, wizard/data_place.rs); none when nothing
     /// says.

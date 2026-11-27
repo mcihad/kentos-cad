@@ -710,7 +710,8 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
     }
     page(
         head(
-            "Ad ve konum",
+            // What the page asks, by its name (the CBS review of 27 November, 4th item; docs/adr/9343).
+            "Proje adı ve koordinat sistemi",
             "Projenin adını ve koordinat sistemini seçin; Oluştur’a basana kadar değiştirebilirsiniz. Ölçek, yazı boyları ve yazı tipi Proje ayarları’ndadır.",
         ),
         parts,

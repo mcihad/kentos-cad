@@ -2586,6 +2586,7 @@
        }
       ],
       "overflow": [
+       "view.zoomLayer",
        "view.zoomIn",
        "view.zoomOut",
        "view.extentCheck"
@@ -3353,6 +3354,7 @@
        }
       ],
       "overflow": [
+       "view.zoomLayer",
        "view.zoomIn",
        "view.zoomOut",
        "view.extentCheck"
