@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Mimari'nin 3B görünümü, kesiti ve eksik araçları (27 Kasım 2026, sahibin isteği; [ADR 8171](../adr/8171-mimari-3d-section-quality-and-missing-tools.md),
+  [plan/mimari-bim.md](../../plan/mimari-bim.md), [araştırma](../research/2026-11-27-mimari-3b-kesit-ve-araclar.md)).**
+  - Bulgular: kolon, kiriş ve döşeme aynı betonu tutuyor (3B'de titreme, IFC'de çift hacim); kesit sürüklenirken kapak
+    yok; kapak halkası ve kenar çizgisi float32 köşelerde kopuyor; her değişiklikte bütün sahne yeniden yükleniyor;
+    keskin dönen kirişin ucu kayboluyor.
+  - Karar: birleşim önceliği (kolon > kiriş > döşemenin betonarmesi; kiriş–kiriş önce çizilen), her zaman kesit yüzü,
+    toleranslı kenar ve halka, içerikten kimlik; sonra temel, duvar profili, arazi, paftada 3B, renk planı, gölge.
+
 - **Karşılaştır üç görünümde kapanır, panel düğmeleri grubu söyler, simgeler satırda (27 Kasım 2026, CBS incelemesinin
   9. maddesi ve simge tabloları; [ADR 9337](../adr/9337-unavailable-actions-panel-names-and-icons.md)).**
   - Kaydırmalı karşılaştır üç ya da dört görünümde kapalıdır, ipucu nedenini söyler. Görünüm › Paneller'in düğmeleri
