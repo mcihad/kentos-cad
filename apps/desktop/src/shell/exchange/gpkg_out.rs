@@ -152,7 +152,9 @@ impl App {
         let Some(doc) = &self.document else {
             return reach;
         };
-        let doc = &doc.model;
+        // The data layers' rows are written too (docs/adr/9344): counted on the drawing with them.
+        let copy = self.source_copy();
+        let doc = copy.as_ref().map_or(&doc.model, |c| &c.doc);
         let mut take = |e: &kentos_commands::Entity| {
             // What the file takes as the writer does: an object a table has no geometry for is counted apart.
             if let Err(word) = kentos_native_application::geopackage::geometry_of(e) {
@@ -164,7 +166,18 @@ impl App {
             *reach.per_layer.entry(e.base().layer_id.clone()).or_default() += 1;
         };
         match scope {
-            Scope::Selection => self.selection.ids().iter().filter_map(|s| doc.get(*s)).for_each(&mut take),
+            Scope::Selection => {
+                self.selection.ids().iter().filter_map(|s| doc.get(*s)).for_each(&mut take);
+                // A data layer's rows chosen in its table, by their keys.
+                if let (Some(c), Some(layer)) = (&copy, self.gis.features.data.selected_layer()) {
+                    let keys = &self.gis.features.data.selected;
+                    c.rows
+                        .iter()
+                        .filter(|(_, (l, k))| l == layer && keys.contains(k))
+                        .filter_map(|(slot, _)| doc.get(kentos_domain::Slot(*slot)))
+                        .for_each(&mut take);
+                }
+            }
             Scope::Active => doc.by_layer_with_uids(doc.layers().active()).for_each(|(_, e)| take(e)),
             Scope::All => doc.entities().for_each(&mut take),
         }
@@ -176,7 +189,9 @@ impl App {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
-        let doc = &doc.model;
+        // A data layer with rows is no template (docs/adr/9344).
+        let copy = self.source_copy();
+        let doc = copy.as_ref().map_or(&doc.model, |c| &c.doc);
         doc.layers()
             .leaves()
             .iter()
@@ -325,19 +340,21 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let model = &doc.model;
+        let copy = self.source_copy();
+        let model = copy.as_ref().map_or(&doc.model, |c| &c.doc);
         let (layers, uids) = match scope {
             Scope::All => (Vec::new(), Vec::new()),
             Scope::Active => (vec![model.layers().active().to_owned()], Vec::new()),
-            Scope::Selection => (
-                Vec::new(),
-                self.selection
-                    .ids()
-                    .iter()
-                    .filter_map(|s| model.uid(*s))
-                    .map(|u| u.to_string())
-                    .collect(),
-            ),
+            Scope::Selection => {
+                let mut uids: Vec<String> =
+                    self.selection.ids().iter().filter_map(|s| model.uid(*s)).map(|u| u.to_string()).collect();
+                // A data layer's rows chosen in its table, as the copy names them (docs/adr/9344).
+                if let (Some(c), Some(layer)) = (&copy, self.gis.features.data.selected_layer()) {
+                    let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
+                    uids.extend(c.uids_of(layer, &keys));
+                }
+                (Vec::new(), uids)
+            }
         };
         let input = ExportGpkg {
             path: path.display().to_string(),
@@ -505,6 +522,8 @@ impl App {
             return Vec::new();
         };
         let layers = doc.model.layers();
+        // A source still read or that cannot be read, said first (docs/adr/9344).
+        let mut first: Vec<(bool, String)> = self.source_copy_words();
         let names: Vec<String> = reach
             .layers
             .iter()
@@ -524,10 +543,14 @@ impl App {
             .iter()
             .filter(|r| reach.layers.contains(&r.parent) && reach.layers.contains(&r.child))
             .count();
-        let mut lines = vec![
-            (false, format!("{} nesne, {} katman yazılır: {}.", reach.objects, reach.layers.len(), names.join(", "))),
-            (false, words_of::taken(relations)),
-        ];
+        let mut lines = std::mem::take(&mut first);
+        lines.push((false, format!("{} nesne, {} katman yazılır: {}.", reach.objects, reach.layers.len(), names.join(", "))));
+        // Layers of one name each get a table of their own (docs/adr/9344): the tables named before they are written.
+        let renamed = gpkg_table_names(layers, &reach.layers);
+        if !renamed.is_empty() {
+            lines.push((false, format!("Aynı adlı katmanların tabloları: {}.", renamed.join(", "))));
+        }
+        lines.push((false, words_of::taken(relations)));
         // The objects of the scope a table has no geometry for: how many of each kind stay out.
         if !reach.left.is_empty() {
             let kinds: Vec<String> = reach.left.iter().map(|(word, n)| format!("{n} {word}")).collect();
@@ -642,3 +665,22 @@ impl App {
     }
 }
 
+/// The tables the writer names for `layers` when two share a name (`qa_yollar`, `qa_yollar_2` …, as
+/// `geopackage::table_name` does, in the tree's order): “Senaryo 1 / qa_yollar → qa_yollar_2” for each one renamed.
+fn gpkg_table_names(tree: &kentos_domain::LayerTree, layers: &BTreeSet<String>) -> Vec<String> {
+    let mut names: BTreeSet<String> = BTreeSet::new();
+    let mut out = Vec::new();
+    for node in tree.leaves().into_iter().filter(|l| layers.contains(&l.id)) {
+        let base = node.name.trim().to_owned();
+        let mut table = base.clone();
+        let mut k = 2;
+        while !names.insert(table.to_ascii_lowercase()) {
+            table = format!("{base}_{k}");
+            k += 1;
+        }
+        if table != base {
+            out.push(format!("{} → {table}", tree.path(&node.id)));
+        }
+    }
+    out
+}

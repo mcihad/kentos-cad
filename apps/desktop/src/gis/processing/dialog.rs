@@ -221,6 +221,9 @@ pub struct ToolDialog {
     pub(super) previews: BTreeMap<String, String>,
     /// Each chosen output file that is there, with the drawing's objects linked to it (overwrite.rs, GIS-035).
     pub overwrites: BTreeMap<String, super::overwrite::Overwrite>,
+    /// A selecting run's matches over more than one data layer, kept by layer (data_location.rs, docs/adr/9345): the
+    /// card under the form shows each layer's in the table without running again.
+    pub(super) layer_results: Option<super::data_location::LayerResults>,
 }
 
 impl ToolDialog {
@@ -286,6 +289,7 @@ impl ToolDialog {
             recalled,
             previews: BTreeMap::new(),
             overwrites: BTreeMap::new(),
+            layer_results: None,
         }
     }
 
@@ -426,6 +430,7 @@ impl ToolDialog {
         self.attempted = false;
         self.run_issues.clear();
         self.status = RunStatus::Idle;
+        self.layer_results = None;
     }
 
     /// The live parts again, from the drawing as it is.
@@ -452,6 +457,7 @@ impl ToolDialog {
         // A finished run's line clears; a running one stays (the web's).
         if !matches!(self.status, RunStatus::Idle | RunStatus::Running { .. }) {
             self.status = RunStatus::Idle;
+            self.layer_results = None;
         }
     }
 
@@ -618,6 +624,7 @@ impl ToolDialog {
     pub fn attempt(&mut self) -> bool {
         self.attempted = true;
         self.run_issues.clear();
+        self.layer_results = None;
         if self.issues.is_empty() {
             return true;
         }

@@ -75,9 +75,11 @@ impl App {
             overwrite: true,
             time: self.export_time(),
         };
-        gml_table::export(&doc.model, &input)
+        // The data layers' rows too (docs/adr/9344).
+        let copy = self.source_copy();
+        gml_table::export(copy.as_ref().map_or(&doc.model, |c| &c.doc), &input)
             .map(|m| m.output)
-            .map_err(|(_, message, _)| message)
+            .map_err(|(_, message, _)| self.while_read(message))
     }
 
     pub(super) fn gml_export_open(&mut self) -> Task<Message> {
@@ -202,6 +204,7 @@ impl App {
             Event::Saved(None) | Event::Opened(None) => {}
             Event::Saved(Some(path)) => {
                 let time = self.export_time();
+                let source = self.source_copy();
                 let (Some(doc), Some(Window::GmlExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
@@ -215,7 +218,7 @@ impl App {
                     time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = doc.model.clone();
+                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 return off_thread(
                     move || {
                         kentos_headless::file_commands::export_gml(&model, &input)

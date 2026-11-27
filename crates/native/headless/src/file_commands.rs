@@ -1503,9 +1503,9 @@ fn run_typed(
     op: CallOp,
     input: Value,
 ) -> Result<(CommandResult<Value>, Option<FileEffect>), String> {
-    run_typed_with_progress(doc,command,op,input,None)
+    crate::package_data::typed_with_rows(doc,command,op,input,None)
 }
-fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
+pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
     if command==kentos_commands::FILE_PREFLIGHT_SHEETS {
         let typed:kentos_commands::PreflightSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok((crate::sheet_preflight::run(doc,&typed,op,progress)?,None));
@@ -2400,10 +2400,10 @@ pub fn job_work(
         // An agent's file is made without the fields the drawing hides (docs/adr/0743 §2); the call is checked
         // against the drawing as it is.
         let made = if hidden.is_empty() {
-            run_typed_with_progress(&copy, &command, envelope.op, input.clone(), Some(progress))
+            crate::package_data::typed_with_rows(&copy, &command, envelope.op, input.clone(), Some(progress))
         } else {
             let without = copy.reading_copy_without(&hidden);
-            run_typed_with_progress(
+            crate::package_data::typed_with_rows(
                 &without,
                 &command,
                 envelope.op,

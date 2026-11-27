@@ -115,10 +115,11 @@ fn a_condition_selects_a_data_layers_rows_by_their_keys_in_every_mode() {
 #[test]
 fn the_preview_counts_the_sources_rows_and_a_stopped_run_keeps_the_selection() {
     let (mut app, bakim, path) = opened("ifadeyle-onizleme");
-    // The rows read after the message that chose the layer (its task not run yet), then counted.
+    // The window opened on Tümü has read the data layers' rows already (docs/adr/9345): the layer chosen, its rows are
+    // counted at once.
     let read = app.update(Message::Gis(gis::Event::Processing(on_layer(&bakim))));
     let preview = |app: &App| app.gis.processing.dialog.as_ref().and_then(|w| w.previews.get("condition").cloned());
-    assert_eq!(preview(&app).as_deref(), Some(super::words::READING));
+    assert_eq!(preview(&app).as_deref(), Some("0 / 6 satır koşulu sağlıyor."));
     drive(&mut app, read);
     event(&mut app, Event::Text("condition".into(), "bedel >= 100".into()));
     assert_eq!(preview(&app).as_deref(), Some("3 / 6 satır koşulu sağlıyor."));

@@ -139,38 +139,9 @@ pub(super) fn bulged(e: &Entity) -> bool {
 }
 
 impl App {
-    /// The scope's objects: the drawing's and the data layers' rows (docs/adr/9338). Görünen katmanlar is what the map
-    /// draws: the visible layers' objects their filters let through.
-    fn geojson_objects<'a>(&'a self, s: &'a State, scope: Scope) -> Vec<&'a Entity> {
-        let Some(doc) = &self.document else {
-            return Vec::new();
-        };
-        let mut out: Vec<&Entity> = match scope {
-            Scope::Visible => doc
-                .model
-                .entities()
-                .filter(|e| {
-                    doc.model.layers().is_visible(&e.base().layer_id)
-                        && self.spatial.filter_shown(kentos_domain::Slot(e.base().id))
-                })
-                .collect(),
-            _ => self.scope_entities(scope),
-        };
-        out.extend(s.sources.rows(scope));
-        out
-    }
-
-    /// The scope's objects by layer, in the tree's order.
-    fn geojson_by_layer<'a>(&'a self, s: &'a State, scope: Scope) -> Vec<(String, Vec<&'a Entity>)> {
-        let Some(doc) = &self.document else {
-            return Vec::new();
-        };
-        kentos_headless::export::by_layer(&doc.model, self.geojson_objects(s, scope))
-    }
-
     /// The objects that will be written: the scope's, less the layers left out.
     fn geojson_chosen<'a>(&'a self, s: &'a State) -> Vec<(String, Vec<&'a Entity>)> {
-        let mut all = self.geojson_by_layer(s, s.scope);
+        let mut all = self.export_by_layer(&s.sources, s.scope);
         all.retain(|(id, _)| !s.excluded.contains(id));
         all
     }
@@ -189,7 +160,7 @@ impl App {
     #[cfg(test)]
     pub(super) fn geojson_scope_counts(&self) -> [usize; 3] {
         match &self.exchange {
-            Some(Window::GeoJsonExport(s)) => Scope::ALL.map(|scope| self.geojson_objects(s, scope).len()),
+            Some(Window::GeoJsonExport(s)) => Scope::ALL.map(|scope| self.export_objects(&s.sources, scope).len()),
             _ => [0; 3],
         }
     }
@@ -216,7 +187,7 @@ impl App {
         }
         let ids: Vec<String> = match &self.exchange {
             Some(Window::GeoJsonExport(s)) => self
-                .geojson_by_layer(s, s.scope)
+                .export_by_layer(&s.sources, s.scope)
                 .into_iter()
                 .map(|(id, _)| id)
                 .collect(),
@@ -399,7 +370,7 @@ impl App {
     pub(super) fn geojson_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let counts: Vec<Counted> = Scope::ALL
             .iter()
-            .map(|scope| Counted(*scope, self.geojson_objects(s, *scope).len()))
+            .map(|scope| Counted(*scope, self.export_objects(&s.sources, *scope).len()))
             .collect();
         let current = counts
             .iter()
@@ -446,7 +417,7 @@ impl App {
             ));
         }
         // One layer's objects: one line, not a table of one row (GIS-011).
-        let layered = self.geojson_by_layer(s, s.scope);
+        let layered = self.export_by_layer(&s.sources, s.scope);
         if let ([(id, list)], Some(doc)) = (layered.as_slice(), &self.document) {
             let name = doc.model.layers().get(id).map_or("Katmansız".to_owned(), |l| l.name.clone());
             let system = if s.wgs84 && self.geojson_can_move() {
@@ -486,7 +457,7 @@ impl App {
     }
 
     fn geojson_export_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let all = self.geojson_by_layer(s, s.scope);
+        let all = self.export_by_layer(&s.sources, s.scope);
         let Some(doc) = self.document.as_ref().filter(|_| !all.is_empty()) else {
             return words::empty("Bu kapsamda nesne yok.");
         };

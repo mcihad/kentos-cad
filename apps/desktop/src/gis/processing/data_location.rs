@@ -1,5 +1,6 @@
-//! Konuma göre seç over data layers (docs/adr/9340). A data layer's rows are its source's, not the drawing's objects
-//! (docs/adr/9101), so the tool did not see them: with only data layers on the map it found no object to try.
+//! Konuma göre seç and İfadeyle seç over data layers (docs/adr/9340, 9345). A data layer's rows are its source's, not
+//! the drawing's objects (docs/adr/9101), so the tools did not see them: with only data layers on the map they found no
+//! object to try. (İfadeyle seç on one data layer, Katman, asks its source the condition instead: data_select.rs.)
 //!
 //! When the tool's Seçilecek nesneler or Başvuru nesneleri take a data layer (Katman: a data layer; Görünen
 //! katmanlar: a visible one; Tümü: every one; Seçili: the rows chosen in the layer's table), its rows are read from the
@@ -8,6 +9,11 @@
 //! `cad.processing.run`, as every channel runs it. What it selects comes back by layer and key: the drawing's objects
 //! to the drawing's selection, a data layer's rows to its table's selection, the table showing that layer and the map
 //! outlining them. While a source is read Çalıştır waits; one that cannot be read is named.
+//!
+//! The inputs' lines name the data layers they take, a layer whose short name another shares by its group's path; for
+//! İfadeyle seç they name the layers without a field the condition reads (there its value is empty). The result is kept
+//! by layer (docs/adr/9345): the card under the form offers each layer's matches, and choosing one shows them in the
+//! table without running again.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -22,8 +28,66 @@ use serde_json::Value;
 use super::dialog::RunStatus;
 use crate::app::App;
 
-/// The tool it answers for.
+/// The tools it answers for.
 pub(crate) const TOOL: &str = "selection.byLocation";
+pub(crate) const EXPRESSION: &str = "selection.byExpression";
+
+/// The features parameters a tool's run reads over data layers.
+fn inputs_of(tool: &str) -> &'static [&'static str] {
+    match tool {
+        TOOL => &["input", "reference"],
+        EXPRESSION => &["input"],
+        _ => &[],
+    }
+}
+
+/// One layer's matches of the last run: its id, how it is named, its rows' keys.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct LayerResult {
+    pub layer: String,
+    pub label: String,
+    pub keys: BTreeSet<i64>,
+}
+
+/// The last run's matches by layer (docs/adr/9345): the card under the form offers them, the table shows one.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct LayerResults {
+    /// What the tool says of its matches (“ilişkiyi sağladı”, “koşulu sağladı”).
+    verb: &'static str,
+    /// The drawing's objects among them, selected in the drawing.
+    pub drawn: usize,
+    pub layers: Vec<LayerResult>,
+    /// The layer the table shows.
+    pub shown: Option<String>,
+}
+
+impl LayerResults {
+    /// The status line: how many matched, by layer when more than one, and what the table shows.
+    pub(crate) fn said(&self) -> String {
+        let rows: usize = self.layers.iter().map(|l| l.keys.len()).sum();
+        let mut out = format!("{} nesne {}", self.drawn + rows, self.verb);
+        let shown = self.shown.as_ref().and_then(|s| self.layers.iter().find(|l| &l.layer == s));
+        let keys = |l: &LayerResult| {
+            let listed: Vec<String> = l.keys.iter().take(10).map(i64::to_string).collect();
+            format!("{}{}", listed.join(", "), if l.keys.len() > 10 { " …" } else { "" })
+        };
+        if self.layers.len() > 1 {
+            let each: Vec<String> = self.layers.iter().map(|l| format!("“{}” {}", l.label, l.keys.len())).collect();
+            out.push_str(&format!(": {}", each.join(", ")));
+            if let Some(l) = shown {
+                out.push_str(&format!(". Tabloda “{}”: {} satır seçili (anahtar: {})", l.label, l.keys.len(), keys(l)));
+            }
+            out.push_str(". Öbür katmanınkini formun başından tabloda açın; işlem yeniden çalışmaz");
+        } else if let Some(l) = shown {
+            out.push_str(&format!("; “{}” katmanında {} satır tabloda seçildi (anahtar: {})", l.label, l.keys.len(), keys(l)));
+        }
+        if self.drawn > 0 {
+            out.push_str(&format!("; çizimde {} nesne seçildi", self.drawn));
+        }
+        out.push('.');
+        out
+    }
+}
 
 /// The drawing with the data layers' rows among its objects, and which object is which row.
 pub(crate) struct Located {
@@ -35,6 +99,9 @@ pub(crate) struct Located {
     /// The layers still read, and those whose source could not be read (with why), by name.
     pub reading: Vec<String>,
     pub failed: Vec<(String, String)>,
+    /// Each data layer read: how it is named (its group's path when another shares its short name), its rows, and its
+    /// fields (the layer's own and those its rows hold).
+    taken: Vec<(String, u64, BTreeSet<String>)>,
 }
 
 /// What the kept copy is of: the drawing's session, its generation and its writes to the sources; each layer and
@@ -74,26 +141,24 @@ impl Scene for LocatedScene<'_> {
 }
 
 impl App {
-    /// The data layers Konuma göre seç's inputs take, in the tree's order; none for another tool.
+    /// The data layers the tool's inputs take, in the tree's order; none for another tool, and for İfadeyle seç on one
+    /// data layer (its source is asked: data_select.rs).
     fn data_location_layers(&self) -> Vec<LayerNode> {
         let (Some(window), Some(doc)) = (self.gis.processing.dialog.as_ref(), self.document.as_ref()) else {
             return Vec::new();
         };
-        if window.tool.id != TOOL {
-            return Vec::new();
-        }
         let tree = doc.model.layers();
         let data: Vec<&LayerNode> = tree.leaves().into_iter().filter(|l| l.data.is_some()).collect();
         let table = self.gis.features.data.selected_layer().map(str::to_owned);
         let mut taken: BTreeSet<String> = BTreeSet::new();
-        for param in ["input", "reference"] {
-            let Some(v) = window.values.get(param).and_then(FeaturesValue::read) else {
+        for param in inputs_of(&window.tool.id) {
+            let Some(v) = window.values.get(*param).and_then(FeaturesValue::read) else {
                 continue;
             };
             match v.scope {
                 Scope::All => taken.extend(data.iter().map(|l| l.id.clone())),
                 Scope::Visible => taken.extend(data.iter().filter(|l| tree.is_visible(&l.id)).map(|l| l.id.clone())),
-                Scope::Layer(id) if data.iter().any(|l| l.id == id) => {
+                Scope::Layer(id) if window.tool.id != EXPRESSION && data.iter().any(|l| l.id == id) => {
                     taken.insert(id);
                 }
                 Scope::Selection => taken.extend(table.iter().filter(|t| data.iter().any(|l| &l.id == *t)).cloned()),
@@ -130,14 +195,17 @@ impl App {
         }
         let mut copy = doc.model.clone();
         let mut rows = HashMap::new();
-        let (mut reading, mut failed) = (Vec::new(), Vec::new());
+        let (mut reading, mut failed, mut taken) = (Vec::new(), Vec::new(), Vec::new());
         for (node, r) in read {
             match r {
                 Some(crate::data_rows::Rows::Ready(all)) => {
                     let held = doc.model.data_hidden(&node.id);
                     let (keys, objects): (Vec<i64>, Vec<kentos_commands::Entity>) =
                         all.iter().filter(|(k, _)| !held.contains(k)).map(|(k, e)| (*k, e.clone())).unzip();
-                    let Ok(slots) = copy.add_many(objects, "Konuma göre seç") else {
+                    let mut fields: BTreeSet<String> = node.fields.iter().map(|f| f.name.clone()).collect();
+                    fields.extend(objects.iter().flat_map(|e| e.base().attrs.keys().cloned()));
+                    taken.push((layer_label(doc.model.layers(), &node.id), objects.len() as u64, fields));
+                    let Ok(slots) = copy.add_many(objects, "Seçim") else {
                         failed.push((node.name.clone(), "çizimde yer kalmadı".to_owned()));
                         continue;
                     };
@@ -157,7 +225,7 @@ impl App {
                 .collect(),
             None => Vec::new(),
         };
-        let located = Arc::new(Located { doc: copy, rows, chosen, reading, failed });
+        let located = Arc::new(Located { doc: copy, rows, chosen, reading, failed, taken });
         *self.gis.processing.data_location.kept.borrow_mut() = Some((stamp, Arc::clone(&located)));
         Some(located)
     }
@@ -180,6 +248,19 @@ impl App {
             return;
         };
         window.refresh(&self.gis.processing.runner, &scene);
+        let scope = scope_words(&located, &window.tool.id, window.values.get("condition"));
+        if let Some(scope) = scope {
+            for param in inputs_of(&window.tool.id) {
+                let takes_data = window
+                    .values
+                    .get(*param)
+                    .and_then(FeaturesValue::read)
+                    .is_some_and(|v| matches!(v.scope, Scope::All | Scope::Visible | Scope::Selection));
+                if takes_data && let Some(input) = window.inputs.get_mut(*param) {
+                    input.description = sentence_after(&input.description, &scope);
+                }
+            }
+        }
         let said = if !located.reading.is_empty() {
             Some(format!("Kaynaktan okunuyor: {}. Satırlar okununca sayılır.", located.reading.join(", ")))
         } else if !located.failed.is_empty() {
@@ -189,22 +270,23 @@ impl App {
             None
         };
         if let Some(said) = said {
-            for param in ["input", "reference"] {
-                if let Some(input) = window.inputs.get_mut(param) {
+            for param in inputs_of(&window.tool.id) {
+                if let Some(input) = window.inputs.get_mut(*param) {
                     if !located.reading.is_empty() {
                         input.count = 0;
                     }
-                    input.description = format!("{} {said}", input.description);
+                    input.description = sentence_after(&input.description, &said);
                 }
             }
         }
     }
 
     /// Çalıştır with a data layer among the inputs: the tool run on the copy through `cad.processing.run`, its choice
-    /// brought back by layer and key; none when it takes no data layer.
+    /// brought back by layer and key and kept by layer; none when it takes no data layer.
     pub(super) fn processing_data_location_run(&mut self) -> Option<()> {
         let located = self.data_location()?;
         let window = self.gis.processing.dialog.as_mut()?;
+        let (tool, label) = (window.tool.id.clone(), window.tool.label.clone());
         if !located.reading.is_empty() {
             window.status = RunStatus::Invalid(format!(
                 "Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.",
@@ -224,7 +306,7 @@ impl App {
         selection.extend(located.chosen.iter().filter_map(uid));
         let b = self.viewport.camera.visible_bounds();
         let run = kentos_commands::ProcessingRun {
-            tool: TOOL.to_owned(),
+            tool: tool.clone(),
             parameters,
             selection,
             view: Some([b.min_x, b.min_y, b.max_x, b.max_y]),
@@ -242,7 +324,7 @@ impl App {
         let answer = match answer {
             Ok(a) if a["status"] == "completed" => a,
             Ok(a) => {
-                let why = a["error"]["message"].as_str().unwrap_or("Konuma göre seç çalışmadı.").to_owned();
+                let why = a["error"]["message"].as_str().map_or_else(|| format!("{label} çalışmadı."), str::to_owned);
                 if let Some(window) = &mut self.gis.processing.dialog {
                     window.status = RunStatus::Error(why);
                 }
@@ -250,7 +332,7 @@ impl App {
             }
             Err(e) => {
                 if let Some(window) = &mut self.gis.processing.dialog {
-                    window.status = RunStatus::Error(format!("Konuma göre seç çalışmadı: {e:?}"));
+                    window.status = RunStatus::Error(format!("{label} çalışmadı: {e:?}"));
                 }
                 return Some(());
             }
@@ -270,28 +352,25 @@ impl App {
             }
         }
         self.selection.set(drawn.clone());
-        let name = |id: &str| copy.layers().get(id).map_or_else(|| id.to_owned(), |l| l.name.clone());
+        let tree = copy.layers();
+        let layers: Vec<LayerResult> = tree
+            .leaves()
+            .into_iter()
+            .filter_map(|l| by_layer.remove(&l.id).map(|keys| (l, keys)))
+            .map(|(l, keys)| LayerResult { layer: l.id.clone(), label: layer_label(tree, &l.id), keys })
+            .collect();
         // The table shows one layer: the input's, else the one with most rows chosen.
         let shown = input_layer
-            .filter(|l| by_layer.contains_key(l))
-            .or_else(|| by_layer.iter().max_by_key(|(_, k)| k.len()).map(|(l, _)| l.clone()));
-        let rows: usize = by_layer.values().map(BTreeSet::len).sum();
-        let mut said = vec![format!("{} nesne ilişkiyi sağladı", drawn.len() + rows)];
+            .filter(|l| layers.iter().any(|r| &r.layer == l))
+            .or_else(|| layers.iter().max_by_key(|r| r.keys.len()).map(|r| r.layer.clone()));
+        let results = LayerResults {
+            verb: if tool == EXPRESSION { "koşulu sağladı" } else { "ilişkiyi sağladı" },
+            drawn: drawn.len(),
+            layers,
+            shown: shown.clone(),
+        };
         match &shown {
-            Some(layer) => {
-                let keys = by_layer.get(layer).cloned().unwrap_or_default();
-                let listed: Vec<String> = keys.iter().take(10).map(i64::to_string).collect();
-                said.push(format!(
-                    "“{}” katmanında {} satır tabloda seçildi (anahtar: {}{})",
-                    name(layer),
-                    keys.len(),
-                    listed.join(", "),
-                    if keys.len() > 10 { " …" } else { "" }
-                ));
-                self.gis.features.data.choose_rows(layer, keys);
-                self.open_feature_table();
-                let _ = self.features_event(crate::features::Event::Layer(layer.clone()));
-            }
+            Some(layer) => self.show_result_layer(layer, &results),
             None => {
                 // Nothing of a data layer: the table's earlier choice goes with a new selection.
                 if let Some(layer) = self.gis.features.data.selected_layer().map(str::to_owned) {
@@ -299,28 +378,101 @@ impl App {
                 }
             }
         }
-        if !drawn.is_empty() {
-            said.push(format!("çizimde {} nesne seçildi", drawn.len()));
-        }
-        for (layer, keys) in by_layer.iter().filter(|(l, _)| Some(*l) != shown.as_ref()) {
-            said.push(format!(
-                "“{}” katmanında {} satır da sağladı (tabloda görmek için Seçilecek nesneler'de o katmanı seçin)",
-                name(layer),
-                keys.len()
-            ));
-        }
+        let nothing = results.drawn == 0 && results.layers.is_empty();
         if let Some(window) = &mut self.gis.processing.dialog {
             window.status = RunStatus::Ok {
-                text: format!("{}.", said.join("; ")),
+                text: results.said(),
                 pick: Vec::new(),
                 selected: true,
                 undo: false,
                 table: None,
-                warning: drawn.is_empty() && rows == 0,
+                warning: nothing,
             };
+            window.layer_results = (results.layers.len() > 1).then_some(results);
         }
         Some(())
     }
+
+    /// A layer's matches in the table: its rows chosen, the table on it.
+    fn show_result_layer(&mut self, layer: &str, results: &LayerResults) {
+        let Some(r) = results.layers.iter().find(|r| r.layer == layer) else {
+            return;
+        };
+        self.gis.features.data.choose_rows(layer, r.keys.clone());
+        self.open_feature_table();
+        let _ = self.features_event(crate::features::Event::Layer(layer.to_owned()));
+    }
+
+    /// A layer chosen on the result card (docs/adr/9345): its matches shown in the table from the kept result, the run
+    /// not made again; the status line says the table's layer.
+    pub(super) fn processing_result_layer(&mut self, layer: &str) {
+        let Some(mut results) = self.gis.processing.dialog.as_ref().and_then(|w| w.layer_results.clone()) else {
+            return;
+        };
+        if !results.layers.iter().any(|r| r.layer == layer) {
+            return;
+        }
+        self.show_result_layer(layer, &results);
+        results.shown = Some(layer.to_owned());
+        if let Some(window) = &mut self.gis.processing.dialog {
+            if let RunStatus::Ok { text, .. } = &mut window.status {
+                *text = results.said();
+            }
+            window.layer_results = Some(results);
+        }
+    }
+}
+
+/// A line with another sentence after it: a full stop between them where the line has none.
+fn sentence_after(line: &str, more: &str) -> String {
+    let line = line.trim_end();
+    if line.is_empty() {
+        more.to_owned()
+    } else if line.ends_with(['.', '!', '?', ':']) {
+        format!("{line} {more}")
+    } else {
+        format!("{line}. {more}")
+    }
+}
+
+/// A layer as the results name it: its group's path when another layer shares its short name.
+fn layer_label(tree: &kentos_domain::LayerTree, id: &str) -> String {
+    let leaves = tree.leaves();
+    let Some(node) = leaves.iter().find(|l| l.id == id) else {
+        return id.to_owned();
+    };
+    let shared = leaves.iter().filter(|l| l.name.trim().eq_ignore_ascii_case(node.name.trim())).count() > 1;
+    if shared { tree.path(id) } else { node.name.clone() }
+}
+
+/// What an input's line adds over data layers: the layers taken with their rows, and for İfadeyle seç the layers
+/// without a field the condition reads (there its value is empty).
+fn scope_words(located: &Located, tool: &str, condition: Option<&Value>) -> Option<String> {
+    if located.taken.is_empty() {
+        return None;
+    }
+    let each: Vec<String> = located.taken.iter().map(|(name, n, _)| format!("{name} ({n})")).collect();
+    let mut out = format!("Kapsamdaki veri katmanları: {}.", each.join(", "));
+    if tool == EXPRESSION
+        && let Some(expr) = condition.and_then(Value::as_str).and_then(|c| kentos_expression::compile(c).ok())
+    {
+        let lacking: Vec<String> = located
+            .taken
+            .iter()
+            .filter_map(|(name, _, fields)| {
+                let missing: Vec<&str> =
+                    expr.fields.iter().filter(|f| !fields.contains(*f)).map(String::as_str).collect();
+                (!missing.is_empty()).then(|| format!("{name} ({})", missing.join(", ")))
+            })
+            .collect();
+        if !lacking.is_empty() {
+            out.push_str(&format!(
+                " Alanı olmayan katmanda değeri boş sayılır, eşitlik sağlanmaz: {}.",
+                lacking.join("; ")
+            ));
+        }
+    }
+    Some(out)
 }
 
 #[cfg(test)]

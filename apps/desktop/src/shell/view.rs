@@ -415,6 +415,7 @@ fn is_choice(id: &str) -> bool {
 
 /// A drop-down's commands (the web's `commandItem`): a toggle its check beside its icon (docs/adr/9337), a choice its
 /// dot beside its icon, a tool and a plain command their icon.
+#[cfg(test)]
 pub(crate) fn menu_of(
     ids: &[&'static str],
     checked: &[Option<bool>],

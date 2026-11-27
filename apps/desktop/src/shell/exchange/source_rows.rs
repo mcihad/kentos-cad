@@ -119,6 +119,35 @@ impl SourceScopes {
 }
 
 impl App {
+    /// A scope's objects for an export window: the drawing's and the data layers' rows (docs/adr/9338). Görünen
+    /// katmanlar is what the map draws: the visible layers' objects their filters let through.
+    pub(crate) fn export_objects<'a>(&'a self, sources: &'a SourceScopes, scope: Scope) -> Vec<&'a Entity> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let mut out: Vec<&Entity> = match scope {
+            Scope::Visible => doc
+                .model
+                .entities()
+                .filter(|e| {
+                    doc.model.layers().is_visible(&e.base().layer_id)
+                        && self.spatial.filter_shown(kentos_domain::Slot(e.base().id))
+                })
+                .collect(),
+            _ => self.scope_entities(scope),
+        };
+        out.extend(sources.rows(scope));
+        out
+    }
+
+    /// The scope's objects by layer, in the tree's order.
+    pub(crate) fn export_by_layer<'a>(&'a self, sources: &'a SourceScopes, scope: Scope) -> Vec<(String, Vec<&'a Entity>)> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        kentos_headless::export::by_layer(&doc.model, self.export_objects(sources, scope))
+    }
+
     /// Every data layer's rows as the export windows count them: asked of the sources where they are not kept yet
     /// (read after this message), the layer's filter worked out over the rows read.
     pub(crate) fn source_scopes(&self) -> SourceScopes {
@@ -162,13 +191,47 @@ impl App {
 
     /// A source's rows came, or the table's chosen rows were read: an open export window gathers its scopes again.
     pub(crate) fn export_sources_read(&mut self) {
-        if !matches!(self.exchange, Some(super::Window::GeoJsonExport(_) | super::Window::Package(_))) {
+        // The file exports' plans made again on the drawing with the rows (source_copy.rs, docs/adr/9344).
+        use super::Window as W;
+        match &self.exchange {
+            Some(W::FgbExport(_)) => {
+                let plan = self.fgb_plan();
+                if let Some(W::FgbExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(W::GmlExport(s)) => {
+                let plan = self.gml_plan(s.schema);
+                if let Some(W::GmlExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(W::CsvExport(s)) => {
+                let plan = self.csv_plan(s.geometry, s.separator);
+                if let Some(W::CsvExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(W::ShpExport(s)) => {
+                let plan = self.shp_plan(s.encoding);
+                if let Some(W::ShpExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(W::ParquetExport(_)) => self.parquet_replan(),
+            _ => {}
+        }
+        if !matches!(
+            self.exchange,
+            Some(super::Window::GeoJsonExport(_) | super::Window::Package(_) | super::Window::Wgs84Export(_))
+        ) {
             return;
         }
         let sources = self.source_scopes();
         match &mut self.exchange {
             Some(super::Window::GeoJsonExport(s)) => s.sources = sources,
             Some(super::Window::Package(s)) => s.sources = sources,
+            Some(super::Window::Wgs84Export(s)) => s.sources = sources,
             _ => {}
         }
     }

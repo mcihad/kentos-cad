@@ -85,6 +85,8 @@ pub struct State {
     status: Option<(bool, String)>,
     /// What the writer said: logged once the file is written.
     written: Option<ExportReport>,
+    /// The data layers' rows, by scope (docs/adr/9344): KML and GPX write them as GeoJSON does.
+    pub(super) sources: super::source_rows::SourceScopes,
 }
 
 #[derive(Debug, Clone)]
@@ -103,9 +105,10 @@ fn event(e: Event) -> Message {
 
 impl State {
     pub fn new(app: &App, format: Format) -> Self {
+        let sources = app.source_scopes();
         Self {
             format,
-            scope: if app.selection.is_empty() {
+            scope: if app.selection.is_empty() && sources.chosen.is_none() {
                 Scope::Visible
             } else {
                 Scope::Selection
@@ -115,6 +118,7 @@ impl State {
             writing: false,
             status: None,
             written: None,
+            sources,
         }
     }
 
@@ -130,8 +134,8 @@ impl State {
 
 impl App {
     /// The objects that will be written: the scope's, less the layers left out.
-    fn wgs84_chosen<'a>(&'a self, s: &State) -> Vec<(String, Vec<&'a Entity>)> {
-        let mut all = self.by_layer(s.scope);
+    fn wgs84_chosen<'a>(&'a self, s: &'a State) -> Vec<(String, Vec<&'a Entity>)> {
+        let mut all = self.export_by_layer(&s.sources, s.scope);
         all.retain(|(id, _)| !s.excluded.contains(id));
         all
     }
@@ -175,7 +179,7 @@ impl App {
         }
         let ids: Vec<String> = match &self.exchange {
             Some(Window::Wgs84Export(s)) => self
-                .by_layer(s.scope)
+                .export_by_layer(&s.sources, s.scope)
                 .into_iter()
                 .map(|(id, _)| id)
                 .collect(),
@@ -331,7 +335,7 @@ impl App {
     pub(super) fn wgs84_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let counts: Vec<Counted> = Scope::ALL
             .iter()
-            .map(|scope| Counted(*scope, self.scope_entities(*scope).len()))
+            .map(|scope| Counted(*scope, self.export_objects(&s.sources, *scope).len()))
             .collect();
         let current = counts
             .iter()
@@ -396,7 +400,7 @@ impl App {
     }
 
     fn wgs84_export_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let all = self.by_layer(s.scope);
+        let all = self.export_by_layer(&s.sources, s.scope);
         let Some(doc) = self.document.as_ref().filter(|_| !all.is_empty()) else {
             return words::empty("Bu kapsamda nesne yok.");
         };

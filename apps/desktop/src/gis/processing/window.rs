@@ -143,6 +143,10 @@ fn form<'a>(
     let advanced: Vec<&ParamDef> = shown.iter().copied().filter(|p| p.advanced).collect();
     let open = window.advanced_open || advanced.iter().any(|p| window.issue_of(&p.name).is_some());
     let mut out = Column::new().spacing(18).padding([4, 8]);
+    // A selecting run's matches over data layers head the form, where they are seen after Çalıştır (docs/adr/9345).
+    if let (super::RunStatus::Ok { .. }, Some(r)) = (&window.status, &window.layer_results) {
+        out = out.push(layer_results(r));
+    }
     for (title, params) in [("Girdi", &input), ("Ayarlar", &main), ("Çıktı", &output)] {
         if !params.is_empty() {
             out = out.push(group(title, params, window, env));
@@ -213,6 +217,48 @@ fn form<'a>(
         out = out.push(result(t, chart));
     }
     out.into()
+}
+
+/// A selecting run's matches over more than one data layer (docs/adr/9345): each layer with its count, the table's one
+/// marked; choosing another shows its matches in the table from the kept result, the run not made again. A card set off
+/// from the form below it.
+fn layer_results(r: &super::data_location::LayerResults) -> Element<'_, Message> {
+    let chips = r.layers.iter().map(|l| {
+        let on = r.shown.as_deref() == Some(l.layer.as_str());
+        button(
+            row![
+                icon(crate::icons::from_web(Some("table"))).size(14.0).tone(if on { Tone::Accent } else { Tone::Muted }),
+                label::caption(l.label.clone()),
+                container(label::mono_caption(l.keys.len().to_string()))
+                    .padding([0, 6])
+                    .style(style::container::badge),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding(kentos_ui::theme::metrics::action_small())
+        .style(style::button::chip(on))
+        .on_press(ev(Event::ResultLayer(l.layer.clone())))
+        .into()
+    });
+    container(
+        column![
+            row![
+                icon(Icon::Success).size(14.0).tone(Tone::Success),
+                label::caption("Sonuç katmanlara göre").font(typography::ui_strong()),
+            ]
+            .spacing(6)
+            .align_y(Center),
+            Row::with_children(chips).spacing(6).align_y(Center).wrap().vertical_spacing(6),
+            label::caption("Bir katmanı seçin: eşleşmeleri tabloda seçili gösterilir; işlem yeniden çalışmaz.")
+                .style(style::text::muted),
+        ]
+        .spacing(8),
+    )
+    .padding(12)
+    .width(Fill)
+    .style(style::container::tile)
+    .into()
 }
 
 /// Whether a table cell is a number: a sign, digits and one decimal point or comma.

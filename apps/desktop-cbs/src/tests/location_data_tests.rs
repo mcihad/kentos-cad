@@ -2,6 +2,9 @@
 //! picture: only data layers of a GeoPackage, the 30–40–50 m triangle, its corners and a control point 5 m west; the
 //! corners chosen in their table by Kesişen, the control point left out. What the run decides is tested beside the
 //! tool (the desktop's `data_location_tests`).
+//!
+//! The 9345 pictures: Uzaklıkta 6 m's matches kept by layer, the card under the form with `kontrol` chosen; İfadeyle
+//! seç on Tümü naming the layers it takes and the one field none of them holds.
 
 use kentos_data::{Coord, Curve, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
 use serde_json::json;
@@ -52,6 +55,10 @@ fn event(app: &mut App, e: Event) {
 }
 
 fn scene(file: &std::path::Path) -> App {
+    scene_of(file).0
+}
+
+fn scene_of(file: &std::path::Path) -> (App, Vec<String>) {
     crate::data_layers::register();
     kentos_processing::command::register_as("desktop");
     let mut app = crate::files_testing::app_with_drawing();
@@ -76,7 +83,7 @@ fn scene(file: &std::path::Path) -> App {
     drive(&mut app, task);
     event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
     event(&mut app, Event::Value("reference".into(), json!({ "scope": "layer", "layerId": ids[0] })));
-    app
+    (app, ids)
 }
 
 #[test]
@@ -87,6 +94,29 @@ fn screens() {
     crate::files_testing::usage_shots("9340", "01-konuma-gore-sec-veri", || {
         let mut app = scene(&file);
         event(&mut app, Event::Run);
+        app
+    });
+}
+
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop-cbs location_data_tests::results_screens -- --ignored --nocapture"]
+fn results_screens() {
+    crate::drawing_fonts::load();
+    let file = triangle();
+    crate::files_testing::usage_shots("9345", "01-katmanlara-gore-sonuc", || {
+        let (mut app, ids) = scene_of(&file);
+        event(&mut app, Event::Value("relation".into(), json!("near")));
+        event(&mut app, Event::Value("distance".into(), json!(6)));
+        event(&mut app, Event::Run);
+        event(&mut app, Event::ResultLayer(ids[2].clone()));
+        app
+    });
+    crate::files_testing::usage_shots("9345", "02-ifadeyle-sec-tumu", || {
+        let (mut app, _) = scene_of(&file);
+        let task = app.update(Message::Run("processing.run.selection.byExpression"));
+        drive(&mut app, task);
+        event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
+        event(&mut app, Event::Value("condition".into(), json!("durum = 'x' veya ad = 'A'")));
         app
     });
 }

@@ -305,20 +305,33 @@ impl App {
         }
         match id {
             "file.saveSelection" => {
-                if self.selection.is_empty() {
+                let rows = self.gis.features.data.selected_layer().map(str::to_owned);
+                if self.selection.is_empty() && rows.is_none() {
                     self.warn("Seçilenleri dosyaya kaydet: önce kaydedilecek nesneleri seçin.");
                     return Task::none();
                 }
-                // A CBS project's copy (docs/adr/9339): its kind asked first, its tables in a GeoPackage beside it.
+                // A CBS project's copy (docs/adr/9339): its kind asked first, its tables in a GeoPackage beside it. A
+                // data layer's rows chosen in its table go too (docs/adr/9344), from the drawing with the rows.
+                let copy = rows.as_ref().and_then(|_| self.source_copy());
                 if let Some(doc) = &self.document {
-                    let uids: Vec<EntityId> = self
+                    let model = copy.as_ref().map_or(&doc.model, |c| &c.doc);
+                    let mut uids: Vec<EntityId> = self
                         .selection
                         .ids()
                         .iter()
-                        .filter_map(|s| doc.model.uid(*s))
+                        .filter_map(|s| model.uid(*s))
                         .map(|u| EntityId(*u.as_bytes()))
                         .collect();
-                    let drawing = doc.model.to_snapshot_v2();
+                    if let (Some(c), Some(layer)) = (&copy, &rows) {
+                        let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
+                        uids.extend(
+                            c.uids_of(layer, &keys)
+                                .iter()
+                                .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                                .map(|u| EntityId(*u.as_bytes())),
+                        );
+                    }
+                    let drawing = model.to_snapshot_v2();
                     let held = crate::exchange::selection_save::held_layers(&drawing, &uids);
                     if !held.is_empty() {
                         self.selection_save_open(uids, drawing, held);

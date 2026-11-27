@@ -4,6 +4,20 @@
 
 ## 0. Güncel karar özeti
 
+- **İfadeyle seç bütün kapsamlarda veri katmanlarını okur; seçimin sonucu katman katman saklanır (27 Kasım 2026,
+  ikinci turun T3 ve T4 maddeleri; [ADR 9345](../adr/9345-expression-select-over-data-layers-and-results-by-layer.md)).**
+  - İfadeyle seç Tümü, Görünen ve Seçili'de veri katmanlarının satırlarını Konuma göre seç'in kopyasında dener.
+    Girdinin satırı kapsamdaki katmanları ve koşulun alanı olmayan katmanları söyler.
+  - Konuma göre seç ve İfadeyle seç birden çok katmanda bulduğunu katman başına saklar. Formun başındaki kartta katman
+    seçilince eşleşmeleri tabloda gösterilir; işlem yeniden çalışmaz.
+
+- **Dosya dışa aktarmaları veri katmanlarının satırlarını yazar; tablonun seçtiği satır Seçilenleri kaydet'e girer
+  (27 Kasım 2026, ikinci turun T1 ve T2 maddeleri; [ADR 9344](../adr/9344-file-exports-write-data-layer-rows.md)).**
+  - GeoPackage, Shapefile, CSV, FlatGeobuf, GeoParquet, GML, KML ve GPX, çizimin satırlarla birlikte kopyasında
+    sayar ve yazar. Aynı adlı katmanların tablo adları (`_2`) yazmadan önce söylenir.
+  - Dışa aktarma komutları Python, MCP ve ajan için de satırları kaynaktan okur. Tablonun seçili satırı Seçilenleri
+    kaydet'i açar.
+
 - **Yeni proje sayfası adını taşır, iki yer ayrılır; görünüm ölçeği çizim ölçeğinden ayrılır; Seçime sığdır ve
   Katmana sığdır (27 Kasım 2026, 27 Kasım CBS incelemesinin 4. ve 8. maddeleri ve simgeler;
   [ADR 9343](../adr/9343-project-page-name-scales-and-fit-commands.md)).**

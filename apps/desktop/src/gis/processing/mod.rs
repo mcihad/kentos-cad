@@ -291,6 +291,8 @@ pub enum Event {
     SaveTableAs(kentos_commands::WorkbookFormat),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
     Results,
+    /// A layer on the result card of a selecting run over data layers: its matches shown in the table (data_location.rs).
+    ResultLayer(String),
     /// Geri al after a run.
     Undo,
     /// The dock's İşlemler tab.
@@ -554,6 +556,10 @@ impl App {
                 self.processing_results();
                 return Task::none();
             }
+            Event::ResultLayer(layer) => {
+                self.processing_result_layer(&layer);
+                return Task::none();
+            }
             Event::ChooseFile(name) => return self.processing_choose_file(name),
             Event::Command(id) => return self.run(id),
             Event::ChooseSave(name) => return self.processing_choose_save(name),
@@ -725,7 +731,7 @@ impl App {
         }
         // Konuma göre seç with a data layer among its inputs runs on the drawing with their rows (data_location.rs).
         if attempted && self.processing_data_location_run().is_some() {
-            return Task::none();
+            return self.result_shown();
         }
         let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();
@@ -864,6 +870,10 @@ impl App {
         match self.gis.processing.dialog.as_ref().map(|w| &w.status) {
             Some(RunStatus::Ok { table: Some(_), .. }) => {
                 iced::widget::operation::snap_to_end(window::FORM)
+            }
+            // The matches kept by layer: their card heads the form (data_location.rs, docs/adr/9345).
+            Some(RunStatus::Ok { .. }) if self.gis.processing.dialog.as_ref().is_some_and(|w| w.layer_results.is_some()) => {
+                iced::widget::operation::snap_to(window::FORM, iced::widget::scrollable::RelativeOffset::START)
             }
             _ => Task::none(),
         }

@@ -188,9 +188,11 @@ impl App {
             overwrite: false,
             time: self.export_time(),
         };
-        csv_table::export(&doc.model, &input)
+        // The data layers' rows too (docs/adr/9344).
+        let copy = self.source_copy();
+        csv_table::export(copy.as_ref().map_or(&doc.model, |c| &c.doc), &input)
             .map(|m| m.output)
-            .map_err(|(_, why, _)| why)
+            .map_err(|(_, why, _)| self.while_read(why))
     }
 
     pub(super) fn csv_export_open(&mut self) -> Task<Message> {
@@ -298,6 +300,7 @@ impl App {
             Event::SavePicked(None) | Event::Picked(None) => {}
             Event::SavePicked(Some(path)) => {
                 let time = self.export_time();
+                let source = self.source_copy();
                 let (Some(doc), Some(Window::CsvExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
@@ -312,7 +315,7 @@ impl App {
                     time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = doc.model.clone();
+                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 return off_thread(
                     move || {
                         kentos_headless::file_commands::export_csv(&model, &input)

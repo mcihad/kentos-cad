@@ -108,9 +108,10 @@ impl App {
             return;
         };
         let input = self.parquet_export_input(self.export_name(".parquet"), s);
-        let plan = parquet_write::export(&doc.model, &input)
-            .map(|m| m.output)
-            .map_err(|(_, message, _)| message);
+        // The data layers' rows too (docs/adr/9344).
+        let copy = self.source_copy();
+        let model = copy.as_ref().map_or(&doc.model, |c| &c.doc);
+        let plan = parquet_write::export(model, &input).map(|m| m.output).map_err(|(_, message, _)| self.while_read(message));
         if let Some(Window::ParquetExport(s)) = &mut self.exchange {
             s.plan = plan;
         }
@@ -252,13 +253,14 @@ impl App {
                     return Task::none();
                 };
                 let input = self.parquet_export_input(path.display().to_string(), s);
+                let source = self.source_copy();
                 let (Some(doc), Some(Window::ParquetExport(s))) =
                     (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = doc.model.clone();
+                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 return off_thread(
                     move || {
                         kentos_headless::file_commands::export_parquet(&model, &input)
