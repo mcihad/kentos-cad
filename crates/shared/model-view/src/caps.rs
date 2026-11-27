@@ -18,8 +18,10 @@ use crate::view::Source;
 /// plane itself (a wall's end where the cut falls on it) does not fight it for the depth.
 pub const LIFT: f64 = 0.000_5;
 
-/// Points closer than this are one where loops are chained, metres.
-const JOIN: f64 = 1e-7;
+/// Points closer than this are one where loops are chained, metres: a model's bodies are float32 triangles, and corners
+/// that should meet may lie a few hundredths of a millimetre apart (see [`MEET`]); a chain broken by such a hair left
+/// its body uncapped, hollow in the section (docs/adr/8171 §1 B3). Far under any drawing's precision.
+const JOIN: f64 = 5e-5;
 
 /// How near a loop's edge another loop's corner lies to be taken into it, metres: a model's bodies are float32
 /// triangles (their corners a few hundredths of a millimetre apart where they should meet), far under any drawing's
@@ -99,8 +101,38 @@ fn meet(p: &[f64; 4], a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 }
 
 fn key(v: [f64; 3]) -> (i64, i64, i64) {
-    let q = |x: f64| (x / JOIN).round() as i64;
+    let q = |x: f64| (x / JOIN).floor() as i64;
     (q(v[0]), q(v[1]), q(v[2]))
+}
+
+/// The segments' ends made nodes: an end within [`JOIN`] of a node made before is that node (the cells about its own
+/// searched), so two ends a hair apart are one wherever the grid's lines fall between them.
+#[derive(Default)]
+struct Nodes {
+    cells: HashMap<(i64, i64, i64), Vec<usize>>,
+    at: Vec<[f64; 3]>,
+}
+
+impl Nodes {
+    fn id(&mut self, v: [f64; 3]) -> usize {
+        let c = key(v);
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    for &n in self.cells.get(&(c.0 + dx, c.1 + dy, c.2 + dz)).into_iter().flatten() {
+                        let d = sub(self.at[n], v);
+                        if dot(d, d) <= JOIN * JOIN {
+                            return n;
+                        }
+                    }
+                }
+            }
+        }
+        let n = self.at.len();
+        self.at.push(v);
+        self.cells.entry(c).or_default().push(n);
+        n
+    }
 }
 
 /// Two directions across the plane `p` and a point of it near the model (`near`), so its flat coordinates stay small.
@@ -118,8 +150,9 @@ fn basis(p: [f64; 4], near: [f64; 3]) -> ([f64; 3], [f64; 3], [f64; 3]) {
 /// One body's closed loops where the plane `p` cuts it, clipped by `others`.
 fn loops_of(vs: &[[f64; 3]], ts: &[[u32; 3]], p: [f64; 4], others: &[[f64; 4]]) -> Vec<Vec<[f64; 3]>> {
     // Each triangle crossing the plane gives a segment between its two edges that cross it (a corner on the plane
-    // counts as kept).
-    let mut segments: Vec<[[f64; 3]; 2]> = Vec::new();
+    // counts as kept); its ends are nodes, a segment whose ends are one node none.
+    let mut nodes = Nodes::default();
+    let mut segments: Vec<[usize; 2]> = Vec::new();
     for t in ts {
         let (Some(&a), Some(&b), Some(&c)) = (vs.get(t[0] as usize), vs.get(t[1] as usize), vs.get(t[2] as usize))
         else {
@@ -131,17 +164,18 @@ fn loops_of(vs: &[[f64; 3]], ts: &[[u32; 3]], p: [f64; 4], others: &[[f64; 4]]) 
             .filter(|&k| side[k] != side[(k + 1) % 3])
             .map(|k| meet(&p, corners[k], corners[(k + 1) % 3]))
             .collect();
-        if let [x, y] = crossing.as_slice()
-            && key(*x) != key(*y)
-        {
-            segments.push([*x, *y]);
+        if let [x, y] = crossing.as_slice() {
+            let (i, j) = (nodes.id(*x), nodes.id(*y));
+            if i != j {
+                segments.push([i, j]);
+            }
         }
     }
-    // Chained by their points: a closed body's cut is closed loops; a chain that does not close is left.
-    let mut at: HashMap<(i64, i64, i64), Vec<(usize, usize)>> = HashMap::new();
+    // Chained by their nodes: a closed body's cut is closed loops; a chain that does not close is left.
+    let mut at: HashMap<usize, Vec<(usize, usize)>> = HashMap::new();
     for (k, s) in segments.iter().enumerate() {
-        at.entry(key(s[0])).or_default().push((k, 0));
-        at.entry(key(s[1])).or_default().push((k, 1));
+        at.entry(s[0]).or_default().push((k, 0));
+        at.entry(s[1]).or_default().push((k, 1));
     }
     let mut used = vec![false; segments.len()];
     let mut loops: Vec<Vec<[f64; 3]>> = Vec::new();
@@ -150,17 +184,17 @@ fn loops_of(vs: &[[f64; 3]], ts: &[[u32; 3]], p: [f64; 4], others: &[[f64; 4]]) 
             continue;
         }
         used[start] = true;
-        let first = key(segments[start][0]);
-        let mut ring = vec![segments[start][0]];
+        let first = segments[start][0];
+        let mut ring = vec![nodes.at[first]];
         let mut end = segments[start][1];
         let mut closed = false;
         for _ in 0..segments.len() {
-            if key(end) == first {
+            if end == first {
                 closed = true;
                 break;
             }
-            ring.push(end);
-            let next = at.get(&key(end)).and_then(|list| list.iter().copied().find(|(k, _)| !used[*k]));
+            ring.push(nodes.at[end]);
+            let next = at.get(&end).and_then(|list| list.iter().copied().find(|(k, _)| !used[*k]));
             let Some((k, e)) = next else { break };
             used[k] = true;
             end = segments[k][1 - e];
@@ -446,6 +480,28 @@ mod tests {
                 dot(n, n).sqrt() / 2.0
             })
             .sum()
+    }
+
+    /// A block whose faces' corners lie a few hundredths of a millimetre apart, as a float32 body's that should meet
+    /// do (docs/adr/8171 §1 B3): its cut still closes and it is capped whole. With the chain's points one only within
+    /// 1e-7 m the loop broke and the block was left hollow.
+    #[test]
+    fn a_body_whose_corners_lie_a_hair_apart_is_capped_whole() {
+        let mut block = cuboid([10.0, 20.0, 0.0], [14.0, 22.0, 3.0], 3);
+        // Each face's own corners moved by up to 0.02 mm, differently for each face.
+        let moved: Vec<[f64; 3]> = block
+            .vertices
+            .iter()
+            .enumerate()
+            .map(|(k, v)| {
+                let face = (k / 4) as f64;
+                [v[0] + 2e-5 * (face - 2.5) / 2.5, v[1] - 1.5e-5 * (face - 2.5) / 2.5, v[2]]
+            })
+            .collect();
+        block.vertices = Arc::new(moved);
+        let caps = super::caps(&[block], &[[0.0, 0.0, -1.0, 1.25]], 99, |_| true);
+        assert_eq!(caps.len(), 1, "capped");
+        assert!((area(&caps[0]) - 8.0).abs() < 1e-3, "{}", area(&caps[0]));
     }
 
     /// A 4 × 2 × 3 m block cut level at 1.25 m: its cap is the 4 × 2 rectangle (8 m²), a hair above 1.25 (the cut-away

@@ -1,6 +1,8 @@
 # ADR 8131: Görüntüleyicide kesit yüzü (kesilen gövdenin kapağı)
 
-- **Durum:** uygulandı (18 Kasım 2026). Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-12 (Kalanlar: "kesilen yüzün
+- **Durum:** uygulandı (18 Kasım 2026). K310'un "sürüklerken kapak yok" kuralını ve 1e-7 m'lik halka zincirini
+  [ADR 8171](8171-mimari-3d-section-quality-and-missing-tools.md) §2.2 değiştirdi: kapak sürüklerken de çizilir, kendi
+  katmanındadır, zincir 0,05 mm'ye toleranslıdır. Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-12 (Kalanlar: "kesilen yüzün
   kapağı"), [bim-plan.md](../../plan/bim-plan.md) B12b.
 - **Bağlam:** ADR [8073](8073-ifc-viewer-first-slice.md) §3 (kesit düzlemi ve kutusu, çizicide kırpma),
   [8120](8120-3d-render-quality.md) (kalite: örnek sayısı, kenar çizgileri), [8061](8061-ifc-viewer-and-reading-engine.md)

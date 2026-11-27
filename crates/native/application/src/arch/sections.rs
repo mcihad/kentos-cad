@@ -33,6 +33,11 @@ use kentos_geometry_core::vec2::Vec2 as P;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+#[path = "sections/frame.rs"]
+mod frame;
+use frame::{beam, column};
+pub use frame::MEMBER_ELEMENT;
+
 /// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
 /// are; Mimarlar Odası's uygulama projesi 1/50 when the drawing has none. A section printed at another scale prints
 /// its words smaller or larger, so the set prints it at this one (as its calculation tables, docs/adr/8037).
@@ -155,6 +160,8 @@ pub struct Model {
     pub roofs: Vec<RoofAt>,
     /// The roofs whose gutters and downpipes are built once every wall and column is in (docs/adr/8044 §8).
     rain: Vec<Rain>,
+    /// The slabs' structure plates, by solid: what the frame's columns and beams stop under (docs/adr/8171 §2.1).
+    pub structure: Vec<usize>,
 }
 
 /// A ring with its arcs (docs/adr/8071 §1): its points and each edge's bulge (to the next point), its first point not
@@ -402,6 +409,7 @@ pub fn model(doc: &Document) -> Model {
     for rain in std::mem::take(&mut m.rain) {
         rain_water(&rain, &mut m);
     }
+    frame::joins(doc, &mut m);
     m
 }
 
@@ -1080,6 +1088,9 @@ fn slab(
         None => material_look("DOSM", s.material.as_deref(), None),
     };
     put(m, solid(z - s.thickness * k, z), look);
+    if s.covering.is_none() {
+        m.structure.push(m.solids.len() - 1);
+    }
     z -= s.thickness * k;
     for l in &s.layers.under {
         put(m, solid(z - l.thickness * k, z), slab_layer_look(l.kind, l.material.as_deref()));
@@ -1089,111 +1100,6 @@ fn slab(
 
 /// The face group of a sloped slab's plate (docs/adr/8071 §6): its own, apart from the roofs' and the ramps'.
 const SLAB_FACES: usize = usize::MAX / 8;
-
-/// A column between the structure under it and the structure over its storey.
-fn column(
-    c: &kentos_commands::ColumnFields,
-    slabs: &[SlabAt],
-    owner: Option<String>,
-    m: &mut Model,
-) {
-    use kentos_geometry_core::entity::Shape;
-    let Shape::Column { at, column } = kentos_formats::arch_elements::core_column(c) else {
-        return;
-    };
-    let Some(foot) = kentos_geometry_core::geom::column_join::Foot::of(at, &column) else {
-        return;
-    };
-    let (floor, storey) = floor_of(&m.levels, c.arch.level.as_deref());
-    // Its own height (a post's, docs/adr/8070 §8), else its storey's.
-    let height = c.height.or(storey);
-    let centre = P::new(
-        foot.ring.iter().map(|q| q.x).sum::<f64>() / foot.ring.len() as f64,
-        foot.ring.iter().map(|q| q.y).sum::<f64>() / foot.ring.len() as f64,
-    );
-    let bottom = slabs
-        .iter()
-        .filter(|s| s.holds(centre) && (s.top - floor).abs() <= 0.5)
-        .map(SlabAt::structure_top)
-        .fold(floor, kentos_geometry_core::jsmath::js_min);
-    let Some(h) = height else {
-        m.left.insert((Left::NoHeight, owner));
-        return;
-    };
-    let top = slabs
-        .iter()
-        .filter(|s| s.holds(centre) && (s.top - (floor + h)).abs() <= 0.5)
-        .map(SlabAt::structure_top)
-        .fold(floor + h, kentos_geometry_core::jsmath::js_min);
-    if top - bottom <= 1e-6 {
-        return;
-    }
-    let solid = Solid {
-        rings: vec![foot.ring.clone()],
-        height: Height::Prism { bottom, top },
-        voids: Vec::new(),
-        marks: Vec::new(),
-        finish: None,
-    };
-    // A post on EK-2's Diğer (docs/adr/8070 §8): not the frame's column.
-    let element = if c.member.is_some() { MEMBER_ELEMENT } else { "KOLN" };
-    push(m, solid, material_look(element, c.material.as_deref(), None), owner);
-}
-
-/// The EK-2 element a post or a rail is drawn on (docs/adr/8070 §8): Diğer (Diğer ögeler için), EK-2 having no post's or
-/// rail's own.
-pub const MEMBER_ELEMENT: &str = "DIGR";
-
-/// A beam between its underside and its top (docs/adr/8041 §1); a lintel and a bond beam alike.
-fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, m: &mut Model) {
-    use kentos_geometry_core::entity::Shape;
-    let (Some(top), Some(bottom)) = (doc.beam_top(b), doc.beam_underside(b)) else {
-        return;
-    };
-    let Shape::Beam { pts, beam } = kentos_formats::arch_elements::core_beam(b) else {
-        return;
-    };
-    let ring = kentos_geometry_core::geom::beam::band(&pts, &beam);
-    if ring.len() < 3 || top - bottom <= 1e-6 {
-        return;
-    }
-    let element = match b.role {
-        // A rail (docs/adr/8070 §8), by its material.
-        _ if b.member.is_some() => MEMBER_ELEMENT,
-        BeamRole::Beam => "TASI",
-        BeamRole::Lintel => "LENT",
-        BeamRole::BondBeam => "HATL",
-    };
-    let made_of = b.member.as_ref().and(b.material.as_deref());
-    // A sloped member (docs/adr/8130): its start where a level one's is (its underside over its floor, else its top
-    // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
-    let height = match (b.rise, b.pts.as_slice()) {
-        (Some(rise), [a, e]) => {
-            let length = kentos_geometry_core::jsmath::js_hypot(e.x - a.x, e.y - a.y);
-            let g = rise / length;
-            let (dx, dy) = (g * (e.x - a.x) / length, g * (e.y - a.y) / length);
-            let upright = (top - bottom) * (1.0 + g * g).sqrt();
-            let start_top = if b.base_offset.is_some() { bottom + upright } else { top };
-            Height::Sloped(sec::Sloped {
-                top: start_top - dx * a.x - dy * a.y,
-                dx,
-                dy,
-                thickness: upright,
-                eaves: ring.clone(),
-                roof: RAMP_FACES + m.solids.len(),
-            })
-        }
-        _ => Height::Prism { bottom, top },
-    };
-    let solid = Solid {
-        rings: vec![ring],
-        height,
-        voids: Vec::new(),
-        marks: Vec::new(),
-        finish: None,
-    };
-    push(m, solid, material_look(element, made_of, None), owner);
-}
 
 /// A railing's look in a section (docs/adr/8045 §3): on its infill's layer (EK-2 Korkuluk: MM-KORK-CUBUK), outlined
 /// light and unhatched: a balustered or glass railing is no mass to hatch, and its cut is a top rail's width.

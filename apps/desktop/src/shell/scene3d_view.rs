@@ -213,6 +213,7 @@ impl App {
     fn scene3d_scene<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let view = SceneView {
             scene: w.scene.clone(),
+            caps: None,
             camera: w.camera(),
             exaggeration: w.exaggeration(),
             styles: w.styles(),

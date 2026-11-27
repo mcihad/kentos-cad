@@ -14,6 +14,7 @@
 
 #[cfg(feature = "mod-arch")]
 mod beam_quantities;
+mod frame_joins;
 #[cfg(feature = "mod-arch")]
 mod underlay_check;
 #[cfg(feature = "mod-arch")]

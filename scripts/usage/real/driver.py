@@ -17,6 +17,12 @@ Scenario lines, one per line; a line starting with '#' and anything after ' #' i
   type TEXT               the text as keystrokes (Turkish letters too)
   shot NAME               the screen as OUT_DIR/NAME.png
   glide X1 Y1 X2 Y2 N MS  the pointer along a line in N moves MS apart (a tool drawn along a wall)
+  down X Y [right|middle], up [right|middle]
+                          a button pressed there and held, let go where the pointer is (a drag in steps)
+  drift X1 Y1 X2 Y2 N MS NAME [X0 Y0 X1 Y1]
+                          glide's moves, the screen (or the region) watched after each and every 16 ms until the
+                          next: each change as OUT_DIR/NAME-<ms>.png, how many frames changed printed; with a button
+                          held (down) it is a drag filmed as a hand makes it (an orbit, a section's handle)
   settle MS               until the app is idle (under a tenth of a core for a quarter second), at most MS
   cpu NAME / cpu NAME end the app's processor and wall time between the two marks, printed (docs/adr/8051)
 Points are screen pixels, as the pictures show them.
@@ -168,6 +174,27 @@ def burst(x, y, notches, gap, name, region=None):
           f"{said(first, t0)} sonra; son değişim son çentikten {said(changed, last)} sonra; {pictures} değişim",
           flush=True)
 
+def drift(x0, y0, x1, y1, n, ms, name, region=None):
+    # glide's moves, each frame that changes kept: a drag as the eye sees it, the frames between the moves included.
+    before = grab(region)
+    t0 = time.monotonic()
+    pictures = 0
+    for i in range(1, n + 1):
+        xtest.fake_input(d, X.MotionNotify, x=round(x0 + (x1 - x0) * i / n), y=round(y0 + (y1 - y0) * i / n))
+        d.sync()
+        end = time.monotonic() + ms / 1000
+        while True:
+            now = grab(region)
+            if now != before:
+                before = now
+                pictures += 1
+                shot(f"{name}-{int((time.monotonic() - t0) * 1000):05d}ms")
+            if time.monotonic() >= end:
+                break
+            time.sleep(0.016)
+    pos[:] = [x1, y1]
+    print(f"drift {name}: {n} adım {int((time.monotonic() - t0) * 1000)} ms, {pictures} değişen kare", flush=True)
+
 def fit(title, region=None):
     # No window manager on the screen: the app's window put over the whole screen, as a maximized window is, or over
     # the region X Y W H of it (a wide screen standing for two monitors side by side).
@@ -295,6 +322,13 @@ for raw in open(sys.argv[1], encoding="utf-8"):
             xtest.fake_input(d, X.MotionNotify, x=round(x0 + (x1 - x0) * i / n), y=round(y0 + (y1 - y0) * i / n))
             sync(ms)
         pos[:] = [x1, y1]
+    elif word == "down":
+        move(int(a[0]), int(a[1]))
+        button(BUTTONS[a[2]] if len(a) > 2 else 1, True)
+    elif word == "up":
+        button(BUTTONS[a[0]] if a else 1, False); sync(150)
+    elif word == "drift":
+        drift(*(int(v) for v in a[:6]), a[6], tuple(int(v) for v in a[7:11]) if len(a) >= 11 else None)
     elif word == "settle":
         pid = app_pid()
         end = time.monotonic() + int(a[0]) / 1000

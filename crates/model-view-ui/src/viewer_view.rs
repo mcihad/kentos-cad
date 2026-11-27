@@ -274,6 +274,7 @@ impl Viewer {
     fn scene_pane<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
         let view = SceneView {
             scene: self.scene().clone(),
+            caps: self.caps().cloned(),
             camera: self.camera(),
             exaggeration: kentos_scene3d::Exaggeration::NONE,
             styles: self.styles(),

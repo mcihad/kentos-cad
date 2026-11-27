@@ -45,10 +45,15 @@ pub struct Scene {
     sources: usize,
     triangles: usize,
     meshes: Vec<Source>,
+    /// Each content's place in `chunked.contents` by its id.
+    index: HashMap<u64, usize>,
+    /// Each content's digest of what the GPU draws of it (its origin, positions, parts, normals, indices and ranges).
+    digests: Vec<u64>,
 }
 
-/// Each scene's contents take their own ids (a block of 2³² from here): a renderer keeps what it uploaded by id, so a
-/// scene made again (a toggle, a selection) never draws the one before's tiles.
+/// Each scene's new contents take their own ids (a block of 2³² from here): a renderer keeps what it uploaded by id, so
+/// a scene made again (a toggle, a selection) never draws a tile of the one before that differs from its own. A
+/// content the scene before had as it is keeps its id (docs/adr/8171 §2.4): it is not uploaded again.
 static NEXT_CONTENT: AtomicU64 = AtomicU64::new(1);
 
 impl fmt::Debug for Scene {
@@ -60,17 +65,55 @@ impl fmt::Debug for Scene {
 impl Scene {
     /// The scene of `sources`, which show `count` things.
     pub fn of(sources: Vec<Source>, count: usize) -> Scene {
+        Scene::after(sources, count, None)
+    }
+
+    /// The scene of `sources` made after `before` (the view's scene it takes the place of): each content `before` had
+    /// as it is keeps its id, so a selection or a body hidden uploads only the tiles it changed (docs/adr/8171 §2.4).
+    pub fn after(sources: Vec<Source>, count: usize, before: Option<&Scene>) -> Scene {
         let first = NEXT_CONTENT.fetch_add(1 << 32, Ordering::Relaxed);
-        let chunked = {
+        let mut chunked = {
             let meshes: Vec<SourceMesh> = sources
                 .iter()
                 .map(|s| SourceMesh { part: s.part, vertices: &s.vertices, triangles: &s.triangles, smooth: s.smooth })
                 .collect();
             chunk(&meshes, Limits::default(), first)
         };
+        let digests: Vec<u64> = chunked.contents.iter().map(digest).collect();
+        if let Some(b) = before {
+            let mut kept: HashMap<u64, u64> = HashMap::new();
+            let mut used: std::collections::HashSet<u64> = std::collections::HashSet::new();
+            let mut by_digest: HashMap<u64, Vec<usize>> = HashMap::new();
+            for (k, d) in b.digests.iter().enumerate() {
+                by_digest.entry(*d).or_default().push(k);
+            }
+            for (k, c) in chunked.contents.iter_mut().enumerate() {
+                let same = by_digest.get(&digests[k]).and_then(|list| {
+                    list.iter().map(|&j| &b.chunked.contents[j]).find(|o| !used.contains(&o.id) && drawn_alike(o, c))
+                });
+                if let Some(o) = same {
+                    used.insert(o.id);
+                    kept.insert(c.id, o.id);
+                    c.id = o.id;
+                }
+            }
+            for t in &mut chunked.hierarchy.tiles {
+                if let Some(c) = &mut t.content
+                    && let Some(&id) = kept.get(&c.id)
+                {
+                    c.id = id;
+                }
+            }
+        }
+        let index = chunked.contents.iter().enumerate().map(|(k, c)| (c.id, k)).collect();
         let bounds = chunked.hierarchy.roots.first().map_or(Aabb::EMPTY, |&r| chunked.hierarchy.tiles[r as usize].bounds);
         let triangles = sources.iter().map(|s| s.triangles.len()).sum();
-        Scene { chunked, first, bounds, sources: count, triangles, meshes: sources }
+        Scene { chunked, first, bounds, sources: count, triangles, meshes: sources, index, digests }
+    }
+
+    /// Its contents' ids.
+    pub fn content_ids(&self) -> impl Iterator<Item = u64> + '_ {
+        self.chunked.contents.iter().map(|c| c.id)
     }
 
     /// Its box (the root tile's).
@@ -149,8 +192,35 @@ impl Scene {
     }
 
     fn content(&self, id: u64) -> Option<&Content> {
-        self.chunked.contents.get(id.checked_sub(self.first)? as usize)
+        self.chunked.contents.get(*self.index.get(&id)?)
     }
+}
+
+/// A digest of what the GPU draws of a content: its origin, positions, parts, normals, indices and ranges.
+fn digest(c: &Content) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    c.origin.map(f64::to_bits).hash(&mut h);
+    for p in &c.positions {
+        p.map(f32::to_bits).hash(&mut h);
+    }
+    c.parts.hash(&mut h);
+    c.normals.hash(&mut h);
+    c.indices.hash(&mut h);
+    for (part, r) in &c.ranges {
+        (part, r.start, r.end).hash(&mut h);
+    }
+    h.finish()
+}
+
+/// Whether two contents draw alike on the GPU (what a renderer uploads of them is the same).
+fn drawn_alike(a: &Content, b: &Content) -> bool {
+    a.origin == b.origin
+        && a.positions == b.positions
+        && a.parts == b.parts
+        && a.normals == b.normals
+        && a.indices == b.indices
+        && a.ranges == b.ranges
 }
 
 /// A point picked in the scene: the source's coordinates (height real), what it is on and its object's key.
@@ -211,6 +281,9 @@ pub enum Mark {
 /// whether contents are still waiting for the GPU).
 pub struct SceneView {
     pub scene: Arc<Scene>,
+    /// A layer drawn with the scene: a section's caps (docs/adr/8131, 8171 §2.2), made again as the section moves while
+    /// the scene stays as it is; none: nothing over it.
+    pub caps: Option<Arc<Scene>>,
     pub camera: Camera,
     pub exaggeration: Exaggeration,
     pub styles: Arc<Vec<Style>>,
@@ -238,6 +311,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         .height(Fill);
     let program = Program {
         scene: v.scene,
+        caps: v.caps,
         camera: v.camera,
         exaggeration: v.exaggeration,
         styles: v.styles,
@@ -259,6 +333,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
 
 struct Program<'a, M> {
     scene: Arc<Scene>,
+    caps: Option<Arc<Scene>>,
     camera: Camera,
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
@@ -420,6 +495,7 @@ impl<M> shader::Program<M> for Program<'_, M> {
         Frame3d {
             view: state.view,
             scene: self.scene.clone(),
+            caps: self.caps.clone(),
             camera: self.camera,
             exaggeration: self.exaggeration,
             styles: self.styles.clone(),
@@ -458,6 +534,7 @@ impl<M> Program<'_, M> {
 pub struct Frame3d {
     view: u64,
     scene: Arc<Scene>,
+    caps: Option<Arc<Scene>>,
     camera: Camera,
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
@@ -487,11 +564,14 @@ pub struct Pipeline {
     format: wgpu::TextureFormat,
     renderers: HashMap<u64, Scene3dRenderer>,
     placed: HashMap<u64, Placed>,
+    /// The scenes each view drew last (their first ids) and their contents' ids: a scene made again lets go of the
+    /// contents of the one before it does not keep (docs/adr/8171 §2.4) at once, not when the budget is full.
+    drawn: HashMap<u64, (Vec<u64>, std::collections::HashSet<u64>)>,
 }
 
 impl shader::Pipeline for Pipeline {
     fn new(_device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new() }
+        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new(), drawn: HashMap::new() }
     }
 }
 
@@ -503,6 +583,7 @@ impl shader::Primitive for Frame3d {
             for view in retired.drain(..) {
                 pipeline.renderers.remove(&view);
                 pipeline.placed.remove(&view);
+                pipeline.drawn.remove(&view);
             }
         }
         let size = viewport.physical_size();
@@ -516,21 +597,47 @@ impl shader::Primitive for Frame3d {
         let (bx, by, bw, bh) = (bounds.x * s, bounds.y * s, bounds.width * s, bounds.height * s);
         r.ensure_targets(device, bw.round().max(1.0) as u32, bh.round().max(1.0) as u32);
         let vp = Viewport { width: f64::from(bw.max(1.0)), height: f64::from(bh.max(1.0)) };
-        let h = &self.scene.chunked.hierarchy;
+        let scenes: Vec<&Scene> = std::iter::once(&*self.scene).chain(self.caps.as_deref()).collect();
+        // The contents of the scenes this view drew before and draws no more: let go.
+        let firsts: Vec<u64> = scenes.iter().map(|s| s.first).collect();
+        if pipeline.drawn.get(&self.view).is_none_or(|(f, _)| *f != firsts) {
+            let ids: std::collections::HashSet<u64> = scenes.iter().flat_map(|s| s.content_ids()).collect();
+            if let Some((_, before)) = pipeline.drawn.insert(self.view, (firsts, ids.clone())) {
+                for id in before.difference(&ids) {
+                    r.forget(*id);
+                }
+            }
+        }
         let settings = Settings { max_screen_error: MAX_SCREEN_ERROR };
+        let content = |id: u64| scenes.iter().find_map(|s| s.content(id));
         // Select with what is resident, upload what it draws and asks for within the budgets, select again with what
         // is resident now, and draw that.
-        let first = select(h, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id));
-        let asked: Vec<&Content> = first
-            .draw
+        let first: Vec<_> = scenes
             .iter()
-            .chain(&first.wanted)
-            .filter_map(|&i| h.tiles[i as usize].content.and_then(|c| self.scene.content(c.id)))
+            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .collect();
+        let asked: Vec<&Content> = scenes
+            .iter()
+            .zip(&first)
+            .flat_map(|(s, sel)| {
+                let h = &s.chunked.hierarchy;
+                sel.draw.iter().chain(&sel.wanted).filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+            })
             .collect();
         r.load(device, &asked);
-        let now = select(h, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id));
-        let draws: Vec<&Content> =
-            now.draw.iter().filter_map(|&i| h.tiles[i as usize].content.and_then(|c| self.scene.content(c.id))).collect();
+        let now: Vec<_> = scenes
+            .iter()
+            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .collect();
+        let draws: Vec<&Content> = scenes
+            .iter()
+            .zip(&now)
+            .flat_map(|(s, sel)| {
+                let h = &s.chunked.hierarchy;
+                sel.draw.iter().filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+            })
+            .collect();
+        let wanted: usize = now.iter().map(|sel| sel.wanted.len()).sum();
         let stats = r.prepare(
             device,
             queue,
@@ -547,9 +654,9 @@ impl shader::Primitive for Frame3d {
                 clip: &self.planes,
             },
         );
-        self.pending.store(!now.wanted.is_empty(), Ordering::Relaxed);
+        self.pending.store(wanted > 0, Ordering::Relaxed);
         if let Ok(mut seen) = self.seen.lock() {
-            *seen = Seen { tiles: stats.tiles, triangles: stats.triangles, waiting: now.wanted.len(), resident: stats.resident_bytes };
+            *seen = Seen { tiles: stats.tiles, triangles: stats.triangles, waiting: wanted, resident: stats.resident_bytes };
         }
         let (vx, vy) = (bx.max(0.0), by.max(0.0));
         let (x1, y1) = ((bx + bw).min(size.width as f32), (by + bh).min(size.height as f32));
@@ -699,4 +806,42 @@ fn plate(frame: &mut iced::widget::canvas::Frame, words: &str, at: iced::Point, 
         align_y: iced::alignment::Vertical::Center,
         ..Text::default()
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A box of side 1 at `x` as a body's source of `part`.
+    fn cube(x: f64, part: u32) -> Source {
+        let c = |i: usize| [x + (i & 1) as f64, ((i >> 1) & 1) as f64, ((i >> 2) & 1) as f64];
+        let faces = [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]];
+        let (mut vertices, mut triangles) = (Vec::new(), Vec::new());
+        for f in faces {
+            let at = vertices.len() as u32;
+            vertices.extend(f.map(c));
+            triangles.extend([[at, at + 1, at + 2], [at, at + 2, at + 3]]);
+        }
+        Source { part, name: "kutu".into(), owner: None, vertices: Arc::new(vertices), triangles, smooth: false, through: false }
+    }
+
+    /// Two boxes 2 km apart, a tile each (a tile spans at most 1 km): made again as it was, every content keeps its id;
+    /// the second box painted another part (chosen), only its tile takes a new one (docs/adr/8171 §2.4).
+    #[test]
+    fn a_scene_made_again_keeps_the_ids_of_the_tiles_it_did_not_change() {
+        let a = Scene::of(vec![cube(0.0, 0), cube(2000.0, 0)], 2);
+        let ids = |s: &Scene| -> Vec<u64> { s.content_ids().collect() };
+        assert_eq!(a.contents(), 2);
+        let same = Scene::after(vec![cube(0.0, 0), cube(2000.0, 0)], 2, Some(&a));
+        assert_eq!(ids(&same), ids(&a), "nothing changed: nothing uploaded again");
+        let chosen = Scene::after(vec![cube(0.0, 0), cube(2000.0, 7)], 2, Some(&same));
+        let kept: Vec<u64> = ids(&chosen).into_iter().filter(|id| ids(&same).contains(id)).collect();
+        assert_eq!(kept.len(), 1, "the first box's tile kept, the chosen one's new: {:?} → {:?}", ids(&same), ids(&chosen));
+        // Every tile finds its content by its id, kept or new.
+        for t in &chosen.chunked.hierarchy.tiles {
+            if let Some(c) = &t.content {
+                assert!(chosen.content(c.id).is_some(), "tile content {}", c.id);
+            }
+        }
+    }
 }
