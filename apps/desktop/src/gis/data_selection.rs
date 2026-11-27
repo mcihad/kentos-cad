@@ -105,10 +105,21 @@ impl App {
                     let objects: Vec<kentos_commands::Entity> = rows.iter().filter_map(|r| r.object.clone()).collect();
                     self.gis.data_selection.outlines = Some(Approved::of(&objects, asked));
                     self.gis.data_selection.rows = rows;
+                    // An export's Seçili takes them (shell/exchange/source_rows.rs).
+                    self.export_sources_read();
                 }
             }
         }
         Task::none()
+    }
+
+    /// The rows chosen in a data layer's table for an export's Seçili (docs/adr/9338): the layer and its rows' objects
+    /// as read, none while they are read; none at all without a chosen row.
+    pub(crate) fn chosen_source_rows(&self) -> Option<(String, Option<Vec<kentos_commands::Entity>>)> {
+        let sel = &self.gis.data_selection;
+        let (layer, _) = sel.of.as_ref()?;
+        let read = sel.outlines.is_some().then(|| sel.rows.iter().filter_map(|r| r.object.clone()).collect());
+        Some((layer.clone(), read))
     }
 
     /// The data layer's rows selected in its table and read from its source, with the layer's id (docs/adr/9326):

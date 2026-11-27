@@ -163,6 +163,8 @@ impl App {
         if self.gis.processing.dialog.is_some() {
             self.refresh_processing();
         }
+        // GeoJSON dışa aktar and Paketle count them (shell/exchange/source_rows.rs).
+        self.export_sources_read();
         Task::none()
     }
 }

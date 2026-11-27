@@ -19,6 +19,9 @@
 //! Asked (`exchange`, docs/adr/2780), the package's objects go in open formats too, made and tried back in the scratch
 //! folder (`package_exchange`) and copied into `devir/` like the rest; their matrix in the answer and `paket.json`.
 //!
+//! Data layers (docs/adr/9338, `package_data`): a GeoPackage copied under `veri/` or kept, a database table copied as a
+//! GeoPackage or kept; their rows, read from the sources, go into the open files.
+//!
 //! The grids the project names (docs/adr/3180: the datum choices' NTv2 grids, the heights' geoid model, the survey
 //! campaigns' velocity grids) go from the device's grid library into `izgaralar/` under their SHA-256, their notes
 //! beside them; a grid named without its SHA-256 or not kept on this device is left out, said.
@@ -84,21 +87,21 @@ impl Planned { pub(crate) fn manifest_bytes(&self)->&[u8]{&self.manifest} }
 
 /// The copies named so far.
 #[derive(Default)]
-struct Copies {
+pub(crate) struct Copies {
     /// A file copied (its path as found) → its index in `list`.
     by_source: BTreeMap<PathBuf, usize>,
     /// Names taken in `veri/`, folded to lower case (a case-insensitive disk keeps them apart too).
     names: BTreeSet<String>,
     list: Vec<(PathBuf, String, PackagedKind, u32)>,
     /// A database table's copy (its path in the package) → the database's address, the table and its rows.
-    databases: BTreeMap<String, (String, String, u64)>,
+    pub(crate) databases: BTreeMap<String, (String, String, u64)>,
     /// An open file made for the package (its path in it, docs/adr/2780) → the command that wrote it.
     made: BTreeMap<String, String>,
 }
 
 impl Copies {
     /// The package path of `from`'s copy, named once: `veri/name`, `veri/name-2` … when the name is another file's.
-    fn take(&mut self, from: &Path, kind: PackagedKind) -> String {
+    pub(crate) fn take(&mut self, from: &Path, kind: PackagedKind) -> String {
         if let Some(&i) = self.by_source.get(from) {
             self.list[i].3 += 1;
             return self.list[i].1.clone();
@@ -475,6 +478,13 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
                 .is_some_and(|id| gone.contains(id) || rebased.contains(id))
         });
     }
+    // Data layers' sources (docs/adr/9338): a GeoPackage copied under veri/ or kept, a database table copied as a
+    // GeoPackage or kept, each said.
+    if let Some(Value::Array(layers)) = value.get_mut("layers") {
+        let ways = crate::package_data::Ways { geopackages, databases, from: from_ref, target: &target, read };
+        let mut out = crate::package_data::Planned { copies: &mut copies, left: &mut left, scratch: &mut scratch };
+        crate::package_data::plan_layers(doc, layers, &ways, &mut out)?;
+    }
     // A map work item's file (docs/adr/1201 §2): copied, its link the copy, found as a source's is (its relative path,
     // the search paths); a file a raster also shows is copied once.
     if let Some(Value::Array(items)) = value.pointer_mut("/settings/mapWork/items") {
@@ -533,7 +543,9 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         }
         let dir = scratch.as_ref().map(|d| d.0.clone()).unwrap_or_default();
         let stem = Path::new(&name).file_stem().map_or_else(|| "proje".to_owned(), |s| s.to_string_lossy().into_owned());
-        let made = crate::package_exchange::make(doc, ask, &dir, &stem)?;
+        // The data layers' rows from their sources (docs/adr/9338): what the map shows of them is in the open files too.
+        let open = crate::package_data::with_rows(doc)?;
+        let made = crate::package_exchange::make(open.as_ref().unwrap_or(doc), ask, &dir, &stem)?;
         for (file, rel, command) in made.files {
             copies.made.insert(rel.clone(), command);
             copies.list.push((file, rel, PackagedKind::Exchange, 0));

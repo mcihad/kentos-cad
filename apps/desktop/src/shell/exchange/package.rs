@@ -3,7 +3,9 @@
 //! formats the package delivers its project in too (Devir dosyaları, each read back and its losses reported); then the
 //! folder is asked, and `file.package` runs on a copy of the drawing off the interface's thread (the files are read
 //! whole and copied, a database table read and written as a GeoPackage): the project file, `veri/` with the files it
-//! uses and `devir/` with the open files; what was left said one by one.
+//! uses and `devir/` with the open files; what was left said one by one. Data layers (docs/adr/9338) are listed with
+//! their rows, counted from their sources, and what the package does with each source; the open files' coverage of
+//! their rows is said before the folder is asked.
 
 use std::fmt;
 use std::path::PathBuf;
@@ -15,6 +17,7 @@ use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
 
+use super::source_rows::{Rows, SourceScopes};
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
 use crate::app::{App, Message, Picker};
@@ -52,6 +55,8 @@ pub struct State {
     pub links: Vec<Link>,
     /// Devir dosyaları (docs/adr/2780): the open formats ticked, in their order; none when the window opens.
     pub formats: Vec<ExchangeFormat>,
+    /// The data layers' rows, counted from their sources (docs/adr/9338).
+    pub(crate) sources: SourceScopes,
 }
 
 #[derive(Debug, Clone)]
@@ -97,11 +102,13 @@ impl App {
                 take: true,
             })
             .collect();
+        let sources = self.source_scopes();
         self.open_window(Window::Package(State {
             geopackages: PackageWay::Copy,
             databases: PackageWay::Keep,
             links,
             formats: Vec::new(),
+            sources,
         }));
         Task::none()
     }
@@ -351,18 +358,37 @@ impl App {
             Way(PackageWay::Embed),
         ];
         let mut body = Column::new().spacing(12);
-        if s.links.iter().any(|l| !l.database) {
+        let data = self.package_data_layers();
+        if s.links.iter().any(|l| !l.database) || data.iter().any(|d| !d.database) {
             body = body.push(words::field(
                 "GeoPackage kaynakları",
                 Segmented::new(ways, Way(s.geopackages), |w| event(Event::GeoPackages(w))),
-                Some(way_hint(s.geopackages, false).to_owned()),
+                Some(way_hint(s.geopackages, false, !data.is_empty()).to_owned()),
             ));
         }
-        if s.links.iter().any(|l| l.database) {
+        if s.links.iter().any(|l| l.database) || data.iter().any(|d| d.database) {
             body = body.push(words::field(
                 "Veritabanı kaynakları",
                 Segmented::new(ways, Way(s.databases), |w| event(Event::Databases(w))),
-                Some(way_hint(s.databases, true).to_owned()),
+                Some(way_hint(s.databases, true, !data.is_empty()).to_owned()),
+            ));
+        }
+        if !data.is_empty() {
+            body = body.push(words::field(
+                "Veri katmanları",
+                self.package_data_list(s, &data),
+                Some("Satırlar kaynaktadır; paket kaynağı kopyalar ya da adıyla bırakır. Kopyalanan kaynak paketin veri/ klasöründedir: paket başka klasöre taşınınca ve eski dosya yerinde olmasa da okunur.".to_owned()),
+            ));
+        }
+        let services = self.package_services();
+        if !services.is_empty() {
+            body = body.push(words::field(
+                "Servis katmanları",
+                words::text_line(
+                    Line::Info,
+                    format!("{}: adresleriyle kalır. Servis salt okunurdur; verisi kopyalanmaz ve devir dosyalarına girmez.", services.join(", ")),
+                ),
+                None,
             ));
         }
         let mut list = Column::new().spacing(4);
@@ -432,6 +458,7 @@ impl App {
                 ),
             },
         ));
+        lines.extend(self.package_coverage(s, &data));
         if s.databases == PackageWay::Copy && s.links.iter().any(|l| l.database && l.take) {
             lines.push(words::text_line(
                 Line::Info,
@@ -443,7 +470,10 @@ impl App {
             Dialog::new("Paketle")
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Klasör seç…", Some(event(Event::Pack))))
+                .action(words::primary(
+                    "Klasör seç…",
+                    self.package_ready(s, &data).then(|| event(Event::Pack)),
+                ))
                 .width(600.0)
                 .max_height(720.0)
                 .on_close(Some(message(Exchange::Close))),
@@ -451,8 +481,144 @@ impl App {
     }
 }
 
-/// What a way does, under its control.
-fn way_hint(way: PackageWay, database: bool) -> &'static str {
+/// A data layer of the drawing as Paketle lists it.
+pub(crate) struct DataLayerRow {
+    pub id: String,
+    pub name: String,
+    /// The GeoPackage's file name, or the database's table.
+    pub place: String,
+    pub database: bool,
+}
+
+impl App {
+    /// The drawing's data layers, in the tree's order.
+    pub(crate) fn package_data_layers(&self) -> Vec<DataLayerRow> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        doc.model
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter_map(|l| {
+                let d = l.data.as_ref()?;
+                let database = d.driver != "gpkg";
+                let place = if database {
+                    d.table.clone()
+                } else {
+                    let file = d.address.strip_prefix("gpkg:").unwrap_or(&d.address);
+                    let name = std::path::Path::new(file).file_name().map_or_else(|| file.to_owned(), |n| n.to_string_lossy().into_owned());
+                    format!("{name}, {}", d.table)
+                };
+                Some(DataLayerRow { id: l.id.clone(), name: l.name.clone(), place, database })
+            })
+            .collect()
+    }
+
+    /// Each data layer's rows as the window counts them (none: counted yet, or the source not read).
+    #[cfg(test)]
+    pub(super) fn package_rows_said(&self) -> Vec<Option<usize>> {
+        let Some(Window::Package(s)) = &self.exchange else {
+            return Vec::new();
+        };
+        self.package_data_layers().iter().map(|d| self.package_rows(s, &d.id).ok().flatten()).collect()
+    }
+
+    /// The service layers' names.
+    fn package_services(&self) -> Vec<String> {
+        self.document.as_ref().map_or_else(Vec::new, |doc| {
+            doc.model.layers().leaves().into_iter().filter(|l| l.service.is_some()).map(|l| l.name.clone()).collect()
+        })
+    }
+
+    /// A data layer's rows: those read from the source the drawing does not hold, and its own; none while read, why
+    /// when they cannot be.
+    fn package_rows(&self, s: &State, id: &str) -> Result<Option<usize>, String> {
+        let held = self.document.as_ref().map_or(0, |d| d.model.by_layer(id).count());
+        match s.sources.layers.iter().find(|l| l.id == id).map(|l| &l.rows) {
+            Some(Rows::Ready { rows, .. }) => Ok(Some(rows.len() + held)),
+            Some(Rows::Failed(why)) => Err(why.clone()),
+            _ => Ok(None),
+        }
+    }
+
+    fn package_data_list<'a>(&'a self, s: &'a State, data: &[DataLayerRow]) -> Element<'a, Message> {
+        let mut list = Column::new().spacing(4);
+        for d in data {
+            let rows = match self.package_rows(s, &d.id) {
+                Ok(Some(n)) => format!("{n} satır"),
+                Ok(None) => "satırlar sayılıyor…".to_owned(),
+                Err(_) => "kaynak okunamadı".to_owned(),
+            };
+            let way = match (d.database, if d.database { s.databases } else { s.geopackages }) {
+                (false, PackageWay::Keep) => "bağlı kalır, dosya kopyalanmaz".to_owned(),
+                (false, _) => "dosyası veri/ altına kopyalanır".to_owned(),
+                (true, PackageWay::Copy) => "tablosu GeoPackage olarak veri/ altına kopyalanır".to_owned(),
+                (true, _) => "veritabanına bağlı kalır, parola girmez".to_owned(),
+            };
+            let kind = if d.database { "veritabanı" } else { "GeoPackage" };
+            list = list.push(words::text_line(
+                if rows == "kaynak okunamadı" { Line::Error } else { Line::Info },
+                format!("{}: {} ({kind}) · {rows} · {way}", d.name, d.place),
+            ));
+        }
+        list.into()
+    }
+
+    /// The open files' coverage of the data layers' rows (docs/adr/9338), said before the folder is asked.
+    fn package_coverage(&self, s: &State, data: &[DataLayerRow]) -> Vec<Element<'_, Message>> {
+        if data.is_empty() || s.formats.is_empty() {
+            return Vec::new();
+        }
+        let mut counted = Vec::new();
+        let mut reading = Vec::new();
+        let mut failed = Vec::new();
+        for d in data {
+            match self.package_rows(s, &d.id) {
+                Ok(Some(n)) => counted.push((d.name.clone(), n)),
+                Ok(None) => reading.push(d.name.clone()),
+                Err(why) => failed.push((d.name.clone(), why)),
+            }
+        }
+        let mut lines = Vec::new();
+        if !counted.is_empty() {
+            let total: usize = counted.iter().map(|(_, n)| n).sum();
+            let each: Vec<String> = counted.iter().map(|(name, n)| format!("{name} {n}")).collect();
+            lines.push(words::text_line(
+                Line::Ok,
+                format!("Devir dosyaları kaynak tablolardan {total} satırı kapsar: {}. Satırlar paketlenirken kaynaktan okunur; katmanlar devir dosyalarında bağsız, kendi satırlarıyla durur.", each.join(", ")),
+            ));
+        }
+        if !reading.is_empty() {
+            lines.push(words::text_line(
+                Line::Info,
+                format!("Kaynaktan sayılıyor: {}. Klasör seç sayım bitince açılır.", reading.join(", ")),
+            ));
+        }
+        for (name, why) in failed {
+            lines.push(words::text_line(
+                Line::Error,
+                format!("“{name}” katmanının kaynağı okunamadı: {why}. Devir dosyaları bu katmanı taşıyamaz; kaynağa ulaşın ya da devir dosyalarını kaldırın."),
+            ));
+        }
+        lines
+    }
+
+    /// Whether Klasör seç is offered: with open files asked, every data layer's rows counted and readable.
+    fn package_ready(&self, s: &State, data: &[DataLayerRow]) -> bool {
+        s.formats.is_empty() || data.iter().all(|d| matches!(self.package_rows(s, &d.id), Ok(Some(_))))
+    }
+}
+
+/// What a way does, under its control; `data`: the drawing has data layers.
+fn way_hint(way: PackageWay, database: bool, data: bool) -> &'static str {
+    if data && way == PackageWay::Embed {
+        return if database {
+            "Bağlı katmanlar projeye gömülür. Veri katmanları gömülmez, veritabanına bağlı kalır: veri katmanının satırları proje dosyasına yazılmaz."
+        } else {
+            "Bağlı katmanlar projeye gömülür. Veri katmanlarının dosyası gömülmez, veri/ altına kopyalanır: veri katmanının satırları proje dosyasına yazılmaz."
+        };
+    }
     match (way, database) {
         (PackageWay::Copy, false) => {
             "Dosyalar bayt bayt veri/ altına kopyalanır; bağ kopyayı gösterir, paket nereye giderse orada bulunur."

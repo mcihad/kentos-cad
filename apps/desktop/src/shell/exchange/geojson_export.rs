@@ -12,7 +12,9 @@
 //! objects are summed up in one line instead of the layers' table. What GeoJSON cannot hold is said
 //! before writing (the summary) and after (the writer's report, in the
 //! command line). An export is not a save: the drawing stays unsaved if it
-//! was.
+//! was. A data layer's rows are its source's: each scope takes them as
+//! source_rows.rs gathers them (docs/adr/9338), counted while they are read
+//! and a source that cannot be read named with why.
 
 use std::collections::BTreeSet;
 
@@ -27,6 +29,7 @@ use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
 
 use super::dxf_export::{Counted, Scope};
+use super::source_rows::SourceScopes;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
 use crate::app::{App, Message};
@@ -67,6 +70,8 @@ pub struct State {
     written: Option<(ExportReport, u32)>,
     /// Moved into WGS 84 as RFC 7946 has it (docs/adr/0222 §7).
     wgs84: bool,
+    /// The data layers' rows, by scope (docs/adr/9338).
+    pub(super) sources: SourceScopes,
 }
 
 #[derive(Debug, Clone)]
@@ -91,8 +96,9 @@ impl State {
     }
 
     pub fn new(app: &App) -> Self {
+        let sources = app.source_scopes();
         Self {
-            scope: if app.selection.is_empty() {
+            scope: if app.selection.is_empty() && sources.chosen.is_none() {
                 Scope::Visible
             } else {
                 Scope::Selection
@@ -102,6 +108,7 @@ impl State {
             status: None,
             written: None,
             wgs84: LAST_WGS84.with(|c| c.get()).unwrap_or(true),
+            sources,
         }
     }
 }
@@ -132,11 +139,66 @@ pub(super) fn bulged(e: &Entity) -> bool {
 }
 
 impl App {
+    /// The scope's objects: the drawing's and the data layers' rows (docs/adr/9338). Görünen katmanlar is what the map
+    /// draws: the visible layers' objects their filters let through.
+    fn geojson_objects<'a>(&'a self, s: &'a State, scope: Scope) -> Vec<&'a Entity> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let mut out: Vec<&Entity> = match scope {
+            Scope::Visible => doc
+                .model
+                .entities()
+                .filter(|e| {
+                    doc.model.layers().is_visible(&e.base().layer_id)
+                        && self.spatial.filter_shown(kentos_domain::Slot(e.base().id))
+                })
+                .collect(),
+            _ => self.scope_entities(scope),
+        };
+        out.extend(s.sources.rows(scope));
+        out
+    }
+
+    /// The scope's objects by layer, in the tree's order.
+    fn geojson_by_layer<'a>(&'a self, s: &'a State, scope: Scope) -> Vec<(String, Vec<&'a Entity>)> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        kentos_headless::export::by_layer(&doc.model, self.geojson_objects(s, scope))
+    }
+
     /// The objects that will be written: the scope's, less the layers left out.
-    fn geojson_chosen<'a>(&'a self, s: &State) -> Vec<(String, Vec<&'a Entity>)> {
-        let mut all = self.by_layer(s.scope);
+    fn geojson_chosen<'a>(&'a self, s: &'a State) -> Vec<(String, Vec<&'a Entity>)> {
+        let mut all = self.geojson_by_layer(s, s.scope);
         all.retain(|(id, _)| !s.excluded.contains(id));
         all
+    }
+
+    /// The data layers of the scope still read, by name, less the layers left out.
+    fn geojson_reading(&self, s: &State) -> Vec<String> {
+        s.sources
+            .reading(s.scope)
+            .into_iter()
+            .filter(|id| !s.excluded.contains(*id))
+            .map(|id| self.geojson_layer_name(id))
+            .collect()
+    }
+
+    /// Seçili's, Görünen katmanlar' and Tümü's counts, as the window shows them.
+    #[cfg(test)]
+    pub(super) fn geojson_scope_counts(&self) -> [usize; 3] {
+        match &self.exchange {
+            Some(Window::GeoJsonExport(s)) => Scope::ALL.map(|scope| self.geojson_objects(s, scope).len()),
+            _ => [0; 3],
+        }
+    }
+
+    fn geojson_layer_name(&self, id: &str) -> String {
+        self.document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(id))
+            .map_or_else(|| id.to_owned(), |l| l.name.clone())
     }
 
     pub(super) fn geojson_export_event(&mut self, e: Event) -> Task<Message> {
@@ -154,7 +216,7 @@ impl App {
         }
         let ids: Vec<String> = match &self.exchange {
             Some(Window::GeoJsonExport(s)) => self
-                .by_layer(s.scope)
+                .geojson_by_layer(s, s.scope)
                 .into_iter()
                 .map(|(id, _)| id)
                 .collect(),
@@ -201,7 +263,7 @@ impl App {
         let (Some(Window::GeoJsonExport(s)), Some(doc)) = (&self.exchange, &self.document) else {
             return Task::none();
         };
-        if s.writing {
+        if s.writing || !self.geojson_reading(s).is_empty() {
             return Task::none();
         }
         let chosen = self.geojson_chosen(s);
@@ -314,6 +376,20 @@ impl App {
                         skipped.join(" ")
                     ));
                 }
+                // A source that could not be read (docs/adr/9338): its layer is not in the file, said by name.
+                let failed: Vec<(String, String)> = match &self.exchange {
+                    Some(Window::GeoJsonExport(s)) => s
+                        .sources
+                        .failed(s.scope)
+                        .into_iter()
+                        .filter(|(id, _)| !s.excluded.contains(*id))
+                        .map(|(id, why)| (self.geojson_layer_name(id), why.to_owned()))
+                        .collect(),
+                    _ => Vec::new(),
+                };
+                for (layer, why) in failed {
+                    self.warn(format!("“{layer}” katmanı “{name}” içine yazılmadı: kaynağı okunamadı ({why})."));
+                }
                 self.close_exchange();
             }
         }
@@ -323,7 +399,7 @@ impl App {
     pub(super) fn geojson_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let counts: Vec<Counted> = Scope::ALL
             .iter()
-            .map(|scope| Counted(*scope, self.scope_entities(*scope).len()))
+            .map(|scope| Counted(*scope, self.geojson_objects(s, *scope).len()))
             .collect();
         let current = counts
             .iter()
@@ -334,9 +410,11 @@ impl App {
             counts.clone(),
             current,
             |c| event(Event::Scope(c.0)),
-            |c| c.1 > 0,
+            // A scope whose sources are still read is offered: its rows come.
+            |c| c.1 > 0 || !s.sources.reading(c.0).is_empty(),
         );
         let chosen = self.geojson_chosen(s);
+        let reading = self.geojson_reading(s);
         let writable = chosen
             .iter()
             .flat_map(|(_, list)| list.iter())
@@ -345,7 +423,7 @@ impl App {
             "Yazılacak nesneler",
             scope,
             Some(
-                "GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır."
+                "Seçili: çizimde ya da veri katmanının tablosunda seçilenler. Görünen katmanlar: haritanın çizdiği, görünür katmanlar süzgeçleriyle. Tümü: bütün katmanların bütün nesneleri ve kaynak satırları. GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır."
                     .to_owned(),
             ),
         ));
@@ -368,7 +446,7 @@ impl App {
             ));
         }
         // One layer's objects: one line, not a table of one row (GIS-011).
-        let layered = self.by_layer(s.scope);
+        let layered = self.geojson_by_layer(s, s.scope);
         if let ([(id, list)], Some(doc)) = (layered.as_slice(), &self.document) {
             let name = doc.model.layers().get(id).map_or("Katmansız".to_owned(), |l| l.name.clone());
             let system = if s.wgs84 && self.geojson_can_move() {
@@ -376,9 +454,10 @@ impl App {
             } else {
                 crate::crs::project_name(doc.settings())
             };
+            let from = if s.sources.is_source(id) { " · kaynaktan" } else { "" };
             body = body.push(words::field(
                 "Katman",
-                words::text_line(Line::Info, format!("{} nesne · {name} · {system}", list.len())),
+                words::text_line(Line::Info, format!("{} nesne · {name}{from} · {system}", list.len())),
                 None,
             ));
         } else {
@@ -398,7 +477,7 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "Dışa aktar…",
-                    (writable && !s.writing).then(|| event(Event::Run)),
+                    (writable && !s.writing && reading.is_empty()).then(|| event(Event::Run)),
                 ))
                 .width(820.0)
                 .max_height(780.0)
@@ -407,7 +486,7 @@ impl App {
     }
 
     fn geojson_export_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let all = self.by_layer(s.scope);
+        let all = self.geojson_by_layer(s, s.scope);
         let Some(doc) = self.document.as_ref().filter(|_| !all.is_empty()) else {
             return words::empty("Bu kapsamda nesne yok.");
         };
@@ -435,7 +514,13 @@ impl App {
                     .spacing(6)
                     .align_y(Center)
                     .into(),
-                    format!("kentos.layer: “{}”", l.name),
+                    match (s.sources.is_source(id), s.sources.filtered(id)) {
+                        (true, Some((kept, of))) if s.scope == Scope::Visible => {
+                            format!("kentos.layer: “{}” · kaynaktan, süzgeçten {kept}/{of}", l.name)
+                        }
+                        (true, _) => format!("kentos.layer: “{}” · kaynaktan", l.name),
+                        _ => format!("kentos.layer: “{}”", l.name),
+                    },
                 ),
                 None => (
                     label::body("Katmanı olmayan nesneler").into(),
@@ -519,6 +604,40 @@ impl App {
                 "Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON'a yazılmaz.",
             )
         }];
+        // The sources (docs/adr/9338): read ones counted, one still read said, one that cannot be read named.
+        let reading = self.geojson_reading(s);
+        if !reading.is_empty() {
+            lines.push(words::text_line(
+                Line::Info,
+                format!("Kaynaktan okunuyor: {}. Satırları okununca sayılır; Dışa aktar o zaman açılır.", reading.join(", ")),
+            ));
+        }
+        for (id, why) in s.sources.failed(s.scope) {
+            if !s.excluded.contains(id) {
+                lines.push(words::text_line(
+                    Line::Error,
+                    format!("“{}” katmanının kaynağı okunamadı: {why}. Bu katman yazılmaz; ötekiler yazılır.", self.geojson_layer_name(id)),
+                ));
+            }
+        }
+        // Points, paths and areas together: GeoJSON keeps each with its own geometry in one collection.
+        let families: BTreeSet<&str> = list
+            .iter()
+            .filter(|e| !UNWRITTEN.contains(&e.kind()))
+            .map(|e| match e.kind() {
+                "point" => "nokta",
+                "polygon" | "hatch" => "alan",
+                "insert" => "blok",
+                _ => "çizgi",
+            })
+            .collect();
+        if families.len() > 1 {
+            let named: Vec<&str> = families.iter().copied().collect();
+            lines.push(words::text_line(
+                Line::Ok,
+                format!("Karışık geometri ({}) tek dosyada yazılır: GeoJSON her nesneyi kendi geometri türüyle tutar. Tek türlü dosya isteyen bir biçim için katmanları ayrı yazın.", named.join(", ")),
+            ));
+        }
         let moving = s.wgs84 && self.geojson_can_move();
         lines.push(if moving {
             match self.wgs84_way(&list) {

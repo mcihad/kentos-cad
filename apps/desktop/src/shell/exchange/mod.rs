@@ -60,6 +60,10 @@ pub(crate) mod field_send;
 #[cfg(test)]
 mod field_send_tests;
 mod geojson_export;
+pub(crate) mod source_rows;
+#[cfg(test)]
+#[path = "source_export_tests.rs"]
+mod source_export_tests;
 mod gis_check;
 mod gis_export;
 #[cfg(test)]

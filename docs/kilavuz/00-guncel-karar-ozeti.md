@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **GeoJSON dışa aktar ve Paketle veri katmanlarının kaynak satırlarını kapsar (27 Kasım 2026, 27 Kasım CBS
+  incelemesinin 2. ve 5. maddeleri; [ADR 9338](../adr/9338-export-and-package-data-layer-rows.md)).**
+  - GeoJSON'un Seçili, Görünen katmanlar ve Tümü kapsamları veri katmanlarının satırlarını kaynaktan okuyup sayar;
+    Görünen katmanlar süzgeci uygular. Okunurken Dışa aktar bekler, okunamayan kaynak adıyla söylenir.
+  - Paketle veri katmanının GeoPackage'ını `veri/` altına kopyalar ya da bağlı bırakır, veritabanı tablosunu GeoPackage
+    olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
+    kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
+
 - **Karşılaştır üç görünümde kapanır, panel düğmeleri grubu söyler, simgeler satırda (27 Kasım 2026, CBS incelemesinin
   9. maddesi ve simge tabloları; [ADR 9337](../adr/9337-unavailable-actions-panel-names-and-icons.md)).**
   - Kaydırmalı karşılaştır üç ya da dört görünümde kapalıdır, ipucu nedenini söyler. Görünüm › Paneller'in düğmeleri

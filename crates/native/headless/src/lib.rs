@@ -66,6 +66,7 @@ pub mod sheet_preflight;
 mod delivery_integrity;
 /// The delivery package's open files and their losses (docs/adr/2780).
 pub mod package_exchange;
+mod package_data;
 mod package_resources;
 mod package_sources;
 use kentos_scene_query::query;
