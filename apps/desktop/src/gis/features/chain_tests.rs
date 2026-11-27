@@ -92,7 +92,7 @@ fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
     let (found, said) = crate::data_info::ask(&[n.clone()], &settings, kentos_interaction::Vec2::new(c.x, c.y), 0.5);
     assert!(said.is_empty(), "{said:?}");
     let asked = app.gis.data_info.asked;
-    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, found.map(Box::new), Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, found.into_iter().collect(), Vec::new(), Vec::new(), false));
     let (card, _, _) = app.data_card().expect("its card");
     assert!(card.source.as_ref().is_some_and(|(l, _)| l.ends_with("› bakim · fid 4")), "{:?}", card.source);
     let cell = |name: &str| card.rows.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());

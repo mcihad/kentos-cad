@@ -136,3 +136,38 @@ fn screens() {
     crate::files_testing::usage_shots("9186", "1-veri-katmani-ornek", prepared(false));
     crate::files_testing::usage_shots("9186", "2-bicim", prepared(true));
 }
+
+/// The label tools on a data layer's label (docs/adr/9341; the CBS review of 27 November 2026, item 10): the label is
+/// found under the click, and the tool's “click a label” is followed by why a data layer's label is not taken alone and
+/// what to use.
+#[test]
+fn a_label_tools_click_on_a_data_label_says_why_and_what_to_use() {
+    let (mut app, id) = bound("etiket-arac");
+    let task = app.open_labelling(Some(id.clone()));
+    drive(&mut app, task);
+    send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
+    send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
+    let rows = match &app.gis.labelling.as_ref().expect("the window").rows {
+        Some(Ok(doc)) => (**doc).clone(),
+        other => panic!("the rows: {other:?}"),
+    };
+    send(&mut app, Event::Save);
+    app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+    // A parcel's middle, where its label lies.
+    let at = *app.gis.data_labels[0].row_points().first().expect("a parcel");
+    let name = app.document.as_ref().and_then(|d| d.model.layers().get(&id).map(|n| n.name.clone())).expect("the layer");
+    assert_eq!(app.data_label_under(at, app.draft.pick_aperture), Some(name.clone()));
+    for tool in ["tool.labelMove", "tool.labelPin", "tool.labelHide"] {
+        let task = app.update(Message::Run(tool));
+        drive(&mut app, task);
+        let [sx, sy] = app.viewport.camera.world_to_screen(at);
+        let p = iced::Point::new(sx as f32, sy as f32);
+        for ev in [crate::viewport::Event::Moved(p), crate::viewport::Event::Pressed(p), crate::viewport::Event::Released(p)] {
+            let task = app.update(Message::Viewport(ev));
+            drive(&mut app, task);
+        }
+        let said = crate::files_testing::last_said(&app);
+        assert_eq!(said, App::data_label_words(&name), "{tool}");
+        assert!(said.contains("Etiketler › Yerleşim"), "{said}");
+    }
+}

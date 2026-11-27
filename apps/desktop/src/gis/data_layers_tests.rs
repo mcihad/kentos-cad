@@ -232,7 +232,7 @@ fn bilgi_on_no_object_asks_the_data_layers_and_shows_the_row_read_from_its_table
     assert!(said.is_empty(), "{said:?}");
     let found = found.expect("a row under the point");
     assert_eq!(found.key, 22);
-    let _ = app.data_info_event(crate::data_info::Event::Answered(1, Some(Box::new(found)), Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(1, vec![found], Vec::new(), Vec::new(), false));
     // The card: the layer's name, the columns in the table's order, where the row is.
     let (card, _, _) = app.data_card().expect("the row's card");
     assert_eq!(card.title, "parseller");
@@ -249,7 +249,7 @@ fn bilgi_on_no_object_asks_the_data_layers_and_shows_the_row_read_from_its_table
     );
     assert!(app.info_card_view().is_some(), "the card is drawn beside the click");
     // An answer to an earlier click is stale.
-    let _ = app.data_info_event(crate::data_info::Event::Answered(0, None, Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(0, Vec::new(), Vec::new(), Vec::new(), false));
     assert!(app.data_card().is_some());
     // Between two parcels: no row.
     let gap = parcel_point(27.5, 12.0);

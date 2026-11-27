@@ -27,6 +27,18 @@ impl DataLabels {
         &mut self.doc
     }
 
+    /// A point on each of its rows' objects (the label tools' tests): a label lies on or by its row.
+    #[cfg(test)]
+    pub(crate) fn row_points(&self) -> Vec<kentos_interaction::Vec2> {
+        self.doc
+            .entities()
+            .filter_map(|e| {
+                let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
+                b.min_x.is_finite().then(|| kentos_interaction::Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0))
+            })
+            .collect()
+    }
+
     /// A layer's labels on `doc`, as a read of the view would hold them (the tests of Denetle on a data layer).
     #[cfg(test)]
     pub(crate) fn of(layer: &str, doc: kentos_domain::Document) -> Self {
@@ -104,6 +116,26 @@ impl App {
             .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
             .map(|d| d.spots.glyphs().clone())
             .collect()
+    }
+
+    /// The labelled data layer whose label or row lies under `at`, by name (docs/adr/9341): what the label tools found
+    /// no drawing label for. A data layer's labels are placed from its source's rows; none is pinned, turned or hidden
+    /// alone. Its placed label is looked for first, then the row the label is of (a label lies on or by its row).
+    pub(crate) fn data_label_under(&self, at: kentos_interaction::Vec2, tol: f64) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        self.gis
+            .data_labels
+            .iter()
+            .filter(|d| d.labelled)
+            .find(|d| d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some())
+            .and_then(|d| doc.model.layers().get(&d.layer).map(|n| n.name.clone()))
+    }
+
+    /// Why a label tool takes no data layer's label, and what to use instead (docs/adr/9341).
+    pub(crate) fn data_label_words(layer: &str) -> String {
+        format!(
+            "Tıklanan etiket “{layer}” veri katmanının. Veri katmanının etiketleri kaynağın satırlarından yerleştirilir: tek tek taşınmaz, döndürülmez, sabitlenmez ve gizlenmez; yerleri kaynağa yazılmaz. Yerleri için katmanın Etiketler › Yerleşim ayarlarını, bir satırın etiketini göstermemek için etiket kuralının koşulunu kullanın."
+        )
     }
 
     /// The snap to the rows of the data layers being edited under the cursor (docs/adr/9103 §5): their drawn read's

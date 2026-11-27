@@ -50,15 +50,19 @@ fn data_layers_are_listed_with_their_tables_counted_by_their_sources() {
 fn the_inspector_says_the_data_layers_apart_from_the_drawings_objects() {
     let (app, _, _) = with_two_parcels("denetci");
     let doc = app.document.as_ref().expect("a drawing");
-    let row = app
+    let rows: Vec<(String, String)> = app
         .properties_panel(doc)
         .sections
         .into_iter()
         .filter(|s| s.title == "Çizim")
         .flat_map(|s| s.rows)
-        .find(|r| r.label == "Veri katmanları")
-        .expect("the row");
-    assert!(row.value.starts_with("2 katman; satırları kaynaklarında"), "{}", row.value);
+        .map(|r| (r.label.to_string(), r.value))
+        .collect();
+    let value = |l: &str| rows.iter().find(|(k, _)| k == l).map(|(_, v)| v.clone());
+    // The drawing's own objects and the sources' rows apart, the rows never 0 before they are counted (docs/adr/9340).
+    assert_eq!(value("Veri katmanları").as_deref(), Some("2 katman"), "{rows:?}");
+    assert!(value("Çizimdeki nesne").is_some() && value("Nesne sayısı").is_none(), "{rows:?}");
+    assert!(value("Kaynaktaki satır").is_some_and(|v| v != "0"), "{rows:?}");
 }
 
 #[test]

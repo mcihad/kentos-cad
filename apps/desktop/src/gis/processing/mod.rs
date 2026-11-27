@@ -28,6 +28,9 @@ mod apart_tests;
 pub(crate) mod background;
 pub(crate) mod batch;
 pub(crate) mod data_location;
+#[cfg(test)]
+#[path = "recall_tests.rs"]
+mod recall_tests;
 pub(crate) mod data_select;
 pub(crate) mod designer;
 pub mod dialog;

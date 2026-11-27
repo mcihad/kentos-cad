@@ -7,6 +7,11 @@
 //! on nothing do. The card's body is the Bilgi kartı window's preview too.
 //! A data layer's row (data_info.rs, docs/adr/9101 §6) has the same card:
 //! its columns as read from the source, its layer's actions, no attachments.
+//! Both offer their record's own actions (docs/adr/9341): Seç (the object to
+//! the drawing's selection, the row to its table's), Tabloda aç (the table on
+//! its layer with it chosen and shown) and Formu göster (its layer's form for
+//! reading, off with why when the layer has none). Bilgi itself never changes
+//! the selection.
 
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, Row, button, column, container, row};
@@ -43,6 +48,10 @@ pub enum Event {
     Raster(bool),
     /// Sonraki: the next of the objects and the data layers' rows under the click (docs/adr/9145, 9167).
     Next,
+    /// Seç, Tabloda aç, Formu göster: the card's record chosen, shown in its table, its form opened (docs/adr/9341).
+    Choose,
+    Table,
+    Form,
 }
 
 /// The words of the hits under a click: how many, and which is shown.
@@ -55,6 +64,9 @@ pub(crate) fn hits_words(shown: usize, count: usize) -> String {
 pub(crate) fn place_words(shown: usize, objects: usize, rows: usize) -> String {
     if rows == 0 {
         return hits_words(shown, objects);
+    }
+    if objects == 0 {
+        return format!("Bu noktada {rows} veri satırı · {shown}/{rows}");
     }
     format!("Bu noktada {objects} nesne, {rows} veri satırı · {shown}/{}", objects + rows)
 }
@@ -183,6 +195,27 @@ pub(crate) fn card_body<'a>(
             body = body.push(label::caption(format!("{attachment_count} ek")));
         }
         _ => {}
+    }
+    // The record's own actions (docs/adr/9341): not the preview's.
+    if !shown_preview && let Some(layer) = app.info_card_layer() {
+        let small = |words: &'static str, on: Option<Message>| {
+            button(label::caption(words))
+                .on_press_maybe(on)
+                .padding(kentos_ui::theme::metrics::action_small())
+                .style(style::button::secondary)
+        };
+        let form: Element<'a, Message> = if app.form_of_layer(&layer).is_some() {
+            small("Formu göster", Some(msg(Event::Form))).into()
+        } else {
+            kentos_ui::widget::tip(
+                small("Formu göster", None),
+                kentos_ui::widget::Tip::new("Katmanın formu yok").body("Veri › Formlar'da bu katman için bir form yapın."),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        body = body.push(
+            row![small("Seç", Some(msg(Event::Choose))), small("Tabloda aç", Some(msg(Event::Table))), form].spacing(6),
+        );
     }
     // The window's preview: each action's name and its target filled for the object, as text.
     if card.actions && !actions.is_empty() && shown_preview {
@@ -333,7 +366,63 @@ impl App {
         .into()
     }
 
+    /// The layer of the card's record: the object's, or the row's.
+    pub(crate) fn info_card_layer(&self) -> Option<String> {
+        match (self.info_card, &self.gis.data_info.card) {
+            (Some((slot, _)), _) => self.document.as_ref()?.model.get(slot).map(|e| e.base().layer_id.clone()),
+            (None, Some(f)) => Some(f.layer.clone()),
+            (None, None) => None,
+        }
+    }
+
+    /// Seç, Tabloda aç and Formu göster on the card's record (docs/adr/9341).
+    fn info_card_record(&mut self, e: &Event) -> iced::Task<Message> {
+        let Some(layer) = self.info_card_layer() else {
+            return iced::Task::none();
+        };
+        match (self.info_card, self.gis.data_info.card.as_ref().map(|f| f.key)) {
+            (Some((slot, _)), _) => {
+                self.selection.set([slot]);
+                match e {
+                    Event::Table => {
+                        // The drawing's table shows the chosen object where it is.
+                        self.open_feature_table();
+                        let _ = self.features_event(crate::features::Event::Layer(layer));
+                    }
+                    Event::Form => return self.run("data.formOpen"),
+                    _ => {}
+                }
+            }
+            (None, Some(key)) => {
+                self.gis.features.data.choose_rows(&layer, [key].into());
+                match e {
+                    Event::Form => return self.open_form_on_row_as(layer, key, true),
+                    Event::Table => {
+                        // A source's table is read a page at a time: its chosen row shown first by showing the chosen.
+                        self.open_feature_table();
+                        let _ = self.features_event(crate::features::Event::Layer(layer));
+                        let _ = self.features_event(crate::features::Event::Show(crate::features::Show::Selected));
+                        self.say(
+                            kentos_interaction::Level::Info,
+                            "Tablo seçili satırı gösteriyor; bütün satırlar için Göster › Tümü.",
+                        );
+                    }
+                    _ => {
+                        // The row chosen in its table: the table comes to its layer, the map outlines it.
+                        self.open_feature_table();
+                        let _ = self.features_event(crate::features::Event::Layer(layer));
+                    }
+                }
+            }
+            (None, None) => {}
+        }
+        iced::Task::none()
+    }
+
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
+        if matches!(e, Event::Choose | Event::Table | Event::Form) {
+            return self.info_card_record(&e);
+        }
         match e {
             Event::Raster(to) => self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty(),
             Event::Next => {
@@ -389,6 +478,7 @@ impl App {
                     self.run_action(&a);
                 }
             }
+            Event::Choose | Event::Table | Event::Form => {}
             Event::Copy(text) => {
                 self.say(
                     kentos_interaction::Level::Info,

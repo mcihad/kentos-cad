@@ -168,7 +168,12 @@ impl App {
                 rows[i].label = "Çizimdeki nesne".into();
             }
             let at = at.map_or(rows.len(), |i| i + 1);
-            rows.insert(at, rows::Row::figure("Kaynaktaki satır", total));
+            // A figure once counted; the words while counting are not figures.
+            let counted = total.chars().next().is_some_and(|c| c.is_ascii_digit());
+            rows.insert(
+                at,
+                if counted { rows::Row::figure("Kaynaktaki satır", total) } else { rows::Row::text("Kaynaktaki satır", total) },
+            );
             rows.insert(at + 1, rows::Row::text("Veri katmanları", layers));
             for (i, (name, said)) in each.into_iter().enumerate() {
                 rows.insert(at + 2 + i, rows::Row::text(format!("  {name}"), said));

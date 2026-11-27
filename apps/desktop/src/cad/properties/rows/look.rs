@@ -251,7 +251,8 @@ pub(super) fn layer_editor(doc: &Document, ids: &[Slot], current: Option<&str>) 
     let layers = doc.model.layers();
     let shown = current.and_then(|id| layers.get(id));
     Editor::Select {
-        text: shown.map_or_else(|| "Çeşitli".to_owned(), |n| n.name.clone()),
+        // Its group path (“Senaryo 1 / qa_yollar”), as the table and the menu's items say it (docs/adr/9341).
+        text: shown.map_or_else(|| "Çeşitli".to_owned(), |n| layer_path(layers, &n.id)),
         swatch: shown.map(|n| n.style.color.clone()),
         icon: None,
         items: layers

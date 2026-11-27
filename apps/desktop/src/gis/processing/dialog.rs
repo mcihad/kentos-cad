@@ -214,6 +214,9 @@ pub struct ToolDialog {
     run_issues: Vec<Issue>,
     /// What each features parameter resolves to now.
     pub(super) inputs: BTreeMap<String, InputSummary>,
+    /// An expression the last run used, not written into its field again (docs/adr/9341): another layer's fields may
+    /// not be there. The field offers it as Son ifade.
+    pub(super) recalled: BTreeMap<String, String>,
     /// Each expression parameter's line (“16 / 340 nesne koşulu sağlıyor.”).
     pub(super) previews: BTreeMap<String, String>,
     /// Each chosen output file that is there, with the drawing's objects linked to it (overwrite.rs, GIS-035).
@@ -225,8 +228,24 @@ impl ToolDialog {
     /// opens when values given on purpose (history's Yeniden aç) differ
     /// there from the defaults.
     pub fn new(tool: Tool, stored: Option<&Values>, explicit: bool, defaults: &Defaults) -> Self {
-        let values = restore_values(&tool, stored, defaults);
+        let mut values = restore_values(&tool, stored, defaults);
         let base = default_values(&tool, defaults);
+        // The last expressions are not written in again (the CBS review of 27 November, 7th item): each field starts
+        // from the tool's own and offers the last one as Son ifade. Values given on purpose stay.
+        let mut recalled = BTreeMap::new();
+        if !explicit {
+            for p in tool.parameters.iter().filter(|p| matches!(p.kind, ParamKind::Expression { .. })) {
+                let last = values.get(&p.name).and_then(Value::as_str).map(str::trim).filter(|t| !t.is_empty());
+                let own = base.get(&p.name);
+                if let Some(last) = last.filter(|l| own.and_then(Value::as_str) != Some(*l)).map(str::to_owned) {
+                    recalled.insert(p.name.clone(), last);
+                    match own {
+                        Some(v) => values.insert(p.name.clone(), v.clone()),
+                        None => values.remove(&p.name),
+                    };
+                }
+            }
+        }
         let advanced_open = explicit
             && tool.parameters.iter().any(|p| {
                 p.advanced
@@ -264,6 +283,7 @@ impl ToolDialog {
             issues: Vec::new(),
             run_issues: Vec::new(),
             inputs: BTreeMap::new(),
+            recalled,
             previews: BTreeMap::new(),
             overwrites: BTreeMap::new(),
         }

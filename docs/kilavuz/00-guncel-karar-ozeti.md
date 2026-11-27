@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Bilgi kartı kaydını seçer, tabloda ve formda açar; son ifade yazılmaz, sunulur; etiket araçları veri katmanının
+  etiketini söyler (27 Kasım 2026, 27 Kasım CBS incelemesinin 6., 7. ve 10. maddeleri;
+  [ADR 9341](../adr/9341-info-card-actions-last-expression-and-data-labels.md)).**
+  - Bilgi kartında Seç, Tabloda aç ve Formu göster vardır. Bir noktadaki bütün veri satırları sabit sırada aday olur;
+    Bilgi seçimi kendiliğinden değiştirmez.
+  - İfade alanına son ifade yazılmaz, “Son ifade” olarak sunulur. Tümü ve Görünen'in anlamı yazılır. Denetçi katmanı
+    grup yoluyla söyler; Tümünü seç projedeki ve seçilen sayıyı ayırır.
+  - Etiket araçları veri katmanının etiketinde nedenini ve yolunu söyler; satır etiketi iğnesi açıktır.
+
 - **Konuma göre seç veri katmanlarını girdi alır; Denetçi çizim nesnelerini ve kaynak satırlarını ayrı sayar (27 Kasım
   2026, 27 Kasım CBS incelemesinin 11. ve 12. maddeleri;
   [ADR 9340](../adr/9340-data-layers-in-select-by-location-and-the-inspector.md)).**

@@ -427,8 +427,18 @@ impl App {
                 change => self.navigating(|app| app.viewport.change(change)),
             }
         }
+        // A label tool's click found no drawing label: a data layer's there is said, with what to use (docs/adr/9341).
+        use kentos_interaction::label_tools::{HIDE_ID, MOVE_ID, PIN_ID, ROTATE_ID};
+        let missed = [MOVE_ID, ROTATE_ID, PIN_ID, HIDE_ID].contains(&tool)
+            && log.iter().any(|l| l.level == kentos_interaction::Level::Warn && l.text.contains("etikete tıklayın"));
         for line in log {
             self.say(line.level, line.text);
+        }
+        if missed
+            && let Some(at) = self.viewport.cursor
+            && let Some(layer) = self.data_label_under(at, self.draft.pick_aperture)
+        {
+            self.say(kentos_interaction::Level::Warn, App::data_label_words(&layer));
         }
         Some(out)
     }

@@ -32,7 +32,16 @@ impl App {
         self.selection.set(found.slots);
         self.say_filtered(found.left_out.kinds as usize);
         self.say_layers_left(found.left_out.layers as usize);
-        self.output(format!("{n} nesne seçildi."));
+        // The selected and the project's own apart (docs/adr/9341): what was not taken is said with its reasons.
+        let total = self.document.as_ref().map_or(n, |d| d.model.len());
+        if total > n {
+            self.output(format!(
+                "{n} nesne seçildi: görünen ve seçilebilir katmanların nesneleri. Projedeki {total} nesneden {} tanesi seçilmedi: gizli, donmuş ya da seçilemez katmanda ya da seçim süzgecinin dışında.",
+                total - n
+            ));
+        } else {
+            self.output(format!("{n} nesne seçildi."));
+        }
     }
 
     /// What Otomatik seçim, off, left out of a selection: the other layers' objects (docs/adr/0622 §5).

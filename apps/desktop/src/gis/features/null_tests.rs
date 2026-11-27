@@ -111,7 +111,7 @@ fn a_never_written_value_an_empty_text_and_a_code_are_told_apart_on_a_data_layer
     };
     let found = card_rows(&app);
     let asked = app.gis.data_info.asked;
-    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, Some(Box::new(found)), Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, vec![found], Vec::new(), Vec::new(), false));
     let (card, _, _) = app.data_card().expect("its card");
     let cell = |name: &str| card.rows.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
     assert_eq!(
@@ -164,7 +164,7 @@ fn a_data_layers_table_and_card_leave_out_what_the_role_does_not_read() {
     let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
     let (found, _) = crate::data_info::ask(&[layer.clone()], &settings, kentos_interaction::Vec2::new(486_500.0, 4_420_200.0), 0.5);
     let asked = app.gis.data_info.asked;
-    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, found.map(Box::new), Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, found.into_iter().collect(), Vec::new(), Vec::new(), false));
     let (card, _, _) = app.data_card().expect("its card");
     assert!(!card.rows.iter().any(|(k, _)| k == "aciklama" || k == "sayi"), "{:?}", card.rows);
     assert!(card.rows.iter().any(|(k, v)| k == "Rolünüz okumuyor" && v == "aciklama, sayi"), "{:?}", card.rows);

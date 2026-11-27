@@ -2,7 +2,8 @@
 //! shown data layers' tables, the top one first, for the row under the point. The first row found opens the card with
 //! every column read from the source, through the layer's card template, and Bilgi rings it. The tables are asked off
 //! the interface's thread: a database may take a moment to answer. A click asked again before the answer came makes
-//! the earlier answer stale. The shown rasters under the point are asked with them (rasters/cell_info.rs,
+//! the earlier answer stale. Every row under the click is a candidate (docs/adr/9341): the layers top first, in a
+//! table the nearest edge first, then the smallest area, equals by their key; the card goes on to them with Sonraki. The shown rasters under the point are asked with them (rasters/cell_info.rs,
 //! docs/adr/9137): with no row their first cell is the card, beside a row or an object the card offers it.
 
 use std::collections::HashMap;
@@ -57,9 +58,9 @@ pub struct State {
 /// What the tables said.
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// The answer to an ask: the row found, if any, the tables that could not be asked, the rasters' cells under the
-    /// point and whether a shown raster was there at all.
-    Answered(u64, Option<Box<Found>>, Vec<String>, Vec<crate::rasters::cell_info::Cell>, bool),
+    /// The answer to an ask: the rows found under the point (the first is the card's), the tables that could not be
+    /// asked, the rasters' cells under the point and whether a shown raster was there at all.
+    Answered(u64, Vec<Found>, Vec<String>, Vec<crate::rasters::cell_info::Cell>, bool),
     /// What lies beside a click on an object (docs/adr/9137, 9167): the rasters' cells under it, the shown data layers'
     /// rows under it and the tables that could not be asked.
     Beside(u64, Vec<crate::rasters::cell_info::Cell>, Vec<Found>, Vec<String>),
@@ -69,19 +70,20 @@ fn message(event: Event) -> Message {
     Message::Gis(crate::gis::Event::DataInfo(event))
 }
 
-/// The row of `node`'s table under `at` within `reach` (the project's units): the nearest edge, else the smallest area
-/// holding the point, as a click on the drawing's objects picks. None for a table without geometry.
-pub fn row_at(
+/// The rows of `node`'s table under `at` within `reach` (the project's units), as a click on the drawing's objects
+/// orders them: the nearest edge first, then the smallest area holding the point; equals by their key. None for a
+/// table without geometry.
+pub fn rows_at(
     node: &LayerNode,
     settings: &ProjectSettings,
     at: Vec2,
     reach: f64,
-) -> Result<Option<(i64, Entity)>, String> {
+) -> Result<Vec<(i64, Entity)>, String> {
     let Some(data) = node.data.as_ref() else {
-        return Ok(None);
+        return Ok(Vec::new());
     };
     let Some(geometry) = data.geometry.as_ref() else {
-        return Ok(None);
+        return Ok(Vec::new());
     };
     let source = kentos_data::registry()
         .source(&data.address)
@@ -105,8 +107,7 @@ pub fn row_at(
         chunk: ROWS as usize,
         ..Request::default()
     };
-    let mut objects: HashMap<u32, (i64, Entity)> = HashMap::new();
-    let mut next = 1u32;
+    let mut read: Vec<(i64, Entity)> = Vec::new();
     source
         .features(&data.table, &request, &Cancel::new(), &mut |part| {
             for f in part {
@@ -125,18 +126,23 @@ pub fn row_at(
                     .zip(&f.values)
                     .filter_map(|(c, v)| crate::data_view::attribute(v).map(|a| (c.clone(), a)))
                     .collect();
-                if let Some(e) =
-                    kentos_native_application::geopackage::object_of(&g, &node.id, next, attrs)
-                {
-                    objects.insert(next, (f.fid, e));
-                    next += 1;
+                if let Some(e) = kentos_native_application::geopackage::object_of(&g, &node.id, 0, attrs) {
+                    read.push((f.fid, e));
                 }
             }
             true
         })
         .map_err(|e| e.to_string())?;
+    // By key, so that equals keep one order whatever order the source answered in.
+    read.sort_by_key(|(k, _)| *k);
+    let mut objects: HashMap<u32, (i64, Entity)> = HashMap::new();
+    for (i, (key, mut e)) in read.into_iter().enumerate() {
+        let id = u32::try_from(i + 1).unwrap_or(u32::MAX);
+        e.base_mut().id = id;
+        objects.insert(id, (key, e));
+    }
     if objects.is_empty() {
-        return Ok(None);
+        return Ok(Vec::new());
     }
     let mut store = Store::new();
     store.put_many(objects.values().map(|(_, e)| {
@@ -147,46 +153,41 @@ pub fn row_at(
             kentos_processing::geometry::record(e).3,
         )
     }));
-    let hit = store.hit(kentos_geometry_core::Vec2::new(at.x, at.y), reach);
-    Ok(hit.and_then(|id| objects.remove(&(id as u32))))
+    let p = kentos_geometry_core::Vec2::new(at.x, at.y);
+    // Edges by their distance to the click (to a micrometre), equals by their key; then the areas holding it, as the
+    // store orders them. One order at every click, whatever way the store's tree is walked.
+    let edges: HashMap<u32, f64> = store.hit_edge(p, reach).into_iter().map(|(id, d)| (id as u32, d)).collect();
+    let mut hits: Vec<u32> = store.hits(p, reach).into_iter().map(|id| id as u32).collect();
+    let key = |id: &u32| objects.get(id).map_or(i64::MAX, |(k, _)| *k);
+    hits.sort_by(|a, b| match (edges.get(a), edges.get(b)) {
+        (Some(x), Some(y)) => ((x * 1e6).round() as i64).cmp(&((y * 1e6).round() as i64)).then(key(a).cmp(&key(b))),
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+    });
+    Ok(hits.into_iter().filter_map(|id| objects.remove(&id)).collect())
 }
 
-/// The first row found under `at` among `nodes` (the shown data layers, the top one first); a table that could not be
-/// asked is said and the next one asked.
-pub fn ask(
-    nodes: &[LayerNode],
-    settings: &ProjectSettings,
-    at: Vec2,
-    reach: f64,
-) -> (Option<Found>, Vec<String>) {
-    let mut said = Vec::new();
-    for node in nodes {
-        match row_at(node, settings, at, reach) {
-            Ok(Some((key, object))) => {
-                let found = Found {
-                    layer: node.id.clone(),
-                    key,
-                    object,
-                    at,
-                };
-                return (Some(found), said);
-            }
-            Ok(None) => {}
-            Err(why) => said.push(format!("“{}” sorulamadı: {why}", node.name)),
-        }
-    }
-    (None, said)
+/// The row of `node`'s table a click under `at` means: the first of [`rows_at`].
+pub fn row_at(node: &LayerNode, settings: &ProjectSettings, at: Vec2, reach: f64) -> Result<Option<(i64, Entity)>, String> {
+    Ok(rows_at(node, settings, at, reach)?.into_iter().next())
 }
 
-/// The row under `at` of each of `nodes` (the shown data layers, the top one first), counted with the objects under a
-/// click (docs/adr/9167); a table that could not be asked is said and the next one asked.
+/// The first row found under `at` among `nodes` (the shown data layers, the top one first).
+pub fn ask(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Option<Found>, Vec<String>) {
+    let (rows, said) = ask_all(nodes, settings, at, reach);
+    (rows.into_iter().next(), said)
+}
+
+/// The rows under `at` of `nodes` (the shown data layers, the top one first), each table's in a click's order: counted
+/// with the objects under a click (docs/adr/9167), or the candidates of a click on no object (docs/adr/9341); a table
+/// that could not be asked is said and the next one asked.
 pub fn ask_all(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Vec<Found>, Vec<String>) {
     let mut rows = Vec::new();
     let mut said = Vec::new();
     for node in nodes {
-        match row_at(node, settings, at, reach) {
-            Ok(Some((key, object))) => rows.push(Found { layer: node.id.clone(), key, object, at }),
-            Ok(None) => {}
+        match rows_at(node, settings, at, reach) {
+            Ok(found) => rows.extend(found.into_iter().map(|(key, object)| Found { layer: node.id.clone(), key, object, at })),
             Err(why) => said.push(format!("“{}” sorulamadı: {why}", node.name)),
         }
     }
@@ -258,10 +259,10 @@ impl App {
         let settings = doc.model.settings().clone();
         let task = crate::db_connections::off_thread(
             move || {
-                let (found, said) = ask(&nodes, &settings, at, reach);
+                let (found, said) = ask_all(&nodes, &settings, at, reach);
                 (found, said, crate::rasters::cell_info::read(rasters, at))
             },
-            move |(found, said, cells)| message(Event::Answered(asked, found.map(Box::new), said, cells, any_raster)),
+            move |(found, said, cells)| message(Event::Answered(asked, found, said, cells, any_raster)),
         );
         self.tool_reply(task)
     }
@@ -275,14 +276,18 @@ impl App {
                 for why in said {
                     self.warn(why);
                 }
-                let object = found.as_ref().map(|f| f.object.clone());
+                let first = found.first().cloned();
+                let object = first.as_ref().map(|f| f.object.clone());
                 // No row: the first raster's cell is the card; a click outside every shown raster is said.
-                self.gis.data_info.showing_raster = found.is_none() && !cells.is_empty();
-                if found.is_none() && cells.is_empty() && any_raster {
+                self.gis.data_info.showing_raster = first.is_none() && !cells.is_empty();
+                if first.is_none() && cells.is_empty() && any_raster {
                     self.say(kentos_interaction::Level::Info, "Tıklanan nokta gösterilen rasterlerin kapsamı dışında.");
                 }
                 self.gis.data_info.cells = cells;
-                self.gis.data_info.card = found.map(|f| *f);
+                // Every row under the click: Sonraki goes on to the next, round to the first (docs/adr/9341).
+                self.gis.data_info.hits.clear();
+                self.gis.data_info.rows = found;
+                self.gis.data_info.card = first;
                 self.with_tool(|s, cx| s.data_found(object.as_ref(), cx));
             }
             Event::Beside(asked, cells, rows, said) => {
@@ -355,3 +360,7 @@ impl App {
         Some((card, actions, found.at))
     }
 }
+
+#[cfg(test)]
+#[path = "data_info_card_tests.rs"]
+mod data_info_card_tests;

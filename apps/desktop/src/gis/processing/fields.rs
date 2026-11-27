@@ -203,6 +203,15 @@ fn features<'a>(
         ));
     }
     parts = parts.push(scope_row);
+    // Tümü and Görünen read alike: what each takes is said (docs/adr/9341).
+    let meaning = match chosen {
+        ScopeKind::All => Some("Görünen katmanların bütün nesneleri; ekranın dışında kalanlar da."),
+        ScopeKind::Visible => Some("Yalnız ekranda görünen alandaki nesneler; gizli katmanlarınki alınmaz."),
+        _ => None,
+    };
+    if let Some(meaning) = meaning {
+        parts = parts.push(label::caption(meaning).style(style::text::muted));
+    }
     if let Scope::Layer(id) = &value.scope {
         let leaves = env.doc.layers().leaves();
         let ids: Vec<String> = leaves.iter().map(|l| l.id.clone()).collect();
@@ -1149,6 +1158,17 @@ fn expression<'a>(
     .spacing(8)
     .align_y(Alignment::Start);
     let mut out = column![line, bar].spacing(8).width(Fill);
+    // The last run's expression, offered, not written in (docs/adr/9341).
+    if let Some(last) = env.window.recalled.get(&def.name).filter(|l| l.as_str() != value) {
+        let name = def.name.clone();
+        let text = last.clone();
+        out = out.push(
+            button(label::caption(format!("Son ifade: {last}")).font(typography::mono()))
+                .padding(kentos_ui::theme::metrics::action_small())
+                .style(style::button::secondary)
+                .on_press(ev(Event::Text(name, text))),
+        );
+    }
     // The live line, hidden while the field shows a problem (the web's).
     if let (Some(text), false) = (env.window.previews.get(&def.name), invalid) {
         let note = text.contains(" yok.") || text.contains(" boş.");
