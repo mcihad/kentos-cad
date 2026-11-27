@@ -182,3 +182,47 @@ pub fn datum_from_corners(doc: &Document) -> Option<f64> {
     let heights = heights?;
     (!heights.is_empty()).then(|| heights.iter().sum::<f64>() / heights.len() as f64)
 }
+
+/// The site's natural and graded ground made now, either absent (not set, or its points make none).
+#[derive(Clone, Debug, Default)]
+pub struct SiteSurfaces {
+    natural: Option<Surface>,
+    graded: Option<Surface>,
+}
+
+impl SiteSurfaces {
+    /// Whether neither ground is made.
+    pub fn is_empty(&self) -> bool {
+        self.natural.is_none() && self.graded.is_none()
+    }
+
+    /// The natural and the graded ground's heights at (x, y), absolute; none off a ground.
+    pub fn heights(&self, x: f64, y: f64) -> (Option<f64>, Option<f64>) {
+        let at = |s: &Option<Surface>| s.as_ref().and_then(|s| s.height(x, y).z);
+        (at(&self.natural), at(&self.graded))
+    }
+}
+
+/// The site's grounds made now.
+pub fn surfaces(doc: &Document) -> SiteSurfaces {
+    let Some(site) = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()) else {
+        return SiteSurfaces::default();
+    };
+    SiteSurfaces {
+        natural: site.natural_ground.as_ref().and_then(|g| made_of(doc, g, false)),
+        graded: site.graded_ground.as_ref().and_then(|g| made_of(doc, g, true)),
+    }
+}
+
+/// A ground level mark's lines (EK-4 4.30, Şekil 4.6: "tzk 849.85 (-5.65)" over "tsk 850.10 (-4.40)"): the natural
+/// ground's height at a place (tzk) and the graded ground's (tsk), each absolute and, with ±0.00's elevation, in
+/// brackets its difference from it, as the drawing writes levels (a point, two decimals). A ground not there gives
+/// no line.
+pub fn level_lines(natural: Option<f64>, graded: Option<f64>, datum: Option<f64>) -> Vec<String> {
+    let line = |word: &str, z: f64| match datum {
+        Some(d) if (z - d).abs() < 0.005 => format!("{word} {z:.2} (±0.00)"),
+        Some(d) => format!("{word} {z:.2} ({:+.2})", z - d),
+        None => format!("{word} {z:.2}"),
+    };
+    natural.map(|z| line("tzk", z)).into_iter().chain(graded.map(|z| line("tsk", z))).collect()
+}

@@ -481,6 +481,7 @@
         "tool.grid",
         "tool.gridNumber",
         "tool.gridSystem",
+        "tool.groundLevel",
         "tool.hatch",
         "tool.hatchEdit",
         "tool.hatchSelected",

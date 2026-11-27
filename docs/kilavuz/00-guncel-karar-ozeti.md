@@ -75,7 +75,7 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
-- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12 1. ve 3. bölüm; [ADR 8174](../adr/8174-site-ground.md)).**
+- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12; [ADR 8174](../adr/8174-site-ground.md)).**
   - `SitePlan.naturalGround/gradedGround`: vaziyetin kendi zemini, `SiteGround { layers }` (kotlu ölçü noktalarının
     katmanları); yüzey okunurken kurulur. `settings.road.surfaces`'ta DEĞİL: Mimari projesi yol ayarı tutamaz,
     kodlayıcı reddeder ve gerçek pencerede kurtarma kopyası yazılamadı (ölçüldü). `datum` ile kesitte ±0.00'a göre.
@@ -84,7 +84,12 @@
   - Arazi zemini aracı (`tool.siteGround`, AZ; Proje ▾): ölçü noktasına tıklanınca o katmandan zemin; Tür (T)
     tabii/tesviye. ±0.00 yoksa bina köşelerinin tabii zemin ortalaması (PAİY 12/4; zemin katın dış hattı, köşe =
     doğrultu değişen köşe). Bahçe hafriyatı: parselin içinde, bina oturumu dışında, kazı ve dolgu ayrı. Ayar; geri
-    alma adımı değil. Kalan: tzk/tsk işareti (2. bölüm), bina kazısı, zeminin planda gösterimi.
+    alma adımı değil.
+  - Zemin kotu (`tool.groundLevel`, ZK): EK-4 Şekil 4.6, "tzk 1001.48 (+0.67)" üstte, "tsk 1000.60 (-0.21)" altta;
+    kot simgesi ve iki maskeli yazı MM-XXXX-SEMBOL'e tek adımda. Değerler yazıdır, canlı değil: yüzey uygulama
+    katmanında kuruluyor, çizim çekirdeği ona bağlanamaz.
+  - Kalan: bodrum katların emsal kuralı (`buried_levels`, PAİY 22/1-k) hâlâ tesviye zemini ±0.00 sayıyor; bina
+    kazısı; zeminin planda gösterimi.
   - Kısa adlar düzeltildi: Tekil temel TK, Sürekli temel SR (TT ve ST KentOS'ta zaten Geçici izleme noktası ve Yazı
     stilleri'ydi; `module_names` sınaması yakaladı).
 

@@ -3434,6 +3434,26 @@
       "status": "implemented"
     },
     {
+      "id": "tool.groundLevel",
+      "title": "Zemin kotu",
+      "short": "Zemin kotu",
+      "icon": "groundLevel",
+      "description": "Vaziyetin tabii zemin kotunu ve tesviye zemin kotunu bir noktada yazar (EK-4 4.30, Şekil 4.6): tıklanan noktaya kot simgesi, sağına üstte “tzk 849.85 (-5.65)”, altta “tsk 850.10 (-4.40)”; önce mutlak kot, parantezde ±0,00'a göre farkı. İmleç gezerken değerler önizlemede görünür. Zeminler Arazi zemini ile kurulur; ±0,00'ın mutlak kotu yoksa yalnız mutlak kot yazılır. Simgeler katmanına (MM-XXXX-SEMBOL), tek geri alma adımında yazılır. Değerler yazı olarak kalır: zemin sonradan değişirse işaret yeniden konur.",
+      "aliases": [
+        "ZEMINKOTU",
+        "ZEMİNKOTU",
+        "TZK",
+        "TSK",
+        "TABIIZEMINKOTU",
+        "TABİİZEMİNKOTU",
+        "TESVIYEKOTU",
+        "TESVİYEKOTU"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.escapeRoutes",
       "title": "Kaçış yolları",
       "short": "Kaçış yolları",
@@ -6032,6 +6052,7 @@
     "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
+    "groundLevel": "<circle cx=\"5\" cy=\"10\" r=\"2.2\"/><path d=\"M1.5 10h7M5 6.5v7\" stroke-width=\"1\"/><path d=\"M10.5 7.5h7M10.5 12.5h7\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "walkRoute": "<circle cx=\"3.8\" cy=\"15.8\" r=\"1.8\"/><circle cx=\"16.2\" cy=\"4.2\" r=\"1.8\"/><path d=\"M5.6 15.8h5.5a2 2 0 0 0 2-2V6.2a2 2 0 0 1 2-2\"/>",
     "slabEdgeBind": "<path d=\"M2 9.5l7.5 4.2 8.5-5-7.5-4.2L2 9.5v3.8l7.5 4.2 8.5-5V8.7M9.5 13.7v3.8\"/><path d=\"M5 5.2l5.5-3.2 4.9 2.7\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.1\"/>",

@@ -195,3 +195,15 @@ fn a_ground_made_is_the_site_s_and_the_architecture_project_is_saved() {
     let why = site_ground::with_ground(&doc, &layer, true).expect_err("the natural ground's layer");
     assert!(why.contains("tabii zeminin katmanı"), "{why}");
 }
+
+/// A ground level mark's lines (EK-4 4.30, Şekil 4.6): absolute, a point and two decimals, the difference from ±0.00
+/// in brackets with its sign; ±0.00 itself as ±0.00; a ground not there gives no line, no ±0.00 no brackets.
+#[test]
+fn a_ground_level_mark_reads_as_the_regulation_s_figure() {
+    use kentos_native_application::site_ground::level_lines;
+    assert_eq!(level_lines(Some(849.85), Some(850.10), Some(855.5)), ["tzk 849.85 (-5.65)", "tsk 850.10 (-5.40)"]);
+    assert_eq!(level_lines(Some(855.5), Some(855.75), Some(855.5)), ["tzk 855.50 (±0.00)", "tsk 855.75 (+0.25)"]);
+    assert_eq!(level_lines(None, Some(850.1), Some(855.5)), ["tsk 850.10 (-5.40)"]);
+    assert_eq!(level_lines(Some(849.85), None, None), ["tzk 849.85"]);
+    assert!(level_lines(None, None, Some(1.0)).is_empty());
+}

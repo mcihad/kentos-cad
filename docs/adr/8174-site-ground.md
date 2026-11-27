@@ -1,9 +1,9 @@
 # ADR 8174: Arazi: tabii ve tesviye zemin, kesitte ve hafriyatta
 
-- **Durum:** 1. ve 3. bölüm kabul edildi ve uygulandı (27 Kasım 2026).
+- **Durum:** üç bölüm de kabul edildi ve uygulandı (27 Kasım 2026).
   - 1. bölüm: vaziyetin tabii ve tesviye zemini, kesitte zemin çizgileri, dosyada Mimari verisi 43.
+  - 2. bölüm: Zemin kotu işareti, "tzk/tsk" (§7).
   - 3. bölüm: Arazi zemini aracı, ±0.00 bina köşelerinden, bahçe hafriyatı. Zeminin yeri değişti (§3.1).
-  - Kalan: "tzk/tsk" kot işareti (2. bölüm).
 - **Plan:** [plan/mimari-bim.md](../../plan/mimari-bim.md) MB-12. Karar: [ADR 8171](8171-mimari-3d-section-quality-and-missing-tools.md)
   §2.6.
 - **İstek** (sahip, 27 Kasım 2026): "mimari proje çizimlerinde birçok eksik aracımız var". Araştırma raporunun 5.
@@ -13,7 +13,7 @@
     noktalarının katmanları (`layers`).
   - `SitePlan` kendi dosyasına taşındı: `crates/shared/contracts/src/arch/site.rs`.
   - `.kcad`'ın Mimari verisi 43 (`ARCH_WITH_GROUND`). Belge şeması değişmedi.
-  - Yeni araç `tool.siteGround` (Arazi zemini); yeni komut yok.
+  - Yeni araçlar `tool.siteGround` (Arazi zemini) ve `tool.groundLevel` (Zemin kotu); yeni komut yok.
 
 ## §1 Sorun
 
@@ -49,6 +49,11 @@ için okundu.
 - **Dijital Hazırlama Yönetmeliği, EK-4 4.30 ve Şekil 4.6:** tabii zemin kotu ve tesviye kotu bir işaretle gösterilir:
   "tzk 849.85 (-5.65)" üstte, "tsk 850.10 (-4.40)" altta. Önce mutlak kot, parantezde ±0.00'a göre farkı. Bütün
   disiplinlerin paftalarında kullanılır.
+  - Kaynak: "Mimarlık ve Mühendislik Projelerinin Elektronik Ortamda Teslimi ve Yönetilmesi Hakkında Yönetmelik"
+    ekleri, EK-4 4.30: "Tabii Zemin Kotu ve Tesviye Kotu Gösterimi bilgi için Şekil 4.6'da verilmiştir ve gösterimi
+    tüm disiplinlerin ilgili paftalarında kullanılır."
+  - Şekil "bilgi için"dir. Örneğin iki farkı iki ayrı ±0.00 verir: 849.85 + 5.65 = 855.50, 850.10 + 4.40 = 854.50.
+    KentOS ikisini de vaziyetin tek ±0.00'ına göre yazar.
 
 ### Mevcut KentOS
 
@@ -177,10 +182,52 @@ için okundu.
   - A-A kesitinde önce zemin ±0,00'da düzdü. Sonra tabii zemin eğim boyunca kesikli, tesviye zemin −0,21'de.
   - Kurtarma kopyası hatası (§3.1) kalktı.
 
+## §7 Zemin kotu işareti (2. bölüm)
+
+- **Ne yazar:** tıklanan noktada iki satır. Üstte tabii zemin kotu, "tzk 1001.48 (+0.67)"; altta tesviye zemin kotu,
+  "tsk 1000.60 (-0.21)". Önce mutlak kot, parantezde ±0.00'a göre farkı. ±0.00'ın kendisi "(±0.00)" yazılır.
+- **Yazım:** çizimin kot yazımı, yani nokta ve iki ondalık. Şekil 4.6 ve Parsel aracının "±0.00 = +1285.40" yazısı da
+  böyle. Fark işaretiyle yazılır: + ya da -.
+- **Eksik olduğunda:**
+  - Noktada yalnız bir zemin varsa tek satır yazılır.
+  - ±0.00'ın mutlak kotu yoksa parantez yazılmaz, araç bunu söyler.
+  - Noktada zemin yoksa hiçbir şey yazılmaz; vaziyette hiç zemin yoksa Arazi zemini'ne yönlendirir.
+- **Biçim:** kot simgesi (daire ve haç) noktada, yazılar sağında. Yazılar maskelidir, taramanın üstünde okunur. Boyu
+  çizimin yazı boyudur (`annotation_height`).
+- **Nerede:** simgeler katmanı (MM-XXXX-SEMBOL; EK-2'de "Kot, kuzey oku, kesit işareti"), tek geri alma adımı. Her
+  nesne `Zemin kotu` özniteliği taşır: tzk, tsk, simge.
+- **Canlı değil:** değerler yazıdır. Ölçülendirme gibi kendini yenileyen bir işaret, zemin yüzeyinin çizim çekirdeğinde
+  kurulmasını gerektirirdi. Bugün yüzey uygulama katmanında kuruluyor; çekirdek ona bağlanamaz. Zemin sonradan
+  değişirse işaret yeniden konur (Kalanlar).
+- **Önizleme:** imleç gezerken değerler imlecin yanında görünür. Zeminler bir kez kurulur ve çizim ile vaziyetin
+  zeminleri değişene dek saklanır (belgenin sürümü ve zeminlerin tanımı anahtardır).
+- **Yeri:** şeritte Proje panelinin açılır listesi, Arazi zemini'nin ardından. Kısa adı ZK; takma adları ZEMİNKOTU,
+  TZK, TSK, TABİİZEMİNKOTU, TESVİYEKOTU. Ortak Açıklama sekmesinin Kot'u yanına konmadı: işaret vaziyetin zeminine
+  bağlı, yalnız Mimari'nin.
+
+## §8 Kanıt (2. bölüm)
+
+- **Satırlar** (`site_ground::a_ground_level_mark_reads_as_the_regulation_s_figure`): Şekil 4.6'nın değerleri, ±0.00,
+  tek zemin, ±0.00'sız proje.
+- **Araç** (`ground_tool.rs`, 2 sınama):
+  - Bina içinde x = 6'da: "tzk 1000.60 (±0.00)", "tsk 1001.00 (+0.40)".
+  - Bir daire, iki çizgi, iki yazı; hepsi MM-XXXX-SEMBOL'de. tzk noktanın üstünde, tsk altında. Tek geri alma hepsini
+    alır.
+  - Zeminlerin dışında ve zeminsiz vaziyette hiçbir şey yazılmaz, nedeni söylenir.
+- **Gerçek pencere** (`mb12-zemin-kotu*`): önizleme kuzeydoğu köşede "tzk 1001.48 (+0.67) / tsk 1000.60 (-0.21)"
+  gösterdi; ±0.00 = 1000.81 ile tutarlı. İşaretler binanın dört köşesine kondu.
+
 ## Kalanlar
 
-- **2. bölüm:** EK-4 Şekil 4.6'nın "tzk/tsk" kot işareti. Vaziyette bir noktaya tıklanınca iki zeminin kotunu mutlak
-  ve ±0.00'a göre yazar.
+- **Bodrum katlar tesviye zemine göre değil:** üç yer hâlâ "tesviye zemin ±0.00'dadır, model başka zemin bilmez (EK-4
+  4.30)" der:
+  - `domain/src/zoning/limits.rs` `buried_levels`: emsale girmeyen, bütün cepheleri toprak altındaki bodrum katlar
+    (PAİY 22/1-k).
+  - `domain/src/projections.rs`: çıkmanın alt kotu.
+  - `sections.rs`: rampanın altındaki dolgu.
+  Eğimli arsada bir cephesi açıkta kalan bodrum emsale girer. Artık tesviye zemin modelde olduğuna göre bu kural ona
+  göre okunmalı (ayrı madde).
+- **Zemin kotu işareti canlı değil** (§7): zemin değişince kendini yenilemez.
 - **Bina kazısı:** bodrum ve temel çukuru, oturum içinde tabii zeminden temel tabanına kadar.
 - **Planda zemin:** yükselti eğrileri ya da üçgenler. Hangi katmandan kurulduğu Öznitelikler'de görünmüyor.
 - **Zeminin araçları:** zemin bir katmanın bütün kotlu noktalarından kurulur. Sınır, kırık hat ve düzenleme yok;
@@ -199,6 +246,8 @@ için okundu.
     `scripts/ui/ribbon.py`. Üretilenler: `ribbon.json`, `commandCatalog.json`, Python SDK, CAD el kitabı, simge
     listesi.
   - "Kesit çıkar"ın tanımı ve kesitin "tabii zemin eksik" gerekçesi artık Arazi zemini'ni anıyor.
+- 2. bölüm: `crates/native/interaction/src/arch/ground_level_tool.rs` (yeni), `site_ground.rs` (`SiteSurfaces`,
+  `surfaces`, `level_lines`); katalogda `tool.groundLevel` (ZK) ve simgesi.
 - `crates/native/application/src/arch/sections/ground.rs` (yeni), `sections.rs` (zemin oraya), `Cargo.toml`
   (`mod-arch` → `terrain`).
 - `crates/shared/kcad/src/{lib.rs, decode.rs}`, `tools/kcad/kcad.py`: Mimari verisi 43.

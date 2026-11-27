@@ -146,3 +146,92 @@ fn too_few_points_or_none_under_the_pointer_say_so_and_change_nothing() {
     assert_eq!(b.last_text(), Some("Burada kotlu nokta yok: arazinin ölçü noktalarından birine tıklayın."));
     assert_eq!(*b.doc.settings(), settings);
 }
+
+/// The site with both grounds made (±0.00 at 1000.60 from the corners) and Zemin kotu started, layer keys on.
+fn levels() -> Bench {
+    let (mut b, _, _) = site();
+    b.click(-10.0, -10.0);
+    assert!(b.type_text("T"));
+    b.click(-8.0, -8.0);
+    b.session.exit();
+    b.memory.layer_keys = true;
+    b.start("groundLevel");
+    b
+}
+
+/// The objects past the first `before` slots, by their kind's name, text and the mark's attribute.
+fn written(b: &Bench, before: usize) -> Vec<(&'static str, String, String)> {
+    let mut out: Vec<_> = b
+        .doc
+        .entities()
+        .skip(before)
+        .map(|e| {
+            let (kind, text) = match e {
+                kentos_commands::Entity::Circle(_) => ("circle", String::new()),
+                kentos_commands::Entity::Line(_) => ("line", String::new()),
+                kentos_commands::Entity::Text(t) => ("text", t.text.clone()),
+                _ => ("other", String::new()),
+            };
+            (kind, text, e.base().attrs.get("Zemin kotu").cloned().unwrap_or_default())
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+#[test]
+fn zemin_kotu_writes_tzk_over_tsk_with_their_differences_in_one_step() {
+    let mut b = levels();
+    assert_eq!(b.session.tool_id(), "groundLevel");
+    let before = b.doc.entities().count();
+    // Inside the building at x 6: the natural ground at 1000.60, ±0.00 itself; the graded ground 40 cm over it.
+    b.click(6.0, 4.5);
+    assert_eq!(b.last_text(), Some("Zemin kotu yazıldı: tzk 1000.60 (±0.00), tsk 1001.00 (+0.40)."));
+    assert_eq!(
+        written(&b, before),
+        vec![
+            ("circle", String::new(), "simge".into()),
+            ("line", String::new(), "simge".into()),
+            ("line", String::new(), "simge".into()),
+            ("text", "tsk 1001.00 (+0.40)".into(), "tsk".into()),
+            ("text", "tzk 1000.60 (±0.00)".into(), "tzk".into()),
+        ]
+    );
+    // On the symbols' layer; tzk over tsk, both right of the symbol.
+    let texts: Vec<_> = b
+        .doc
+        .entities()
+        .skip(before)
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.clone()),
+            _ => None,
+        })
+        .collect();
+    for t in &texts {
+        let name = b.doc.layers().get(&t.base.layer_id).map(|l| l.name.clone());
+        assert_eq!(name.as_deref(), Some("MM-XXXX-SEMBOL"));
+        assert!(t.p.x > E + 6.0, "right of the symbol");
+    }
+    let y = |w: &str| texts.iter().find(|t| t.text.starts_with(w)).map(|t| t.p.y).unwrap();
+    assert!(y("tzk") > N + 4.5 && y("tsk") < N + 4.5, "tzk over the place, tsk under it");
+    // One undo step takes the mark away; the tool stays for the next.
+    b.doc.undo();
+    assert_eq!(b.doc.entities().count(), before);
+    assert_eq!(b.session.tool_id(), "groundLevel");
+}
+
+#[test]
+fn zemin_kotu_says_why_nothing_is_written_off_the_grounds_or_without_them() {
+    let mut b = levels();
+    let before = b.doc.entities().count();
+    b.click(60.0, 60.0);
+    assert_eq!(b.last_text(), Some("Bu nokta zeminlerin dışında: ölçü noktalarının kapladığı yere tıklayın."));
+    assert_eq!(b.doc.entities().count(), before);
+    let (mut b, _, _) = site();
+    b.session.exit();
+    b.start("groundLevel");
+    let before = b.doc.entities().count();
+    b.click(6.0, 4.5);
+    assert_eq!(b.last_text(), Some("Vaziyetin zemini yok: tabii ve tesviye zemini Arazi zemini ile kurun."));
+    assert_eq!(b.doc.entities().count(), before);
+}

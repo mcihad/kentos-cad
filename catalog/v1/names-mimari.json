@@ -27,6 +27,7 @@
     { "name": "SL", "command": "tool.moulding" },
     { "name": "HP", "command": "tool.coping" },
     { "name": "AZ", "command": "tool.siteGround" },
+    { "name": "ZK", "command": "tool.groundLevel" },
     { "name": "CT", "command": "tool.roof" },
     { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },

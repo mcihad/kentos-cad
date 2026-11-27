@@ -2554,6 +2554,13 @@
       ],
       "note": "Arazi zemini: yüzeyin tanımı (kotlu noktaların katmanı) projenin arazi yüzeylerine (road.surfaces), tabii ya da tesviye zeminin kimliği ve ±0,00'ın mutlak kotu vaziyete (arch.site) yazılır; yüzeyi, kesitteki çizgisi ve bahçe hafriyatı modelin (ADR 8174)."
     },
+    "tool.groundLevel": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "note": "Zemin kotu: kot simgesi (daire ve haç) ve iki yazı, “tzk 849.85 (-5.65)” ve “tsk 850.10 (-4.40)”, simgeler katmanına tek adımda; değerler aracın vaziyet zemininden okuduğudur, yazılar kendileri (ADR 8174 §7)."
+    },
     "tool.escapeRoutes": {
       "level": "semantic",
       "via": [

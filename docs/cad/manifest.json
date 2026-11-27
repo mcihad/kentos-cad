@@ -12935,6 +12935,22 @@
    "tests": 0
   },
   {
+   "id": "tool.groundLevel",
+   "kind": "command",
+   "title": "Zemin kotu",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Zemin kotu: kot simgesi (daire ve haç) ve iki yazı, “tzk 849.85 (-5.65)” ve “tsk 850.10 (-4.40)”, simgeler katmanına tek adımda; değerler aracın vaziyet zemininden okuduğudur, yazılar kendileri (ADR 8174 §7).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.hatch",
    "kind": "tool",
    "title": "Tarama",
