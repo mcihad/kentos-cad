@@ -165,11 +165,13 @@ impl App {
                 (!running).then_some(ev(Event::Open)),
             ));
         }
+        // Yeniden başlat after a start that failed too: it looks at the Python chosen now (docs/adr/9336).
+        let unready = c.failed.is_some() || matches!(c.check, Some(Err(_)));
         tools = tools
             .push(small(
                 Icon::Retry,
                 restart_tip,
-                (c.started() || running).then_some(ev(Event::Restart)),
+                (c.started() || running || unready).then_some(ev(Event::Restart)),
             ))
             .push(link_toggle(c, self.program));
         if let Some(signature) = &c.signature
@@ -193,7 +195,24 @@ impl App {
             .input_id(INPUT)
             .compact(true)
             .toolbar(tools);
-        Column::new()
+        // The head (docs/adr/9336): which Python and how it stands; the way to set one up when it holds no kentos.
+        let mut column = Column::new();
+        if let Some((words, setup)) = c.head() {
+            let said = kentos_ui::label::caption(words).style(if setup {
+                kentos_ui::style::text::warning
+            } else {
+                kentos_ui::style::text::muted
+            });
+            let mut line = iced::widget::row![container(said).width(Fill)].spacing(8).align_y(iced::Center);
+            if setup {
+                line = line.push(crate::exchange::words::secondary(
+                    "Python ortamını yapılandır",
+                    Some(ev(Event::Configure)),
+                ));
+            }
+            column = column.push(container(line).padding([4, 10]).width(Fill));
+        }
+        column
             .push(container(repl).padding([6, 8]).width(Fill).height(Fill))
             .height(Fill)
             .into()

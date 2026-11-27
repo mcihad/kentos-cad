@@ -29,27 +29,46 @@ sys.stdout.write(json.dumps(answer, ensure_ascii=False))
 
 /// The Python a rule runs in: `KENTOS_PYTHON`, else the user's personal environment while Python is on and it is ready
 /// (KentOS's own Python with KentOS's library; on Windows the only one there is), else a checkout's own environment
-/// above the program (`.run/py`, which `scripts/python/test.sh` makes; the program is in `target/<profile>/`, a test in
-/// its `deps/`), else `python3`.
+/// above the program (`.run/py`, which `scripts/python/test.sh` makes; the program is in `target/<profile>/`, a test as
+/// deep as `target/<profile>/build/<crate>/<hash>/out/`), else `python3`.
 pub fn interpreter() -> PathBuf {
+    interpreter_choice().0
+}
+
+/// Where [`interpreter`]'s Python comes from (docs/adr/9336): what the Python console says of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PythonSource {
+    /// `KENTOS_PYTHON` names it.
+    Env,
+    /// The user's personal environment KentOS made and keeps (Python ve eklentiler).
+    Personal,
+    /// A checkout's own environment above the program (a developer's).
+    Checkout,
+    /// `python3` on the path: the user's own Python, which may not hold the kentos package.
+    System,
+}
+
+/// [`interpreter`] and where it comes from.
+pub fn interpreter_choice() -> (PathBuf, PythonSource) {
     if let Some(path) = std::env::var_os("KENTOS_PYTHON") {
-        return PathBuf::from(path);
+        return (PathBuf::from(path), PythonSource::Env);
     }
     if let Some(root) = kentos_python_env::places::root()
         && kentos_python_env::settings::PythonSettings::load(&root).enabled
         && let Some(own) = kentos_python_env::personal::ready(&root)
     {
-        return own;
+        return (own, PythonSource::Personal);
     }
+    // A test's program sits as deep as `target/debug/build/<crate>/<hash>/out/` (docs/adr/9336).
     if let Ok(exe) = std::env::current_exe() {
-        for folder in exe.ancestors().skip(1).take(4) {
+        for folder in exe.ancestors().skip(1).take(8) {
             let own = folder.join(".run/py/bin/python");
             if own.exists() {
-                return own;
+                return (own, PythonSource::Checkout);
             }
         }
     }
-    PathBuf::from("python3")
+    (PathBuf::from("python3"), PythonSource::System)
 }
 
 /// The standards package `name`'s folder (`dijital-proje`).

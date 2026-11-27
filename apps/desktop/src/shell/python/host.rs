@@ -6,7 +6,7 @@
 
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader, Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
 
@@ -33,13 +33,6 @@ pub enum Said {
 pub struct Host {
     child: Child,
     writer: mpsc::Sender<String>,
-}
-
-/// The Python the console runs: the standards rules' (`kentos_standards::interpreter`): `KENTOS_PYTHON`, else
-/// the user's personal environment while Python is on and it is ready, else a checkout's own environment above the
-/// program, else `python3`.
-pub fn interpreter() -> PathBuf {
-    kentos_standards::interpreter()
 }
 
 impl Host {

@@ -555,7 +555,13 @@ impl App {
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::CommandHistoryShown => self.show_history(),
-            Message::BottomTab(tab) => self.show_bottom(tab),
+            Message::BottomTab(tab) => {
+                self.show_bottom(tab);
+                // The Python tab looks at the chosen Python once (docs/adr/9336).
+                if self.bottom_tab == crate::bottom::BottomTab::Python {
+                    return self.python_check();
+                }
+            }
             Message::Gis(inner) => return self.gis_event(inner),
             Message::TableWritten(outcome) => match outcome {
                 crate::table_write::Outcome::Written { file, rows, notes } => {

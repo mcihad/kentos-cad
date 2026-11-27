@@ -507,10 +507,10 @@ fn real_python_writes_the_open_drawing() {
 }
 
 /// The real console's messages: the stream of its process's start.
-type Heard = iced::futures::stream::BoxStream<'static, iced_runtime::Action<Message>>;
+pub(super) type Heard = iced::futures::stream::BoxStream<'static, iced_runtime::Action<Message>>;
 
 /// Runs `code` in the real console to its end, its messages driven here.
-fn run_real(app: &mut App, code: &str, heard: &mut Option<Heard>) {
+pub(super) fn run_real(app: &mut App, code: &str, heard: &mut Option<Heard>) {
     use iced::futures::StreamExt as _;
     let task = submit(app, code);
     // The first run's task carries the process's messages; a later one's only scrolls.

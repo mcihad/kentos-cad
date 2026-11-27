@@ -26,6 +26,8 @@ mod view;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod check_tests;
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -110,6 +112,12 @@ pub struct Console {
     pub ready: Option<String>,
     pub running: Option<Run>,
     python: PathBuf,
+    /// Where the chosen Python comes from (docs/adr/9336); none before the tab first looked.
+    pub source: Option<kentos_standards::PythonSource>,
+    /// The chosen Python looked at when the tab was shown: its versions, or why it does not hold the kentos package.
+    pub check: Option<Result<String, String>>,
+    /// Why the last start did not open KentOS's session; none while it did or none was tried.
+    pub failed: Option<String>,
     /// The call the console's cursor is in.
     pub signature: Option<assist::Signature>,
     /// The last questions asked of the process: older answers are dropped.
@@ -146,6 +154,9 @@ impl Default for Console {
             ready: None,
             running: None,
             python: PathBuf::new(),
+            source: None,
+            check: None,
+            failed: None,
             signature: None,
             asked_completion: None,
             asked_signature: 0,
@@ -193,6 +204,41 @@ impl Console {
         self.host.is_some()
     }
 
+    /// The console's head (docs/adr/9336): which Python, where it comes from, how it stands; true when the way to set
+    /// one up is to be shown. KentOS's managed environment and the user's own Python are said apart.
+    pub fn head(&self) -> Option<(String, bool)> {
+        use kentos_standards::PythonSource as S;
+        let source = self.source?;
+        let path = self.python.display();
+        let words = match source {
+            S::Personal => "KentOS'un yönettiği kişisel ortam",
+            S::Env => "KENTOS_PYTHON'un gösterdiği Python",
+            S::Checkout => "Geliştirme ortamı (.run/py)",
+            S::System => "Sistemdeki python3 (kendi Python'unuz)",
+        };
+        let missing = |why: &str| match source {
+            S::Personal => format!(
+                "{words} ({path}) KentOS paketini yükleyemedi: {why}. Ortamı Python ve eklentiler'den yeniden kurun."
+            ),
+            S::Env => format!("{words} ({path}) KentOS paketini yükleyemedi: {why}."),
+            S::Checkout => format!(
+                "{words} ({path}) KentOS paketini yükleyemedi: {why}. Ortamı scripts/python/test.sh ile kurun."
+            ),
+            S::System => format!(
+                "{words} kullanılıyor ({path}); KentOS paketi bu Python'da yok: {why}. KentOS'un yönettiği ortamı \
+                 kurun ya da kentos paketini bu Python'a kurun."
+            ),
+        };
+        // What Python said when looked at is the closer reason; a start that failed after a good look is said as such.
+        Some(match (&self.ready, &self.failed, &self.check) {
+            (Some(ready), _, _) => (format!("{words} · {ready}"), false),
+            (None, _, Some(Err(why))) => (missing(why), true),
+            (None, Some(why), _) => (missing(why), true),
+            (None, None, Some(Ok(seen))) => (format!("{words} · {seen} · ilk ifadede başlar"), false),
+            (None, None, None) => (format!("{words} ({path}) denetleniyor…"), false),
+        })
+    }
+
     /// The console's first line (gis-usage-report GIS-018, docs/adr/1083): ready only once the chosen Python opened
     /// KentOS's session; being checked while it starts; else what the first expression will start.
     pub fn greeting(&self) -> String {
@@ -229,6 +275,40 @@ pub enum Event {
     Agent(link::Heard),
     /// A message of the process of this generation.
     Host(u64, Said),
+    /// The chosen Python looked at (docs/adr/9336): its path, and its versions or why it holds no kentos package.
+    Checked(PathBuf, Result<String, String>),
+    /// Python ortamını yapılandır: Uygulama ayarları › Python ve eklentiler.
+    Configure,
+}
+
+/// Whether `python` opens and holds the kentos package (docs/adr/9336): its version and kentos's, or why not (the last
+/// line Python wrote, “ModuleNotFoundError: No module named 'kentos'”).
+fn look_at(python: &std::path::Path) -> Result<String, String> {
+    let mut command = std::process::Command::new(python);
+    command
+        .args(["-c", "import platform, kentos; print(platform.python_version(), kentos.__version__)"])
+        .env("PYTHONIOENCODING", "utf-8");
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    let out = command.output().map_err(|e| format!("açılamadı ({e})"))?;
+    if out.status.success() {
+        let text = String::from_utf8_lossy(&out.stdout);
+        let mut words = text.split_whitespace();
+        let (python, kentos) = (words.next().unwrap_or("?"), words.next().unwrap_or("?"));
+        return Ok(format!("Python {python} · kentos {kentos}"));
+    }
+    let said = String::from_utf8_lossy(&out.stderr);
+    Err(said
+        .lines()
+        .rev()
+        .map(str::trim)
+        .find(|l| !l.is_empty())
+        .unwrap_or("Python bir hata verdi")
+        .to_owned())
 }
 
 /// A run that could not start or reach the process: its error, at once.
@@ -316,7 +396,10 @@ impl App {
                     Kind::Note,
                     "Yeni oturum: tanımlanan adlar silindi; sonraki çalıştırma yeni bir Python'da.",
                 );
-                view::follow()
+                // The Python chosen now looked at again: one set up meanwhile is taken (docs/adr/9336).
+                self.python.check = None;
+                self.python.failed = None;
+                Task::batch([self.python_check(), view::follow()])
             }
             Event::Open => Task::perform(
                 async {
@@ -344,7 +427,34 @@ impl App {
                 }
                 self.python_said(said)
             }
+            // An answer for the Python chosen now; one for another is stale.
+            Event::Checked(python, seen) => {
+                if python == self.python.python {
+                    self.python.check = Some(seen);
+                }
+                Task::none()
+            }
+            Event::Configure => {
+                self.open_settings_at(crate::settings_sections::Section::Python);
+                Task::none()
+            }
         }
+    }
+
+    /// The Python tab shown (docs/adr/9336): the chosen Python looked at once, on a thread of its own, whether it holds
+    /// the kentos package; nothing stays running. Again after Yeniden başlat.
+    pub(crate) fn python_check(&mut self) -> Task<Message> {
+        if self.python.check.is_some() || self.python.host.is_some() || self.python.running.is_some() {
+            return Task::none();
+        }
+        let (python, source) = kentos_standards::interpreter_choice();
+        self.python.python = python.clone();
+        self.python.source = Some(source);
+        iced_runtime::task::blocking(move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
+            let seen = look_at(&python);
+            let answer = Message::Python(Event::Checked(python, seen));
+            let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, answer));
+        })
     }
 
     /// The console's own events: Enter sends the code to the process, Durdur
@@ -458,13 +568,16 @@ impl App {
 
     fn python_start(&mut self) -> Result<Task<Message>, String> {
         self.python.generation += 1;
-        let python = host::interpreter();
+        let (python, source) = kentos_standards::interpreter_choice();
+        self.python.python = python.clone();
+        self.python.source = Some(source);
         let (process, task) = host::Host::start(&python, self.python.generation, |g, said| {
             Message::Python(Event::Host(g, said))
-        })?;
+        })
+        .inspect_err(|why| self.python.failed = Some(why.clone()))?;
         self.python.host = Some(process);
         self.python.ready = None;
-        self.python.python = python;
+        self.python.failed = None;
         Ok(task)
     }
 
@@ -475,6 +588,7 @@ impl App {
                     let python = m.get("python").and_then(Value::as_str).unwrap_or("?");
                     let kentos = m.get("kentos").and_then(Value::as_str).unwrap_or("?");
                     self.python.ready = Some(format!("Python {python} · kentos {kentos}"));
+                    self.python.failed = None;
                     Task::none()
                 }
                 Some("out") => {
@@ -721,6 +835,10 @@ impl App {
             "Python başlatılamadı ({}): KentOS oturumu açılmadı; kentos paketi bu Python'da kurulu olmayabilir. Ayarlar › Python ve eklentiler'den başka bir Python seçin ya da kurun, sonra Yeniden başlat'a basın.",
             self.python.python.display()
         );
+        // The console's head says it with the way to set Python up (docs/adr/9336).
+        if !was_ready {
+            self.python.failed = Some("KentOS oturumu açılmadı".to_owned());
+        }
         if let Some(run) = self.python.running.take() {
             let id = run.id;
             let wrote = self.python_close(run, false);

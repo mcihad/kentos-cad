@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Python konsolu seçili yorumlayıcıyı ve KentOS paketini baştan denetler (27 Kasım 2026, CBS incelemesinin 20.
+  maddesi; [ADR 9336](../adr/9336-python-console-checks-its-environment.md)).**
+  - Python sekmesi açılınca seçili Python'a bir kez bakılır; konsolun başı kaynağını (KentOS'un ortamı, kendi
+    Python'unuz, KENTOS_PYTHON, geliştirme ortamı) ve durumunu söyler, kentos yoksa “Python ortamını yapılandır”
+    düğmesini gösterir.
+  - Yeniden başlat başarısızlıktan sonra da açıktır ve o an seçili Python'u alır. Depo ortamı derin sınama
+    programlarından da bulunur.
+
 - **Zaman ayarları tarih tutan alanı önerir ve UTC'yi söyler; Kot noktası ekle ile Kot oku ayrılır; Mesh sor meshini
   sorar (27 Kasım 2026, CBS incelemesinin 19. maddesi;
   [ADR 9335](../adr/9335-time-field-elevation-read-and-mesh-prerequisite.md)).**
