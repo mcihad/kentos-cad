@@ -27,6 +27,7 @@ pub(crate) mod apart;
 mod apart_tests;
 pub(crate) mod background;
 pub(crate) mod batch;
+pub(crate) mod data_location;
 pub(crate) mod data_select;
 pub(crate) mod designer;
 pub mod dialog;
@@ -176,6 +177,8 @@ pub struct Processing {
     pub(crate) environment: environment::LocalEnvironment,
     /// İfadeyle seç asking a data layer's source (data_select.rs, docs/adr/9133).
     pub(crate) data_select: data_select::DataSelect,
+    /// Konuma göre seç over data layers: the drawing with their rows (data_location.rs, docs/adr/9340).
+    pub(crate) data_location: data_location::DataLocation,
 }
 
 impl Default for Processing {
@@ -195,6 +198,7 @@ impl Default for Processing {
             server_asked: None,
             environment: environment::LocalEnvironment::default(),
             data_select: data_select::DataSelect::default(),
+            data_location: data_location::DataLocation::default(),
         }
     }
 }
@@ -492,6 +496,8 @@ impl App {
                 window.previews.insert("condition".to_owned(), line);
             }
         }
+        // Konuma göre seç with a data layer among its inputs: counted with the layers' rows (data_location.rs).
+        self.data_location_refresh();
     }
 
     pub(crate) fn processing_event(&mut self, e: Event) -> Task<Message> {
@@ -713,6 +719,10 @@ impl App {
         // İfadeyle seç on a data layer asks its source, not the drawing (data_select.rs, docs/adr/9133).
         if attempted && let Some(task) = self.processing_data_select_run() {
             return task;
+        }
+        // Konuma göre seç with a data layer among its inputs runs on the drawing with their rows (data_location.rs).
+        if attempted && self.processing_data_location_run().is_some() {
+            return Task::none();
         }
         let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();

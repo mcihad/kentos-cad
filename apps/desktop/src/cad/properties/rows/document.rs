@@ -27,14 +27,8 @@ pub(super) fn document_section(doc: &Document, crs: bool) -> Section {
         Row::figure("Nesne sayısı", doc.entity_count().to_string()),
         Row::text("Etkin katman", active),
     ]);
-    // The data layers' rows are in their sources, not the drawing's objects (docs/adr/9129): said apart, never as 0.
-    let data = layers.leaves().iter().filter(|n| n.data.is_some()).count();
-    if data > 0 {
-        rows.push(Row::text(
-            "Veri katmanları",
-            format!("{data} katman; satırları kaynaklarında (sayısı Kaynak durumu'nda)"),
-        ));
-    }
+    // The data layers' rows are in their sources, not the drawing's objects (docs/adr/9129): the panel says them apart,
+    // counted by their sources, never as 0 (docs/adr/9340, properties/panel.rs).
     Section {
         id: "doc".into(),
         title: "Çizim".into(),

@@ -156,6 +156,24 @@ impl App {
             let at = panel.sections.len().min(1);
             panel.sections.insert(at, section);
         }
+        // Nothing selected, data layers in the project (docs/adr/9340): the drawing's own objects and the sources' rows
+        // said apart, the rows counted by their sources.
+        if selected.is_empty()
+            && let Some((total, layers, each)) = self.source_counts_said()
+            && let Some(section) = panel.sections.iter_mut().find(|s| s.id == "doc")
+        {
+            let rows = &mut section.rows;
+            let at = rows.iter().position(|r| r.label == "Nesne sayısı");
+            if let Some(i) = at {
+                rows[i].label = "Çizimdeki nesne".into();
+            }
+            let at = at.map_or(rows.len(), |i| i + 1);
+            rows.insert(at, rows::Row::figure("Kaynaktaki satır", total));
+            rows.insert(at + 1, rows::Row::text("Veri katmanları", layers));
+            for (i, (name, said)) in each.into_iter().enumerate() {
+                rows.insert(at + 2 + i, rows::Row::text(format!("  {name}"), said));
+            }
+        }
         // Nothing selected in the drawing, rows of a data layer selected in its table (docs/adr/9326): the first row's
         // values as its source holds them, by the layer and the key; read, not taken into the drawing.
         if selected.is_empty()

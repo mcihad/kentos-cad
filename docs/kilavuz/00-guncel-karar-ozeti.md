@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Konuma göre seç veri katmanlarını girdi alır; Denetçi çizim nesnelerini ve kaynak satırlarını ayrı sayar (27 Kasım
+  2026, 27 Kasım CBS incelemesinin 11. ve 12. maddeleri;
+  [ADR 9340](../adr/9340-data-layers-in-select-by-location-and-the-inspector.md)).**
+  - Konuma göre seç'in girdileri veri katmanını kapsayınca satırlar kaynaktan okunup çizimin kopyasına konur. Araç orada
+    `cad.processing.run` ile koşar, sonuç katman ve anahtarla tablonun seçimine döner.
+  - Seçim yokken Denetçi “Çizimdeki nesne”yi, kaynağın saydığı “Kaynaktaki satır”ı ve katman katman satırları
+    gösterir; sayılırken “sayılıyor…” der, hiçbir zaman 0 değil.
+
 - **CBS'de Seçilenleri kaydet kopyanın türünü sorar; seçim GeoPackage'ıyla birlikte CBS projesi olur (27 Kasım 2026,
   27 Kasım CBS incelemesinin 1. maddesi; [ADR 9339](../adr/9339-cbs-selection-copy-with-its-geopackage.md)).**
   - “CBS projesi ve GeoPackage”: seçilenler proje dosyasıyla aynı adlı GeoPackage'a tablo olarak yazılır, kopya

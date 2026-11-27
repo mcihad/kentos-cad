@@ -244,7 +244,7 @@ impl Row {
         }
     }
 
-    fn figure(label: impl Into<Cow<'static, str>>, value: impl Into<String>) -> Self {
+    pub(crate) fn figure(label: impl Into<Cow<'static, str>>, value: impl Into<String>) -> Self {
         Self {
             numeric: true,
             ..Self::text(label, value)

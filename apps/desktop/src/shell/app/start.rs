@@ -299,6 +299,7 @@ impl App {
                 data_pending: None,
                 data_rows: Default::default(),
                 data_counts: Default::default(),
+                source_counts: Default::default(),
                 data_extents: Default::default(),
                 data_pick: Default::default(),
                 layer_classes: Default::default(),

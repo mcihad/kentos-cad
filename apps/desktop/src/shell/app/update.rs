@@ -255,6 +255,8 @@ impl App {
             self.data_rows_tasks(),
             // The data layers' fields İstatistik and Grafik count, counted by their sources (data_counts.rs, docs/adr/9181).
             self.data_counts_tasks(),
+            // The data layers' rows the inspector says, counted by their sources (source_counts.rs, docs/adr/9340).
+            self.source_counts_tasks(),
             // A database table's mark asked while Topoloji shows a check that read one (topology/, docs/adr/9182).
             self.topology_marks_tasks(),
             // Seç's clicks and boxes on the data layers, asked of their sources (data_pick.rs, docs/adr/9103 §5).
