@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Karşılaştır üç görünümde kapanır, panel düğmeleri grubu söyler, simgeler satırda (27 Kasım 2026, CBS incelemesinin
+  9. maddesi ve simge tabloları; [ADR 9337](../adr/9337-unavailable-actions-panel-names-and-icons.md)).**
+  - Kaydırmalı karşılaştır üç ya da dört görünümde kapalıdır, ipucu nedenini söyler. Görünüm › Paneller'in düğmeleri
+    “Sağ panel” ve “Alt panel”dir.
+  - Asistan'ın kutusu dar panelde sarılan satırları kadar uzar. Taşma listelerinde aç/kapa satırı simgesini gösterir;
+    komut açan başlatıcı komutunun simgesini taşır. Boru hattı denetimi altyapı ağı yokken Ağlar…'ı sunar.
+
 - **Python konsolu seçili yorumlayıcıyı ve KentOS paketini baştan denetler (27 Kasım 2026, CBS incelemesinin 20.
   maddesi; [ADR 9336](../adr/9336-python-console-checks-its-environment.md)).**
   - Python sekmesi açılınca seçili Python'a bir kez bakılır; konsolun başı kaynağını (KentOS'un ortamı, kendi

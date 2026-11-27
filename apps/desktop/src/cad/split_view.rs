@@ -454,7 +454,7 @@ impl App {
         }
         if split.others.len() > 1 {
             self.warn(
-                "Kaydırmalı karşılaştır iki görünümle olur: fazla görünümleri üstlerindeki × ile kapatın.",
+                "Kaydırmalı karşılaştırma için iki görünüm kullanın: fazla görünümleri üstlerindeki × ile kapatın.",
             );
             return;
         }

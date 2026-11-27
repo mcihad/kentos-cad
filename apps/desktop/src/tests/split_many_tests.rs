@@ -118,7 +118,10 @@ fn bagla_moves_every_view_and_swipe_is_of_two() {
     // Three views: Kaydırmalı karşılaştır is refused and said.
     let _ = app.update(Message::Run("view.swipe"));
     assert!(app.split.as_ref().is_some_and(|s| s.swipe.is_none()));
-    assert!(crate::files_testing::last_said(&app).contains("iki görünümle"));
+    assert!(crate::files_testing::last_said(&app).contains("iki görünüm kullanın"));
+    // Off on the ribbon with three views, and its tip says why (docs/adr/9337).
+    assert!(!app.available("view.swipe"));
+    assert!(app.why_disabled("view.swipe").is_some_and(|w| w.starts_with("Kaydırmalı karşılaştırma için iki görünüm")));
     // Two views compared; a view added goes back to side by side.
     let _ = app.update(Message::Split(Event::Close(1)));
     let _ = app.update(Message::Run("view.swipe"));

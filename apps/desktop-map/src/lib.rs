@@ -215,6 +215,9 @@ mod pipes_check_window_tests;
 #[path = "tests/pipes_profile_walls_tests.rs"]
 mod pipes_profile_walls_tests;
 #[cfg(test)]
+#[path = "tests/pipes_prerequisite_tests.rs"]
+mod pipes_prerequisite_tests;
+#[cfg(test)]
 #[path = "tests/pipes_rules_tests.rs"]
 mod pipes_rules_tests;
 #[cfg(test)]

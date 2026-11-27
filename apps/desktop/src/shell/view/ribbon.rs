@@ -371,6 +371,13 @@ impl App {
             && let Some(message) = launch(launcher)
         {
             group = group.launcher(message, launcher.title);
+            // A launcher that opens a command shows that command's icon (CBS review, docs/adr/9337): Uygulama
+            // ayarları', Katman stili's; one that goes to a tab keeps the arrow.
+            if let crate::catalog::LauncherTarget::Command(id) = launcher.target
+                && let Some(command) = crate::catalog::catalog().get(id)
+            {
+                group = group.launcher_icon(command.icon);
+            }
         }
         any.then_some(group)
     }

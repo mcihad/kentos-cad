@@ -2750,7 +2750,7 @@
       ],
       "launcher": {
        "command": "tools.options",
-       "title": "Uygulama ayarları: görünüm"
+       "title": "Görünüm ayarları"
       }
      },
      {
@@ -4470,7 +4470,7 @@
       ],
       "launcher": {
        "command": "tools.options",
-       "title": "Uygulama ayarları: görünüm"
+       "title": "Görünüm ayarları"
       }
      },
      {

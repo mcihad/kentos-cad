@@ -141,16 +141,22 @@ impl App {
             _ => return None,
         };
         let group = group.icon(panel.icon).keep(panel.keep);
-        Some(
-            match panel
-                .launcher
-                .as_ref()
-                .and_then(|l| crate::view::launch(l).map(|message| (message, l.title)))
-            {
-                Some((message, title)) => group.launcher(message, title),
+        let Some((message, launcher)) = panel
+            .launcher
+            .as_ref()
+            .and_then(|l| crate::view::launch(l).map(|message| (message, l)))
+        else {
+            return Some(group);
+        };
+        let group = group.launcher(message, launcher.title);
+        // A launcher that opens a command shows that command's icon, as the ribbon's own (docs/adr/9337).
+        Some(match launcher.target {
+            crate::catalog::LauncherTarget::Command(id) => match crate::catalog::catalog().get(id) {
+                Some(command) => group.launcher_icon(command.icon),
                 None => group,
             },
-        )
+            crate::catalog::LauncherTarget::Tab(_) => group,
+        })
     }
 
     /// A small command button of these panels, as the ribbon's own.

@@ -38,6 +38,16 @@ const DESKTOP_TITLES: &[(&str, &str)] = &[
     ("view.commandSearch", "Menülerde ara"),
     // It adds one; a point's elevation is read with Kot oku (docs/adr/9335).
     ("tool.spot", "Kot noktası ekle"),
+    // They show and hide a panel group, not one of its tabs (CBS review, docs/adr/9337).
+    ("view.rightPanel", "Sağ panel"),
+    ("view.bottomPanel", "Alt panel"),
+];
+
+/// The desktop's own short names (the ribbon's labels) of commands the frozen web inventory names otherwise
+/// (docs/adr/9337).
+const DESKTOP_SHORTS: &[(&str, &str)] = &[
+    ("view.rightPanel", "Sağ panel"),
+    ("view.bottomPanel", "Alt panel"),
     ("sheet.alignTo.page", "Sayfanın ortasına hizala"),
     ("sheet.alignTo.margins", "Kenar boşluklarının ortasına hizala"),
     ("sheet.alignTo.selection", "Seçimin ortasına hizala"),
@@ -48,6 +58,14 @@ const DESKTOP_TITLES: &[(&str, &str)] = &[
 const DESKTOP_ICONS: &[(&str, &str)] = &[("tool.point", "pointDot")];
 
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
+    (
+        "view.rightPanel",
+        "Sağdaki panel grubunu (Katmanlar, Öznitelikler, İşlemler ve öbür sekmeleri) birlikte gösterir ya da gizler. Bir sekmeyi açmak için onun komutunu kullanın.",
+    ),
+    (
+        "view.bottomPanel",
+        "Alttaki panel grubunu (Komut geçmişi, Uyarılar, Python ve öbür sekmeleri) birlikte gösterir ya da gizler; sağ paneldeki Öznitelikler etkilenmez.",
+    ),
     (
         "tool.spot",
         "Tıklanan yere, yazılan kot değeriyle bir kot noktası ekler (Kot noktaları katmanına, kotu yazısıyla). Bir noktanın ya da köşenin kotunu yalnız okumak için Kot oku kullanılır.",

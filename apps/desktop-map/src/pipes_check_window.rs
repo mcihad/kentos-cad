@@ -444,7 +444,14 @@ impl PipesCheckWindowApp for App {
         // The selection's own network when every selected object is its part (docs/adr/2480), else the first.
         let picked = self.selection_roles().network.and_then(|id| networks.iter().find(|n| n.0 == id).cloned());
         let Some(first) = picked.or_else(|| networks.first().cloned()) else {
-            self.warn("Boru hattı denetimi: projede altyapı ağı yok. Önce Ağlar'da boruların katmanıyla bir altyapı ağı tanımlayın.");
+            let why = "Projede altyapı ağı yok. Önce Ağlar'da boruların katmanıyla bir altyapı ağı tanımlayın.";
+            self.warn(format!("Boru hattı denetimi: {why}"));
+            // The way to it, one press away, as Alt ağlar offers it (CBS review, docs/adr/9337).
+            self.toast(
+                kentos_ui::widget::Toast::info("Boru hattı denetimi")
+                    .body(why)
+                    .action("Ağlar…", Message::Run("network.manage")),
+            );
             return Task::none();
         };
         let first = &first;

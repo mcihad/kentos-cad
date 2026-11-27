@@ -413,10 +413,9 @@ fn is_choice(id: &str) -> bool {
         .any(|p| id.starts_with(p))
 }
 
-/// A drop-down's commands (the web's `commandItem`): a toggle shows its
-/// check instead of its icon, a choice its dot beside its icon, a tool and a
-/// plain command their icon.
-fn menu_of(
+/// A drop-down's commands (the web's `commandItem`): a toggle its check beside its icon (docs/adr/9337), a choice its
+/// dot beside its icon, a tool and a plain command their icon.
+pub(crate) fn menu_of(
     ids: &[&'static str],
     checked: &[Option<bool>],
     off: &[Option<String>],
@@ -486,12 +485,19 @@ fn headed_menu_of(
         let Some(command) = catalog().get(id) else {
             continue;
         };
-        let title = row_title(command.title, menu_name);
+        // Tam ekran on says how to leave it (CBS review, docs/adr/9337).
+        let title = if command.id == "view.fullscreen" && checked == Some(true) {
+            "Tam ekrandan çık"
+        } else {
+            row_title(command.title, menu_name)
+        };
         let is_off = matches!(off.get(k), Some(Some(_)));
         let run = enabled(command).filter(|_| !is_off);
         menu = match checked {
             Some(on) if is_choice(command.id) => menu.radio(title, on, run).icon(command.icon),
-            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, run),
+            // A switch's row has its icon beside its tick (CBS review, docs/adr/9337): Tam ekran, Çizgi kalınlığını
+            // göster, Mevcut durum.
+            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, run).icon(command.icon),
             _ => menu.item(title, run).icon(command.icon),
         };
         if let Some(keys) = crate::keymap::first_key(command) {

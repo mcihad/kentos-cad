@@ -36,6 +36,8 @@ pub struct Group<'a, Message> {
     labels: bool,
     more: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     launcher: Option<(Message, String)>,
+    /// Başlatıcının simgesi: açtığı komutunki; yoksa genel çapraz ok.
+    launcher_icon: Option<Icon>,
     /// A command shown by the search is under the ▾, or in the folded panel.
     flash_more: bool,
     flash_folded: bool,
@@ -77,6 +79,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             labels: true,
             more: None,
             launcher: None,
+            launcher_icon: None,
             flash_more: false,
             flash_folded: false,
             key_tips: [None, None, None],
@@ -212,6 +215,12 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         self
     }
 
+    /// Başlatıcının simgesi: neyi açtığını gösteren (ayarlar, katman stili); verilmezse genel çapraz ok.
+    pub fn launcher_icon(mut self, icon: Icon) -> Self {
+        self.launcher_icon = Some(icon);
+        self
+    }
+
     /// Şeridin boyutuna göre küçülebilir mi.
     pub(crate) fn adaptive(&self) -> bool {
         !matches!(self.content, Content::Fixed(_))
@@ -338,7 +347,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let launcher: Element<'a, Message> = match &self.launcher {
             Some((message, name)) => key_tip(
                 tip(
-                    button(icon(Icon::Maximize).size(10.0).tone(Tone::Muted))
+                    button(icon(self.launcher_icon.unwrap_or(Icon::Maximize)).size(10.0).tone(Tone::Muted))
                         .on_press(message.clone())
                         .padding(crate::theme::metrics::icon_small(10.0))
                         .style(style::button::ribbon(style::button::Ribbon::Idle)),

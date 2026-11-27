@@ -212,7 +212,7 @@ def view_tab(cad):
             M("Sembol boyutu", [("", ["view.symbols.plot", "view.symbols.screen"])]),
             S("view.fills"), S("view.areaEdges"), S("view.transparency")],
           overflow=["view.lineWeights"],
-          launcher=toCmd("tools.options", "Uygulama ayarları: görünüm")),
+          launcher=toCmd("tools.options", "Görünüm ayarları")),
         # Asistan (docs/adr/8056 §4): the user's own AI agent's panel.
         # Tam ekran is in the window's bar too: in the ▾, so the panel keeps two columns with Asistan and every CAD
         # tab keeps its words at 1440 px (docs/adr/8057 §3).

@@ -900,6 +900,9 @@ impl App {
                 self.session.lock_reference().is_some() && self.session.travel().is_some()
             }
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
+            // Kaydırmalı karşılaştır takes two views (CBS review, docs/adr/9337): off with three or four; with one it
+            // splits the area in two first.
+            "view.swipe" => self.split.as_ref().is_none_or(|s| s.others.len() <= 1),
             "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
             "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
             "edit.deselect" => !self.selection.is_empty() || !self.gis.features.data.selected.is_empty(),
@@ -996,6 +999,10 @@ impl App {
             }
             id if id.starts_with("workspace.") && !self.available(id) => Some(
                 "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
+                    .to_owned(),
+            ),
+            "view.swipe" if !self.available("view.swipe") => Some(
+                "Kaydırmalı karşılaştırma için iki görünüm kullanın: fazla görünümleri üstlerindeki × ile kapatın."
                     .to_owned(),
             ),
             "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"

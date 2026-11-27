@@ -14,6 +14,8 @@ mod limits_tests;
 #[cfg(test)]
 mod model_tests;
 #[cfg(test)]
+mod narrow_tests;
+#[cfg(test)]
 mod python_tests;
 mod settings;
 #[cfg(test)]

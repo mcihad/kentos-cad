@@ -152,16 +152,29 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
             body = body.push(container(attachments).padding(Padding::new(10.0).bottom(0.0)));
         }
         let size = typography::body() + 2.0;
-        let input = text_editor(&self.state.content)
+        let state: &'a PromptState = self.state;
+        let content = &state.content;
+        let placeholder = self.placeholder;
+        // The box is as tall as its lines as they wrap in the panel's width, the placeholder's while it is empty: a narrow
+        // panel does not cut them (CBS review, docs/adr/9337); two at least, six at most, then it scrolls.
+        let input = crate::widget::Responsive::new(move |bounds| {
+            let room = (bounds.width - 28.0).max(40.0);
+            let text = content.text();
+            let shown = if text.trim().is_empty() { placeholder } else { text.as_str() };
+            let lines: usize = shown
+                .split('\n')
+                .map(|line| ((typography::measured_width(line, size, false) / room).ceil() as usize).max(1))
+                .sum();
+            let events = events.clone();
+            let keys = keys.clone();
+            Element::from(text_editor(content)
             .on_action(move |action| events(AiEvent::Edit(action)))
             .font(typography::ui())
             .size(size)
             .line_height(LineHeight::Relative(1.6))
-            .placeholder(self.placeholder)
+            .placeholder(placeholder)
             .padding([12, 14])
-            .height(
-                (self.state.content.line_count().clamp(2, 6) as f32 * size * 1.6 + 24.0).round(),
-            )
+            .height((lines.clamp(2, 6) as f32 * size * 1.6 + 24.0).round())
             .key_binding(move |kp| {
                 if !matches!(kp.status, Status::Focused { .. }) {
                     return None;
@@ -193,7 +206,9 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
                     value: t.text,
                     selection: t.selection(),
                 }
-            });
+            }))
+        })
+        .height(Length::Shrink);
         body = body.push(input);
         let controls = crate::widget::Responsive::new(move |bounds| {
             let mut model = row![tag(self.model)].spacing(8).align_y(iced::Center);
@@ -221,13 +236,11 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
             } else {
                 style::button::primary
             });
+            // A narrow panel keeps the model and Gönder on one row: the box and the button stay in reach in a short
+            // panel too (CBS review, docs/adr/9337); Shift+Enter is said where there is room.
             if bounds.width < typography::scaled(530.0) {
-                column![
-                    model,
-                    row![hint, space::horizontal(), send].align_y(iced::Center)
-                ]
-                .spacing(8)
-                .into()
+                // Gönder takes its own width first; the model's tag wraps in what is left.
+                row![model.width(Fill), send].spacing(8).align_y(iced::Center).into()
             } else {
                 model.push(space::horizontal()).push(hint).push(send).into()
             }
@@ -985,7 +998,8 @@ impl<'a, Message: Clone + 'a> AiConversation<'a, Message> {
         self.suggestions.push((label, message));
         self
     }
-    fn view(self) -> Element<'a, Message> {
+    /// The panel's body: the header (when there is height for it), the chat and the box with Gönder.
+    fn body(&self, with_header: bool) -> Element<'a, Message> {
         let phase = self.state.phase();
         let header = row![
             AiActivity::new(phase.active()).size(28.0),
@@ -1020,7 +1034,7 @@ impl<'a, Message: Clone + 'a> AiConversation<'a, Message> {
                 )
                 .padding([25, 4]),
             );
-            for (label, message) in self.suggestions {
+            for (label, message) in self.suggestions.clone() {
                 messages = messages.push(
                     button(
                         row![
@@ -1047,7 +1061,7 @@ impl<'a, Message: Clone + 'a> AiConversation<'a, Message> {
             ))
             .width(Fill)
             .height(Fill);
-        if let Some(id) = self.output_id {
+        if let Some(id) = self.output_id.clone() {
             output = output.id(id);
         }
         let follow = self.on_event.clone();
@@ -1060,18 +1074,29 @@ impl<'a, Message: Clone + 'a> AiConversation<'a, Message> {
             .busy(self.state.pending().is_some())
             .model(self.model)
             .attachments(self.attachments);
-        let content = column![
-            container(header).width(Fill).padding([14, 18]),
-            crate::widget::horizontal_divider(),
-            output,
-            container(composer).padding([12, 16]).width(Fill)
-        ]
-        .height(self.height);
+        // A short panel leaves the header out: the chat and the box with Gönder stay in sight (CBS review,
+        // docs/adr/9337). The header's name and model are the box's tag too.
+        let mut column = Column::new().height(Fill);
+        if with_header {
+            column = column
+                .push(container(header).width(Fill).padding([14, 18]))
+                .push(crate::widget::horizontal_divider());
+        }
+        column
+            .push(output)
+            .push(container(composer).padding([12, 16]).width(Fill))
+            .into()
+    }
+
+    fn view(self) -> Element<'a, Message> {
+        let height = self.height;
+        let phase = self.state.phase();
+        let content = crate::widget::Responsive::new(move |bounds| {
+            self.body(bounds.height >= typography::scaled(330.0))
+        })
+        .height(height);
         Surface::new(
-            container(content)
-                .width(Fill)
-                .height(self.height)
-                .padding(1),
+            container(content).width(Fill).height(height).padding(1),
             phase,
             0,
         )

@@ -49,7 +49,10 @@ impl Catalog {
                 Command {
                     id,
                     title,
-                    short: c.short.map_or(title, leak),
+                    short: DESKTOP_SHORTS
+                        .iter()
+                        .find(|(desktop, _)| *desktop == id)
+                        .map_or_else(|| c.short.map_or(title, leak), |(_, s)| *s),
                     description,
                     line_note: line_note(standing, pending_note, description),
                     aliases: leak_list(c.aliases),

@@ -647,6 +647,9 @@ mod split_scenes;
 #[path = "tests/split_many_tests.rs"]
 mod split_many_tests;
 #[cfg(test)]
+#[path = "tests/review_panels_tests.rs"]
+mod review_panels_tests;
+#[cfg(test)]
 #[path = "tests/split_tests.rs"]
 mod split_tests;
 #[cfg(test)]

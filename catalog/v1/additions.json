@@ -813,7 +813,7 @@
       "title": "Kaydırmalı karşılaştır",
       "short": "Karşılaştır",
       "icon": "viewSwipe",
-      "description": "İki görünümü üst üste karşılaştırır: ayırıcının solunda etkin görünüm, sağında diğer görünüm aynı yerde ve ölçekte. Her görünümün teması (projenin bir katman durumu) üstteki seçiciden seçilir; ortofoto ile kadastro ya da eski ile yeni durum böyle karşılaştırılır. Ayırıcı sürüklenir; çizim değişmez, araçlar etkin görünümde çalışır.",
+      "description": "İki görünümü üst üste karşılaştırır: ayırıcının solunda etkin görünüm, sağında diğer görünüm aynı yerde ve ölçekte. Her görünümün teması (projenin bir katman durumu) üstteki seçiciden seçilir; ortofoto ile kadastro ya da eski ile yeni durum böyle karşılaştırılır. Ayırıcı sürüklenir; çizim değişmez, araçlar etkin görünümde çalışır. Tek görünümdeyken basınca çizim alanı ikiye bölünür ve karşılaştırma başlar; üç ya da dört görünümde kapalıdır.",
       "aliases": [
         "KAYDIRKARSILASTIR",
         "KAYDIRKARŞILAŞTIR",
