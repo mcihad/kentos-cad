@@ -18,7 +18,7 @@ use kentos_domain::Slot;
 use crate::app::App;
 
 /// The drawing with its data layers' rows.
-pub(crate) struct SourceCopy {
+pub struct SourceCopy {
     pub doc: kentos_domain::Document,
     /// A row's object in the copy (its slot) → its layer and key.
     pub rows: HashMap<u32, (String, i64)>,
@@ -48,7 +48,7 @@ thread_local! {
 
 impl App {
     /// The drawing with every data layer's rows as objects of their layers, links taken off; none without a data layer.
-    pub(crate) fn source_copy(&self) -> Option<Rc<SourceCopy>> {
+    pub fn source_copy(&self) -> Option<Rc<SourceCopy>> {
         let doc = self.document.as_ref()?;
         let nodes: Vec<kentos_commands::LayerNode> =
             doc.model.layers().leaves().into_iter().filter(|l| l.data.is_some()).cloned().collect();

@@ -120,3 +120,21 @@ fn results_screens() {
         app
     });
 }
+
+/// The 9353 picture: Tampon on the corners' data layer, the input counting the source's rows and naming the layer.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop-cbs location_data_tests::buffer_screens -- --ignored --nocapture"]
+fn buffer_screens() {
+    crate::drawing_fonts::load();
+    let file = triangle();
+    crate::files_testing::usage_shots("9353", "01-tampon-veri", || {
+        let (mut app, ids) = scene_of(&file);
+        let task = app.update(Message::Run("processing.run.geometry.buffer"));
+        drive(&mut app, task);
+        event(&mut app, Event::Value("input".into(), json!({ "scope": "layer", "layerId": ids[1] })));
+        let task = app.data_rows_tasks();
+        drive(&mut app, task);
+        event(&mut app, Event::Value("distance".into(), json!(3)));
+        app
+    });
+}

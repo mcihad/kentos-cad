@@ -12,6 +12,8 @@ use crate::cbs_ext::*;
 mod engine;
 pub(crate) mod read;
 #[cfg(test)]
+mod data_rows_tests;
+#[cfg(test)]
 mod read_tests;
 #[cfg(test)]
 mod tests;
@@ -68,6 +70,9 @@ struct Stamp {
     sources: Vec<(String, String)>,
     /// The bound layers whose files have changed since they were read, as last said (docs/adr/0640 §4).
     stale: Vec<String>,
+    /// The data layers' rows it was built over (docs/adr/9353): the copy holding them, by its place; a new copy (the
+    /// drawing changed, a source's rows came or were written) builds anew.
+    rows: Option<usize>,
 }
 
 #[derive(Default)]
@@ -238,9 +243,39 @@ impl NetworksApp for App {
             return Ok(Task::none());
         };
         let model = &doc.model;
-        if self.modules.cbs_mut().networks.fresh(key, def, model) {
+        // A network over data layers is built over their rows (docs/adr/9353): the copy of the drawing holding them.
+        let tree = model.layers();
+        let over_rows = def.layers().iter().any(|l| tree.get(l).is_some_and(|n| n.data.is_some()));
+        let rows = if over_rows { self.source_copy() } else { None };
+        if let Some(r) = &rows {
+            if !r.reading.is_empty() {
+                return Err(format!(
+                    "{}: ağın katmanlarının satırları kaynaktan okunuyor ({}); birazdan yeniden deneyin.",
+                    def.name,
+                    r.reading.join(", ")
+                ));
+            }
+            if let Some((name, why)) = r.failed.first() {
+                return Err(format!("{}: “{name}” katmanının kaynağı okunamadı: {why}. Ağ kurulmadı.", def.name));
+            }
+        }
+        let rows_key = rows.as_ref().map(|r| std::rc::Rc::as_ptr(r) as usize);
+        let Some(doc) = self.document.as_ref() else {
+            return Ok(Task::none());
+        };
+        let model = &doc.model;
+        if self.modules.cbs_mut().networks.fresh(key, def, model)
+            && self.modules.cbs().networks.built.get(key).is_some_and(|s| s.rows == rows_key)
+        {
             return Ok(Task::none());
         }
+        if let Some(r) = rows {
+            return Ok(build_over_rows(self, key, def, &r, rows_key));
+        }
+        let Some(doc) = self.document.as_ref() else {
+            return Ok(Task::none());
+        };
+        let model = &doc.model;
         self.spatial.sync(model);
         let rules = rules_of(def)?;
         let store = self.spatial.store();
@@ -291,6 +326,7 @@ impl NetworksApp for App {
                 members,
                 sources: source_links(model, def),
                 stale: Vec::new(),
+                rows: None,
             },
         );
         let (done, wait) = oneshot::channel();
@@ -391,3 +427,63 @@ impl NetworksApp for App {
         }
     }
 }
+
+    /// Builds network `key` over the data layers' rows (docs/adr/9353): the copy holding them read whole, its objects
+    /// in a geometry store of their own; the graph on the network thread as any build.
+fn build_over_rows(
+        app: &mut App,
+        key: &str,
+        def: &NetworkDef,
+        rows: &kentos_desktop::exchange::source_copy::SourceCopy,
+        rows_key: Option<usize>,
+    ) -> Task<Message> {
+        let Ok(rules) = rules_of(def) else {
+            return Task::none();
+        };
+        let model = &rows.doc;
+        let mut store = kentos_geometry_core::store::Store::new();
+        store.put_many(def.layers().iter().flat_map(|l| model.by_layer(l)).map(kentos_processing::geometry::record));
+        let (mut whole, members) = read_whole(def, model, &store);
+        let skipped = std::mem::take(&mut whole.skipped);
+        let problems = std::mem::take(&mut whole.problems);
+        let reading = Reading::Whole(read::Inputs { edges: whole.edges, junctions: whole.junctions, turns: whole.turns });
+        let Some(doc) = app.document.as_ref() else {
+            return Task::none();
+        };
+        app.modules.cbs_mut().networks.built.insert(
+            key.to_owned(),
+            Stamp {
+                def: def.clone(),
+                mark: doc.model.change_mark(),
+                layers: leaves(&doc.model),
+                members,
+                sources: source_links(&doc.model, def),
+                stale: Vec::new(),
+                rows: rows_key,
+            },
+        );
+        let (done, wait) = oneshot::channel();
+        app.modules.cbs_mut().networks.engine.send(Job::Build {
+            network: key.to_owned(),
+            name: def.name.clone(),
+            rules: Box::new(rules),
+            reading,
+            skipped,
+            problems,
+            done,
+        });
+        let task = Task::perform(wait, |r| match r {
+            Ok(built) => Message::from(crate::cbs::Event::Networks(Event::Built(built))),
+            Err(_) => Message::from(crate::cbs::Event::Networks(Event::Built(Built {
+                network: String::new(),
+                name: String::new(),
+                problems: vec!["Ağ kurulamadı: ağların iş parçacığı yanıt vermedi.".into()],
+                skipped: 0,
+                nodes: 0,
+                pieces: 0,
+                millis: 0.0,
+                again: false,
+            }))),
+        });
+        app.document_reply(task)
+    }

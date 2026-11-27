@@ -32,12 +32,19 @@ use crate::app::App;
 pub(crate) const TOOL: &str = "selection.byLocation";
 pub(crate) const EXPRESSION: &str = "selection.byExpression";
 
-/// The features parameters a tool's run reads over data layers.
-fn inputs_of(tool: &str) -> &'static [&'static str] {
-    match tool {
-        TOOL => &["input", "reference"],
-        EXPRESSION => &["input"],
-        _ => &[],
+/// The features parameters a tool's run reads over data layers: the selecting tools' named ones, every other tool's
+/// features parameters (data_inputs.rs, docs/adr/9353).
+fn inputs_of(tool: &kentos_processing::Tool) -> Vec<String> {
+    match tool.id.as_str() {
+        TOOL => vec!["input".into(), "reference".into()],
+        EXPRESSION => vec!["input".into()],
+        id if id.starts_with(kentos_processing::model_runner::MODEL_PREFIX) => Vec::new(),
+        _ => tool
+            .parameters
+            .iter()
+            .filter(|p| matches!(p.kind, kentos_processing::ParamKind::Features { .. }))
+            .map(|p| p.name.clone())
+            .collect(),
     }
 }
 
@@ -101,7 +108,14 @@ pub(crate) struct Located {
     pub failed: Vec<(String, String)>,
     /// Each data layer read: how it is named (its group's path when another shares its short name), its rows, and its
     /// fields (the layer's own and those its rows hold).
-    taken: Vec<(String, u64, BTreeSet<String>)>,
+    taken: Vec<(String, String, BTreeSet<String>)>,
+}
+
+impl Located {
+    /// The rows chosen in the table, as objects of the copy.
+    pub(super) fn chosen(&self) -> &[Slot] {
+        &self.chosen
+    }
 }
 
 /// What the kept copy is of: the drawing's session, its generation and its writes to the sources; each layer and
@@ -151,8 +165,8 @@ impl App {
         let data: Vec<&LayerNode> = tree.leaves().into_iter().filter(|l| l.data.is_some()).collect();
         let table = self.gis.features.data.selected_layer().map(str::to_owned);
         let mut taken: BTreeSet<String> = BTreeSet::new();
-        for param in inputs_of(&window.tool.id) {
-            let Some(v) = window.values.get(*param).and_then(FeaturesValue::read) else {
+        for param in inputs_of(&window.tool) {
+            let Some(v) = window.values.get(&param).and_then(FeaturesValue::read) else {
                 continue;
             };
             match v.scope {
@@ -204,7 +218,19 @@ impl App {
                         all.iter().filter(|(k, _)| !held.contains(k)).map(|(k, e)| (*k, e.clone())).unzip();
                     let mut fields: BTreeSet<String> = node.fields.iter().map(|f| f.name.clone()).collect();
                     fields.extend(objects.iter().flat_map(|e| e.base().attrs.keys().cloned()));
-                    taken.push((layer_label(doc.model.layers(), &node.id), objects.len() as u64, fields));
+                    // What waits in the edit session, said beside the source's rows (docs/adr/9353).
+                    let c = doc.model.data_changes(&node.id);
+                    let waiting = c.added.len() + c.changed.len() + c.deleted.len();
+                    let count = if waiting > 0 {
+                        format!(
+                            "{} kaynakta, bekleyen {}",
+                            objects.len(),
+                            crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                        )
+                    } else {
+                        objects.len().to_string()
+                    };
+                    taken.push((layer_label(doc.model.layers(), &node.id), count, fields));
                     let Ok(slots) = copy.add_many(objects, "Seçim") else {
                         failed.push((node.name.clone(), "çizimde yer kalmadı".to_owned()));
                         continue;
@@ -250,13 +276,13 @@ impl App {
         window.refresh(&self.gis.processing.runner, &scene);
         let scope = scope_words(&located, &window.tool.id, window.values.get("condition"));
         if let Some(scope) = scope {
-            for param in inputs_of(&window.tool.id) {
+            for param in inputs_of(&window.tool) {
                 let takes_data = window
                     .values
-                    .get(*param)
+                    .get(&param)
                     .and_then(FeaturesValue::read)
-                    .is_some_and(|v| matches!(v.scope, Scope::All | Scope::Visible | Scope::Selection));
-                if takes_data && let Some(input) = window.inputs.get_mut(*param) {
+                    .is_some_and(|v| matches!(v.scope, Scope::All | Scope::Visible | Scope::Selection | Scope::Layer(_)));
+                if takes_data && let Some(input) = window.inputs.get_mut(&param) {
                     input.description = sentence_after(&input.description, &scope);
                 }
             }
@@ -270,8 +296,8 @@ impl App {
             None
         };
         if let Some(said) = said {
-            for param in inputs_of(&window.tool.id) {
-                if let Some(input) = window.inputs.get_mut(*param) {
+            for param in inputs_of(&window.tool) {
+                if let Some(input) = window.inputs.get_mut(&param) {
                     if !located.reading.is_empty() {
                         input.count = 0;
                     }
@@ -284,6 +310,10 @@ impl App {
     /// Çalıştır with a data layer among the inputs: the tool run on the copy through `cad.processing.run`, its choice
     /// brought back by layer and key and kept by layer; none when it takes no data layer.
     pub(super) fn processing_data_location_run(&mut self) -> Option<()> {
+        // Another tool writes its result into the drawing: data_inputs.rs.
+        if !matches!(self.gis.processing.dialog.as_ref()?.tool.id.as_str(), TOOL | EXPRESSION) {
+            return None;
+        }
         let located = self.data_location()?;
         let window = self.gis.processing.dialog.as_mut()?;
         let (tool, label) = (window.tool.id.clone(), window.tool.label.clone());

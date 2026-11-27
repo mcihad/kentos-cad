@@ -508,7 +508,10 @@ impl App {
             return Task::none();
         }
         let input = self.processing_sink_input();
-        let (Some(doc), Some(window), Some(input)) =
+        // A data layer among the inputs: the run reads the copy holding its rows (data_inputs.rs, docs/adr/9353), the
+        // rows chosen in its table taken as chosen.
+        let located = self.data_location();
+        let (Some(doc), Some(window), Some(mut input)) =
             (&self.document, &mut self.gis.processing.dialog, input)
         else {
             return Task::none();
@@ -517,7 +520,18 @@ impl App {
             window.status = RunStatus::Invalid(why.to_owned());
             return Task::none();
         }
-        let mut copy = doc.model.reading_copy();
+        if let Some(l) = located.as_ref().filter(|l| !l.reading.is_empty()) {
+            window.status =
+                RunStatus::Invalid(format!("Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.", l.reading.join(", ")));
+            return Task::none();
+        }
+        let mut copy = match &located {
+            Some(l) => {
+                input.selection.extend(l.chosen().iter().filter_map(|s| l.doc.uid(*s).map(|u| u.to_string())));
+                l.doc.reading_copy()
+            }
+            None => doc.model.reading_copy(),
+        };
         let stop = Arc::new(AtomicBool::new(false));
         window.sink.stop = Some(stop.clone());
         window.status = RunStatus::Running {

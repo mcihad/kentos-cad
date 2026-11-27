@@ -28,6 +28,7 @@ mod apart_tests;
 pub(crate) mod background;
 pub(crate) mod batch;
 pub(crate) mod data_location;
+pub(crate) mod data_inputs;
 #[cfg(test)]
 #[path = "recall_tests.rs"]
 mod recall_tests;
@@ -732,6 +733,13 @@ impl App {
         // Konuma göre seç with a data layer among its inputs runs on the drawing with their rows (data_location.rs).
         if attempted && self.processing_data_location_run().is_some() {
             return self.result_shown();
+        }
+        // Another tool with a data layer among its inputs: read on the rows, written into the drawing (data_inputs.rs).
+        if attempted
+            && self.gis.processing.dialog.as_ref().is_some_and(|w| w.sink.place == sink::Place::Drawing)
+            && let Some(task) = self.processing_rows_run()
+        {
+            return task;
         }
         let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();

@@ -123,7 +123,7 @@ impl App {
     }
 
     /// After every message: the rows a tab asked for read from their sources, off the interface's thread.
-    pub(crate) fn data_rows_tasks(&mut self) -> Task<Message> {
+    pub fn data_rows_tasks(&mut self) -> Task<Message> {
         let wanted: Vec<String> = self.gis.data_rows.wanted.borrow_mut().drain().collect();
         let (Some(doc), Some(stamp)) = (self.document.as_ref(), self.data_rows_stamp()) else {
             return Task::none();

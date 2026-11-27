@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Analiz araçları veri katmanlarının satırlarını okur (27 Kasım 2026, T28, T29, T32, T36;
+  [ADR 9353](../adr/9353-analysis-tools-read-data-layer-rows.md)).**
+  - İşlem araçları (Tampon …) girdiyi satırlı kopyadan okur, sonucu çizime yazar; oturumun bekleyen satırları katman ve
+    anahtarla birleşir. Girdisini yerinde değiştiren araç satırları almaz, nedenini söyler.
+  - Ağlar veri katmanında satırlardan kurulur. Veri karşılaştır her iki tarafın satırlarını okur, açık sekmeleri sunar,
+    boş sonucu uyarıyla söyler.
+
 - **Okumak için açılan formda Düzenle alt çubuğun solunda (27 Kasım 2026, sahibin sözü;
   [ADR 9352](../adr/9352-form-edit-button-in-the-footer.md)).** Sağda yalnız Vazgeç; yazılamayan kayıtta kapalı
   kaydetme düğmesi gösterilmez.

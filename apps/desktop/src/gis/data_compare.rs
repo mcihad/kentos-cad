@@ -82,6 +82,24 @@ pub struct Other {
     system: String,
 }
 
+/// A drawing read from a file as Eski veri: its objects and its data layers' rows read from their sources (docs/adr/9353:
+/// a data layer's rows are its source's, not the drawing's objects); a source that cannot be read refuses, named.
+fn other_of(name: &str, model: &kentos_domain::Document) -> Result<Other, String> {
+    let mut entities: Vec<Entity> = model.entities().cloned().collect();
+    for node in model.layers().leaves().into_iter().filter(|l| l.data.is_some()) {
+        let held = model.data_hidden(&node.id);
+        let read = kentos_native_application::data_write::all_rows(node, model.settings(), &held, &|| false)
+            .map_err(|why| format!("“{name}” dosyasının “{}” katmanının kaynağı okunamadı: {why}.", node.name))?;
+        entities.extend(read.rows.into_iter().map(|(_, e)| e));
+    }
+    Ok(Other {
+        name: name.to_owned(),
+        tree: model.layers().nodes().to_vec(),
+        entities,
+        system: system_of(model.settings()),
+    })
+}
+
 /// A side's objects and the tree their layers are in.
 struct Side<'a> {
     tree: &'a [LayerNode],
@@ -147,6 +165,8 @@ pub struct Preset {
 pub enum Event {
     /// Eski veri: this drawing (true) or the file read.
     Source(bool),
+    /// Eski veri: the drawing open in another tab, by its session (docs/adr/9353).
+    Tab(u64),
     FromFile,
     FilePicked(Option<PathBuf>),
     OldNode(String),
@@ -328,7 +348,7 @@ pub fn counts_text(rows: &[Row]) -> String {
         .map(|(n, w)| format!("{n} {w}"))
         .collect();
     if said.is_empty() {
-        "karşılaştırılacak nesne yok".to_owned()
+        "karşılaştırılacak nesne yok: iki tarafta da seçilen katmanlarda nesne ya da satır bulunmadı".to_owned()
     } else {
         said.join(", ")
     }
@@ -394,12 +414,12 @@ impl App {
         let _ = std::fs::remove_file(path);
         match read {
             Ok(read) => {
-                let model = &read.model;
-                let other = Other {
-                    name: name.to_owned(),
-                    tree: model.layers().nodes().to_vec(),
-                    entities: model.entities().cloned().collect(),
-                    system: system_of(model.settings()),
+                let other = match other_of(name, &read.model) {
+                    Ok(o) => o,
+                    Err(why) => {
+                        self.warn(why);
+                        return;
+                    }
                 };
                 self.open_data_compare_with(Preset {
                     other: Some(other),
@@ -452,12 +472,13 @@ impl App {
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::DataCompare));
     }
 
-    /// The two sides as the window sets them.
-    fn compare_sides(&self) -> Option<(Side<'_>, Side<'_>)> {
+    /// The two sides as the window sets them; `rows`: the open drawing with its data layers' rows (docs/adr/9353), its
+    /// side's objects then.
+    fn compare_sides<'a>(&'a self, rows: Option<&'a kentos_domain::Document>) -> Option<(Side<'a>, Side<'a>)> {
         let (Some(w), Some(doc)) = (&self.gis.data_compare, &self.document) else {
             return None;
         };
-        let model = &doc.model;
+        let model = rows.unwrap_or(&doc.model);
         let here_tree = model.layers().nodes();
         let here_system = system_of(model.settings());
         let (old_tree, old_all, old_system, old_name): (
@@ -531,7 +552,15 @@ impl App {
         };
         date_of(&w.old_date, OLD_DATE)?;
         date_of(&w.new_date, NEW_DATE)?;
-        let Some((old, new)) = self.compare_sides() else {
+        // The open drawing's data layers are read with their rows (docs/adr/9353); while they are read, said so.
+        let rows = self.source_copy();
+        if let Some(r) = rows.as_ref().filter(|r| !r.reading.is_empty()) {
+            return Err(format!("Kaynaktan okunuyor: {}. Satırlar okununca karşılaştırın.", r.reading.join(", ")));
+        }
+        if let Some((name, why)) = rows.as_ref().and_then(|r| r.failed.first()) {
+            return Err(format!("“{name}” katmanının kaynağı okunamadı: {why}. Karşılaştırma yapılmadı."));
+        }
+        let Some((old, new)) = self.compare_sides(rows.as_ref().map(|r| &r.doc)) else {
             return Err("Açık çizim yok.".to_owned());
         };
         if let Some(why) = Self::compare_refused(&old, &new) {
@@ -859,6 +888,28 @@ impl App {
                     w.old_node.clear();
                 }
             }
+            Event::Tab(session) => {
+                let read = self
+                    .doc_tabs
+                    .parked
+                    .iter()
+                    .find(|p| p.document.session == session)
+                    .map(|p| (p.document.name().to_owned(), other_of(p.document.name(), &p.document.model)));
+                match read {
+                    Some((_, Ok(other))) => {
+                        let count = other.entities.len();
+                        let name = other.name.clone();
+                        if let Some(w) = self.gis.data_compare.as_mut() {
+                            w.other = Some(other);
+                            w.old_here = false;
+                            w.old_node.clear();
+                        }
+                        self.say(Level::Info, format!("“{name}” sekmesi okundu: {count} nesne; Eski veri olarak seçildi."));
+                    }
+                    Some((_, Err(why))) => self.warn(why),
+                    None => {}
+                }
+            }
             Event::FromFile => {
                 return Task::perform(
                     async {
@@ -878,12 +929,12 @@ impl App {
                     let name = path
                         .file_name()
                         .map_or_else(String::new, |f| f.to_string_lossy().into_owned());
-                    let model = &read.model;
-                    let other = Other {
-                        name: name.clone(),
-                        tree: model.layers().nodes().to_vec(),
-                        entities: model.entities().cloned().collect(),
-                        system: system_of(model.settings()),
+                    let other = match other_of(&name, &read.model) {
+                        Ok(o) => o,
+                        Err(why) => {
+                            self.warn(why);
+                            return Task::none();
+                        }
                     };
                     let count = other.entities.len();
                     if let Some(w) = self.gis.data_compare.as_mut() {
@@ -959,7 +1010,8 @@ impl App {
                         w.outcome = Some(outcome);
                         w.stale = false;
                     }
-                    self.say(Level::Success, format!("Karşılaştırıldı: {said}."));
+                    let level = if said.starts_with("karşılaştırılacak nesne yok") { Level::Warn } else { Level::Success };
+                    self.say(level, format!("Karşılaştırıldı: {said}."));
                 }
                 Err(why) => self.warn(why),
             },
@@ -1042,13 +1094,25 @@ impl App {
             (Some(o), false) => &o.tree,
             _ => here_tree,
         };
-        // Eski veri: this drawing or the file read.
+        // Eski veri: this drawing, the file read, or a drawing open in another tab (docs/adr/9353).
         let mut sources = vec![Choice::new("Bu çizim")];
         if let Some(o) = &w.other {
             sources.push(Choice::new(o.name.clone()));
         }
-        let source = Select::new(sources, Some(if w.old_here { 0 } else { 1 }), |i| {
-            msg(Event::Source(i == 0))
+        let tabs: Vec<(u64, String)> = self
+            .doc_tabs
+            .parked
+            .iter()
+            .map(|p| (p.document.session, format!("Sekme: {}", p.document.name())))
+            .collect();
+        let first_tab = sources.len();
+        sources.extend(tabs.iter().map(|(_, n)| Choice::new(n.clone())));
+        let tab_sessions: Vec<u64> = tabs.iter().map(|(s, _)| *s).collect();
+        let had_other = w.other.is_some();
+        let source = Select::new(sources, Some(if w.old_here { 0 } else { 1 }), move |i| match i {
+            0 => msg(Event::Source(true)),
+            1 if had_other => msg(Event::Source(false)),
+            i => msg(Event::Tab(tab_sessions.get(i - first_tab).copied().unwrap_or_default())),
         });
         let pick = |tree: &[LayerNode], chosen: &str, on: fn(String) -> Event| {
             let choices = node_choices(tree);
@@ -1089,8 +1153,9 @@ impl App {
             .width(iced::Length::FillPortion(2)),
         ]
         .spacing(18);
+        let rows = self.source_copy();
         let fields = self
-            .compare_sides()
+            .compare_sides(rows.as_ref().map(|r| &r.doc))
             .map(|(o, n)| fields_of(&[&o, &n]))
             .unwrap_or_default();
         let key_choices: Vec<Choice> = std::iter::once(Choice::new("Seçin"))
@@ -1172,12 +1237,20 @@ impl App {
         .spacing(18);
         let summary = match &w.outcome {
             Some(o) => words::summary(vec![words::text_line(
-                if o.rows.iter().any(|r| r.status != Status::Same) {
+                // Nothing to compare is no success: said as a warning (docs/adr/9353).
+                if o.rows.is_empty() {
+                    Kind::Warn
+                } else if o.rows.iter().any(|r| r.status != Status::Same) {
                     Kind::Info
                 } else {
                     Kind::Ok
                 },
-                format!("{}.", counts_text(&o.rows)),
+                // How many were compared before what they came to (docs/adr/9353): “6 nesne karşılaştırıldı: 6 aynı.”
+                if o.rows.is_empty() {
+                    format!("{}.", counts_text(&o.rows))
+                } else {
+                    format!("{} nesne karşılaştırıldı: {}.", o.rows.len(), counts_text(&o.rows))
+                },
             )]),
             None => words::summary(vec![words::text_line(
                 Kind::Info,
@@ -1425,4 +1498,62 @@ mod tests {
         assert_eq!(changed(&app), 0, "at 2 m the parcel is the same");
     }
 
+    /// The second round's T36 (docs/adr/9353): two data layers reading the same table of two GeoPackages, no object of
+    /// the drawing on them. Compared by location the six rows of each are paired: “Karşılaştırıldı: 6 aynı”, not an
+    /// empty success. Read from a file as Eski veri, a drawing's data layers bring their rows too.
+    #[test]
+    fn two_data_layers_are_compared_by_their_rows() {
+        crate::data_layers::register();
+        let (a, b) = (crate::data_layers_tests::municipal("karsilastir-a"), crate::data_layers_tests::municipal("karsilastir-b"));
+        let mut app = app_with_drawing();
+        let ids = app
+            .add_data_layers(vec![
+                crate::data_layers::describe(&a.display().to_string(), "bakim").expect("described"),
+                crate::data_layers::describe(&b.display().to_string(), "bakim").expect("described"),
+            ])
+            .expect("added");
+        let _ = app.source_copy();
+        let task = app.data_rows_tasks();
+        crate::files_testing::drive(&mut app, task);
+        app.open_data_compare_with(super::Preset {
+            old_node: Some(ids[0].clone()),
+            new_node: Some(ids[1].clone()),
+            ..super::Preset::default()
+        });
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
+        let said = crate::files_testing::last_said(&app);
+        assert_eq!(said, "Karşılaştırıldı: 6 aynı.");
+        let model = &app.document.as_ref().expect("a drawing").model;
+        let other = super::other_of("kopya.kcad", model).expect("read");
+        assert_eq!(other.entities.len() - model.entities().count(), 12, "both layers' rows");
+    }
+
+    /// The 9353 picture: two data layers compared by their rows.
+    #[test]
+    #[ignore = "pictures: cargo test -p kentos-desktop --lib data_compare::tests::rows_screens -- --ignored --nocapture"]
+    fn rows_screens() {
+        crate::drawing_fonts::load();
+        crate::files_testing::usage_shots("9353", "02-veri-karsilastir", || {
+            crate::data_layers::register();
+            let (a, b) = (crate::data_layers_tests::municipal("karsilastir-ra"), crate::data_layers_tests::municipal("karsilastir-rb"));
+            let mut app = app_with_drawing();
+            let ids = app
+                .add_data_layers(vec![
+                    crate::data_layers::describe(&a.display().to_string(), "bakim").expect("described"),
+                    crate::data_layers::describe(&b.display().to_string(), "bakim").expect("described"),
+                ])
+                .expect("added");
+            let _ = app.source_copy();
+            let task = app.data_rows_tasks();
+            crate::files_testing::drive(&mut app, task);
+            app.open_data_compare_with(super::Preset {
+                old_node: Some(ids[0].clone()),
+                new_node: Some(ids[1].clone()),
+                ..super::Preset::default()
+            });
+            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::OnlyDiffs(false))));
+            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
+            app
+        });
+    }
 }
