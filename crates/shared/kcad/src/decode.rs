@@ -491,6 +491,9 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
     if arch < crate::ARCH_WITH_FOOTINGS && crate::uses_footings(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "temel (tekil ve sürekli) mimari veri sürümü 40 gerektirir"));
     }
+    if arch < crate::ARCH_WITH_RAFTS && crate::uses_rafts(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "radye mimari veri sürümü 41 gerektirir"));
+    }
     if arch < crate::ARCH_WITH_CASEWORK_PLACEMENT && crate::uses_casework_placement(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "mutfak dizisinin kat ve dolgu yerleşimi mimari veri sürümü 39 gerektirir"));
     }

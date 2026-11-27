@@ -30,6 +30,8 @@ pub enum Kind {
     Space,
     /// A slab, by its material (Betonarme); none: GENEL.
     Slab(Option<String>),
+    /// A raft (docs/adr/8172 §6): a slab of the foundation, EK-2 Tablo 2.3's Temel (TEML), MM-TEML-RADYE.
+    Raft,
     /// A column. KentOS keeps no column material yet (plan M41): GENEL.
     Column,
     Stair,
@@ -79,6 +81,7 @@ impl Kind {
             Kind::Door => "KAPI",
             Kind::Window => "PENC",
             Kind::Slab(_) => "DOSM",
+            Kind::Raft => "TEML",
             Kind::Column => "KOLN",
             Kind::Stair => "MERD",
             Kind::Ramp => "RAMP",
@@ -125,6 +128,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(kentos_commands::BeamRole::PadFooting) => word("TEKIL"),
             Kind::Beam(kentos_commands::BeamRole::StripFooting) => word("SUREKLI"),
+            Kind::Raft => word("RADYE"),
             Kind::Beam(_) => String::new(),
             Kind::Post => word("DIKME"),
             Kind::Rail => word("KAYIT"),
@@ -176,6 +180,7 @@ impl Kind {
             Kind::Flue => "Baca",
             Kind::Space => "Mahal",
             Kind::Slab(_) => "Döşeme",
+            Kind::Raft => "Radye",
             Kind::Column => "Kolon",
             Kind::Stair => "Merdiven",
             Kind::Ramp => "Rampa",
@@ -210,6 +215,7 @@ impl Kind {
             Kind::Flue => "baca",
             Kind::Space => "mahal",
             Kind::Slab(_) => "döşeme",
+            Kind::Raft => "radye",
             Kind::Column => "kolon",
             Kind::Stair => "merdiven",
             Kind::Ramp => "rampa",
@@ -247,7 +253,7 @@ impl Kind {
         };
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
-            Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
+            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) => look("ink", 0.35),
             Kind::Covering(_) | Kind::CeilingDevice => look("ink", 0.18),
             Kind::Door
             | Kind::Window
@@ -455,8 +461,6 @@ mod tests {
             Kind::Beam(kentos_commands::BeamRole::Beam),
             Kind::Beam(kentos_commands::BeamRole::Lintel),
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
-            Kind::Beam(kentos_commands::BeamRole::PadFooting),
-            Kind::Beam(kentos_commands::BeamRole::StripFooting),
             Kind::Roof(Some("Kiremit".into())),
             Kind::Roof(None),
             Kind::Railing(kentos_commands::RailingInfill::Balusters),
@@ -467,6 +471,10 @@ mod tests {
             Kind::Post,
             Kind::Rail,
             Kind::Covering("ASTV"),
+            // The foundations (docs/adr/8172): EK-2's Temel, by their kind.
+            Kind::Beam(kentos_commands::BeamRole::PadFooting),
+            Kind::Beam(kentos_commands::BeamRole::StripFooting),
+            Kind::Raft,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -494,7 +502,8 @@ mod tests {
             ("MM-CATI-KIREMIT", "MM-CATI-GENEL")
         );
         // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill; an elevator's block (§5) its Asansör; a curtain
-        // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer.
+        // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer; the foundations (docs/adr/8172)
+        // Temel.
         assert_eq!(
             &names[25..],
             [
@@ -505,7 +514,10 @@ mod tests {
                 "MM-GIYC-GENEL",
                 "MM-DIGR-DIKME",
                 "MM-DIGR-KAYIT",
-                "MM-ASTV-GENEL"
+                "MM-ASTV-GENEL",
+                "MM-TEML-TEKIL",
+                "MM-TEML-SUREKLI",
+                "MM-TEML-RADYE"
             ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");

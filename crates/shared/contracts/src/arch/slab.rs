@@ -287,16 +287,19 @@ pub enum SlabRole {
     Balcony,
     /// Teras.
     Terrace,
+    /// Radye (docs/adr/8172 §6): a raft, the building's foundation slab; IFC's `IfcSlab` BASESLAB.
+    Raft,
 }
 
 impl SlabRole {
-    pub const ALL: [SlabRole; 3] = [SlabRole::Floor, SlabRole::Balcony, SlabRole::Terrace];
+    pub const ALL: [SlabRole; 4] = [SlabRole::Floor, SlabRole::Balcony, SlabRole::Terrace, SlabRole::Raft];
 
     pub fn label(self) -> &'static str {
         match self {
             SlabRole::Floor => "Döşeme",
             SlabRole::Balcony => "Balkon",
             SlabRole::Terrace => "Teras",
+            SlabRole::Raft => "Radye",
         }
     }
 
@@ -305,11 +308,23 @@ impl SlabRole {
             SlabRole::Floor => "floor",
             SlabRole::Balcony => "balcony",
             SlabRole::Terrace => "terrace",
+            SlabRole::Raft => "raft",
         }
     }
 
     pub fn is_floor(&self) -> bool {
         *self == SlabRole::Floor
+    }
+
+    /// Its `IfcSlab`'s predefined type (EK-6 Tablo 6.56): a raft's BASESLAB (IFC 4.3: a slab foundation is no
+    /// `IfcFooting`), every other FLOOR.
+    pub fn ifc_type(self) -> &'static str {
+        if self == SlabRole::Raft { "BASESLAB" } else { "FLOOR" }
+    }
+
+    /// Its IFC name's words (EK-5 §5.5): a raft's Radye, every other Döşeme.
+    pub fn ifc_words(self) -> &'static str {
+        if self == SlabRole::Raft { "Radye" } else { "Döşeme" }
     }
 }
 
@@ -787,7 +802,16 @@ impl SlabFields {
                 ));
             }
         }
-        // A covering is a plate of its own (docs/adr/8070 §10): no layers, no edge, no balcony or terrace.
+        // A raft (docs/adr/8172 §6): the building's level base, no railing or parapet along it.
+        if self.role == SlabRole::Raft {
+            if self.slope.is_some() {
+                return Some(("slope".into(), "Radyeye eğim verilmez: radye binanın düz tabanıdır.".into()));
+            }
+            if self.edge.is_some() {
+                return Some(("edge".into(), "Radyenin kenarı (korkuluk, parapet) olmaz.".into()));
+            }
+        }
+        // A covering is a plate of its own (docs/adr/8070 §10): no layers, no edge, no balcony, terrace or raft.
         if let Some(c) = &self.covering {
             if let Some(problem) = c.problem() {
                 return Some(problem);
@@ -800,6 +824,9 @@ impl SlabFields {
             }
             if self.edge.is_some() {
                 return Some(("covering".into(), "Kaplamanın kenarı (korkuluk, parapet) olmaz.".into()));
+            }
+            if self.role == SlabRole::Raft {
+                return Some(("covering".into(), "Radye kaplama olamaz; kaplamanın türü Döşeme olmalı.".into()));
             }
             if self.role != SlabRole::Floor {
                 return Some((

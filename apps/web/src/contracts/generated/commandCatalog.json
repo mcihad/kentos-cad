@@ -215232,6 +215232,11 @@
           "const": "terrace",
           "description": "Teras.",
           "type": "string"
+        },
+        {
+          "const": "raft",
+          "description": "Radye (docs/adr/8172 §6): a raft, the building's foundation slab; IFC's `IfcSlab` BASESLAB.",
+          "type": "string"
         }
       ]
     },

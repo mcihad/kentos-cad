@@ -8126,13 +8126,15 @@ class SlabRole(_StrEnum):
     - ``floor``: Döşeme: a storey's floor.
     - ``balcony``: Balkon.
     - ``terrace``: Teras.
+    - ``raft``: Radye (docs/adr/8172 §6): a raft, the building's foundation slab; IFC's `IfcSlab` BASESLAB.
     """
     FLOOR = "floor"
     BALCONY = "balcony"
     TERRACE = "terrace"
+    RAFT = "raft"
 
 
-SlabRoleName = Literal["floor", "balcony", "terrace"]
+SlabRoleName = Literal["floor", "balcony", "terrace", "raft"]
 """The names of :class:`SlabRole`, for a plain string."""
 
 

@@ -535,6 +535,7 @@
         "tool.polyline",
         "tool.post",
         "tool.quickDimension",
+        "tool.raft",
         "tool.rail",
         "tool.railing",
         "tool.ramp",

@@ -2108,6 +2108,11 @@
           "command": "tool.footingStrip",
           "title": "Kiriş",
           "label": "Sürekli temel"
+         },
+         {
+          "command": "tool.raft",
+          "title": "Kiriş",
+          "label": "Radye"
          }
         ]
        },

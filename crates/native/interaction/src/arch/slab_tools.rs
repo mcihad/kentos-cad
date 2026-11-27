@@ -28,6 +28,12 @@ use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Area, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool};
 
 pub const SLAB_ID: &str = "slab";
+/// Radye (docs/adr/8172 §6): the slab tool started as a raft.
+pub const RAFT_ID: &str = "raft";
+
+/// A raft's thickness, its top under its storey's floor and its edges past the walls' outer faces until changed,
+/// metres (docs/adr/8172 §6.3): KentOS's own first values, not a regulation's.
+const RAFT: (f64, f64, f64) = (0.6, -0.3, 0.5);
 
 /// How the outline is given.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -182,6 +188,32 @@ impl SlabTool {
         Self::default()
     }
 
+    /// Radye (docs/adr/8172 §6): 60 cm, its top 30 cm under the floor, 50 cm past the walls' outer faces.
+    pub fn raft() -> Self {
+        let mut tool = Self::default();
+        tool.set_role(SlabRole::Raft);
+        tool
+    }
+
+    /// Its Tür taken: into a raft with a raft's sizes, out of one with a slab's, until changed.
+    fn set_role(&mut self, role: SlabRole) {
+        if role == self.role {
+            return;
+        }
+        if role == SlabRole::Raft {
+            (self.thickness, self.offset, self.edge_offset) = RAFT;
+            self.edge = None;
+        } else if self.role == SlabRole::Raft {
+            (self.thickness, self.offset, self.edge_offset) = (kentos_commands::SLAB_THICKNESS, 0.0, 0.0);
+        }
+        self.role = role;
+    }
+
+    /// Its name: Radye for a raft, else Döşeme.
+    fn name(&self) -> &'static str {
+        if self.role == SlabRole::Raft { "Radye" } else { "Döşeme" }
+    }
+
     fn draws(&self) -> bool {
         self.bound == Bound::Draw
     }
@@ -220,8 +252,11 @@ impl SlabTool {
         }
     }
 
-    /// The layer kind of the slab the tool writes: by its material (docs/adr/8008).
+    /// The layer kind of the slab the tool writes: by its material (docs/adr/8008); a raft on Temel's (docs/adr/8172).
     fn layer_kind(&self) -> crate::arch_layer::Kind {
+        if self.role == SlabRole::Raft {
+            return crate::arch_layer::Kind::Raft;
+        }
         crate::arch_layer::Kind::Slab(self.material.clone())
     }
 
@@ -503,11 +538,11 @@ impl Tool for SlabTool {
     }
 
     fn id(&self) -> &'static str {
-        SLAB_ID
+        if self.role == SlabRole::Raft { RAFT_ID } else { SLAB_ID }
     }
 
     fn label(&self) -> &'static str {
-        "Döşeme"
+        self.name()
     }
 
     fn cursor(&self) -> Cursor {
@@ -535,7 +570,7 @@ impl Tool for SlabTool {
     }
 
     fn prompt(&self) -> Prompt {
-        let words = |label: &'static str| Prompt::new("Döşeme", label).option("Geri", "G");
+        let words = |label: &'static str| Prompt::new(self.name(), label).option("Geri", "G");
         match self.ask {
             Some(Ask::Thickness) => return words("döşemenin kalınlığını yazın (15 cm gibi)"),
             Some(Ask::Offset) => return words("üst yüzün katın kotuna göre farkını yazın (-5 cm gibi)"),
@@ -549,12 +584,13 @@ impl Tool for SlabTool {
             (true, false) => "döşemeden kesilecek odaya tıklayın",
             (true, true) if self.pts.len() < 3 => "kesilecek alanın köşelerine tıklayın",
             (false, false) if self.bound == Bound::Room => "döşemesi yapılacak odaya tıklayın",
+            (false, false) if self.role == SlabRole::Raft => "duvarların içine tıklayın: dış konturdan, ötelemesi kadar taşan radye",
             (false, false) => "duvarların içine tıklayın: dış konturdan döşeme",
             (_, true) if self.pts.len() < 3 => "döşemenin köşelerine tıklayın",
             _ => "köşelere tıklayın, Enter ile kapatın",
         };
         let f = &self.format;
-        let mut p = Prompt::new("Döşeme", step)
+        let mut p = Prompt::new(self.name(), step)
             .option_with("Sınır", "S", if self.hole && self.bound == Bound::Outline { "Oda" } else { self.bound.label() })
             .option_with("Tür", "T", self.role.label())
             .option_with("Kalınlık", "E", f.length(self.thickness))
@@ -623,13 +659,12 @@ impl Tool for SlabTool {
         }
         match key.as_str() {
             "S" => self.cycle_bound(),
-            "T" => {
-                self.role = match self.role {
-                    SlabRole::Floor => SlabRole::Balcony,
-                    SlabRole::Balcony => SlabRole::Terrace,
-                    SlabRole::Terrace => SlabRole::Floor,
-                }
-            }
+            "T" => self.set_role(match self.role {
+                SlabRole::Floor => SlabRole::Balcony,
+                SlabRole::Balcony => SlabRole::Terrace,
+                SlabRole::Terrace => SlabRole::Raft,
+                SlabRole::Raft => SlabRole::Floor,
+            }),
             "N" => {
                 self.edge = match self.edge {
                     None => Some(SlabEdgeKind::Railing),
@@ -747,7 +782,7 @@ impl Tool for SlabTool {
                 let Some(r) = SlabRole::ALL.into_iter().find(|r| r.name() == typed || r.label() == typed) else {
                     return false;
                 };
-                self.role = r;
+                self.set_role(r);
             }
             "N" => {
                 self.edge = match typed {

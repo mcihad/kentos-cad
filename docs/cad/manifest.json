@@ -14079,6 +14079,22 @@
    "tests": 2
   },
   {
+   "id": "tool.raft",
+   "kind": "command",
+   "title": "Radye",
+   "level": "semantic",
+   "via": [
+    "cad.slabs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.slabs.create",
+   "mcp": "cad.slabs.create",
+   "note": "Döşeme aracı Radye türüyle: iç nokta ya da kontur, kalınlık, kot farkı, kenar ötelemesi ve malzeme komuta verilir; konturu, radyenin kuralları (kenar ve eğim yok) ve IFC sınıfı (IfcSlab BASESLAB) komutun ve modelin (ADR 8172 §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.rail",
    "kind": "command",
    "title": "Kayıt",

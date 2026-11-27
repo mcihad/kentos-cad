@@ -424,3 +424,38 @@ fn a_footing_round_trips_under_arch_data_40() {
     let refused = kentos_kcad::encode(&baseless).expect_err("a footing stands at its base");
     assert!(refused.message.contains("Temelin"), "{}", refused.message);
 }
+
+#[test]
+fn a_raft_round_trips_under_arch_data_41() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_rafts(&doc));
+    let slab = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Slab(s) if s.slab.covering.is_none() => Some(s),
+            _ => None,
+        })
+        .expect("a slab");
+    slab.slab.role = kentos_contracts::SlabRole::Raft;
+    slab.slab.thickness = 0.6;
+    slab.slab.offset = -0.3;
+    slab.slab.edge = None;
+    slab.slab.slope = None;
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_RAFTS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the raft reads back");
+    // A raft with a parapet is refused while written (docs/adr/8172 §6).
+    let mut edged = doc.clone();
+    if let Some(kentos_contracts::Entity::Slab(s)) =
+        edged.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.role == kentos_contracts::SlabRole::Raft))
+    {
+        s.slab.edge = Some(kentos_contracts::SlabEdge {
+            kind: kentos_contracts::SlabEdgeKind::Parapet,
+            width: 0.2,
+            runs: Vec::new(),
+        });
+    }
+    let refused = kentos_kcad::encode(&edged).expect_err("a raft has no edge");
+    assert!(refused.message.contains("Radyenin"), "{}", refused.message);
+}

@@ -137,3 +137,31 @@ fn the_strip_tool_draws_a_strip_along_its_axis_and_enter_writes_it() {
     assert!(b.run(|s, cx| s.configure("T", "stripFooting", cx)));
     assert!(chips(&b).iter().any(|c| c == "Hiza"));
 }
+
+#[test]
+fn the_raft_tool_writes_a_raft_past_its_outline_and_tur_gives_a_slab_s_sizes_back() {
+    let mut b = bench("raft");
+    assert_eq!(b.session.tool_id(), "raft");
+    assert_eq!(b.session.prompt().tool, Some("Radye"));
+    // Its corners drawn, Enter writes it: 50 cm past them, 60 cm thick, its top 30 cm under the floor.
+    assert!(b.run(|s, cx| s.configure("S", "draw", cx)));
+    for (x, y) in [(0.0, 0.0), (10.0, 0.0), (10.0, 8.0), (0.0, 8.0)] {
+        b.click(x, y);
+    }
+    b.confirm();
+    let Entity::Slab(s) = b.newest().clone() else {
+        panic!("a raft is a slab")
+    };
+    assert_eq!(s.slab.role, kentos_commands::SlabRole::Raft);
+    assert_eq!((s.slab.thickness, s.slab.offset), (0.6, -0.3));
+    let ring = &s.slab.parts[0].outer.pts;
+    let (min_x, max_x) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| (a.min(p.x - E), z.max(p.x - E)));
+    let (min_y, max_y) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| (a.min(p.y - N), z.max(p.y - N)));
+    assert!(near(min_x, -0.5) && near(max_x, 10.5) && near(min_y, -0.5) && near(max_y, 8.5), "{ring:?}");
+    assert_eq!(layer_of(&b), "MM-TEML-RADYE");
+    // Tür: Döşeme with a slab's sizes again, its id the slab tool's.
+    assert!(b.run(|s, cx| s.configure("T", "floor", cx)));
+    assert_eq!(b.session.tool_id(), "slab");
+    let thickness = b.session.prompt().options.iter().find(|o| o.label == "Kalınlık").and_then(|o| o.value.clone());
+    assert!(thickness.as_deref().is_some_and(|t| t.starts_with("0.15") || t.starts_with("15")), "{thickness:?}");
+}

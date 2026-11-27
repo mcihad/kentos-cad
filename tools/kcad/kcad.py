@@ -721,7 +721,9 @@ ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
 # Architecture data 40 (docs/adr/8172): a footing, a beam of a pad or strip footing role (`padFooting`, `stripFooting`).
 ARCH_WITH_FOOTINGS = 40
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_FOOTINGS), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 41 (docs/adr/8172 §6): a raft, a slab of the raft role (`raft`).
+ARCH_WITH_RAFTS = 41
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_RAFTS), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -10269,7 +10271,9 @@ class _Schema:
         edge = self.fields({"kind": (self.enum(("railing", "parapet")), True), "width": (self.float, True),
                             "runs": (not_default(self.array(run), [], "boş kenar parçası listesi yazılmaz"), False)})
         f = self.fields({"parts": (self.array(self.space_part), True),
-                         "role": (not_default(self.enum(("floor", "balcony", "terrace")), "floor", "varsayılan tür ('floor') yazılmaz"), False),
+                         "role": (not_default(self.enum(("floor", "balcony", "terrace")
+                                                        + (("raft",) if self.arch_version >= ARCH_WITH_RAFTS else ())),
+                                              "floor", "varsayılan tür ('floor') yazılmaz"), False),
                          "thickness": (self.float, True),
                          "offset": (not_default(self.float, 0.0, "sıfır kot farkı yazılmaz"), False),
                          "arch": (not_default(self.arch_info, {}, "boş mimari bilgi yazılmaz"), False),

@@ -60,7 +60,11 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
             key: o.global_id.clone(),
             class: o.class.clone(),
             label: label(o),
-            category: category(&o.class),
+            // A base slab is the building's foundation (IFC 4.3's IfcSlabTypeEnum, ADR 8172 §6): drawn as Temel.
+            category: match category(&o.class) {
+                Category::Slab if o.predefined.as_deref() == Some("BASESLAB") => Category::Footing,
+                c => c,
+            },
             parent: o.parent.or(o.container),
             storey: None,
         })
@@ -176,5 +180,22 @@ mod tests {
             assert!(storey.is_some_and(|s| s.category == Category::Storey) && z.storey == z.parent, "{z:?}");
         }
         assert!(!roots.contains(&Category::Space), "no zone at the root: {roots:?}");
+    }
+
+    #[test]
+    fn a_base_slab_is_shown_as_a_foundation() {
+        // A raft (docs/adr/8172 §6): IFC 4.3's slab foundation, an IfcSlab BASESLAB; a floor stays a slab.
+        let bytes = b"ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
+            FILE_NAME('radye.ifc','2026-11-27T12:00:00',(''),(''),'','','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\n\
+            DATA;\n#1=IFCPROJECT('0YvctVUKr0kugbFTf53O9L',$,'Proje',$,$,$,$,$,$);\n\
+            #2=IFCSLAB('1YvctVUKr0kugbFTf53O9L',$,'MM-DSM-Radye',$,$,$,$,$,.BASESLAB.);\n\
+            #3=IFCSLAB('2YvctVUKr0kugbFTf53O9L',$,'MM-DSM-D\\X2\\00F6\\X0\\\\X2\\015F\\X0\\eme',$,$,$,$,$,.FLOOR.);\n\
+            ENDSEC;\nEND-ISO-10303-21;\n";
+        let m = read_ok(bytes);
+        let b = m.bodies(bytes, &never).expect("the bodies");
+        let input = input("radye.ifc", &m, &b);
+        let of = |name: &str| input.objects.iter().find(|o| o.label.contains(name)).map(|o| o.category);
+        assert_eq!(of("Radye"), Some(Category::Footing), "{:?}", input.objects);
+        assert_eq!(input.objects.iter().filter(|o| o.category == Category::Slab).count(), 1, "{:?}", input.objects);
     }
 }

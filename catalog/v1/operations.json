@@ -2355,6 +2355,13 @@
       ],
       "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 8041 §1)."
     },
+    "tool.raft": {
+      "level": "semantic",
+      "via": [
+        "cad.slabs.create"
+      ],
+      "note": "Döşeme aracı Radye türüyle: iç nokta ya da kontur, kalınlık, kot farkı, kenar ötelemesi ve malzeme komuta verilir; konturu, radyenin kuralları (kenar ve eğim yok) ve IFC sınıfı (IfcSlab BASESLAB) komutun ve modelin (ADR 8172 §6)."
+    },
     "tool.rail": {
       "level": "semantic",
       "via": [

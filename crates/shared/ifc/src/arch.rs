@@ -976,7 +976,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     "STANDARD",
                     wall_style_name(w.wall.style.as_deref()),
                 ),
-                Entity::Slab(_) => (Class::Slab, "FLOOR", "Döşeme".into()),
+                Entity::Slab(s) => (Class::Slab, s.slab.role.ifc_type(), s.slab.role.ifc_words().into()),
                 Entity::Column(c) => (
                     Class::Column,
                     "COLUMN",
@@ -2344,7 +2344,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             continue;
         }
         use kentos_contracts::SlabLayerKind as L;
-        let outside_top = s.role != SlabRole::Floor;
+        let outside_top = !matches!(s.role, SlabRole::Floor | SlabRole::Raft);
         let open_under = s.role == SlabRole::Balcony
             || (s.role == SlabRole::Floor && s.arch.external.as_ref().is_some_and(|x| x.external));
         let layer = |l: &kentos_contracts::SlabLayer, over: bool| crate::building::Layer {

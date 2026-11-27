@@ -119,6 +119,8 @@ pub const TOOLS: &[&str] = &[
     crate::opening_array::ID,
     space_tools::SPACE_ID,
     crate::slab_tools::SLAB_ID,
+    // docs/adr/8172 §6: Radye, the slab tool as a raft.
+    crate::slab_tools::RAFT_ID,
     crate::slab_edge_tool::ID,
     crate::ceiling_device_tool::ID,
     // Kaplama (docs/adr/8070 §10).
@@ -569,6 +571,7 @@ impl Session {
             crate::opening_array::ID => Box::new(crate::opening_array::Array::default()),
             space_tools::SPACE_ID => Box::new(space_tools::SpaceTool::new()),
             crate::slab_tools::SLAB_ID => Box::new(crate::slab_tools::SlabTool::new()),
+            crate::slab_tools::RAFT_ID => Box::new(crate::slab_tools::SlabTool::raft()),
             crate::slab_edge_tool::ID => Box::new(crate::slab_edge_tool::SlabEdgeTool::default()),
             crate::ceiling_device_tool::ID => Box::new(crate::ceiling_device_tool::CeilingDeviceTool::default()),
             crate::covering_tool::ID => Box::new(crate::covering_tool::CoveringTool::new()),
