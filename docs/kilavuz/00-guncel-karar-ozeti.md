@@ -75,10 +75,12 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
-- **Duvar profili: kaplama olan kiriş bandı (27 Kasım 2026, MB-11 1. bölüm; [ADR 8173](../adr/8173-wall-profiles.md)).**
+- **Duvar profili: kaplama olan kiriş bandı (27 Kasım 2026, MB-11; [ADR 8173](../adr/8173-wall-profiles.md)).**
   - `BeamFields.covering`: cephe silmesi MOLDING "Silme" (EK-2 Cephe, `MM-CEPH-…`), harpuşta COPING (`MM-HARP-…`);
     IFC `IfcCovering`, `MM-KPL-…`. Yapı değil: duvarı kesmez, birleşime girmez, kirişler çizelgesinde yok. Kattan
-    yüksekliği zorunlu; Mimari verisi 42. Kalan: araç.
+    yüksekliği zorunlu; Mimari verisi 42.
+  - Araçlar Baca ▾'in altında: Silme (SL) dış yüzler boyunca, halka bir kenarın ortasından dolanır (köşe gönyeli);
+    Harpuşta (HP) duvarın orta çizgisinde, tepesinde, iki yandan taşar.
 
 - **Temel: tekil ve sürekli temel kirişin rolü, radye döşemenin türü (27 Kasım 2026, MB-10; [ADR 8172](../adr/8172-footings.md)).**
   - `BeamRole::{PadFooting, StripFooting}`; kendi tabanına oturur (`baseOffset` zorunlu, negatif). Katman

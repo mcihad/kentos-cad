@@ -2355,6 +2355,20 @@
       ],
       "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 8041 §1)."
     },
+    "tool.moulding": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Silme”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173)."
+    },
+    "tool.coping": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Duvarın orta çizgisi ve tepesi araçta okunur; eksen, genişlik (duvar kalınlığı + iki taşma), kalınlık, kattan yükseklik, malzeme ve kaplama tipi (COPING) komuta verilir (ADR 8173)."
+    },
     "tool.raft": {
       "level": "semantic",
       "via": [

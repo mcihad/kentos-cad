@@ -24,6 +24,8 @@
     { "name": "TT", "command": "tool.footingPad" },
     { "name": "ST", "command": "tool.footingStrip" },
     { "name": "RD", "command": "tool.raft" },
+    { "name": "SL", "command": "tool.moulding" },
+    { "name": "HP", "command": "tool.coping" },
     { "name": "CT", "command": "tool.roof" },
     { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },

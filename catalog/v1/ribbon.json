@@ -2066,6 +2066,16 @@
           "command": "tool.flue",
           "title": "Boşluk",
           "label": "Baca"
+         },
+         {
+          "command": "tool.moulding",
+          "title": "Boşluk",
+          "label": "Silme"
+         },
+         {
+          "command": "tool.coping",
+          "title": "Boşluk",
+          "label": "Harpuşta"
          }
         ]
        },
@@ -7228,6 +7238,16 @@
          "command": "tool.flue",
          "title": "Boşluk",
          "label": "Baca"
+        },
+        {
+         "command": "tool.moulding",
+         "title": "Boşluk",
+         "label": "Silme"
+        },
+        {
+         "command": "tool.coping",
+         "title": "Boşluk",
+         "label": "Harpuşta"
         }
        ]
       }

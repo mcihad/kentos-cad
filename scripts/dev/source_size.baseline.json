@@ -21,7 +21,7 @@
   "crates/native/headless/tests/headless.rs": 3117,
   "crates/native/interaction/src/arch/arch_tools.rs": 2634,
   "crates/native/interaction/src/core/path.rs": 2724,
-  "crates/native/interaction/src/core/session.rs": 2182,
+  "crates/native/interaction/src/core/session.rs": 2161,
   "crates/native/interaction/src/core/tool.rs": 2043,
   "crates/native/mcp/tests/mcp.rs": 5190,
   "crates/native/postgis/tests/all.rs": 3243,

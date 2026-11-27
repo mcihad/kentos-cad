@@ -37,6 +37,10 @@ OPENINGS = {"key": "archOpenings", "size": "small", "split": [
     {"command": "tool.opening", "title": "Boşluk", "label": "Boşluk"},
     {"command": "tool.niche", "title": "Boşluk", "label": "Niş"},
     {"command": "tool.flue", "title": "Boşluk", "label": "Baca"},
+    # A wall's profiles (docs/adr/8173): what a wall carries along it, beside what is cut in it; the tab has its 30
+    # buttons (DESIGN.md §7.3.1).
+    {"command": "tool.moulding", "title": "Boşluk", "label": "Silme"},
+    {"command": "tool.coping", "title": "Boşluk", "label": "Harpuşta"},
 ]}
 def M(label, blocks, size='small', checklist=False, works=(), modes=()):
     # A block is (title, ids), (title, ids, works) or (title, ids, works, modes): a block only some CAD works, or one

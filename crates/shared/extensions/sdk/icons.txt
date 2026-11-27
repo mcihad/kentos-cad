@@ -213,6 +213,7 @@ contours
 conversion
 coordinate-label
 coordinate-vertices
+coping
 copy
 copy-base
 copy-to-layer
@@ -703,6 +704,7 @@ module-update
 moon
 more
 mosaic
+moulding
 move
 move-down
 move-up

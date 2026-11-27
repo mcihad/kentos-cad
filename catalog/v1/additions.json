@@ -3024,6 +3024,42 @@
       "status": "implemented"
     },
     {
+      "id": "tool.moulding",
+      "title": "Silme",
+      "icon": "moulding",
+      "description": "Cephe silmesi çizer: binanın içine tıklanınca duvarların dış yüzü boyunca dolanır ve dışa taşar; Sınır (S) Çiz ile ekseni nokta nokta verilir, Enter yazar. Tür (T: Silme, Harpuşta), Çıkıntı (E), Yükseklik (Y), Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği), Hiza (H: Çiz'de), Malzeme (M). 5 cm çıkıntı, 20 cm yükseklik ve 2,80 m ile başlar: 3 m'lik katın döşeme hizası. IFC'de kaplama (IfcCovering, MOLDING); yapı değildir. Etkin kata, MM-CEPH-SILME katmanına yazılır.",
+      "aliases": [
+        "SILME",
+        "KATSILMESI",
+        "KAT SİLMESİ",
+        "SUBASMANSILMESI",
+        "MOULDING",
+        "MOLDING",
+        "WALLSWEEP",
+        "DUVARPROFILI",
+        "DUVARPROFİLİ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.coping",
+      "title": "Harpuşta",
+      "icon": "coping",
+      "description": "Tıklanan duvarın tepesine harpuşta koyar: duvarın ortasında, her iki yüzden Taşma (E) kadar taşar; kapalı duvarda çevresinde dolanır. Tür (T), Yükseklik (Y: kalınlığı), Malzeme (M: Taş gibi; katmanın adı olur). 5 cm taşma ve 5 cm kalınlıkla başlar. Parapetin, bahçe duvarının başlığı; IFC'de kaplama (IfcCovering, COPING), duvarı kısaltmaz. Duvarın katına, MM-HARP-<malzeme> katmanına yazılır.",
+      "aliases": [
+        "HARPUSTA",
+        "HARPUŞTA",
+        "COPING",
+        "DUVARBASLIGI",
+        "DUVARBAŞLIĞI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.roof",
       "title": "Çatı",
       "icon": "roof",
@@ -5674,6 +5710,8 @@
     "footingPad": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"6.5\" y=\"6.5\" width=\"7\" height=\"7\"/><path d=\"M6.5 6.5l7 7M13.5 6.5l-7 7\" stroke-width=\"0.9\"/>",
     "footingStrip": "<path d=\"M7 18V7h11M10.5 18v-7.5H18\"/><path d=\"M3 18V3h15M14.5 18v-3.5H18\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/>",
     "raft": "<rect x=\"2\" y=\"3\" width=\"16\" height=\"14\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"5.5\" y=\"6.5\" width=\"9\" height=\"7\"/><path d=\"M5.5 10h9M10 6.5v7\" stroke-width=\"0.9\"/>",
+    "moulding": "<path d=\"M5.5 18V2.5h5V18\"/><path d=\"M10.5 7.5h4.5v3.5h-4.5\"/><path d=\"m6.6 5.4 2.8-2.8m-2.8 7.6 2.8-2.8m-2.8 7.6 2.8-2.8\" stroke-width=\"0.9\"/>",
+    "coping": "<path d=\"M7 18V7.5h6V18\"/><path d=\"M4.5 7.5h11V4.5h-11z\"/><path d=\"M4.5 7.5v1.2M15.5 7.5v1.2\" stroke-width=\"1\"/><path d=\"m8.1 11.4 3.8-3.8m-3.8 8.6 3.8-3.8\" stroke-width=\"0.9\"/>",
     "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",
     "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",

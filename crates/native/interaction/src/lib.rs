@@ -396,6 +396,8 @@ pub mod selectable;
 mod selection;
 #[path = "core/session.rs"]
 mod session;
+#[path = "core/named_points.rs"]
+mod named_points;
 #[path = "core/session_hooks.rs"]
 mod session_hooks;
 #[path = "arch/set_elevation.rs"]
@@ -506,6 +508,8 @@ pub mod arch_tools;
 pub mod beam_tools;
 #[path = "arch/footing_tools.rs"]
 pub mod footing_tools;
+#[path = "arch/profile_tools.rs"]
+pub mod profile_tools;
 #[path = "arch/railing_tools.rs"]
 pub mod railing_tools;
 #[path = "arch/roof_part_tools.rs"]

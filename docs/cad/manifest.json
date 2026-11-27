@@ -12125,6 +12125,22 @@
    "tests": 1
   },
   {
+   "id": "tool.coping",
+   "kind": "command",
+   "title": "Harpuşta",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Duvarın orta çizgisi ve tepesi araçta okunur; eksen, genişlik (duvar kalınlığı + iki taşma), kalınlık, kattan yükseklik, malzeme ve kaplama tipi (COPING) komuta verilir (ADR 8173).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.copy",
    "kind": "tool",
    "title": "Kopyala",
@@ -13500,6 +13516,22 @@
    "python": "kentos.cad.modules.edit",
    "mcp": "cad.modules.edit",
    "note": "Tıklanan nokta, açı, ayna, kat, tadilat durumu, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.moulding",
+   "kind": "command",
+   "title": "Silme",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Silme”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

@@ -32,6 +32,10 @@ pub enum Kind {
     Slab(Option<String>),
     /// A raft (docs/adr/8172 §6): a slab of the foundation, EK-2 Tablo 2.3's Temel (TEML), MM-TEML-RADYE.
     Raft,
+    /// A facade moulding (docs/adr/8173): EK-2 Tablo 2.3's Cephe (CEPH), its type SILME.
+    Moulding,
+    /// A coping (docs/adr/8173), by its material (Taş): EK-2 Tablo 2.3's Harpuşta (HARP); none: GENEL.
+    Coping(Option<String>),
     /// A column. KentOS keeps no column material yet (plan M41): GENEL.
     Column,
     Stair,
@@ -82,6 +86,8 @@ impl Kind {
             Kind::Window => "PENC",
             Kind::Slab(_) => "DOSM",
             Kind::Raft => "TEML",
+            Kind::Moulding => "CEPH",
+            Kind::Coping(_) => "HARP",
             Kind::Column => "KOLN",
             Kind::Stair => "MERD",
             Kind::Ramp => "RAMP",
@@ -113,7 +119,7 @@ impl Kind {
     pub fn detail(&self) -> String {
         let word = |w: &str| w.to_owned();
         match self {
-            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) => {
+            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) | Kind::Coping(m) => {
                 m.clone().unwrap_or_default()
             }
             Kind::Void => word("BOSLUK"),
@@ -129,6 +135,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::PadFooting) => word("TEKIL"),
             Kind::Beam(kentos_commands::BeamRole::StripFooting) => word("SUREKLI"),
             Kind::Raft => word("RADYE"),
+            Kind::Moulding => word("SILME"),
             Kind::Beam(_) => String::new(),
             Kind::Post => word("DIKME"),
             Kind::Rail => word("KAYIT"),
@@ -181,6 +188,8 @@ impl Kind {
             Kind::Space => "Mahal",
             Kind::Slab(_) => "Döşeme",
             Kind::Raft => "Radye",
+            Kind::Moulding => "Silme",
+            Kind::Coping(_) => "Harpuşta",
             Kind::Column => "Kolon",
             Kind::Stair => "Merdiven",
             Kind::Ramp => "Rampa",
@@ -216,6 +225,8 @@ impl Kind {
             Kind::Space => "mahal",
             Kind::Slab(_) => "döşeme",
             Kind::Raft => "radye",
+            Kind::Moulding => "silme",
+            Kind::Coping(_) => "harpuşta",
             Kind::Column => "kolon",
             Kind::Stair => "merdiven",
             Kind::Ramp => "rampa",
@@ -253,7 +264,7 @@ impl Kind {
         };
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
-            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) => look("ink", 0.35),
+            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) | Kind::Moulding | Kind::Coping(_) => look("ink", 0.35),
             Kind::Covering(_) | Kind::CeilingDevice => look("ink", 0.18),
             Kind::Door
             | Kind::Window
@@ -475,6 +486,8 @@ mod tests {
             Kind::Beam(kentos_commands::BeamRole::PadFooting),
             Kind::Beam(kentos_commands::BeamRole::StripFooting),
             Kind::Raft,
+            Kind::Moulding,
+            Kind::Coping(Some("Taş".into())),
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -517,7 +530,9 @@ mod tests {
                 "MM-ASTV-GENEL",
                 "MM-TEML-TEKIL",
                 "MM-TEML-SUREKLI",
-                "MM-TEML-RADYE"
+                "MM-TEML-RADYE",
+                "MM-CEPH-SILME",
+                "MM-HARP-TAS"
             ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");

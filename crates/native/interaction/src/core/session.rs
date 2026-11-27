@@ -23,6 +23,7 @@ use kentos_geometry_core::tools::locks::{LockText, parse_lock_text};
 use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
+pub(crate) use crate::named_points::named_point_at;
 use crate::align::{self, Align};
 use crate::arc::{self, Arc};
 use crate::array::{self, Array};
@@ -143,6 +144,9 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/8172: Tekil temel, Sürekli temel.
     crate::footing_tools::PAD_ID,
     crate::footing_tools::STRIP_ID,
+    // docs/adr/8173: Silme, Harpuşta.
+    crate::profile_tools::MOULDING_ID,
+    crate::profile_tools::COPING_ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
@@ -591,6 +595,8 @@ impl Session {
             crate::beam_tools::RAIL_ID => Box::new(crate::beam_tools::BeamTool::rail()),
             crate::footing_tools::PAD_ID => Box::new(crate::footing_tools::FootingTool::pad()),
             crate::footing_tools::STRIP_ID => Box::new(crate::footing_tools::FootingTool::strip()),
+            crate::profile_tools::MOULDING_ID => Box::new(crate::profile_tools::ProfileTool::moulding()),
+            crate::profile_tools::COPING_ID => Box::new(crate::profile_tools::ProfileTool::coping()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
             crate::roof_part_tools::CHIMNEY_ID => {
@@ -2152,31 +2158,4 @@ fn with_waiting(mut top: Preview, below: Preview) -> Preview {
     cells.append(&mut top.cells);
     top.cells = cells;
     top
-}
-
-/// The place of the one point named `name` (docs/adr/0152 §4; the web's
-/// `namedPoint`), or why none is taken, in `#ad`'s words. The name is
-/// matched with the points' labels, the spaces round them dropped; hidden
-/// layers count too: a name is an identity. Nokta adından takes it too
-/// (docs/adr/0188 §3).
-pub(crate) fn named_point_at(doc: &kentos_domain::Document, name: &str) -> Result<Vec2, String> {
-    let found: Vec<Vec2> = doc
-        .entities()
-        .filter_map(|e| match e {
-            kentos_commands::Entity::Point(q)
-                if q.base.label.as_deref().map(crate::js_trim) == Some(name) =>
-            {
-                Some(Vec2::new(q.p.x, q.p.y))
-            }
-            _ => None,
-        })
-        .collect();
-    match found.as_slice() {
-        [] => Err(format!("#{name}: bu adda nokta yok.")),
-        [p] => Ok(*p),
-        more => Err(format!(
-            "#{name}: bu adda {} nokta var; koordinatı yazın.",
-            more.len()
-        )),
-    }
 }
