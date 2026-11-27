@@ -9,7 +9,7 @@ use kentos_commands::EntityGeometry;
 use serde_json::{Value, json};
 
 use super::{
-    RunNetwork, cost_value, date_param, missing_note, name_of, network_param, places_of,
+    RunNetwork, cost_cell, date_param, missing_note, name_of, network_param, places_of,
     points_param, profile_param, reach_param, run_network, time_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
@@ -121,7 +121,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         for (rank, f) in row.iter().enumerate() {
             let (o, a) = origins[i];
             let (t, b) = targets[f.target];
-            let value = cost_value(Some(f.cost), cost, ctx.units.length_decimals);
+            let value = cost_cell(&def, Some(f.cost), cost, ctx.units.length_decimals);
             table.push(vec![
                 name_of(o),
                 name_of(t),
@@ -135,7 +135,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                     ("Sıra".to_owned(), (rank + 1).to_string()),
                     ("Ağ".to_owned(), def.name.clone()),
                     ("Maliyet".to_owned(), name.clone()),
-                    (name.clone(), value),
+                    (def.cost_column(cost), value),
                 ]);
                 let g = EntityGeometry::Line {
                     ms: None,
@@ -163,7 +163,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         }),
         outputs: [(
             "table".to_owned(),
-            json!({ "columns": ["Başlangıç", "Varış", "Sıra", name], "rows": table }),
+            json!({ "columns": ["Başlangıç", "Varış", "Sıra", def.cost_column(cost)], "rows": table }),
         )]
         .into_iter()
         .collect(),

@@ -32,6 +32,8 @@ DOC_OUT = PROC_DIR / "network.kcad"
 DECIMALS = 3
 REACH = 100.0
 COSTS = ["Uzunluk", "Süre", "Ücret"]
+# The costs' columns with their units (docs/adr/9355): the length in metres, Süre in seconds, Ücret in its unit.
+COLUMNS = ["Uzunluk (m)", "Süre (sn)", "Ücret (TL)"]
 
 NETWORK = {
     "id": "yollar",
@@ -129,8 +131,11 @@ LINES_STYLE = style("#1565C0", 0.35)
 
 
 def cost_text(v, c):
-    """A cost as written: the length with the project's decimals, the others with two; nothing for no way."""
-    return "" if v == INF or v is None or not math.isfinite(v) else shown(v, DECIMALS if c == 0 else 2)
+    """A cost as written in its column's unit: the length with the project's decimals, Süre's minutes as seconds with
+    two, the others with two; nothing for no way."""
+    if v == INF or v is None or not math.isfinite(v):
+        return ""
+    return shown(v * 60.0 if c == 1 else v, DECIMALS if c == 0 else 2)
 
 
 def check_no_tie(v, d, what):
@@ -171,11 +176,11 @@ def build():
                 totals = [net.spans_cost(f["spans"], x) for x in range(len(COSTS))]
                 for x, t in enumerate(totals):
                     if math.isfinite(t):
-                        check_no_tie(t, DECIMALS if x == 0 else 2, f"{cid} {i} {rank} {x}")
+                        check_no_tie(t * 60.0 if x == 1 else t, DECIMALS if x == 0 else 2, f"{cid} {i} {rank} {x}")
                 values = [cost_text(t, x) for x, t in enumerate(totals)]
                 incident, facility = ADDRESSES[i][0], SCHOOLS[f["target"]][0]
                 table.append([incident, facility, str(rank + 1), *values])
-                attrs = {"Olay": incident, "Tesis": facility, "Sıra": str(rank + 1), "Ağ": "Yollar", "Maliyet": COSTS[c], **dict(zip(COSTS, values))}
+                attrs = {"Olay": incident, "Tesis": facility, "Sıra": str(rank + 1), "Ağ": "Yollar", "Maliyet": COSTS[c], **dict(zip(COLUMNS, values))}
                 shapes.append({"kind": "polyline", "layerId": layer_id("En yakın tesis"), "attrs": attrs, "parts": 1, "holes": 0, "length": totals[0]})
         none = sum(1 for r in rows if not r)
         log = [FAR_NOTE.format("olay")]
@@ -191,7 +196,7 @@ def build():
             "layers": [new_layer("En yakın tesis", ROUTES_STYLE)],
             "addedShapes": shapes,
             "log": [{"level": "warn", "text": t} for t in log],
-            "outputs": {"table": {"columns": ["Olay", "Tesis", "Sıra", *COSTS], "rows": table}},
+            "outputs": {"table": {"columns": ["Olay", "Tesis", "Sıra", *COLUMNS], "rows": table}},
         }
         values = {"network": {"network": "yollar", "cost": COSTS[c]}, "incidents": LAY("adres"), "facilities": LAY("okul"), "count": k, **extra}
         cases.append(proc_case(cid, title, "network.closestFacility", values, expect))
@@ -211,7 +216,7 @@ def build():
         {"network": {"network": "yollar", "cost": "Uzunluk"}, "origins": LAY("okul"), "destinations": LAY("adres")},
         {"status": "ok", "summary": f"3 başlangıçtan 3 varışa {len(table)} satır (“Yollar” ağında Uzunluk).", "undo": None, "layers": [], "addedShapes": [],
          "log": [{"level": "warn", "text": FAR_NOTE.format("varış")}],
-         "outputs": {"table": {"columns": ["Başlangıç", "Varış", "Sıra", "Uzunluk"], "rows": table}}}))
+         "outputs": {"table": {"columns": ["Başlangıç", "Varış", "Sıra", "Uzunluk (m)"], "rows": table}}}))
     # The nearest one each, with straight lines.
     shapes, table = [], []
     for i, row in enumerate(rows):
@@ -219,7 +224,7 @@ def build():
             value = cost_text(f["cost"], 0)
             table.append([SCHOOLS[i][0], ADDRESSES[f["target"]][0], "1", value])
             a, b = SCHOOLS[i][1], ADDRESSES[f["target"]][1]
-            attrs = {"Başlangıç": SCHOOLS[i][0], "Varış": ADDRESSES[f["target"]][0], "Sıra": "1", "Ağ": "Yollar", "Maliyet": "Uzunluk", "Uzunluk": value}
+            attrs = {"Başlangıç": SCHOOLS[i][0], "Varış": ADDRESSES[f["target"]][0], "Sıra": "1", "Ağ": "Yollar", "Maliyet": "Uzunluk", "Uzunluk (m)": value}
             shapes.append({"kind": "line", "layerId": layer_id("Maliyet matrisi"), "attrs": attrs, "parts": 1, "holes": 0, "length": math.hypot(b[0] - a[0], b[1] - a[1])})
     cases.append(proc_case(
         "matrix-lines", "Maliyet matrisi: her okula en yakın adres, düz çizgilerle", "network.odMatrix",
@@ -227,7 +232,7 @@ def build():
         {"status": "ok", "summary": f"3 başlangıçtan 3 varışa {len(table)} satır (“Yollar” ağında Uzunluk).", "undo": "Maliyet matrisi",
          "layers": [new_layer("Maliyet matrisi", MATRIX_STYLE)], "addedShapes": shapes,
          "log": [{"level": "warn", "text": FAR_NOTE.format("varış")}],
-         "outputs": {"table": {"columns": ["Başlangıç", "Varış", "Sıra", "Uzunluk"], "rows": table}}}))
+         "outputs": {"table": {"columns": ["Başlangıç", "Varış", "Sıra", "Uzunluk (m)"], "rows": table}}}))
 
     # Hizmet alanları: Okul A's 150 and 300 m, discs and rings; two schools apart; the lines too.
     def areas(cid, title, facilities, breaks, ring, separate, lines_too, names, toward=False):
@@ -238,7 +243,7 @@ def build():
             f = a["facility"]
             tesis = ", ".join(names) if f is None else names[f]
             start = breaks[a["band"] - 1] if ring and a["band"] > 0 else 0.0
-            attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Başlangıç": shown(start, DECIMALS), "Bitiş": shown(breaks[a["band"]], DECIMALS)}
+            attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Başlangıç (m)": shown(start, DECIMALS), "Bitiş (m)": shown(breaks[a["band"]], DECIMALS)}
             shapes.append({"kind": "polygon", "layerId": layer_id("Yaklaşık hizmet alanı"), "attrs": attrs, "parts": a[key + "Parts"], "holes": a[key + "Holes"], "area": a[key]})
         new_layers = [new_layer("Yaklaşık hizmet alanı", AREA_STYLE)]
         if lines_too:
@@ -249,7 +254,7 @@ def build():
                 f = line["facility"]
                 tesis = ", ".join(names) if f is None else names[f]
                 lo = breaks[line["band"] - 1] if line["band"] > 0 else 0.0
-                attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Aralık": f"{plain(lo)}–{plain(breaks[line['band']])}"}
+                attrs = {"Ağ": "Yollar", "Maliyet": "Uzunluk", "Tesis": tesis, "Aralık (m)": f"{plain(lo)}–{plain(breaks[line['band']])}"}
                 shapes.append({"kind": "polyline", "layerId": layer_id("Ulaşılan yollar"), "attrs": attrs, "parts": 1, "holes": 0, "length": abs(line["b"] - line["a"])})
         n_areas = len(got["areas"])
         roads = f" ({len(got['lines'])} yol)" if lines_too else ""

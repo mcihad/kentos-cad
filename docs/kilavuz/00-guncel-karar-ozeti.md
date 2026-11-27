@@ -4,6 +4,14 @@
 
 ## 0. Güncel karar özeti
 
+- **Ağ sonuçlarının birimleri; Tablo etkin katmanı açar; Hizmet alanı ayarları panelde (27 Kasım 2026, T33–T35;
+  [ADR 9355](../adr/9355-network-results-units-table-follows-active-service-area-settings.md)).**
+  - Bir dakikanın altındaki süre saniyeyle (“Süre 2.16 sn”); sonuç sütunları birimli (“Uzunluk (m)”, “Süre (sn)”,
+    “Aralık (dk)”), kural ortak sözleşmede (`NetworkDef::cost_column`), İşlemler'in ağ araçlarında da.
+  - Şeritteki Tablo etkin katmanı açar; Katman ▾ ile sabitlenen tabloda “Sabit” ve Etkin katmana geç. Göster katman
+    başına.
+  - Hizmet alanının Aralıklar, Kenar payı, Yaklaşık alan ve Ulaşılan yollar ayarları panelde düzenlenir.
+
 - **İşlem sonucunun dosya ve veritabanı hedefi; işlem geçmişi (27 Kasım 2026, T30, T31;
   [ADR 9354](../adr/9354-processing-sink-target-words-and-history.md)).**
   - Sonucun yeri Çıktı'dan önce; dosyada ve veritabanında çıktı “Tablo adı”dır. Çakışma pencerenin dilinde (“Bu

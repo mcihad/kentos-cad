@@ -162,6 +162,48 @@ impl App {
             .collect()
     }
 
+    /// The table pinned to a layer other than the active one (the second round's T34): “Sabit” with the way back to the
+    /// active layer; none while the table follows the active layer or the selection.
+    pub(crate) fn pinned_chip<'a>(&self, rows: &Rows) -> Element<'a, Message> {
+        let Some((table, active)) = self.table_pinned(rows) else {
+            return space::horizontal().width(0).into();
+        };
+        tip(
+            row![
+                container(
+                    row![icon(Icon::Lock).size(12.0).tone(Tone::Muted), label::caption("Sabit")]
+                        .spacing(4)
+                        .align_y(Center),
+                )
+                .padding([1, 6])
+                .style(style::container::badge),
+                button(label::caption("Etkin katmana geç"))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::ghost)
+                    .on_press(msg(Event::FollowActive)),
+            ]
+            .spacing(4)
+            .align_y(Center),
+            Tip::new("Tablo bir katmana sabit").body(format!(
+                "Tablo, Katman ▾ ile seçtiğiniz “{table}” katmanında kalır; etkin katman “{active}”. Etkin katmana geç \
+                 tabloyu etkin katmana götürür, sonra tablo etkin katmanı izler. Şeritteki Tablo da etkin katmanı açar."
+            )),
+            iced::widget::tooltip::Position::Top,
+        )
+    }
+
+    /// The layer the table is pinned to and the active one, by their names, while they differ (T34).
+    pub(crate) fn table_pinned(&self, rows: &Rows) -> Option<(String, String)> {
+        let doc = self.document.as_ref()?;
+        let layers = doc.model.layers();
+        let pinned = self.gis.features.layer.as_deref()?;
+        let active = layers.active();
+        if rows.layer.as_deref() != Some(pinned) || pinned == active {
+            return None;
+        }
+        Some((layers.get(pinned)?.name.clone(), layers.get(active)?.name.clone()))
+    }
+
     /// Katman ▾: the layers, then the project's join views (docs/adr/0527).
     pub(crate) fn layer_select<'a>(&self, rows: &Rows) -> Select<'a, Message> {
         let views: Vec<(String, String)> = self
@@ -255,6 +297,7 @@ impl App {
         let filters = row![
             pane,
             container(layer).width(Length::Fixed(250.0)),
+            self.pinned_chip(rows),
             container(search).width(Length::Fixed(170.0)),
             container(show).width(Length::Fixed(150.0)),
         ]

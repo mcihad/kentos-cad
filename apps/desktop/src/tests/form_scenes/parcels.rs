@@ -477,8 +477,8 @@ pub(super) fn duplicated(app: &mut App) {
     let _ = app.update(Message::Gis(gis::Event::Features(
         crate::features::Event::Duplicate,
     )));
-    app.gis.features.layer = Some("kat".into());
     let _ = app.update(Message::Run("data.featureTable"));
+    app.gis.features.layer = Some("kat".into());
 }
 
 /// A building whose height is calculated from its floors and may be typed over (docs/adr/0417): its
@@ -527,8 +527,8 @@ pub(super) fn overridden_height(app: &mut App) {
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 pub(super) fn owner_table(app: &mut App) {
     owners(app);
-    app.gis.features.layer = Some("malik".into());
     let _ = app.update(Message::Run("data.featureTable"));
+    app.gis.features.layer = Some("malik".into());
     app.selection.set([Slot(4)]);
 }
 

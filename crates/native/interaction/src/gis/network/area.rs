@@ -106,6 +106,8 @@ struct Seen {
     separate: bool,
     trim: f64,
     lines: bool,
+    /// The approximate areas are written (T35).
+    areas: bool,
     time: Option<u32>,
     profile: String,
     day: Option<i64>,
@@ -176,6 +178,7 @@ impl NetArea {
             separate: m.network_separate,
             trim: m.network_trim,
             lines: m.network_lines,
+            areas: m.network_areas,
             time: m.network_time,
             profile: m.network_profile.as_str().to_owned(),
             day: m.network_day,
@@ -259,6 +262,17 @@ impl NetArea {
         out
     }
 
+    /// The unit of the breaks as a result's columns name it (the second round's T33): metres for Uzunluk (the breaks are
+    /// kept in metres), minutes for a speed (as typed), a field's own; none for a field without one.
+    fn breaks_unit(&self) -> Option<String> {
+        self.seen.network.as_ref()?.breaks_unit(self.seen.cost).map(str::to_owned)
+    }
+
+    /// A column's name with the breaks' unit: “Bitiş (m)”.
+    fn with_unit(&self, name: &str) -> String {
+        self.breaks_unit().map_or_else(|| name.to_owned(), |u| format!("{name} ({u})"))
+    }
+
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> Option<Changed> {
         let m = &mut cx.memory;
         match key {
@@ -276,7 +290,13 @@ impl NetArea {
                 m.network_separate = !m.network_separate;
                 return Some(Changed::Ask);
             }
-            "Ç" => m.network_lines = !m.network_lines,
+            "Ç" => {
+                m.network_lines = !m.network_lines;
+                // One output at least: the areas come back with the lines off (T35).
+                if !m.network_lines && !m.network_areas {
+                    m.network_areas = true;
+                }
+            }
             _ => return self.base.option(key, NetworkKind::Road, true, cx),
         }
         Some(Changed::Show)
@@ -343,6 +363,13 @@ impl NetArea {
 
     /// Enter: the areas (and the lines) written; the facilities go.
     fn write(&mut self, cx: &mut Context<'_>) {
+        if !self.seen.areas && !self.seen.lines {
+            cx.say(
+                Level::Warn,
+                format!("{LABEL}: yazılacak çıktı seçilmedi; Yaklaşık alan ya da Ulaşılan yollar anahtarını açın."),
+            );
+            return;
+        }
         let Some(shown) = self.shown.as_ref().filter(|s| s.full) else {
             let why = self.refusal.clone().unwrap_or_else(|| {
                 "alanlar henüz hesaplanmadı; biraz bekleyip yeniden deneyin.".to_owned()
@@ -364,6 +391,8 @@ impl NetArea {
             .join(", ");
         let facility = |f: Option<usize>| f.map_or_else(|| all.clone(), |i| (i + 1).to_string());
         let rings = self.seen.rings;
+        let (start_column, end_column, band_column) =
+            (self.with_unit("Başlangıç"), self.with_unit("Bitiş"), self.with_unit("Aralık"));
         let attrs = |pairs: Vec<(&str, String)>| {
             pairs
                 .into_iter()
@@ -387,8 +416,8 @@ impl NetArea {
                         ("Ağ", n.name.clone()),
                         ("Maliyet", cost.clone()),
                         ("Tesis", facility(a.facility)),
-                        ("Başlangıç", number(start)),
-                        ("Bitiş", number(breaks[a.band])),
+                        (start_column.as_str(), number(start)),
+                        (end_column.as_str(), number(breaks[a.band])),
                     ]),
                 ))
             })
@@ -403,6 +432,7 @@ impl NetArea {
         values.insert("toward".to_owned(), json!(self.seen.toward));
         values.insert("separate".to_owned(), json!(self.seen.separate));
         values.insert("lines".to_owned(), json!(self.seen.lines));
+        values.insert("areas".to_owned(), json!(self.seen.areas));
         let tool = format!("tool.{ID}");
         let derived = record::derivation(&tool, LABEL, &values, &n, started, cx);
         let f = cx.format();
@@ -414,10 +444,13 @@ impl NetArea {
             format!("Yön: {}", if self.seen.toward { "tesise" } else { "tesisten" }),
         ]);
         let records_in = record::records_in(&n, cx);
-        let mut writes = vec![ResultWrite {
-            layer: &AREA_LAYER,
-            objects: areas,
-        }];
+        let mut writes = Vec::new();
+        if self.seen.areas {
+            writes.push(ResultWrite {
+                layer: &AREA_LAYER,
+                objects: areas,
+            });
+        }
         let lines = shown.served.lines.len();
         if self.seen.lines {
             writes.push(ResultWrite {
@@ -434,7 +467,7 @@ impl NetArea {
                                 ("Ağ", n.name.clone()),
                                 ("Maliyet", cost.clone()),
                                 ("Tesis", facility(l.facility)),
-                                ("Aralık", format!("{}–{}", plain(lo), plain(breaks[l.band]))),
+                                (band_column.as_str(), format!("{}–{}", plain(lo), plain(breaks[l.band]))),
                             ]),
                         )
                     })
@@ -444,13 +477,17 @@ impl NetArea {
         let Some(written) = write_results(LABEL, &writes, Some(&derived), cx) else {
             return;
         };
-        words.push(record::layer_words("Çıktı katmanı", AREA_LAYER.name, &written.opened));
+        if self.seen.areas {
+            words.push(record::layer_words("Çıktı katmanı", AREA_LAYER.name, &written.opened));
+        }
         if self.seen.lines {
             words.push(record::layer_words("Ulaşılan yollar", AREA_LINES_LAYER.name, &written.opened));
         }
         // What the areas are and where the reach itself is (docs/adr/9333).
         let trim = cx.format().length(self.seen.trim);
-        let said = if self.seen.lines {
+        let said = if !self.seen.areas {
+            format!("{LABEL}: {lines} ulaşılan yol parçası yazıldı.")
+        } else if self.seen.lines {
             format!("{LABEL}: {count} yaklaşık alan ve {lines} ulaşılan yol parçası yazıldı; alan, yolların {trim} çevresidir.")
         } else {
             format!(
@@ -579,27 +616,92 @@ impl Tool for NetArea {
         if self.seen.network.is_none() {
             return rows;
         }
-        rows.push(Setting::text("serviceBreaks", "Aralıklar", self.breaks_text()).read_only());
-        rows.push(Setting::text("serviceTrim", "Kenar payı", format.length(self.seen.trim)).read_only());
-        rows.push(
-            Setting::text("serviceLines", "Çizgiler", if self.seen.lines { "yazılır" } else { "yazılmaz" })
-                .read_only(),
-        );
-        let mut note = Setting::text(
-            "serviceAreaNote",
-            "Alan",
-            format!(
-                "Alan, ulaşılan yolların {} çevresidir; yaklaşıktır, “{}” katmanına yazılır. Ağda ulaşılan yollar \
-                 Çizgiler açıkken “{}” katmanına yazılır.",
-                format.length(self.seen.trim),
+        // Editable here as on the command line (the second round's T35): the breaks in their unit, the margin, and
+        // which outputs are written; the outputs' layers and columns said before the run.
+        let unit = self.breaks_unit();
+        let breaks: Vec<String> = self
+            .seen
+            .breaks
+            .iter()
+            .map(|&b| plain(if self.seen.cost == 0 { format.from_metres(b) } else { b }))
+            .collect();
+        let breaks_label = match self.seen.cost {
+            0 => format!("Aralıklar ({})", format.length_unit_label()),
+            _ => unit.as_ref().map_or_else(|| "Aralıklar".to_owned(), |u| format!("Aralıklar ({u})")),
+        };
+        rows.push(Setting::text("serviceBreaks", breaks_label, breaks.join(" ")));
+        rows.push(Setting::text("serviceTrim", "Kenar payı", format.length(self.seen.trim)));
+        rows.push(Setting::toggle("serviceAreas", "Yaklaşık alan", self.seen.areas));
+        rows.push(Setting::toggle("serviceLines", "Ulaşılan yollar", self.seen.lines));
+        let mut out = Vec::new();
+        if self.seen.areas {
+            out.push(format!(
+                "“{}” ({}, {}): ulaşılan yolların {} çevresi, yaklaşık",
                 AREA_LAYER.name,
-                AREA_LINES_LAYER.name
-            ),
-        )
-        .read_only();
-        note.note = true;
-        rows.push(note);
+                self.with_unit("Başlangıç"),
+                self.with_unit("Bitiş"),
+                format.length(self.seen.trim)
+            ));
+        }
+        if self.seen.lines {
+            out.push(format!("“{}” ({}): ağın ulaşılan parçaları", AREA_LINES_LAYER.name, self.with_unit("Aralık")));
+        }
+        let text = if out.is_empty() {
+            "Çıktı seçilmedi: Yaklaşık alan ya da Ulaşılan yollar anahtarını açın.".to_owned()
+        } else {
+            format!("Çıktılar: {}.", out.join("; "))
+        };
+        rows.push(if out.is_empty() {
+            Setting::notice("serviceAreaNote", "Çıktı", text)
+        } else {
+            Setting::hint("serviceAreaNote", "Çıktı", text)
+        });
         rows
+    }
+
+    /// The pane's settings written (T35): the breaks and the margin as the command line takes them (a unit after them
+    /// is the one shown), the outputs' switches as Ç is; the last output is not switched off.
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        match key {
+            "serviceBreaks" | "serviceTrim" => {
+                // The unit the pane shows after the numbers: dropped, the numbers are in it.
+                let words: Vec<&str> = value.split_whitespace().collect();
+                let keep = words.iter().rposition(|w| w.chars().any(|c| c.is_ascii_digit())).map_or(0, |i| i + 1);
+                let numbers = words[..keep].join(" ");
+                self.asking = Some(if key == "serviceBreaks" { Asking::Breaks } else { Asking::Trim });
+                self.answer(&numbers, cx);
+                // A refused value leaves it asked on the line: the pane's value goes back as it was.
+                if self.asking.is_some() {
+                    self.asking = None;
+                    return false;
+                }
+                true
+            }
+            "serviceAreas" | "serviceLines" => {
+                let on = match value {
+                    "yes" => true,
+                    "no" => false,
+                    _ => return false,
+                };
+                let m = &mut cx.memory;
+                let other = if key == "serviceAreas" { m.network_lines } else { m.network_areas };
+                if !on && !other {
+                    cx.say(
+                        Level::Warn,
+                        format!("{LABEL}: en az bir çıktı yazılır; önce öbür çıktıyı açın."),
+                    );
+                    return false;
+                }
+                if key == "serviceAreas" {
+                    m.network_areas = on;
+                } else {
+                    m.network_lines = on;
+                }
+                self.look(cx);
+                true
+            }
+            _ => false,
+        }
     }
 
     /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the
@@ -632,6 +734,7 @@ impl Tool for NetArea {
             ("rings", &mut m.network_rings),
             ("separate", &mut m.network_separate),
             ("lines", &mut m.network_lines),
+            ("areas", &mut m.network_areas),
         ] {
             if let Some(v) = flag(key) {
                 *slot = v;

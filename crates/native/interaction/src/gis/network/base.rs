@@ -239,10 +239,28 @@ impl Base {
             return f.length(v);
         }
         match n.costs.get(c - 1) {
-            Some(cost) if cost.kind == NetworkCostKind::Speed => format!("{} dk", fixed(v, 1)),
+            Some(cost) if cost.kind == NetworkCostKind::Speed => Self::minutes_text(v),
             Some(cost) if !cost.unit.is_empty() => format!("{} {}", fixed(v, 2), cost.unit),
             _ => fixed(v, 2),
         }
+    }
+
+    /// A time in minutes as it reads (the second round's T33): under a minute in seconds (“2.16 sn”), so a short one is
+    /// not taken for nought; nought as such (“0 sn”); else minutes (“1.4 dk”).
+    pub fn minutes_text(v: f64) -> String {
+        if v == 0.0 {
+            "0 sn".to_owned()
+        } else if v.abs() < 1.0 {
+            format!("{} sn", fixed(v * 60.0, 2))
+        } else {
+            format!("{} dk", fixed(v, 1))
+        }
+    }
+
+    /// A value of cost `c` in its column's unit (`NetworkDef::column_value`, docs/adr/9355): metres with the drawing's
+    /// decimals, a speed's minutes as seconds with two, a field's value with two.
+    pub fn cost_cell(n: &NetworkDef, c: usize, v: f64, decimals: usize) -> String {
+        fixed(n.column_value(c, v), if c == 0 { decimals } else { 2 })
     }
 
     /// How far a point looks for the network, metres.

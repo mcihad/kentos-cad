@@ -164,6 +164,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         .join(", ");
     let facility = |f: Option<usize>| f.map_or_else(|| all.clone(), |i| name_of(facilities[i].0));
     let number = |x: f64| cost_value(Some(x), cost, ctx.units.length_decimals);
+    // The breaks' unit in the columns' names (docs/adr/9355): “Bitiş (m)”, “Aralık (dk)”.
+    let unit = def.breaks_unit(cost).map(str::to_owned);
+    let column = |n: &str| unit.as_ref().map_or_else(|| n.to_owned(), |u| format!("{n} ({u})"));
     let layer = v.layer("layer").id.clone();
     let mut add = Vec::new();
     for a in &served.areas {
@@ -179,8 +182,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             ("Ağ".to_owned(), def.name.clone()),
             ("Maliyet".to_owned(), name.clone()),
             ("Tesis".to_owned(), facility(a.facility)),
-            ("Başlangıç".to_owned(), number(start)),
-            ("Bitiş".to_owned(), number(breaks[a.band])),
+            (column("Başlangıç"), number(start)),
+            (column("Bitiş"), number(breaks[a.band])),
         ]);
         if let Some(e) = new_object(shape, &layer, attrs) {
             add.push(e);
@@ -197,7 +200,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 ("Maliyet".to_owned(), name.clone()),
                 ("Tesis".to_owned(), facility(l.facility)),
                 (
-                    "Aralık".to_owned(),
+                    column("Aralık"),
                     format!("{}–{}", plain(lo), plain(breaks[l.band])),
                 ),
             ]);

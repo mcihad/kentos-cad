@@ -476,8 +476,8 @@ pub(super) fn styled_buildings(app: &mut App) {
         d["layers"] = Value::Array(layers);
         d["activeLayer"] = json!("bina");
     });
-    app.gis.features.layer = Some("bina".into());
     let _ = app.update(Message::Run("data.featureTable"));
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// The buildings with a published survey form that names the floor count in its rules (docs/adr/0414).

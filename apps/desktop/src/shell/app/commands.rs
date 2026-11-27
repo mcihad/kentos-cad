@@ -375,7 +375,7 @@ impl App {
             // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
             "point.editor" => self.show_bottom(crate::bottom::BottomTab::Points),
             // Öznitelik tablosu: the bottom panel's Tablo tab (features/, docs/adr/0199 §4).
-            "data.featureTable" => self.open_feature_table(),
+            "data.featureTable" => self.open_feature_table_active(),
             // Alan istatistikleri and Grafik: the bottom panel's İstatistik and Grafik tabs (docs/adr/0227 §8).
             "data.statistics" => self.open_statistics(None),
             "data.chart" => self.open_chart(None, None, None),

@@ -183,9 +183,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "384.996",
-       "Süre": "0.77",
-       "Ücret": "3.05"
+       "Uzunluk (m)": "384.996",
+       "Süre (sn)": "46.20",
+       "Ücret (TL)": "3.05"
       },
       "parts": 1,
       "holes": 0,
@@ -200,9 +200,9 @@
        "Sıra": "2",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "511.965",
-       "Süre": "0.81",
-       "Ücret": "5.03"
+       "Uzunluk (m)": "511.965",
+       "Süre (sn)": "48.72",
+       "Ücret (TL)": "5.03"
       },
       "parts": 1,
       "holes": 0,
@@ -217,9 +217,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "95.000",
-       "Süre": "0.11",
-       "Ücret": "0.95"
+       "Uzunluk (m)": "95.000",
+       "Süre (sn)": "6.84",
+       "Ücret (TL)": "0.95"
       },
       "parts": 1,
       "holes": 0,
@@ -234,9 +234,9 @@
        "Sıra": "2",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "250.000",
-       "Süre": "0.30",
-       "Ücret": "2.50"
+       "Uzunluk (m)": "250.000",
+       "Süre (sn)": "18.00",
+       "Ücret (TL)": "2.50"
       },
       "parts": 1,
       "holes": 0,
@@ -251,9 +251,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "125.000",
-       "Süre": "0.15",
-       "Ücret": "1.00"
+       "Uzunluk (m)": "125.000",
+       "Süre (sn)": "9.00",
+       "Ücret (TL)": "1.00"
       },
       "parts": 1,
       "holes": 0,
@@ -268,9 +268,9 @@
        "Sıra": "2",
        "Ağ": "Yollar",
        "Maliyet": "Süre",
-       "Uzunluk": "470.000",
-       "Süre": "0.56",
-       "Ücret": "4.45"
+       "Uzunluk (m)": "470.000",
+       "Süre (sn)": "33.84",
+       "Ücret (TL)": "4.45"
       },
       "parts": 1,
       "holes": 0,
@@ -289,9 +289,9 @@
        "Olay",
        "Tesis",
        "Sıra",
-       "Uzunluk",
-       "Süre",
-       "Ücret"
+       "Uzunluk (m)",
+       "Süre (sn)",
+       "Ücret (TL)"
       ],
       "rows": [
        [
@@ -299,7 +299,7 @@
         "Okul B",
         "1",
         "384.996",
-        "0.77",
+        "46.20",
         "3.05"
        ],
        [
@@ -307,7 +307,7 @@
         "Okul A",
         "2",
         "511.965",
-        "0.81",
+        "48.72",
         "5.03"
        ],
        [
@@ -315,7 +315,7 @@
         "Okul C",
         "1",
         "95.000",
-        "0.11",
+        "6.84",
         "0.95"
        ],
        [
@@ -323,7 +323,7 @@
         "Okul A",
         "2",
         "250.000",
-        "0.30",
+        "18.00",
         "2.50"
        ],
        [
@@ -331,7 +331,7 @@
         "Okul A",
         "1",
         "125.000",
-        "0.15",
+        "9.00",
         "1.00"
        ],
        [
@@ -339,7 +339,7 @@
         "Okul C",
         "2",
         "470.000",
-        "0.56",
+        "33.84",
         "4.45"
        ]
       ]
@@ -396,9 +396,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "220.000",
-       "Süre": "0.28",
-       "Ücret": "1.65"
+       "Uzunluk (m)": "220.000",
+       "Süre (sn)": "16.80",
+       "Ücret (TL)": "1.65"
       },
       "parts": 1,
       "holes": 0,
@@ -413,9 +413,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "95.000",
-       "Süre": "0.11",
-       "Ücret": "0.95"
+       "Uzunluk (m)": "95.000",
+       "Süre (sn)": "6.84",
+       "Ücret (TL)": "0.95"
       },
       "parts": 1,
       "holes": 0,
@@ -430,9 +430,9 @@
        "Sıra": "2",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "250.000",
-       "Süre": "0.30",
-       "Ücret": "2.50"
+       "Uzunluk (m)": "250.000",
+       "Süre (sn)": "18.00",
+       "Ücret (TL)": "2.50"
       },
       "parts": 1,
       "holes": 0,
@@ -447,9 +447,9 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "125.000",
-       "Süre": "0.15",
-       "Ücret": "1.00"
+       "Uzunluk (m)": "125.000",
+       "Süre (sn)": "9.00",
+       "Ücret (TL)": "1.00"
       },
       "parts": 1,
       "holes": 0,
@@ -468,9 +468,9 @@
        "Olay",
        "Tesis",
        "Sıra",
-       "Uzunluk",
-       "Süre",
-       "Ücret"
+       "Uzunluk (m)",
+       "Süre (sn)",
+       "Ücret (TL)"
       ],
       "rows": [
        [
@@ -478,7 +478,7 @@
         "Okul A",
         "1",
         "220.000",
-        "0.28",
+        "16.80",
         "1.65"
        ],
        [
@@ -486,7 +486,7 @@
         "Okul C",
         "1",
         "95.000",
-        "0.11",
+        "6.84",
         "0.95"
        ],
        [
@@ -494,7 +494,7 @@
         "Okul A",
         "2",
         "250.000",
-        "0.30",
+        "18.00",
         "2.50"
        ],
        [
@@ -502,7 +502,7 @@
         "Okul A",
         "1",
         "125.000",
-        "0.15",
+        "9.00",
         "1.00"
        ]
       ]
@@ -549,7 +549,7 @@
        "Başlangıç",
        "Varış",
        "Sıra",
-       "Uzunluk"
+       "Uzunluk (m)"
       ],
       "rows": [
        [
@@ -659,7 +659,7 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "125.000"
+       "Uzunluk (m)": "125.000"
       },
       "parts": 1,
       "holes": 0,
@@ -674,7 +674,7 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "454.996"
+       "Uzunluk (m)": "454.996"
       },
       "parts": 1,
       "holes": 0,
@@ -689,7 +689,7 @@
        "Sıra": "1",
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
-       "Uzunluk": "95.000"
+       "Uzunluk (m)": "95.000"
       },
       "parts": 1,
       "holes": 0,
@@ -708,7 +708,7 @@
        "Başlangıç",
        "Varış",
        "Sıra",
-       "Uzunluk"
+       "Uzunluk (m)"
       ],
       "rows": [
        [
@@ -779,12 +779,12 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "150.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "150.000"
       },
       "parts": 1,
       "holes": 0,
-      "area": 13170.793862638593
+      "area": 13170.793862638604
      },
      {
       "kind": "polygon",
@@ -793,12 +793,12 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "300.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "300.000"
       },
       "parts": 1,
       "holes": 0,
-      "area": 30362.071908781563
+      "area": 30362.07190878155
      }
     ],
     "log": [
@@ -860,12 +860,12 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "150.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "150.000"
       },
       "parts": 1,
       "holes": 0,
-      "area": 13170.793862638593
+      "area": 13170.793862638604
      },
      {
       "kind": "polygon",
@@ -874,8 +874,8 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "150.000",
-       "Bitiş": "300.000"
+       "Başlangıç (m)": "150.000",
+       "Bitiş (m)": "300.000"
       },
       "parts": 2,
       "holes": 0,
@@ -950,8 +950,8 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "200.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "200.000"
       },
       "parts": 1,
       "holes": 0,
@@ -964,8 +964,8 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul B",
-       "Başlangıç": "0.000",
-       "Bitiş": "200.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "200.000"
       },
       "parts": 1,
       "holes": 0,
@@ -978,7 +978,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -991,7 +991,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1004,7 +1004,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1017,7 +1017,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1030,7 +1030,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1043,7 +1043,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1056,7 +1056,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul B",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1069,7 +1069,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul B",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1082,7 +1082,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul B",
-       "Aralık": "0–200"
+       "Aralık (m)": "0–200"
       },
       "parts": 1,
       "holes": 0,
@@ -1159,12 +1159,12 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "150.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "150.000"
       },
       "parts": 1,
       "holes": 0,
-      "area": 13170.793862638593
+      "area": 13170.793862638604
      },
      {
       "kind": "polygon",
@@ -1173,12 +1173,12 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Başlangıç": "0.000",
-       "Bitiş": "300.000"
+       "Başlangıç (m)": "0.000",
+       "Bitiş (m)": "300.000"
       },
       "parts": 1,
       "holes": 0,
-      "area": 26447.91313625383
+      "area": 26447.913136253825
      },
      {
       "kind": "polyline",
@@ -1187,20 +1187,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–150"
-      },
-      "parts": 1,
-      "holes": 0,
-      "length": 50.0
-     },
-     {
-      "kind": "polyline",
-      "layerId": "islem-ulasilan-yollar",
-      "attrs": {
-       "Ağ": "Yollar",
-       "Maliyet": "Uzunluk",
-       "Tesis": "Okul A",
-       "Aralık": "0–150"
+       "Aralık (m)": "0–150"
       },
       "parts": 1,
       "holes": 0,
@@ -1213,7 +1200,20 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–150"
+       "Aralık (m)": "0–150"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-ulasilan-yollar",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık (m)": "0–150"
       },
       "parts": 1,
       "holes": 0,
@@ -1226,7 +1226,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "0–150"
+       "Aralık (m)": "0–150"
       },
       "parts": 1,
       "holes": 0,
@@ -1239,7 +1239,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "150–300"
+       "Aralık (m)": "150–300"
       },
       "parts": 1,
       "holes": 0,
@@ -1252,7 +1252,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "150–300"
+       "Aralık (m)": "150–300"
       },
       "parts": 1,
       "holes": 0,
@@ -1265,7 +1265,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "150–300"
+       "Aralık (m)": "150–300"
       },
       "parts": 1,
       "holes": 0,
@@ -1278,7 +1278,7 @@
        "Ağ": "Yollar",
        "Maliyet": "Uzunluk",
        "Tesis": "Okul A",
-       "Aralık": "150–300"
+       "Aralık (m)": "150–300"
       },
       "parts": 1,
       "holes": 0,

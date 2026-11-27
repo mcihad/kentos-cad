@@ -333,6 +333,11 @@ pub fn cost_value(v: Option<f64>, c: usize, length_decimals: u32) -> String {
     }
 }
 
+/// A cost's value in its column's unit (docs/adr/9355, `NetworkDef::column_value`): a speed's minutes as seconds.
+pub fn cost_cell(def: &kentos_commands::NetworkDef, v: Option<f64>, c: usize, length_decimals: u32) -> String {
+    cost_value(v.map(|v| def.column_value(c, v)), c, length_decimals)
+}
+
 /// The note about points not found on the network.
 pub fn missing_note(missing: usize, what: &str, reach: f64, feedback: &mut dyn Feedback) {
     if missing > 0 {

@@ -53,6 +53,8 @@ pub(crate) mod source;
 #[cfg(test)]
 mod scope_tests;
 #[cfg(test)]
+mod follow_tests;
+#[cfg(test)]
 mod tests;
 pub(crate) mod view;
 pub(crate) mod whole;
@@ -159,6 +161,8 @@ pub(crate) fn walk(shift: bool) -> Walk {
 pub enum Event {
     /// Katman ▾: a layer by id.
     Layer(String),
+    /// Etkin katmana geç: the table pinned to a layer lets go and follows the active one (the second round's T34).
+    FollowActive,
     /// Düzenlenen katmanlar ▾: an edited layer made the active one and the table's (docs/adr/9347).
     EditedLayer(String),
     /// Süzülen katman (false) or Kaynağın tümü (true) on a data layer with a Katman süzgeci (docs/adr/9348).
@@ -653,6 +657,19 @@ impl App {
 
     /// Öznitelik tablosu (`data.featureTable`): the bottom panel on its Tablo
     /// tab, as tall as Arama's at least (the rows want room; a taller panel stays).
+    /// Tablo, the ribbon's and the command's (the second round's T34): the active layer's table. A layer the table was
+    /// pinned to (Katman ▾) lets go; with objects chosen on the drawing the table shows their layer, as it follows them.
+    /// The callers that open the table on a layer of their own pin it after this.
+    pub fn open_feature_table_active(&mut self) {
+        if self.gis.features.layer.take().is_some() {
+            self.gis.features.join.view = None;
+            self.gis.features.editing = None;
+            self.gis.features.changed();
+        }
+        self.open_feature_table();
+        self.table_conditions_follow();
+    }
+
     pub fn open_feature_table(&mut self) {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(crate::bottom::BottomTab::Table) {
@@ -766,6 +783,16 @@ impl App {
                 self.gis.features.search = text;
                 self.gis.features.changed();
                 return self.form_follows_rows();
+            }
+            Event::FollowActive => {
+                if !self.docked_form_may_leave() {
+                    return Task::none();
+                }
+                self.gis.features.layer = None;
+                self.gis.features.join.view = None;
+                self.gis.features.editing = None;
+                self.gis.features.changed();
+                self.table_conditions_follow();
             }
             Event::Show(show) => {
                 self.gis.features.show = show;

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use serde_json::{Value, json};
 
 use super::{
-    RunNetwork, cost_value, date_param, line_geometry, missing_note, name_of, network_param,
+    RunNetwork, cost_cell, date_param, line_geometry, missing_note, name_of, network_param,
     places_of, points_param, profile_param, reach_param, run_network, time_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
@@ -151,7 +151,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         for (rank, f) in row.iter().enumerate() {
             let values: Vec<String> = (0..cost_names.len())
                 .map(|c| {
-                    cost_value(
+                    cost_cell(
+                        &def,
                         f.totals.as_ref().and_then(|t| t.get(c).copied().flatten()),
                         c,
                         decimals,
@@ -171,8 +172,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                     ("Ağ".to_owned(), def.name.clone()),
                     ("Maliyet".to_owned(), cost_names[cost].clone()),
                 ]);
-                for (c, name) in cost_names.iter().enumerate() {
-                    attrs.insert(name.clone(), values[c].clone());
+                // Each cost with its unit in its column's name (docs/adr/9355).
+                for c in 0..cost_names.len() {
+                    attrs.insert(def.cost_column(c), values[c].clone());
                 }
                 if let Some(e) = edit_object(&line_geometry(l), layer, attrs) {
                     add.push(e);
@@ -191,7 +193,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         ));
     }
     let mut columns = vec!["Olay".to_owned(), "Tesis".to_owned(), "Sıra".to_owned()];
-    columns.extend(cost_names.iter().cloned());
+    columns.extend((0..cost_names.len()).map(|c| def.cost_column(c)));
     let summary = format!(
         "{} olay için {} tesis bulundu; {} yol “{}” ağında {} ile yazıldı.",
         incidents.len(),

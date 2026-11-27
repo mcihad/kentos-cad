@@ -106,7 +106,7 @@ fn a_service_area_is_a_run_reopened_with_its_values_and_its_layer_keeps_what_mad
     assert_eq!(app.session.tool_id(), "netServiceArea");
     assert!(prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"), "{}", prompt(&app));
     let rows = settings(&app);
-    assert_eq!((rows[4].1.as_str(), rows[6].1.as_str()), ("35 m", "yazılır"));
+    assert_eq!((rows[4].1.as_str(), rows[7].1.as_str()), ("35", "Açık"));
 }
 
 #[test]

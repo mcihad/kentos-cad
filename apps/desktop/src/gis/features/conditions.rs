@@ -4,7 +4,8 @@
 //! shown before. A condition written for one table is never asked of another, where it could keep nothing and the
 //! answer would look like the data's. Whichever way the table comes to another layer (Katman ▾, the selection, the
 //! active layer) they follow it. They last while the drawing is on screen: another drawing starts the table again
-//! (GIS-022); the project file does not keep them.
+//! (GIS-022); the project file does not keep them. Göster is the layer's too (the second round's T34): a layer come to
+//! for the first time shows all its rows.
 
 use super::{FeaturesPanel, data::DataConditions};
 use crate::app::App;
@@ -15,6 +16,8 @@ pub(crate) type Key = (String, String);
 /// A layer's conditions: typed in the bar and, on a data layer, asked of its source.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct Conditions {
+    /// Göster: a layer come to for the first time shows all its rows, not the Seçililer of the one left (T34).
+    show: super::Show,
     search: String,
     filter: String,
     sort: Option<String>,
@@ -26,6 +29,7 @@ impl FeaturesPanel {
     /// The conditions the table has, taken out: it has none until others are put.
     fn take_conditions(&mut self) -> Conditions {
         Conditions {
+            show: std::mem::take(&mut self.show),
             search: std::mem::take(&mut self.search),
             filter: std::mem::take(&mut self.filter),
             sort: self.sort.take(),
@@ -35,7 +39,8 @@ impl FeaturesPanel {
     }
 
     fn put_conditions(&mut self, c: Conditions) {
-        (self.search, self.filter, self.sort, self.descending) = (c.search, c.filter, c.sort, c.descending);
+        (self.show, self.search, self.filter, self.sort, self.descending) =
+            (c.show, c.search, c.filter, c.sort, c.descending);
         self.data.put_conditions(c.data);
     }
 }

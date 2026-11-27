@@ -58,28 +58,28 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
     let rows = settings(&app);
     let shown: Vec<(&str, &str)> = rows.iter().map(|(l, v)| (l.as_str(), v.as_str())).collect();
     assert_eq!(
-        shown[..7],
+        shown[..8],
         [
             ("Ağ", "qa_yollar ağı"),
             ("Maliyet", "Uzunluk, metre"),
             ("Tolerans", f.length(0.01).as_str()),
             ("Bağlanma", "uçlarda"),
-            ("Aralıklar", "500 1000 1500 m"),
+            ("Aralıklar (m)", "500 1000 1500"),
             ("Kenar payı", f.length(50.0).as_str()),
-            ("Çizgiler", "yazılmaz"),
+            ("Yaklaşık alan", "Açık"),
+            ("Ulaşılan yollar", "Kapalı"),
         ]
     );
     assert_eq!(
-        rows[7].1,
+        rows[8].1,
         format!(
-            "Alan, ulaşılan yolların {} çevresidir; yaklaşıktır, “Yaklaşık hizmet alanı” katmanına yazılır. Ağda \
-             ulaşılan yollar Çizgiler açıkken “Ulaşılan yollar” katmanına yazılır.",
+            "Çıktılar: “Yaklaşık hizmet alanı” (Başlangıç (m), Bitiş (m)): ulaşılan yolların {} çevresi, yaklaşık.",
             f.length(50.0)
         )
     );
     at_35_m(&mut app);
-    assert_eq!(settings(&app)[4].1, "35 m");
-    assert_eq!(settings(&app)[6].1, "yazılır");
+    assert_eq!(settings(&app)[4].1, "35");
+    assert_eq!(settings(&app)[7].1, "Açık");
     assert!(prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"), "{}", prompt(&app));
     typed(&mut app, "");
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
@@ -103,7 +103,7 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
     for (got, want) in lengths.iter().zip([5.0, 30.0, 35.0]) {
         assert!((got - want).abs() < 1e-6, "{lengths:?}");
     }
-    assert!(lines.iter().all(|(_, a)| a.get("Aralık").map(String::as_str) == Some("0–35")), "{lines:?}");
+    assert!(lines.iter().all(|(_, a)| a.get("Aralık (m)").map(String::as_str) == Some("0–35")), "{lines:?}");
     // The area: the lines' 50 m surroundings, so B (35 m from the end of CB's part) is in it though not reached.
     let areas = objects(&app, "Yaklaşık hizmet alanı");
     let [(kentos_geometry_core::entity::Shape::Polygon { pts, .. }, attrs)] = &areas[..] else {
@@ -113,7 +113,7 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
         kentos_geometry_core::geometry::point_in_polygon(kentos_interaction::Vec2::new(B.0, B.1), pts),
         "B in the area"
     );
-    assert_eq!(attrs.get("Bitiş").map(String::as_str), Some(f.length(35.0).trim_end_matches(" m")));
+    assert_eq!(attrs.get("Bitiş (m)").map(String::as_str), Some(f.length(35.0).trim_end_matches(" m")));
 }
 
 /// The view drawn back so that the area's 50 m surroundings show whole.

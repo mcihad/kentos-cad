@@ -25,6 +25,8 @@ mod prerequisite_tests;
 mod service_area_tests;
 #[cfg(test)]
 mod analysis_history_tests;
+#[cfg(test)]
+mod units_tests;
 pub(crate) mod edge_fit;
 #[cfg(test)]
 mod edge_fit_tests;

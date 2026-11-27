@@ -10,7 +10,6 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::NetworkKind;
-use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::{Reorder, Routed};
 
 use serde_json::{Value, json};
@@ -269,11 +268,13 @@ impl NetRoute {
                     .join(", "),
             );
         }
-        for (c, name) in self.seen.costs.iter().enumerate() {
+        // Each cost with its unit in its column's name (the second round's T33): “Uzunluk (m)”, “Süre (sn)”; a cost the
+        // route has no value of stays empty.
+        for c in 0..self.seen.costs.len() {
             let v = r.totals.get(c).copied().flatten();
             attrs.insert(
-                name.clone(),
-                v.map_or_else(String::new, |v| fixed(v, if c == 0 { decimals } else { 2 })),
+                def.cost_column(c),
+                v.map_or_else(String::new, |v| Base::cost_cell(&def, c, v, decimals)),
             );
         }
         let totals = self.totals(r);

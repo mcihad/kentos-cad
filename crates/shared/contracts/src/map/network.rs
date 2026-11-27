@@ -1078,6 +1078,46 @@ impl NetworkDef {
             .collect()
     }
 
+    /// The short name of cost `c`'s unit in a result's column (docs/adr/9355): “m” for the length (written in metres),
+    /// “sn” for a speed's time (written in seconds), a field's own; none for a field without one.
+    pub fn column_unit(&self, c: usize) -> Option<&str> {
+        match c {
+            0 => Some("m"),
+            c => match self.costs.get(c - 1) {
+                Some(k) if k.kind == NetworkCostKind::Speed => Some("sn"),
+                Some(k) if !k.unit.is_empty() => Some(k.unit.as_str()),
+                _ => None,
+            },
+        }
+    }
+
+    /// A result's column for cost `c` (docs/adr/9355): its name with its unit, “Uzunluk (m)”, “Süre (sn)”.
+    pub fn cost_column(&self, c: usize) -> String {
+        let name = self.cost_names().get(c).copied().unwrap_or_default().to_owned();
+        self.column_unit(c).map_or_else(|| name.clone(), |u| format!("{name} ({u})"))
+    }
+
+    /// A value of cost `c` in its column's unit (docs/adr/9355): a speed's minutes as seconds, the others as they are.
+    pub fn column_value(&self, c: usize, v: f64) -> f64 {
+        match self.costs.get(c.wrapping_sub(1)) {
+            Some(k) if c > 0 && k.kind == NetworkCostKind::Speed => v * 60.0,
+            _ => v,
+        }
+    }
+
+    /// The unit of the breaks of a service area over cost `c`, as its columns name it (docs/adr/9355): metres for the
+    /// length, minutes for a speed (as the breaks are given), a field's own; none for a field without one.
+    pub fn breaks_unit(&self, c: usize) -> Option<&str> {
+        match c {
+            0 => Some("m"),
+            c => match self.costs.get(c - 1) {
+                Some(k) if k.kind == NetworkCostKind::Speed => Some("dk"),
+                Some(k) if !k.unit.is_empty() => Some(k.unit.as_str()),
+                _ => None,
+            },
+        }
+    }
+
     /// The layers it reads (edges, then junctions, then turns), each once in its first place.
     pub fn layers(&self) -> Vec<&str> {
         let mut out: Vec<&str> = Vec::new();

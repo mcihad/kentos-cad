@@ -118,6 +118,7 @@ impl App {
         let filters = row![
             pane,
             container(self.layer_select(rows)).width(Length::Fixed(250.0)),
+            self.pinned_chip(rows),
             self.edit_state_badge(&layer),
             scope,
             container(search).width(Length::Fixed(170.0)),

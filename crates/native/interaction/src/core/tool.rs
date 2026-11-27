@@ -1044,6 +1044,8 @@ pub struct Memory {
     pub network_separate: bool,
     pub network_trim: f64,
     pub network_lines: bool,
+    /// Hizmet alanı writes its approximate areas (the second round's T35): off, only the reached ways.
+    pub network_areas: bool,
     pub network_trace: kentos_geometry_core::ops::network::TraceKind,
 }
 
@@ -1345,6 +1347,7 @@ impl Default for Memory {
             network_separate: false,
             network_trim: crate::network::FIRST_TRIM,
             network_lines: false,
+            network_areas: true,
             network_trace: kentos_geometry_core::ops::network::TraceKind::Connected,
         }
     }
