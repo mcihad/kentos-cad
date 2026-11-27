@@ -4,6 +4,15 @@
 
 ## 0. Güncel karar özeti
 
+- **Dosya eylemleri önkoşullarını söyler; Veri ekle kaynak türlerine göre başlıklanır (27 Kasım 2026, 27 Kasım CBS
+  incelemesinin 3. ve 9. maddeleri; [ADR 9342](../adr/9342-file-menu-prerequisites-and-add-data-groups.md)).**
+  - Seçilenleri kaydet seçim yokken kapalıdır ve nedenini söyler. Aç ile Yeni sekmede aç sekmeyi, Açılış raporu
+    dosyayı ve açıldığı anı söyler. Bulut eylemlerinin kapalılık nedenleri ayrıdır. Paketle pakete gireni klasörden
+    önce listeler.
+  - Şerit menüleri bloklarının başlıklarıyla okunur. Veri ekle: Vektör, Raster ve karo, Nokta bulutu ve mesh, Harita
+    ve CAD, Saha verileri. GeoPackage penceresi karo tablolarını da gösterir; servis pencereleri görüntü katmanını ve
+    özellik tablosunu ayırır.
+
 - **Bilgi kartı kaydını seçer, tabloda ve formda açar; son ifade yazılmaz, sunulur; etiket araçları veri katmanının
   etiketini söyler (27 Kasım 2026, 27 Kasım CBS incelemesinin 6., 7. ve 10. maddeleri;
   [ADR 9341](../adr/9341-info-card-actions-last-expression-and-data-labels.md)).**

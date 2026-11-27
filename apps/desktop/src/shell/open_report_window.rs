@@ -41,6 +41,8 @@ impl Fate {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OpenReport {
     pub file: String,
+    /// When the file was opened, milliseconds since 1970 (docs/adr/9342): the report is of that opening.
+    pub opened: u64,
     pub items: Vec<(Fate, ReportItem)>,
     /// The row pressed: its whole words under the table, to read and copy (UR2-024).
     pub chosen: Option<usize>,
@@ -66,7 +68,10 @@ impl OpenReport {
         items.sort_by_key(|(fate, _)| *fate);
         // The first row chosen: what was left out is read at once, whole.
         let chosen = (!items.is_empty()).then_some(0);
-        Self { file, items, chosen }
+        let opened = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(0));
+        Self { file, opened, items, chosen }
     }
 
     /// Whether anything was left out or changed: the window comes up by itself.
@@ -146,7 +151,11 @@ impl App {
                 let (left, changed) = (r.count(Fate::Left), r.count(Fate::Changed));
                 lines.push(words::text_line(
                     Kind::Info,
-                    format!("“{}” ayrı bir çizim olarak açıldı; kaynak dosya değişmedi.", r.file),
+                    format!(
+                        "“{}” ayrı bir çizim olarak açıldı ({}); rapor bu açılışındır, kaynak dosya değişmedi.",
+                        r.file,
+                        crate::cloud::local_time::stamp(r.opened, crate::cloud::local_time::Zone::system())
+                    ),
                 ));
                 if left > 0 {
                     lines.push(words::text_line(

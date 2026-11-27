@@ -63,6 +63,9 @@ mod geojson_export;
 pub(crate) mod source_rows;
 pub(crate) mod selection_save;
 #[cfg(test)]
+#[path = "file_menu_tests.rs"]
+mod file_menu_tests;
+#[cfg(test)]
 #[path = "selection_save_tests.rs"]
 mod selection_save_tests;
 #[cfg(test)]

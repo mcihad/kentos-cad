@@ -58,6 +58,19 @@ const DESKTOP_SHORTS: &[(&str, &str)] = &[
 const DESKTOP_ICONS: &[(&str, &str)] = &[("tool.point", "pointDot")];
 
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
+    // Which tab a file opens in, said before it is pressed (the CBS review of 27 November, 3rd item; docs/adr/9342).
+    (
+        "file.openTab",
+        "Bir KentOS projesini yeni bir sekmede açar; açık çizim kendi sekmesinde geri alması, seçimi ve görünümüyle kalır. Sekmeler arasında Sonraki çizim ya da çizimin üstündeki sekmeler geçer.",
+    ),
+    (
+        "file.openReport",
+        "Açık çizimin son açılışının raporu: hangi dosyadan, ne zaman açıldığı, çizime alınmayan, değiştirilerek alınan ve yalnız bilgi olan öğeler. DWG, DXF ya da NCZ'den açılan çizimde vardır; kaynak dosya değişmez.",
+    ),
+    (
+        "file.saveSelection",
+        "Seçili nesneleri, kullandıkları katmanlar, bloklar ve projenin ayarlarıyla yeni bir projeye yazar; açık çizim değişmez. CBS projesinde önce kopyanın türü sorulur: GeoPackage'ıyla CBS projesi ya da Çizim kopyası. Seçim yokken kapalıdır.",
+    ),
     (
         "view.rightPanel",
         "Sağdaki panel grubunu (Katmanlar, Öznitelikler, İşlemler ve öbür sekmeleri) birlikte gösterir ya da gizler. Bir sekmeyi açmak için onun komutunu kullanın.",
@@ -72,7 +85,7 @@ const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     ),
     (
         "file.open",
-        "KCAD, DWG, DXF, NCZ çizimini ya da GeoPackage'ı doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. GeoPackage'ın içindeki proje açılır; projesi yoksa tabloları bellekte bir CBS projesi olarak açılır ve dosyaya bir şey yazılmaz, ilk Kaydet projeyi dosyanın içinde saklamayı önerir. Mevcut projeye eklemek için İçe aktar kullanın.",
+        "KCAD, DWG, DXF, NCZ çizimini ya da GeoPackage'ı doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. GeoPackage'ın içindeki proje açılır; projesi yoksa tabloları bellekte bir CBS projesi olarak açılır ve dosyaya bir şey yazılmaz, ilk Kaydet projeyi dosyanın içinde saklamayı önerir. Mevcut projeye eklemek için İçe aktar kullanın. Bu sekmede açar: açık çizim kapanır, kaydedilmemiş değişikliği varsa önce sorulur; açık çizimi yerinde tutmak için Yeni sekmede aç.",
     ),
     (
         "file.import.shp",

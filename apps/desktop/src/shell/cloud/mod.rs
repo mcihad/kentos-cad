@@ -879,6 +879,26 @@ impl App {
         }
     }
 
+    /// Why a cloud command of the open project is off (the CBS review of 27 November, 3rd item; docs/adr/9342): a local
+    /// project, no session, no connection, an archived project, the role, or nothing to settle, each said apart.
+    pub(crate) fn cloud_why(&self, id: &str) -> Option<String> {
+        const OWN: [&str; 6] = ["cloud.share", "cloud.history", "cloud.rename", "cloud.delete", "cloud.openNewest", "cloud.conflicts"];
+        if !OWN.contains(&id) || self.cloud_available(id) {
+            return None;
+        }
+        let project = self.document.as_ref().and_then(|d| d.cloud_source());
+        Some(match project {
+            None => "Yalnız bulut projesinde: açık proje yerel bir dosya. Buluta yükle ile buluta koyun ya da Bulut projesi aç ile bir bulut projesi açın.".to_owned(),
+            Some(_) if self.cloud.me.is_none() => "Oturum gerekli: Bulut › Oturum aç ile girin.".to_owned(),
+            Some(_) if self.cloud.link == copy::Link::Offline => {
+                "Bağlantı yok: bulut sunucusuna ulaşılamıyor; bağlantı gelince açılır.".to_owned()
+            }
+            Some(_) if id == "cloud.conflicts" => "Bekleyen çakışma yok: bulutla eşitleme temiz.".to_owned(),
+            Some(c) if c.archived() => "Proje arşivlenmiş: değiştirilemez; önce arşivden çıkarın.".to_owned(),
+            Some(_) => "Rolünüzün bu projede bu izni yok; proje sahibinden ya da yöneticisinden isteyin.".to_owned(),
+        })
+    }
+
     /// The timers: the catalog's search, then the open project's.
     pub(crate) fn cloud_tick(&mut self, now: Instant) -> Task<Message> {
         // The drawing set aside while Blok düzenleyici is open waits (block_editor.rs, docs/adr/0316 §1).

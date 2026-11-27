@@ -944,6 +944,8 @@ impl App {
             }
             "edit.autoSelect" => doc.is_some(),
             "file.openReport" => self.open_report().is_some(),
+            // Seçilenleri kaydet writes the selection: off without one, its tip saying why (docs/adr/9342).
+            "file.saveSelection" => !self.selection.is_empty(),
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             // A selection tool that takes none of the selected kinds (UR-007).
@@ -1001,6 +1003,14 @@ impl App {
                 "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
                     .to_owned(),
             ),
+            "file.saveSelection" if self.selection.is_empty() => Some(
+                "Önce kaydedilecek nesneleri seçin: çizimde bir ya da daha çok nesne. Seçilenler yeni bir projeye yazılır."
+                    .to_owned(),
+            ),
+            "file.openReport" if self.open_report().is_none() => Some(
+                "Açılış raporu yalnız DWG, DXF ya da NCZ'den açılan çizimde vardır; bu çizim öyle açılmadı.".to_owned(),
+            ),
+            id if id.starts_with("cloud.") && self.cloud_why(id).is_some() => self.cloud_why(id),
             "view.swipe" if !self.available("view.swipe") => Some(
                 "Kaydırmalı karşılaştırma için iki görünüm kullanın: fazla görünümleri üstlerindeki × ile kapatın."
                     .to_owned(),

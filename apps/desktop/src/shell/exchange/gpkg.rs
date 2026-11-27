@@ -57,6 +57,9 @@ pub struct State {
     /// Var olan katmanla birleştir (docs/adr/0628 §8), and while it is on the plan's merges or why it would not go in.
     pub merge: MergeForm,
     pub merged: Option<Result<Vec<MergeReport>, String>>,
+    /// The file's tile tables, by name (docs/adr/9342): one file holding vectors and tiles shows both, the tiles read
+    /// by GeoPackage karolarını oku.
+    pub tiles: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -72,6 +75,8 @@ pub enum Event {
     /// Anahtar alanı typed.
     Key(String),
     Merge(MergeEvent),
+    /// Karoları aç…: the same file in GeoPackage karolarını oku (docs/adr/9342).
+    Tiles,
     Run,
 }
 
@@ -83,9 +88,14 @@ fn event(e: Event) -> Message {
 pub fn describe(path: &std::path::Path) -> Result<State, String> {
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let mut tables = Vec::new();
+    let mut tiles = Vec::new();
     // The relations' mapping tables and the layer styles come in with the layers, not as layers (docs/adr/0627 §6, §7).
     let beside = gp.side_tables().map_err(|e| e.0)?;
     for l in gp.layers().map_err(|e| e.0)? {
+        if l.data_type == DataType::Tiles {
+            tiles.push(l.name.clone());
+            continue;
+        }
         if !matches!(l.data_type, DataType::Features | DataType::Attributes)
             || beside.contains(&l.name)
         {
@@ -126,6 +136,7 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         status: None,
         merge: MergeForm::new(path, true),
         merged: None,
+        tiles,
     })
 }
 
@@ -231,6 +242,14 @@ impl App {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
                     s.area = !s.area;
                 }
+            }
+            Event::Tiles => {
+                let Some(Window::Gpkg(s)) = &self.exchange else {
+                    return Task::none();
+                };
+                let path = s.path.clone();
+                self.close_exchange();
+                return Task::done(message(Exchange::GpkgTiles(super::gpkg_tiles::Event::Opened(Some(path)))));
             }
             Event::Key(k) => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
@@ -622,6 +641,23 @@ impl App {
             .spacing(12)
             .push(words::file_line(&s.file, s.path.display().to_string()))
             .push(words::field("Tablolar", list, None));
+        // Vectors and tiles in one file: the tiles named, a press away (docs/adr/9342).
+        if !s.tiles.is_empty() {
+            body = body.push(words::field(
+                "Karo tabloları",
+                iced::widget::row![
+                    iced::widget::container(words::text_line(
+                        Line::Info,
+                        format!("{}: raster karoları; GeoPackage karolarını oku ile eklenir.", s.tiles.join(", ")),
+                    ))
+                    .width(Fill),
+                    words::secondary("Karoları aç…", Some(event(Event::Tiles))),
+                ]
+                .spacing(8)
+                .align_y(iced::Center),
+                None,
+            ));
+        }
         body = body.push(if binds {
             words::field(
             "Bağ",

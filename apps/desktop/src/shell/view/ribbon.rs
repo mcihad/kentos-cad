@@ -594,7 +594,10 @@ impl App {
                 }
                 let name = *label;
                 let off = self.rows_off(&members);
-                let menu = move || menu_of(&members, &checked, &off, Some(name));
+                // Its titled blocks under their headers (Veri ekle's Vektör, Raster ve bulut …; the CBS review of 27
+                // November, 9th item): a menu of more than one titled block reads by them, not as one long list.
+                let heads = block_heads(&members, blocks);
+                let menu = move || headed_menu_of(&members, &checked, &heads, &off, Some(name));
                 Some(with_family(button, ids, label, menu))
             }
             Item::Builtin(_) => None,
@@ -615,4 +618,23 @@ impl App {
     pub(super) fn checks(&self, ids: &[&'static str]) -> Vec<Option<bool>> {
         ids.iter().map(|id| self.checked(id)).collect()
     }
+}
+
+/// The header before each block's first row of `ids`, when more than one titled block has rows (docs/adr/9342).
+pub(crate) fn block_heads(
+    ids: &[&'static str],
+    blocks: &[(&'static str, Vec<&'static str>)],
+) -> Vec<Option<&'static str>> {
+    let mut heads = vec![None; ids.len()];
+    let titled: Vec<(&'static str, usize)> = blocks
+        .iter()
+        .filter(|(title, _)| !title.is_empty())
+        .filter_map(|(title, items)| ids.iter().position(|id| items.contains(id)).map(|at| (*title, at)))
+        .collect();
+    if titled.len() > 1 {
+        for (title, at) in titled {
+            heads[at] = Some(title);
+        }
+    }
+    heads
 }

@@ -148,12 +148,14 @@ def export_menu(cad):
 NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
     ("Türüyle", ["layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation"])])
 
+# Its blocks read under their headers (docs/adr/9342): the providers' kinds, a GeoPackage's tiles among the rasters.
 ADD_DATA = M("Veri ekle", [
     ("Vektör", ["file.import.gpkg", "file.import.shp", "file.import.geojson", "file.import.kml",
                 "file.import.csv", "file.import.fgb", "file.import.parquet", "file.import.gml"]),
-    ("Raster ve bulut", ["raster.add", "mesh.add", "pointcloud.add"]),
-    ("Çizim", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
-    ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')
+    ("Raster ve karo", ["raster.add", "raster.gpkgRead"]),
+    ("Nokta bulutu ve mesh", ["pointcloud.add", "mesh.add"]),
+    ("Harita ve CAD", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
+    ("Saha verileri", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')
 
 LAYER_OVERFLOW = ["tool.layerOff", "tool.layerIsolate", "layer.unisolate", "tool.layerLock", "tool.layerFreeze",
     "layer.thawAll", "tool.layerMakeActive", "tool.layerMatch", "tool.copyToLayer", "layer.merge", "layer.states",

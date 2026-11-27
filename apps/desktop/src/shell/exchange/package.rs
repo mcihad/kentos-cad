@@ -57,6 +57,17 @@ pub struct State {
     pub formats: Vec<ExchangeFormat>,
     /// The data layers' rows, counted from their sources (docs/adr/9338).
     pub(crate) sources: SourceScopes,
+    /// What the package takes and what stays out, as `file.package`'s plan says without reading a database
+    /// (docs/adr/9342): asked when the window opens and again when a way or a link changes.
+    pub preview: Option<Result<Preview, String>>,
+}
+
+/// The plan's lists: each file copied (its place in the package and where it comes from) and each link left as it is
+/// (its place and why).
+#[derive(Debug, Clone, Default)]
+pub struct Preview {
+    pub files: Vec<(String, String)>,
+    pub left: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone)]
@@ -73,6 +84,8 @@ pub enum Event {
     Picked(Option<PathBuf>),
     /// Packed, or why not.
     Done(Result<Box<(ProjectPackaged, Vec<CommandWarning>)>, String>),
+    /// The plan's lists for the window (docs/adr/9342).
+    Previewed(Result<Preview, String>),
 }
 
 fn event(e: Event) -> Message {
@@ -109,8 +122,26 @@ impl App {
             links,
             formats: Vec::new(),
             sources,
+            preview: None,
         }));
-        Task::none()
+        self.package_preview()
+    }
+
+    /// The plan's lists asked off the interface's thread: a folder that is not there stands for the package's.
+    fn package_preview(&mut self) -> Task<Message> {
+        let place = std::env::temp_dir().join(format!("kentos-paket-onizleme-{}", std::process::id()));
+        let (Some(doc), Some(mut input)) = (&self.document, self.package_input(&place)) else {
+            return Task::none();
+        };
+        // The open files are not made for a preview.
+        input.exchange = None;
+        let model = doc.model.clone();
+        off_thread(
+            move || {
+                kentos_headless::package::plan_reading(&model, &input, false).map(|p| preview_of(&p.output)).map_err(|e| e.message)
+            },
+            |r| Exchange::Package(Event::Previewed(r)),
+        )
     }
 
     pub(super) fn package_pick(&mut self) -> Task<Message> {
@@ -170,19 +201,25 @@ impl App {
                 if let Some(Window::Package(s)) = &mut self.exchange {
                     s.geopackages = w;
                 }
-                Task::none()
+                self.package_preview()
             }
             Event::Databases(Way(w)) => {
                 if let Some(Window::Package(s)) = &mut self.exchange {
                     s.databases = w;
                 }
-                Task::none()
+                self.package_preview()
             }
             Event::Take(i) => {
                 if let Some(Window::Package(s)) = &mut self.exchange
                     && let Some(l) = s.links.get_mut(i)
                 {
                     l.take = !l.take;
+                }
+                self.package_preview()
+            }
+            Event::Previewed(r) => {
+                if let Some(Window::Package(s)) = &mut self.exchange {
+                    s.preview = Some(r);
                 }
                 Task::none()
             }
@@ -466,6 +503,9 @@ impl App {
             ));
         }
         body = body.push(words::summary(lines));
+        if let Some(list) = package_preview_view(s) {
+            body = body.push(list);
+        }
         overlay::blocking(
             Dialog::new("Paketle")
                 .scroll(body)
@@ -479,6 +519,63 @@ impl App {
                 .on_close(Some(message(Exchange::Close))),
         )
     }
+}
+
+/// The plan's files and links, in words: “veri/qa.gpkg ← /iş/qa.gpkg”, “Ortofoto.tif: yerinde yok”.
+fn preview_of(out: &ProjectPackaged) -> Preview {
+    let kind = |k: kentos_commands::PackagedKind| match k {
+        kentos_commands::PackagedKind::Source => "kaynak",
+        kentos_commands::PackagedKind::Picture => "resim ya da raster",
+        kentos_commands::PackagedKind::Sidecar => "raster yanı",
+        kentos_commands::PackagedKind::Table => "tablo",
+        kentos_commands::PackagedKind::Attachment => "ek",
+        kentos_commands::PackagedKind::Xref => "dış başvuru",
+        kentos_commands::PackagedKind::Font => "yazı tipi",
+        kentos_commands::PackagedKind::Profile | kentos_commands::PackagedKind::Mapping => "profil",
+        kentos_commands::PackagedKind::WorkFile => "harita işi",
+        _ => "dosya",
+    };
+    let why = |w: kentos_commands::LeftWhy| match w {
+        kentos_commands::LeftWhy::Missing => "yerinde yok",
+        kentos_commands::LeftWhy::Database => "veritabanına bağlı kalır",
+        kentos_commands::LeftWhy::Address => "adres",
+        kentos_commands::LeftWhy::Substituted => "yerine başka yüz",
+        kentos_commands::LeftWhy::Unreadable => "okunamadı",
+        kentos_commands::LeftWhy::Kept => "bağlı kalır",
+        kentos_commands::LeftWhy::Excluded => "dışarıda bırakıldı",
+    };
+    Preview {
+        files: out.files.iter().map(|f| (f.path.clone(), format!("{} · {}", kind(f.kind), f.from))).collect(),
+        left: out.left.iter().map(|l| (l.path.clone(), why(l.why).to_owned())).collect(),
+    }
+}
+
+/// The plan's lists under the summary: what is copied into the package and what stays as it is; none before it
+/// answers.
+fn package_preview_view(s: &State) -> Option<Element<'_, Message>> {
+    const SHOWN: usize = 10;
+    let mut lines = Vec::new();
+    match s.preview.as_ref()? {
+        Err(why) => lines.push(words::text_line(Line::Warn, format!("Önizleme yapılamadı: {why}"))),
+        Ok(p) => {
+            if p.files.is_empty() && p.left.is_empty() {
+                lines.push(words::text_line(Line::Info, "Pakette yalnız proje dosyası olur: bağlı dosyası yok."));
+            }
+            for (path, from) in p.files.iter().take(SHOWN) {
+                lines.push(words::text_line(Line::Ok, format!("{path} ← {from}")));
+            }
+            if p.files.len() > SHOWN {
+                lines.push(words::text_line(Line::Info, format!("… {} dosya daha kopyalanır.", p.files.len() - SHOWN)));
+            }
+            for (path, why) in p.left.iter().take(SHOWN) {
+                lines.push(words::text_line(Line::Warn, format!("{path}: {why}, pakete kopyalanmaz.")));
+            }
+            if p.left.len() > SHOWN {
+                lines.push(words::text_line(Line::Info, format!("… {} bağ daha olduğu gibi kalır.", p.left.len() - SHOWN)));
+            }
+        }
+    }
+    Some(words::field("Pakete girecekler", words::summary(lines), Some("Veritabanı tabloları ve devir dosyaları paketlenirken yazılır; burada sayılmaz.".to_owned())))
 }
 
 /// A data layer of the drawing as Paketle lists it.

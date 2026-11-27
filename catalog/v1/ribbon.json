@@ -3380,15 +3380,21 @@
           ]
          },
          {
-          "label": "Raster ve bulut",
+          "label": "Raster ve karo",
           "items": [
            "raster.add",
-           "mesh.add",
-           "pointcloud.add"
+           "raster.gpkgRead"
           ]
          },
          {
-          "label": "Çizim",
+          "label": "Nokta bulutu ve mesh",
+          "items": [
+           "pointcloud.add",
+           "mesh.add"
+          ]
+         },
+         {
+          "label": "Harita ve CAD",
           "items": [
            "file.import.dwg",
            "file.import.dxf",
@@ -3397,7 +3403,7 @@
           ]
          },
          {
-          "label": "Noktalar",
+          "label": "Saha verileri",
           "items": [
            "file.import.ncn",
            "file.import.gnss",

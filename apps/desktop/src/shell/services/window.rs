@@ -715,7 +715,18 @@ impl App {
         } else {
             TITLE
         })
-        .push(column![row![left, right].spacing(16), words::summary(lines)].spacing(12))
+        // What the layer is, beside Servisten veri al's (docs/adr/9342): a picture of the map, not its objects.
+        .push(
+            column![
+                words::text_line(
+                    Kind::Info,
+                    "Görüntü katmanı: servis haritayı resim olarak çizer; nesneleri seçilmez, öznitelikleri tabloda okunmaz. Nesneleri öznitelikleriyle almak için Servisten veri al.",
+                ),
+                row![left, right].spacing(16),
+                words::summary(lines)
+            ]
+            .spacing(12),
+        )
         .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
         .width(900.0);
         if KINDS[w.kind].0.is_some() {

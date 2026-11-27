@@ -13,7 +13,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use iced::widget::{Column, button, container, row, scrollable};
+use iced::widget::{Column, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, Entity, FeatureFeed, FeedKind, LayerServiceOperation, LayersService,
@@ -756,8 +756,18 @@ impl App {
         } else {
             TITLE
         })
+        // What it takes, beside Harita servisi's (docs/adr/9342): the objects with their attributes, not a picture.
         // The form scrolls in a low window; the summary and the buttons stay in sight.
-        .scroll(row![left, right].spacing(16))
+        .scroll(
+            column![
+                words::text_line(
+                    Kind::Info,
+                    "Özellik tablosu: servisin nesneleri öznitelikleriyle alınır; seçilir, tabloda okunur, işlemlere girer. Yalnız haritanın resmi için Harita servisi.",
+                ),
+                row![left, right].spacing(16)
+            ]
+            .spacing(12),
+        )
         .push(words::summary(vec![line]))
         .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
         .width(900.0);

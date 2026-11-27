@@ -861,7 +861,7 @@ pub(crate) fn program_tab(module: kentos_launch::Module) -> Option<&'static str>
 }
 
 #[path = "view/ribbon.rs"]
-mod ribbon;
+pub(crate) mod ribbon;
 
 #[path = "view/area.rs"]
 mod area;
