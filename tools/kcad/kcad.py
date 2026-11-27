@@ -12908,8 +12908,10 @@ class _Schema:
                                                     "edges": (self.array(self.fields({"kind": (self.enum(("front", "back", "public")), False),
                                                                                       "setback": (self.float, False)})), False),
                                                     "datum": (self.float, False), "envelope": (self.text, False),
-                                                    # Architecture data 43 (docs/adr/8174): the natural and the graded ground.
-                                                    **({"naturalGround": (self.text, False), "gradedGround": (self.text, False)}
+                                                    # Architecture data 43 (docs/adr/8174): the natural and the graded ground,
+                                                    # each its survey's layers.
+                                                    **({"naturalGround": (self.fields({"layers": (self.array(self.text), True)}), False),
+                                                        "gradedGround": (self.fields({"layers": (self.array(self.text), True)}), False)}
                                                        if self.arch_version >= ARCH_WITH_GROUND else {})}), False)}
                             if self.site_plan else {}),
                          # Schema 225 (docs/adr/8034): the municipality's regulation.
@@ -12942,10 +12944,13 @@ class _Schema:
             if "datum" in site and not (math.isfinite(site["datum"]) and abs(site["datum"]) <= 10000):
                 self.fail("bad_value", "±0,00 kotu en çok ±10 000 m olur")
             for key in ("naturalGround", "gradedGround"):
-                if key in site and not site[key].strip():
-                    self.fail("bad_value", "zeminin yüzey kimliği boş olamaz")
-            if "naturalGround" in site and site.get("naturalGround") == site.get("gradedGround"):
-                self.fail("bad_value", "tabii ve tesviye zemin aynı yüzey olamaz")
+                layers = site.get(key, {}).get("layers")
+                if layers is not None and (not layers or len(layers) > 16 or any(not l.strip() for l in layers)
+                                           or len(set(layers)) != len(layers)):
+                    self.fail("bad_value", "zemin 1–16 katmandan kurulur; kimlikleri dolu ve birer kez")
+            if "naturalGround" in site and "gradedGround" in site \
+                    and set(site["naturalGround"]["layers"]) == set(site["gradedGround"]["layers"]):
+                self.fail("bad_value", "tabii ve tesviye zemin aynı katmanlardan kurulamaz")
         if "cutHeight" in a and not (math.isfinite(a["cutHeight"]) and CUT_HEIGHT_RANGE[0] <= a["cutHeight"] <= CUT_HEIGHT_RANGE[1]):
             self.fail("bad_value", "planın kesme yüksekliği 0,3 ile 3 m arasında olur")
         ids, names = set(), set()

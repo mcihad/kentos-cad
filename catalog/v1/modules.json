@@ -577,6 +577,7 @@
         "tool.selectSimilar",
         "tool.setElevation",
         "tool.simplify",
+        "tool.siteGround",
         "tool.siteParcel",
         "tool.slab",
         "tool.slabEdgeBind",

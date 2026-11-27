@@ -92,7 +92,7 @@ pub struct Look {
 pub enum Left {
     /// The roof: the model has none (ADV-20).
     Roof,
-    /// The natural ground: the model has no survey of it (EK-4 4.30).
+    /// The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4 4.30).
     NaturalGround,
     /// A curved wall, slab or stair: the section draws its chords, not its curve (the IFC writes a wall's and a slab's
     /// arcs as arcs from [`Model::exact`], docs/adr/8071 §1).

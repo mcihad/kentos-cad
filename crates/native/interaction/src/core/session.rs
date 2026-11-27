@@ -120,8 +120,6 @@ pub const TOOLS: &[&str] = &[
     crate::opening_array::ID,
     space_tools::SPACE_ID,
     crate::slab_tools::SLAB_ID,
-    // docs/adr/8172 §6: Radye, the slab tool as a raft.
-    crate::slab_tools::RAFT_ID,
     crate::slab_edge_tool::ID,
     crate::ceiling_device_tool::ID,
     // Kaplama (docs/adr/8070 §10).
@@ -141,12 +139,13 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/8041 §1: Kiriş.
     crate::beam_tools::BEAM_ID,
     crate::beam_tools::RAIL_ID,
-    // docs/adr/8172: Tekil temel, Sürekli temel.
+    // docs/adr/8172–8174: Tekil temel, Sürekli temel, Radye; Cephe silmesi, Duvar harpuştası; Arazi zemini.
     crate::footing_tools::PAD_ID,
     crate::footing_tools::STRIP_ID,
-    // docs/adr/8173: Silme, Harpuşta.
+    crate::slab_tools::RAFT_ID,
     crate::profile_tools::MOULDING_ID,
     crate::profile_tools::COPING_ID,
+    crate::ground_tool::ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
@@ -597,6 +596,7 @@ impl Session {
             crate::footing_tools::STRIP_ID => Box::new(crate::footing_tools::FootingTool::strip()),
             crate::profile_tools::MOULDING_ID => Box::new(crate::profile_tools::ProfileTool::moulding()),
             crate::profile_tools::COPING_ID => Box::new(crate::profile_tools::ProfileTool::coping()),
+            crate::ground_tool::ID => Box::new(crate::ground_tool::GroundTool::new()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
             crate::roof_part_tools::CHIMNEY_ID => {

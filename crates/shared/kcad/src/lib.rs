@@ -452,7 +452,7 @@ pub fn uses_rafts(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 pub const ARCH_WITH_PROFILES: u16 = 42;
 
 /// Architecture data version 43 (docs/adr/8174): the site plan's natural and graded ground (`naturalGround`,
-/// `gradedGround`: terrain surfaces by their ids). Version 43 holds versions 1–42's data too.
+/// `gradedGround`: each its survey's layers). Version 43 holds versions 1–42's data too.
 pub const ARCH_WITH_GROUND: u16 = 43;
 
 /// Whether `doc` holds architecture data 43 ([`ARCH_WITH_GROUND`]): a site ground.

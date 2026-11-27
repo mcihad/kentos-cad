@@ -133953,7 +133953,7 @@
         },
         {
           "const": "naturalGround",
-          "description": "The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.",
+          "description": "The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4\n4.30); the graded ground is drawn at ±0.00.",
           "type": "string"
         },
         {
@@ -214632,6 +214632,23 @@
         }
       ]
     },
+    "SiteGround": {
+      "additionalProperties": false,
+      "description": "A site's ground (docs/adr/8174 §3.1): the terrain surface of the points with a height on its layers (a survey's),\nmade when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps\nno road settings, where a road's and a map's surfaces are.",
+      "properties": {
+        "layers": {
+          "description": "The layers' ids, each once.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "layers"
+      ],
+      "type": "object"
+    },
     "SitePlan": {
       "additionalProperties": false,
       "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a\npolygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;\npast the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on\nthe parcel and the storeys.",
@@ -214659,18 +214676,26 @@
           ]
         },
         "gradedGround": {
-          "description": "Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): the terrain surface the parcel is graded to, by its id;\nabsent: none.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SiteGround"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none."
         },
         "naturalGround": {
-          "description": "Tabii zemin (docs/adr/8174; PAİY 4: \"arazinin hafredilmemiş veya doldurulmamış hali\", 57/2-a): the terrain\nsurface it is, by its id among the project's surfaces; its heights absolute, as `datum` is. Absent: none.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SiteGround"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Tabii zemin (docs/adr/8174; PAİY 4: \"arazinin hafredilmemiş veya doldurulmamış hali\", 57/2-a). Absent: none."
         },
         "parcel": {
           "type": [

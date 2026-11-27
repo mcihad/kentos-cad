@@ -93,6 +93,51 @@ fn is_side(k: &SiteEdgeKind) -> bool {
 /// The largest number of parcel edges a site plan keeps (docs/adr/8032).
 pub const MAX_SITE_EDGES: usize = 1000;
 
+/// The most survey layers a ground is made of.
+pub const MAX_GROUND_LAYERS: usize = 16;
+
+/// A site's ground (docs/adr/8174 §3.1): the terrain surface of the points with a height on its layers (a survey's),
+/// made when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps
+/// no road settings, where a road's and a map's surfaces are.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SiteGround {
+    /// The layers' ids, each once.
+    pub layers: Vec<String>,
+}
+
+impl SiteGround {
+    /// The ground of the points on `layer`.
+    pub fn of_layer(layer: &str) -> Self {
+        Self { layers: vec![layer.to_owned()] }
+    }
+
+    /// What is wrong with it (`what`: the ground's name, Tabii zemin): the words.
+    fn problem(&self, what: &str) -> Option<String> {
+        if self.layers.is_empty() {
+            return Some(format!("{what} en az bir nokta katmanından kurulur."));
+        }
+        if self.layers.len() > MAX_GROUND_LAYERS {
+            return Some(format!("{what} en çok {MAX_GROUND_LAYERS} katmandan kurulur; {} verildi.", self.layers.len()));
+        }
+        if self.layers.iter().any(|l| l.trim().is_empty()) {
+            return Some(format!("{what} katmanının kimliği boş olamaz."));
+        }
+        if self.layers.iter().enumerate().any(|(i, l)| self.layers[..i].contains(l)) {
+            return Some(format!("{what} katmanları birer kez yazılır."));
+        }
+        None
+    }
+
+    /// Whether it is made of the same layers as `other`, in any order.
+    fn same(&self, other: &Self) -> bool {
+        self.layers.len() == other.layers.len() && self.layers.iter().all(|l| other.layers.contains(l))
+    }
+}
+
 /// Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
 /// polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
 /// past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
@@ -118,16 +163,14 @@ pub struct SitePlan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub envelope: Option<String>,
-    /// Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a): the terrain
-    /// surface it is, by its id among the project's surfaces; its heights absolute, as `datum` is. Absent: none.
+    /// Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub natural_ground: Option<String>,
-    /// Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): the terrain surface the parcel is graded to, by its id;
-    /// absent: none.
+    pub natural_ground: Option<SiteGround>,
+    /// Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub graded_ground: Option<String>,
+    pub graded_ground: Option<SiteGround>,
 }
 
 impl SitePlan {
@@ -191,17 +234,19 @@ impl SitePlan {
                 format!("±0,00 kotu {z} m; en çok ±10 000 m olmalı."),
             ));
         }
-        // The grounds (docs/adr/8174): each a surface's id; the earthwork is the two's difference.
-        if self.natural_ground.as_deref().is_some_and(|g| g.trim().is_empty()) {
-            return Some(("site.naturalGround".into(), "Tabii zeminin yüzey kimliği boş olamaz.".into()));
+        // The grounds (docs/adr/8174): each its survey's layers; the earthwork is the two's difference.
+        if let Some(why) = self.natural_ground.as_ref().and_then(|g| g.problem("Tabii zemin")) {
+            return Some(("site.naturalGround".into(), why));
         }
-        if self.graded_ground.as_deref().is_some_and(|g| g.trim().is_empty()) {
-            return Some(("site.gradedGround".into(), "Tesviye zeminin yüzey kimliği boş olamaz.".into()));
+        if let Some(why) = self.graded_ground.as_ref().and_then(|g| g.problem("Tesviye zemin")) {
+            return Some(("site.gradedGround".into(), why));
         }
-        if self.natural_ground.is_some() && self.natural_ground == self.graded_ground {
+        if let (Some(n), Some(g)) = (&self.natural_ground, &self.graded_ground)
+            && n.same(g)
+        {
             return Some((
                 "site.gradedGround".into(),
-                "Tabii ve tesviye zemin aynı yüzey olamaz: hafriyat ikisinin farkıdır.".into(),
+                "Tabii ve tesviye zemin aynı katmanlardan kurulamaz: hafriyat ikisinin farkıdır.".into(),
             ));
         }
         None

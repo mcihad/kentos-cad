@@ -75,11 +75,18 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
-- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12 1. bölüm; [ADR 8174](../adr/8174-site-ground.md)).**
-  - `SitePlan.naturalGround/gradedGround`: `settings.road.surfaces`'taki yüzeylerin kimlikleri; `datum` ile kesitte
-    ±0.00'a göre. Kesit yüzeyin kesin kesitini çizer: tabii `MM-CVRE-TABII` kesikli, tesviye `MM-CVRE-TESVIYE` kalın;
-    yoksa eskisi gibi düz ±0.00. `road.terrains.*`'ın kapısı değişmedi (başka modüllerin 30 durum dosyası).
-    `mod-arch` → `terrain`. Mimari verisi 43. Kalan: tzk/tsk işareti, hafriyat, zemini kuran araç.
+- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12 1. ve 3. bölüm; [ADR 8174](../adr/8174-site-ground.md)).**
+  - `SitePlan.naturalGround/gradedGround`: vaziyetin kendi zemini, `SiteGround { layers }` (kotlu ölçü noktalarının
+    katmanları); yüzey okunurken kurulur. `settings.road.surfaces`'ta DEĞİL: Mimari projesi yol ayarı tutamaz,
+    kodlayıcı reddeder ve gerçek pencerede kurtarma kopyası yazılamadı (ölçüldü). `datum` ile kesitte ±0.00'a göre.
+    Kesit yüzeyin kesin kesitini çizer: tabii `MM-CVRE-TABII` kesikli, tesviye `MM-CVRE-TESVIYE` kalın; yoksa eskisi
+    gibi düz ±0.00. `road.terrains.*`'ın kapısı değişmedi. `mod-arch` → `terrain`. Mimari verisi 43.
+  - Arazi zemini aracı (`tool.siteGround`, AZ; Proje ▾): ölçü noktasına tıklanınca o katmandan zemin; Tür (T)
+    tabii/tesviye. ±0.00 yoksa bina köşelerinin tabii zemin ortalaması (PAİY 12/4; zemin katın dış hattı, köşe =
+    doğrultu değişen köşe). Bahçe hafriyatı: parselin içinde, bina oturumu dışında, kazı ve dolgu ayrı. Ayar; geri
+    alma adımı değil. Kalan: tzk/tsk işareti (2. bölüm), bina kazısı, zeminin planda gösterimi.
+  - Kısa adlar düzeltildi: Tekil temel TK, Sürekli temel SR (TT ve ST KentOS'ta zaten Geçici izleme noktası ve Yazı
+    stilleri'ydi; `module_names` sınaması yakaladı).
 
 - **Duvar profili: kaplama olan kiriş bandı (27 Kasım 2026, MB-11; [ADR 8173](../adr/8173-wall-profiles.md)).**
   - `BeamFields.covering`: cephe silmesi MOLDING "Cephe silmesi" (EK-2 Cephe, `MM-CEPH-…`), harpuşta COPING (`MM-HARP-…`);
@@ -94,8 +101,8 @@
     `MM-TEML-TEKIL/SUREKLI` (EK-2 TEML); IFC `IfcFooting` PAD_FOOTING/STRIP_FOOTING, `MM-TML-…`,
     `Qto_FootingBaseQuantities`; 3B'de "Temel"; `.kcad` Mimari verisi 40. TBDY 16'nın metni okunamadı: ölçüler
     öntanımlı, denetim yok.
-  - Araçlar Kiriş ▾'in altında (sekmede 30 düğme): Tekil temel (TT) tıklanan kolonun altına ortalanır ve kolonla
-    döner; Sürekli temel (ST) eksen + Enter. Kolon aynı kattaki temelin tepesine iner (kesit modelinde, `seats`).
+  - Araçlar Kiriş ▾'in altında (sekmede 30 düğme): Tekil temel (TK) tıklanan kolonun altına ortalanır ve kolonla
+    döner; Sürekli temel (SR) eksen + Enter. Kolon aynı kattaki temelin tepesine iner (kesit modelinde, `seats`).
   - Radye (RD): `SlabRole::Raft`, IFC `IfcSlab` BASESLAB (IFC 4.3: döşeme temeli `IfcFooting` değil), `MM-DSM-Radye`,
     katman `MM-TEML-RADYE`, 3B'de Temel; eğim, kenar ve kaplama almaz; Mimari verisi 41. 60 cm, −0,30, 50 cm taşma.
 

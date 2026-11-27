@@ -1187,7 +1187,7 @@ class BuildingSectionLeft(_StrEnum):
     """Why something of the model is not in the section, or only in part.
 
     - ``roof``: The roof: the model has none yet (ADV-20).
-    - ``naturalGround``: The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.
+    - ``naturalGround``: The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4
     - ``curved``: A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
     - ``ramp``: A ramp: not drawn before docs/adr/8070 (its runs and landings are drawn since); no longer given.
     - ``noHeight``: A wall or a column with no height.
@@ -101908,6 +101908,28 @@ class SiteEdge(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SiteGround(_Model):
+    """A site's ground (docs/adr/8174 §3.1): the terrain surface of the points with a height on its layers (a survey's),
+    made when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps
+    no road settings, where a road's and a map's surfaces are.
+    Attributes:
+        layers: The layers' ids, each once.
+    """
+    layers: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SiteGround:
+        return cls(
+            layers=list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SitePlan(_Model):
     """Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
     polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
@@ -101916,16 +101938,14 @@ class SitePlan(_Model):
     Attributes:
         datum: ±0.00's absolute elevation, m. Unit: elevation.
         envelope: Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.
-        graded_ground: Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): the terrain surface the parcel is graded to, by its id;
-            absent: none.
-        natural_ground: Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a): the terrain
-            surface it is, by its id among the project's surfaces; its heights absolute, as `datum` is. Absent: none.
+        graded_ground: Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none.
+        natural_ground: Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a). Absent: none.
     """
     datum: float | None | Unset = UNSET
     edges: list[SiteEdge] | Unset = UNSET
     envelope: str | None | Unset = UNSET
-    graded_ground: str | None | Unset = UNSET
-    natural_ground: str | None | Unset = UNSET
+    graded_ground: SiteGround | None | Unset = UNSET
+    natural_ground: SiteGround | None | Unset = UNSET
     parcel: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -101937,9 +101957,9 @@ class SitePlan(_Model):
         if self.envelope is not UNSET:
             out["envelope"] = self.envelope
         if self.graded_ground is not UNSET:
-            out["gradedGround"] = self.graded_ground
+            out["gradedGround"] = None if self.graded_ground is None else self.graded_ground.to_json()
         if self.natural_ground is not UNSET:
-            out["naturalGround"] = self.natural_ground
+            out["naturalGround"] = None if self.natural_ground is None else self.natural_ground.to_json()
         if self.parcel is not UNSET:
             out["parcel"] = self.parcel
         return out
@@ -101950,8 +101970,8 @@ class SitePlan(_Model):
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             edges=[SiteEdge.from_json(e0) for e0 in data["edges"]] if "edges" in data else UNSET,
             envelope=data.get("envelope", UNSET),
-            graded_ground=data.get("gradedGround", UNSET),
-            natural_ground=data.get("naturalGround", UNSET),
+            graded_ground=UNSET if "gradedGround" not in data else None if data["gradedGround"] is None else SiteGround.from_json(data["gradedGround"]),
+            natural_ground=UNSET if "naturalGround" not in data else None if data["naturalGround"] is None else SiteGround.from_json(data["naturalGround"]),
             parcel=data.get("parcel", UNSET),
         )
 
@@ -152480,6 +152500,7 @@ __all__ = [
     "SiteEdge",
     "SiteEdgeKind",
     "SiteEdgeKindName",
+    "SiteGround",
     "SitePlan",
     "SizeRectangleFrame",
     "SlabBound",

@@ -105,7 +105,7 @@ Yönetmelik değeri değildir; değiştirilir.
 
 ### §5.1 Ne yapar
 
-- **Tekil temel** (`tool.footingPad`, kısa adı TT): tıklanan yere bir temel koyar, ortası tıklanan noktadır.
+- **Tekil temel** (`tool.footingPad`, kısa adı TK): tıklanan yere bir temel koyar, ortası tıklanan noktadır.
   - Bir kolona tıklanınca temel kolonun altına ortalanır ve kolonla döner. Ortayı ve dönüşü araç kolondan alır, komuta
     eksenin iki ucu gider.
   - İmleç bir kolonun üstündeyken kolon vurgulanır; önizlemenin yazısı "Kolonun altına ortalanır" der.
@@ -117,7 +117,7 @@ Yönetmelik değeri değildir; değiştirilir.
     - Kattan yükseklik (A)
     - Açı (D): kolonsuz temelin dönüşü
     - Numara (N)
-- **Sürekli temel** (`tool.footingStrip`, kısa adı ST): eksen nokta nokta tıklanır, Enter ya da kısa sağ tık yazar.
+- **Sürekli temel** (`tool.footingStrip`, kısa adı SR): eksen nokta nokta tıklanır, Enter ya da kısa sağ tık yazar.
   Kiriş aracı gibidir. Seçenekler:
   - Tür (T)
   - Genişlik (E)
@@ -141,7 +141,7 @@ Yönetmelik değeri değildir; değiştirilir.
 - **Yeri:** Mimari şeridinin Yerleştir panelinde, Kiriş ▾'in altında. Menü: Kiriş, Kayıt, Tekil temel, Sürekli temel.
 - **Ayrı bir "Temel ▾" düğmesi yok:** sekmede 30 düğme var, sınır da 30 (DESIGN.md §7.3.1). Temel modelde de kirişin
   rolüdür.
-- **Bulma:** komut aramasında TEMEL, TEKİLTEMEL, SÜREKLİTEMEL; kısa adları TT ve ST.
+- **Bulma:** komut aramasında TEMEL, TEKİLTEMEL, SÜREKLİTEMEL; kısa adları TK ve SR. İlk sürümde TT ve ST verilmişti; ikisi KentOS'ta zaten Geçici izleme noktası'nın ve Yazı stilleri'nin adıydı.
 - **Simgeler:** plandaki gösterimleriyle çizildi.
   - Tekil temel: kolonun çevresinde kesikli kare.
   - Sürekli temel: duvarın altında kesikli bant.

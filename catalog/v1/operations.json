@@ -2360,7 +2360,7 @@
       "via": [
         "cad.beams.create"
       ],
-      "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Silme”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173)."
+      "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Cephe silmesi”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173)."
     },
     "tool.coping": {
       "level": "semantic",
@@ -2546,6 +2546,13 @@
         "cad.entities.create"
       ],
       "note": "Vaziyet planı: parsel (kapalı çizginin ya da alanın kimliği), kenar türleri ve kendi mesafeleri ayarlara (arch.site), yapı yaklaşma sınırı kesikli kapalı çizgi olarak çizime; sınırı belge her adımda yeniden yazar (ADR 8032)."
+    },
+    "tool.siteGround": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Arazi zemini: yüzeyin tanımı (kotlu noktaların katmanı) projenin arazi yüzeylerine (road.surfaces), tabii ya da tesviye zeminin kimliği ve ±0,00'ın mutlak kotu vaziyete (arch.site) yazılır; yüzeyi, kesitteki çizgisi ve bahçe hafriyatı modelin (ADR 8174)."
     },
     "tool.escapeRoutes": {
       "level": "semantic",

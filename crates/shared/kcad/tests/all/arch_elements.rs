@@ -497,22 +497,31 @@ fn a_profile_round_trips_under_arch_data_42() {
 
 #[test]
 fn a_site_s_ground_round_trips_under_arch_data_43() {
+    use kentos_contracts::{CadWork, SiteGround};
     let mut doc = sample();
     assert!(!kentos_kcad::uses_ground(&doc));
-    // The site's natural and graded ground (docs/adr/8174): terrain surfaces by their ids.
+    // An architecture project's (docs/adr/8174 §3.1): its road settings would be refused.
+    assert_eq!(doc.settings.cad_work, Some(CadWork::Architecture));
+    assert!(doc.settings.road.is_none());
+    // The site's natural and graded ground: each its survey's layers, the site's own.
     let arch = doc.settings.arch.get_or_insert_with(Default::default);
     let site = arch.site.get_or_insert_with(Default::default);
     site.datum = Some(1285.4);
-    site.natural_ground = Some("tabii".into());
-    site.graded_ground = Some("tesviye".into());
+    site.natural_ground = Some(SiteGround::of_layer("arazi"));
+    site.graded_ground = Some(SiteGround { layers: vec!["tesviye".into(), "bahce".into()] });
     assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_GROUND);
-    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    let bytes = kentos_kcad::encode(&doc).expect("an architecture project writes its grounds");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grounds read back");
-    // One surface cannot be both: the earthwork is their difference.
-    let mut same = doc.clone();
-    if let Some(s) = same.settings.arch.as_mut().and_then(|a| a.site.as_mut()) {
-        s.graded_ground = Some("tabii".into());
-    }
-    let refused = kentos_kcad::encode(&same).expect_err("one surface is not both grounds");
-    assert!(refused.message.contains("aynı yüzey"), "{}", refused.message);
+    let refused = |change: &dyn Fn(&mut kentos_contracts::SitePlan)| {
+        let mut wrong = doc.clone();
+        change(wrong.settings.arch.as_mut().and_then(|a| a.site.as_mut()).unwrap());
+        kentos_kcad::encode(&wrong).expect_err("refused").message
+    };
+    // The same layers cannot be both: the earthwork is their difference.
+    let same = refused(&|s| s.graded_ground = Some(SiteGround { layers: vec!["arazi".into()] }));
+    assert!(same.contains("aynı katmanlardan"), "{same}");
+    assert!(refused(&|s| s.natural_ground = Some(SiteGround::default())).contains("en az bir"));
+    assert!(refused(&|s| s.natural_ground = Some(SiteGround { layers: vec![" ".into()] })).contains("boş olamaz"));
+    let twice = refused(&|s| s.natural_ground = Some(SiteGround { layers: vec!["arazi".into(), "arazi".into()] }));
+    assert!(twice.contains("birer kez"), "{twice}");
 }

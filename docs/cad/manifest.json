@@ -13531,7 +13531,7 @@
    "operation": null,
    "python": "kentos.cad.beams.create",
    "mcp": "cad.beams.create",
-   "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Silme”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173).",
+   "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Cephe silmesi”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -14988,6 +14988,22 @@
    "mcp": "cad.shapes.edit",
    "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.siteGround",
+   "kind": "command",
+   "title": "Arazi zemini",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Arazi zemini: yüzeyin tanımı (kotlu noktaların katmanı) projenin arazi yüzeylerine (road.surfaces), tabii ya da tesviye zeminin kimliği ve ±0,00'ın mutlak kotu vaziyete (arch.site) yazılır; yüzeyi, kesitteki çizgisi ve bahçe hafriyatı modelin (ADR 8174).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

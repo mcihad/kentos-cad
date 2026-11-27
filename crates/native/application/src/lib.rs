@@ -1238,6 +1238,9 @@ pub mod elevations_edit;
 #[path = "arch/elevations_query.rs"]
 pub mod elevations_query;
 #[cfg(feature = "mod-arch")]
+#[path = "arch/site_ground.rs"]
+pub mod site_ground;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/sections.rs"]
 pub mod sections;
 #[cfg(feature = "mod-arch")]

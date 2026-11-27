@@ -1,6 +1,6 @@
 //! The ground a section draws (docs/adr/8174; EK-4 4.30; Planlı Alanlar İmar Yönetmeliği 4, 57/2-a: "tabii ve tesviye
-//! zemin" in every section). Where the site names the natural and the graded ground's terrain surfaces and ±0.00's
-//! elevation, each surface's section along the line (exact where it crosses a triangle's edge, the road's own
+//! zemin" in every section). Where the site has the natural and the graded ground (each its survey layers' terrain
+//! surface) and ±0.00's elevation, each surface's section along the line (exact where it crosses a triangle's edge, the road's own
 //! `Surface::section`), its heights relative to ±0.00: the natural ground light and dashed, the graded ground heavy.
 //! Without them the graded ground lies flat at ±0.00, as before. Neither runs through what is cut.
 
@@ -20,17 +20,14 @@ pub(super) struct Grounds {
     datum: f64,
 }
 
-/// The site's grounds: none when it names neither surface, gives no ±0.00 elevation or neither surface is made.
+/// The site's grounds: none when it has neither, gives no ±0.00 elevation or neither surface is made.
 pub(super) fn grounds(doc: &Document) -> Option<Grounds> {
     let site = doc.settings().arch.as_ref()?.site.as_ref()?;
     let datum = site.datum?;
-    let made = |id: Option<&str>| {
-        let def = crate::road_terrains::surfaces(doc).iter().find(|d| Some(d.id.as_str()) == id)?;
-        crate::road_terrains::made_of(doc, def).1
-    };
+    let made = |g: Option<&kentos_commands::SiteGround>, graded| crate::site_ground::made_of(doc, g?, graded);
     let g = Grounds {
-        natural: made(site.natural_ground.as_deref()),
-        graded: made(site.graded_ground.as_deref()),
+        natural: made(site.natural_ground.as_ref(), false),
+        graded: made(site.graded_ground.as_ref(), true),
         datum,
     };
     (g.natural.is_some() || g.graded.is_some()).then_some(g)

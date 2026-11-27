@@ -3412,6 +3412,28 @@
       "status": "implemented"
     },
     {
+      "id": "tool.siteGround",
+      "title": "Arazi zemini",
+      "short": "Arazi zemini",
+      "icon": "siteGround",
+      "description": "Vaziyetin tabii ve tesviye zeminini kurar (Planlı Alanlar İmar Yönetmeliği 4, 57/2-a): kotlu bir ölçü noktasına tıklanınca o katmanın kotlu noktalarından bir arazi yüzeyi kurulur ve vaziyetin tabii zemini olur; Tür (T) Tesviye zemin'e geçer. Kesitler zemini kesit çizgisi boyunca çizer: tabii zemin ince ve kesikli (MM-CVRE-TABII), tesviye zemin kalın (MM-CVRE-TESVIYE). Tabii zemin kurulurken ±0,00'ın mutlak kotu yoksa bina köşelerinin tabii zemin kotlarının aritmetik ortalaması olur (12/4; zemin katın dış hattı). İki zemin ve parsel varsa bahçe hafriyatı söylenir: parselin içinde, bina oturumu dışında, kazı ve dolgu ayrı. Ayardır, geri alma adımı değildir; aynı zemin yeniden kurulunca eskisinin yerini alır.",
+      "aliases": [
+        "ARAZIZEMINI",
+        "ARAZİZEMİNİ",
+        "TABIIZEMIN",
+        "TABİİZEMİN",
+        "TESVIYEZEMIN",
+        "TESVİYEZEMİN",
+        "HAFRIYAT",
+        "HAFRİYAT",
+        "KAZIDOLGU",
+        "TOPOSURFACE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.escapeRoutes",
       "title": "Kaçış yolları",
       "short": "Kaçış yolları",
@@ -5654,7 +5676,7 @@
       "id": "tool.sectionDraw",
       "title": "Kesit çıkar",
       "icon": "sectionDraw",
-      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır: işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, ±0,00'da zemin, A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
+      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır: işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, zemin (vaziyetin tabii ve tesviye zemini kesit çizgisi boyunca, Arazi zemini ile; yoksa ±0,00'da düz), A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, rampa; vaziyette yoksa tabii zemin) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
       "aliases": ["KESITCIKAR", "KESİTÇIKAR", "BIMSECTION"],
       "shortcuts": [],
       "category": "Mimari",
@@ -6009,6 +6031,7 @@
     "parkingTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 14.5v-9h3.5a2.5 2.5 0 0 1 0 5H7\"/>",
     "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
+    "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "walkRoute": "<circle cx=\"3.8\" cy=\"15.8\" r=\"1.8\"/><circle cx=\"16.2\" cy=\"4.2\" r=\"1.8\"/><path d=\"M5.6 15.8h5.5a2 2 0 0 0 2-2V6.2a2 2 0 0 1 2-2\"/>",
     "slabEdgeBind": "<path d=\"M2 9.5l7.5 4.2 8.5-5-7.5-4.2L2 9.5v3.8l7.5 4.2 8.5-5V8.7M9.5 13.7v3.8\"/><path d=\"M5 5.2l5.5-3.2 4.9 2.7\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.1\"/>",
