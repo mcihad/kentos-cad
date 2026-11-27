@@ -102,6 +102,8 @@ pub(super) fn beam(
         BeamRole::Beam => "TASI",
         BeamRole::Lintel => "LENT",
         BeamRole::BondBeam => "HATL",
+        // A footing on EK-2's Temel (docs/adr/8172).
+        BeamRole::PadFooting | BeamRole::StripFooting => "TEML",
     };
     let made_of = b.member.as_ref().and(b.material.as_deref());
     // A sloped member (docs/adr/8130): its start where a level one's is (its underside over its floor, else its top

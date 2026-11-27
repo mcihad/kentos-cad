@@ -890,6 +890,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         grid_axes: n(written.grid_axes),
         coverings: n(written.coverings),
         compartments: n(zoned),
+        footings: n(written.footings),
         bytes: text.len() as u64,
         sha256,
     };

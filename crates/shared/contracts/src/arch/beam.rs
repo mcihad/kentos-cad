@@ -8,6 +8,9 @@
 //!   top; its offset moves it from there. A wall under it stops at its underside.
 //! - A lintel or a bond beam (docs/adr/8041 §3) is one too, of its own role: it sits in a wall at its base over its
 //!   storey's floor (a lintel at its opening's head), and the wall runs on round it.
+//! - So is a footing (temel, docs/adr/8172): a pad footing (tekil temel) its band on a short axis, a strip footing
+//!   (sürekli temel) its band along its axis, each at its base under its storey's floor (a negative base), its height
+//!   its thickness. Written as an `IfcFooting` (Dijital Hazırlama Yön. EK-5 Tablo 5.1 sıra 34; EK-6 Tablo 6.34).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -43,10 +46,15 @@ pub enum BeamRole {
     Beam,
     Lintel,
     BondBeam,
+    /// A pad footing (tekil temel, `IfcFooting` PAD_FOOTING; docs/adr/8172).
+    PadFooting,
+    /// A strip footing (sürekli temel, `IfcFooting` STRIP_FOOTING; docs/adr/8172).
+    StripFooting,
 }
 
 impl BeamRole {
-    pub const ALL: [BeamRole; 3] = [BeamRole::Beam, BeamRole::Lintel, BeamRole::BondBeam];
+    pub const ALL: [BeamRole; 5] =
+        [BeamRole::Beam, BeamRole::Lintel, BeamRole::BondBeam, BeamRole::PadFooting, BeamRole::StripFooting];
 
     /// Its name in the interface.
     pub fn label(self) -> &'static str {
@@ -54,7 +62,14 @@ impl BeamRole {
             BeamRole::Beam => "Kiriş",
             BeamRole::Lintel => "Lento",
             BeamRole::BondBeam => "Hatıl",
+            BeamRole::PadFooting => "Tekil temel",
+            BeamRole::StripFooting => "Sürekli temel",
         }
+    }
+
+    /// Whether it is a footing (docs/adr/8172).
+    pub fn is_footing(self) -> bool {
+        matches!(self, BeamRole::PadFooting | BeamRole::StripFooting)
     }
 
     fn is_beam(&self) -> bool {
@@ -218,6 +233,13 @@ impl BeamFields {
                 ),
             ));
         }
+        // A footing sits at its base under its storey's floor (docs/adr/8172): it hangs from no slab.
+        if self.role.is_footing() && self.base_offset.is_none() {
+            return Some((
+                "baseOffset".into(),
+                "Temelin kattan yüksekliği verilmeli: temel, katın tabanının altında kendi tabanına oturur.".into(),
+            ));
+        }
         if let Some(b) = self.base_offset {
             if !(b.is_finite() && b.abs() <= MAX_BEAM_OFFSET) {
                 return Some((
@@ -244,6 +266,9 @@ impl BeamFields {
         if let Some(m) = &self.member {
             if let Some(found) = m.problem() {
                 return Some(found);
+            }
+            if self.role.is_footing() {
+                return Some(("member".into(), "Temel eleman (kayıt) olamaz; türü Kiriş olmalı.".into()));
             }
             if self.role != BeamRole::Beam {
                 return Some((

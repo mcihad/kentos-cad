@@ -968,13 +968,21 @@ BatchOnErrorName = Literal["stop", "continue"]
 class BeamRole(_StrEnum):
     """What a beam is (docs/adr/8041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
     a bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).
+
+    - ``beam``
+    - ``lintel``
+    - ``bondBeam``
+    - ``padFooting``: A pad footing (tekil temel, `IfcFooting` PAD_FOOTING; docs/adr/8172).
+    - ``stripFooting``: A strip footing (sürekli temel, `IfcFooting` STRIP_FOOTING; docs/adr/8172).
     """
     BEAM = "beam"
     LINTEL = "lintel"
     BOND_BEAM = "bondBeam"
+    PAD_FOOTING = "padFooting"
+    STRIP_FOOTING = "stripFooting"
 
 
-BeamRoleName = Literal["beam", "lintel", "bondBeam"]
+BeamRoleName = Literal["beam", "lintel", "bondBeam", "padFooting", "stripFooting"]
 """The names of :class:`BeamRole`, for a plain string."""
 
 
@@ -50855,6 +50863,7 @@ class IfcBuildingExported(_Model):
         coverings: Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them. Unit: count.
         curtain_walls: Unit: count.
         fixtures: Unit: count.
+        footings: Its footings (docs/adr/8172): pad and strip footings; said only when it has some. Unit: count.
         grid_axes: Unit: count.
         members: Unit: count.
         ramps: Unit: count.
@@ -50880,6 +50889,7 @@ class IfcBuildingExported(_Model):
     coverings: int = 0
     curtain_walls: int = 0
     fixtures: int = 0
+    footings: int | Unset = UNSET
     grid_axes: int = 0
     members: int = 0
     ramps: int = 0
@@ -50908,6 +50918,8 @@ class IfcBuildingExported(_Model):
         out["coverings"] = self.coverings
         out["curtainWalls"] = self.curtain_walls
         out["fixtures"] = self.fixtures
+        if self.footings is not UNSET:
+            out["footings"] = self.footings
         out["gridAxes"] = self.grid_axes
         out["members"] = self.members
         out["ramps"] = self.ramps
@@ -50938,6 +50950,7 @@ class IfcBuildingExported(_Model):
             coverings=data["coverings"] if "coverings" in data else 0,
             curtain_walls=data["curtainWalls"] if "curtainWalls" in data else 0,
             fixtures=data["fixtures"] if "fixtures" in data else 0,
+            footings=data.get("footings", UNSET),
             grid_axes=data["gridAxes"] if "gridAxes" in data else 0,
             members=data["members"] if "members" in data else 0,
             ramps=data["ramps"] if "ramps" in data else 0,

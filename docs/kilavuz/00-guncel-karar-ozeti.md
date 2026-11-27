@@ -53,6 +53,12 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **Temel: tekil ve sürekli temel kirişin rolü (27 Kasım 2026, MB-10 1. bölüm; [ADR 8172](../adr/8172-footings.md)).**
+  - `BeamRole::{PadFooting, StripFooting}`; kendi tabanına oturur (`baseOffset` zorunlu, negatif). Katman
+    `MM-TEML-TEKIL/SUREKLI` (EK-2 TEML); IFC `IfcFooting` PAD_FOOTING/STRIP_FOOTING, `MM-TML-…`,
+    `Qto_FootingBaseQuantities`; 3B'de "Temel"; `.kcad` Mimari verisi 40. TBDY 16'nın metni okunamadı: ölçüler
+    öntanımlı, denetim yok. Kalan: araç ve şerit, radye.
+
 - **Mimari'nin 3B görünümü, kesiti ve eksik araçları (27 Kasım 2026, sahibin isteği; [ADR 8171](../adr/8171-mimari-3d-section-quality-and-missing-tools.md),
   [plan/mimari-bim.md](../../plan/mimari-bim.md), [araştırma](../research/2026-11-27-mimari-3b-kesit-ve-araclar.md)).**
   - Bulgular: kolon, kiriş ve döşeme aynı betonu tutuyor (3B'de titreme, IFC'de çift hacim); kesit sürüklenirken kapak

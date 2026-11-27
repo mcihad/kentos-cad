@@ -151,7 +151,16 @@ pub struct IfcBuildingExported {
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub compartments: u32,
+    /// Its footings (docs/adr/8172): pad and strip footings; said only when it has some.
+    #[serde(default, skip_serializing_if = "is_none_counted")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub footings: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
+}
+
+/// Whether a count is nought: a field said only when something is counted.
+fn is_none_counted(n: &u32) -> bool {
+    *n == 0
 }

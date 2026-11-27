@@ -385,3 +385,42 @@ fn building_places_round_trip_under_arch_data_9() {
     let refused = kentos_kcad::encode(&wrong).expect_err("a code in a wrong form");
     assert!(refused.message.contains("bina kodu"), "{}", refused.message);
 }
+
+/// Architecture data 40 (docs/adr/8172): a footing (a beam of a pad or strip footing role, at its base under the
+/// storey's floor) is written with `modules.arch = 40` and read back as it was; one without its base is refused when
+/// written.
+#[test]
+fn a_footing_round_trips_under_arch_data_40() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_footings(&doc));
+    let beam = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Beam(b) => Some(b),
+            _ => None,
+        })
+        .expect("a beam");
+    beam.beam.role = kentos_contracts::BeamRole::StripFooting;
+    beam.beam.width = 0.6;
+    beam.beam.base_offset = Some(-0.8);
+    beam.beam.offset = 0.0;
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_FOOTINGS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the strip footing reads back");
+    let mut pad = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) = pad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_))) {
+        b.beam.role = kentos_contracts::BeamRole::PadFooting;
+        b.beam.pts.truncate(2);
+    }
+    let bytes = kentos_kcad::encode(&pad).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), pad, "the pad footing reads back");
+    let mut baseless = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) =
+        baseless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    {
+        b.beam.base_offset = None;
+    }
+    let refused = kentos_kcad::encode(&baseless).expect_err("a footing stands at its base");
+    assert!(refused.message.contains("Temelin"), "{}", refused.message);
+}

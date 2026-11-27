@@ -501,6 +501,8 @@ pub struct Written {
     /// The coverings written (docs/adr/8070 §10).
     pub coverings: usize,
     pub members: usize,
+    /// The footings written (docs/adr/8172).
+    pub footings: usize,
     /// The grids' axes written (docs/adr/8070 §4).
     pub grid_axes: usize,
     pub left: Vec<Left>,
@@ -1070,6 +1072,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 Entity::Beam(b) => match b.beam.role {
                     BeamRole::Lintel => (Class::Beam, "LINTEL", "Lento".into()),
                     BeamRole::BondBeam => (Class::Beam, "BEAM", "Hatıl".into()),
+                    // EK-6 Tablo 6.34's predefined types (docs/adr/8172).
+                    BeamRole::PadFooting => (Class::Footing, "PAD_FOOTING", "Tekil temel".into()),
+                    BeamRole::StripFooting => (Class::Footing, "STRIP_FOOTING", "Sürekli temel".into()),
                     _ => (Class::Beam, "BEAM", "Kiriş".into()),
                 },
                 Entity::Roof(_) => (Class::Roof, "NOTDEFINED", "Çatı".into()),
@@ -1099,6 +1104,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Class::Ramp => written.ramps += 1,
             Class::Member => written.members += 1,
             Class::Covering => written.coverings += 1,
+            Class::Footing => written.footings += 1,
             _ => {}
         }
         // EK-6's properties the drawing knows: a balcony's or a terrace's slab is outside (Tablo 6.56), a roof is
@@ -1604,6 +1610,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             (Class::Covering, _) => crate::quantities::covering(&el.shapes),
             (Class::Column, Entity::Column(_)) => crate::quantities::column(&el.shapes, &cuts),
             (Class::Beam, Entity::Beam(b)) => Some(crate::quantities::beam(&b.beam, &el.shapes, &cuts)),
+            (Class::Footing, Entity::Beam(b)) => Some(crate::quantities::footing(&b.beam, &el.shapes, &cuts)),
             _ => None,
         };
         if let Some(q) = qto {

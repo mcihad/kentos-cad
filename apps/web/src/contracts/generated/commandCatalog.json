@@ -73004,6 +73004,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "footings": {
+            "description": "Its footings (docs/adr/8172): pad and strip footings; said only when it has some.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "gridAxes": {
             "default": 0,
             "format": "uint32",
@@ -73174,6 +73181,13 @@
           },
           "fixtures": {
             "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "footings": {
+            "description": "Its footings (docs/adr/8172): pad and strip footings; said only when it has some.",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -132402,12 +132416,26 @@
     },
     "BeamRole": {
       "description": "What a beam is (docs/adr/8041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or\na bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).",
-      "enum": [
-        "beam",
-        "lintel",
-        "bondBeam"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "beam",
+            "lintel",
+            "bondBeam"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "padFooting",
+          "description": "A pad footing (tekil temel, `IfcFooting` PAD_FOOTING; docs/adr/8172).",
+          "type": "string"
+        },
+        {
+          "const": "stripFooting",
+          "description": "A strip footing (sürekli temel, `IfcFooting` STRIP_FOOTING; docs/adr/8172).",
+          "type": "string"
+        }
+      ]
     },
     "BeamRow": {
       "description": "A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length and its concrete's volume. A beam's\nvolume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the\nslab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,\nin their wall, is the whole.",

@@ -167,6 +167,8 @@ pub enum Class {
     Chimney,
     Ramp,
     CurtainWall,
+    /// A footing (temel; docs/adr/8172): a pad or a strip footing.
+    Footing,
 }
 
 impl Class {
@@ -191,6 +193,7 @@ impl Class {
             Class::Chimney => "IFCCHIMNEY",
             Class::Ramp => "IFCRAMP",
             Class::CurtainWall => "IFCCURTAINWALL",
+            Class::Footing => "IFCFOOTING",
         }
     }
 
@@ -215,6 +218,7 @@ impl Class {
             Class::Chimney => "BAC",
             Class::Ramp => "RMP",
             Class::CurtainWall => "GDC",
+            Class::Footing => "TML",
         }
     }
 }

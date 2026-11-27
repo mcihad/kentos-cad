@@ -443,6 +443,18 @@ pub fn beam(fields: &BeamFields, shapes: &[Shape], cuts: &[&Opening]) -> Qto {
     }
 }
 
+/// A footing's base quantities (IFC 4.3 `Qto_FootingBaseQuantities`; docs/adr/8172): its length along its axis, its
+/// width, its height (its thickness), its section, its body's volume.
+pub fn footing(fields: &BeamFields, shapes: &[Shape], cuts: &[&Opening]) -> Qto {
+    let mut q = beam(fields, shapes, cuts);
+    q.name = "Qto_FootingBaseQuantities".into();
+    // After Length: its width and its height, then its section and volumes as a beam's.
+    let at = q.quantities.iter().position(|(n, _)| n == "Length").map_or(0, |k| k + 1);
+    q.quantities.insert(at, ("Width".into(), Value::Length(fields.width)));
+    q.quantities.insert(at + 1, ("Height".into(), Value::Length(fields.height)));
+    q
+}
+
 /// A path's length with its arcs' own lengths.
 pub fn path_length(pts: &[[f64; 2]], bulges: &[f64], closed: bool) -> f64 {
     let pts: Vec<P> = pts.iter().map(|p| P::new(p[0], p[1])).collect();

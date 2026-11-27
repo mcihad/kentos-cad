@@ -76,7 +76,7 @@ pub use schemas::*;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_CASEWORK_PLACEMENT),
+    ("arch", "mimari", ARCH_WITH_FOOTINGS),
     ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -428,6 +428,23 @@ pub const ARCH_WITH_CEILING_RECIPE: u16 = 37;
 pub const ARCH_WITH_ELECTRIC_APPLIANCES: u16 = 38;
 /// Storey and per-leg filler choice in a kitchen recipe.
 pub const ARCH_WITH_CASEWORK_PLACEMENT: u16 = 39;
+/// Architecture data version 40 (docs/adr/8172): a footing, a beam of a pad or strip footing role (`role`
+/// `padFooting`, `stripFooting`), in the drawing or a block. Version 40 holds versions 1–39's data too. The document
+/// schema stays as it is.
+pub const ARCH_WITH_FOOTINGS: u16 = 40;
+
+/// Whether `doc` holds architecture data 40 ([`ARCH_WITH_FOOTINGS`]): a footing.
+pub fn uses_footings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_footings_in(doc, doc.entities.iter())
+}
+
+fn uses_footings_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    let footing = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.role.is_footing());
+    objects.any(footing) || doc.blocks.iter().any(|b| b.entities.iter().any(footing))
+}
 
 pub fn uses_casework_placement(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.casework.iter().map(|r| &r.recipe)
@@ -581,7 +598,7 @@ fn uses_shaft_vents_in<'a>(
     objects.any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 39 for kitchen storey or filler placement, 38 for an electrical
+/// The architecture data version `doc` needs: 40 for a footing, 39 for kitchen storey or filler placement, 38 for an electrical
 /// appliance card, 37 for a ceiling view recipe, 36 for individual slab edge links,
 /// 35 for a building's own plan notes, 34 for a plan note of the
 /// projections or basements, 33 for one of the
@@ -611,7 +628,9 @@ fn arch_version_of<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
 ) -> u16 {
-    if uses_casework_placement(doc) {
+    if uses_footings_in(doc, objects.clone()) {
+        ARCH_WITH_FOOTINGS
+    } else if uses_casework_placement(doc) {
         ARCH_WITH_CASEWORK_PLACEMENT
     } else if uses_electric_appliances(doc) {
         ARCH_WITH_ELECTRIC_APPLIANCES

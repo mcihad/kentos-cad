@@ -56,6 +56,7 @@ fn class_name(c: Class) -> &'static str {
         Class::Chimney => "IfcChimney",
         Class::Ramp => "IfcRamp",
         Class::CurtainWall => "IfcCurtainWall",
+        Class::Footing => "IfcFooting",
     }
 }
 

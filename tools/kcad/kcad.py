@@ -719,7 +719,9 @@ ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 40 (docs/adr/8172): a footing, a beam of a pad or strip footing role (`padFooting`, `stripFooting`).
+ARCH_WITH_FOOTINGS = 40
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_FOOTINGS), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -10320,7 +10322,8 @@ class _Schema:
                 self.fail("bad_value", "varsayılan kot farkı (0) yazılmaz")
             return x
         def role(x):
-            r = self.enum(("beam", "lintel", "bondBeam"))(x)
+            footings = ("padFooting", "stripFooting") if self.arch_version >= ARCH_WITH_FOOTINGS else ()
+            r = self.enum(("beam", "lintel", "bondBeam") + footings)(x)
             if r == "beam":
                 self.fail("bad_value", "varsayılan tür ('beam') yazılmaz")
             return r

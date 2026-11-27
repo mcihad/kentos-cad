@@ -112,6 +112,8 @@ fn role_key(r: BeamRole) -> &'static str {
         BeamRole::Beam => "beam",
         BeamRole::Lintel => "lintel",
         BeamRole::BondBeam => "bondBeam",
+        BeamRole::PadFooting => "padFooting",
+        BeamRole::StripFooting => "stripFooting",
     }
 }
 
@@ -149,6 +151,8 @@ impl BeamTool {
             BeamRole::Beam => (self.width, self.height) = (0.25, 0.5),
             BeamRole::Lintel => self.height = LINTEL_HEIGHT,
             BeamRole::BondBeam => (self.width, self.height) = (0.2, 0.2),
+            // The footing tool draws these (footing_tools.rs); the beam tool never takes them.
+            BeamRole::PadFooting | BeamRole::StripFooting => {}
         }
     }
 
@@ -292,6 +296,7 @@ impl BeamTool {
             BeamRole::Beam => "Kiriş çizildi",
             BeamRole::Lintel => "Lento kondu",
             BeamRole::BondBeam => "Hatıl çizildi",
+            BeamRole::PadFooting | BeamRole::StripFooting => "Temel çizildi",
         };
         match self.tag.take() {
             // The next one the next number (K101 → K102), as the column tool's.
@@ -562,7 +567,7 @@ impl Tool for BeamTool {
                 let next = match self.role {
                     BeamRole::Beam => BeamRole::Lintel,
                     BeamRole::Lintel => BeamRole::BondBeam,
-                    BeamRole::BondBeam => BeamRole::Beam,
+                    BeamRole::BondBeam | BeamRole::PadFooting | BeamRole::StripFooting => BeamRole::Beam,
                 };
                 self.set_role(next);
                 self.see(cx);

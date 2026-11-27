@@ -144,6 +144,7 @@ impl ArchIfcApp for App {
                 (out.fixtures, "donatı"),
                 (out.grid_axes, "aks"),
                 (out.coverings, "kaplama"),
+                (out.footings, "temel"),
             ]
             .iter()
             .filter(|(n, _)| *n > 0)

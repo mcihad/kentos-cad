@@ -13,7 +13,7 @@ use super::bodies::Bodies;
 use super::{Model, header};
 
 /// The classes whose objects are which category, the first the object is a kind of winning.
-const CATEGORIES: [(&str, Category); 26] = [
+const CATEGORIES: [(&str, Category); 27] = [
     ("IfcProject", Category::Project),
     ("IfcFeatureElementSubtraction", Category::Opening),
     ("IfcSpatialZone", Category::Zone),
@@ -31,6 +31,7 @@ const CATEGORIES: [(&str, Category); 26] = [
     ("IfcColumn", Category::Column),
     ("IfcBeam", Category::Beam),
     ("IfcMember", Category::Beam),
+    ("IfcFooting", Category::Footing),
     ("IfcRoof", Category::Roof),
     ("IfcStair", Category::Stair),
     ("IfcStairFlight", Category::Stair),

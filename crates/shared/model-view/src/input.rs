@@ -18,6 +18,8 @@ pub enum Category {
     Slab,
     Column,
     Beam,
+    /// A footing (docs/adr/8172).
+    Footing,
     Roof,
     Stair,
     Railing,

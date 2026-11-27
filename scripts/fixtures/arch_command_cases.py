@@ -1530,6 +1530,11 @@ def beam_problem(f, path):
         return refusal("invalid_beam", f"Kirişin genişliği {num(w)}; sıfırdan büyük, en çok 3 m olmalı.", f"{path}.width")
     if not (math.isfinite(h) and 0 < h <= 5.0):
         return refusal("invalid_beam", f"Kirişin yüksekliği {num(h)}; sıfırdan büyük, en çok 5 m olmalı.", f"{path}.height")
+    # A footing sits at its base under its storey's floor (docs/adr/8172): it hangs from no slab.
+    footing = f.get("role") in ("padFooting", "stripFooting")
+    if footing and f.get("baseOffset") is None:
+        return refusal("invalid_beam", "Temelin kattan yüksekliği verilmeli: temel, katın tabanının altında kendi tabanına "
+                                       "oturur.", f"{path}.baseOffset")
     b = f.get("baseOffset")
     if b is not None:
         if not (math.isfinite(b) and abs(b) <= 10.0):
@@ -1543,6 +1548,8 @@ def beam_problem(f, path):
         r = member_problem(f["member"], "invalid_beam", path)
         if r:
             return r
+        if footing:
+            return refusal("invalid_beam", "Temel eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
         if f.get("role", "beam") != "beam":
             return refusal("invalid_beam", "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
     # A sloped member (ADR 8130): a member's alone, on a straight axis; never 0, at most ±10 m.
@@ -2655,8 +2662,31 @@ def beam_cases():
                                                       member={"predefined": "RAFTER"}, rise=3.0)),
         ("aşağı inen payanda", beam(width=0.08, height=0.08, baseOffset=2.0, member={"predefined": "BRACE"}, rise=-1.5)),
         ("sıfır yükselme düz yazılır", beam(width=0.05, height=0.1, member={"predefined": "PURLIN"}, rise=0.0)),
+        # Footings (docs/adr/8172): pad and strip footings at their base under the storey's floor.
+        ("tekil temel: 150 × 150, 50 cm, üstü −0.30", beam(pts=[P(-0.75, 50), P(0.75, 50)], width=1.5, height=0.5,
+                                                         role="padFooting", baseOffset=-0.8, tag="T101")),
+        ("dikdörtgen tekil temel, döndürülmüş eksenle", beam(pts=[P(0, 49), P(1.2, 50.6)], width=1.0, height=0.6,
+                                                             role="padFooting", baseOffset=-0.9, tag="T102")),
+        ("sürekli temel: 60 cm genişlik, 50 cm yükseklik", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8)),
+        ("L sürekli temel, sol yüzü eksende", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], width=0.6, height=0.5, justify="left",
+                                                    role="stripFooting", baseOffset=-0.8, tag="ST1")),
+        ("C30 betonlu sürekli temel, katıyla", beam(width=0.8, height=0.6, role="stripFooting", baseOffset=-1.1,
+                                                    material="Betonarme C30", arch={"level": "zemin"})),
+        ("tadilatta ilave tekil temel", beam(pts=[P(0, 50), P(1, 50)], width=1.0, height=0.4, role="padFooting", baseOffset=-0.6,
+                                            arch={"level": "zemin", "phase": "new"})),
+        ("bodrum altında derin temel: kattan −3 m", beam(width=1.2, height=0.8, role="stripFooting", baseOffset=-3.0)),
+        ("temel ve kiriş tek adımda", {"layerId": "cizim", "beams": [
+            beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8)["beams"][0],
+            beam(pts=[P(0, 50), P(0, 55)], tag="K201")["beams"][0]]}),
+        ("iki tekil temel tek adımda", {"layerId": "cizim", "beams": [
+            beam(pts=[P(-0.75, 50), P(0.75, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8, tag="T1")["beams"][0],
+            beam(pts=[P(4.25, 50), P(5.75, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8, tag="T2")["beams"][0]]}),
+        ("renkli ve kalın sürekli temel", {**beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8), "color": "#806040",
+                                           "lineWeight": 0.35}),
     ]:
         c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
+    life(c, BEAMS, beam(pts=[P(-0.75, 50), P(0.75, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8, tag="T101",
+                        arch={"level": "zemin"}), "Zemin katın altında 150/150/50 tekil temel")
     refusals(c, BEAMS, [
         ("kiriş verilmezse reddedilir", {"layerId": "cizim", "beams": []}, {}),
         ("sonsuz genişlik reddedilir", beam(), {"non_finite": {"beams[0].width": "NaN"}}),
@@ -2683,6 +2713,20 @@ def beam_cases():
         ("eğimli elemanın üç noktası olmaz", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], member={"predefined": "BRACE"}, rise=1.0), {}),
         ("12 m yükselme reddedilir", beam(member={"predefined": "RAFTER"}, rise=12.0), {}),
         ("sonsuz yükselme reddedilir", beam(member={"predefined": "RAFTER"}, rise=1.0), {"non_finite": {"beams[0].rise": "NaN"}}),
+        # docs/adr/8172.
+        ("tabansız tekil temel reddedilir", beam(width=1.5, height=0.5, role="padFooting"), {}),
+        ("tabansız sürekli temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting"), {}),
+        ("kot farklı temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8, offset=0.1), {}),
+        ("temel kayıt olamaz", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8,
+                                    member={"predefined": "USERDEFINED", "name": "Kayıt"}), {}),
+        ("3 m'den geniş temel reddedilir", beam(width=3.2, height=0.5, role="padFooting", baseOffset=-0.8), {}),
+        ("sıfır yükseklikli temel reddedilir", beam(width=0.6, height=0.0, role="stripFooting", baseOffset=-0.8), {}),
+        ("12 m derin temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-12.0), {}),
+        ("sonsuz tabanlı temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8),
+         {"non_finite": {"beams[0].baseOffset": "-Infinity"}}),
+        ("tek noktalı temel reddedilir", beam(pts=[P(0, 50)], width=1.5, height=0.5, role="padFooting", baseOffset=-0.8), {}),
+        ("olmayan kattaki temel reddedilir", beam(width=0.6, height=0.5, role="stripFooting", baseOffset=-0.8,
+                                                  arch={"level": "yok"}), {}),
     ])
     common_refusals(c, BEAMS, beam())
     return c.cases

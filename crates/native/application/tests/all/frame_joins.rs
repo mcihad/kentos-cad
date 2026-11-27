@@ -201,3 +201,38 @@ fn the_section_building_s_frame_shares_no_concrete() {
     let doc = Document::from_snapshot_v2(snapshot).unwrap();
     shares_none(&doc, &model(&doc));
 }
+
+/// Footings (docs/adr/8172): a pad footing under a column and a strip footing under a wall stand at their base under
+/// the storey's floor, their height their thickness; nothing joins them to the column standing on the floor over them.
+/// The IFC writes each an `IfcFooting` of its predefined type (EK-6 Tablo 6.34), named MM-TML-…, with its quantities.
+#[test]
+fn footings_stand_under_the_floor_and_are_the_ifc_s_footings() {
+    let (doc, uid) = building(json!([
+        {"kind": "column", "at": {"x": 0.0, "y": 0.0}, "width": 0.3, "depth": 0.3, "arch": {"level": "zemin"}},
+        {"kind": "beam", "pts": [{"x": -0.75, "y": 0.0}, {"x": 0.75, "y": 0.0}], "width": 1.5, "height": 0.5,
+         "role": "padFooting", "baseOffset": -0.8, "tag": "T101", "arch": {"level": "zemin"}},
+        {"kind": "beam", "pts": [{"x": 0.75, "y": 0.0}, {"x": 6.0, "y": 0.0}], "width": 0.6, "height": 0.5,
+         "role": "stripFooting", "baseOffset": -0.8, "arch": {"level": "zemin"}}
+    ]));
+    let m = model(&doc);
+    shares_none(&doc, &m);
+    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    // Its base 0.80 under ±0.00, its top 0.30 under it.
+    let (b, t) = heights(&m, solid(&uid[1]));
+    assert!((b + 0.8).abs() < 1e-12 && (t + 0.3).abs() < 1e-12, "{b}–{t}");
+    // Betonarme as the column and the slab: one section with them where a drawn section cuts (ISO 128-3, ADR 8041 §2).
+    assert_eq!(m.looks[solid(&uid[1])].layer, "MM-TASI-BETONARME");
+    // The pad 1.5 × 1.5 × 0.5 whole; the strip 5.25 × 0.6 × 0.5 less the pad's crossing (it was drawn after).
+    assert!((volume(&m, &uid[1]) - 1.5 * 1.5 * 0.5).abs() < 1e-9);
+    assert!((volume(&m, &uid[2]) - 5.25 * 0.6 * 0.5).abs() < 1e-9, "{}", volume(&m, &uid[2]));
+    // The column on the floor over them, whole: 0.09 × 3.
+    assert!((volume(&m, &uid[0]) - 0.09 * 3.0).abs() < 1e-9);
+    let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
+    assert_eq!(written.footings, 2);
+    let text = kentos_ifc::building::write(&building);
+    let footings: Vec<&str> = text.lines().filter(|l| l.contains("=IFCFOOTING(")).collect();
+    assert_eq!(footings.len(), 2, "{footings:?}");
+    assert!(footings.iter().any(|l| l.ends_with(".PAD_FOOTING.);") && l.contains("'MM-TML-")), "{footings:?}");
+    assert!(footings.iter().any(|l| l.ends_with(".STRIP_FOOTING.);")), "{footings:?}");
+    assert_eq!(text.matches("Qto_FootingBaseQuantities").count(), 2);
+}
