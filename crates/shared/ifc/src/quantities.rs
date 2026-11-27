@@ -386,16 +386,23 @@ pub fn covering(shapes: &[Shape]) -> Option<Qto> {
     })
 }
 
-/// A column's base quantities (EK-6, `Qto_ColumnBaseQuantities`): its height, its section's area, its volume.
+/// A column's base quantities (EK-6, `Qto_ColumnBaseQuantities`): its height, its section's area, its volume. A column
+/// the slab over it cuts (docs/adr/8171 §2.1) is prisms of more than one height: its height runs from its lowest foot
+/// to its highest top, its section is that of the prisms standing on its foot (together its whole section).
 pub fn column(shapes: &[Shape], cuts: &[&Opening]) -> Option<Qto> {
-    let (bottom, top) = span(shapes)?;
-    let section: f64 = shapes
-        .iter()
-        .map(|s| match s {
-            Shape::Prism { rings, bulges, .. } => area(rings, bulges),
-            Shape::Faces { .. } => 0.0,
-        })
-        .sum();
+    let mut prisms = Vec::new();
+    for s in shapes {
+        let Shape::Prism { rings, bulges, bottom, top } = s else {
+            return None;
+        };
+        prisms.push((area(rings, bulges), *bottom, *top));
+    }
+    let bottom = prisms.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+    let top = prisms.iter().map(|p| p.2).fold(f64::NEG_INFINITY, f64::max);
+    if prisms.is_empty() {
+        return None;
+    }
+    let section: f64 = prisms.iter().filter(|p| (p.1 - bottom).abs() <= 1e-9).map(|p| p.0).sum();
     Some(Qto {
         name: "Qto_ColumnBaseQuantities".into(),
         quantities: vec![

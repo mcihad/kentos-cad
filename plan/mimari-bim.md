@@ -26,7 +26,7 @@ Karar: [ADR 8171](../docs/adr/8171-mimari-3d-section-quality-and-missing-tools.m
 
 | Madde | İş | Kabul |
 |---|---|---|
-| MB-01 | **Birleşim kuralı.** Kolon kirişi keser. Kolon ve kiriş döşemenin betonarme katmanını keser. Kiriş–kiriş kesişiminde önce çizilen baskındır. Kesit modeli (`sections.rs`) gövdeleri ayırır; 3B, IFC ve kesit aynı gövdeyi kullanır. | İki gövde aynı hacmi tutmaz (bekçi sınaması). IFC hacimlerinin toplamı betonun gerçek hacmidir. 2B kesitte yeni çizgi yok. Döndürürken birleşim titremesi yok. |
+| MB-01 | **Birleşim kuralı.** Döşemenin taşıyıcısı içindekini tutar (kolon ve kiriş onun altında biter, ADR 8041 §3'ün metrajı gibi). Kolon kirişi keser. Kiriş–kiriş kesişiminde önce çizilen baskındır. Kesit modeli (`sections.rs`) gövdeleri ayırır; 3B, IFC ve kesit aynı gövdeyi kullanır. | İki gövde aynı hacmi tutmaz (bekçi sınaması). IFC hacimlerinin toplamı betonun gerçek hacmidir. 2B kesitte yeni çizgi yok. Döndürürken birleşim titremesi yok. **Yapıldı (ADR 8171 §3): bölüm binasında 3,76 m³ çift sayım gitti.** |
 | MB-02 | **Kesit yüzü her zaman.** Sürüklerken de kapak var. Halka zinciri gövdenin float32 aralığına toleranslı. Kapak, modelin parçalarından ayrı küçük bir katmanda kurulur; model yeniden yüklenmez. | Sürükleme filminde içi boş gövde yok. Float32 köşeli gövde kapağını alır (sınama). |
 | MB-03 | **Kenar çizgisi.** Köşeler toleransla birleşir; düz yüzün köşegeni çizilmez. | Çatının köşegeni yok; kutunun 12 kenarı yine 12. |
 | MB-04 | **Kararlı parçalar.** Parça kimliği içeriğinden gelir: değişmeyen parça yeniden yüklenmez, kenarı yeniden hesaplanmaz. Sahneden çıkan parça hemen bırakılır. | Seçimde yalnız seçilenin parçası yüklenir (sayaç). Ekran kartındaki bayt büyümez. |
@@ -52,5 +52,6 @@ resmî belgesi, Türkiye mevzuatı).
 
 ## Durum
 
-- [ ] MB-01 … MB-06
+- [x] MB-01
+- [ ] MB-02 … MB-06
 - [ ] MB-10 … MB-18

@@ -28,21 +28,29 @@ Araştırma raporunun §3'ü. Özetle:
 
 Kesit modeli gövdeleri **birleşim önceliğiyle** ayırır. Hiçbir iki gövde aynı hacmi tutmaz:
 
-1. **Kolon kirişi keser.** Kirişin bandı aynı kattaki ve düşeyde çakışan kolonların ayak izinde kesilir. Revit'in
-   betonarme birleşim tablosu da kolonu baskın sayar.
-2. **Kolon ve kiriş döşemeyi keser.** Döşemenin betonarme katmanı, tepesi o katmanın içine uzanan kolonun ve kirişin
-   ayak izinde açılır. Bu, ADR 8041'in kuralını korur: kolonun ve kirişin tepesi döşemenin betonarme üstüdür; kiriş
-   yüksekliği döşemeyi içine alır (TBDY 2018 7.4.1.1). Döşemenin üstündeki şap, yalıtım ve kaplama katmanları kesilmez.
+1. **Döşemenin taşıyıcısı içindekini tutar.** Kolonun ve kirişin tepesi döşemenin betonarme üstüdür (ADR 8041 §1;
+   kiriş yüksekliği döşemeyi içine alır, TBDY 2018 7.4.1.1). Gövdeleri, döşemenin örttüğü yerde onun betonarmesinin
+   altında biter. Bu, KentOS'un kendi metraj kuralıdır (ADR 8041 §3: "Kirişin hacmi döşemenin altında kalan
+   kısmıdır … Döşemenin içindeki kısmı döşemenin hacmindedir, iki kez sayılmaz").
+   - Döşemenin kenarından taşan parça (2,5 cm dışarıda kalan kolon yüzü, döşemesiz yere uzanan kiriş) tam yüksekliğini
+     korur.
+   - Döşemenin içinden geçen kolon (iki kata yayılan, ADR 8168) döşemenin üstünde sürer.
+   - Kirişin ve kolonun ölçüsü, kotu ve "Üst kot"u değişmez; değişen yalnız gövdedir.
+2. **Kolon kirişi keser.** Kirişin bandı, düşeyde çakışan kolonların ayak izinde kesilir. Revit'in betonarme birleşim
+   tablosu da kolonu baskın sayar.
 3. **Kiriş–kiriş:** önce çizilen baskındır (Revit'in kuralı). Sonra çizilenin bandı öbürünün bandında kesilir.
 
 **Kapsam:** Kesit modelini kullanan her şey aynı gövdeyi kullanır: 3B görünüm, IFC'nin iki profili, IFC'nin miktar
-setleri ve 2B kesit.
+setleri ve 2B kesit. Döşemenin gövdesi değişmez. Eğimli kiriş ve döşeme ile bir nesnenin parçası (baca, giydirme
+cephenin çerçevesi) birleştirilmez.
 
-**2B kesit:** Aynı malzemeden bitişik kesilen parçalar zaten tek dolgu ve aralarında çizgi yok (ADR 8041 §2,
-TS EN ISO 128-3). Birleşim kesitte yeni çizgi doğurmamalı; altın sınamalar bunu denetler.
+**2B kesit:** Kesilen parçalar malzeme malzeme birleştirilip tek dolgu çizilir (`union_areas`, ADR 8041 §2,
+TS EN ISO 128-3). Döşeme ile altında biten kiriş yine tek betonarme kesittir; yeni çizgi doğmaz.
 
-**Metraj:** Kolonun ve kirişin IFC hacmi birleşimdeki betonu içerir, döşemeninki içermez. Bağlayıcı bir Türk metraj
-metni bu turda bulunamadı (rapor §6); toplam beton hacmi kesindir ve iki kez sayılmaz.
+**IFC miktarları:** Kolonun ve kirişin `GrossVolume`'u kendi gövdesidir; birleşimdeki beton döşemenindir.
+Döşemenin altında kalan ve kenarından taşan parçasıyla iki yükseklikli kolonun `Qto_ColumnBaseQuantities`'i:
+- `Length` en alt ayağından en üst tepesine;
+- `CrossSectionArea` ayağında duran parçaların toplamı, yani kolonun bütün kesiti.
 
 ### §2.2 Kesit yüzü (MB-02)
 
@@ -85,3 +93,43 @@ serbest biçimli eleman, yürüyen merdiven, kazık. Her biri kendi ADR'siyle, k
 ## §3 Kanıt
 
 Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölçüler.
+
+### MB-01 (27 Kasım 2026)
+
+- **Bekçi sınamaları** (`crates/native/application/tests/all/frame_joins.rs`):
+  - Birleşen her iki gövde (kolon, kiriş, döşemenin taşıyıcısı) düşeyde çakışıyorsa planda ortak alanları < 1e-9 m².
+    Elle kurulan çerçevede ve bölüm binasında denetlenir.
+  - Hacimler elle hesaplananla aynı (1e-9 m³):
+    - kolon 0,09 × 2,85;
+    - kolonlar arasındaki kiriş 4,70 × 0,25 × 0,35;
+    - döşeme kenarından taşan kiriş 2,85 × 0,25 × 0,50;
+    - sonra çizilen ve kesişen kiriş 2 × 0,875 × 0,25 × 0,35;
+    - kenarda yarısı döşeme altında kalan kiriş 5 × 0,125 × (0,35 + 0,50);
+    - döşemesiz katta yuvarlak kolona dayanan kiriş, çemberin iki noktası arasında.
+  - İlk koşuda bir açık yakalandı: kenardaki kolonun içine düşen kiriş parçası kesilmiyordu ("hiçbir şey kalmazsa
+    gövdeyi koru" parça başına uygulanıyordu). Kural eleman başına alındı.
+- **Bölüm binasının IFC'si** (`fixtures/arch/v1/ifc/kesit-binasi-tipli.ifc`, `KENTOS_WRITE_IFC_TYPES=1` ile yeniden
+  yazıldı):
+
+  | Sınıf | Önce | Sonra |
+  |---|---|---|
+  | Kiriş | 10,50 m³ | 6,93 m³ |
+  | Kolon | 4,29 m³ | 4,10 m³ |
+  | Döşeme | 97,45 m³ | 97,45 m³ |
+  | Toplam | 112,24 m³ | 108,48 m³ |
+
+  İki kez sayılan 3,76 m³ gitti. Elle sağlama: 84 m kiriş × 0,25 × 0,35 = 7,35 m³, eksi 16 kolon kesimi × 0,30 m ×
+  0,25 × 0,35 = 0,42 m³ → 6,93.
+- **IfcOpenShell 0.9.0** yeni dosyayı açtı: türler, katman takımları ve kat yerleşimi "uyuyor"
+  (`ifc_types_check.py`, `slab_layers_check.py`, `storey_spans_check.py`).
+- **Sınamalar:**
+  - `kentos-native-application`: kesit, IFC, metraj, kolon ve mahal sınamaları ile `cad.arch.ifc`, `cad.sections`,
+    `cad.elevations`, `cad.spaces.quantities` ortak durumları geçti; 2B kesit sınamalarında değişen yok.
+  - `kentos-ifc`'in 77 sınaması ve Mimari masaüstünün 3B ile IFC görüntüleyicisi sınamaları (21) geçti.
+- **Resim:** `.run/gui-evidence/mimari-bim/sonra/mb01-birlesim.png`. Gerçek pencerede döndürürken birleşimlerdeki
+  titreyen kareler yok, yuvarlak kolonun tepesi görünüyor, döşeme kenarındaki çift çizgiler gitti.
+- **Uygulama:**
+  - `crates/native/application/src/arch/sections/frame.rs`: kolon ve kiriş gövdeleri `sections.rs`'ten taşındı
+    (dosya sınırının üstündeydi, 3334 → 3240 satır), `joins`.
+  - `sections.rs`: `Model::structure` (döşemelerin taşıyıcı plakaları), `joins`'in çağrısı.
+  - `crates/shared/ifc/src/quantities.rs`: kolonun iki yükseklikli gövdesinin miktarları.
