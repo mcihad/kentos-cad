@@ -114,7 +114,7 @@ Formun başında “Sonuç dosyaya yazıldı” (ya da “veritabanına”) kart
 
 - **Kalıcı geçmiş:** işlem geçmişi ve hedefler oturumluktur; proje ya da makine ile saklanmaz.
 - **Veritabanında tablo listesi:** tablo adı elle yazılır; şemadaki tablolardan seçme yok.
-- **Gerçek pencere:** fare ve klavyeyle kabul (`scripts/usage/real/`) bu dilimde yapılmadı.
+- **Gerçek pencere:** bu dilimin akışları fare ve klavyeyle denendi (Doğrulama); `scripts/usage/real/`'ın Linux koşusu yapılmadı.
 
 ## Doğrulama
 
@@ -140,3 +140,16 @@ Formun başında “Sonuç dosyaya yazıldı” (ya da “veritabanına”) kart
   - `03-cakisma`: “Bu GeoPackage zaten var: sonuc.gpkg …”;
   - `04-gecmis`: Geri alındı ve Başarısız çipleri, kaldırılan katmanın adı;
   - `05-yeniden-ac`: “Önceki çalıştırmanın girdisi değişti …”.
+- **Gerçek pencere** (27 Kasım 2026, macOS; sistem imleci ve klavye olaylarıyla, yalıtılmış kullanıcı dizininde, sınama
+  GeoPackage'ı üzerinde; resimler `.run/real-9353/shots/`, Git'e eklenmez):
+  - Sonucun yeri Çıktı'dan önce; GeoPackage seçilince “Tablo adı”. `sonuc.gpkg` yazıldı, kart dosyayı ve tabloyu
+    söyledi; Katman olarak ekle tabloyu veri katmanı yaptı.
+  - Aynı dosyaya yeniden: “Bu GeoPackage zaten var: sonuc.gpkg. Başka dosya seçin ya da Varsa üzerine yaz'ı açın.
+    Dosyaya dokunulmadı.”
+  - İşlem geçmişi: Başarısız (nedeniyle) ve Başarılı, hedef satırıyla; Yeniden aç dosya hedefini ve Tablo adını geri
+    getirdi.
+  - Kusur bulundu ve düzeltildi: sonucu Veri kaynağına taşı ile tabloya geçen çalıştırma “Geri alındı” sayılıyordu.
+    Artık çalıştırmanın açtığı katman duruyorsa geri alınmış sayılmaz; kart Başarılı kalır ve “Sonucu veri kaynağına
+    taşındı: “…” katmanının satırları kaynağında.” der, nesneleri silinmişse “silindi” der
+    (`sink_tests::a_result_moved_to_a_source_or_deleted_is_not_taken_for_undone`). Düzeltme yeniden derlenen programda
+    gerçek pencerede de görüldü.

@@ -139,7 +139,7 @@
 
 - **Ekran okuyucu:** Katman özelliklerinin bölüm listesi erişilebilirlik ağacına adlandırılmış liste olarak verilmiyor.
 - **Varsayılan formun çocukları:** varsayılan form ilişkili kayıt öğesi taşımaz; alt kayıtlar özel formla girilir.
-- **Gerçek pencere:** fare ve klavyeyle kabul (`scripts/usage/real/`) bu dilimde yapılmadı.
+- **Gerçek pencere:** bu dilimin akışları fare ve klavyeyle denendi (Doğrulama); `scripts/usage/real/`'ın Linux koşusu yapılmadı.
 
 ## Doğrulama
 
@@ -174,3 +174,12 @@
   - `02-tablo-suzgec`: sarılan çubuk, altta “İfade süzgeci: mahalle = 'M2' ×”;
   - `03-ozellikler-kaynak`: Yolu kopyala halkada;
   - `04-ozellikler-stil`: “Tema ön planı (#E4EAF0, temaya göre değişir)”, Stil ayarlarını aç, Stil halkada.
+- **Gerçek pencere** (27 Kasım 2026, macOS; sistem imleci ve klavye olaylarıyla, yalıtılmış kullanıcı dizininde, sınama
+  GeoPackage'ı üzerinde; resimler `.run/real-9353/shots/`, Git'e eklenmez):
+  - Katman özellikleri: ↓ Tab Enter yolu panoya kopyaladı; Tab halkası liste, eylem ve Kapat arasında dolaştı; End ve ↑
+    bölüm değiştirdi; Alanları aç Alanlar'ı `bakim`'de açtı; Esc kapattı, ağaç ↓ ile `mahalleler`e geçti; Stil “Tema ön
+    planı (#1E2833, temaya göre değişir)”.
+  - Katmana yakınlaştır `mahalleler`in üç noktasını görünüme aldı.
+  - Varsayılan form: okuma sözü, Düzenle, “Uygula” ve not; `bedel` 120 yapıldı, tablonun altında “1 kayıt kaynağa
+    yazılmadı (1 değişen satır)”, Formlar bölümü “Katmanın formu yok”.
+  - Tablo çubuğu sarıldı; `mahalle = 'M2'` süzgeci altta işaretlendi, × kaldırdı.

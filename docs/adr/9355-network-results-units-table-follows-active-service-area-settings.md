@@ -124,7 +124,7 @@ Tablo ve Hizmet alanının paneli arayüzün işidir; kanallar tabloyu okumaz, a
   geliştirmede).
 - **Saat:** çok uzun süreler de saniye ya da dakikadır; saate geçiş yok.
 - **Komut satırında alan anahtarı:** Yaklaşık alan yalnız paneldedir; komut satırında harfi yoktur.
-- **Gerçek pencere:** fare ve klavyeyle kabul (`scripts/usage/real/`) bu dilimde yapılmadı.
+- **Gerçek pencere:** bu dilimin akışları fare ve klavyeyle denendi (Doğrulama); `scripts/usage/real/`'ın Linux koşusu yapılmadı.
 
 ## Doğrulama
 
@@ -152,3 +152,10 @@ Tablo ve Hizmet alanının paneli arayüzün işidir; kanallar tabloyu okumaz, a
   - `01-rota-birimler`: Rota tablosu “Süre (sn) 2.16”, “Uzunluk (m) 30.000”;
   - `02-hizmet-ayarlari`: düzenlenebilir Aralıklar (m), Kenar payı ve iki anahtar;
   - `03-tablo-sabit`: “Sabit” ve “Etkin katmana geç”, “Çizim hedefi: bakim”.
+- **Gerçek pencere** (27 Kasım 2026, macOS; sistem imleci ve klavye olaylarıyla, yalıtılmış kullanıcı dizininde, sınama
+  GeoPackage'ı üzerinde; resimler `.run/real-9353/shots/`, Git'e eklenmez):
+  - 30 m'lik rota: komut satırı ve geçmiş “Süre 2.15 sn”; Rota tablosu “Süre (sn) 2.15”, “Uzunluk (m) 29.878”.
+  - Hizmet alanı: panelde Aralıklar (m) “35”, Yaklaşık alan kapalı, Ulaşılan yollar açık; komut satırı aynı ayarı
+    gösterdi; yalnız “Ulaşılan yollar” yazıldı, sütunu “Aralık (m)” 0–35.
+  - Tablo: şeritteki Tablo etkin katmanı açtı; Katman ▾ ile `bakim`'de “Sabit” ve Etkin katmana geç; Etkin katmana geç
+    Taslak'a döndü.

@@ -100,7 +100,7 @@ dışa aktarmalar (ADR 9344) satırları okuyordu; öbür analiz araçları okum
 - **Arka plan:** satırlı girdi bu dilimde arayüzün iş parçacığında çalışır; 2 000 nesneden büyük girdide arka plan
   yolu satırlı kopyayı da taşımalı.
 - **Ağın kenar sayısı:** Ağlar penceresi kenar ve düğüm sayısını Denetle ile söyler; kaynak durumunu ayrıca yazmaz.
-- **Gerçek pencere:** fare ve klavyeyle kabul (`scripts/usage/real/`) bu dilimde yapılmadı.
+- **Gerçek pencere:** bu dilimin akışları fare ve klavyeyle denendi (Doğrulama); `scripts/usage/real/`'ın Linux koşusu yapılmadı.
 
 ## Doğrulama
 
@@ -122,3 +122,13 @@ dışa aktarmalar (ADR 9344) satırları okuyordu; öbür analiz araçları okum
 - **Resim** (`.run/gui-evidence/kullanim-9353/`, açık ve koyu tema; büyütülerek bakıldı):
   - `01-tampon-veri`: Tampon, `koseler` Katman: “3 nokta … Kapsamdaki veri katmanları: koseler (3).”;
   - `02-veri-karsilastir`: “6 nesne karşılaştırıldı: 6 aynı.”, altı satır.
+- **Gerçek pencere** (27 Kasım 2026, macOS; sistem imleci ve klavye olaylarıyla, yalıtılmış kullanıcı dizininde, sınama
+  GeoPackage'ı üzerinde; resimler `.run/real-9353/shots/`, Git'e eklenmez):
+  - Tampon `bakim`'de “6 nokta … Kapsamdaki veri katmanları: bakim (6)”; oturumda değişen satırla “5 kaynakta, bekleyen
+    1 değişen satır”.
+  - `yollar` veri katmanından kurulan ağda En kısa yol ve Hizmet alanı çalıştı.
+  - Veri karşılaştır: kaydedilen `.kcad` Dosyadan ile okundu (“17 nesne”), `bakim` iki tarafta “6 nesne karşılaştırıldı:
+    6 aynı.”
+  - Kusur bulundu ve düzeltildi: ağ kurulurken uyarı projenin bütün veri katmanlarını sayıyordu (“bakim, mahalleler,
+    yollar”). Artık yalnız ağın kendi katmanlarını bekler ve söyler (“yollar”); okunamayan kaynak da yalnız ağınki
+    sayılır.

@@ -130,7 +130,7 @@
 - **İki eylemli bildirim:** kitin bildirimi tek eylem taşır; “Etiket kuralını aç” ayrı düğme değildir, kural aynı
   penceredir.
 - **Önizlemenin katlanması:** önizleme ve tanı kartı küçük pencerede katlanmıyor; sınıf listesi esneyerek yer açıyor.
-- **Gerçek pencere:** fare ve klavyeyle kabul (`scripts/usage/real/`) bu dilimde yapılmadı.
+- **Gerçek pencere:** bu dilimin akışları fare ve klavyeyle denendi (Doğrulama); `scripts/usage/real/`'ın Linux koşusu yapılmadı.
 
 ## Doğrulama
 
@@ -158,3 +158,15 @@
   - `02-nokta-onizleme`: Yerleşim'de Nokta önde, Çevresinde; önizlemede sembol ve sağ üstte metin;
   - `03-stil-deger-yok`: Çınar, İstasyon, M9, Değer yok; yol satırı;
   - `04-etiket-araci`: “Veri katmanının etiketi” bildirimi ve Yerleşim ayarlarını aç.
+- **Gerçek pencere** (27 Kasım 2026, macOS; sistem imleci ve klavye olaylarıyla, yalıtılmış kullanıcı dizininde, sınama
+  GeoPackage'ı üzerinde; resimler `.run/real-9353/shots/`, Git'e eklenmez):
+  - Kurallı: varsayılan boyutta araçlar, Ad ve Koşul görünür.
+  - Tek etiket `bakim`'de: Yerleşim'de Nokta önde, Çevresinde; önizlemede sembol ve sağ üstte metin; Üstünde'de metin
+    sembolün üstünde; Uygula ardından Tamam tek “uygulandı” sözü.
+  - Etiketi sabitle açılınca söz ve “Veri katmanının etiketi” bildirimi; Yerleşim ayarlarını aç Etiketler'i Yerleşim'de
+    açtı.
+  - Kategorili `mahalle`: önce M1, M2, M9, Değer yok; Alanlar'da değer listesi (M1 Çınar, M2 İstasyon) tanımlanınca
+    Çınar, İstasyon, M9, Değer yok; altı nokta çizildi; Katman stili başlığında yol ve kaynak; bildirim katmanı
+    adlandırdı.
+  - Kusur bulundu ve düzeltildi: bildirimin 8 saniyesi uzun sözü okuyup eyleme basmaya yetmedi (ilk denemede eylem süre
+    dolunca gitti). Bu bildirim artık 20 saniye durur (üzerine gelince zaten bekler).

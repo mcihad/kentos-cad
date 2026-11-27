@@ -165,10 +165,12 @@ impl App {
     /// ayarlarını aç opens the layer's Etiketler on Yerleşim (Kurallı and its conditions are there too).
     pub(crate) fn data_label_toast(&mut self, layer: &str, words: String) {
         use crate::labelling::{Event, msg};
+        // Long enough to read its words and press its action (seen in the real window: 8 s went before they were read).
         self.toast(
             kentos_ui::widget::Toast::info("Veri katmanının etiketi")
                 .body(words)
-                .action("Yerleşim ayarlarını aç", msg(Event::OpenAt(layer.to_owned(), crate::labelling::form::Tab::Place))),
+                .action("Yerleşim ayarlarını aç", msg(Event::OpenAt(layer.to_owned(), crate::labelling::form::Tab::Place)))
+                .duration(std::time::Duration::from_secs(20)),
         );
     }
 

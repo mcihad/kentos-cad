@@ -307,7 +307,7 @@ impl App {
         let alive = self.alive(r).len();
         // What it made is no longer in the drawing: taken back, said as such (docs/adr/9354), the success kept apart
         // from a failure and from a stop.
-        let undone = r.status == Status::Ok && !r.added.is_empty() && alive == 0;
+        let undone = r.status == Status::Ok && !r.added.is_empty() && alive == 0 && self.run_undone(r);
         let (glyph, tone, state) = match r.status {
             Status::Ok if undone => (Icon::Undo, Tone::Muted, "Geri alındı"),
             Status::Ok => (Icon::Success, Tone::Success, "Başarılı"),
@@ -407,22 +407,10 @@ impl App {
         .into()
     }
 
-    /// What of a run's result is gone from the drawing (docs/adr/9354): all of it (taken back, its new layers named
-    /// when they went with it), or how many of its objects.
-    pub(super) fn run_gone(&self, r: &RunRecord, alive: usize) -> Option<String> {
-        if r.status != Status::Ok || r.added.is_empty() || alive == r.added.len() {
-            return None;
-        }
-        let doc = self.document.as_ref()?;
-        if alive > 0 {
-            return Some(format!(
-                "Eklediği {} nesneden {}'i çizimde yok: geri alındı ya da silindi.",
-                r.added.len(),
-                r.added.len() - alive
-            ));
-        }
-        let layers = doc.model.layers();
-        let gone: Vec<String> = self
+    /// The new layers a run opened, by name: its layer parameters given a new name, and the layers its words say it
+    /// opened (“…: “X” (yeni katman)”, the network analyses').
+    fn run_new_layers(&self, r: &RunRecord) -> Vec<String> {
+        let mut out: Vec<String> = self
             .gis
             .processing
             .registry
@@ -435,11 +423,71 @@ impl App {
                         kentos_processing::LayerValue::New(name) => Some(name),
                         kentos_processing::LayerValue::Existing(_) => None,
                     })
-                    .filter(|name| !layers.leaves().iter().any(|l| &l.name == name))
-                    .map(|name| format!("“{name}”"))
                     .collect()
             })
             .unwrap_or_default();
+        for w in &r.words {
+            if let Some(name) = w
+                .strip_suffix(" (yeni katman)")
+                .and_then(|w| w.rsplit_once('“'))
+                .and_then(|(_, n)| n.strip_suffix('”'))
+                .filter(|n| !out.iter().any(|o| o == n))
+            {
+                out.push(name.to_owned());
+            }
+        }
+        out
+    }
+
+    /// Whether a run whose objects are all gone was taken back (seen in the real window, 27 November 2026): the
+    /// layers it opened go with an undo; one still there means its objects were deleted or moved to a source's table
+    /// (Veri kaynağına taşı), not taken back. A run that opened no layer is taken for taken back.
+    pub(super) fn run_undone(&self, r: &RunRecord) -> bool {
+        let Some(doc) = self.document.as_ref() else {
+            return false;
+        };
+        let layers = doc.model.layers();
+        let leaves = layers.leaves();
+        self.run_new_layers(r).iter().all(|name| !leaves.iter().any(|l| &l.name == name))
+    }
+
+    /// What of a run's result is gone from the drawing (docs/adr/9354): all of it (taken back, its new layers named
+    /// when they went with it; moved to a source's table; deleted), or how many of its objects.
+    pub(super) fn run_gone(&self, r: &RunRecord, alive: usize) -> Option<String> {
+        if r.status != Status::Ok || r.added.is_empty() || alive == r.added.len() {
+            return None;
+        }
+        let doc = self.document.as_ref()?;
+        if alive == 0 && !self.run_undone(r) {
+            let layers = doc.model.layers();
+            let leaves = layers.leaves();
+            let moved: Vec<String> = self
+                .run_new_layers(r)
+                .into_iter()
+                .filter(|name| leaves.iter().any(|l| &l.name == name && l.data.is_some()))
+                .map(|name| format!("“{name}”"))
+                .collect();
+            return Some(if moved.is_empty() {
+                "Eklediği nesneler çizimde yok: silindi.".to_owned()
+            } else {
+                format!("Sonucu veri kaynağına taşındı: {} katmanının satırları kaynağında.", moved.join(", "))
+            });
+        }
+        if alive > 0 {
+            return Some(format!(
+                "Eklediği {} nesneden {}'i çizimde yok: geri alındı ya da silindi.",
+                r.added.len(),
+                r.added.len() - alive
+            ));
+        }
+        let layers = doc.model.layers();
+        let leaves = layers.leaves();
+        let gone: Vec<String> = self
+            .run_new_layers(r)
+            .into_iter()
+            .filter(|name| !leaves.iter().any(|l| &l.name == name))
+            .map(|name| format!("“{name}”"))
+            .collect();
         Some(if gone.is_empty() {
             "Geri alındı: eklediği nesneler çizimde yok.".to_owned()
         } else {

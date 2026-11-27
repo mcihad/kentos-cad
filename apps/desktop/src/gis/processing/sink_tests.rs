@@ -435,6 +435,50 @@ fn screens() {
     }
 }
 
+/// Seen in the real window (27 November 2026): a run's result moved to a source's table (Veri kaynağına taşı) is not
+/// taken back: its record stays Başarılı and says where its rows are; objects deleted from a layer still there are
+/// said deleted; Geri al alone marks it Geri alındı.
+#[test]
+fn a_result_moved_to_a_source_or_deleted_is_not_taken_for_undone() {
+    let (mut app, dir) = scene("sonuc-tasindi");
+    crate::data_layers::register();
+    event(&mut app, Event::LayerName("layer".into(), "Merkezler".into()));
+    event(&mut app, Event::Run);
+    let r = history(&app)[0].clone();
+    let layer = {
+        let model = &app.document.as_ref().expect("a drawing").model;
+        model.layers().leaves().into_iter().find(|l| l.name == "Merkezler").map(|l| l.id.clone()).expect("its layer")
+    };
+    // Deleted from its layer: not taken back.
+    let snapshot = app.document.as_ref().expect("a drawing").model.clone();
+    {
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        model.remove(&r.added);
+    }
+    assert!(!app.run_undone(&r));
+    assert_eq!(app.run_gone(&r, 0).as_deref(), Some("Eklediği nesneler çizimde yok: silindi."));
+    // Moved to a GeoPackage's table: said so.
+    app.document.as_mut().expect("a drawing").model = snapshot;
+    let input = kentos_commands::LayersMigrate {
+        layer: layer.clone(),
+        target: kentos_commands::CreateTarget::Gpkg,
+        path: Some(dir.join("tasinan.gpkg").display().to_string()),
+        address: None,
+        schema: None,
+        table: Some("merkezler".into()),
+        existing: None,
+    };
+    let model = &mut app.document.as_mut().expect("a drawing").model;
+    let done = kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(model), input);
+    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    assert_eq!(app.alive(&r).len(), 0, "its objects left the drawing");
+    assert!(!app.run_undone(&r));
+    assert_eq!(
+        app.run_gone(&r, 0).as_deref(),
+        Some("Sonucu veri kaynağına taşındı: “Merkezler” katmanının satırları kaynağında.")
+    );
+}
+
 /// The pictures of the second round's T30 and T31 (docs/adr/9354), into `.run/gui-evidence/kullanim-9354/`:
 ///
 /// ```text

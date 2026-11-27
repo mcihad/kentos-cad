@@ -250,14 +250,18 @@ impl NetworksApp for App {
         let over_rows = def.layers().iter().any(|l| tree.get(l).is_some_and(|n| n.data.is_some()));
         let rows = if over_rows { self.source_copy() } else { None };
         if let Some(r) = &rows {
-            if !r.reading.is_empty() {
+            // Only the network's own layers are waited for and named (seen in the real window, 27 November 2026: the
+            // words named every data layer of the project).
+            let own: Vec<&str> = def.layers().iter().filter_map(|l| tree.get(l).map(|n| n.name.as_str())).collect();
+            let reading: Vec<&str> = r.reading.iter().map(String::as_str).filter(|n| own.contains(n)).collect();
+            if !reading.is_empty() {
                 return Err(format!(
                     "{}: ağın katmanlarının satırları kaynaktan okunuyor ({}); birazdan yeniden deneyin.",
                     def.name,
-                    r.reading.join(", ")
+                    reading.join(", ")
                 ));
             }
-            if let Some((name, why)) = r.failed.first() {
+            if let Some((name, why)) = r.failed.iter().find(|(n, _)| own.contains(&n.as_str())) {
                 return Err(format!("{}: “{name}” katmanının kaynağı okunamadı: {why}. Ağ kurulmadı.", def.name));
             }
         }
