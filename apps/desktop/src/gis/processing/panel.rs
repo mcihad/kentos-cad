@@ -304,12 +304,16 @@ impl App {
 
     /// One run: its state, name, when, what it did, how long it took, and its buttons.
     fn run_card<'a>(&'a self, r: &'a RunRecord) -> Element<'a, Message> {
-        let (glyph, tone) = match r.status {
-            Status::Ok => (Icon::Success, Tone::Success),
-            Status::Canceled => (Icon::Warning, Tone::Warning),
-            Status::Error => (Icon::Error, Tone::Danger),
-        };
         let alive = self.alive(r).len();
+        // What it made is no longer in the drawing: taken back, said as such (docs/adr/9354), the success kept apart
+        // from a failure and from a stop.
+        let undone = r.status == Status::Ok && !r.added.is_empty() && alive == 0;
+        let (glyph, tone, state) = match r.status {
+            Status::Ok if undone => (Icon::Undo, Tone::Muted, "Geri alındı"),
+            Status::Ok => (Icon::Success, Tone::Success, "Başarılı"),
+            Status::Canceled => (Icon::Warning, Tone::Warning, "Durduruldu"),
+            Status::Error => (Icon::Error, Tone::Danger, "Başarısız"),
+        };
         // A network analysis' run (docs/adr/9334): its tool takes Yeniden aç; it was run by hand, not timed.
         let analysis = super::analyses::is_analysis(&r.tool_id);
         let known = analysis || self.gis.processing.registry.get(&r.tool_id).is_some();
@@ -349,6 +353,7 @@ impl App {
             label::body(r.label.clone())
                 .font(typography::ui_strong())
                 .width(Fill),
+            container(label::caption(state)).padding([0, 6]).style(style::container::badge),
             label::mono_caption(crate::cloud::local_time::clock(
                 r.started,
                 crate::cloud::local_time::Zone::system()
@@ -365,6 +370,9 @@ impl App {
         // What flowed through it (docs/adr/0529 §2): the objects it read and the ones it made, changed or chose, and for
         // a model each step's share and time.
         let mut body = column![head, label::caption(r.summary.clone())].spacing(4);
+        if let Some(gone) = self.run_gone(r, alive) {
+            body = body.push(label::caption(gone).style(style::text::warning));
+        }
         // The run in words (docs/adr/9179): its inputs as they resolved, its numbers with their units, where it wrote.
         for w in &r.words {
             body = body.push(label::caption(w.clone()).style(style::text::muted));
@@ -399,8 +407,90 @@ impl App {
         .into()
     }
 
+    /// What of a run's result is gone from the drawing (docs/adr/9354): all of it (taken back, its new layers named
+    /// when they went with it), or how many of its objects.
+    pub(super) fn run_gone(&self, r: &RunRecord, alive: usize) -> Option<String> {
+        if r.status != Status::Ok || r.added.is_empty() || alive == r.added.len() {
+            return None;
+        }
+        let doc = self.document.as_ref()?;
+        if alive > 0 {
+            return Some(format!(
+                "Eklediği {} nesneden {}'i çizimde yok: geri alındı ya da silindi.",
+                r.added.len(),
+                r.added.len() - alive
+            ));
+        }
+        let layers = doc.model.layers();
+        let gone: Vec<String> = self
+            .gis
+            .processing
+            .registry
+            .get(&r.tool_id)
+            .map(|tool| {
+                tool.parameters
+                    .iter()
+                    .filter(|p| matches!(p.kind, kentos_processing::ParamKind::Layer { .. }))
+                    .filter_map(|p| match kentos_processing::LayerValue::read(r.values.get(&p.name)?)? {
+                        kentos_processing::LayerValue::New(name) => Some(name),
+                        kentos_processing::LayerValue::Existing(_) => None,
+                    })
+                    .filter(|name| !layers.leaves().iter().any(|l| &l.name == name))
+                    .map(|name| format!("“{name}”"))
+                    .collect()
+            })
+            .unwrap_or_default();
+        Some(if gone.is_empty() {
+            "Geri alındı: eklediği nesneler çizimde yok.".to_owned()
+        } else {
+            format!("Geri alındı: eklediği nesneler çizimde yok, {} katmanı kaldırıldı.", gone.join(", "))
+        })
+    }
+
+    /// Opened again from İşlem geçmişi (docs/adr/9354): what of the run's input is no longer there, a layer gone, a
+    /// model step's objects gone, or fewer objects than it read (deleted ones, or the edit session's records thrown
+    /// away before they were written).
+    fn reopen_missing(&self, r: &RunRecord) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let tool = self.gis.processing.registry.get(&r.tool_id)?;
+        let window = self.gis.processing.dialog.as_ref()?;
+        let layers = doc.model.layers();
+        let mut gone = Vec::new();
+        let (mut now, mut counted) = (0usize, false);
+        for p in tool.parameters.iter().filter(|p| matches!(p.kind, kentos_processing::ParamKind::Features { .. })) {
+            let Some(v) = r.values.get(&p.name).and_then(kentos_processing::FeaturesValue::read) else {
+                continue;
+            };
+            match &v.scope {
+                kentos_processing::Scope::Layer(id) if layers.get(id).is_none() => {
+                    gone.push(format!("{}: “{id}” katmanı artık yok", p.label));
+                }
+                kentos_processing::Scope::Ids(ids) => {
+                    let missing = ids.iter().filter(|i| doc.model.get(kentos_domain::Slot(**i)).is_none()).count();
+                    if missing > 0 {
+                        gone.push(format!("{}: önceki adımın {missing} nesnesi artık yok", p.label));
+                    }
+                }
+                _ => {}
+            }
+            if let Some(i) = window.inputs.get(&p.name) {
+                now += i.count;
+                counted = true;
+            }
+        }
+        let reading = self.data_location().is_some_and(|l| !l.reading.is_empty());
+        if gone.is_empty() && counted && !reading && r.status == Status::Ok && (now as u64) < r.records_in {
+            gone.push(format!(
+                "önceki çalıştırma {} nesne okudu, girdi şimdi {now} nesne; silinen nesneler ya da kaynağa yazılmadan \
+                 atılan geçici kayıtlar artık girdide değil",
+                r.records_in
+            ));
+        }
+        (!gone.is_empty()).then(|| format!("Önceki çalıştırmanın girdisi değişti: {}. Girdiyi denetleyip yeniden seçin.", gone.join("; ")))
+    }
+
     /// What a run made (else what it changed or selected) that is still in the drawing.
-    fn alive(&self, r: &RunRecord) -> Vec<kentos_domain::Slot> {
+    pub(super) fn alive(&self, r: &RunRecord) -> Vec<kentos_domain::Slot> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -433,13 +523,23 @@ impl App {
                     .history()
                     .iter()
                     .find(|r| r.seq == seq)
-                    .map(|r| (r.tool_id.clone(), r.values.clone()));
-                if let Some((tool, values)) = run {
+                    .cloned();
+                if let Some(r) = run {
                     // A network analysis' run: its tool starts again with the values (docs/adr/9334).
-                    if super::analyses::is_analysis(&tool) {
-                        let _ = self.reopen_analysis(&tool, &values);
+                    if super::analyses::is_analysis(&r.tool_id) {
+                        let _ = self.reopen_analysis(&r.tool_id, &r.values);
                     } else {
-                        self.open_processing(&tool, Some(values));
+                        self.open_processing(&r.tool_id, Some(r.values.clone()));
+                        // A run to a file or a database: its target back (docs/adr/9354).
+                        let target = self.gis.processing.sink_targets.get(&r.seq).cloned();
+                        if let (Some(t), Some(window)) = (target, &mut self.gis.processing.dialog) {
+                            window.sink.aim(&t);
+                        }
+                        self.refresh_processing();
+                        let note = self.reopen_missing(&r);
+                        if let Some(window) = &mut self.gis.processing.dialog {
+                            window.reopen_note = note;
+                        }
                     }
                 }
             }

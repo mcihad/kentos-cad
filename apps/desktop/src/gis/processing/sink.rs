@@ -4,6 +4,11 @@
 //! it between parts (nothing of the result is then written). An input on a layer bound to a table can be read whole
 //! from its source (“Bütün tablo”) when the result does not go to the drawing: the part the drawing holds is said in
 //! the switch's note. The window's line says what was written where.
+//!
+//! The target is chosen before the output's name (docs/adr/9354): to a file or a database the output layer is the
+//! table's name there. A refusal is said in the window's words (the switch to turn on, the choice to make), the file
+//! told from the table by the provider's code. A written result offers Katman olarak ekle (its tables as data layers)
+//! and, for a file, Dosya konumunu aç. Every run here, written or refused, goes into İşlem geçmişi with its target.
 
 use crate::gis;
 use std::collections::BTreeSet;
@@ -62,6 +67,79 @@ pub(crate) struct LocalSink {
     pub bound: Vec<Bound>,
     /// The run going on another thread: its stop.
     pub stop: Option<Arc<AtomicBool>>,
+    /// The run asked, kept until it ends for its history record.
+    pub asked: Option<Asked>,
+    /// What the last run wrote: its card's actions.
+    pub written: Option<Written>,
+}
+
+/// Where a run wrote: the window's Sonucun yeri as it was, for Yeniden aç (docs/adr/9354).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Target {
+    pub place: Place,
+    pub path: String,
+    pub mode: SinkMode,
+    pub overwrite: bool,
+    pub address: String,
+    pub schema: String,
+}
+
+impl LocalSink {
+    /// Its target as it is now.
+    fn target(&self) -> Target {
+        Target {
+            place: self.place,
+            path: self.path.clone(),
+            mode: self.mode,
+            overwrite: self.overwrite,
+            address: self.address.clone(),
+            schema: self.schema.clone(),
+        }
+    }
+
+    /// A run's target back (Yeniden aç).
+    pub(crate) fn aim(&mut self, t: &Target) {
+        self.place = t.place;
+        self.path = t.path.clone();
+        self.mode = t.mode;
+        self.overwrite = t.overwrite;
+        self.address = t.address.clone();
+        self.schema = t.schema.clone();
+    }
+}
+
+/// A run to a file or a database as it was asked (docs/adr/9354): its record's tool, values, inputs and target.
+#[derive(Clone, Debug)]
+pub(crate) struct Asked {
+    pub tool: String,
+    pub label: String,
+    pub values: kentos_processing::Values,
+    /// When it started: ms since the Unix epoch, and the clock to time it.
+    pub started: (u64, std::time::Instant),
+    /// The run in words: its inputs as they resolved, then where it writes.
+    pub words: Vec<String>,
+    pub target: Target,
+}
+
+/// What a run to a file or a database wrote (docs/adr/9354).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Written {
+    /// The GeoPackage's path or the database's address.
+    pub address: String,
+    pub file: bool,
+    /// Its tables as a data layer names them (`schema.table` in a database), with their rows.
+    pub tables: Vec<(String, u64)>,
+    /// Katman olarak ekle was asked.
+    pub added: bool,
+}
+
+/// A run to a file or a database that wrote its result: what the line says, where, and what flowed through it.
+#[derive(Clone, Debug)]
+pub struct Ran {
+    text: String,
+    written: Written,
+    records_in: u64,
+    records_out: u64,
 }
 
 impl Default for LocalSink {
@@ -76,6 +154,8 @@ impl Default for LocalSink {
             whole: BTreeSet::new(),
             bound: Vec::new(),
             stop: None,
+            asked: None,
+            written: None,
         }
     }
 }
@@ -90,8 +170,12 @@ pub enum SinkEvent {
     Address(String),
     Schema(String),
     Whole(String, bool),
-    /// The run on the other thread ended: what the line says, or why it did not.
-    Ran(Result<String, String>),
+    /// The run on the other thread ended: what it wrote, or why it did not.
+    Ran(Result<Ran, String>),
+    /// Katman olarak ekle: the written tables as data layers.
+    AddLayer,
+    /// Dosya konumunu aç: the written file's folder.
+    Reveal,
 }
 
 fn ev(e: SinkEvent) -> Message {
@@ -341,12 +425,12 @@ impl BatchFlow for Flow {
 
 const STOPPED: &str = "Durduruldu; sonuç yazılmadı.";
 
-/// The run on a copy of the drawing: what the window's line says, or why it did not write.
+/// The run on a copy of the drawing: what it wrote, or why it did not, in the window's words.
 pub(crate) fn run_to_sink(
     copy: &mut Document,
     input: &ProcessingRun,
     stop: Arc<AtomicBool>,
-) -> Result<String, String> {
+) -> Result<Ran, String> {
     if tools().is_none() {
         kentos_processing::command::register();
     }
@@ -358,12 +442,69 @@ pub(crate) fn run_to_sink(
             let mut text = said(&ran);
             for w in warnings {
                 text.push(' ');
-                text.push_str(&w.message);
+                // A part of a table: the window's switch, not the channels' input (docs/adr/9354).
+                if w.code == kentos_commands::codes::PARTIAL_SCOPE {
+                    let head = w.message.split_once("; araç").map_or(w.message.as_str(), |(h, _)| h);
+                    text.push_str(&format!(
+                        "{head}; araç o parçayla çalıştı. Bütün tablo için girdinin altındaki Bütün tablo (kaynaktan oku) \
+                         anahtarını açın."
+                    ));
+                } else {
+                    text.push_str(&w.message);
+                }
             }
-            Ok(text)
+            let written = ran.sink.as_ref().map_or_else(
+                || Written { address: String::new(), file: false, tables: Vec::new(), added: false },
+                |s| Written {
+                    address: s.path.clone(),
+                    file: !kentos_commands::is_database(&s.path),
+                    tables: s.tables.iter().map(|t| (t.table.clone(), u64::from(t.rows))).collect(),
+                    added: false,
+                },
+            );
+            Ok(Ran {
+                text,
+                written,
+                records_in: ran.record.total.records_in,
+                records_out: ran.record.total.records_out,
+            })
         }
         Ok(RunEnd::Cancelled) => Err(STOPPED.to_owned()),
-        Err(e) => Err(e.message),
+        Err(e) => Err(refusal_words(&e, input)),
+    }
+}
+
+/// A refusal in the window's words (docs/adr/9354): the channels' words name the input's fields (`overwrite`,
+/// `sink.mode`); here the switch to turn on or the choice to make. The provider's code tells a file that is there from
+/// a table that is.
+fn refusal_words(e: &kentos_commands::CommandError, input: &ProcessingRun) -> String {
+    use kentos_commands::codes;
+    let path = input.sink.as_ref().map_or("", |s| s.path.as_str());
+    let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
+    // The table's name between the quotes of the channel's sentence.
+    let table = e.message.split_once('“').and_then(|(_, r)| r.split_once('”')).map(|(t, _)| t.to_owned());
+    match e.code.as_str() {
+        codes::FILE_EXISTS => format!(
+            "Bu GeoPackage zaten var: {name}. Başka dosya seçin ya da Varsa üzerine yaz'ı açın. Dosyaya dokunulmadı."
+        ),
+        codes::FILE_NOT_FOUND => format!(
+            "{name} yok. Tablo eklenecek GeoPackage'ı seçin ya da Tablolar'da Yeni'yi seçin."
+        ),
+        codes::TABLE_EXISTS if e.message.contains("replaceTables") => {
+            let table = table.unwrap_or_default();
+            if kentos_commands::is_database(path) {
+                format!(
+                    "“{table}” tablosu veritabanında var. Tablolar'da Tabloyu değiştir'i seçin, başka bir tablo adı ya da \
+                     şema yazın. Veritabanına dokunulmadı."
+                )
+            } else {
+                format!(
+                    "“{table}” tablosu {name} dosyasında var. Tablolar'da Tabloyu değiştir'i seçin ya da başka bir tablo \
+                     adı yazın. Dosyaya dokunulmadı."
+                )
+            }
+        }
+        _ => e.message.clone(),
     }
 }
 
@@ -407,12 +548,144 @@ fn said(ran: &kentos_commands::ProcessingRan) -> String {
     text
 }
 
+/// The run as it is asked from the window (docs/adr/9354): its tool and values, its inputs as they resolve now, where it
+/// writes.
+pub(super) fn asked_of(window: &ToolDialog) -> Asked {
+    let started = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64);
+    let mut words: Vec<String> = window
+        .tool
+        .parameters
+        .iter()
+        .filter(|p| matches!(p.kind, ParamKind::Features { .. }))
+        .filter_map(|p| Some(format!("{}: {}", p.label, window.inputs.get(&p.name)?.description)))
+        .collect();
+    words.push(target_words(&window.sink));
+    Asked {
+        tool: window.tool.id.clone(),
+        label: window.tool.label.clone(),
+        values: kentos_processing::parameters::stored_values(&window.tool, &window.values),
+        started: (started, std::time::Instant::now()),
+        words,
+        target: window.sink.target(),
+    }
+}
+
+/// Where a run writes, in words: the file's name, or the database's host and the schema.
+fn target_words(s: &LocalSink) -> String {
+    match s.place {
+        Place::Drawing => "Sonucun yeri: çizim".to_owned(),
+        Place::File => {
+            let path = s.path.trim();
+            let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
+            format!("Sonucun yeri: {name} (GeoPackage dosyası)")
+        }
+        Place::Database => {
+            let at = s.address.trim();
+            let at = at.split_once("://").map_or(at, |(_, r)| r);
+            let at = at.rsplit_once('@').map_or(at, |(_, h)| h);
+            format!("Sonucun yeri: {at}, şema {} (PostGIS veritabanı)", s.schema.trim())
+        }
+    }
+}
+
+/// The history record of a run to a file or a database: written (its tables) or refused (why), with its target.
+fn sink_record(a: Asked, end: &Result<Ran, String>) -> kentos_processing::RunRecord {
+    let mut words = a.words;
+    let (status, summary, records_in, records_out) = match end {
+        Ok(ran) => {
+            let tables: Vec<String> = ran.written.tables.iter().map(|(t, n)| format!("{t} ({n} satır)")).collect();
+            if !tables.is_empty() {
+                words.push(format!("Yazılan tablolar: {}", tables.join(", ")));
+            }
+            (kentos_processing::Status::Ok, ran.text.clone(), ran.records_in, ran.records_out)
+        }
+        Err(why) if why == STOPPED => (kentos_processing::Status::Canceled, why.clone(), 0, 0),
+        Err(why) => (kentos_processing::Status::Error, format!("Yazılmadı: {why}"), 0, 0),
+    };
+    kentos_processing::RunRecord {
+        seq: 0,
+        tool_id: a.tool,
+        label: a.label,
+        values: a.values,
+        started: a.started.0,
+        ms: a.started.1.elapsed().as_millis() as u64,
+        status,
+        summary,
+        added: Vec::new(),
+        touched: Vec::new(),
+        target: Some(kentos_processing::Target::Client),
+        records_in,
+        records_out,
+        steps: Vec::new(),
+        words,
+    }
+}
+
+/// The card heading the form after a run wrote its result to a file or a database (docs/adr/9354): where, its tables,
+/// Katman olarak ekle and, for a file, Dosya konumunu aç.
+pub(crate) fn written_card(w: &Written) -> Element<'_, Message> {
+    use kentos_ui::icon::{Icon, Tone, icon};
+    let place = if w.file {
+        w.address.clone()
+    } else {
+        let at = w.address.split_once("://").map_or(w.address.as_str(), |(_, r)| r);
+        at.rsplit_once('@').map_or(at, |(_, h)| h).to_owned()
+    };
+    let tables: Vec<String> = w.tables.iter().map(|(t, n)| format!("{t} ({n} satır)")).collect();
+    let action = |text: &'static str, glyph: Icon, e: Option<SinkEvent>| {
+        button(row![icon(glyph).size(14.0), label::caption(text)].spacing(5).align_y(Center))
+            .padding(kentos_ui::theme::metrics::action_small())
+            .style(style::button::secondary)
+            .on_press_maybe(e.map(ev))
+    };
+    let mut actions = row![].spacing(6).align_y(Center);
+    actions = actions.push(if w.added {
+        action("Katman olarak eklendi", Icon::Success, None)
+    } else {
+        action("Katman olarak ekle", Icon::Layers, Some(SinkEvent::AddLayer))
+    });
+    if w.file {
+        actions = actions.push(action("Dosya konumunu aç", Icon::Open, Some(SinkEvent::Reveal)));
+    }
+    container(
+        column![
+            row![
+                icon(Icon::Success).size(14.0).tone(Tone::Success),
+                label::caption(if w.file { "Sonuç dosyaya yazıldı" } else { "Sonuç veritabanına yazıldı" })
+                    .font(kentos_ui::theme::typography::ui_strong()),
+            ]
+            .spacing(6)
+            .align_y(Center),
+            kentos_ui::widget::Pairs::new()
+                .spacing_x(10.0)
+                .spacing_y(2.0)
+                .push(
+                    label::caption(if w.file { "Dosya" } else { "Veritabanı" }).style(style::text::muted),
+                    label::caption(place).wrapping(iced::widget::text::Wrapping::WordOrGlyph),
+                )
+                .push(label::caption("Tablolar").style(style::text::muted), label::caption(tables.join(", "))),
+            actions,
+        ]
+        .spacing(8),
+    )
+    .padding(12)
+    .width(Fill)
+    .style(style::container::tile)
+    .into()
+}
+
 impl App {
     pub(crate) fn processing_sink_event(&mut self, e: SinkEvent) -> Task<Message> {
         let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();
         };
         let s = &mut window.sink;
+        // Another target: the card of what was written goes.
+        if matches!(e, SinkEvent::Place(_) | SinkEvent::Path(_) | SinkEvent::Mode(_) | SinkEvent::Address(_) | SinkEvent::Schema(_)) {
+            s.written = None;
+        }
         match e {
             SinkEvent::Place(p) => s.place = p,
             SinkEvent::Path(t) => s.path = t,
@@ -449,17 +722,51 @@ impl App {
             }
             SinkEvent::Ran(end) => {
                 s.stop = None;
+                let asked = s.asked.take();
+                let record = asked.map(|a| (a.target.clone(), sink_record(a, &end)));
                 window.status = match end {
-                    Ok(text) => RunStatus::Ok {
-                        text,
-                        pick: Vec::new(),
-                        selected: false,
-                        undo: false,
-                        table: None,
-                        warning: false,
-                    },
-                    Err(why) => RunStatus::Error(why),
+                    Ok(ran) => {
+                        s.written = Some(ran.written);
+                        RunStatus::Ok {
+                            text: ran.text,
+                            pick: Vec::new(),
+                            selected: false,
+                            undo: false,
+                            table: None,
+                            warning: false,
+                        }
+                    }
+                    Err(why) => {
+                        s.written = None;
+                        RunStatus::Error(why)
+                    }
                 };
+                // İşlem geçmişi keeps it as it keeps a run on the drawing (docs/adr/9354).
+                if let Some((target, r)) = record {
+                    let seq = self.gis.processing.runner.add_record(r).seq;
+                    self.gis.processing.sink_targets.insert(seq, target);
+                }
+            }
+            SinkEvent::AddLayer => {
+                let Some(w) = s.written.as_mut().filter(|w| !w.added) else {
+                    return Task::none();
+                };
+                w.added = true;
+                let (address, tables) = (w.address.clone(), w.tables.iter().map(|(t, _)| t.clone()).collect());
+                return self.add_tables(address, tables);
+            }
+            SinkEvent::Reveal => {
+                let Some(folder) = s
+                    .written
+                    .as_ref()
+                    .filter(|w| w.file)
+                    .and_then(|w| std::path::Path::new(&w.address).parent().map(std::path::Path::to_path_buf))
+                else {
+                    return Task::none();
+                };
+                if let Err(e) = crate::attachments::open_in_system(&folder) {
+                    self.warn(format!("Dosyanın klasörü açılamadı: {e}. Klasör: {}", folder.display()));
+                }
             }
         }
         Task::none()
@@ -534,6 +841,9 @@ impl App {
         };
         let stop = Arc::new(AtomicBool::new(false));
         window.sink.stop = Some(stop.clone());
+        window.sink.written = None;
+        window.reopen_note = None;
+        window.sink.asked = Some(asked_of(window));
         window.status = RunStatus::Running {
             fraction: 0.0,
             label: if window.sink.whole.is_empty() {

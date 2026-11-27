@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **İşlem sonucunun dosya ve veritabanı hedefi; işlem geçmişi (27 Kasım 2026, T30, T31;
+  [ADR 9354](../adr/9354-processing-sink-target-words-and-history.md)).**
+  - Sonucun yeri Çıktı'dan önce; dosyada ve veritabanında çıktı “Tablo adı”dır. Çakışma pencerenin dilinde (“Bu
+    GeoPackage zaten var … Varsa üzerine yaz'ı açın”); yazılınca Katman olarak ekle ve Dosya konumunu aç.
+  - Dosyaya yazan ve reddedilen çalıştırmalar da hedefleriyle geçmişte; geri alınan “Geri alındı”, Yeniden aç hedefi
+    geri getirir, eksilen girdiyi söyler.
+
 - **Analiz araçları veri katmanlarının satırlarını okur (27 Kasım 2026, T28, T29, T32, T36;
   [ADR 9353](../adr/9353-analysis-tools-read-data-layer-rows.md)).**
   - İşlem araçları (Tampon …) girdiyi satırlı kopyadan okur, sonucu çizime yazar; oturumun bekleyen satırları katman ve

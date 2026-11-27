@@ -205,6 +205,12 @@ pub struct Viewer {
     note: text_editor::Content,
 }
 
+/// Opens a file or a folder in the system's own viewer (a folder in the file manager): the shell's opener for the
+/// modules and the cores, which do not reach into the sheets' code for it.
+pub(crate) fn open_in_system(path: &std::path::Path) -> std::io::Result<()> {
+    crate::sheet_pdf::open_with_viewer(path)
+}
+
 /// Runs `work` off the UI thread and hands its answer to the app.
 fn off_thread<T: Send + 'static>(
     work: impl FnOnce() -> T + Send + 'static,

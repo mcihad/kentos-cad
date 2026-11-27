@@ -504,6 +504,19 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         Some(LayerValue::New(n)) => n.clone(),
         _ => suggested,
     };
+    // To a file or a database the result is a table of that name (docs/adr/9354): no layer of the drawing is offered.
+    if env.window.sink.place != super::sink::Place::Drawing {
+        let name = def.name.clone();
+        // A layer of the drawing chosen before: its name is the table's.
+        let table = match &value {
+            Some(LayerValue::Existing(id)) => layers.get(id).map_or(new_name, |l| l.name.clone()),
+            _ => new_name,
+        };
+        return input("Tablo adı", &table, false, ev)
+            .on_input(move |t| ev(Event::LayerName(name.clone(), t)))
+            .width(Fill)
+            .into();
+    }
     let leaves = layers.leaves();
     let trimmed = kentos_processing::text::js_trim(&new_name);
     // A new name an existing layer has writes to that layer (the runner's rule): “(mevcut)”.

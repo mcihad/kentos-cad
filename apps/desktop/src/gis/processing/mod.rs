@@ -183,6 +183,9 @@ pub struct Processing {
     pub(crate) data_select: data_select::DataSelect,
     /// Konuma göre seç over data layers: the drawing with their rows (data_location.rs, docs/adr/9340).
     pub(crate) data_location: data_location::DataLocation,
+    /// Where each run to a file or a database wrote, by its history record: Yeniden aç asks the same target
+    /// (sink.rs, docs/adr/9354).
+    pub(crate) sink_targets: std::collections::HashMap<u64, sink::Target>,
 }
 
 impl Default for Processing {
@@ -198,6 +201,7 @@ impl Default for Processing {
             batch: None,
             running: Vec::new(),
             runs: 0,
+            sink_targets: std::collections::HashMap::new(),
             server_request: None,
             server_asked: None,
             environment: environment::LocalEnvironment::default(),

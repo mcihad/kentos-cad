@@ -147,13 +147,33 @@ fn form<'a>(
     if let (super::RunStatus::Ok { .. }, Some(r)) = (&window.status, &window.layer_results) {
         out = out.push(layer_results(r));
     }
-    for (title, params) in [("Girdi", &input), ("Ayarlar", &main), ("Çıktı", &output)] {
+    // What a run to a file or a database wrote, with Katman olarak ekle and Dosya konumunu aç (docs/adr/9354).
+    if let (super::RunStatus::Ok { .. }, Some(w)) = (&window.status, &window.sink.written) {
+        out = out.push(super::sink::written_card(w));
+    }
+    // A run opened again from İşlem geçmişi whose input is no longer what it read (docs/adr/9354).
+    if let Some(note) = &window.reopen_note {
+        out = out.push(
+            container(
+                row![
+                    icon(Icon::Warning).size(14.0).tone(Tone::Warning),
+                    label::caption(note.clone()).width(Fill),
+                ]
+                .spacing(6)
+                .align_y(Alignment::Start),
+            )
+            .padding(12)
+            .width(Fill)
+            .style(style::container::tile),
+        );
+    }
+    for (title, params) in [("Girdi", &input), ("Ayarlar", &main)] {
         if !params.is_empty() {
             out = out.push(group(title, params, window, env));
         }
     }
-    // Where the result goes here: the drawing, a GeoPackage or a database (sink.rs, docs/adr/0592 §3); on the server
-    // the side column's Sonuç says it.
+    // Where the result goes, chosen before the output's name (docs/adr/9354): the drawing, a GeoPackage or a database
+    // (sink.rs, docs/adr/0592 §3); on the server the side column's Sonuç says it.
     let selection_only = matches!(window.tool.id.as_str(), "selection.byExpression" | "selection.byLocation");
     if selection_only {
         out = out.push(label::caption("Bu işlem yalnız seçimi değiştirir; yeni katman oluşturmaz, çizim verisini değiştirmez."));
@@ -169,6 +189,9 @@ fn form<'a>(
             ]
             .spacing(6),
         );
+    }
+    if !output.is_empty() {
+        out = out.push(group("Çıktı", &output, window, env));
     }
     // Analiz ortamı (environment.rs, docs/adr/0643 §5): the raster tools' area, cell size, snap raster and NoData.
     if window.takes_environment && !at_server {
@@ -434,15 +457,21 @@ fn field_row<'a>(
     window: &'a ToolDialog,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    // An output layer while the result goes to a file or a database is the table's name there (docs/adr/9354).
+    let to_table = matches!(def.kind, ParamKind::Layer { .. }) && window.sink.place != super::sink::Place::Drawing;
+    let title = if to_table { "Tablo adı".to_owned() } else { def.label.clone() };
     let mut heading = Row::new()
         .spacing(8)
         .align_y(Alignment::End)
-        .push(label::body(def.label.clone()).font(typography::ui_strong()));
+        .push(label::body(title).font(typography::ui_strong()));
     if def.optional {
         heading = heading.push(label::caption("isteğe bağlı").style(style::text::muted));
     }
     let mut text = Column::new().spacing(2).push(heading);
-    if let Some(d) = &def.description {
+    if to_table {
+        let place = if window.sink.place == super::sink::Place::File { "GeoPackage'da" } else { "Veritabanında" };
+        text = text.push(label::caption(format!("{place} bu adla tablo yazılır; çizim değişmez.")).style(style::text::muted));
+    } else if let Some(d) = &def.description {
         text = text.push(label::caption(d.clone()).style(style::text::muted));
     }
     let mut control_col = Column::new().spacing(6).width(Fill).push(control(def, env));

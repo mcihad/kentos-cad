@@ -224,6 +224,9 @@ pub struct ToolDialog {
     /// A selecting run's matches over more than one data layer, kept by layer (data_location.rs, docs/adr/9345): the
     /// card under the form shows each layer's in the table without running again.
     pub(super) layer_results: Option<super::data_location::LayerResults>,
+    /// Opened again from İşlem geçmişi: what of the run's input is no longer there (docs/adr/9354); goes with the next
+    /// change or run.
+    pub(super) reopen_note: Option<String>,
 }
 
 impl ToolDialog {
@@ -290,6 +293,7 @@ impl ToolDialog {
             previews: BTreeMap::new(),
             overwrites: BTreeMap::new(),
             layer_results: None,
+            reopen_note: None,
         }
     }
 
@@ -454,6 +458,7 @@ impl ToolDialog {
     pub fn touch(&mut self, name: &str) {
         self.touched.insert(name.to_owned());
         self.run_issues.clear();
+        self.reopen_note = None;
         // A finished run's line clears; a running one stays (the web's).
         if !matches!(self.status, RunStatus::Idle | RunStatus::Running { .. }) {
             self.status = RunStatus::Idle;
@@ -641,6 +646,8 @@ impl ToolDialog {
     /// How the run ended.
     pub fn ran(&mut self, outcome: Outcome) {
         self.waiting = None;
+        self.reopen_note = None;
+        self.sink.written = None;
         match outcome {
             Outcome::Ok {
                 result,
