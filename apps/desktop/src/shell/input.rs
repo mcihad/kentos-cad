@@ -347,6 +347,8 @@ impl App {
                 ViewChange::CloudQuery { at, reach } => self.cloud_query_wanted.push((at, reach)),
                 // Ağ analizi: a question to a network, asked on the network thread (networks/).
                 ViewChange::Network(ask) => self.network_wanted.push(*ask),
+                // A network analysis' run: İşlemler's history keeps it (processing/analyses.rs, docs/adr/9334).
+                ViewChange::Ran(run) => self.analysis_ran(*run),
                 // A command the tool asks for (Ağlar from the network tools).
                 ViewChange::Command(id) => self.command_wanted.push(id),
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).

@@ -27,8 +27,9 @@ kentos-ifc = { path = "../../shared/ifc" }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }
+# A network analysis' run as values (docs/adr/9334): already in every program through kentos-commands and kentos-domain.
+serde_json = { workspace = true }
 
-# The shared cases' JSON in tests (fixtures/gnss/v1/import.json); not in the library.
+# The shared cases' JSON in tests (fixtures/gnss/v1/import.json).
 [dev-dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }

@@ -979,6 +979,7 @@ impl Viewport {
             | ViewChange::DataInfo { .. }
             | ViewChange::DataSelect(_)
             | ViewChange::Network(_)
+            | ViewChange::Ran(_)
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)
             | ViewChange::InfoHits(..)

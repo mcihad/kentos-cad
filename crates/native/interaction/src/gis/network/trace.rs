@@ -14,15 +14,18 @@ use kentos_commands::{NetworkDef, NetworkKind};
 use kentos_domain::{Related, Slot, Tie};
 use kentos_geometry_core::ops::network::{TraceAnswer, TraceKind};
 use kentos_geometry_core::tools::point_text::js_trim;
+use serde_json::{Value, json};
+use std::collections::BTreeMap;
 
-use super::base::{Base, Changed, REACH_PX, outline, refusal_words, stroke};
+use super::base::{Base, Changed, PointKind, REACH_PX, outline, refusal_words, stroke};
+use super::record::{self, AnalysisRun};
 use super::{Answer, NetworkQuestion, NetworkReply};
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tone, Tool,
+    Context, Cursor, Flow, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tone, Tool, ViewChange,
 };
 
 /// The tool's id: its command is `tool.netTrace`.
@@ -36,6 +39,16 @@ pub const TRACE_KINDS: [(TraceKind, &str); 4] = [
     (TraceKind::Upstream, "akış yukarı"),
     (TraceKind::Isolation, "yalıtım"),
 ];
+
+/// Tür as a run keeps it (docs/adr/9334).
+fn kind_key(k: TraceKind) -> &'static str {
+    match k {
+        TraceKind::Connected => "connected",
+        TraceKind::Downstream => "downstream",
+        TraceKind::Upstream => "upstream",
+        TraceKind::Isolation => "isolation",
+    }
+}
 
 pub fn kind_name(k: TraceKind) -> &'static str {
     TRACE_KINDS
@@ -376,7 +389,17 @@ impl Tool for NetTrace {
             .filter(|s| cx.doc.get(*s).is_some())
             .collect();
         ids.extend(self.related.iter().flat_map(|r| r.slots.iter().copied()));
-        cx.selection.set(ids);
+        // The run as İşlemler keeps it (docs/adr/9334): what it chose, not a layer.
+        let run = self.seen.network.as_ref().map(|n| {
+            let mut values = record::common_values(n, None, &self.base, cx);
+            values.insert("kind".to_owned(), json!(kind_key(self.kind())));
+            let f = self.seen.format.unwrap_or_default();
+            let mut words = record::common_words(n, None, "Başlangıç noktaları", &self.base, &f);
+            words.push(format!("Tür: {}", kind_name(self.kind())));
+            words.push(format!("Seçilen nesneler: {}", ids.len()));
+            (values, words, record::records_in(n, cx))
+        });
+        cx.selection.set(ids.clone());
         let mut said = format!("{LABEL} ({}): {}", kind_name(self.kind()), self.summary(t));
         if isolation && !t.valves.is_empty() {
             let names: Vec<String> = t
@@ -386,15 +409,51 @@ impl Tool for NetTrace {
                 .collect();
             said.push_str(&format!("; kapatılacak vanalar: {}", names.join(", ")));
         }
-        if t.unverified.is_empty() {
-            cx.say(Level::Success, format!("{said}."));
+        let said = if t.unverified.is_empty() {
+            let said = format!("{said}.");
+            cx.say(Level::Success, said.clone());
+            said
         } else {
-            cx.say(
-                Level::Warn,
-                format!("{said}. İzleme Denetle'nin bulduğu bağlantı sorunlarından geçiyor; sonuca güvenmeden önce ağı Ağlar › Denetle ile düzeltin."),
-            );
+            let said = format!("{said}. İzleme Denetle'nin bulduğu bağlantı sorunlarından geçiyor; sonuca güvenmeden önce ağı Ağlar › Denetle ile düzeltin.");
+            cx.say(Level::Warn, said.clone());
+            said
+        };
+        if let Some((values, words, records_in)) = run {
+            cx.view_changes.push(ViewChange::Ran(Box::new(AnalysisRun {
+                tool: format!("tool.{ID}"),
+                label: LABEL.to_owned(),
+                values,
+                words,
+                summary: said,
+                added: Vec::new(),
+                touched: ids,
+                records_in,
+                started: record::now_ms(),
+            })));
         }
         Flow::Exit
+    }
+
+    /// Yeniden aç (docs/adr/9334): the network and Tür put back, the barriers and the starting points placed again;
+    /// the trace comes as it did.
+    fn reopen(&mut self, values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> bool {
+        let points = record::reopen_common(values, cx);
+        if let Some(k) = values
+            .get("kind")
+            .and_then(Value::as_str)
+            .and_then(|k| TRACE_KINDS.iter().map(|(t, _)| *t).find(|t| kind_key(*t) == k))
+        {
+            cx.memory.network_trace = k;
+        }
+        self.base.reset();
+        self.changed(cx);
+        self.prepare(cx);
+        let id = self.seen.network.as_ref().map(|n| n.id.clone());
+        for (kind, at) in points {
+            self.base.barrier_next = kind == PointKind::Barrier;
+            self.base.place(at, id.as_deref(), LABEL, cx);
+        }
+        true
     }
 
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {

@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Ağ analizleri işlem geçmişine girer, açtıkları katman neyden üretildiğini taşır (27 Kasım 2026, CBS incelemesinin
+  18. maddesi; [ADR 9334](../adr/9334-network-analyses-in-processing-history.md)).**
+  - En kısa yol, Hizmet alanı ve Şebeke izleme yazınca ya da seçince İşlemler › Geçmiş'e işlem araçlarının kaydıyla
+    girer: ağın kimliği, maliyet ve birimi, aralıklar, noktalar, yazılan katman ya da seçilen nesneler.
+  - Yeniden aç aracı aynı ayarlarla başlatır, noktaları yeniden oturtur. Açılan katmanlar türetim kaydı taşır; proje
+    yeniden açılınca Soy onu “güncel” gösterir.
+
 - **Hizmet alanı yaklaşık alanı ulaşılan yollardan ayırır; Tampon'un Yan'ı çizgisiz girdide kapanır (27 Kasım 2026,
   CBS incelemesinin 17. maddesi; [ADR 9333](../adr/9333-service-area-reach-and-buffer-side.md)).**
   - Hizmet alanının aralıkları, kenar payı ve çizgileri komut satırında öne alındı ve aracın ayarlarında baştan durur.

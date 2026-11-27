@@ -21,7 +21,10 @@ use kentos_geometry_core::ops::network::Served;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::edit_geometry;
 
-use super::base::{Base, Changed, REACH_PX, outline, refusal_words, stroke};
+use serde_json::{Value, json};
+
+use super::base::{Base, Changed, PointKind, REACH_PX, outline, refusal_words, stroke};
+use super::record::{self, AnalysisRun};
 use super::result::{AREA_LAYER, AREA_LINES_LAYER, ResultWrite, line_geometry, write_results};
 use super::{Answer, NetworkQuestion, NetworkReply};
 use crate::Vec2;
@@ -29,7 +32,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Area, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tone, Tool, Values,
+    Area, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tone, Tool, Values, ViewChange,
 };
 
 /// The tool's id: its command is `tool.netServiceArea`.
@@ -391,6 +394,26 @@ impl NetArea {
             })
             .collect();
         let count = areas.len();
+        // The run as İşlemler keeps it (docs/adr/9334), taken before the write: the facilities go after it.
+        let started = record::now_ms();
+        let mut values = record::common_values(&n, Some(c), &self.base, cx);
+        values.insert("breaks".to_owned(), json!(breaks));
+        values.insert("trim".to_owned(), json!(self.seen.trim));
+        values.insert("rings".to_owned(), json!(rings));
+        values.insert("toward".to_owned(), json!(self.seen.toward));
+        values.insert("separate".to_owned(), json!(self.seen.separate));
+        values.insert("lines".to_owned(), json!(self.seen.lines));
+        let tool = format!("tool.{ID}");
+        let derived = record::derivation(&tool, LABEL, &values, &n, started, cx);
+        let f = cx.format();
+        let mut words = record::common_words(&n, Some(c), "Tesisler", &self.base, &f);
+        words.extend([
+            format!("Aralıklar: {}", self.breaks_text()),
+            format!("Kenar payı: {}", f.length(self.seen.trim)),
+            format!("Biçim: {}", if rings { "halka" } else { "disk" }),
+            format!("Yön: {}", if self.seen.toward { "tesise" } else { "tesisten" }),
+        ]);
+        let records_in = record::records_in(&n, cx);
         let mut writes = vec![ResultWrite {
             layer: &AREA_LAYER,
             objects: areas,
@@ -418,8 +441,12 @@ impl NetArea {
                     .collect(),
             });
         }
-        if write_results(LABEL, &writes, cx).is_none() {
+        let Some(written) = write_results(LABEL, &writes, Some(&derived), cx) else {
             return;
+        };
+        words.push(record::layer_words("Çıktı katmanı", AREA_LAYER.name, &written.opened));
+        if self.seen.lines {
+            words.push(record::layer_words("Ulaşılan yollar", AREA_LINES_LAYER.name, &written.opened));
         }
         // What the areas are and where the reach itself is (docs/adr/9333).
         let trim = cx.format().length(self.seen.trim);
@@ -431,7 +458,18 @@ impl NetArea {
                  için Çizgiler (Ç) seçeneğini açın."
             )
         };
-        cx.say(Level::Success, said);
+        cx.say(Level::Success, said.clone());
+        cx.view_changes.push(ViewChange::Ran(Box::new(AnalysisRun {
+            tool,
+            label: LABEL.to_owned(),
+            values,
+            words,
+            summary: said,
+            added: written.slots,
+            touched: Vec::new(),
+            records_in,
+            started,
+        })));
         self.base.points.clear();
         self.changed(cx);
     }
@@ -581,6 +619,56 @@ impl Tool for NetArea {
         self.look(cx);
         self.prepare(cx);
         Flow::Stay
+    }
+
+    /// Yeniden aç (docs/adr/9334): the network, cost, breaks, margin, shape, way and the lines' switch put back, the
+    /// facilities and barriers placed again; the areas come as they did.
+    fn reopen(&mut self, values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> bool {
+        let points = record::reopen_common(values, cx);
+        let flag = |key: &str| values.get(key).and_then(Value::as_bool);
+        let m = &mut cx.memory;
+        for (key, slot) in [
+            ("toward", &mut m.network_toward),
+            ("rings", &mut m.network_rings),
+            ("separate", &mut m.network_separate),
+            ("lines", &mut m.network_lines),
+        ] {
+            if let Some(v) = flag(key) {
+                *slot = v;
+            }
+        }
+        if let Some(t) = values
+            .get("trim")
+            .and_then(Value::as_f64)
+            .filter(|t| *t > 0.0 && t.is_finite() && *t <= 10_000.0)
+        {
+            m.network_trim = t;
+        }
+        self.base.reset();
+        self.asking = None;
+        self.shown = None;
+        self.refusal = None;
+        self.waiting = [None, None];
+        self.look(cx);
+        // The breaks, for the cost the network has now: rising numbers above nought, as typed ones are.
+        if let (Some(n), Some(list)) = (self.seen.network.clone(), values.get("breaks").and_then(Value::as_array)) {
+            let breaks: Vec<f64> = list.iter().filter_map(Value::as_f64).collect();
+            let rising = breaks.len() == list.len()
+                && !breaks.is_empty()
+                && breaks.len() <= MAX_BREAKS
+                && breaks.iter().enumerate().all(|(i, b)| *b > 0.0 && b.is_finite() && (i == 0 || *b > breaks[i - 1]));
+            if rising && let Some(kept) = Values::from_slice(&breaks) {
+                cx.memory.network_breaks[cost_kind(&n, self.seen.cost)] = kept;
+            }
+            self.look(cx);
+        }
+        self.prepare(cx);
+        let id = self.seen.network.as_ref().map(|n| n.id.clone());
+        for (kind, at) in points {
+            self.base.barrier_next = kind == PointKind::Barrier;
+            self.base.place(at, id.as_deref(), LABEL, cx);
+        }
+        true
     }
 
     fn cursor(&self) -> Cursor {

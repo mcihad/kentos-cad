@@ -251,7 +251,7 @@ mod layer_fields;
 #[path = "gis/layer_filters.rs"]
 mod layer_filters;
 #[path = "gis/dataset_window.rs"]
-mod dataset_window;
+pub mod dataset_window;
 #[path = "shell/dialog_sizes.rs"]
 mod dialog_sizes;
 #[path = "gis/layer_info.rs"]

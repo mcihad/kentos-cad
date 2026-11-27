@@ -7,8 +7,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{EntityGeometry, LineType};
-use kentos_domain::NewLayer;
+use kentos_commands::{EntityGeometry, LayerDerivation, LineType};
+use kentos_domain::{NewLayer, Slot};
 use kentos_geometry_core::ops::network::Line;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, create};
@@ -112,16 +112,25 @@ fn fresh_id(name: &str, cx: &Context<'_>) -> String {
     id
 }
 
+/// What a write left: the objects written, and the layers it opened by name.
+#[derive(Clone, Debug, Default)]
+pub struct Written {
+    pub slots: Vec<Slot>,
+    pub opened: Vec<&'static str>,
+}
+
 /// Writes the objects to their result layers in one undo step named `step`, opening the layers the drawing lacks
-/// in it; nothing stays when one is refused (its words are said). The objects written, or none.
+/// in it, each with `derived` as what it was made of (docs/adr/9334); nothing stays when one is refused (its words are
+/// said). What was written, or none.
 pub fn write_results(
     step: &str,
     writes: &[ResultWrite<'_>],
+    derived: Option<&LayerDerivation>,
     cx: &mut Context<'_>,
-) -> Option<usize> {
+) -> Option<Written> {
     let group = cx.doc.begin_group(step);
-    let mut opened: Vec<&str> = Vec::new();
-    let mut count = 0;
+    let mut opened: Vec<&'static str> = Vec::new();
+    let mut slots: Vec<Slot> = Vec::new();
     for w in writes {
         if w.objects.is_empty() {
             continue;
@@ -140,6 +149,14 @@ pub fn write_results(
                     cx.doc.cancel_group(group);
                     cx.say(Level::Warn, refusal.to_string());
                     return None;
+                }
+                // What the new layer was made of, in the same step (docs/adr/0633 §2): a layer that was there is not
+                // the analysis' alone and takes none.
+                if let Some(d) = derived
+                    && let Some(mut info) = cx.doc.layers().info_of(&id)
+                {
+                    info.derivation = Some(d.clone());
+                    let _ = cx.doc.set_layer_info(&id, info, step);
                 }
                 opened.push(w.layer.name);
                 id
@@ -170,7 +187,7 @@ pub fn write_results(
         };
         let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
         match written(result, cx) {
-            Some(out) => count += out.ids.len(),
+            Some(out) => slots.extend(out.ids.into_iter().map(Slot)),
             None => {
                 cx.doc.cancel_group(group);
                 return None;
@@ -178,7 +195,7 @@ pub fn write_results(
         }
     }
     cx.doc.end_group(group);
-    for name in opened {
+    for name in &opened {
         cx.say(
             Level::Info,
             format!(
@@ -187,5 +204,5 @@ pub fn write_results(
             ),
         );
     }
-    Some(count)
+    Some(Written { slots, opened })
 }

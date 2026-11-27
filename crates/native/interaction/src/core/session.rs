@@ -431,7 +431,8 @@ struct Nest {
 /// has the pointer while none runs.
 #[derive(Default)]
 pub struct Session {
-    tool: Option<Box<dyn Tool>>,
+    /// Read by the running tool's hooks the host calls (session_hooks.rs).
+    pub(crate) tool: Option<Box<dyn Tool>>,
     /// The commands suspended under the running tool, the first the oldest:
     /// the point calculator's, a transparent tool's (docs/adr/0083, 0283).
     parents: Vec<Nest>,
@@ -1974,38 +1975,6 @@ impl Session {
         self.settle(cx);
     }
 
-    /// The values the running tool's option `key` chooses between (Yazı's
-    /// Hiza, docs/adr/0145 §6); none without a tool or such an option.
-    pub fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        self.tool
-            .as_ref()
-            .map_or_else(Vec::new, |tool| tool.option_choices(key))
-    }
-
-    pub fn settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
-        self.tool
-            .as_ref()
-            .map_or_else(Vec::new, |tool| tool.settings(format))
-    }
-
-    /// Refresh decorations after a model change, even with the pointer in
-    /// a panel. Tools that do not cache document-derived previews opt out.
-    pub fn document_changed(&mut self, cx: &Context<'_>) {
-        if let Some(tool) = self.tool.as_mut() {
-            tool.document_changed(cx);
-        }
-    }
-    /// The running tool's settings the value field offers after its locks, in Tab's order (docs/adr/8018).
-    pub fn cursor_settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
-        let Some(tool) = self.tool.as_ref() else {
-            return Vec::new();
-        };
-        let rows = tool.settings(format);
-        tool.cursor_settings()
-            .iter()
-            .filter_map(|key| rows.iter().find(|r| r.key == *key && r.editable).cloned())
-            .collect()
-    }
     pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let taken = self
             .tool

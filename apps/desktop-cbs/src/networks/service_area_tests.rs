@@ -8,18 +8,18 @@ use super::prerequisite_tests::{click, prompt, roads, send, settings};
 use crate::app::{App, Message};
 use crate::files_testing::drive;
 
-const A: (f64, f64) = (500_000.0, 4_320_000.0);
-const B: (f64, f64) = (500_030.0, 4_320_040.0);
+pub(super) const A: (f64, f64) = (500_000.0, 4_320_000.0);
+pub(super) const B: (f64, f64) = (500_030.0, 4_320_040.0);
 
 /// Hizmet alanı on the roads' network (made of the layer, Katmandan ağ oluştur).
-fn service_area() -> App {
+pub(super) fn service_area() -> App {
     let mut app = roads();
     send(&mut app, Message::Run("tool.netServiceArea"));
     send(&mut app, Message::PromptOption("O"));
     app
 }
 
-fn typed(app: &mut App, text: &str) {
+pub(super) fn typed(app: &mut App, text: &str) {
     let task = app.submit_line(text);
     drive(app, task);
 }
@@ -36,7 +36,7 @@ fn objects(app: &App, name: &str) -> Vec<(kentos_geometry_core::entity::Shape, s
 }
 
 /// 35 m from A, the lines written too.
-fn at_35_m(app: &mut App) {
+pub(super) fn at_35_m(app: &mut App) {
     send(app, Message::PromptOption("R"));
     typed(app, "35");
     send(app, Message::PromptOption("Ç"));
@@ -117,7 +117,7 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
 }
 
 /// The view drawn back so that the area's 50 m surroundings show whole.
-fn drawn_back(app: &mut App) {
+pub(super) fn drawn_back(app: &mut App) {
     for _ in 0..3 {
         send(app, Message::Run("view.zoomOut"));
     }

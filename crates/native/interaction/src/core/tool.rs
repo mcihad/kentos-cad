@@ -151,6 +151,9 @@ pub enum ViewChange {
     /// it must and answers off the interface's thread, with
     /// [`Tool::network_answered`].
     Network(Box<crate::network::NetworkAsk>),
+    /// A network analysis that wrote or chose its result (docs/adr/9334): the host keeps it in İşlemler's history, as a
+    /// processing tool's run.
+    Ran(Box<crate::network::AnalysisRun>),
     /// A command the host runs for the tool, as a click on its button would
     /// (Ağ analizi's tools open Ağlar with G, docs/adr/0209 §10).
     Command(&'static str),
@@ -1058,83 +1061,8 @@ pub struct ImageFile {
     pub height: u32,
 }
 
-/// A short text kept in [`Memory`], which is `Copy`: at most
-/// [`Name::MAX_CHARS`] characters (an attribute's name).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Name {
-    len: u16,
-    bytes: [u8; Name::MAX_BYTES],
-}
-
-impl Name {
-    pub const MAX_CHARS: usize = 60;
-    const MAX_BYTES: usize = Self::MAX_CHARS * 4;
-    /// The empty text.
-    pub const EMPTY: Self = Self {
-        len: 0,
-        bytes: [0; Self::MAX_BYTES],
-    };
-
-    /// The text, or `None` when it is longer than [`Name::MAX_CHARS`] characters.
-    pub fn new(text: &str) -> Option<Self> {
-        if text.chars().count() > Self::MAX_CHARS {
-            return None;
-        }
-        let mut bytes = [0; Self::MAX_BYTES];
-        bytes[..text.len()].copy_from_slice(text.as_bytes());
-        Some(Self {
-            len: text.len() as u16,
-            bytes,
-        })
-    }
-
-    pub fn as_str(&self) -> &str {
-        // Written from a `&str` in `new`: always UTF-8.
-        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or_default()
-    }
-}
-
-/// A short list of numbers typed as one answer (Ara nokta's distances and
-/// ratios), kept in [`Memory`], which is `Copy`: at most [`Values::MAX`].
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Values {
-    len: u8,
-    v: [f64; Values::MAX],
-}
-
-impl Values {
-    pub const MAX: usize = 32;
-
-    /// The list, or `None` when it is longer than [`Values::MAX`].
-    pub fn from_slice(list: &[f64]) -> Option<Self> {
-        if list.len() > Self::MAX {
-            return None;
-        }
-        let mut v = [0.0; Self::MAX];
-        v[..list.len()].copy_from_slice(list);
-        Some(Self {
-            len: list.len() as u8,
-            v,
-        })
-    }
-
-    pub fn as_slice(&self) -> &[f64] {
-        &self.v[..usize::from(self.len)]
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-}
-
-impl Default for Values {
-    fn default() -> Self {
-        Self {
-            len: 0,
-            v: [0.0; Self::MAX],
-        }
-    }
-}
+// The short texts and number lists [`Memory`] keeps (kept.rs).
+pub use crate::kept::{Name, Values};
 
 /// The annotation tools' heights typed in one drawing, paper mm, by
 /// [`AnnotationKind`] (docs/adr/0205 §2); none: the project's.
@@ -1860,6 +1788,16 @@ pub trait Tool {
     /// The document changed without a pointer event (Undo/Redo, script or
     /// another editor). Refresh transient decorations without writing it.
     fn document_changed(&mut self, _cx: &Context<'_>) {}
+
+    /// İşlemler › Geçmiş's Yeniden aç on a run this tool recorded with [`ViewChange::Ran`] (docs/adr/9334): its settings
+    /// and inputs given back; false when the tool records no runs.
+    fn reopen(
+        &mut self,
+        _values: &std::collections::BTreeMap<String, serde_json::Value>,
+        _cx: &mut Context<'_>,
+    ) -> bool {
+        false
+    }
 
     fn activate(&mut self, _cx: &mut Context<'_>) -> Flow {
         Flow::Stay

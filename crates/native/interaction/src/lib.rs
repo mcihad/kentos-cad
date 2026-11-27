@@ -396,6 +396,8 @@ pub mod selectable;
 mod selection;
 #[path = "core/session.rs"]
 mod session;
+#[path = "core/session_hooks.rs"]
+mod session_hooks;
 #[path = "arch/set_elevation.rs"]
 pub mod set_elevation;
 #[path = "gis/sources.rs"]
@@ -444,6 +446,8 @@ pub mod time_version;
 pub mod tool_layer;
 #[path = "core/tool.rs"]
 mod tool;
+#[path = "core/kept.rs"]
+mod kept;
 #[path = "gis/topology.rs"]
 pub mod topology;
 #[path = "road/trace_work.rs"]

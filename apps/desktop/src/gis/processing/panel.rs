@@ -310,9 +310,13 @@ impl App {
             Status::Error => (Icon::Error, Tone::Danger),
         };
         let alive = self.alive(r).len();
-        let known = self.gis.processing.registry.get(&r.tool_id).is_some();
+        // A network analysis' run (docs/adr/9334): its tool takes Yeniden aç; it was run by hand, not timed.
+        let analysis = super::analyses::is_analysis(&r.tool_id);
+        let known = analysis || self.gis.processing.registry.get(&r.tool_id).is_some();
         // A decimal point, as every number the app writes (the web's `toFixed(1)`).
-        let took = if r.ms < 1000 {
+        let took = if analysis {
+            "Etkileşimli".to_owned()
+        } else if r.ms < 1000 {
             format!("{} ms", r.ms)
         } else {
             format!("{:.1} sn", r.ms as f64 / 1000.0)
@@ -333,7 +337,11 @@ impl App {
                 .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
                 .on_press_maybe(known.then_some(ev(Event::Reopen(r.seq)))),
-            Tip::new("Aynı değerlerle pencereyi açar"),
+            Tip::new(if analysis {
+                "Aracı aynı ağ, ayarlar ve noktalarla başlatır"
+            } else {
+                "Aynı değerlerle pencereyi açar"
+            }),
             iced::widget::tooltip::Position::Top,
         ));
         // The time of day it ran (the web's `toLocaleTimeString`).
@@ -427,7 +435,12 @@ impl App {
                     .find(|r| r.seq == seq)
                     .map(|r| (r.tool_id.clone(), r.values.clone()));
                 if let Some((tool, values)) = run {
-                    self.open_processing(&tool, Some(values));
+                    // A network analysis' run: its tool starts again with the values (docs/adr/9334).
+                    if super::analyses::is_analysis(&tool) {
+                        let _ = self.reopen_analysis(&tool, &values);
+                    } else {
+                        self.open_processing(&tool, Some(values));
+                    }
                 }
             }
             Event::SelectRun(seq) => {

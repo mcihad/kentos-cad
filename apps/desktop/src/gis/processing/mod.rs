@@ -21,6 +21,7 @@
 //! - Ayrı pencerede aç ([`apart`], docs/adr/8060): the window in an operating-system
 //!   window of its own, beside the main one, the drawing free while it runs.
 
+pub(crate) mod analyses;
 pub(crate) mod apart;
 #[cfg(test)]
 mod apart_tests;

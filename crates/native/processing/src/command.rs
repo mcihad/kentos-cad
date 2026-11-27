@@ -1086,7 +1086,7 @@ fn host_name() -> &'static str {
 }
 
 pub(crate) fn engine() -> String {
-    format!("KentOS {}", env!("CARGO_PKG_VERSION"))
+    kentos_native_application::lineage::engine()
 }
 
 /// The record of a tool's or a model's run (docs/adr/0529 §2), from what it began with and the history record the
@@ -1788,19 +1788,7 @@ fn utc_now() -> String {
 
 /// A time as `YYYY-MM-DDTHH:MM:SS.SSSZ`, from milliseconds since the Unix epoch.
 pub(crate) fn utc_at(ms: u64) -> String {
-    let text = kentos_geometry_core::time::write(ms as f64, false);
-    // A whole second is written without its milliseconds, and midnight as the day alone.
-    let text = if text.len() == 10 {
-        format!("{text}T00:00:00")
-    } else {
-        text
-    };
-    let text = if text.len() == 19 {
-        format!("{text}.000")
-    } else {
-        text
-    };
-    format!("{text}Z")
+    kentos_native_application::lineage::utc_at(ms)
 }
 
 /// How a sink's write ended.

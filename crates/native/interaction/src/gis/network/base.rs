@@ -185,14 +185,7 @@ impl Base {
             return vec![note];
         };
         let names = Self::cost_names(n);
-        let unit = match cost {
-            0 => f.length_unit_name().to_owned(),
-            c => match n.costs.get(c - 1) {
-                Some(k) if k.kind == NetworkCostKind::Speed => "dakika".to_owned(),
-                Some(k) if !k.unit.is_empty() => k.unit.clone(),
-                _ => "birimsiz".to_owned(),
-            },
-        };
+        let unit = Self::cost_unit(n, cost, f);
         let joined = match n.connect {
             kentos_commands::NetworkConnect::Ends => "uçlarda",
             kentos_commands::NetworkConnect::Vertices => "köşelerde de",
@@ -209,6 +202,18 @@ impl Base {
             Setting::text("networkTolerance", "Tolerans", f.length(n.tolerance)).read_only(),
             Setting::text("networkJoin", "Bağlanma", joined).read_only(),
         ]
+    }
+
+    /// The unit of cost `cost` of network `n`, as words: the length's, minutes for a speed, a field's own.
+    pub fn cost_unit(n: &NetworkDef, cost: usize, f: &Format) -> String {
+        match cost {
+            0 => f.length_unit_name().to_owned(),
+            c => match n.costs.get(c - 1) {
+                Some(k) if k.kind == NetworkCostKind::Speed => "dakika".to_owned(),
+                Some(k) if !k.unit.is_empty() => k.unit.clone(),
+                _ => "birimsiz".to_owned(),
+            },
+        }
     }
 
     /// The network's costs' names, Uzunluk first.

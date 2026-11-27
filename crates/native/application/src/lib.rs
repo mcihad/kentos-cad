@@ -217,6 +217,8 @@ pub mod qml;
 pub mod sld;
 #[path = "gis/sources/mod.rs"]
 pub mod sources;
+#[path = "gis/lineage.rs"]
+pub mod lineage;
 #[path = "gis/geopackage.rs"]
 pub mod geopackage;
 #[path = "gis/gpkg_fields.rs"]

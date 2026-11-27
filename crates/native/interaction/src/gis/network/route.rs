@@ -13,14 +13,17 @@ use kentos_commands::NetworkKind;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::{Reorder, Routed};
 
-use super::base::{Base, Changed, REACH_PX, outline, refusal_words, stroke};
+use serde_json::{Value, json};
+
+use super::base::{Base, Changed, PointKind, REACH_PX, outline, refusal_words, stroke};
+use super::record::{self, AnalysisRun};
 use super::result::{ROUTE_LAYER, ResultWrite, line_geometry, write_results};
 use super::{Answer, NetworkQuestion, NetworkReply};
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool, ViewChange};
 
 /// The tool's id: its command is `tool.netRoute`.
 pub const ID: &str = "netRoute";
@@ -38,6 +41,15 @@ fn reorder_name(r: Reorder) -> &'static str {
         .iter()
         .find(|(v, _)| *v == r)
         .map_or("yok", |(_, n)| n)
+}
+
+/// Sıra as a run keeps it (docs/adr/9334).
+fn reorder_key(r: Reorder) -> &'static str {
+    match r {
+        Reorder::None => "none",
+        Reorder::KeepFirst => "keepFirst",
+        Reorder::KeepFirstLast => "keepFirstLast",
+    }
 }
 
 /// The tickets the tool waits for.
@@ -266,25 +278,43 @@ impl NetRoute {
         }
         let totals = self.totals(r);
         let objects = vec![(line_geometry(&r.line), attrs)];
-        if write_results(
+        // The run as İşlemler keeps it (docs/adr/9334), taken before the write: the stops go after it.
+        let started = record::now_ms();
+        let cost = self.seen.cost;
+        let mut values = record::common_values(&def, Some(cost), &self.base, cx);
+        values.insert("reorder".to_owned(), json!(reorder_key(cx.memory.network_reorder)));
+        let tool = format!("tool.{ID}");
+        let derived = record::derivation(&tool, LABEL, &values, &def, started, cx);
+        let mut words = record::common_words(&def, Some(cost), "Duraklar", &self.base, &cx.format());
+        if cx.memory.network_reorder != Reorder::None {
+            words.push(format!("Sıra: {}", reorder_name(cx.memory.network_reorder)));
+        }
+        let records_in = record::records_in(&def, cx);
+        let Some(written) = write_results(
             LABEL,
             &[ResultWrite {
                 layer: &ROUTE_LAYER,
                 objects,
             }],
+            Some(&derived),
             cx,
-        )
-        .is_none()
-        {
+        ) else {
             return;
-        }
-        cx.say(
-            Level::Success,
-            format!(
-                "{LABEL}: {totals}; “{}” katmanına yazıldı.",
-                ROUTE_LAYER.name
-            ),
-        );
+        };
+        words.push(record::layer_words("Çıktı katmanı", ROUTE_LAYER.name, &written.opened));
+        let said = format!("{LABEL}: {totals}; “{}” katmanına yazıldı.", ROUTE_LAYER.name);
+        cx.say(Level::Success, said.clone());
+        cx.view_changes.push(ViewChange::Ran(Box::new(AnalysisRun {
+            tool,
+            label: LABEL.to_owned(),
+            values,
+            words,
+            summary: said,
+            added: written.slots,
+            touched: Vec::new(),
+            records_in,
+            started,
+        })));
         self.base.points.clear();
         self.changed(cx);
     }
@@ -380,6 +410,28 @@ impl Tool for NetRoute {
         self.look(cx);
         self.prepare(cx);
         Flow::Stay
+    }
+
+    /// Yeniden aç (docs/adr/9334): the network, cost and Sıra put back, the barriers and the stops placed again in
+    /// their order; the route comes as it did.
+    fn reopen(&mut self, values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> bool {
+        let points = record::reopen_common(values, cx);
+        if let Some(r) = values
+            .get("reorder")
+            .and_then(Value::as_str)
+            .and_then(|k| REORDERS.iter().map(|(r, _)| *r).find(|r| reorder_key(*r) == k))
+        {
+            cx.memory.network_reorder = r;
+        }
+        self.base.reset();
+        self.changed(cx);
+        self.prepare(cx);
+        let id = self.seen.network.as_ref().map(|(id, _)| id.clone());
+        for (kind, at) in points {
+            self.base.barrier_next = kind == PointKind::Barrier;
+            self.base.place(at, id.as_deref(), LABEL, cx);
+        }
+        true
     }
 
     fn cursor(&self) -> Cursor {
