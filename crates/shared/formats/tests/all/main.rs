@@ -18,6 +18,7 @@ mod coords;
 mod dimension_text_style;
 #[cfg(feature = "dxf")]
 mod dxf;
+mod dxf_bridge;
 #[cfg(feature = "dxf")]
 mod dxf_units;
 #[cfg(feature = "dxf")]
