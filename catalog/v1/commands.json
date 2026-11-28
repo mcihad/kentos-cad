@@ -1941,7 +1941,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -2253,7 +2252,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -2466,7 +2464,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -2768,7 +2765,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -2962,7 +2958,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -3180,7 +3175,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -3386,7 +3380,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -3609,7 +3602,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -3902,7 +3894,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -4157,7 +4148,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -36185,7 +36175,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -36477,7 +36466,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -37305,7 +37293,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -37558,7 +37545,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -39472,7 +39458,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -39725,7 +39710,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -78038,7 +78022,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -78186,7 +78169,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -78419,7 +78401,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -81865,7 +81846,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -82036,7 +82016,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -82196,7 +82175,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -82405,7 +82383,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,
@@ -82766,7 +82743,6 @@
       "aliases": [],
       "effect": "document",
       "hosts": [
-        "web",
         "desktop"
       ],
       "headless": true,

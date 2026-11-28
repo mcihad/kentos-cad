@@ -248,8 +248,9 @@ pub enum CommandEffect {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CommandHost {
-    Web,
+    /// The desktop programs and the hosts that run the same handlers without a window (Python, MCP, extensions).
     Desktop,
+    /// The cloud server.
     Server,
 }
 

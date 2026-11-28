@@ -2195,10 +2195,7 @@ mod tests {
                 d.id
             );
             // A command an app runs plans too; one only the server runs does not.
-            let local = d
-                .hosts
-                .iter()
-                .any(|h| matches!(h, CommandHost::Web | CommandHost::Desktop));
+            let local = d.hosts.iter().any(|h| matches!(h, CommandHost::Desktop));
             assert_eq!(
                 d.plan.as_ref().is_some_and(|p| p.get("$schema").is_some()),
                 local,

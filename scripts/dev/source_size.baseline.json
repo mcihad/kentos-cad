@@ -46,7 +46,7 @@
   "crates/server/application/src/changes.rs": 2343,
   "crates/server/application/tests/all/portal.rs": 2114,
   "crates/shared/commands/src/catalog/gis.rs": 3537,
-  "crates/shared/commands/src/catalog/mod.rs": 3532,
+  "crates/shared/commands/src/catalog/mod.rs": 3529,
   "crates/shared/commands/src/catalog/road.rs": 2634,
   "crates/shared/contracts/src/arch/arch.rs": 3446,
   "crates/shared/contracts/src/core/entity.rs": 2163,
