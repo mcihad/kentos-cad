@@ -201,7 +201,7 @@ impl App {
                     self.label_size(),
                     lift,
                     // The drawing's text through the area's renderer where it can (docs/adr/9212 §4, stage 2).
-                    crate::labels::Engine { gpu: crate::labels::gpu_text(), ..self.label_engine() },
+                    crate::labels::Engine { gpu: crate::glyph_layer::on(), ..self.label_engine() },
                     None,
                 );
                 // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).

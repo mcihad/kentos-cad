@@ -224,7 +224,7 @@ impl schemars::JsonSchema for DrawingFont {
     fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let own: Vec<&str> = DrawingFont::ALL.iter().map(|f| f.id()).collect();
         schemars::json_schema!({
-            "description": "KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı (docs/adr/9313).",
+            "description": "KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı.",
             "anyOf": [
                 { "type": "string", "enum": own },
                 {

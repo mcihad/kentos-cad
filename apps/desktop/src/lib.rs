@@ -254,6 +254,8 @@ mod font_report;
 mod forms;
 #[path = "shell/give_back.rs"]
 pub(crate) mod give_back;
+#[path = "shell/glyph_layer.rs"]
+pub mod glyph_layer;
 #[path = "gis/gpkg_open.rs"]
 mod gpkg_open;
 #[path = "shell/gpu_frame.rs"]

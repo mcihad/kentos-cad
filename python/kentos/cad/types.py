@@ -10005,7 +10005,7 @@ ZoneName = Literal["residential", "residentialShops", "mixed", "commercial", "ot
 """The names of :class:`Zone`, for a plain string."""
 
 
-#: KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı (docs/adr/9313). Bilinenler: barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono, arial, times-new-roman.
+#: KentOS'un yüzlerinden biri ya da yazı tipi klasöründeki bir ailenin adı. Bilinenler: barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono, arial, times-new-roman.
 DrawingFont = Union[str]
 
 

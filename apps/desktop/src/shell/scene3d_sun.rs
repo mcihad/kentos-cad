@@ -8,8 +8,7 @@ use kentos_geometry_core::geom::sun;
 use kentos_interaction::shadow_tool::{DAYS, Kept};
 use kentos_native_application::shadows;
 
-use crate::app::{App, Message};
-use crate::scene3d_window::Event;
+use crate::app::App;
 
 /// The sun of 3B görünüm: its day's place in Gölge's days and its hour (clock time, the place's time zone).
 #[derive(Clone, Copy, Debug, PartialEq)]

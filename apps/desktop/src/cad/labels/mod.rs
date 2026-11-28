@@ -45,8 +45,8 @@ use kentos_native_style::color::ColorMode;
 mod gpu;
 mod layer;
 mod unicode;
-pub(crate) use gpu::text_run;
-pub use gpu::{GlyphSlot, on as gpu_text};
+pub use crate::glyph_layer::{GlyphSlot, on as gpu_text};
+use crate::glyph_layer::{MEASURES_KEPT, REFERENCE};
 #[cfg(test)]
 mod parts_tests;
 
@@ -1266,8 +1266,6 @@ impl Labels<'_> {
     }
 }
 
-/// Text measured at this size; widths and baselines grow with the size.
-const REFERENCE: f32 = 100.0;
 /// The halo's width each side (the web strokes 3 px under the text).
 const HALO: f32 = 1.5;
 /// Text smaller than this on screen is not drawn (the store keeps dimensions to 5 … 240 px).
@@ -1517,8 +1515,6 @@ struct Measure {
 /// Text widths by face, kept between frames: a pan measures each text once
 /// (the web's `widths`). Forgets everything when it grows large.
 static MEASURES: Mutex<Option<HashMap<Font, HashMap<String, Measure>>>> = Mutex::new(None);
-/// Measured texts kept at most (a dense view offers tens of thousands).
-const MEASURES_KEPT: usize = 200_000;
 
 /// A text shaped at the reference size: its width and where its baseline falls.
 fn shaped(text: &str, font: Font) -> Measure {

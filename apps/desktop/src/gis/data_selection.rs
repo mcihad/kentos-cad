@@ -288,7 +288,7 @@ impl App {
                 outlines,
                 camera: self.viewport.camera,
                 color,
-                gpu: crate::labels::gpu_text().then(|| slot.clone()),
+                gpu: crate::glyph_layer::on().then(|| slot.clone()),
             })
             .width(Fill)
             .height(Fill)
@@ -302,7 +302,7 @@ struct Layer<'a> {
     camera: Camera,
     color: Color,
     /// Where it goes for the area's renderer (plan/render.md RM-14); none: drawn on the canvas.
-    gpu: Option<crate::labels::GlyphSlot>,
+    gpu: Option<crate::glyph_layer::GlyphSlot>,
 }
 
 impl Layer<'_> {

@@ -115,7 +115,7 @@ impl App {
                     self.label_size(),
                     // Through the area's renderer as the drawing's own (docs/adr/9214).
                     crate::labels::Engine {
-                        gpu: crate::labels::gpu_text(),
+                        gpu: crate::glyph_layer::on(),
                         ..self.label_engine()
                     },
                 )
@@ -124,7 +124,7 @@ impl App {
     }
 
     /// The slots the data layers' labels send the area's renderer, in their layers' order (docs/adr/9214).
-    pub(crate) fn data_label_glyphs(&self) -> Vec<crate::labels::GlyphSlot> {
+    pub(crate) fn data_label_glyphs(&self) -> Vec<crate::glyph_layer::GlyphSlot> {
         let view = crate::data_view::service();
         self.gis
             .data_labels

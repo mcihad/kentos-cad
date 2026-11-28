@@ -67,13 +67,13 @@ pub fn layer<'a>(
     version: u64,
     camera: &Camera,
     color: Color,
-    slot: &crate::labels::GlyphSlot,
+    slot: &crate::glyph_layer::GlyphSlot,
 ) -> Option<Element<'a, Message>> {
     let Some(approved) = approved.filter(|a| a.version == version && a.objects > 0) else {
         slot.clear();
         return None;
     };
-    let gpu = crate::labels::gpu_text().then(|| slot.clone());
+    let gpu = crate::glyph_layer::on().then(|| slot.clone());
     Some(
         canvas::Canvas::new(Layer {
             approved,
@@ -92,7 +92,7 @@ struct Layer<'a> {
     camera: Camera,
     color: Color,
     /// Where it goes for the area's renderer; none: drawn on the canvas.
-    gpu: Option<crate::labels::GlyphSlot>,
+    gpu: Option<crate::glyph_layer::GlyphSlot>,
 }
 
 /// The picture of a view.

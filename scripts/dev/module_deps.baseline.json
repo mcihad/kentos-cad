@@ -84,7 +84,6 @@
     ],
     "shell->gis": [
       "shell/app/commands.rs",
-      "shell/app/settings.rs",
       "shell/app/start.rs",
       "shell/app/update.rs",
       "shell/app.rs",

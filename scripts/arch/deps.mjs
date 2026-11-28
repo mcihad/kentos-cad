@@ -122,8 +122,9 @@ const GROUPS = [
   // runtime, database or Python. Listed before `native`, whose path contains it; its users name it in `uses`.
   { name: 'extension-host', path: 'crates/native/extension-host/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
   { name: 'python-env', path: 'crates/native/python-env/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
-  // The standards packages' Python rules asked from Rust (docs/adr/8075 §2.6): a process with JSON in and out.
-  { name: 'standards', path: 'crates/native/standards/', targets: [HOST], uses: ['python-env'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
+  // The standards packages' Python rules asked from Rust (docs/adr/8075 §2.6): a process with JSON in and out. It asks
+  // the installation where the packages are kept (`kentos_launch::install`, CLAUDE.md §26, docs/adr/9312).
+  { name: 'standards', path: 'crates/native/standards/', targets: [HOST], uses: ['python-env', 'launch'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
   // An extension's İşlemler tools in its own Python process (docs/adr/8057 §70): the registry, the processes and
   // İşlemler over the headless host, shared by the desktop and the headless hosts (MCP, Python). No window, runtime,
   // database or network; a host's entry point offers the tools, so the headless host itself stays pure. Listed before

@@ -28,11 +28,11 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
     adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. nameText açıksa
     ad (label) noktanın sağ üstüne, projenin kenar ve köşe yazısı yüksekliğiyle Metin
     nesnesi olarak da yazılır, aynı adımda; yazı noktaya bağlıdır: nokta taşınınca
-    kayar, ad değişince metni değişir (ADR 9314). Plan yazıyı text'te, çıktı kimliğini
-    textUid ve textId'de verir. Katman girdide açıkça verilir: kilitli katmana yazılmaz,
-    gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
-    projesine değişiklik project.changes ile gider.
+    kayar, ad değişince metni değişir. Plan yazıyı text'te, çıktı kimliğini textUid ve
+    textId'de verir. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli
+    katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
+    değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.point.create"
@@ -64,9 +64,9 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta
         için bu komutu bir kez çalıştırır. nameText açıksa ad (label) noktanın sağ üstüne,
         projenin kenar ve köşe yazısı yüksekliğiyle Metin nesnesi olarak da yazılır, aynı
-        adımda; yazı noktaya bağlıdır: nokta taşınınca kayar, ad değişince metni değişir
-        (ADR 9314). Plan yazıyı text'te, çıktı kimliğini textUid ve textId'de verir. Katman
-        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        adımda; yazı noktaya bağlıdır: nokta taşınınca kayar, ad değişince metni değişir.
+        Plan yazıyı text'te, çıktı kimliğini textUid ve textId'de verir. Katman girdide
+        açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
         conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
         ile gider.

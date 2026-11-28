@@ -191,7 +191,7 @@ pub struct Styling<'a> {
     /// What the overlays' painting sends the area's renderer, bottom first: the drawing's text (labels/gpu.rs,
     /// docs/adr/9212 §4), the layers over the drawing and the screen's marks (gpu_frame.rs, docs/adr/9214). None: the
     /// canvas draws them all.
-    pub glyphs: &'a [crate::labels::GlyphSlot],
+    pub glyphs: &'a [crate::glyph_layer::GlyphSlot],
 }
 
 /// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
@@ -623,7 +623,7 @@ struct Program {
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
     passive: bool,
     /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214).
-    glyphs: Vec<crate::labels::GlyphSlot>,
+    glyphs: Vec<crate::glyph_layer::GlyphSlot>,
 }
 
 impl Program {
@@ -1006,7 +1006,7 @@ pub struct Frame {
     keep: bool,
     /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214); none in
     /// Büyüteç's window.
-    glyphs: Vec<crate::labels::GlyphSlot>,
+    glyphs: Vec<crate::glyph_layer::GlyphSlot>,
 }
 
 impl fmt::Debug for Frame {
@@ -1091,7 +1091,7 @@ impl shader::Primitive for Frame {
                 let sets: Vec<_> = self
                     .glyphs
                     .iter()
-                    .map(crate::labels::GlyphSlot::get)
+                    .map(crate::glyph_layer::GlyphSlot::get)
                     .collect();
                 let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &sets);
                 Status {

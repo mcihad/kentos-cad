@@ -226,13 +226,13 @@ pub fn layer<'a>(
     marks: Rc<Marks>,
     key: u64,
     camera: Camera,
-    slot: &crate::labels::GlyphSlot,
+    slot: &crate::glyph_layer::GlyphSlot,
 ) -> Option<Element<'a, Message>> {
     if marks.labels.is_empty() {
         slot.clear();
         return None;
     }
-    let gpu = crate::labels::gpu_text().then(|| slot.clone());
+    let gpu = crate::glyph_layer::on().then(|| slot.clone());
     Some(
         canvas::Canvas::new(Labels {
             marks,
@@ -252,7 +252,7 @@ struct Labels {
     /// The view its labels are placed on, and where they go for the area's renderer (plan/render.md RM-14); none:
     /// drawn on the canvas.
     camera: Camera,
-    gpu: Option<crate::labels::GlyphSlot>,
+    gpu: Option<crate::glyph_layer::GlyphSlot>,
 }
 
 impl Labels {
