@@ -109,7 +109,7 @@ yapılmıştır.
 | W-18 | yeni dosya `apps/web/scripts/e2e/sheet-a11y.mjs` | paylaşılan dosya değil; W-13 gibi yazılı. Chrome'un erişilebilirlik ağacından (CDP `Accessibility.getFullAXTree`; paket yok) pafta kipini, galeriyi, paylaşım ve dışa aktarma pencerelerini denetler; dışa aktarma penceresinde ve galeride Tab'la gezer | koordinatörün D+ notu 3 | `node apps/web/scripts/e2e/sheet-a11y.mjs [--strict]` |
 | W-19 | yeni dosya `apps/web/scripts/e2e/sheet-north.mjs` | paylaşılan dosya değil; W-13 gibi yazılı. Demo çizimin ifraz paftasında manyetik kuzey okunu denetler: denetçinin sapması ve kaynağı, “Sapmayı elle gir”, kuzey çizelgesi (kâğıtta ve PDF'te), iki ön denetim bulgusunun düzeltmeleri | E bölümünün uçtan uca denetimi; F'de değerler `northInfo`'dan, açılar `'` ile | `node apps/web/scripts/e2e/sheet-north.mjs` (poppler-utils gerekir) |
 | R-6 | `.gitignore` | `apps/web/src/product/sheet/pkg/` satırı, öbür `pkg/` satırlarının ardına | üretilen WASM paketi depoya girmez (öbür paketler gibi; §1.4) | `pnpm wasm` sonrası `git status`'ta `pkg/` görünmez |
-| R-7 | `crates/server/application/Cargo.toml` | `[dependencies]`: `kentos-sheet = { path = "../../shared/sheet", default-features = false }`; `[dev-dependencies]`: aynısı `features = ["schema"]` ile (ikisi de yorumlu) | sunucu şablonu cihazın okuduğu gibi okur ve denetler; komut tipleri web ve masaüstünün gönderdiği tiplerdir; test, katalog girdilerini karşılaştırır | `cargo test -p kentos-application --test sheet_templates` |
+| R-7 | `crates/server/application/Cargo.toml` | `[dependencies]`: `kentos-sheet = { path = "../../shared/sheet", default-features = false }`; `[dev-dependencies]`: aynısı `features = ["schema"]` ile (ikisi de yorumlu) | sunucu şablonu cihazın okuduğu gibi okur ve denetler; komut tipleri web ve masaüstünün gönderdiği tiplerdir; test, katalog girdilerini karşılaştırır | `cargo test -p kentos-application --test all sheet_templates::` |
 | R-8 | `crates/server/application/src/lib.rs` | `pub mod sheet_templates;` (yorumuyla), `sharing` ile `snapshot` arasına | şablon kitaplığının kullanım durumları | `cargo build -p kentos-application` |
 | R-9 | `crates/server/application/src/commands.rs` | (1) `CommandOutcome::SheetTemplate(kentos_sheet::cloud::SheetTemplateChanged)`; `committed()` onun için `false` (bir projeye olay gitmez), `to_json()` onu yazar; (2) `run_in_tenant`'ın başında `if crate::sheet_templates::handles(&envelope.command_name) { return … run(…).map(CommandOutcome::SheetTemplate); }` (~10 satır) | beş `sheet.template.*` komutu kişisel alanın komut ucuna gelir (ADR 0013 zarfıyla) | `cargo test -p kentos-application` (bütün testler) |
 | R-10 | `apps/api/Cargo.toml` | `kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }` (yorumuyla) | uçların yanıt tipleri | `cargo build -p kentos-api` |
@@ -708,7 +708,7 @@ C bölümünün kodu ve sözleri (`apps/web/src/app/sheet/`, `ui/sheet/`) örnek
      export KENTOS_DATABASE_OWNER_URL=postgres://kentos_cad_owner:<sahip>@127.0.0.1:55440/kentos_cad
      export KENTOS_TEST_DB=required
      flock .run/heavy.lock cargo test -p kentos-api sheet_templates
-     flock .run/heavy.lock cargo test -p kentos-application --test sheet_templates
+     flock .run/heavy.lock cargo test -p kentos-application --test all sheet_templates::
      # Canlı masaüstü testinin sunucusu, kendi veritabanında; ayarları geçici dizinde:
      docker exec kentos-sheet-testdb-desktop psql -U postgres -c "create database kentos_e2e owner kentos_cad_owner"
      docker exec kentos-sheet-testdb-desktop psql -U postgres -d kentos_e2e \
@@ -839,7 +839,7 @@ adımı gelince atılır.
 | `cargo test -p kentos-sheet-wasm`; `cargo build -p kentos-sheet --target wasm32-unknown-unknown` | 4 geçti; temiz |
 | `cargo test -p kentos-desktop` | 682 geçti, 82 yok sayılan, başarısız yok |
 | `KENTOS_TEST_DB=required cargo test -p kentos-api sheet_templates` | 3 geçti (yeni `the_desktop_syncs_a_template_library_across_devices_and_accounts`) |
-| `KENTOS_TEST_DB=required cargo test -p kentos-application --test sheet_templates` | 5 geçti |
+| `KENTOS_TEST_DB=required cargo test -p kentos-application --test all sheet_templates::` | 5 geçti |
 | canlı test (yukarıdaki tarif) | geçti; 12 bulut resmi |
 | `cargo test -p kentos-desktop sheet_comparison_screens -- --ignored` | geçti; 16 resim |
 | `cargo test -p kentos-sheet-ui --test screens -- --ignored` | geçti; 28 resim |

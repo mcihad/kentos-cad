@@ -1,0 +1,106 @@
+//! The seam measured in the images through a real AI host (plan/map-cad.md MAP-12, docs/adr/2460): the shared seam
+//! case's drawing (two synthetic GeoTIFFs of the fixtures, their paths made absolute) opened as a .kcad file over MCP.
+//! `cad.orthophoto.compare` with `seam` gives the case's places, counts and shift; a narrow search leaves every peak
+//! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it;
+//! docs/adr/3260: along a line with an arc, and with the peak refined by the second image resampled (bicubic);
+//! docs/adr/3660: a second image of 0.08 m pixels and a turned one resampled onto the first's grid, along a line too;
+//! docs/adr/4060: the turned image first, the grid itself (its places, the shift and `turned`).
+use kentos_mcp::{MODERN, Server};
+use serde_json::{Value, json};
+
+fn call(s: &mut Server, name: &str, args: Value) -> Value {
+    s.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,"io.modelcontextprotocol/clientInfo":{"name":"orthophoto-seam-test","version":"1"},"io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone()
+}
+
+/// A text with its `$fixture:` paths made absolute, as the shared runners make them.
+fn fixtures(v: &Value) -> Value {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/");
+    serde_json::from_str(
+        &v.to_string()
+            .replace("$fixture:", &root.display().to_string()),
+    )
+    .unwrap()
+}
+
+/// Two places' lists alike: states and correlations, shifts within 10⁻⁹.
+fn alike(got: &Value, want: &Value, name: &str) {
+    let (g, w) = (
+        got["patches"].as_array().unwrap(),
+        want["patches"].as_array().unwrap(),
+    );
+    assert_eq!(g.len(), w.len(), "{name}");
+    for (a, b) in g.iter().zip(w) {
+        assert_eq!(a["state"], b["state"], "{name}");
+        for key in ["dx", "dy", "correlation", "station"] {
+            match (a[key].as_f64(), b[key].as_f64()) {
+                (Some(x), Some(y)) => assert!((x - y).abs() < 1e-9, "{name} {key}: {x} {y}"),
+                (x, y) => assert_eq!(x.is_some(), y.is_some(), "{name} {key}"),
+            }
+        }
+    }
+    for key in ["ok", "low", "edge", "flat", "passed", "resampled", "turned"] {
+        assert_eq!(got[key], want[key], "{name} {key}");
+    }
+    // The seam line's length, places and those outside (docs/adr/2860), where one was asked.
+    for key in ["uid", "places", "outside"] {
+        assert_eq!(got["line"][key], want["line"][key], "{name} line.{key}");
+    }
+    match (
+        got["line"]["length"].as_f64(),
+        want["line"]["length"].as_f64(),
+    ) {
+        (Some(x), Some(y)) => assert!((x - y).abs() < 1e-9, "{name} line.length"),
+        (x, y) => assert_eq!(x.is_some(), y.is_some(), "{name} line.length"),
+    }
+}
+
+#[test]
+fn the_seam_over_mcp_is_the_cases() {
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.orthophoto.compare.json"
+    ))
+    .unwrap();
+    for name in [
+        "dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı",
+        "dikiş: arama dar, tepe sınırda kalır",
+        "dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır",
+        "dikiş hattı yaylı: yerler yay boyunca",
+        "dikiş: görüntünün çift kübik ara değeriyle piksel altı",
+        "dikiş: ikinci görüntü 0,08 m pikselli; birincinin ızgarasına yeniden örneklenir",
+        "dikiş: ikinci görüntü 9° dönük; pikselleri yetmeyen yerler örtüşmenin dışında",
+        "dikiş hattı boyunca, dönük ikinci görüntü, çift kübik piksel altı",
+        // docs/adr/4060: the turned image first, the grid itself.
+        "dikiş: birinci görüntü 9° dönük; ızgara onun pikselleri, ikincisi ona örneklenir (parabol)",
+        "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı",
+        "dikiş hattı boyunca, dönük birinci görüntü, 0,08 m pikselli ikinci, çift kübik piksel altı",
+    ] {
+        let case = cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone();
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(fixtures(&case["setup"])).unwrap();
+        let path = std::env::temp_dir().join(format!(
+            "kentos-orthophoto-seam-{}.kcad",
+            std::process::id()
+        ));
+        std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
+        let mut server = Server::new();
+        let opened = call(&mut server, "drawing.open", json!({"path": path}));
+        assert_eq!(opened["isError"], false, "{opened}");
+        let step = &case["steps"][0];
+        let mut args = step["input"].clone();
+        args["drawing"] = opened["structuredContent"]["drawing"].clone();
+        let r = call(&mut server, "cad.orthophoto.compare", args);
+        assert_eq!(r["isError"], false, "{name}: {r}");
+        alike(
+            &r["structuredContent"]["output"]["seam"],
+            &step["result"]["output"]["seam"],
+            name,
+        );
+        let _ = std::fs::remove_file(path);
+    }
+}

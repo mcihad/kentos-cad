@@ -112,6 +112,23 @@ Zemin (Aşama 0) hiçbir komutu, aracı ya da arayüz yüzeyini değiştirmez.
   - `shell/scene3d_sun.rs`'in kullanılmayan iki içe aktarımı kalktı (derleme uyarısızdır).
 - **BK-03 (28 Kasım 2026).** `make guard`, `scripts/dev/guard_hook.sh`, `.claude/settings.json`. Hook dört yolda
   sınandı: yeşil, değişiklik yok, kırmızı (engeller, çıktıyı verir), zaten engellemiş (geçer).
+- **BK-04 (28 Kasım 2026).**
+  - MCP: 163 dosya `crates/native/mcp/tests/all/`'a taşındı, tek program (`main.rs`). Üç sınama kendi programında
+    kaldı (`package_grids.rs`, `package_grids_found.rs`, `gnss_sessions.rs`): her biri `KENTOS_GRID_DIR`'i bütün süreci
+    için değiştirir. Dosyaya göreli `include_str!` yolları bir düzey derinleşti; `CARGO_MANIFEST_DIR`'e göreli yollar
+    değişmedi. Sonuç: 313 + 3 sınama, hepsi geçti; tek programın koşusu 126 sn, derlemesi 2 dk 2 sn.
+    Ölçüm: bir MCP sınama programı 0,88 GB'tır (her biri bütün konağı bağlar); 166 program ≈ 146 GB, 4 program ≈ 3,5 GB.
+  - Sunucu: 40 dosya ve `common` `crates/server/application/tests/all/`'a taşındı; `common` bir kez derlenir.
+    `disk_full.rs` kendi programında kaldı (`scripts/ops/disk_full_drill.sh` onu tek başına derleyip koşar). Her
+    veritabanı sınamasının kendi veritabanı olduğu için (`TestDb`) modüller durum paylaşmaz. Geçici bir PostGIS
+    kabında (`KENTOS_TEST_DB=required`): 167 geçti, 4 yok sayıldı (süre ölçümleri), 62,7 sn.
+  - Yığın: MCP'nin kabul sınaması 2 MB'lık sınama yığınını tek başına koşunca da taşırıyordu (birleştirmeden bağımsız;
+    `pnpm rust:test` değişkeni vermediği için orada çökerdi). `.cargo/config.toml` `[env]` artık
+    `RUST_MIN_STACK=67108864` verir; masaüstü sınamaları için de elle vermek gerekmez. Kök neden hata ayıklama
+    derlemesinde dev işlevlerin yığın çerçeveleridir (BK-21, BK-40).
+  - Kılavuzdaki 155 komut yeni hedefe çevrildi (`--test all <modül>::`). ADR'lerdeki ve `docs/baseline`'daki eski
+    komutlar tarihsel kayıttır, değişmedi.
+  - Kalan: 133 MCP sınama dosyasındaki aynı `fn call(…)` yardımcısı ortak bir modüle alınacak (BK-53).
 
 ## Doğrulama
 

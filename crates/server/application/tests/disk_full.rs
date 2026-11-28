@@ -7,6 +7,7 @@
 //! mount namespace (no root needed) and runs this test there with `KENTOS_FULL_DIR` naming it. Real database
 //! (`KENTOS_TEST_DB=required`), `pg_dump` (`KENTOS_PG_DUMP`).
 
+#[path = "all/common/mod.rs"]
 mod common;
 
 use std::io::Write;

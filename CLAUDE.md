@@ -70,7 +70,8 @@ satıra (749 KB) büyüdüğü için bölündü.
   sınamaları tek ikilidir (`tests/all/main.rs`).
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
-- **Masaüstü testleri** `RUST_MIN_STACK=67108864` ister. Pencere resimleri `#[ignore]` `screens` testleridir:
+- **Masaüstü testleri:** sınama iş parçacığının 64 MB yığınını cargo verir (`.cargo/config.toml` `RUST_MIN_STACK`, ADR 9400);
+  ikiliyi cargo'suz koşan `RUST_MIN_STACK=67108864` verir. Pencere resimleri `#[ignore]` `screens` testleridir:
   `cargo test -p kentos-desktop --lib <modül>_tests::screens -- --ignored --nocapture`. Kendi paketine ayrılan modülün
   testleri onun paketindedir (CBS `-p kentos-desktop-cbs`, Mimari `-p kentos-desktop-arch`, Harita `-p kentos-desktop-map`, Yol `-p kentos-desktop-road`), programlar arası olanlar (yüzey matrisi,
   katman menüsü, izler) `cargo test -p kentos-cad`'dedir; program `cargo build -p kentos-cad` (ADR 9199).

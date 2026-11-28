@@ -204,8 +204,10 @@ düzenlenir.
 - [x] **BK-03 — `make guard` ve hook.** `deps.mjs`, `source_size.py`, `module_deps.py --check`,
   `scripts/cad/manifest.py --check`, `cargo fmt --all -- --check`; Claude Code `Stop` hook'u
   (`scripts/dev/guard_hook.sh`) onu koşar. Başka uygulama adı bekçisi masaüstü sınamasıdır, derleme ister, girmez.
-- [ ] **BK-04 — Sınama ikilileri** (E1). MCP 166 → 1 (`tests/all/main.rs`, ortak `call`), sunucu 41 → 1. Bağlama
-  süresi ve `target/` boyu önce ve sonra ölçülür.
+- [x] **BK-04 — Sınama ikilileri** (E1; ADR 9400 §5). MCP 166 → 4 program (tek program 313 sınama, 126 sn; süreç
+  değişkeni değiştiren üç sınama ayrı), sunucu 41 → 2 (167 geçti, 4 yok sayıldı, 62,7 sn; `disk_full` ayrı). Bir MCP
+  sınama programı 0,88 GB: 166 program ≈ 146 GB, 4 program ≈ 3,5 GB. Sınama yığını artık `.cargo/config.toml`'dan
+  gelir. Kalan: ortak `call` yardımcısı (BK-53).
 - [ ] **BK-05 — Ölçüm tabanı.** Clippy'nin sonucu; sıfırdan ve tek satır değişiklikte derleme süresi; `docs/perf/`.
 
 ### Aşama 1 — Doğruluk düzeltmeleri
@@ -260,7 +262,7 @@ düzenlenir.
 - [ ] **BK-52** (F3) XML kaçışı, renk, base64, CRC, bayt okuyucu birer tane; PostGIS'in eski sürücüsü yenisinin
   arkasına.
 - [ ] **BK-53** (F4) Grafik paleti ve yazı boyu tema jetonu; komut sonucu tek yardımcı; kullanılmayan yedi kit
-  bileşeni için sahibin kararı.
+  bileşeni için sahibin kararı. MCP sınamalarının ortak `call` yardımcısı (133 kopya).
 - [ ] **BK-54** (F5) Sınır hatalarına tür, önce dosya biçimleri; eksik üç kod tabloya.
 
 ### Aşama 6 — `.kcad` şema zinciri

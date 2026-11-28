@@ -127,7 +127,7 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   shots`. Görüntüler `.run/gui-evidence/portal/` altına yazılır.
 - **Sınamalar:**
   - `cargo test -p kentos-application --lib portal`
-  - `cargo test -p kentos-application --test portal` (veritabanı ister)
+  - `cargo test -p kentos-application --test all portal::` (veritabanı ister)
   - `pnpm portal:test`
   - `cargo test -p kentos-api --bin kentosd cloud_files access_tests openapi` (bulut dosyaları, anahtarlar, açıklama)
   - `cargo test -p kentos-application --lib scan preview` (tarama ve çizim)
