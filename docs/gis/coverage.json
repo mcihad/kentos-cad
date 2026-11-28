@@ -271,6 +271,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -297,6 +302,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -583,7 +593,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 215,
+   "cases": 220,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.json",
@@ -839,6 +849,16 @@
      "key": "role",
      "value": "lintel",
      "covered": true
+    },
+    {
+     "key": "role",
+     "value": "padFooting",
+     "covered": false
+    },
+    {
+     "key": "role",
+     "value": "stripFooting",
+     "covered": false
     },
     {
      "key": "shape",
@@ -1982,7 +2002,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 86,
+   "cases": 120,
    "files": [
     "fixtures/commands/v1/cad.arch.edit.json",
     "fixtures/commands/v1/cad.beams.create.json",
@@ -2113,6 +2133,16 @@
     {
      "key": "role",
      "value": "lintel",
+     "covered": true
+    },
+    {
+     "key": "role",
+     "value": "padFooting",
+     "covered": true
+    },
+    {
+     "key": "role",
+     "value": "stripFooting",
      "covered": true
     },
     {
@@ -2430,6 +2460,11 @@
      "key": "kind",
      "value": "lookup",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "mass",
+     "covered": false
     },
     {
      "key": "kind",
@@ -6180,7 +6215,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 314,
+   "cases": 316,
    "files": [
     "fixtures/commands/v1/cad.drawing.repair.json",
     "fixtures/commands/v1/cad.entities.create.json",
@@ -6783,6 +6818,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": true
     },
@@ -6809,6 +6849,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -8744,6 +8789,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": true
     },
@@ -8770,6 +8820,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -11074,6 +11129,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": true
     },
@@ -11100,6 +11160,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -11360,6 +11425,11 @@
     {
      "key": "kind",
      "value": "manhattan",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mass",
      "covered": false
     },
     {
@@ -12698,7 +12768,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1135,
+   "cases": 1142,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -12776,6 +12846,11 @@
     {
      "key": "lineType",
      "value": "dotted",
+     "covered": true
+    },
+    {
+     "key": "nameText",
+     "value": true,
      "covered": true
     },
     {
@@ -13936,7 +14011,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 49,
+   "cases": 50,
    "files": [
     "fixtures/commands/v1/cad.fonts.report.json"
    ],
@@ -16136,6 +16211,180 @@
    "kinds": []
   },
   {
+   "id": "cad.layers.columns",
+   "title": "Veri kaynağının sütunları",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 44,
+   "files": [
+    "fixtures/commands/v1/cad.layers.columns.json"
+   ],
+   "options": [
+    {
+     "key": "action",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "action",
+     "value": "refresh",
+     "covered": true
+    },
+    {
+     "key": "action",
+     "value": "rules",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boolean",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "datetime",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "decimal",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "integer",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
+     "covered": false
+    },
+    {
+     "key": "maxExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "sum",
+     "covered": false
+    },
+    {
+     "key": "minExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "multiple",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "required",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "retired",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "default",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "unique",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.layers.compose",
    "title": "Katman çizimi",
    "effect": "document",
@@ -16497,8 +16746,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 79,
+   "cases": 107,
    "files": [
+    "fixtures/commands/v1/cad.layers.columns.json",
     "fixtures/commands/v1/cad.layers.data.json",
     "fixtures/commands/v1/cad.layers.session.json"
    ],
@@ -17531,11 +17781,31 @@
     "mcp": true,
     "server": false
    },
-   "cases": 34,
+   "cases": 43,
    "files": [
     "fixtures/commands/v1/cad.layers.migrate.json"
    ],
    "options": [
+    {
+     "key": "existing",
+     "value": "append",
+     "covered": true
+    },
+    {
+     "key": "existing",
+     "value": "overwriteFile",
+     "covered": true
+    },
+    {
+     "key": "existing",
+     "value": "refuse",
+     "covered": true
+    },
+    {
+     "key": "existing",
+     "value": "replaceLayer",
+     "covered": true
+    },
     {
      "key": "target",
      "value": "gpkg",
@@ -17597,8 +17867,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 74,
+   "cases": 78,
    "files": [
+    "fixtures/commands/v1/cad.layers.columns.json",
     "fixtures/commands/v1/cad.layers.create.json",
     "fixtures/commands/v1/cad.layers.export.json",
     "fixtures/commands/v1/cad.layers.migrate.json",
@@ -19077,6 +19348,141 @@
     {
      "key": "upright",
      "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.masses.create",
+   "title": "Kütle",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 37,
+   "files": [
+    "fixtures/commands/v1/cad.arch.edit.json",
+    "fixtures/commands/v1/cad.masses.create.json"
+   ],
+   "options": [
+    {
+     "key": "bearing",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "electrical",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "landscape",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "mechanical",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "plumbing",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "structure",
+     "covered": false
+    },
+    {
+     "key": "exit",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "external",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "fireStop",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "author",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "document",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
+     "covered": false
+    },
+    {
+     "key": "pressurized",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "protected",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "approved",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "built",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "underConstruction",
      "covered": false
     }
    ],
@@ -21264,6 +21670,84 @@
    "kinds": []
   },
   {
+   "id": "cad.parcels.report",
+   "title": "Parsel alan çizelgesi",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.parcels.report.json"
+   ],
+   "options": [
+    {
+     "key": "lengths",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "names",
+     "value": "numbers",
+     "covered": true
+    },
+    {
+     "key": "names",
+     "value": "points",
+     "covered": false
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "polygon",
+     "covered": false
+    }
+   ]
+  },
+  {
+   "id": "cad.parcels.table",
+   "title": "Parsel alan çizelgesi tablosu",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 23,
+   "files": [
+    "fixtures/commands/v1/cad.parcels.table.json"
+   ],
+   "options": [
+    {
+     "key": "lengths",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "names",
+     "value": "numbers",
+     "covered": true
+    },
+    {
+     "key": "names",
+     "value": "points",
+     "covered": false
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "polygon",
+     "covered": false
+    }
+   ]
+  },
+  {
    "id": "cad.parcels.withdraw",
    "title": "Taslağı geri çek",
    "effect": "document",
@@ -21472,7 +21956,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 76,
+   "cases": 79,
    "files": [
     "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
@@ -21482,7 +21966,13 @@
     "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.sync.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "nameText",
+     "value": true,
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -22076,7 +22566,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 60,
+   "cases": 61,
    "files": [
     "fixtures/commands/v1/cad.processing.batch.json",
     "fixtures/commands/v1/cad.processing.batch.sink.json"
@@ -22131,7 +22621,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 154,
+   "cases": 155,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.processing.run.environment.json",
@@ -28373,6 +28863,11 @@
     },
     {
      "key": "drawingFont",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
      "value": "arimo",
      "covered": true
     },
@@ -28399,6 +28894,11 @@
     {
      "key": "drawingFont",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -28664,6 +29164,11 @@
     {
      "key": "kind",
      "value": "line",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mass",
      "covered": false
     },
     {
@@ -29044,6 +29549,16 @@
     {
      "key": "removed",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "usage",
      "covered": false
     },
     {
@@ -34824,7 +35339,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 180,
+   "cases": 184,
    "files": [
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
@@ -34995,6 +35510,11 @@
     },
     {
      "key": "role",
+     "value": "raft",
+     "covered": true
+    },
+    {
+     "key": "role",
      "value": "terrace",
      "covered": true
     },
@@ -35162,6 +35682,11 @@
     {
      "key": "role",
      "value": "floor",
+     "covered": false
+    },
+    {
+     "key": "role",
+     "value": "raft",
      "covered": false
     },
     {
@@ -36013,7 +36538,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 900,
+   "cases": 901,
    "files": [
     "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.create.json",
@@ -36507,6 +37032,11 @@
     },
     {
      "key": "fonts",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "fonts",
      "value": "arimo",
      "covered": false
     },
@@ -36533,6 +37063,11 @@
     {
      "key": "fonts",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "fonts",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -36753,6 +37288,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -36779,6 +37319,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -37136,6 +37681,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -37162,6 +37712,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -37809,6 +38364,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": true
     },
@@ -37835,6 +38395,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -38167,7 +38732,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 31,
+   "cases": 32,
    "files": [
     "fixtures/commands/v1/cad.survey.baselines.json"
    ],
@@ -42821,7 +43386,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 63,
+   "cases": 68,
    "files": [
     "fixtures/commands/v1/file.import.maplibre.json",
     "fixtures/commands/v1/file.import.maplibre.labels.json"
@@ -44552,6 +45117,11 @@
     },
     {
      "key": "drawingFont",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
      "value": "arimo",
      "covered": false
     },
@@ -44578,6 +45148,11 @@
     {
      "key": "drawingFont",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -44757,6 +45332,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -44783,6 +45363,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -45513,6 +46098,11 @@
     {
      "key": "kind",
      "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mass",
      "covered": false
     },
     {
@@ -47163,6 +47753,16 @@
     {
      "key": "runs",
      "value": "here",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "usage",
      "covered": false
     },
     {
@@ -48599,6 +49199,11 @@
     },
     {
      "key": "drawingFont",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
      "value": "arimo",
      "covered": false
     },
@@ -48625,6 +49230,11 @@
     {
      "key": "drawingFont",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -48804,6 +49414,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -48830,6 +49445,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -49560,6 +50180,11 @@
     {
      "key": "kind",
      "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mass",
      "covered": false
     },
     {
@@ -51213,6 +51838,16 @@
      "covered": false
     },
     {
+     "key": "scheme",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "usage",
+     "covered": false
+    },
+    {
      "key": "scope",
      "value": "finding",
      "covered": false
@@ -52641,6 +53276,11 @@
     },
     {
      "key": "drawingFont",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
      "value": "arimo",
      "covered": false
     },
@@ -52667,6 +53307,11 @@
     {
      "key": "drawingFont",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -52846,6 +53491,11 @@
     },
     {
      "key": "font",
+     "value": "arial",
+     "covered": false
+    },
+    {
+     "key": "font",
      "value": "arimo",
      "covered": false
     },
@@ -52872,6 +53522,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "times-new-roman",
      "covered": false
     },
     {
@@ -53572,6 +54227,11 @@
     {
      "key": "kind",
      "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mass",
      "covered": false
     },
     {
@@ -55187,6 +55847,16 @@
     {
      "key": "runs",
      "value": "here",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "scheme",
+     "value": "usage",
      "covered": false
     },
     {
@@ -61776,34 +62446,6 @@
    "options": []
   },
   {
-   "id": "annotation.edgeLengths",
-   "title": "Kenar uzunluklarını yaz",
-   "cases": 2,
-   "command": 2,
-   "options": [
-    {
-     "key": "side",
-     "value": "outside",
-     "covered": true
-    },
-    {
-     "key": "side",
-     "value": "inside",
-     "covered": true
-    },
-    {
-     "key": "shared",
-     "value": true,
-     "covered": true
-    },
-    {
-     "key": "shared",
-     "value": false,
-     "covered": false
-    }
-   ]
-  },
-  {
    "id": "attributes.calculate",
    "title": "Öznitelik hesapla",
    "cases": 16,
@@ -64088,7 +64730,7 @@
    "id": "network.serviceAreas",
    "title": "Hizmet alanları",
    "cases": 6,
-   "command": 6,
+   "command": 8,
    "options": [
     {
      "key": "direction",
@@ -64521,69 +65163,6 @@
     {
      "key": "add",
      "value": false,
-     "covered": true
-    }
-   ]
-  },
-  {
-   "id": "points.numberVertices",
-   "title": "Köşe noktalarını numarala",
-   "cases": 7,
-   "command": 14,
-   "options": [
-    {
-     "key": "direction",
-     "value": "cw",
-     "covered": true
-    },
-    {
-     "key": "direction",
-     "value": "ccw",
-     "covered": true
-    },
-    {
-     "key": "start",
-     "value": "northwest",
-     "covered": true
-    },
-    {
-     "key": "start",
-     "value": "north",
-     "covered": false
-    },
-    {
-     "key": "start",
-     "value": "first",
-     "covered": false
-    },
-    {
-     "key": "start",
-     "value": "point",
-     "covered": false
-    },
-    {
-     "key": "shared",
-     "value": true,
-     "covered": true
-    },
-    {
-     "key": "shared",
-     "value": false,
-     "covered": false
-    },
-    {
-     "key": "output",
-     "value": "points",
-     "covered": true
-    },
-    {
-     "key": "output",
-     "value": "text",
-     "covered": false
-    },
-    {
-     "key": "output",
-     "value": "both",
      "covered": true
     }
    ]
