@@ -259,6 +259,11 @@ düzenlenir.
     99,99976 çıkıyordu). Kalan: ham koordinatla toplayan öbür 29 yer tek tek okunmadı (çoğu yalnız yön ya da yerel
     koordinat).
   - Kalan: NCZ okuyucusundaki kopya (`ncz/src/emit.rs`); dosyadaki 26 ad atfıyla birlikte temizlenir.
+  - Kalan: çizime dilin kendi yuvarlamasıyla yazılan sayı dört değilmiş. Tarama (bir yazının ya da özniteliğin
+    yanında `{:.N}`) uygulama katmanında yirmi kadar yer daha gösteriyor: Yol'un çizim komutları (koridor, menfez,
+    otokorkuluk, kavşak, istinat duvarı, kazı-dolgu, yüzey kapsamı), boru profili çizelgesi, ağ elipsleri,
+    uzlaştırmanın öznitelikleri; etkileşim katmanında parsel aracının “±0.00 = …” yazısı. Tek tek okunmadı. Bu
+    komutların ortak durumları var: üreteçleri aynı yuvarlamayı kullanıyorsa birlikte değişir (BK-50, BK-88).
   - Gerekçesiyle bırakılan üç kopya ADR'de yazılı.
 - [x] **BK-18** (A11; ADR 9401 §7) Üç değil sekiz metin: bekçi arayüz kitlerinin crate'lerini taramıyordu. Metinler
   yeniden yazıldı; bekçi dört ad daha arar ve `crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`'yi de tarar.
@@ -393,6 +398,10 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
     “native and WASM”). Bekçi (`scripts/dev/removed_paths.py`) sayıyı tutar, yalnız azalır; dokunulan dosyada
     temizlenir.
   - Kalan: `TODOS.md`, `DESIGN.md` ve kılavuzun öbür bölümlerindeki web sözleri (BK-70 ile birlikte).
+- Aşamanın sonunda bir kez koşulan geniş doğrulama: çalışma alanı bütün hedefleriyle derlendi; masaüstü çekirdeği
+  (2 616 sınama), dört modül paketi, birleşik program, başsız konak ve MCP (313 sınama) sınamaları yeşil; portalın
+  tür denetimi, 9 sınaması ve paketi taşımadan önceki hâliyle aynı. Koşulmayan: sunucunun veritabanı sınamaları,
+  Python'ın tam takımı, eklenti sınamaları.
 - [ ] **BK-88 — Sayısal temel.** `jsmath` 696 dosyada kullanılıyor (`js_max` 882, `js_hypot` 702, `js_min` 494,
   `js_round` 159 çağrı; `libm`'den 15 işlev). Sıra: araştırma (doğru yuvarlanan temel işlevler, hatasız dönüşümler,
   kesin yüklemler, aralık aritmetiği; kaynakları ADR'de), karar (ADR 9403), bağımsız yüksek hassasiyetli başvuru,
