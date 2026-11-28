@@ -592,3 +592,57 @@ fn the_calls_to_other_objects_speak_the_drawing_unit() {
         wrong.join("\n")
     );
 }
+
+/// Runs `f` on a thread with 2 MB of stack, the size a worker thread has: an expression past the language's limits
+/// must be refused there, not overflow it (docs/adr/9401 §2).
+fn on_a_small_thread<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
+    std::thread::Builder::new()
+        .stack_size(2 << 20)
+        .spawn(f)
+        .expect("a thread")
+        .join()
+        .expect("neither an overflow nor a panic")
+}
+
+#[test]
+fn an_expression_nested_past_the_limit_is_refused() {
+    let brackets = format!("{}1{}", "(".repeat(100_000), ")".repeat(100_000));
+    let message = on_a_small_thread(move || kentos_expression::compile(&brackets).err())
+        .expect("refused")
+        .message;
+    assert!(message.contains("iç içe"), "{message}");
+    // Signs before a value nest as brackets do.
+    let signs = format!("{}1", "-".repeat(100_000));
+    assert!(on_a_small_thread(move || kentos_expression::compile(
+        &signs
+    )
+    .is_err()));
+    // The limit itself: 63 brackets round a value stand, the 64th does not.
+    let nested = |n: usize| format!("{}1{}", "(".repeat(n), ")".repeat(n));
+    assert!(kentos_expression::compile(&nested(kentos_expression::MAX_DEPTH - 1)).is_ok());
+    assert!(kentos_expression::compile(&nested(kentos_expression::MAX_DEPTH)).is_err());
+}
+
+#[test]
+fn an_expression_of_too_many_operations_is_refused() {
+    let chain = |terms: usize| vec!["1"; terms].join(" + ");
+    let long = chain(100_001);
+    let message = on_a_small_thread(move || kentos_expression::compile(&long).err())
+        .expect("refused")
+        .message;
+    assert!(message.contains("işlem"), "{message}");
+    // The limit itself, on a thread with room for a debug build's frames.
+    let most = kentos_expression::MAX_OPERATIONS;
+    let stands = std::thread::Builder::new()
+        .stack_size(64 << 20)
+        .spawn(move || {
+            (
+                kentos_expression::compile(&chain(most + 1)).is_ok(),
+                kentos_expression::compile(&chain(most + 2)).is_ok(),
+            )
+        })
+        .expect("a thread")
+        .join()
+        .expect("no overflow");
+    assert_eq!(stands, (true, false));
+}

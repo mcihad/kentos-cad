@@ -220,7 +220,8 @@ düzenlenir.
   pencere ve `leader_tools`.
 - [ ] **BK-12** (A3) Arka plan yanıtı koşu kimliği taşır; beş aktarım ve IFC karşılaştırması.
 - [ ] **BK-13** (A4) BCF okuması kendi iş parçacığında; form taslağı gecikmeli ve hatası görünür yazılır.
-- [ ] **BK-14** (A7) İki ayrıştırıcıya derinlik sayacı.
+- [x] **BK-14** (A7; ADR 9401 §2) İfade dili: en çok 64 düzey ve 1 000 işlem; stil süzgeci: 64 düzey. Ölçüm: 2 MB'lık
+  iş parçacığında sürüm derlemesi 3 000 terimli zincirde, 1 000 parantezde taşıyordu.
 - [ ] **BK-15** (A8, A9) Dört sessiz kayıp hataya ya da rapora döner; `execute_batch` yerine `prepare`.
 - [ ] **BK-16** (A6) Hata kodu tablosu disiplin başına dosyalara bölünür, `INVALID_MASS` eklenir.
 - [ ] **BK-17** (A10) Yerel nokta-alan ve alan kopyaları çekirdektekine bağlanır; çizime yazan yerler

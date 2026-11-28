@@ -64,6 +64,7 @@ pub use host::{
     Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema, Unit, Variable,
 };
 use library::{Func, Var};
+pub use parser::{MAX_DEPTH, MAX_OPERATIONS};
 use parser::{Node, Parser};
 use program::Program;
 pub use value::Value;

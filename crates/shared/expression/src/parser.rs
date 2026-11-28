@@ -188,7 +188,20 @@ pub struct Parser {
     /// Leaves the arguments' rules to the compile: the builder's flow reads
     /// expressions with empty inputs (`?`) where a constant text must go.
     pub lenient: bool,
+    /// How deep the value being read is nested (brackets, signs, arguments): [`MAX_DEPTH`] at most.
+    depth: usize,
+    /// The operations joined so far: [`MAX_OPERATIONS`] at most.
+    operations: usize,
 }
+
+/// The most levels an expression nests (a value in brackets, after a sign, as an argument). The readers of the tree
+/// walk it by calling themselves: a deeper one would overflow a thread's stack (measured on 2 MB, docs/adr/9401 §2:
+/// 200 brackets in a debug build, 1 000 in a release one).
+pub const MAX_DEPTH: usize = 64;
+
+/// The most operations an expression joins. A chain of them is a tree as deep as it is long (`a + b + c` is
+/// `(a + b) + c`), and a chain of 3 000 overflowed a 2 MB stack in a release build (docs/adr/9401 §2).
+pub const MAX_OPERATIONS: usize = 1_000;
 
 fn err(message: impl Into<String>, at: usize) -> CompileError {
     CompileError {
@@ -205,6 +218,8 @@ impl Parser {
             fields: Vec::new(),
             inner: 0,
             lenient: false,
+            depth: 0,
+            operations: 0,
         }
     }
 
@@ -270,15 +285,18 @@ impl Parser {
                 .op_at()
                 .and_then(|o| LEVELS[level].iter().find(|(s, _)| *s == o))
             {
-                self.next();
+                let at = self.next().at;
+                self.joined(at)?;
                 let b = self.binary(level + 1)?;
                 a = Node::Bin(op.1, Box::new(a), Box::new(b));
                 continue;
             }
             if level == COMPARISONS {
+                let at = self.peek().at;
                 let (with, rest) = self.predicate(a)?;
                 a = with;
                 if rest {
+                    self.joined(at)?;
                     continue;
                 }
             }
@@ -389,7 +407,39 @@ impl Parser {
         Ok(items)
     }
 
+    /// One more operation joined to the value on its left; refused past [`MAX_OPERATIONS`].
+    fn joined(&mut self, at: usize) -> Result<(), CompileError> {
+        self.operations += 1;
+        if self.operations > MAX_OPERATIONS {
+            return Err(err(
+                format!(
+                    "İfadede {MAX_OPERATIONS} işlemden çok var. Uzun değer listesini “içinde (…)” ile yazın ya da \
+                     ifadeyi parçalara bölün."
+                ),
+                at,
+            ));
+        }
+        Ok(())
+    }
+
+    /// A value with its signs: every nesting of the language passes here (a bracket's content, an argument, a
+    /// branch are read from their first value), so this is where its depth is counted.
     fn unary(&mut self) -> Result<Node, CompileError> {
+        self.depth += 1;
+        if self.depth > MAX_DEPTH {
+            return Err(err(
+                format!(
+                    "İfade {MAX_DEPTH} düzeyden derin iç içe. Parantezleri azaltın ya da ifadeyi parçalara bölün."
+                ),
+                self.peek().at,
+            ));
+        }
+        let value = self.signed();
+        self.depth -= 1;
+        value
+    }
+
+    fn signed(&mut self) -> Result<Node, CompileError> {
         let tok = self.peek().clone();
         if keyword(&tok) == Some(Keyword::Not) {
             self.next();

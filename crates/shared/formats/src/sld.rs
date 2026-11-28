@@ -295,7 +295,7 @@ fn tokens(src: &str, qgis: bool) -> Option<Vec<Tok>> {
 pub fn parse_filter(src: &str) -> Option<Filter> {
     let toks = tokens(src, false)?;
     let mut at = 0;
-    let f = or_of(&toks, &mut at)?;
+    let f = or_of(&toks, &mut at, 0)?;
     (at == toks.len()).then_some(f)
 }
 
@@ -304,7 +304,7 @@ pub fn parse_filter(src: &str) -> Option<Filter> {
 pub fn parse_qgis(src: &str) -> Option<Filter> {
     let toks = tokens(src, true)?;
     let mut at = 0;
-    let f = or_of(&toks, &mut at)?;
+    let f = or_of(&toks, &mut at, 0)?;
     (at == toks.len()).then_some(f)
 }
 
@@ -312,11 +312,15 @@ fn word(t: Option<&Tok>, words: &[&str]) -> bool {
     matches!(t, Some(Tok::Word(w)) if words.contains(&w.as_str()))
 }
 
-fn or_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
-    let mut parts = vec![and_of(t, at)?];
+/// The most levels a filter nests (brackets and `not`s): a deeper one is not read (none), as one the grammar cannot
+/// say. The readers call themselves a level at a time; a hostile style file would overflow the stack (docs/adr/9401 §2).
+const MAX_FILTER_DEPTH: usize = 64;
+
+fn or_of(t: &[Tok], at: &mut usize, depth: usize) -> Option<Filter> {
+    let mut parts = vec![and_of(t, at, depth)?];
     while word(t.get(*at), &["veya", "or"]) {
         *at += 1;
-        parts.push(and_of(t, at)?);
+        parts.push(and_of(t, at, depth)?);
     }
     Some(if parts.len() == 1 {
         parts.remove(0)
@@ -325,11 +329,11 @@ fn or_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
     })
 }
 
-fn and_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
-    let mut parts = vec![not_of(t, at)?];
+fn and_of(t: &[Tok], at: &mut usize, depth: usize) -> Option<Filter> {
+    let mut parts = vec![not_of(t, at, depth)?];
     while word(t.get(*at), &["ve", "and"]) {
         *at += 1;
-        parts.push(not_of(t, at)?);
+        parts.push(not_of(t, at, depth)?);
     }
     Some(if parts.len() == 1 {
         parts.remove(0)
@@ -338,14 +342,17 @@ fn and_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
     })
 }
 
-fn not_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
+fn not_of(t: &[Tok], at: &mut usize, depth: usize) -> Option<Filter> {
+    if depth > MAX_FILTER_DEPTH {
+        return None;
+    }
     if word(t.get(*at), &["değil", "not"]) {
         *at += 1;
-        return Some(Filter::Not(Box::new(not_of(t, at)?)));
+        return Some(Filter::Not(Box::new(not_of(t, at, depth + 1)?)));
     }
     if t.get(*at) == Some(&Tok::Open) {
         *at += 1;
-        let f = or_of(t, at)?;
+        let f = or_of(t, at, depth + 1)?;
         if t.get(*at) != Some(&Tok::Close) {
             return None;
         }
@@ -2187,6 +2194,30 @@ mod tests {
 
     fn none(_: &str) -> Option<Value> {
         None
+    }
+
+    /// A filter nested past the limit is not read, on a thread as small as a worker's: before the limit a style
+    /// file's 100 000 brackets overflowed the stack (docs/adr/9401 §2).
+    #[test]
+    fn a_filter_nested_past_the_limit_is_not_read() {
+        let nested = |n: usize| format!("{}\"a\" = 1{}", "(".repeat(n), ")".repeat(n));
+        let on_a_small_thread = |source: String| {
+            std::thread::Builder::new()
+                .stack_size(2 << 20)
+                .spawn(move || {
+                    (
+                        parse_qgis(&source).is_some(),
+                        parse_filter(&source).is_some(),
+                    )
+                })
+                .expect("a thread")
+                .join()
+                .expect("neither an overflow nor a panic")
+        };
+        assert_eq!(on_a_small_thread(nested(100_000)), (false, false));
+        assert!(!on_a_small_thread(format!("{}\"a\" = 1", "not ".repeat(100_000))).0);
+        assert!(parse_qgis(&nested(MAX_FILTER_DEPTH)).is_some());
+        assert!(parse_qgis(&nested(MAX_FILTER_DEPTH + 1)).is_none());
     }
 
     #[test]
