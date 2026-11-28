@@ -144,6 +144,12 @@ Zemin (Aşama 0) hiçbir komutu, aracı ya da arayüz yüzeyini değiştirmez.
   masaüstü onu derleme zamanında gömüp ilk sorulduğunda okur. Kataloğun kendisi çalışma anında kurulmaz: şemalarıyla
   birlikte kurulması saniyeler sürer. Eski tablonun 505 çiftinin hepsi dosyadakiyle aynıydı. `text.rs` 1 226 → 704
   satır. BK-21'de komut tek tabloda bildirilince dosya o tablodan üretilir.
+- **BK-21, ilk adım (28 Kasım 2026).** Bir komutun kimliği ile girdi ve çıktı türü, kataloğun sınamaları için iki
+  ayrı yerde elle eşleniyordu (`catalog/example_inputs.rs`, 520 kol; `catalog/mod.rs`'teki sınamada 315 kol). İkisi
+  tek tabloya indi: `catalog/types.rs`, komut başına bir satır (`KİMLİK: Girdi [=> Çıktı];`); iki okuyucu bir makroyla
+  ondan üretilir. Tablo eski iki eşlemeden betikle çıkarıldı (525 kimlik, artık parça yok); bütün örnekler aynı
+  türlerle okunuyor ve üretilen katalog değişmedi. Sonraki adımlar tabloya sürümü, plan türünü ve konağı ekler ve
+  öbür kopyaları (masaüstü listesi, dağıtım, sınama koşucusu) ondan türetir.
 
 ## Doğrulama
 

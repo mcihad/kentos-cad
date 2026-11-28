@@ -112,7 +112,8 @@ Kullanıcının sorunu, profesyonel araçların karşılığı, KentOS'ta bugün
 - **TypeScript türleri:** yalnız bulut portalı için üretilir (ADR 9402). Portalın kullanacağı tür `derive(TS)` alır; portalın adını andığı tür ayrıca `ts(export)` alır (`apps/portal/src/api/types.ts`). `cargo test -p kentos-contracts` çıktıyı `apps/portal/src/api/generated/`'a yazar. Bu
   klasör elle düzenlenmez.
 - **Komut kataloğu:** `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-commands catalog`. Yeni komut için `catalog.rs`'e bir
-  `CommandDescriptor` ve örnekler ekle; katalog testindeki girdi ve çıktı tür eşlemesine de ekle. Aynı komut başlıkların
+  `CommandDescriptor` ve örnekler ekle; komutun türlerini `catalog/types.rs`'teki tabloya bir satır olarak yaz
+  (`KİMLİK: Girdi => Çıktı;`): örneklerin girdisi ve çıktısı o türlerle okunur. Aynı komut başlıkların
   dosyasını da yazar (`catalog/v1/command-titles.json`); masaüstünün geçmişi başlığı ondan okur, elle yazılan başlık
   tablosu yoktur.
 - **Ayar şeması** (kullanıcı ayarı eklendiyse): `KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings`.

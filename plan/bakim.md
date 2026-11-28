@@ -295,8 +295,15 @@ düzenlenir.
 
 - [x] **BK-20** (B1) `history/text.rs` `TITLES` silindi; başlık kataloğun ürettiği `catalog/v1/command-titles.json`'dan
   okunur (ADR 9400 “Yapılanlar”).
-- [ ] **BK-21** (B2, D3) Komut tek yerde bildirilir; `example_inputs`, çıktı eşlemesi, dağıtım, `DESKTOP_COMMANDS`,
+- [~] **BK-21** (B2, D3) Komut tek yerde bildirilir; `example_inputs`, çıktı eşlemesi, dağıtım, `DESKTOP_COMMANDS`,
   sınama koşucusu ve `use` listeleri ondan üretilir. Katalog tanımı komutun tipleriyle aynı dosyada, kendi işlevinde.
+  - [x] Türlerin tek tablosu (`commands/src/catalog/types.rs`: 525 komut, `KİMLİK: Girdi [=> Çıktı];`): girdi ve
+    çıktı okuyucuları ondan üretilir; elle yazılan iki eşleme (`example_inputs.rs` 1 568 satır, `mod.rs`'te 1 240
+    satırlık `match`) silindi; `catalog/mod.rs` 3 540 → 2 303 satır. Üretilen katalog aynı.
+  - [ ] Tablo sürümü, plan türünü ve konağı da taşır; `DESKTOP_COMMANDS` ve uygulama katmanının dağıtımındaki girdi
+    türleri ondan gelir.
+  - [ ] Sınama koşucusunun (`tests/all/fixtures/inputs_*.rs`) eşlemeleri tablodan.
+  - [ ] Dev `descriptors()` işlevleri komut başına küçük işlevlere bölünür (D3).
 - [ ] **BK-22** (B3) İşleyici iskeleti: `Result → CommandResult` dönüşümü ve `checks::fail` ortak; `create_command!`
   genellenir.
 - [ ] **BK-23** (B4) Masaüstü kataloğu tek dosyada; birleşmeden önceki ve sonraki kataloğun eşitliği sınamayla
