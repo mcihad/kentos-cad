@@ -15,6 +15,7 @@ use kentos_commands::{
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::geometry::point_in_rings;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, slabs_create, slabs_edit, spaces};
@@ -90,21 +91,6 @@ pub(crate) fn rings_of(parts: &[SpacePart]) -> Vec<Vec<Vec2>> {
         .iter()
         .flat_map(|p| std::iter::once(ring(&p.outer)).chain(p.holes.iter().map(ring)))
         .collect()
-}
-
-/// Whether a point lies inside the rings (even-odd).
-fn inside(rings: &[Vec<Vec2>], p: Vec2) -> bool {
-    let mut c = false;
-    for r in rings {
-        let n = r.len();
-        for i in 0..n {
-            let (a, b) = (r[i], r[(i + 1) % n]);
-            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
-                c = !c;
-            }
-        }
-    }
-    c
 }
 
 /// A slab drawn: its rings and its edge as the drawing shows them, and its fill.
@@ -316,7 +302,7 @@ impl SlabTool {
             if !cx.doc.layers().is_visible(&e.base().layer_id) {
                 continue;
             }
-            if inside(&rings_of(&s.slab.parts), at) {
+            if point_in_rings(at, &rings_of(&s.slab.parts)) {
                 let a = spaces::area_of(&s.slab.parts);
                 if best.is_none_or(|(b, _)| a < b) {
                     best = Some((a, Slot(e.base().id)));

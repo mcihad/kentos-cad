@@ -18,6 +18,7 @@ use kentos_geometry_core::geom::bulge::bulge_path_edges;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::opening;
 use kentos_geometry_core::geom::wall as wall_geom;
+use kentos_geometry_core::geometry::point_in_polygon;
 
 /// How far a zone is shrunk before it is tested, metres: a touch is no clash.
 pub const SLACK: f64 = 0.001;
@@ -103,18 +104,6 @@ fn area(ring: &[V]) -> f64 {
         / 2.0
 }
 
-fn inside(ring: &[V], p: V) -> bool {
-    let mut odd = false;
-    let n = ring.len();
-    for i in 0..n {
-        let (a, b) = (ring[i], ring[(i + n - 1) % n]);
-        if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
-            odd = !odd;
-        }
-    }
-    odd
-}
-
 fn cross(o: V, a: V, b: V) -> f64 {
     (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
 }
@@ -141,13 +130,14 @@ pub(crate) fn overlaps(z: &[V], o: &Obstacle) -> bool {
     if !boxes_meet(z, &o.outer) {
         return false;
     }
-    let in_body = |p: V| inside(&o.outer, p) && !o.holes.iter().any(|h| inside(h, p));
+    let in_body =
+        |p: V| point_in_polygon(p, &o.outer) && !o.holes.iter().any(|h| point_in_polygon(p, h));
     edges_cross(z, &o.outer)
         || o.holes.iter().any(|h| edges_cross(z, h))
         || z.iter().any(|p| in_body(*p))
         || o.outer
             .iter()
-            .any(|p| inside(z, *p) && !o.holes.iter().any(|h| inside(h, *p)))
+            .any(|p| point_in_polygon(*p, z) && !o.holes.iter().any(|h| point_in_polygon(*p, h)))
 }
 
 /// Whether two rings' boxes meet: the cheap test before the exact one.
@@ -402,7 +392,7 @@ pub fn fixture_front(
         }
         let Some(o) = obstacle(doc, e) else { continue };
         let at = world(width * 0.5, SLACK);
-        if inside(&o.outer, at) && !o.holes.iter().any(|h| inside(h, at)) {
+        if point_in_polygon(at, &o.outer) && !o.holes.iter().any(|h| point_in_polygon(at, h)) {
             return Some((world(width * 0.5, 0.0), 0.0, o.what));
         }
         for ring in std::iter::once(&o.outer).chain(&o.holes) {
@@ -686,5 +676,21 @@ fn dative(what: &str) -> &'static str {
         "duvar" => "duvara",
         "kolon" => "kolona",
         _ => "donatıya",
+    }
+}
+
+#[cfg(test)]
+mod shared_edge_tests {
+    use super::*;
+
+    /// A point on the edge two rings share is in exactly one of them (docs/adr/9401 §9; a case of
+    /// fixtures/geometry/v1/point_in_rings.json): the middle of the wall line between two rooms.
+    #[test]
+    fn a_point_on_a_shared_edge_is_in_one_ring() {
+        let (a, b) = (V::new(3.35, 34.25), V::new(-4.45, 42.08));
+        let p = V::new(-0.55, 38.165);
+        let left = vec![a, b, V::new(-34.45, 42.08), V::new(-34.45, 34.25)];
+        let right = vec![b, a, V::new(33.35, 34.25), V::new(33.35, 42.08)];
+        assert_ne!(point_in_polygon(p, &left), point_in_polygon(p, &right));
     }
 }

@@ -10,6 +10,7 @@
 use kentos_contracts::{Entity, StairFields};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::stair_body::{UNDER_STAIR_CLEAR, low_under, stair_body};
+use kentos_geometry_core::geometry::point_in_rings;
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::Document;
@@ -41,22 +42,6 @@ fn area_of(mut ring: Vec<Vec2>) -> Area {
         },
         holes: Vec::new(),
     }
-}
-
-/// Whether `at` lies in `rings` (even-odd).
-fn holds(rings: &[Vec<Vec2>], at: Vec2) -> bool {
-    let mut odd = false;
-    for r in rings {
-        let n = r.len();
-        for i in 0..n {
-            let (a, b) = (r[i], r[(i + 1) % n]);
-            if (a.y > at.y) != (b.y > at.y) && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
-            {
-                odd = !odd;
-            }
-        }
-    }
-    odd
 }
 
 impl Document {
@@ -106,11 +91,11 @@ impl Document {
         let at = |p: &kentos_contracts::Vec2| Vec2::new(p.x, p.y);
         slabs
             .iter()
-            .find(|(r, top, _)| holds(r, at(end)) && (top - arrive).abs() <= 0.5)
+            .find(|(r, top, _)| point_in_rings(at(end), r) && (top - arrive).abs() <= 0.5)
             .or_else(|| {
                 slabs
                     .iter()
-                    .find(|(r, top, _)| holds(r, at(start)) && (top - base).abs() <= 0.5)
+                    .find(|(r, top, _)| point_in_rings(at(start), r) && (top - base).abs() <= 0.5)
             })
             .map(|(_, _, t)| *t)
     }

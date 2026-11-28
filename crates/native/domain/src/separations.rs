@@ -21,6 +21,7 @@
 //!   of one kind on consecutive storeys, the middle of one inside the other, are one shaft, named by its lowest room's
 //!   persistent id (the storeys' order; a shaft on no storey is its own). Its area is its outline's.
 
+use kentos_geometry_core::geometry::{point_in_polygon, point_in_rings};
 use std::collections::BTreeMap;
 
 use kentos_contracts::{Entity, SpaceMethod};
@@ -99,14 +100,14 @@ pub(crate) fn element(
 ) -> At {
     if let Some((o, ..)) = openings
         .iter()
-        .filter(|(_, l, place)| l == level && holds(place, m))
+        .filter(|(_, l, place)| l == level && point_in_polygon(m, place))
         .min_by(|a, b| a.0.cmp(&b.0))
     {
         return At::Opening(o.clone());
     }
     walls
         .iter()
-        .filter(|(_, l, rings)| l == level && rings.iter().filter(|r| holds(r, m)).count() % 2 == 1)
+        .filter(|(_, l, rings)| l == level && point_in_rings(m, rings))
         .min_by(|a, b| a.0.cmp(&b.0))
         .map_or(At::Open, |(w, ..)| At::Wall(w.clone()))
 }
@@ -152,19 +153,6 @@ pub(crate) fn spans<K: Clone + PartialEq>(
         from = to;
     }
     out
-}
-
-/// Whether `ring` holds `p` (even-odd).
-fn holds(ring: &[Vec2], p: Vec2) -> bool {
-    let n = ring.len();
-    let mut odd = false;
-    for i in 0..n {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
-            odd = !odd;
-        }
-    }
-    odd
 }
 
 impl Document {
