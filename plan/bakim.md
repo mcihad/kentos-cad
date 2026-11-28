@@ -19,6 +19,14 @@ Sahibin kararları (28 Kasım 2026):
 - `.kcad`: şema zinciri dondurulur; yeni alanlar modül sürümüne ya da adlı zorunlu uzantıya yazılır.
 - Katalog: donmuş web envanteri ile ekler tek masaüstü kataloğunda birleştirilir.
 
+Sahibin ikinci kararı (28 Kasım 2026, yürütme sırasında; [ADR 9402](../docs/adr/9402-web-and-wasm-removed.md)):
+
+- Web uygulaması ve WASM desteği sistemden tamamen kaldırılır; dosyaları silinir. İhtiyaç olursa ileride yeniden
+  eklenir.
+- TypeScript yalnız KentOS Bulut (portal) için üretilir.
+- `jsmath` (JavaScript'in sayı davranışının kopyası) yerine CAD için doğru sonuç veren bir sayısal temele geçilir.
+- Bu iş Aşama 1'in ardından, Aşama 2'den önce yürütülür (Aşama 8).
+
 Kural: refactor davranışı değiştirmez; doğruluk düzeltmesi ayrı commit'tir ve düzeltmeden önce kırmızı olan bir
 sınamayla gelir. Her dilim bir commit; önce o crate'in hedefli sınaması, sonra `make guard`. Yürütme sırayla, tek
 elden; alt ajan için ayrıca sorulur.
@@ -256,8 +264,22 @@ düzenlenir.
   yeniden yazıldı; bekçi dört ad daha arar ve `crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`'yi de tarar.
   - Açık: “Excel (.xlsx)” 27 yerde biçim adı olarak duruyor (sahibin kararı).
   - Sözleşmelerin belge yorumlarındaki kitaplık adı BK-16'da temizlendi.
-- [ ] **BK-19** (A5) Doğrudan yazıcılar kilitli katman denetimine ve tek geri alma adımına bağlanır; komuta
-  çevrilmeleri Aşama 2'den sonra. Stil yöneticisi `cad.library.edit`'e geçer.
+- [~] **BK-19** (A5; ADR 9401 §10) Ölçüm: uygulama katmanındaki 26 `doc.remove`'un 24'ü bir komutun denetiminden
+  sonra. Yapılan (§10.1): dört aracın eski işaretleri (renk planı lejandı, kaçış yolları, gölge, vaziyet ölçüleri)
+  kilitli katmandaysa silinmez ve yenisi çizilmez; tek yardımcı `marks::take_away`, silme `cad.entities.delete`'in
+  işleyicisiyle. Dört sınama önce kırmızıydı.
+  - Kalan: `cad.xrefs.edit`'in `detach`'i yerleştirmeleri kilide bakmadan siler
+    (`application/src/core/xrefs.rs`, `Plan::Detach`, `inserts_of`; dosyada kilit denetimi yok). Ortak durum ve
+    üreteci (`xref_command_cases.py`) ister.
+  - Kalan: `road.project.rebuild`, `edited` ile istenen çizimin nesnelerini başka (kilitli) bir katmana taşınmış
+    olsalar da siler (`road_project_rebuild.rs` `run_drawing`, `road_project_regional.rs`); komutun denetimi yalnız
+    çizimin kendi katmanına bakar.
+  - Kalan: stil pencereleri (yönetici, tasarımcı, SVG düzenleyicisi, şablonlar; 20 çağrı) projenin kitaplığını
+    `Styles::changed` → `doc.set_styles` ile bütün olarak yazar. `cad.library.edit` öğe öğe çalışır ve dokuz
+    işleminde kategori yoktur: geçiş komuta kategori işlemleri eklemeyi ister (§9.2 zinciri), Aşama 2'den sonra.
+  - Kalan: dört aracın ve imar takımının kendi komutu (Aşama 2'den sonra).
+  - Stil tablolarını yazan pencereler (`style_tables::save_*`) kilide kendi bakıyor ve `cad.styles.edit` ile aynı
+    kodu kullanıyor; plan ölçüleri aracı da kilide bakıyor. Onlar bulgu değil.
 
 ### Aşama 2 — Tek kaynak: kopyayı türetmeye çevir
 
@@ -269,7 +291,7 @@ düzenlenir.
 - [ ] **BK-23** (B4) Masaüstü kataloğu tek dosyada; birleşmeden önceki ve sonraki kataloğun eşitliği sınamayla
   kanıtlanır. `PORTED` BK-32'nin işleyici tablosundan türer.
 - [ ] **BK-24** (B5) Araç listesi tek tablo.
-- [ ] **BK-25** (G1) Üretilen çıktılar donmuş web'in dışına taşınır; portal ve SDK üreteci yeni yeri okur.
+- [ ] **BK-25** (G1) Aşama 8'e taşındı: BK-82 (komut kataloğu) ve BK-83 (TypeScript yalnız Bulut için).
 
 ### Aşama 3 — Masaüstü kabuğu
 
@@ -312,6 +334,44 @@ düzenlenir.
   `kod-incelemesi`; `.claude/agents/inceleyici.md` (salt okunur, Fable değil). Kalan: yeni komut skill'i (BK-21 tarifi
   değiştirince), resim çekme skill'i, kökteki inceleme dosyalarının `docs/devir/`'e taşınması.
 - [ ] **BK-72** Sunucu, bulut istemcisi, eklenti konağı ve imza için aynı inceleme.
+
+### Aşama 8 — Web ve WASM'ın kaldırılması; sayısal temel
+
+Karar ve ölçüm: [ADR 9402](../docs/adr/9402-web-and-wasm-removed.md). Sıra bağımlılığa göredir: önce web'den bir şey
+alan her yer kendi kopyasına ya da yeni yerine bağlanır, klasör en son silinir. Her madde bir commit; her birinin
+sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
+
+- [ ] **BK-80 — Portal kendi ayakları üstünde.** Portal web'den üç TypeScript dosyası (`ui/dom.ts`,
+  `core/signal.ts`, `core/disposable.ts`), üç stil dosyası (`fonts.css`, `tokens.css`, `accents.css`) ve yazı
+  tiplerini (13 aile, 1,3 MB) alıyor. Hepsi portala taşınır. Yazı tipi üreteçleri (`scripts/fonts/ui_fonts.py`,
+  `drawing_fonts.py`, `sheet_metrics.py`) kaynağı portaldan okur.
+- [ ] **BK-81 — Masaüstünün web'den aldıkları.** Yeni proje sihirbazının iki resmi (`include_str!`) masaüstüne;
+  sınamaların okuduğu dosyalar yerlerine: `tokens.css` (2 sınama) portalınkine, `labelDefaults.ts` ve işlem
+  araçlarının iki alanı (üreteç `processing_command_cases.py`) dondurulmuş başvuru dosyasına, `favicon.svg`
+  portalınkine.
+- [ ] **BK-82 — Komut kataloğu `catalog/v1/commands.json`.** Yazan: komutların sınaması. Okuyanlar: SDK üreteci,
+  CAD manifesti, CBS kapsam betiği, geçmiş çağrıları betiği, iki Python sınaması, masaüstünün başlık sınaması. SDK
+  yeniden üretilir (yalnız başlık satırı değişir).
+- [ ] **BK-83 — TypeScript yalnız Bulut için.** `ts-rs` çıktısı `apps/portal/src/api/generated`'a yazılır ve yalnız
+  portalın adını andığı 110 türle onların içe aldıkları üretilir (342 dosya; bugün 3 899). Kalan: kullanılmayan
+  `ts` özniteliklerinin silinmesi (üç crate'te 16 157 satır) ayrı bir dilimdir.
+- [ ] **BK-84 — WASM.** Dokuz bağlayıcı crate (`crates/wasm`), `wasm-bindgen`, `wasm` ve `wasm-dev` profilleri,
+  ortak crate'lerdeki 13 `cfg(target_arch = "wasm32")` satırı (5 dosya), `scripts/wasm`.
+- [ ] **BK-85 — `apps/web` silinir.** 5 535 izlenen dosya. pnpm çalışma alanı ve kilit dosyası, `.gitignore`,
+  yalnız web'e yazan ya da web'in düzeneğini kullanan betikler (`scripts/ui/arrow_icons.py`, `hatch_icons.py`,
+  `scripts/wgsl/browser-check.mjs`). Bekçi: `apps/web` ve `crates/wasm` geri gelemez (`make guard`).
+- [ ] **BK-86 — Katalogda `web` konağı.** 24 komutun konağı `web` ve `desktop`. Konak listesinden `web` çıkar;
+  katalog ve SDK yeniden üretilir. Sunucunun tarayıcı istemcisi (`x-kentos-client: web`, `Client::Web`) kalır: o
+  portaldır.
+- [ ] **BK-87 — Kurallar ve belgeler.** CLAUDE.md (web ve WASM'ı anan kurallar), kılavuz §4, envanter belgeleri,
+  `Makefile` ve `Cargo.toml` yorumları. Yorumlarda `apps/web/…` yolunu anan satırlar (Rust 439, Python ~230) ve
+  “native/WASM” sözleri: sayısı bekçiyle izlenir, yalnız azalır; dokunulan dosyada temizlenir.
+- [ ] **BK-88 — Sayısal temel.** `jsmath` 696 dosyada kullanılıyor (`js_max` 882, `js_hypot` 702, `js_min` 494,
+  `js_round` 159 çağrı; `libm`'den 15 işlev). Sıra: araştırma (doğru yuvarlanan temel işlevler, hatasız dönüşümler,
+  kesin yüklemler, aralık aritmetiği; kaynakları ADR'de), karar (ADR 9403), bağımsız yüksek hassasiyetli başvuru,
+  işlev ailesi başına geçiş. Beklenen değerler başvurudan yeniden üretilir, koddan değil. JavaScript'in metin
+  davranışını taşıyan yardımcılar (`js_trim`, `js_number`, `parse_number`) aynı işte adlandırılır ve kuralları
+  yazılır.
 
 ## Doğrulama
 
