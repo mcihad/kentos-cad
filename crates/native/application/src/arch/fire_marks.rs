@@ -11,7 +11,7 @@
 use kentos_commands::{
     CommandResult, EntitiesCreate, EntityGeometry, NewObject, TextAlign, TextFace,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::Document;
 use kentos_geometry_core::Vec2 as V;
 
 use crate::{ExecutionContext, create};
@@ -54,14 +54,7 @@ pub fn words(w: &crate::fire_audit::Walk) -> String {
 /// Draws `level`'s walks (every storey's when none) on the active layer, the old marks taken away first; one undo step
 /// when the caller holds a group.
 pub fn draw(doc: &mut Document, level: Option<&str>) -> Result<Drawn, String> {
-    let old: Vec<Slot> = doc
-        .entities()
-        .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
-        .map(|e| Slot(e.base().id))
-        .collect();
-    if !old.is_empty() {
-        doc.remove(&old);
-    }
+    crate::marks::take_away(doc, MARK_ATTR, "Eski kaçış yolları")?;
     let walks: Vec<crate::fire_audit::Walk> = crate::fire_audit::walks(doc)
         .into_iter()
         .filter(|w| level.is_none() || w.level.as_deref() == level)

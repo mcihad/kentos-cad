@@ -501,3 +501,37 @@ fn the_escape_routes_tool_draws_the_storey_s_walks_with_their_limits() {
     let _ = app.update(Message::Run("edit.undo"));
     assert!(marks(&app).is_empty(), "{:#?}", marks(&app));
 }
+
+/// Escape walks on a locked layer are not taken away (docs/adr/9401 §10): run again with another layer active, the
+/// tool leaves the old walks as they are, draws no second set, and says which layer to open.
+#[test]
+fn the_escape_routes_tool_leaves_walks_on_a_locked_layer() {
+    let mut app = tall_dwelling();
+    let _ = app.update(Message::ActiveLevel(Some("zemin".into())));
+    let marks = |app: &App| -> Vec<(String, u32)> {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities()
+            .filter(|e| e.base().attrs.contains_key("Kaçış"))
+            .map(|e| (e.base().layer_id.clone(), e.base().id))
+            .collect()
+    };
+    let _ = app.update(Message::Run("tool.escapeRoutes"));
+    let first = marks(&app);
+    assert!(!first.is_empty());
+    let old = first[0].0.clone();
+    {
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let other = doc
+            .add_layer(kentos_domain::NewLayer::layer("Başka"), None, false)
+            .expect("a layer");
+        assert!(doc.set_active_layer(&other));
+        assert!(doc.set_layer_locked(&old, true));
+    }
+    let _ = app.update(Message::Run("tool.escapeRoutes"));
+    assert_eq!(marks(&app), first, "the old walks as they were, no second set");
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.contains("kilitli") && said.contains("Katmanlar"),
+        "{said}"
+    );
+}

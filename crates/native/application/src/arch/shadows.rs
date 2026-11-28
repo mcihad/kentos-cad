@@ -17,7 +17,7 @@ use kentos_commands::{
     CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject,
     TextAlign, Vec2,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::Document;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::region::{intersect_area_sets, subtract_areas, union_areas};
 use kentos_geometry_core::geom::section::Height;
@@ -398,14 +398,7 @@ pub fn clock(hours: f64) -> String {
 /// away first; how many areas. One time: filled with a light hatch under its outline; several: each its outline and its
 /// time at its tip, the point farthest down the sun's rays. One undo step when the caller holds a group.
 pub fn draw(doc: &mut Document, layer: &str, shadows: &[Hour]) -> Result<usize, String> {
-    let old: Vec<Slot> = doc
-        .entities()
-        .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
-        .map(|e| Slot(e.base().id))
-        .collect();
-    if !old.is_empty() {
-        doc.remove(&old);
-    }
+    crate::marks::take_away(doc, MARK_ATTR, "Eski gölge")?;
     let h = 2.5 / 1000.0 * doc.settings().plot_scale;
     let filled = shadows.len() == 1;
     let object = |geometry, what: &str, color: &str| NewObject {

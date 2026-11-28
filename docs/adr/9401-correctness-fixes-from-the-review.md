@@ -449,6 +449,40 @@ dosyaları ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
   başka işlerden; dokunulmadı, sahibine bildirildi.
 - `scene3d_building_tests` tam koşuda ara sıra düşüyor: iki sınama aynı geçici klasörü kullanıyor.
 
+### 10. Komutun dışından yazan yerler kilitli katman kuralına uyar (BK-19)
+
+Kural (CLAUDE.md §7): belge değişikliği kilitli katman kurallarına uyar. Belgenin kendi yazıcıları (`Document::remove`,
+`add`, `update`) kilide bakmaz; kilide komutlar bakar. Komutun dışından, belgenin yazıcısını doğrudan çağıran yer
+kuralı atlar.
+
+**Ölçüm.** Uygulama katmanında 26 `doc.remove` çağrısı var; 24'ü bir komutun yazma adımında ve komutun denetiminden
+sonra. Komutun dışından silen dört yer bulundu (§10.1). Uygulama katmanının dışında belgeye doğrudan yazan tek başka
+yer plan ölçüleri aracıdır (`interaction/src/arch/plan_dimensions.rs`); o kilide kendi bakıyor.
+
+#### 10.1 Aracın kendi işaretleri: eskisi kilitli katmandaysa yenisi çizilmez
+
+**Bulgu.** Dört araç her çalıştığında kendi işaretlerini yeniden çizer ve önce eskilerini siler: renk planı lejandı,
+kaçış yolları, gölge, vaziyet planının ölçüleri. Eskiler taşıdıkları öznitelikle bulunup doğrudan `doc.remove` ile
+siliniyordu. İşaretler kilitli bir katmandaysa (kullanıcı katmanı kilitleyip başka katmanı etkin yaptıysa) kilide
+rağmen siliniyor, yenileri etkin katmana çiziliyordu.
+
+**Karar.**
+
+- Tek yardımcı: `kentos_native_application::marks::take_away`. Dört yazıcı onu çağırır.
+- Eski işaretlerden biri kilitli katmandaysa hiçbiri silinmez ve yenisi çizilmez; araç katmanın adını ve çözümü söyler
+  (“Eski lejant kilitli “Lejant” katmanında; yerine yenisi çizilemez. Kilidi Katmanlar panelinden açın.”). Örnek alınan
+  karar mahal kaplamasınınkidir (`cad.spaces.finish`: eski kaplama kilitli katmandaysa yenisi yazılmaz).
+- Kilitli olanları bırakıp yenisini çizmek seçilmedi: planda iki takım işaret kalırdı.
+- Silme, silme komutunun kendisiyle yapılır (`cad.entities.delete`'in işleyicisi): her nesne için baktığı ilişki
+  kurallarına işaret için de bakılır.
+- Dört araç da yazdıklarını zaten tek geri alma adımında topluyordu (`begin_group`); ret adımı geri alır.
+
+**Kalan (BK-19).** Dört aracın kendi komutu yok: MCP, Python, eklenti ve yapay zekâ ajanı lejant, kaçış yolu, gölge ya
+da vaziyet ölçüsü çizemez. Komuta çevrilmeleri (§9.2 zinciri) Aşama 2'den sonradır; komut eklemek o zaman ucuzlar.
+
+**Sınama.** Dört sınama düzeltmeden önce kırmızıydı (işaretler kilitli katmandan silinip öbür katmana çiziliyordu):
+uygulama katmanında lejant ve gölge, masaüstünde kaçış yolları aracı ve parsel aracı.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -470,6 +504,7 @@ dosyaları ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
 | Formlar'ın bu aygıtta tutulan taslağı (BK-13) | yok: profilinde yok | var | yok: profilinde yok | var | yok: taslak pencerenindir; kanal formu `cad.forms.edit` ile yazar | yok: aynı | yok: aynı | yok: aynı |
 | Kütle (`tool.mass`) ve kütlenin düzenlenmesi (BK-16) | var | yok: Mimari'nin işi | yok | yok | var: `cad.masses.create`, `cad.arch.edit` | var: `kentos.cad.masses.create` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Çizime yazılan sayılar ve nokta-alan kararı (BK-17) | var | var | var | var | var: aynı çekirdek işlevi | var: aynı | var: aynı | var: aynı |
+| Renk planı lejandı, Kaçış yolları, Gölge, Parsel'in ölçüleri (BK-19, §10.1) | var | yok: Mimari'nin araçları | yok | yok | yok: araçların komutu yok (BK-19'un kalanı) | yok: aynı | yok: aynı | yok: aynı |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal

@@ -152,14 +152,11 @@ impl ParcelTool {
     }
 
     fn draw_marks(report: &kentos_domain::site::SiteReport, cx: &mut Context<'_>) -> Option<usize> {
-        let old: Vec<kentos_domain::Slot> = cx
-            .doc
-            .entities()
-            .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
-            .map(|e| kentos_domain::Slot(e.base().id))
-            .collect();
-        if !old.is_empty() {
-            cx.doc.remove(&old);
+        if let Err(why) =
+            kentos_native_application::marks::take_away(cx.doc, MARK_ATTR, "Eski vaziyet ölçüleri")
+        {
+            cx.say(Level::Warn, why);
+            return None;
         }
         let layer = cx.doc.layers().active().to_owned();
         let look = |what: &str| kentos_commands::NewLook {

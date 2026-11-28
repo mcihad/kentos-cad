@@ -312,4 +312,34 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
             .floors,
         5
     );
+    // The marks on a locked layer are not taken away (docs/adr/9401 §10): with another layer active, the tool leaves
+    // them as they are, draws no second set, and says which layer to open.
+    let placed = |app: &App| -> Vec<(String, u32)> {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities()
+            .filter(|e| {
+                e.base()
+                    .attrs
+                    .contains_key(kentos_interaction::parcel_tool::MARK_ATTR)
+            })
+            .map(|e| (e.base().layer_id.clone(), e.base().id))
+            .collect()
+    };
+    let before = placed(&app);
+    {
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let other = doc
+            .add_layer(kentos_domain::NewLayer::layer("Başka"), None, false)
+            .expect("a layer");
+        assert!(doc.set_active_layer(&other));
+        assert!(doc.set_layer_locked(&layer, true));
+    }
+    let _ = app.update(Message::Run("tool.siteParcel"));
+    let _ = app.submit_line("");
+    assert_eq!(placed(&app), before, "the old marks as they were, no second set");
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.contains("kilitli") && said.contains("Katmanlar"),
+        "{said}"
+    );
 }

@@ -12,7 +12,7 @@ use kentos_commands::{
     CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject,
     TextAlign, Vec2,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::Document;
 
 use crate::{ExecutionContext, create};
 
@@ -48,14 +48,7 @@ pub fn draw(
     if rows.is_empty() {
         return Err("Bu katta mahal yok: renk planının lejandı mahallerden yapılır.".into());
     }
-    let old: Vec<Slot> = doc
-        .entities()
-        .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
-        .map(|e| Slot(e.base().id))
-        .collect();
-    if !old.is_empty() {
-        doc.remove(&old);
-    }
+    crate::marks::take_away(doc, MARK_ATTR, "Eski lejant")?;
     let h = 2.5 / 1000.0 * doc.settings().plot_scale;
     let p = |x: f64, y: f64| Vec2 {
         x: at.x + x,

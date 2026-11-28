@@ -188,3 +188,38 @@ fn one_hour_is_filled_several_are_outlined_with_their_times_and_drawn_again_they
         .collect();
     assert_eq!(times, ["09:00", "12:00"]);
 }
+
+/// Shadows on a locked layer are not taken away (docs/adr/9401 §10): drawn again on another layer, the old ones stay
+/// as they are, no second set is drawn, and the refusal names the layer.
+#[test]
+fn shadows_on_a_locked_layer_are_not_replaced() {
+    use kentos_domain::NewLayer;
+    let mut doc = drawing(vec![column()]);
+    let layer = doc
+        .add_layer(NewLayer::layer("Gölge"), None, false)
+        .unwrap();
+    let s = 0.5_f64.sqrt();
+    let sun = [0.0, -s, s];
+    let one = vec![("12:00".to_owned(), sun, shadows::shadow(&doc, sun))];
+    shadows::draw(&mut doc, &layer, &one).expect("drawn");
+    let marks = |doc: &Document| -> Vec<(String, u32)> {
+        doc.entities()
+            .filter(|e| e.base().attrs.contains_key(shadows::MARK_ATTR))
+            .map(|e| (e.base().layer_id.clone(), e.base().id))
+            .collect()
+    };
+    let before = marks(&doc);
+    assert!(!before.is_empty());
+    assert!(doc.set_layer_locked(&layer, true));
+    let why =
+        shadows::draw(&mut doc, "0", &one).expect_err("the old shadows are on a locked layer");
+    assert!(
+        why.contains("“Gölge”") && why.contains("kilitli") && why.contains("Katmanlar"),
+        "{why}"
+    );
+    assert_eq!(
+        marks(&doc),
+        before,
+        "the old shadows as they were, no second set"
+    );
+}

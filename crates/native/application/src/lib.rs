@@ -231,6 +231,8 @@ pub mod lineage;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/maplibre.rs"]
 pub mod maplibre;
+#[path = "core/marks.rs"]
+pub mod marks;
 #[path = "core/parameters_edit.rs"]
 pub mod parameters_edit;
 #[cfg(feature = "mod-gis")]

@@ -210,6 +210,50 @@ fn the_legend_is_drawn_and_drawn_again_in_one_place() {
     assert!(why.contains("Renk planı kapalı"), "{why}");
 }
 
+/// A legend on a locked layer is not taken away (docs/adr/9401 §10): drawn again on another layer, the old one stays
+/// as it is, no second legend is drawn beside it, and the refusal names the layer and how to open it.
+#[test]
+fn a_legend_on_a_locked_layer_is_not_replaced() {
+    use kentos_domain::NewLayer;
+    let mut doc = drawing(
+        vec![room(0.0, "zemin", Some("Salon"), None, None)],
+        Some("usage"),
+    );
+    let legend = doc
+        .add_layer(NewLayer::layer("Lejant"), None, false)
+        .unwrap();
+    color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 0.0, y: -2.0 }, &legend).expect("drawn");
+    let marks = |doc: &Document| -> Vec<(String, u32)> {
+        doc.entities()
+            .filter(|e| e.base().attrs.contains_key(color_legend::MARK_ATTR))
+            .map(|e| (e.base().layer_id.clone(), e.base().id))
+            .collect()
+    };
+    let before = marks(&doc);
+    assert!(!before.is_empty() && before.iter().all(|(l, _)| *l == legend));
+    assert!(doc.set_layer_locked(&legend, true));
+    let why = color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 20.0, y: -2.0 }, "0")
+        .expect_err("the old legend is on a locked layer");
+    assert!(
+        why.contains("“Lejant”") && why.contains("kilitli") && why.contains("Katmanlar"),
+        "{why}"
+    );
+    assert_eq!(
+        marks(&doc),
+        before,
+        "the old legend as it was, no second one"
+    );
+    // Opened, it is replaced as before.
+    assert!(doc.set_layer_locked(&legend, false));
+    color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 20.0, y: -2.0 }, "0").expect("drawn");
+    assert!(
+        marks(&doc).iter().all(|(l, _)| l == "0"),
+        "{:?}",
+        marks(&doc)
+    );
+    assert_eq!(marks(&doc).len(), before.len());
+}
+
 #[test]
 fn a_colour_plan_round_trips_under_arch_data_44() {
     let mut doc = drawing(vec![room(0.0, "zemin", Some("Salon"), None, None)], None);
