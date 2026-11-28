@@ -78,6 +78,20 @@ fn the_rooms_are_the_building_not_the_ground_in_its_shadow() {
 }
 
 #[test]
+fn light_passes_through_a_slab_s_hole() {
+    // A 10 m square slab on 1. kat (2.85–3.00 m) with a 4 m square hole in its middle; the sun in the south 45° up.
+    let ring = |x0: f64, y0: f64, s: f64| {
+        json!({"pts": [{"x": x0, "y": y0}, {"x": x0 + s, "y": y0}, {"x": x0 + s, "y": y0 + s}, {"x": x0, "y": y0 + s}]})
+    };
+    let slab = json!({"kind": "slab", "parts": [{"outer": ring(0.0, 0.0, 10.0), "holes": [ring(3.0, 3.0, 4.0)]}],
+        "thickness": 0.15, "arch": {"level": "k1"}});
+    let s = 0.5_f64.sqrt();
+    let a = area_of(&shadows::shadow(&drawing(vec![slab]), [0.0, -s, s]));
+    // Its sweep 10 × 10.15 less the light through the hole 4 × 3.85: the hole cast no shadow.
+    assert!((a - (101.5 - 15.4)).abs() < 1e-6, "{a}");
+}
+
+#[test]
 fn the_place_is_the_project_s_or_the_one_given_and_true_north_the_plan_s_without_an_arrow() {
     let wall = json!({"kind": "wall", "pts": [{"x": 0.0, "y": 0.0}, {"x": 6.0, "y": 0.0}], "width": 0.25, "height": 3.0,
                       "arch": {"level": "zemin"}});

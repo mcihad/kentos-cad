@@ -82,6 +82,10 @@
   - **prizma** (duvar, kolon, kiriş, döşeme): alt kotundan (en az ±0,00) üst kotuna;
   - **eğik düzlem** (çatı yüzü): her köşe kendi yüksekliğinden;
   - **merdiven kolu**: tabanından son basamağına.
+- **Delikli cisim** (avlulu ya da merdiven boşluklu döşeme): halkaları tek-çift kuralıyla okunur; bir halka, köşesi
+  öbürlerinin tek sayısının içindeyse deliktir (orta noktası değil: avlulu dış halkanın ortası avludadır). Gölgesi dış
+  halkalarının süpürülmesi, eksi her deliğin alt ve üst yüzünün birlikte geçirdiği ışık. İlk sürüm her halkayı dolu
+  süpürüyordu: deliğin de gölgesi düşüyordu (10 m'lik döşemede 4 m'lik delik: 101,5 yerine 86,1 m²).
 - Bir yükseklik birimi zemine `(−sx/up, −sy/up)` kadar kayar. Süpürülen halkaların birleşiminden binanın ±0,00'da
   oturduğu alan çıkarılır: kalan, binanın zemindeki gölgesidir.
 - **Binanın oturduğu alan:** ±0,00'a inen cisimler, binanın oradaki dış çevresi (`site_ground::building_corners`,
@@ -165,7 +169,8 @@
 
 - **Güneş** (`geom::sun`, 4 sınama): Greenwich ve Sivas'ın gündönümü öğleleri; ılım noktasında güneşin doğudan
   doğup batıdan batması, gece ufkun altında olması; plan kuzeyi dönünce güneşin de dönmesi; gün ve aydan yılın günü.
-- **Uygulama** (`crates/native/application/tests/all/shadows.rs`, 4 sınama):
+- **Uygulama** (`crates/native/application/tests/all/shadows.rs`, 5 sınama; deliğin içinden ışık geçiyor:
+  `light_passes_through_a_slab_s_hole`):
   - 1 × 1 m, 3 m yüksek kolon, 45° güneş: gölge kuzeye 3 m, alanı 3,00 m² (kolonun oturduğu alan dışında). Alçak
     güneşte daha uzun; güneş batınca yok.
   - Konum: koordinat sistemi yoksa enlem ve boylam istenir; verilince kullanılır, kuzey oku yoksa plan kuzeyi alınır.

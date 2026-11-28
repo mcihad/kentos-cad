@@ -18,7 +18,7 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
-use kentos_geometry_core::geom::region::{subtract_areas, union_areas};
+use kentos_geometry_core::geom::region::{intersect_area_sets, subtract_areas, union_areas};
 use kentos_geometry_core::geom::section::Height;
 use kentos_geometry_core::geom::sun::{self, Sun};
 use kentos_geometry_core::geometry::point_in_polygon;
@@ -206,6 +206,20 @@ fn inside_of(ring: &[P]) -> Option<P> {
     (xs.len() >= 2).then(|| P::new((xs[0] + xs[1]) / 2.0, y))
 }
 
+/// Which of a solid's `rings` are holes, by the even-odd rule its rings follow: one whose corner lies inside an odd
+/// number of the others (a corner, not a middle: a courtyard's outer ring has its middle in the courtyard).
+fn holes_of(rings: &[Vec<P>]) -> Vec<bool> {
+    rings
+        .iter()
+        .enumerate()
+        .map(|(i, r)| {
+            r.first().is_some_and(|&p| {
+                rings.iter().enumerate().filter(|&(j, o)| j != i && o.len() >= 3 && point_in_polygon(p, o)).count() % 2 == 1
+            })
+        })
+        .collect()
+}
+
 /// `ground` with every hole a solid of `model` covers filled.
 fn covered(model: &crate::sections::Model, ground: Vec<Area>) -> Vec<Area> {
     let mut filled: Vec<Area> = ground
@@ -242,11 +256,36 @@ pub fn shadow_of(caster: &Caster, sun: [f64; 3]) -> Vec<Area> {
                     continue;
                 }
                 let b = bottom.max(0.0);
-                for ring in &solid.rings {
-                    sweep(ring, b, *top, v, &mut pieces);
-                    if *bottom <= 0.01 && ring.len() >= 3 {
-                        footprint.push(area(ring.clone()));
+                let holes = holes_of(&solid.rings);
+                if !holes.contains(&true) {
+                    for ring in &solid.rings {
+                        sweep(ring, b, *top, v, &mut pieces);
+                        if *bottom <= 0.01 && ring.len() >= 3 {
+                            footprint.push(area(ring.clone()));
+                        }
                     }
+                    continue;
+                }
+                // A solid with holes (a courtyard, a stair's opening): its outer rings' sweep less the light through
+                // each hole, the rays its bottom and its top both let by. Swept whole, a slab's hole cast a shadow.
+                let (mut own, mut light, mut ground, mut open) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+                for (ring, hole) in solid.rings.iter().zip(&holes).filter(|(r, _)| r.len() >= 3) {
+                    if *hole {
+                        let at = |z: f64| area(ring.iter().map(|p| P::new(p.x + v.0 * z, p.y + v.1 * z)).collect());
+                        light.extend(intersect_area_sets(&[vec![at(b)], vec![at(*top)]]));
+                        if *bottom <= 0.01 {
+                            open.push(area(ring.clone()));
+                        }
+                    } else {
+                        sweep(ring, b, *top, v, &mut own);
+                        if *bottom <= 0.01 {
+                            ground.push(area(ring.clone()));
+                        }
+                    }
+                }
+                pieces.extend(subtract_areas(&union_areas(&own), &union_areas(&light)));
+                if !ground.is_empty() {
+                    footprint.extend(subtract_areas(&union_areas(&ground), &union_areas(&open)));
                 }
             }
             Height::Sloped(s) => {
