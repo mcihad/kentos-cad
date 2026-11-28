@@ -44,6 +44,74 @@ pub struct KeptDraft {
     pub body: FormBody,
 }
 
+/// The drafts' writes, one out at a time (docs/adr/9401 §6). The draft was written inside every event of the window,
+/// on the interface thread, and a write that failed was dropped without a word. Now a write runs on a thread of its
+/// own; a newer draft waits for it and takes the place of one already waiting, so the file ends as the window is; a
+/// failure is said once, until a write goes in again.
+#[derive(Debug, Default)]
+pub struct DraftKeeper {
+    writing: bool,
+    /// The newest draft not written yet, with its project.
+    waiting: Option<(String, KeptDraft)>,
+    /// The last draft handed to a write: the same one is not written again.
+    last: Option<(String, KeptDraft)>,
+    /// A draft let go (saved, or Vazgeç) while its write was out: its project and form. The file is taken away again
+    /// when the write ends.
+    let_go: Option<(String, String)>,
+    failed: bool,
+}
+
+impl DraftKeeper {
+    /// The draft to write now, when none is out; else it waits. None also for the draft written last.
+    pub fn take(&mut self, project: String, draft: KeptDraft) -> Option<(String, KeptDraft)> {
+        let next = (project, draft);
+        if self.last.as_ref() == Some(&next) && self.waiting.is_none() {
+            return None;
+        }
+        if self.writing {
+            self.waiting = Some(next);
+            return None;
+        }
+        self.writing = true;
+        self.let_go = None;
+        self.last = Some(next.clone());
+        Some(next)
+    }
+
+    /// A write ended: the draft let go meanwhile (its file is to be taken away), whether the failure is news, and
+    /// the draft that waited.
+    pub fn ended(&mut self, written: &Result<(), String>) -> Ended {
+        self.writing = false;
+        let news = written.is_err() && !self.failed;
+        self.failed = written.is_err();
+        if written.is_err() {
+            // Not on the disk: the same draft is tried again at the next step.
+            self.last = None;
+        }
+        Ended {
+            let_go: self.let_go.take(),
+            news,
+            next: self.waiting.take(),
+        }
+    }
+
+    /// The draft of `form` is let go: what waits is forgotten, and a write still out does not bring the file back.
+    pub fn let_go(&mut self, project: &str, form: &str) {
+        self.waiting = None;
+        self.last = None;
+        if self.writing {
+            self.let_go = Some((project.to_owned(), form.to_owned()));
+        }
+    }
+}
+
+/// What [`DraftKeeper::ended`] found.
+pub struct Ended {
+    pub let_go: Option<(String, String)>,
+    pub news: bool,
+    pub next: Option<(String, KeptDraft)>,
+}
+
 /// The folder; none (tests, a device without a data folder): nothing is kept.
 #[derive(Clone, Debug, Default)]
 pub struct FormFiles {
@@ -165,13 +233,14 @@ impl FormFiles {
             .map(|d| d.join("taslak").join(format!("{key}.json")))
     }
 
-    /// Keeps the window's draft of `form` in `project` (written each step; small).
-    pub fn keep_draft(&self, project: &str, draft: &KeptDraft) {
-        if let Some(path) = self.draft_file(project, &draft.form)
-            && let Ok(text) = serde_json::to_vec(draft)
-        {
-            let _ = write_atomically(&path, &text);
-        }
+    /// Writes the window's draft of `form` in `project`; why it could not be written. Without a folder nothing is
+    /// kept and nothing is wrong. The designer calls it off the interface thread ([`DraftKeeper`]).
+    pub fn keep_draft(&self, project: &str, draft: &KeptDraft) -> Result<(), String> {
+        let Some(path) = self.draft_file(project, &draft.form) else {
+            return Ok(());
+        };
+        let text = serde_json::to_vec(draft).map_err(|e| e.to_string())?;
+        write_atomically(&path, &text)
     }
 
     /// The draft kept of `form`, if one is.
@@ -299,7 +368,7 @@ mod tests {
             name: "F".into(),
             body: FormBody::default(),
         };
-        files.keep_draft("proje", &draft);
+        files.keep_draft("proje", &draft).expect("kept");
         assert_eq!(files.kept_draft("proje", "f"), Some(draft));
         files.drop_draft("proje", "f");
         assert_eq!(files.kept_draft("proje", "f"), None);

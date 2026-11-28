@@ -169,6 +169,74 @@ fn comments_go_through_cad_forms_edit_and_are_settled() {
     );
 }
 
+/// A draft that cannot be kept on this device is said (docs/adr/9401 §6): it was dropped without a word, and the user
+/// took a crash to be covered.
+#[test]
+fn a_draft_that_cannot_be_kept_is_said_once() {
+    let mut app = crate::files_testing::app_with_drawing();
+    meters_rebodied(&mut app, meters_items());
+    // The drafts' folder is a file: nothing can be written under it.
+    let blocked =
+        std::env::temp_dir().join(format!("kentos-form-yazilamaz-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&blocked);
+    std::fs::write(&blocked, b"").expect("a file");
+    app.gis.form_files = crate::forms::library::FormFiles::at(&blocked);
+    run(&mut app, "data.forms");
+    designer(&mut app, designer::Event::SelectItem("ad".into()));
+    designer(&mut app, designer::Event::AddDivider);
+    let said = |app: &App| {
+        app.log
+            .lines()
+            .filter(|l| l.text.contains("taslağı bu aygıta yazılamadı"))
+            .count()
+    };
+    assert_eq!(said(&app), 1, "{}", crate::files_testing::last_said(&app));
+    // Said once while it lasts, not at every step.
+    designer(&mut app, designer::Event::AddDivider);
+    assert_eq!(said(&app), 1);
+    let _ = std::fs::remove_file(&blocked);
+}
+
+/// The draft is written off the interface thread (docs/adr/9401 §6): an edit does not wait for the disk; an edit made
+/// while a write is out waits for it, and the file ends as the window is. Vazgeç while a write is out leaves no file.
+#[test]
+fn a_draft_is_written_off_the_interface_thread_and_ends_as_the_window_is() {
+    let mut app = crate::files_testing::app_with_drawing();
+    meters_rebodied(&mut app, meters_items());
+    scene_library(&mut app, "gecikmeli");
+    run(&mut app, "data.forms");
+    designer(&mut app, designer::Event::SelectItem("ad".into()));
+    let key = app.form_project_key();
+    let edit = |app: &mut App| app.update(Message::Gis(gis::Event::Forms(designer::Event::AddDivider)));
+    let dividers = |body: &kentos_commands::FormBody| {
+        body.walk()
+            .iter()
+            .filter(|(_, i)| matches!(i, FormItem::Divider { .. }))
+            .count()
+    };
+    let first = edit(&mut app);
+    assert_eq!(
+        app.gis.form_files.kept_draft(&key, "bina"),
+        None,
+        "the edit does not wait for the disk"
+    );
+    let second = edit(&mut app);
+    crate::files_testing::drive(&mut app, first);
+    crate::files_testing::drive(&mut app, second);
+    let kept = app.gis.form_files.kept_draft(&key, "bina").expect("kept");
+    let window = app.gis.forms_window.as_ref().expect("the window");
+    assert_eq!(
+        dividers(&kept.body),
+        dividers(window.body.as_ref().expect("a body")),
+        "the file ends as the window is"
+    );
+    // Vazgeç while a write is out: the write does not bring the file back.
+    let writing = edit(&mut app);
+    designer(&mut app, designer::Event::Cancel);
+    crate::files_testing::drive(&mut app, writing);
+    assert_eq!(app.gis.form_files.kept_draft(&key, "bina"), None);
+}
+
 #[test]
 fn a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it() {
     let mut app = crate::files_testing::app_with_drawing();

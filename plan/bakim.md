@@ -223,7 +223,9 @@ düzenlenir.
 - [x] **BK-12** (A3; ADR 9401 §5) Arka plan yanıtı soran pencerenindir. Beş aktarım değil ortak düzenek: aktarım
   pencerelerinin yanıtı pencerenin numarasıyla döner (`exchange::Runs`); geç yanıt başka pencereyi kapatmaz, söylediği
   ileti günlüğüne düşer. 17 hata kolu pencere gitmişse hatayı söyler. IFC karşılaştırması koşu numarası taşır.
-- [ ] **BK-13** (A4) BCF okuması kendi iş parçacığında; form taslağı gecikmeli ve hatası görünür yazılır.
+- [x] **BK-13** (A4; ADR 9401 §6) BCF okuması kendi iş parçacığında, koşu numarasıyla. Form taslağı arayüz iş
+  parçacığının dışında, aynı anda tek yazmayla yazılır; yazılamayınca bir kez söylenir. Kalan: `forms_step`'in her
+  olayda pencereyi kopyalaması (BK-40).
 - [x] **BK-14** (A7; ADR 9401 §2) İfade dili: en çok 64 düzey ve 1 000 işlem; stil süzgeci: 64 düzey. Ölçüm: 2 MB'lık
   iş parçacığında sürüm derlemesi 3 000 terimli zincirde, 1 000 parantezde taşıyordu.
 - [x] **BK-15** (A8, A9; ADR 9401 §3) Beş düzeltme, her biri kırmızıdan yeşile dönen sınamasıyla:

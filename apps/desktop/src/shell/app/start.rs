@@ -343,6 +343,7 @@ impl App {
                 form_rows_asked: 0,
                 forms_window: None,
                 form_files: crate::forms::library::FormFiles::default(),
+                form_drafts: Default::default(),
                 form_entry: None,
                 form_stack: Vec::new(),
                 relations_window: None,

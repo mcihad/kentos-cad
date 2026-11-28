@@ -115,6 +115,35 @@ fn an_earlier_comparison_s_answer_does_not_write_over_a_newer_one() {
     );
 }
 
+/// Oku reads the BCF and its model on a thread of its own (docs/adr/9401 §6): the click answers before the file is
+/// read, and the window says it is reading until the answer comes.
+#[test]
+fn the_issues_are_read_off_the_interface_thread() {
+    let mut app = opened();
+    let _ = app.update(Message::Run("arch.bcfIssues"));
+    bcf(
+        &mut app,
+        Bcf::Path(
+            crate::bcf_window::Field::Bcf,
+            fixture("ifc/v1/bcf/disaridan-v3.bcf"),
+        ),
+    );
+    let reading = app.update(Message::from(crate::arch::Event::Bcf(Bcf::Read)));
+    let w = app.modules.arch().bcf_window.as_ref().expect("the window");
+    assert!(
+        w.read.is_none() && w.reading(),
+        "the click does not wait for the file: {:?}",
+        w.read.as_ref().map(|r| r.is_ok())
+    );
+    drive(&mut app, reading);
+    let w = app.modules.arch().bcf_window.as_ref().expect("the window");
+    assert!(
+        matches!(&w.read, Some(Ok(r)) if !r.topics.is_empty()) && !w.reading(),
+        "{:?}",
+        w.read.as_ref().map(|r| r.as_ref().map(|o| o.topics.len()))
+    );
+}
+
 #[test]
 fn the_revisions_are_compared_written_as_issues_and_read_back_to_the_drawing() {
     let mut app = opened();

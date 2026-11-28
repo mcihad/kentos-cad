@@ -16,6 +16,7 @@ use crate::arch::ArchState;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use iced::futures::channel::oneshot;
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{BcfRead, BcfReadOutput, BcfTopic, CommandResult};
@@ -55,6 +56,16 @@ pub(crate) struct Window {
     pub read: Option<Result<Arc<BcfReadOutput>, String>>,
     pub chosen: Option<usize>,
     pub said: Option<(Kind, String)>,
+    /// The read the window waits for (docs/adr/9401 §6); none when none is out. An answer of an earlier one is not
+    /// its own.
+    run: Option<u64>,
+}
+
+impl Window {
+    /// Whether the file is being read.
+    pub fn reading(&self) -> bool {
+        self.run.is_some()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -63,6 +74,8 @@ pub enum Event {
     Pick(Field),
     Picked(Field, Option<PathBuf>),
     Read,
+    /// A read's answer, with the run that asked.
+    ReadDone(u64, Box<Result<Arc<BcfReadOutput>, String>>),
     Choose(usize),
     Select,
     Close,
@@ -80,7 +93,7 @@ fn when(s: &str) -> String {
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
 pub(crate) trait BcfWindowApp {
     fn open_bcf_issues(&mut self);
-    fn bcf_read_now(&mut self);
+    fn bcf_read_now(&mut self) -> Task<Message>;
     fn bcf_select(&mut self);
     fn bcf_event(&mut self, event: Event) -> Task<Message>;
     fn bcf_view(&self) -> Element<'_, Message>;
@@ -102,34 +115,55 @@ impl BcfWindowApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Bcf));
     }
 
-    fn bcf_read_now(&mut self) {
-        let Some(w) = self.modules.arch().bcf_window.as_ref() else {
-            return;
+    /// The file and its model read on a thread of their own (docs/adr/9401 §6): an IFC model is tens of megabytes,
+    /// and reading it inside the click froze the window. The drawing is read from a copy.
+    fn bcf_read_now(&mut self) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
+        let mut drawing = doc.model.clone();
+        let Some(w) = self.modules.arch_mut().bcf_window.as_mut() else {
+            return Task::none();
         };
         let model = (!w.model.trim().is_empty()).then(|| w.model.trim().to_owned());
         let input = BcfRead {
             path: w.path.trim().to_owned(),
             model,
         };
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        let read =
-            match bcf_exchange::read::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-                CommandResult::Completed { output, .. } => Ok(Arc::new(output)),
-                CommandResult::Failed { error }
-                | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => Err(error.message),
-                CommandResult::Queued { .. } | CommandResult::Cancelled => Err("Okunmadı.".into()),
-            };
-        if let Some(w) = self.modules.arch_mut().bcf_window.as_mut() {
-            w.chosen = read
-                .as_ref()
-                .ok()
-                .and_then(|r| (!r.topics.is_empty()).then_some(0));
-            w.read = Some(read);
-            w.said = None;
+        // A number of its own, in this window or one opened after it.
+        static RUNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let run = RUNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+        w.run = Some(run);
+        w.read = None;
+        w.chosen = None;
+        w.said = None;
+        let (done, wait) = oneshot::channel();
+        let spawned = std::thread::Builder::new()
+            .name("bcf-oku".into())
+            .stack_size(64 << 20)
+            .spawn(move || {
+                let _ = done.send(bcf_exchange::read::execute(
+                    &mut ExecutionContext::new(&mut drawing),
+                    input,
+                ));
+            });
+        if spawned.is_err() {
+            w.run = None;
+            w.read = Some(Err("BCF okunamadı: iş parçacığı açılmadı.".into()));
+            return Task::none();
         }
+        Task::perform(wait, move |answer| {
+            let read = match answer {
+                Ok(CommandResult::Completed { output, .. }) => Ok(Arc::new(output)),
+                Ok(
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error },
+                ) => Err(error.message),
+                Ok(_) | Err(_) => Err("Okunmadı.".into()),
+            };
+            msg(Event::ReadDone(run, Box::new(read)))
+        })
     }
 
     /// The chosen topic's objects the drawing holds, selected and shown.
@@ -210,15 +244,27 @@ impl BcfWindowApp for App {
             Event::Picked(_, None) => {}
             Event::Picked(Field::Bcf, Some(p)) => {
                 w.path = p.display().to_string();
-                self.bcf_read_now();
+                return self.bcf_read_now();
             }
             Event::Picked(Field::Model, Some(p)) => {
                 w.model = p.display().to_string();
                 if !w.path.trim().is_empty() {
-                    self.bcf_read_now();
+                    return self.bcf_read_now();
                 }
             }
-            Event::Read => self.bcf_read_now(),
+            Event::Read => return self.bcf_read_now(),
+            // An earlier read's answer: Oku was pressed again, the window waits for that one.
+            Event::ReadDone(run, _) if Some(run) != w.run => {}
+            Event::ReadDone(_, read) => {
+                w.run = None;
+                w.chosen = read
+                    .as_ref()
+                    .as_ref()
+                    .ok()
+                    .and_then(|r| (!r.topics.is_empty()).then_some(0));
+                w.read = Some(*read);
+                w.said = None;
+            }
             Event::Choose(k) => {
                 w.chosen = Some(k);
                 w.said = None;
@@ -264,6 +310,9 @@ impl BcfWindowApp for App {
             );
         let mut body = Column::new().spacing(10).push(head);
         match &w.read {
+            None if w.reading() => {
+                body = body.push(words::text_line(Kind::Info, "Okunuyor…".to_owned()));
+            }
             None => body = body.push(label::caption(
                 "BCF dosyasını açın; nesnelerin modeldeki karşılığı için IFC dosyasını da seçin.",
             )),

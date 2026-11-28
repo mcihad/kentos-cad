@@ -288,6 +288,8 @@ pub enum Palette {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// The draft's write on this device ended (designer/draft.rs).
+    DraftKept(Result<(), String>),
     /// Senaryolar (docs/adr/0420): the preview's values kept as a scenario, its name typed, one removed.
     SaveScenario,
     ScenarioName(String),
@@ -1141,9 +1143,7 @@ impl App {
             return false;
         }
         // The copy follows the draft as it was kept; the device's copy is no longer needed.
-        self.gis
-            .form_files
-            .drop_draft(&self.form_project_key(), &id);
+        self.drop_form_draft(&id);
         let mut fresh = w;
         self.choose_into(&mut fresh, &id);
         fresh.item = self.gis.forms_window.as_ref().and_then(|w| w.item.clone());
@@ -1160,6 +1160,8 @@ impl App {
             return Task::none();
         }
         match event {
+            // A draft's write answers whether the window is still there or not.
+            Event::DraftKept(written) => return self.form_draft_kept(written),
             Event::Undo => return self.forms_history(true),
             Event::Redo => return self.forms_history(false),
             Event::Export => return self.export_form(),
@@ -1636,6 +1638,7 @@ mod tests {
     }
 }
 
+mod draft;
 mod step;
 
 pub(crate) mod lists;

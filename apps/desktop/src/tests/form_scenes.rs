@@ -89,7 +89,9 @@ pub(crate) fn buildings_with(app: &mut App, form: Value) {
 }
 
 pub(crate) fn designer(app: &mut App, event: designer::Event) {
-    let _ = app.update(Message::Gis(gis::Event::Forms(event)));
+    // The draft is written on a thread of its own (docs/adr/9401 §6): its answer is waited for.
+    let task = app.update(Message::Gis(gis::Event::Forms(event)));
+    crate::files_testing::drive(app, task);
 }
 
 pub(crate) fn entry(app: &mut App, event: entry::Event) {

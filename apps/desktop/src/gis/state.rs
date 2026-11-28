@@ -105,6 +105,8 @@ pub struct GisUiState {
     /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
     /// The designer's section library and kept drafts on this device (forms/library.rs, docs/adr/0441).
     pub(crate) form_files: crate::forms::library::FormFiles,
+    /// The drafts' writes, off the interface thread and one at a time (forms/library.rs `DraftKeeper`).
+    pub(crate) form_drafts: crate::forms::library::DraftKeeper,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
     /// The records whose forms wait under a child's (docs/adr/0440 §7): their drafts kept, the

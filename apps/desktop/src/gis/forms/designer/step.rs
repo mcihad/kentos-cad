@@ -599,9 +599,7 @@ impl App {
             }
             Event::DropKept => {
                 if let (Some(_), Some(form)) = (w.kept.take(), w.chosen.as_deref()) {
-                    self.gis
-                        .form_files
-                        .drop_draft(&self.form_project_key(), form);
+                    self.drop_form_draft(form);
                 }
             }
             Event::AddDivider => {
@@ -1018,7 +1016,8 @@ impl App {
             | Event::Export
             | Event::Exported(_)
             | Event::Import
-            | Event::Imported(_) => {}
+            | Event::Imported(_)
+            | Event::DraftKept(_) => {}
             Event::Audit => {
                 let form = w.chosen.clone();
                 if w.dirty {
@@ -1598,9 +1597,7 @@ impl App {
             Event::Cancel => {
                 // Vazgeç lets the window's changes go, the draft kept on this device with them.
                 if let Some(form) = w.chosen.as_deref() {
-                    self.gis
-                        .form_files
-                        .drop_draft(&self.form_project_key(), form);
+                    self.drop_form_draft(form);
                 }
                 self.gis.forms_window = None;
                 self.gis.form_preview = None;
@@ -1608,20 +1605,19 @@ impl App {
                 return Task::none();
             }
         }
-        // The draft kept on this device as it is edited (docs/adr/0441 §5): a crash does not lose it.
-        if w.dirty
-            && let (Some(form), Some(body)) = (w.chosen.clone(), w.body.clone())
-        {
-            self.gis.form_files.keep_draft(
-                &self.form_project_key(),
-                &crate::forms::library::KeptDraft {
+        // The draft kept on this device as it is edited (docs/adr/0441 §5): a crash does not lose it. Written off the
+        // interface thread (draft.rs).
+        let kept = match (w.dirty, w.chosen.clone(), w.body.clone()) {
+            (true, Some(form), Some(body)) => {
+                self.keep_form_draft(crate::forms::library::KeptDraft {
                     form,
                     name: w.name.clone(),
                     body,
-                },
-            );
-        }
+                })
+            }
+            _ => Task::none(),
+        };
         self.gis.forms_window = Some(w);
-        Task::none()
+        kept
     }
 }

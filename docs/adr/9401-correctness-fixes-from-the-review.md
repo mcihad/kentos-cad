@@ -277,6 +277,37 @@ hangi pencere açıksa ona dokunuyordu:
 - İleti akışı bütün aktarım pencerelerinde değiştiği için masaüstünün aktarım, iz, kaynak ve nokta sınamaları (488) ve
   programlar arası iz sınaması koşuldu.
 
+### 6. Ağır iş arayüz iş parçacığında koşmaz: BCF okuması ve form taslağı (BK-13)
+
+**Bulgu.**
+
+- **BCF sorunları** (`desktop-arch/src/bcf_window.rs`): Oku, BCF dosyasını ve andığı IFC modelini tıklamanın içinde
+  okuyordu. IFC modeli onlarca megabayt olabilir; pencere okuma bitene kadar donuyordu.
+- **Formlar** (`gis/forms/designer/step.rs`): pencere değişmişken her olayda taslak JSON'a çevrilip olayın içinde
+  diske yazılıyordu. Yazma hatası yutuluyordu (`library.rs`): klasör yazılamazken kullanıcı taslağın korunduğunu
+  sanıyordu.
+
+**Karar.**
+
+- **BCF:** okuma kendi iş parçacığında koşar (IFC karşılaştırmasının kalıbı: çizimin kopyası, 64 MB yığın, koşu
+  numarası). Pencere “Okunuyor…” der; eski koşunun yanıtı yok sayılır.
+- **Form taslağı** (`forms/library.rs` `DraftKeeper`, `designer/draft.rs`):
+  - yazma arayüz iş parçacığının dışındadır ve aynı anda bir tanedir;
+  - yeni taslak süren yazmayı bekler ve bekleyenin yerini alır: dosya pencerenin son hâliyle biter;
+  - aynı taslak yeniden yazılmaz;
+  - hata bir kez söylenir, yazma yeniden başarılı olana dek yinelenmez;
+  - Vazgeç ya da Kaydet taslağı bırakınca bekleyen unutulur, süren yazma dosyayı geri getirmez.
+- **Kalan:** `forms_step` her olayda pencerenin tamamını kopyalar (1 620 satırlık işlev). İşlev bölünürken ele alınır
+  (BK-40).
+
+**Sınama.**
+
+- `ifc_revisions_tests::the_issues_are_read_off_the_interface_thread`: tıklama dosyayı beklemeden döner.
+- `workflow::a_draft_that_cannot_be_kept_is_said_once`: düzeltmeden önce hiçbir şey söylenmiyordu.
+- `workflow::a_draft_is_written_off_the_interface_thread_and_ends_as_the_window_is`: düzeltmeden önce taslak olayın
+  içinde yazılıyordu; ayrıca art arda iki düzenlemeyi ve yazma sürerken Vazgeç'i denetler.
+- Sınama yardımcısı (`form_scenes::designer`) artık taslağın yanıtını bekler; 390 form sınaması geçti.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -294,6 +325,8 @@ hangi pencere açıksa ona dokunuyordu:
 | Kılavuz stilleri'nin Kaydet'i (BK-11) | var | var | var | yok: profilinde yok (CAD açıklaması) | var: `cad.styles.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.styles.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Aktarım pencerelerinin arka plan yanıtı (BK-12) | var | var | var | var | yok: pencere yok, komut cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
 | IFC revizyonlarını karşılaştır'ın yanıtı (BK-12) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.ifc.compare` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
+| BCF sorunları'nın okuması (BK-13) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.bcf.read` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
+| Formlar'ın bu aygıtta tutulan taslağı (BK-13) | yok: profilinde yok | var | yok: profilinde yok | var | yok: taslak pencerenindir; kanal formu `cad.forms.edit` ile yazar | yok: aynı | yok: aynı | yok: aynı |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal
