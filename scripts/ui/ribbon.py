@@ -37,6 +37,10 @@ OPENINGS = {"key": "archOpenings", "size": "small", "split": [
     {"command": "tool.opening", "title": "Boşluk", "label": "Boşluk"},
     {"command": "tool.niche", "title": "Boşluk", "label": "Niş"},
     {"command": "tool.flue", "title": "Boşluk", "label": "Baca"},
+    # A wall's profiles (docs/adr/8173): what a wall carries along it, beside what is cut in it; the tab has its 30
+    # buttons (DESIGN.md §7.3.1).
+    {"command": "tool.moulding", "title": "Boşluk", "label": "Cephe silmesi"},
+    {"command": "tool.coping", "title": "Boşluk", "label": "Duvar harpuştası"},
 ]}
 def M(label, blocks, size='small', checklist=False, works=(), modes=()):
     # A block is (title, ids), (title, ids, works) or (title, ids, works, modes): a block only some CAD works, or one
@@ -434,8 +438,8 @@ CAD = [
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
             # Kolon ▾ and Kiriş ▾ hold their members, Dikme and Kayıt (docs/adr/8070 §8); Çatı ▾ its parts.
-            # Kiriş ▾ holds the footings too (docs/adr/8172): in the model a beam's role, and the tab has its 30
-            # buttons (DESIGN.md §7.3.1).
+            # Kiriş ▾ holds the footings too (docs/adr/8172): pad and strip a beam's role, the raft a slab's; the
+            # foundations together, and the tab has its 30 buttons (DESIGN.md §7.3.1).
             {"key": "archColumns", "size": "small", "split": [
                 {"command": "tool.column", "title": "Kolon", "label": "Kolon"},
                 {"command": "tool.post", "title": "Kolon", "label": "Dikme"},
@@ -444,6 +448,7 @@ CAD = [
                 {"command": "tool.rail", "title": "Kiriş", "label": "Kayıt"},
                 {"command": "tool.footingPad", "title": "Kiriş", "label": "Tekil temel"},
                 {"command": "tool.footingStrip", "title": "Kiriş", "label": "Sürekli temel"},
+                {"command": "tool.raft", "title": "Kiriş", "label": "Radye"},
             ]}, {"key": "archRoofs", "size": "small", "split": [
                 {"command": "tool.roof", "title": "Çatı", "label": "Çatı"},
                 {"command": "tool.roofChimney", "title": "Çatı", "label": "Çatı bacası"},
@@ -461,11 +466,15 @@ CAD = [
                 {"command": "tool.ramp", "title": "Merdiven", "label": "Rampa"},
                 {"command": "tool.railing", "title": "Merdiven", "label": "Korkuluk"},
             ]}]),
-        # Döşeme (docs/adr/0722) beside the rooms it covers.
+        # Döşeme (docs/adr/0722) beside the rooms it covers. Renk planı (docs/adr/8176) with the rooms it fills: each
+        # scheme on, and off again when chosen again (Kapalı by its name), and the legend; the tab has its 30 buttons.
         P("Mahal", "space", [{"key": "archSpaces", "size": "large", "split": [
                 {"command": "tool.space", "title": "Mahal", "label": "Mahal"},
                 {"command": "tool.spaceDiscover", "title": "Mahal", "label": "Toplu mahal bul"},
                 {"command": "tool.spaceSeparator", "title": "Mahal", "label": "Mahal ayırıcı"},
+                {"command": "arch.colorPlan.usage", "title": "Mahal", "label": "Renk planı: Kullanım"},
+                {"command": "arch.colorPlan.unit", "title": "Mahal", "label": "Renk planı: Bağımsız bölüm"},
+                {"command": "tool.colorLegend", "title": "Mahal", "label": "Renk planı lejandı"},
             ]}, {"key": "archSlabs", "size": "small", "split": [
                 {"command": "tool.slab", "title": "Döşeme", "label": "Döşeme"},
                 {"command": "tool.covering", "title": "Döşeme", "label": "Kaplama"},
@@ -551,15 +560,18 @@ CAD = [
           # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside
           # the navigator: a view's area edited on the model.
           # Parsel ve bahçe mesafeleri (docs/adr/8032) beside Program: the site plan's parcel, the project's as the
-          # program is.
+          # program is. Arazi zemini and Zemin kotu (docs/adr/8174) after it: the site's grounds and their levels;
+          # Gölge (docs/adr/8177) the building's shadow on them. Kütle (docs/adr/8178) beside the parcel: the design's
+          # volume weighed against it before its walls are drawn.
           # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
           # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
           # Model kalite kontrol formu (docs/adr/8047 §10) beside Ruhsat takımı: the digital submission's form.
           # Dijital proje kuralları (docs/adr/8062) after it: the regulation's rules the form and the set are held to.
           # Ruhsat takımı and the IFC viewer lead the ▾ (3B görünüm took Ruhsat takımı's button); the deliveries,
           # underlays, model comparison, BCF issues and the review package (B16–B20) follow the quality form.
-          overflow=["arch.permitSet", "ifc.view", "arch.program", "tool.siteParcel", "tool.escapeRoutes",
-                    "tool.walkRoute", "arch.template", "arch.sheetSet", "arch.qualityForm", "arch.deliveries",
+          overflow=["arch.permitSet", "ifc.view", "arch.program", "tool.siteParcel", "tool.mass", "tool.siteGround",
+                    "tool.groundLevel", "tool.sunShadow", "tool.escapeRoutes", "tool.walkRoute", "arch.template", "arch.sheetSet", "arch.qualityForm",
+                    "arch.deliveries",
                     "arch.underlays", "arch.ifcCompare", "arch.bcfIssues", "arch.reviewPackage", "arch.digitalRules",
                     "arch.navigator", "tool.viewCrop", "arch.openingTypes", "arch.elementTypes", "arch.materials",
                     "arch.modules", "tool.modulePlace", "arch.options"]),

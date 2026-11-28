@@ -74,6 +74,8 @@ pub mod arch_modules;
 pub mod arch_options;
 #[path = "arch/slab.rs"]
 pub mod slab;
+#[path = "arch/mass.rs"]
+pub mod mass;
 #[path = "arch/beam.rs"]
 pub mod beam;
 #[path = "arch/member.rs"]
@@ -236,6 +238,8 @@ pub mod portal;
 pub mod encoding;
 #[path = "core/entity.rs"]
 pub mod entity;
+#[path = "core/entity_arch.rs"]
+mod entity_arch;
 #[path = "core/entity_merge.rs"]
 pub mod entity_merge;
 #[path = "gis/fields.rs"]
@@ -393,6 +397,7 @@ pub use package_review::*;
 pub use arch_modules::*;
 pub use arch_options::*;
 pub use slab::*;
+pub use mass::*;
 pub use beam::*;
 pub use member::*;
 pub use covering::*;

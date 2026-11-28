@@ -1,0 +1,3080 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.masses.create",
+  "commandVersion": 1,
+  "title": "Kütle: oturum (delikli, çok parçalı), yükseklik, taban kot farkı, ad, kat; doğrulama, plan, yazma, geri alma; retler (ADR 8178)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Zemin katta 20 × 12 m, 15 m yüksek blok: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katta 20 × 12 m, 15 m yüksek blok: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "masses": [
+                {
+                  "kind": "mass",
+                  "id": 0,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 0.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 72.0
+                          },
+                          {
+                            "x": 0.0,
+                            "y": 72.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "height": 15.0,
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katta 20 × 12 m, 15 m yüksek blok: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kütle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katta 20 × 12 m, 15 m yüksek blok: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "avlulu kütle: oturumun deliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 9.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 9.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "adı ve taban kot farkıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 30.0,
+                "name": "Blok A",
+                "offset": 3.06
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 30.0,
+                "offset": 3.06,
+                "name": "Blok A"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. katta kütle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 6.12,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 6.12,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır taban kot farkı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "offset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tadilatta yeni kütle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki parçalı kütle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kütle tek adımda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 15.0,
+                "name": "Avlulu"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              },
+              "11": {
+                "kind": "mass",
+                "id": 11,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 50.0,
+                          "y": 80.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 80.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 36.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 66.0
+                          },
+                          {
+                            "x": 44.0,
+                            "y": 74.0
+                          },
+                          {
+                            "x": 36.0,
+                            "y": 74.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 15.0,
+                "name": "Avlulu"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "renkli ve kalın kütle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ],
+            "color": "#cc3300",
+            "lineWeight": 0.35
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "color": "#cc3300",
+                "lineWeight": 0.35,
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kütle verilmezse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_objects",
+              "message": "Yazılacak kütle verilmedi. En az bir kütlenin oturumunu ve yüksekliğini verin.",
+              "path": "masses"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "masses[0].height": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Yükseklik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "masses[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz köşe reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "masses[0].parts[0].outer.pts[1].x": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "2. noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "masses[0].parts[0].outer.pts[1].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz kot farkı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "offset": 1.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "masses[0].offset": "-Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kot farkı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "masses[0].offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "oturumsuz kütle reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin oturumu yok: en az bir halka verin.",
+              "path": "masses[0].parts"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki köşeli halka reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin halkası en az üç köşedir; 2 verildi.",
+              "path": "masses[0].parts[0].outer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki köşeli delik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 5.0,
+                            "y": 62.0
+                          },
+                          {
+                            "x": 8.0,
+                            "y": 62.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin halkası en az üç köşedir; 2 verildi.",
+              "path": "masses[0].parts[0].holes[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 0 verildi.",
+              "path": "masses[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "300 m'den yüksek kütle reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 320.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 320 verildi.",
+              "path": "masses[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "101 m taban kot farkı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "offset": 101.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; 101 verildi.",
+              "path": "masses[0].offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "name": ""
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
+              "path": "masses[0].name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kenarı boşluklu ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "name": " Blok A"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
+              "path": "masses[0].name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "yok"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "masses[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman grubu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz çizgi kalınlığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ],
+            "lineWeight": 120.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ],
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm değişince yazılmaz (çakışma)",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ],
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -20,6 +20,8 @@ pub enum Category {
     Beam,
     /// A footing (docs/adr/8172).
     Footing,
+    /// A mass (docs/adr/8178): a massing study's prism, beside the drawing's model (the IFC holds none).
+    Mass,
     Roof,
     Stair,
     Railing,
@@ -94,6 +96,16 @@ impl Input {
             b
         }));
         self.not_shown.extend(other.not_shown.into_iter().map(|(o, why)| (o + base, why)));
+    }
+
+    /// Appends `other`'s objects and bodies as the source's own, not apart: what the drawing holds beside its file
+    /// (its masses, docs/adr/8178), drawn and lit as its elements are. Before any [`Input::append`]: an appended
+    /// model's objects stay apart after it.
+    pub fn join(&mut self, other: Input, prefix: &str) {
+        debug_assert!(self.apart.is_none(), "joined after an appended model");
+        let apart = self.apart.take();
+        self.append(other, prefix);
+        self.apart = apart;
     }
 
     /// Whether `object` came from a model appended after the source's own.

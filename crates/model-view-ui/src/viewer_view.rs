@@ -202,6 +202,14 @@ impl Viewer {
             self.see_through,
             Message::SeeThrough,
         ));
+        out.push(strip::toggle(
+            Some(Icon::Cube),
+            "Aksonometri",
+            "Aksonometri: modeli paralel çizgilerle gösterir, uzaktaki uzunluklar kısalmaz; kapalıyken perspektif. Kesit \
+             ve dönüş aynı kalır.",
+            self.axonometric,
+            Message::Axonometric,
+        ));
         out.push(strip::divider());
         let (section, facing) = (self.section, self.facing);
         out.push(strip::menu(
@@ -271,6 +279,44 @@ impl Viewer {
         Some(container(kentos_ui::widget::legend::frame(container(body).padding([2, 4]))).width(typography::scaled(CARD_WIDTH)).into())
     }
 
+    /// The scene as a picture of it draws it (docs/adr/8175 §3.2): as the window shows it, the camera, the section with
+    /// its caps and what is hidden or see-through, without what only the screen needs (the ringed point, the
+    /// measurements, the section's handles); and its size as it last drew, logical pixels. None before it first drew.
+    pub fn picture(&self, quality: scene::Quality) -> Option<(SceneView, (f32, f32))> {
+        let size = self.size;
+        if size.0 <= 0.0 || size.1 <= 0.0 || self.view().is_none() {
+            return None;
+        }
+        let view = SceneView {
+            scene: self.scene().clone(),
+            caps: self.caps().cloned(),
+            camera: self.camera(),
+            exaggeration: kentos_scene3d::Exaggeration::NONE,
+            styles: self.styles(),
+            light: self.sun.unwrap_or_else(|| self.orbit.light()),
+            sky: SKY,
+            fill: FILL,
+            quality,
+            planes: self.planes(),
+            marked: None,
+            marks: Vec::new(),
+            hover: false,
+            handles: Vec::new(),
+            active: None,
+            seen: std::sync::Arc::default(),
+            pending: std::sync::Arc::default(),
+            sun: self.sun.is_some(),
+        };
+        Some((view, size))
+    }
+
+    /// The view in words, a picture's name: its projection, the side it is seen from and whether it is cut.
+    pub fn picture_name(&self) -> String {
+        let projection = if self.axonometric { "aksonometri" } else { "perspektif" };
+        let cut = if self.section.planes().is_empty() { "" } else { ", kesit" };
+        format!("3B görünüm, {projection}, {}{cut}", self.orbit.seen_from())
+    }
+
     fn scene_pane<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
         let view = SceneView {
             scene: self.scene().clone(),
@@ -278,7 +324,7 @@ impl Viewer {
             camera: self.camera(),
             exaggeration: kentos_scene3d::Exaggeration::NONE,
             styles: self.styles(),
-            light: self.orbit.light(),
+            light: self.sun.unwrap_or_else(|| self.orbit.light()),
             // A building's faces under a sky and with a fill (docs/adr/8120): a roof lighter than the wall under it,
             // two walls seen at a corner never the same.
             sky: SKY,
@@ -293,6 +339,7 @@ impl Viewer {
             active: self.gripped,
             seen: self.seen.clone(),
             pending: self.pending.clone(),
+            sun: self.sun.is_some(),
         };
         let swatches = self.swatches();
         look::framed(

@@ -206,7 +206,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V,
         let whose = match x.role {
             SlabRole::Balcony => "Balkonun",
             SlabRole::Terrace => "Terasın",
-            SlabRole::Floor => continue,
+            SlabRole::Floor | SlabRole::Raft => continue,
         };
         let sides: Vec<(Vec<V>, bool)> = doc
             .slab_runs(x)

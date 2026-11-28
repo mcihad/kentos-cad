@@ -1187,7 +1187,7 @@ class BuildingSectionLeft(_StrEnum):
     """Why something of the model is not in the section, or only in part.
 
     - ``roof``: The roof: the model has none yet (ADV-20).
-    - ``naturalGround``: The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.
+    - ``naturalGround``: The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4
     - ``curved``: A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
     - ``ramp``: A ramp: not drawn before docs/adr/8070 (its runs and landings are drawn since); no longer given.
     - ``noHeight``: A wall or a column with no height.
@@ -1618,6 +1618,20 @@ class CloudReturns(_StrEnum):
 
 CloudReturnsName = Literal["all", "first", "last", "single"]
 """The names of :class:`CloudReturns`, for a plain string."""
+
+
+class ColorScheme(_StrEnum):
+    """What a colour plan colours the rooms by.
+
+    - ``usage``: Kullanım: the room's use as written, else the group its name reads as (oturma, yatma, ıslak hacim …).
+    - ``unit``: Bağımsız bölüm: the program's unit the room belongs to (a flat, a common area, an outdoor area).
+    """
+    USAGE = "usage"
+    UNIT = "unit"
+
+
+ColorSchemeName = Literal["usage", "unit"]
+"""The names of :class:`ColorScheme`, for a plain string."""
 
 
 class ColumnAnchor(_StrEnum):
@@ -8126,13 +8140,15 @@ class SlabRole(_StrEnum):
     - ``floor``: Döşeme: a storey's floor.
     - ``balcony``: Balkon.
     - ``terrace``: Teras.
+    - ``raft``: Radye (docs/adr/8172 §6): a raft, the building's foundation slab; IFC's `IfcSlab` BASESLAB.
     """
     FLOOR = "floor"
     BALCONY = "balcony"
     TERRACE = "terrace"
+    RAFT = "raft"
 
 
-SlabRoleName = Literal["floor", "balcony", "terrace"]
+SlabRoleName = Literal["floor", "balcony", "terrace", "raft"]
 """The names of :class:`SlabRole`, for a plain string."""
 
 
@@ -11011,6 +11027,7 @@ class Entity(_Union):
     - :class:`OpeningEntity` (``kind: opening``)
     - :class:`SpaceEntity` (``kind: space``)
     - :class:`SlabEntity` (``kind: slab``)
+    - :class:`MassEntity` (``kind: mass``)
     - :class:`GridEntity` (``kind: grid``)
     - :class:`ColumnEntity` (``kind: column``)
     - :class:`BeamEntity` (``kind: beam``)
@@ -17689,12 +17706,13 @@ class ArchAudited(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArchEdit(_Model):
-    """Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids
-    changed as one undo step “Mimari nesneyi düzenle”, all or none.
+    """Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs, railings and masses named by their persistent
+    ids changed as one undo step “Mimari nesneyi düzenle”, all or none.
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
     `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-    `invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,
+    `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,
+    `level_not_found`,
     `invalid_revision`, `revision_conflict`, `layer_locked`.
     Warnings: those of the stairs and ramps written.
     """
@@ -18320,6 +18338,8 @@ class ArchSettings(_Model):
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
             level). Absent: its ground level (the one at elevation 0, else its first).
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
+        color_plan: Mahal renk planı (docs/adr/8176; `.kcad` Mimari data 44): the plan's rooms filled by a scheme's colours. Absent:
+            none.
         cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
@@ -18372,6 +18392,7 @@ class ArchSettings(_Model):
     """
     active_level: str | None | Unset = UNSET
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
+    color_plan: ColorPlan | None | Unset = UNSET
     cut_height: float | None | Unset = UNSET
     deliveries: list[Delivery] | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
@@ -18408,6 +18429,8 @@ class ArchSettings(_Model):
             out["activeLevel"] = self.active_level
         if self.audit_exceptions is not UNSET:
             out["auditExceptions"] = [e0.to_json() for e0 in self.audit_exceptions]
+        if self.color_plan is not UNSET:
+            out["colorPlan"] = None if self.color_plan is None else self.color_plan.to_json()
         if self.cut_height is not UNSET:
             out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
         if self.deliveries is not UNSET:
@@ -18473,6 +18496,7 @@ class ArchSettings(_Model):
         return cls(
             active_level=data.get("activeLevel", UNSET),
             audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
+            color_plan=UNSET if "colorPlan" not in data else None if data["colorPlan"] is None else ColorPlan.from_json(data["colorPlan"]),
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             deliveries=[Delivery.from_json(e0) for e0 in data["deliveries"]] if "deliveries" in data else UNSET,
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
@@ -21635,6 +21659,9 @@ class BeamEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        covering: A profile (docs/adr/8173): a band covering a wall — a facade moulding (silme), a coping (harpuşta) — written as
+            an `IfcCovering` of its type; absent: the frame's beam. It stands at its base (`baseOffset`) and is no
+            structure: walls, columns and slabs do not stop at it, the frame's joins pass it by.
         justify: How it lies on its axis: its middle (absent), its left face or its right face, as a wall's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -21675,6 +21702,7 @@ class BeamEntity(Entity):
     base_offset: float | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -21711,6 +21739,8 @@ class BeamEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.justify is not UNSET:
             out["justify"] = _enum_out(self.justify)
         if self.label is not UNSET:
@@ -21761,6 +21791,7 @@ class BeamEntity(Entity):
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else UNSET,
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -26819,6 +26850,23 @@ class CodedClass(_Model):
             moved=data["moved"],
             lines=data["lines"],
             areas=data["areas"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColorPlan(_Model):
+    """A colour plan: its scheme."""
+    scheme: ColorScheme | ColorSchemeName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scheme"] = _enum_out(self.scheme)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColorPlan:
+        return cls(
+            scheme=_enum_in(ColorScheme, data["scheme"]),
         )
 
 
@@ -63220,6 +63268,215 @@ class MarkReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MassEntity(Entity):
+    """A mass: its base and its own fields.
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        parts: Its footprint: one part or more, each an outer ring and its holes (a courtyard).
+        height: Its height, metres: above 0, at most 300. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        name: Its name ("Blok A", "Podyum"); absent: none.
+        offset: Its bottom above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0. Unit: elevation.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask: it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "mass"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    parts: list[SpacePart]
+    height: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "mass"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["height"] = float(self.height)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MassEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            height=float(data["height"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            name=data.get("name", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MassesCreate(_Model):
+    """Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,
+    `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+    `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    masses: list[NewMass]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["masses"] = [e0.to_json() for e0 in self.masses]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MassesCreate:
+        return cls(
+            layer_id=data["layerId"],
+            masses=[NewMass.from_json(e0) for e0 in data["masses"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MassesCreated(_Model):
+    """Output of `cad.masses.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MassesCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MassesPlan(_Model):
+    """What `cad.masses.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    masses: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["masses"] = [e0.to_json() for e0 in self.masses]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MassesPlan:
+        return cls(
+            masses=[Entity.from_json(e0) for e0 in data["masses"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MaterialChange(_Model):
     """A material's fields to change; absent ones stay. A nullable field's null takes it away.
     Attributes:
@@ -66784,6 +67041,8 @@ class NewBeam(_Model):
         height: Its height, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
         base_offset: Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it
             hangs (a beam's). Not with an offset. Unit: length.
+        covering: A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;
+            absent: the frame's beam. Only a beam's, with its base.
         justify: How it lies on its axis; absent: centred.
         material: Its material; absent: Betonarme.
         member: A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
@@ -66800,6 +67059,7 @@ class NewBeam(_Model):
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     base_offset: float | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     material: str | None | Unset = UNSET
     member: Member | None | Unset = UNSET
@@ -66819,6 +67079,8 @@ class NewBeam(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.base_offset is not UNSET:
             out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.justify is not UNSET:
             out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.material is not UNSET:
@@ -66844,6 +67106,7 @@ class NewBeam(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             material=data.get("material", UNSET),
             member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
@@ -67033,6 +67296,48 @@ class NewGrid(_Model):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewMass(_Model):
+    """A mass to add (docs/adr/8178): its footprint, height and bottom, its name.
+    Attributes:
+        parts: Its footprint: one part or more, each an outer ring and its holes.
+        height: Its height, above 0 and at most 300 m. Unit: length.
+        name: Its name ("Blok A"); absent: none.
+        offset: Its bottom over its storey's floor; absent: 0. Unit: elevation.
+    """
+    parts: list[SpacePart]
+    height: float
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["height"] = float(self.height)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewMass:
+        return cls(
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            height=float(data["height"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            name=data.get("name", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
         )
 
 
@@ -101893,6 +102198,28 @@ class SiteEdge(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SiteGround(_Model):
+    """A site's ground (docs/adr/8174 §3.1): the terrain surface of the points with a height on its layers (a survey's),
+    made when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps
+    no road settings, where a road's and a map's surfaces are.
+    Attributes:
+        layers: The layers' ids, each once.
+    """
+    layers: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SiteGround:
+        return cls(
+            layers=list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SitePlan(_Model):
     """Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
     polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
@@ -101901,10 +102228,14 @@ class SitePlan(_Model):
     Attributes:
         datum: ±0.00's absolute elevation, m. Unit: elevation.
         envelope: Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.
+        graded_ground: Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none.
+        natural_ground: Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a). Absent: none.
     """
     datum: float | None | Unset = UNSET
     edges: list[SiteEdge] | Unset = UNSET
     envelope: str | None | Unset = UNSET
+    graded_ground: SiteGround | None | Unset = UNSET
+    natural_ground: SiteGround | None | Unset = UNSET
     parcel: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -101915,6 +102246,10 @@ class SitePlan(_Model):
             out["edges"] = [e0.to_json() for e0 in self.edges]
         if self.envelope is not UNSET:
             out["envelope"] = self.envelope
+        if self.graded_ground is not UNSET:
+            out["gradedGround"] = None if self.graded_ground is None else self.graded_ground.to_json()
+        if self.natural_ground is not UNSET:
+            out["naturalGround"] = None if self.natural_ground is None else self.natural_ground.to_json()
         if self.parcel is not UNSET:
             out["parcel"] = self.parcel
         return out
@@ -101925,6 +102260,8 @@ class SitePlan(_Model):
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             edges=[SiteEdge.from_json(e0) for e0 in data["edges"]] if "edges" in data else UNSET,
             envelope=data.get("envelope", UNSET),
+            graded_ground=UNSET if "gradedGround" not in data else None if data["gradedGround"] is None else SiteGround.from_json(data["gradedGround"]),
+            natural_ground=UNSET if "naturalGround" not in data else None if data["naturalGround"] is None else SiteGround.from_json(data["naturalGround"]),
             parcel=data.get("parcel", UNSET),
         )
 
@@ -148344,7 +148681,7 @@ _ELEMENT_TYPES_OPERATION: dict[str, type[ElementTypesOperation]] = {"define": De
 _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "roof": RoofEntity, "railing": RailingEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "mass": MassEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "roof": RoofEntity, "railing": RailingEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"ellipseAxis": EllipseAxisEntityEdit, "update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -149338,6 +149675,9 @@ __all__ = [
     "CollectLeaderEdit",
     "CollinearConstraintRule",
     "ColorPaperPlotColor",
+    "ColorPlan",
+    "ColorScheme",
+    "ColorSchemeName",
     "ColumnAlignTableEdit",
     "ColumnAnchor",
     "ColumnAnchorName",
@@ -150816,6 +151156,10 @@ __all__ = [
     "MappingField",
     "MappingNames",
     "MarkReference",
+    "MassEntity",
+    "MassesCreate",
+    "MassesCreated",
+    "MassesPlan",
     "MatchProperty",
     "MatchPropertyName",
     "MatchSizePaperOp",
@@ -151001,6 +151345,7 @@ __all__ = [
     "NewColumn",
     "NewConstraint",
     "NewGrid",
+    "NewMass",
     "NewObject",
     "NewOpening",
     "NewRailing",
@@ -152453,6 +152798,7 @@ __all__ = [
     "SiteEdge",
     "SiteEdgeKind",
     "SiteEdgeKindName",
+    "SiteGround",
     "SitePlan",
     "SizeRectangleFrame",
     "SlabBound",

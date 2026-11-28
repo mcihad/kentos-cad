@@ -155,14 +155,98 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
-- **Temel: tekil ve sürekli temel kirişin rolü (27 Kasım 2026, MB-10 1. ve 2. bölüm; [ADR 8172](../adr/8172-footings.md)).**
+- **Kütle (28 Kasım 2026, MB-16 1. bölüm; [ADR 8178](../adr/8178-mass.md)).**
+  - `MassEntity` (`mass`): oturumun halkaları (avlu, yay), yükseklik (en çok 300 m), kata göre taban (±100 m), ad (en
+    çok 80 karakter); kurallar `MassFields::problem`. Binanın elemanı değil: IFC'ye yazılmaz, metraj ve denetim görmez,
+    birleşim kuralı içindeki duvarı ve kolonu kesmez.
+  - `cad.masses.create` v1: halka, yükseklik, kot farkı ve ad `invalid_space` ile reddedilir; kendi kodu `codes.rs`
+    bölününce. `cad.arch.edit` yüksekliği, kot farkını ve adı değiştirir.
+  - Kesit modelinde ince ve dolgusuz prizma (MM-XXXX-KUTLE); kesitler, görünüşler ve Gölge onu okur. 3B'ye IFC'den
+    gelmediği için `scene3d_building::masses` ayrıca ekler: yaylar noktalara, dış halka saat yönünün tersine, avlu saat
+    yönüne. Yalnız kütleli çizim de 3B'de açılır.
+  - Kütle aracı (KU), Proje ▾: Köşeleri çiz, Dikdörtgen, Kapalı çizgiden (alanın parçaları ve delikleri, daire,
+    kapanmış çoklu çizgi). Yükseklik 9,00 m (PAİY 23/1-d'nin 3,00 m'lik üç katı), Kot farkı, Ad. Alansız oturum
+    yazılmaz. `.kcad` Mimari verisi 45; Python okuyucusu da.
+  - Bir ad her Mimari aracında tek harf (ADR 8003): tekil temelin Boy'u (B) Uzunluk (U) oldu.
+
+- **Güneş ve gölge (28 Kasım 2026, MB-15; [ADR 8177](../adr/8177-sun-and-shadow.md)).**
+  - `geom::sun::at`: güneşin azimutu ve yüksekliği enlem, boylam, saat dilimi, gün ve saatten (NOAA genel güneş konumu
+    formülleri; ölçülen sapma 0,15°'nin altında, kırılma yok). Türkiye saati güneşin yarım saat önünde: Sivas'ta güneş
+    öğlesi 12:30–12:34; saatler saat dilimiyle yazılır. `Sun::in_plan`: coğrafi kuzey `north::model_north`'tan, yoksa
+    plan kuzeyi (söylenir).
+  - Gölge (`shadows::shadow_of`): kesit modelinin ±0,00 üstündeki cisimleri ışın boyunca zemine süpürülür (prizma
+    alt–üst, çatı yüzü köşe köşe, merdiven kolu), birleşimden binanın oturduğu alan çıkar: ±0,00'a inen cisimler +
+    dış çevre (`building_corners`) + bir cismin örttüğü boşluklar (yoksa odaların içi taranıyordu). Dışbükey halka
+    tek zarf, saatler yan yana (`shadows_of`): gün boyu 10,5 s → 0,46 s (hata ayıklama, kesit binası). Zemin
+    ±0,00'da düz; tesviye zemin, komşular ve iç avlu yok.
+  - Gölge aracı (GL), Proje ▾: Tarih (21 Aralık, 21 Mart, 21 Haziran, 23 Eylül), Saat (09, 12, 15 ya da 09–15 saatlik),
+    konumsuz projede E/B istemin seçeneği (masaüstü harfi araca ancak seçenekse verir), saat dilimi Z (UTC+3). Önizlemeli; tek saat taramalı, birden çok saat çerçeve ve uçta saat;
+    MM-XXXX-GOLGE, tek adım, eskisinin yerine. Canlı değil. Konum ve seçimler `Memory::sun_shadow`'da (uygulama açık
+    kaldıkça). Sözleşme ve `.kcad` değişmedi.
+  - 3B'de Güneş (2. bölüm): `Frame::shadows` kutusu verilince çizici saydam olmayan yüzleri güneşten derinlik
+    haritasına çizer (`shadow.rs`: 4096², Hızlı 2048; dik izdüşüm kutuya sıkı; kesit düzlemleri gölge düşürenleri de
+    keser; saydam parça düşürmez; köşelerin zemindeki gölgeleri derinlik aralığına girer) ve doğrudan ışığı 5 × 5
+    karşılaştırmanın payıyla söndürür. **Alıcı düzlem sapması şart:** tek texellik sapmayla 45° güneşte zeminde
+    bantlar çıktı (ekran kartı resmi); 12° güneşte kumlanma (84…91) normal kaydırmasını sıyıran güneşte iki texele
+    çıkarınca gitti. Güneş açıkken görüntüleyici bir zemin koyar (±0,00'ın 2 cm altında, sahnenin üç katı). Düzen sözleşmesi 5. sürüm,
+    View 288 bayt. Masaüstünde Güneş düğmesi, Tarih ▾ ve ◀ saat ▶; konum Gölge'nin belleğinden; ufkun altındaki saate
+    geçilmez.
+
+- **Mahal renk planı (28 Kasım 2026, MB-14 1. bölüm; [ADR 8176](../adr/8176-room-colour-plan.md)).**
+  - `ArchSettings.colorPlan` (`usage` | `unit`), Mimari verisi 44. Belge: `space_fills`, `color_legend`,
+    `covered_layers`. Kullanım: yazılı kullanım adı geçer, yoksa ad (`room_names`) gruplara (sabit renkli); bölüm:
+    program sırası, eklenti bölümünün, ortak/dış alan birer, atanmamış dolgusuz. Renkler kaymaz.
+  - Dolgu mahalin geometri deposundaki ilk parçası (`set_space_fills`, yalnız değişen yeniden çizilir): canlı, kendi
+    katında, paftada basılır. **Çizim sırası mahalin katmanınındır**: üstteki mahal katmanı kapıları örter (ölçüldü);
+    yeni EK-4 katmanları MM-XXXX-MAHAL'in üstüne açılır, açılışta örtülen katmanlar adlarıyla söylenir. Masaüstü düz
+    taramayı saydam çizmiyor (gözlendi); saydamlık çözüm değil.
+  - Şeritte Mahal bölmesi (sekme 30 düğme, menü en çok 6 öğe): şemalar anahtar; lejant aracı RL (düz nesneler, tek
+    lejant). Plan notları `plan_note.rs`'e taşındı (`arch.rs` boyutu); etiketli mahal eşitlemesi `space_sync.rs`'e.
+
+- **3B görünüm paftada (27 Kasım 2026, MB-13; [ADR 8175](../adr/8175-3d-view-on-sheet.md)).**
+  - Görüntüleyicide Aksonometri (`OrbitCamera::axonometric`): ortografik, hedefte perspektifle aynı boy; göz modelin
+    önünde (`uzaklık + erişim + 1 m`). IFC görüntüleyicisinde de.
+  - 3B penceresinde Paftaya koy: görünüm olduğu gibi (izdüşüm, yön, kesit, kapaklar; işaret, ölçü ve tutamaç yok,
+    seçim önce bırakılır) ekran dışı GPU çizicisiyle (`kentos_ui::snapshot`) uzun kenarı 2400 piksel, kendi iş
+    parçacığında; PNG 4 MB'ı aşarsa 1800/1350. Öndeki paftaya Resim öğesi olarak (`Designer::place_picture`): sol
+    yarı, sonra sağ yarı, sonra orta; tek adım "3B görünüm". Resim canlı değil (pafta çekirdeği GPU'ya bağlanamaz).
+  - Gerçek pencere sürücüsünün `fit`'i pencereyi öne de alır.
+
+- **Arazi: tabii ve tesviye zemin (27 Kasım 2026, MB-12; [ADR 8174](../adr/8174-site-ground.md)).**
+  - `SitePlan.naturalGround/gradedGround`: vaziyetin kendi zemini, `SiteGround { layers }` (kotlu ölçü noktalarının
+    katmanları); yüzey okunurken kurulur. `settings.road.surfaces`'ta DEĞİL: Mimari projesi yol ayarı tutamaz,
+    kodlayıcı reddeder ve gerçek pencerede kurtarma kopyası yazılamadı (ölçüldü). `datum` ile kesitte ±0.00'a göre.
+    Kesit yüzeyin kesin kesitini çizer: tabii `MM-CVRE-TABII` kesikli, tesviye `MM-CVRE-TESVIYE` kalın; yoksa eskisi
+    gibi düz ±0.00. `road.terrains.*`'ın kapısı değişmedi. `mod-arch` → `terrain`. Mimari verisi 43.
+  - Arazi zemini aracı (`tool.siteGround`, AZ; Proje ▾): ölçü noktasına tıklanınca o katmandan zemin; Tür (T)
+    tabii/tesviye. ±0.00 yoksa bina köşelerinin tabii zemin ortalaması (PAİY 12/4; zemin katın dış hattı, köşe =
+    doğrultu değişen köşe). Bahçe hafriyatı: parselin içinde, bina oturumu dışında, kazı ve dolgu ayrı. Ayar; geri
+    alma adımı değil.
+  - Zemin kotu (`tool.groundLevel`, ZK): EK-4 Şekil 4.6, "tzk 1001.48 (+0.67)" üstte, "tsk 1000.60 (-0.21)" altta;
+    kot simgesi ve iki maskeli yazı MM-XXXX-SEMBOL'e tek adımda. Değerler yazıdır, canlı değil: yüzey uygulama
+    katmanında kuruluyor, çizim çekirdeği ona bağlanamaz.
+  - Kalan: bodrum katların emsal kuralı (`buried_levels`, PAİY 22/1-k) hâlâ tesviye zemini ±0.00 sayıyor; bina
+    kazısı; zeminin planda gösterimi.
+  - Kısa adlar düzeltildi: Tekil temel TK, Sürekli temel SR (TT ve ST KentOS'ta zaten Geçici izleme noktası ve Yazı
+    stilleri'ydi; `module_names` sınaması yakaladı).
+
+- **Duvar profili: kaplama olan kiriş bandı (27 Kasım 2026, MB-11; [ADR 8173](../adr/8173-wall-profiles.md)).**
+  - `BeamFields.covering`: cephe silmesi MOLDING "Cephe silmesi" (EK-2 Cephe, `MM-CEPH-…`), harpuşta COPING (`MM-HARP-…`);
+    IFC `IfcCovering`, `MM-KPL-…`. Yapı değil: duvarı kesmez, birleşime girmez, kirişler çizelgesinde yok. Kattan
+    yüksekliği zorunlu; Mimari verisi 42.
+  - Araçlar Baca ▾'in altında, mimarlıktaki tam adlarıyla ("Silme" tek başına silme işlemi gibi okunur): Cephe
+    silmesi (SL) dış yüzler boyunca, halka bir kenarın ortasından dolanır (köşe gönyeli); Duvar harpuştası (HP)
+    duvarın orta çizgisinde, tepesinde, iki yandan taşar.
+
+- **Temel: tekil ve sürekli temel kirişin rolü, radye döşemenin türü (27 Kasım 2026, MB-10; [ADR 8172](../adr/8172-footings.md)).**
   - `BeamRole::{PadFooting, StripFooting}`; kendi tabanına oturur (`baseOffset` zorunlu, negatif). Katman
     `MM-TEML-TEKIL/SUREKLI` (EK-2 TEML); IFC `IfcFooting` PAD_FOOTING/STRIP_FOOTING, `MM-TML-…`,
     `Qto_FootingBaseQuantities`; 3B'de "Temel"; `.kcad` Mimari verisi 40. TBDY 16'nın metni okunamadı: ölçüler
     öntanımlı, denetim yok.
-  - Araçlar Kiriş ▾'in altında (sekmede 30 düğme): Tekil temel (TT) tıklanan kolonun altına ortalanır ve kolonla
-    döner; Sürekli temel (ST) eksen + Enter. Kolon aynı kattaki temelin tepesine iner (kesit modelinde, `seats`).
-    Kalan: radye.
+  - Araçlar Kiriş ▾'in altında (sekmede 30 düğme): Tekil temel (TK) tıklanan kolonun altına ortalanır ve kolonla
+    döner; Sürekli temel (SR) eksen + Enter. Kolon aynı kattaki temelin tepesine iner (kesit modelinde, `seats`).
+  - Radye (RD): `SlabRole::Raft`, IFC `IfcSlab` BASESLAB (IFC 4.3: döşeme temeli `IfcFooting` değil), `MM-DSM-Radye`,
+    katman `MM-TEML-RADYE`, 3B'de Temel; eğim, kenar ve kaplama almaz; Mimari verisi 41. 60 cm, −0,30, 50 cm taşma.
 
 - **Mimari'nin 3B görünümü, kesiti ve eksik araçları (27 Kasım 2026, sahibin isteği; [ADR 8171](../adr/8171-mimari-3d-section-quality-and-missing-tools.md),
   [plan/mimari-bim.md](../../plan/mimari-bim.md), [araştırma](../research/2026-11-27-mimari-3b-kesit-ve-araclar.md)).**

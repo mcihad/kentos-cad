@@ -85,10 +85,11 @@ impl Document {
     }
 
     /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`. A lintel and a bond
-    /// beam sit in the wall, which runs on round them (docs/adr/8041 §3): only a beam of the frame stops it.
+    /// beam sit in the wall, which runs on round them (docs/adr/8041 §3): only a beam of the frame stops it. A profile
+    /// (docs/adr/8173) covers a wall and stops none.
     fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
         self.beams_at(at)
-            .filter(|b| b.role == kentos_contracts::BeamRole::Beam)
+            .filter(|b| b.role == kentos_contracts::BeamRole::Beam && b.covering.is_none())
             .filter_map(|b| self.beam_underside_at(b, at))
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)

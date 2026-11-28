@@ -1659,6 +1659,15 @@ pub(super) fn geometry(
             }
             Entity::Roof(kentos_contracts::RoofEntity { base, roof: Box::new(roof) })
         }
+        34 => {
+            let text = c.text(|| "kütlenin alanları".into())?;
+            let mass: kentos_contracts::MassFields =
+                serde_json::from_str(&text).map_err(|_| broken("kütlenin alanları"))?;
+            if let Some((_, problem)) = mass.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Mass(kentos_contracts::MassEntity { base, mass: Box::new(mass) })
+        }
         33 => {
             let text = c.text(|| "korkuluğun alanları".into())?;
             let railing: kentos_contracts::RailingFields =

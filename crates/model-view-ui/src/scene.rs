@@ -278,7 +278,8 @@ pub enum Mark {
 /// One view of a scene: the scene, the camera, the exaggeration, the parts' styles, towards the light, the sky's and
 /// the fill's shares of the light (0: the light alone; docs/adr/8120), the quality it is drawn at, the half-spaces a
 /// section keeps (in the shown space; none: nothing cut), the point ringed, and the frame's shared notes (what it drew;
-/// whether contents are still waiting for the GPU).
+/// whether contents are still waiting for the GPU). With `sun` the light is the sun and the faces cast its shadows
+/// within the scene's box (docs/adr/8177 §4).
 pub struct SceneView {
     pub scene: Arc<Scene>,
     /// A layer drawn with the scene: a section's caps (docs/adr/8131, 8171 §2.2), made again as the section moves while
@@ -301,6 +302,7 @@ pub struct SceneView {
     pub active: Option<usize>,
     pub seen: Arc<Mutex<Seen>>,
     pub pending: Arc<AtomicBool>,
+    pub sun: bool,
 }
 
 /// The scene drawn and its gestures sent through `on`.
@@ -322,6 +324,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         planes: Arc::new(v.planes),
         seen: v.seen,
         pending: v.pending,
+        sun: v.sun,
         hover: v.hover,
         handles,
         on: Box::new(on),
@@ -344,6 +347,7 @@ struct Program<'a, M> {
     planes: Arc<Vec<[f64; 4]>>,
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
+    sun: bool,
     hover: bool,
     handles: Arc<Vec<Handle>>,
     on: Box<dyn Fn(Gesture) -> M + 'a>,
@@ -506,6 +510,18 @@ impl<M> shader::Program<M> for Program<'_, M> {
             planes: self.planes.clone(),
             seen: self.seen.clone(),
             pending: self.pending.clone(),
+            // The box the sun's shadows are cast within: the scene's and its caps'.
+            shadows: self.sun.then(|| {
+                let mut b = self.scene.bounds();
+                if let Some(c) = &self.caps {
+                    let o = c.bounds();
+                    for i in 0..3 {
+                        b.min[i] = b.min[i].min(o.min[i]);
+                        b.max[i] = b.max[i].max(o.max[i]);
+                    }
+                }
+                [b.min, b.max]
+            }).filter(|[lo, hi]| (0..3).all(|i| lo[i].is_finite() && hi[i].is_finite() && lo[i] <= hi[i])),
         }
     }
 
@@ -545,6 +561,7 @@ pub struct Frame3d {
     planes: Arc<Vec<[f64; 4]>>,
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
+    shadows: Option<[[f64; 3]; 2]>,
 }
 
 impl fmt::Debug for Frame3d {
@@ -567,11 +584,50 @@ pub struct Pipeline {
     /// The scenes each view drew last (their first ids) and their contents' ids: a scene made again lets go of the
     /// contents of the one before it does not keep (docs/adr/8171 §2.4) at once, not when the budget is full.
     drawn: HashMap<u64, (Vec<u64>, std::collections::HashSet<u64>)>,
+    /// Each view's ground while the sun lights it.
+    grounds: HashMap<u64, Ground>,
 }
 
 impl shader::Pipeline for Pipeline {
     fn new(_device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new(), drawn: HashMap::new() }
+        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new(), drawn: HashMap::new(), grounds: HashMap::new() }
+    }
+}
+
+/// The ground the sun's shadows fall on (docs/adr/8177 §4), while the sun lights a scene: a square three times the
+/// scene's width about its middle, 2 cm under ±0.00 when the scene's heights reach across it (a ground floor's slab
+/// on it shows over it), else 2 cm under the scene. Without it a building stood in the sky and its shadow fell on
+/// nothing.
+struct Ground {
+    /// The square's middle, half side and height, and its part (the style after the scene's): made again when one
+    /// changes.
+    key: [u64; 5],
+    content: Content,
+}
+
+/// The content id the ground takes (a scene's take blocks of 2³² from the bottom).
+const GROUND_ID: u64 = u64::MAX - 1;
+/// The ground's colour: a light, warm grey.
+const GROUND_STYLE: Style = Style::of([0.80, 0.78, 0.74, 1.0]);
+
+impl Ground {
+    /// Its height for the scene's box `lo`–`hi`.
+    fn height(lo: [f64; 3], hi: [f64; 3]) -> f64 {
+        if lo[2] <= 0.0 && hi[2] >= 0.0 { -0.02 } else { lo[2] - 0.02 }
+    }
+
+    fn of(lo: [f64; 3], hi: [f64; 3], part: u32) -> Option<Ground> {
+        let (cx, cy) = ((lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0);
+        let half = (1.5 * (hi[0] - lo[0]).max(hi[1] - lo[1])).max(20.0);
+        let z = Ground::height(lo, hi);
+        let key = [cx.to_bits(), cy.to_bits(), half.to_bits(), z.to_bits(), u64::from(part)];
+        let vertices = [[cx - half, cy - half, z], [cx + half, cy - half, z], [cx + half, cy + half, z], [cx - half, cy + half, z]];
+        let mesh = kentos_scene3d::SourceMesh { part, vertices: &vertices, triangles: &[[0, 1, 2], [0, 2, 3]], smooth: false };
+        let content = kentos_scene3d::chunk(&[mesh], kentos_scene3d::Limits { max_triangles: 8, max_extent: f64::MAX }, GROUND_ID)
+            .contents
+            .into_iter()
+            .next()?;
+        Some(Ground { key, content })
     }
 }
 
@@ -608,6 +664,16 @@ impl shader::Primitive for Frame3d {
                 }
             }
         }
+        // The ground while the sun lights the scene, made again when the scene's box or parts change.
+        let ground = self.shadows.and_then(|[lo, hi]| Ground::of(lo, hi, self.styles.len() as u32));
+        if pipeline.grounds.get(&self.view).map(|g| g.key) != ground.as_ref().map(|g| g.key) {
+            r.forget(GROUND_ID);
+            match ground {
+                Some(g) => pipeline.grounds.insert(self.view, g),
+                None => pipeline.grounds.remove(&self.view),
+            };
+        }
+        let ground = pipeline.grounds.get(&self.view).map(|g| &g.content);
         let settings = Settings { max_screen_error: MAX_SCREEN_ERROR };
         let content = |id: u64| scenes.iter().find_map(|s| s.content(id));
         // Select with what is resident, upload what it draws and asks for within the budgets, select again with what
@@ -616,7 +682,7 @@ impl shader::Primitive for Frame3d {
             .iter()
             .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
             .collect();
-        let asked: Vec<&Content> = scenes
+        let mut asked: Vec<&Content> = scenes
             .iter()
             .zip(&first)
             .flat_map(|(s, sel)| {
@@ -624,12 +690,13 @@ impl shader::Primitive for Frame3d {
                 sel.draw.iter().chain(&sel.wanted).filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
             })
             .collect();
+        asked.extend(ground);
         r.load(device, &asked);
         let now: Vec<_> = scenes
             .iter()
             .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
             .collect();
-        let draws: Vec<&Content> = scenes
+        let mut draws: Vec<&Content> = scenes
             .iter()
             .zip(&now)
             .flat_map(|(s, sel)| {
@@ -637,7 +704,11 @@ impl shader::Primitive for Frame3d {
                 sel.draw.iter().filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
             })
             .collect();
+        draws.extend(ground.filter(|g| r.is_resident(g.id)));
         let wanted: usize = now.iter().map(|sel| sel.wanted.len()).sum();
+        // The ground's style after the scene's; the shadows' box down to the ground.
+        let styles: Vec<Style> = self.styles.iter().copied().chain(ground.map(|_| GROUND_STYLE)).collect();
+        let shadows = self.shadows.map(|[lo, hi]| [[lo[0], lo[1], lo[2].min(Ground::height(lo, hi))], hi]);
         let stats = r.prepare(
             device,
             queue,
@@ -646,12 +717,13 @@ impl shader::Primitive for Frame3d {
                 exaggeration: self.exaggeration,
                 viewport: vp,
                 draws: &draws,
-                styles: &self.styles,
+                styles: &styles,
                 light: self.light,
                 ambient: 0.38,
                 sky: self.sky,
                 fill: self.fill,
                 clip: &self.planes,
+                shadows,
             },
         );
         self.pending.store(wanted > 0, Ordering::Relaxed);

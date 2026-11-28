@@ -376,7 +376,7 @@ def edit(state, inp):
         return got, None
     for at, i in got:
         if state[i]["kind"] not in ("grid", "column", "stair", "ramp"):
-            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
                            f"uids[{at}]"), None
     op = inp["operation"]
     if len(got) != 1:

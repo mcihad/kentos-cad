@@ -40,6 +40,8 @@ impl Document {
                 SlabRole::Floor => Reading { value: false, why: "kat döşemesi olduğu için içeride" },
                 SlabRole::Balcony => Reading { value: true, why: "balkon döşemesi olduğu için dışarıda" },
                 SlabRole::Terrace => Reading { value: true, why: "teras döşemesi olduğu için dışarıda" },
+                // A raft (docs/adr/8172 §6): its underside on the ground, as the building's foundation.
+                SlabRole::Raft => Reading { value: true, why: "radye zemine oturduğu için dışarıda" },
             }),
             Entity::Roof(_) => Some(Reading { value: true, why: "çatı olduğu için dışarıda" }),
             Entity::Opening(o) if matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) => {

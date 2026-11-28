@@ -1,9 +1,9 @@
 # ADR 8172: Temel (tekil ve sürekli temel, radye)
 
-- **Durum:** 1. ve 2. bölüm kabul edildi ve uygulandı (27 Kasım 2026).
+- **Durum:** üç bölümü de kabul edildi ve uygulandı (27 Kasım 2026).
   - 1. bölüm: tekil ve sürekli temel modelde, kesitte, 3B'de, IFC'de ve dosyada.
   - 2. bölüm: Tekil temel ve Sürekli temel araçları, şeritte Kiriş ▾'in altında (§5).
-  - Kalan: radye (3. bölüm).
+  - 3. bölüm: radye, döşemenin bir türü (§6).
 - **Plan:** [plan/mimari-bim.md](../../plan/mimari-bim.md) MB-10. Karar: [ADR 8171](8171-mimari-3d-section-quality-and-missing-tools.md)
   §2.6.
 - **İstek** (sahip, 27 Kasım 2026): "mimari proje çizimlerinde birçok eksik aracımız var". Araştırma raporu (§5):
@@ -105,19 +105,21 @@ Yönetmelik değeri değildir; değiştirilir.
 
 ### §5.1 Ne yapar
 
-- **Tekil temel** (`tool.footingPad`, kısa adı TT): tıklanan yere bir temel koyar, ortası tıklanan noktadır.
+- **Tekil temel** (`tool.footingPad`, kısa adı TK): tıklanan yere bir temel koyar, ortası tıklanan noktadır.
   - Bir kolona tıklanınca temel kolonun altına ortalanır ve kolonla döner. Ortayı ve dönüşü araç kolondan alır, komuta
     eksenin iki ucu gider.
   - İmleç bir kolonun üstündeyken kolon vurgulanır; önizlemenin yazısı "Kolonun altına ortalanır" der.
   - Seçenekler:
     - Tür (T)
     - Genişlik (E): eksene dik kenar
-    - Boy (B): eksen boyunca kenar
+    - Uzunluk (U): eksen boyunca kenar; duvarın ve giydirme cephenin Uzunluk'u da U. İlk sürümde Boy (B) idi: kolonun
+      Boy'u Y olduğu için bir ad iki harf taşıyordu. 28 Kasım 2026'da ADR 8178 ile düzeltildi (bir ad her Mimari
+      aracında tek harftir, ADR 8003).
     - Yükseklik (Y)
     - Kattan yükseklik (A)
     - Açı (D): kolonsuz temelin dönüşü
     - Numara (N)
-- **Sürekli temel** (`tool.footingStrip`, kısa adı ST): eksen nokta nokta tıklanır, Enter ya da kısa sağ tık yazar.
+- **Sürekli temel** (`tool.footingStrip`, kısa adı SR): eksen nokta nokta tıklanır, Enter ya da kısa sağ tık yazar.
   Kiriş aracı gibidir. Seçenekler:
   - Tür (T)
   - Genişlik (E)
@@ -141,7 +143,7 @@ Yönetmelik değeri değildir; değiştirilir.
 - **Yeri:** Mimari şeridinin Yerleştir panelinde, Kiriş ▾'in altında. Menü: Kiriş, Kayıt, Tekil temel, Sürekli temel.
 - **Ayrı bir "Temel ▾" düğmesi yok:** sekmede 30 düğme var, sınır da 30 (DESIGN.md §7.3.1). Temel modelde de kirişin
   rolüdür.
-- **Bulma:** komut aramasında TEMEL, TEKİLTEMEL, SÜREKLİTEMEL; kısa adları TT ve ST.
+- **Bulma:** komut aramasında TEMEL, TEKİLTEMEL, SÜREKLİTEMEL; kısa adları TK ve SR. İlk sürümde TT ve ST verilmişti; ikisi KentOS'ta zaten Geçici izleme noktası'nın ve Yazı stilleri'nin adıydı.
 - **Simgeler:** plandaki gösterimleriyle çizildi.
   - Tekil temel: kolonun çevresinde kesikli kare.
   - Sürekli temel: duvarın altında kesikli bant.
@@ -187,6 +189,84 @@ Yönetmelik değeri değildir; değiştirilir.
     (−0,8614680402387846 → …838). Dosya yeniden yazıldı; iki koşuda aynı.
 - **Gerçek pencere:** önce ve sonra resimleri `.run/gui-evidence/mimari-bim/{once,sonra}/mb10-temel-araci.png`.
 
+## §6 Radye (3. bölüm)
+
+### §6.1 Araştırma
+
+- **IFC 4.3:** radye (temel döşemesi, "mat foundation") `IfcFooting` değildir. `IfcSlab`'dır, ön tanımlı tipi
+  BASESLAB.
+  - `IfcSlabTypeEnum` BASESLAB'ı zemine oturan, temelin parçası olan döşeme olarak tanımlar.
+  - `IfcFooting`'in belgesi döşeme temellerinin `IfcFooting` olarak değil, BASESLAB tipli `IfcSlab` olarak yazılacağını
+    söyler.
+  - Kaynaklar: [IfcSlabTypeEnum](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/lexical/IfcSlabTypeEnum.htm),
+    [IfcFooting](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/lexical/IfcFooting.htm).
+- **Dijital Hazırlama Yönetmeliği:**
+  - EK-6 Tablo 6.56 (`IfcSlab`, PDF s. 97) ön tanımlı tipleri arasında BASE SLAB'ı sayar
+    (`mevzuat/bim/ek-6-2-zorunlu-f-z.md`).
+  - Tablo 6.34 (`IfcFooting`) radye tipi saymaz.
+  - Adı EK-5 Tablo 5.1 sıra 56'ya göre `MM-DSM-Radye`dir (`IfcSlab` Döşeme, DSM).
+  - Katmanı EK-2 Tablo 2.3'ün Temel'i: `MM-TEML-RADYE`.
+- **Piyasa** (araştırma raporu §5): Revit'te temel döşemesi ayrı bir araçtır ("Foundation Slab"); IFC'ye BASESLAB
+  yazılır. Archicad'de döşeme aracı ve sınıflandırmayla çizilir.
+- **TBDY 2018 Bölüm 16'nın metni okunamadı** (§2). Ölçüler kural değil, öntanımlıdır.
+
+### §6.2 Karar
+
+- **Model:** döşemenin dördüncü türü, `SlabRole::Raft` ("Radye"). Ayrı nesne değil.
+  - Döşemenin konturu (dış yüzler, oda, köşeler), kenar ötelemesi, kalınlığı, kotu, katmanları, kesiti, 3B'si, metrajı
+    ve IFC'si hazır.
+  - Temelin kirişin rolü olmasıyla (§3.1) aynı yol.
+- **Kurallar** (`SlabFields::problem`):
+  - Radyeye eğim verilmez: "Radyeye eğim verilmez: radye binanın düz tabanıdır."
+  - Kenarı (korkuluk, parapet) olmaz.
+  - Kaplama olamaz.
+  - Kot ve kalınlık döşemeninkiler: kot ±100 m, kalınlık 5 m'ye kadar.
+- **IFC:** `IfcSlab` BASESLAB, adı `MM-DSM-Radye`.
+  - Balkon ve teras eskisi gibi FLOOR ve "Döşeme"dir; yazılan dosyaları değişmedi.
+  - Radyenin üstündeki kaplama katmanı "Inner finish"tir, çünkü üstü binanın içidir.
+  - `IsExternal` doğrudur: zemine oturur.
+- **3B:** okuyucu BASESLAB'ı "Temel" sınıfına koyar; renk ve lejant tekil ve sürekli temelinkiyle aynıdır.
+- **Kesit modeli:** radye döşemenin taşıyıcısıdır. Tepesi katın kotunun yarım metre altıyla 10 cm üstü arasındaysa
+  katın döşemesi sayılır (ADR 8040 §1).
+  - Üstündeki kolonlar ve duvarlar radyenin tepesine oturur. Bu, kolonun ve duvarın tabanının bugünkü kuralıdır; yeni
+    bir kural eklenmedi.
+  - Radyenin üstüne ayrı bir zemin kat döşemesi çizilirse duvar ve kolon en yüksekteki döşemeye, yani ona oturur.
+- **Dosya:** Mimari verisi 41 (`ARCH_WITH_RAFTS`). Eski okuyucu "radye mimari veri sürümü 41 gerektirir" diyerek
+  reddeder. Bağımsız Python okuyucusu da tanır.
+
+### §6.3 Araç ve öntanımlılar
+
+- **Radye** (`tool.raft`, kısa adı RD): Döşeme aracı Radye türüyle başlar. Şeritte Kiriş ▾'in altında, iki temelin
+  yanında: üç temel bir arada.
+- **Öntanımlılar** (yönetmelik değeri değil):
+  - 60 cm kalınlık.
+  - Tepesi katın 30 cm altında (kot −0,30).
+  - Duvarların dış yüzlerinden 50 cm taşar (Kenar ötelemesi 0,50).
+- **Tür (T):** Döşeme → Balkon → Teras → Radye. Radyeye geçince öntanımlıları alır; radyeden çıkınca döşemenin
+  ölçülerine döner (15 cm, 0, 0).
+- **Katman:** `MM-TEML-RADYE`.
+
+### §6.4 Kanıt
+
+- **Ortak durumlar:** `cad.slabs.create` 74 durum, 4'ü yeni.
+  - Geçerli: dış yüzlerden 50 cm taşan radye (metrajıyla).
+  - Ret: kaplama radye, korkuluklu radye, eğimli radye.
+- **Başvuru:** bağımsız başvuruya duvarın tabanı kuralı eklendi (`space_command_cases.py`, `wall_height`).
+  - Kural ADR 8040 §1'den: duvar altındaki döşemenin taşıyıcısına oturur.
+  - Önceki durumların hiçbiri değişmedi: 38 + 47 + 30 mahal, 33 bağlı döşeme, 23 + 22 duvar, 53 döşeme düzenleme.
+  - Radyede zemin kat duvarı 3,30 m: radyenin tepesinden katın tepesine.
+- **Bekçiler:**
+  - `frame_joins::a_raft_is_the_ifc_s_base_slab_and_its_columns_stand_on_it`: radye −0,90 ile −0,30 arasında; kolon
+    −0,30'dan başlar; hacim paylaşılmaz. IFC'de tek `IfcSlab`, BASESLAB, `MM-DSM-Radye`; temel sayısı 0.
+  - `read::view::tests::a_base_slab_is_shown_as_a_foundation`: BASESLAB Temel, FLOOR Döşeme.
+  - `arch_elements::a_raft_round_trips_under_arch_data_41`: Mimari verisi 41 ile aynen okunur; kenarlı radye yazılırken
+    reddedilir.
+  - `footing_tools::the_raft_tool_writes_a_raft_past_its_outline_and_tur_gives_a_slab_s_sizes_back`: köşeleri çizilen
+    10 × 8 radye 11 × 9 yazılır; Tür Döşeme'ye dönünce ölçüler 15 cm'ye döner.
+  - `arch_layer::tests::every_kind_has_an_ek4_name`: `MM-TEML-TEKIL`, `MM-TEML-SUREKLI`, `MM-TEML-RADYE`.
+- **1. bölümün artığı:** temel türleri bu sınamanın listesine ortadan eklenmişti; sonraki türlerin sıra numaraları
+  kaymış, sınama main'de kırmızıydı (bu sınama `--test all`'da değil). Liste sona taşındı.
+
 ## Uygulama
 
 - `crates/shared/contracts/src/arch/beam.rs`: `BeamRole::{PadFooting, StripFooting}`, `is_footing`, tabanın
@@ -203,6 +283,11 @@ Yönetmelik değeri değildir; değiştirilir.
 - 2. bölüm: `crates/native/interaction/src/arch/footing_tools.rs` (`FootingTool`); kayıt `core/session.rs`;
   katalog `catalog/v1/{additions,operations,modules,names-mimari,ribbon}.json`, `scripts/ui/ribbon.py`;
   `crates/shared/extensions/sdk/icons.txt`; `docs/cad/manifest.{json,md}`.
+- Radye (§6): `crates/shared/contracts/src/arch/slab.rs` (`SlabRole::Raft`, `ifc_type`, `ifc_words`, kurallar);
+  `crates/shared/ifc/src/arch.rs` (yerinde, satır sayısı aynı), `read/view.rs`; `crates/native/domain/src/derived_roles.rs`;
+  `crates/native/application/src/arch/railing_audit.rs`; `crates/native/interaction/src/arch/{slab_tools.rs, arch_layer.rs}`;
+  `crates/shared/kcad/src/{lib.rs, decode.rs}`, `tools/kcad/kcad.py`; `scripts/fixtures/{slab_cases.py,
+  space_command_cases.py}`; katalog ve şerit.
 - Kolon temelde (§5.5): `crates/native/application/src/arch/sections/frame.rs` (`Seat`, `seats`; `SlabAt` buraya
   taşındı). Boyut sınırı için konusuna göre ayrılanlar: emsal alanı `crates/shared/ifc/src/arch/emsal.rs`, düzlem
   geometrisi (`circle`, `nest`) `crates/shared/ifc/src/plane.rs`.

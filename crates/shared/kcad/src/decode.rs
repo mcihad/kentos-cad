@@ -491,6 +491,21 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
     if arch < crate::ARCH_WITH_FOOTINGS && crate::uses_footings(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "temel (tekil ve sürekli) mimari veri sürümü 40 gerektirir"));
     }
+    if arch < crate::ARCH_WITH_RAFTS && crate::uses_rafts(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "radye mimari veri sürümü 41 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_MASSES && crate::uses_masses(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "kütle mimari veri sürümü 45 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_COLOR_PLAN && crate::uses_color_plan(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "mahal renk planı mimari veri sürümü 44 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_GROUND && crate::uses_ground(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "vaziyetin tabii ve tesviye zemini mimari veri sürümü 43 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_PROFILES && crate::uses_profiles(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "duvar profili (silme, harpuşta) mimari veri sürümü 42 gerektirir"));
+    }
     if arch < crate::ARCH_WITH_CASEWORK_PLACEMENT && crate::uses_casework_placement(&doc) {
         return Err(r.fail_at(Code::UnknownField, body_at, "mutfak dizisinin kat ve dolgu yerleşimi mimari veri sürümü 39 gerektirir"));
     }

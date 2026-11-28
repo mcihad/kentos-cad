@@ -544,6 +544,7 @@ pub(crate) fn geometry(
         Entity::Space(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
         // A slab's outline, an area object's (docs/adr/0722 §6).
         Entity::Slab(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
+        Entity::Mass(m) => return geometry(&Entity::Polygon(m.as_polygon()), blocks, rep, w),
         // Its path, or its outline (docs/adr/0343 §5).
         Entity::Grid(_)
         | Entity::Column(_)

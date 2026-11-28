@@ -28,6 +28,7 @@ fn kind_name(e: &Entity) -> &'static str {
         Entity::Beam(_) => "kiriş",
         Entity::Roof(_) => "çatı",
         Entity::Railing(_) => "korkuluk",
+        Entity::Mass(_) => "kütle",
         _ => "nesne",
     }
 }
@@ -43,6 +44,8 @@ fn not_for(field: &str, e: &Entity) -> Stop {
 /// The fields `c` gives, by their names on the wire, with the kinds that have each.
 fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const GRID: &[&str] = &["grid"];
+    // A mass's name its label (docs/adr/8178).
+    const NAMED: &[&str] = &["grid", "mass"];
     const COLUMN: &[&str] = &["column"];
     const STAIR: &[&str] = &["stair"];
     const RAMP: &[&str] = &["ramp"];
@@ -52,21 +55,21 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const BEAM: &[&str] = &["beam"];
     const RAMP_BEAM: &[&str] = &["ramp", "beam"];
     const TAGGED: &[&str] = &["column", "beam"];
-    const BEAM_ROOF: &[&str] = &["beam", "roof", "railing"];
-    // A column's own height (docs/adr/8070 §8).
-    const TALL: &[&str] = &["beam", "railing", "column"];
+    const BEAM_ROOF: &[&str] = &["beam", "roof", "railing", "mass"];
+    // A column's own height (docs/adr/8070 §8); a mass's (docs/adr/8178).
+    const TALL: &[&str] = &["beam", "railing", "column", "mass"];
     const STAIR_COLUMN: &[&str] = &["stair", "column"];
     const RAILING: &[&str] = &["railing"];
     const MADE_OF: &[&str] = &["column", "beam", "roof"];
     const ROOF: &[&str] = &["roof"];
-    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof", "railing"];
+    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof", "railing", "mass"];
     let mut out = Vec::new();
     let mut add = |on: bool, name: &'static str, kinds: &'static [&'static str]| {
         if on {
             out.push((name, kinds));
         }
     };
-    add(c.label.is_some(), "label", GRID);
+    add(c.label.is_some(), "label", NAMED);
     add(c.bubbles.is_some(), "bubbles", GRID);
     add(c.bubble_size.is_some(), "bubbleSize", GRID);
     add(c.ends.is_some(), "ends", GRID);
@@ -129,6 +132,7 @@ fn tag_of(e: &Entity) -> &'static str {
         Entity::Beam(_) => "beam",
         Entity::Roof(_) => "roof",
         Entity::Railing(_) => "railing",
+        Entity::Mass(_) => "mass",
         _ => "",
     }
 }
@@ -393,6 +397,19 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
         }
         // A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.
+        // A mass's name, height and bottom over its storey's floor (docs/adr/8178).
+        Entity::Mass(m) => {
+            let f = &mut m.mass;
+            if let Some(v) = &c.label {
+                f.name = Some(v.clone());
+            }
+            if let Some(v) = c.height {
+                f.height = v;
+            }
+            if let Some(v) = c.offset {
+                f.offset = v;
+            }
+        }
         Entity::Railing(r) => {
             let f = &mut r.railing;
             if let Some(v) = c.width {
@@ -433,6 +450,7 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Beam(b) => Some(&mut b.beam.arch),
         Entity::Roof(r) => Some(&mut r.roof.arch),
         Entity::Railing(r) => Some(&mut r.railing.arch),
+        Entity::Mass(m) => Some(&mut m.mass.arch),
         _ => None,
     }
 }
@@ -485,9 +503,19 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
             }
             Entity::Railing(r)
         }
+        // A mass's rings and height follow a space's rules (docs/adr/8178).
+        Entity::Mass(m) => {
+            if let Some((field, words)) = m.mass.problem() {
+                return Err(fail(codes::INVALID_SPACE, words, &format!("{path}.{field}")));
+            }
+            Entity::Mass(m)
+        }
         other => other,
     };
-    if let Some(arch) = arch_elements::arch_of(&e) {
+    if let Some(arch) = arch_elements::arch_of(&e).or(match &e {
+        Entity::Mass(m) => Some(&m.mass.arch),
+        _ => None,
+    }) {
         crate::walls::level_known(doc, arch, "operation.level")?;
     }
     let e = match e {
@@ -521,14 +549,14 @@ type Work = (Vec<CommandWarning>, Vec<(Slot, Entity)>);
 fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
     checks::uids(
         &input.uids,
-        "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi.",
+        "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle verilmedi.",
     )?;
     let found = checks::named(doc, &input.uids)?;
     for (at, _, e, _) in &found {
-        if arch_elements::arch_of(e).is_none() {
+        if arch_elements::arch_of(e).is_none() && !matches!(e, Entity::Mass(_)) {
             return Err(fail(
                 codes::NOT_ARCH_ELEMENT,
-                "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
+                "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
                     .into(),
                 &format!("uids[{at}]"),
             ));

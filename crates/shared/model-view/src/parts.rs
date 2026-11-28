@@ -8,7 +8,7 @@ use crate::input::Category;
 pub type Part = u32;
 
 /// The parts: their names (the legend's words) and colours.
-pub const PARTS: [(&str, [f32; 4]); 21] = [
+pub const PARTS: [(&str, [f32; 4]); 22] = [
     ("Duvar", [0.80, 0.78, 0.74, 1.0]),
     ("Döşeme", [0.60, 0.61, 0.64, 1.0]),
     ("Kolon", [0.52, 0.55, 0.60, 1.0]),
@@ -36,6 +36,8 @@ pub const PARTS: [(&str, [f32; 4]); 21] = [
     // A footing (docs/adr/8172): concrete in the ground, darker and browner than a column so the frame stands apart
     // from what it stands on.
     ("Temel", [0.46, 0.44, 0.40, 1.0]),
+    // A mass (docs/adr/8178): a study model's off-white, apart from every building element's.
+    ("Kütle", [0.93, 0.92, 0.89, 1.0]),
 ];
 
 pub const SPACE: Part = 9;
@@ -49,6 +51,7 @@ pub const ZONE: Part = 18;
 /// A section's cut faces (docs/adr/8131).
 pub const CAP: Part = 19;
 pub const FOOTING: Part = 20;
+pub const MASS: Part = 21;
 
 /// A category's part.
 pub fn of(category: Category) -> Part {
@@ -58,6 +61,7 @@ pub fn of(category: Category) -> Part {
         Category::Column => 2,
         Category::Beam => 3,
         Category::Footing => FOOTING,
+        Category::Mass => MASS,
         Category::Roof => 4,
         Category::Stair => 5,
         Category::Railing => 6,

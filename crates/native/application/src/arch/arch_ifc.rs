@@ -227,7 +227,17 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
 /// [`made`] of one of the program's buildings (docs/adr/8072 §2), and how many architectural objects of the project's
 /// no building holds (on no storey, or a shared one no building is chosen for) when it has several.
 fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope>) -> (Building, Written, usize, usize) {
-    let model = sections::model(doc);
+    made_from(doc, sections::model(doc), stamp, application, scope)
+}
+
+/// [`made_for`] of a section model made already.
+fn made_from(
+    doc: &Document,
+    model: sections::Model,
+    stamp: &str,
+    application: &str,
+    scope: Option<&Scope>,
+) -> (Building, Written, usize, usize) {
     let curved = model
         .left
         .iter()
@@ -594,6 +604,12 @@ pub fn file_name(doc: &Document) -> String {
 pub fn model(doc: &Document) -> (Building, Written, Particulars) {
     let (b, written, _) = made(doc, "", "KentOS Mimari");
     (b, written, particulars(doc))
+}
+
+/// [`model`]'s building with its frame as drawn, not joined (`sections::unjoined_model`): what an underlay's elements
+/// are recognised by (docs/adr/8102 §3).
+pub fn unjoined_model(doc: &Document) -> Building {
+    made_from(doc, sections::unjoined_model(doc), "", "KentOS Mimari", None).0
 }
 
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.

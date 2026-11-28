@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 4,
+  "version": 5,
   "module": "scene3d",
-  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha. Version 3 (docs/adr/8120): the View's `edge` block and the bodies' edges, lines over the faces drawn a hair nearer, testing depth without writing it; a view drawn at the quality's samples into its own target, then laid over the window by the composite, darkened by the ambient light's occlusion when asked. At the highest quality the faces also write their veil (meshVeiledFs: a see-through face's alpha, the most over a pixel) to a second target, which lifts the occlusion under glass. Version 4 (docs/adr/8131): a section's caps, parts no plane cuts, their style's alpha raised by 2 (the vertex stage reads the styles too, to draw a cap as much nearer as an edge is); the View's `edge.w` is the samples a pixel, and a cut face writes the samples its planes keep (`@builtin(sample_mask)`), each plane's distance carried from the pixel's middle to the standard pattern's places by the derivatives.",
+  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha. Version 3 (docs/adr/8120): the View's `edge` block and the bodies' edges, lines over the faces drawn a hair nearer, testing depth without writing it; a view drawn at the quality's samples into its own target, then laid over the window by the composite, darkened by the ambient light's occlusion when asked. At the highest quality the faces also write their veil (meshVeiledFs: a see-through face's alpha, the most over a pixel) to a second target, which lifts the occlusion under glass. Version 4 (docs/adr/8131): a section's caps, parts no plane cuts, their style's alpha raised by 2 (the vertex stage reads the styles too, to draw a cap as much nearer as an edge is); the View's `edge.w` is the samples a pixel, and a cut face writes the samples its planes keep (`@builtin(sample_mask)`), each plane's distance carried from the pixel's middle to the standard pattern's places by the derivatives. Version 5 (docs/adr/8177 §4): the sun's shadows. The opaque faces drawn once more from the sun into a depth32float map (shadowVs/shadowFs, standard depth cleared to 1, compare less; a section's planes cut the casters); the faces' direct light is the share of twenty-five comparisons against it (a comparing sampler, linear) that find the sample lit. The View's `shadow` (the sun's projection) and `sun` (on, a texel in the map's coordinates and in metres, the bias) make it 288 bytes; the map and the sampler are group 0's bindings 2 and 3, which the shadow pass leaves unbound.",
   "sources": [
     "scene3d/mesh.wgsl"
   ],
@@ -29,6 +29,24 @@
             "vertex",
             "fragment"
           ]
+        },
+        {
+          "binding": 2,
+          "name": "shadowMap",
+          "type": "depth-texture",
+          "dynamicOffset": false,
+          "visibility": [
+            "fragment"
+          ]
+        },
+        {
+          "binding": 3,
+          "name": "shadowSampler",
+          "type": "comparison-sampler",
+          "dynamicOffset": false,
+          "visibility": [
+            "fragment"
+          ]
         }
       ]
     },
@@ -50,7 +68,7 @@
   ],
   "structs": {
     "View": {
-      "size": 208,
+      "size": 288,
       "align": 16,
       "fields": [
         {
@@ -77,6 +95,16 @@
           "name": "planes",
           "type": "array<vec4<f32>, 6>",
           "offset": 112
+        },
+        {
+          "name": "shadow",
+          "type": "mat4x4<f32>",
+          "offset": 208
+        },
+        {
+          "name": "sun",
+          "type": "vec4<f32>",
+          "offset": 272
         }
       ]
     },
@@ -182,6 +210,45 @@
         "format": "depth32float",
         "compare": "greater-equal",
         "write": false
+      },
+      "buffers": [
+        {
+          "stepMode": "vertex",
+          "arrayStride": 20,
+          "attributes": [
+            {
+              "location": 0,
+              "name": "p",
+              "format": "float32x3",
+              "offset": 0
+            },
+            {
+              "location": 1,
+              "name": "part",
+              "format": "uint32",
+              "offset": 12
+            },
+            {
+              "location": 2,
+              "name": "n",
+              "format": "snorm8x4",
+              "offset": 16
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shadow",
+      "vertex": "shadowVs",
+      "fragment": "shadowFs",
+      "topology": "triangle-list",
+      "cull": "none",
+      "blend": "none",
+      "depth": {
+        "format": "depth32float",
+        "compare": "less",
+        "write": true
       },
       "buffers": [
         {

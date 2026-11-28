@@ -79,6 +79,7 @@ pub(crate) fn declared() -> Document {
         edges: vec![edge(SiteEdgeKind::Front), edge(SiteEdgeKind::Side), edge(SiteEdgeKind::Back), edge(SiteEdgeKind::Side)],
         datum: Some(1285.4),
         envelope: None,
+        ..Default::default()
     });
     doc.set_settings(settings);
     // The author's fire classes (Binaların Yangından Korunması Hakkında Yönetmelik) and exit roles.

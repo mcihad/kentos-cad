@@ -261,8 +261,21 @@ def covering_problem(s, prefix):
         return refusal("invalid_slab", "Kaplamanın katmanları olmaz: kalınlığı kendisinindir; katmanları kaldırın.", f"{prefix}.covering")
     if s.get("edge") is not None:
         return refusal("invalid_slab", "Kaplamanın kenarı (korkuluk, parapet) olmaz.", f"{prefix}.covering")
+    if s.get("role", "floor") == "raft":
+        return refusal("invalid_slab", "Radye kaplama olamaz; kaplamanın türü Döşeme olmalı.", f"{prefix}.covering")
     if s.get("role", "floor") != "floor":
         return refusal("invalid_slab", "Balkon ve teras kaplama olamaz; kaplamanın türü Döşeme olmalı.", f"{prefix}.covering")
+    return None
+
+
+def raft_problem(s, prefix):
+    """A raft's rule and words (ADR 8172 §6): the building's level base; no slope, no railing or parapet along it."""
+    if s.get("role") != "raft":
+        return None
+    if s.get("slope") is not None:
+        return refusal("invalid_slab", "Radyeye eğim verilmez: radye binanın düz tabanıdır.", f"{prefix}.slope")
+    if s.get("edge") is not None:
+        return refusal("invalid_slab", "Radyenin kenarı (korkuluk, parapet) olmaz.", f"{prefix}.edge")
     return None
 
 
@@ -314,6 +327,9 @@ def problem(s, prefix):
                 return refusal("invalid_slab", f"{LAYER[lay['kind']]} katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; {num(t)} verildi.",
                                f"{prefix}.layers.{side}[{i}].thickness")
     r = slope_problem(s, prefix)
+    if r:
+        return r
+    r = raft_problem(s, prefix)
     if r:
         return r
     r = covering_problem(s, prefix)
@@ -658,6 +674,9 @@ def create_cases():
         ("iki parçalı döşeme", {"parts": [box_json(20, 0, 22, 2), box_json(25, 0, 27, 2)]}),
         ("duvara bitişik balkon: korkuluk serbest üç kenar boyunca", {"parts": [BALCONY], "role": "balcony", "edge": {"kind": "railing"}}),
         ("teras: dört yanı serbest, parapet 20 cm", {"parts": [box_json(20, 10, 26, 14)], "role": "terrace", "edge": {"kind": "parapet", "width": 0.2}}),
+        # A raft (ADR 8172 §6): the walls' outer faces 50 cm out, 60 cm thick, its top 30 cm under the floor.
+        ("radye: dış yüzlerden 50 cm taşar, 60 cm, tepesi −0,30",
+         {"seed": LEFT, "role": "raft", "thickness": 0.6, "offset": -0.3, "edgeOffset": 0.5, "arch": {"level": "zemin"}}),
         ("dış konturdan döşemenin korkuluğunun serbest kenarı yok", {"seed": LEFT, "edge": {"kind": "railing"}}),
         ("metraj dışı döşeme listelenir, toplanmaz", {"parts": [box_json(20, 0, 24, 3)], "excluded": True}),
         ("ara kat dizilişi: kaplama, şap ve sıva; metrajda her katman net alanla",
@@ -716,6 +735,11 @@ def create_cases():
         ("korkuluklu kaplama reddedilir", one(parts=[BALCONY], covering={"predefined": "FLOORING"}, edge={"kind": "railing"}), {}),
         ("balkon kaplama olamaz", one(parts=[BALCONY], role="balcony", covering={"predefined": "FLOORING"}), {}),
         ("teras kaplama olamaz", one(parts=[box_json(20, 10, 26, 14)], role="terrace", covering={"predefined": "ROOFING"}), {}),
+        # A raft's refusals (ADR 8172 §6).
+        ("radye kaplama olamaz", one(parts=[box_json(20, 0, 24, 3)], role="raft", covering={"predefined": "FLOORING"}), {}),
+        ("radyenin kenarı olmaz", one(parts=[BALCONY], role="raft", edge={"kind": "parapet", "width": 0.2}), {}),
+        ("radyeye eğim verilmez",
+         one(parts=[box_json(20, 0, 24, 3)], role="raft", slope={"from": P(20, 0), "to": P(20, 3), "rise": 0.1}), {}),
         # A sloped slab's refusals (ADR 8071 §6).
         ("eğim okunun başı kuyruğunda olamaz",
          one(parts=[box_json(20, 0, 24, 3)], slope={"from": P(20, 0), "to": P(20, 0), "rise": 0.1}), {}),

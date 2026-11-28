@@ -167,6 +167,12 @@ pub enum Event {
     /// The legend over the scene folded or opened.
     Legend,
     Export,
+    /// Paftaya koy: the building's view drawn and placed on the sheet in front (docs/adr/8175 §3.2).
+    ToSheet,
+    /// Its picture made, or why not.
+    Pictured(Result<Arc<crate::scene3d_sheet::Picture>, String>),
+    /// Güneş (docs/adr/8177 §4): on or off, its day, its hour.
+    Sun(crate::scene3d_sun::SunChange),
     Close,
 }
 
@@ -433,7 +439,13 @@ impl App {
             Event::Close => self.scene3d_gone(),
             Event::Sized(..) => {}
             // A building's alone.
-            Event::Storey(_) | Event::AllStoreys | Event::Viewer(_) | Event::Made(..) => {}
+            Event::Storey(_)
+            | Event::AllStoreys
+            | Event::Viewer(_)
+            | Event::Made(..)
+            | Event::ToSheet
+            | Event::Pictured(_)
+            | Event::Sun(_) => {}
         }
         Task::none()
     }
@@ -445,6 +457,12 @@ impl App {
         use kentos_model_view_ui::scene::Gesture;
         let viewer = match event {
             Event::Made(id, result) => return self.building3d_made(id, result),
+            Event::ToSheet => return self.building3d_to_sheet(),
+            Event::Pictured(made) => return self.building3d_pictured(made),
+            Event::Sun(change) => {
+                self.building3d_sun(change);
+                return Task::none();
+            }
             Event::Viewer(m) => m,
             Event::Orbit(dx, dy) => V::Gesture(Gesture::Orbit(dx, dy)),
             Event::Pan(dx, dy) => V::Gesture(Gesture::Pan(dx, dy)),

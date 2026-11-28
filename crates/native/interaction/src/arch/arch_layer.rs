@@ -30,6 +30,12 @@ pub enum Kind {
     Space,
     /// A slab, by its material (Betonarme); none: GENEL.
     Slab(Option<String>),
+    /// A raft (docs/adr/8172 §6): a slab of the foundation, EK-2 Tablo 2.3's Temel (TEML), MM-TEML-RADYE.
+    Raft,
+    /// A facade moulding (docs/adr/8173): EK-2 Tablo 2.3's Cephe (CEPH), its type SILME.
+    Moulding,
+    /// A coping (docs/adr/8173), by its material (Taş): EK-2 Tablo 2.3's Harpuşta (HARP); none: GENEL.
+    Coping(Option<String>),
     /// A column. KentOS keeps no column material yet (plan M41): GENEL.
     Column,
     Stair,
@@ -63,6 +69,10 @@ pub enum Kind {
     /// A legend of the drawing's symbols and materials (EK-4 4.17.6).
     Legend,
     Schedule,
+    /// The building's shadow on the ground (docs/adr/8177): EK-2 Tablo 2.3 has none, GENL.
+    Shadow,
+    /// A massing study's volume (docs/adr/8178): EK-2 Tablo 2.3 has none either, MM-XXXX-KUTLE.
+    Mass,
 }
 
 impl Kind {
@@ -79,6 +89,9 @@ impl Kind {
             Kind::Door => "KAPI",
             Kind::Window => "PENC",
             Kind::Slab(_) => "DOSM",
+            Kind::Raft => "TEML",
+            Kind::Moulding => "CEPH",
+            Kind::Coping(_) => "HARP",
             Kind::Column => "KOLN",
             Kind::Stair => "MERD",
             Kind::Ramp => "RAMP",
@@ -101,7 +114,9 @@ impl Kind {
             | Kind::Tag
             | Kind::Symbol
             | Kind::Legend
-            | Kind::Schedule => EK4_GENERAL,
+            | Kind::Schedule
+            | Kind::Shadow
+            | Kind::Mass => EK4_GENERAL,
         }
     }
 
@@ -110,7 +125,7 @@ impl Kind {
     pub fn detail(&self) -> String {
         let word = |w: &str| w.to_owned();
         match self {
-            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) => {
+            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) | Kind::Coping(m) => {
                 m.clone().unwrap_or_default()
             }
             Kind::Void => word("BOSLUK"),
@@ -122,9 +137,13 @@ impl Kind {
             Kind::Symbol => word("SEMBOL"),
             Kind::Legend => word("LEJANT"),
             Kind::Schedule => word("CIZELGE"),
+            Kind::Shadow => word("GOLGE"),
+            Kind::Mass => word("KUTLE"),
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(kentos_commands::BeamRole::PadFooting) => word("TEKIL"),
             Kind::Beam(kentos_commands::BeamRole::StripFooting) => word("SUREKLI"),
+            Kind::Raft => word("RADYE"),
+            Kind::Moulding => word("SILME"),
             Kind::Beam(_) => String::new(),
             Kind::Post => word("DIKME"),
             Kind::Rail => word("KAYIT"),
@@ -176,6 +195,9 @@ impl Kind {
             Kind::Flue => "Baca",
             Kind::Space => "Mahal",
             Kind::Slab(_) => "Döşeme",
+            Kind::Raft => "Radye",
+            Kind::Moulding => "Cephe silmesi",
+            Kind::Coping(_) => "Duvar harpuştası",
             Kind::Column => "Kolon",
             Kind::Stair => "Merdiven",
             Kind::Ramp => "Rampa",
@@ -196,6 +218,8 @@ impl Kind {
             Kind::Symbol => "İşaret",
             Kind::Legend => "Lejant",
             Kind::Schedule => "Çizelge",
+            Kind::Shadow => "Gölge",
+            Kind::Mass => "Kütle",
         }
     }
 
@@ -210,6 +234,9 @@ impl Kind {
             Kind::Flue => "baca",
             Kind::Space => "mahal",
             Kind::Slab(_) => "döşeme",
+            Kind::Raft => "radye",
+            Kind::Moulding => "cephe silmesi",
+            Kind::Coping(_) => "duvar harpuştası",
             Kind::Column => "kolon",
             Kind::Stair => "merdiven",
             Kind::Ramp => "rampa",
@@ -234,6 +261,8 @@ impl Kind {
             Kind::Symbol => "işaret",
             Kind::Legend => "lejant",
             Kind::Schedule => "çizelge",
+            Kind::Shadow => "gölge",
+            Kind::Mass => "kütle",
         }
     }
 
@@ -247,7 +276,7 @@ impl Kind {
         };
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
-            Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
+            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) | Kind::Moulding | Kind::Coping(_) => look("ink", 0.35),
             Kind::Covering(_) | Kind::CeilingDevice => look("ink", 0.18),
             Kind::Door
             | Kind::Window
@@ -267,8 +296,8 @@ impl Kind {
             },
             Kind::Casework | Kind::Furniture(_) => look("fg-dim", 0.18),
             Kind::Dimension => look("#56B6C2", 0.18),
-            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule => look("fg", 0.18),
-            Kind::Symbol => look("fg", 0.25),
+            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule | Kind::Shadow => look("fg", 0.18),
+            Kind::Symbol | Kind::Mass => look("fg", 0.25),
         }
     }
 }
@@ -406,7 +435,21 @@ pub fn writing(
         style: kind.style(),
         ..NewLayer::layer(name.clone())
     };
-    if let Err(refusal) = cx.doc.add_layer(layer, None, false) {
+    // The rooms' layer stays under the others (docs/adr/8176 §3.4): a colour plan fills the rooms where their layer is,
+    // over what lies on a layer under it. A new kind's layer opens over the rooms' when the drawing has it at the top.
+    let rooms = (*kind != Kind::Space)
+        .then(|| {
+            let name = Kind::Space.layer_name();
+            cx.doc.layers().leaves().into_iter().find(|l| l.name == name).map(|l| l.id.clone())
+        })
+        .flatten()
+        .and_then(|id| cx.doc.layers().place_of(&id))
+        .and_then(|(group, at)| group.is_none().then_some(at));
+    let added = match rooms {
+        Some(at) => cx.doc.add_layer_at(layer, None, Some(at), None, false),
+        None => cx.doc.add_layer(layer, None, false),
+    };
+    if let Err(refusal) = added {
         cx.doc.cancel_group(group);
         cx.say(Level::Warn, refusal.to_string());
         return false;
@@ -455,8 +498,6 @@ mod tests {
             Kind::Beam(kentos_commands::BeamRole::Beam),
             Kind::Beam(kentos_commands::BeamRole::Lintel),
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
-            Kind::Beam(kentos_commands::BeamRole::PadFooting),
-            Kind::Beam(kentos_commands::BeamRole::StripFooting),
             Kind::Roof(Some("Kiremit".into())),
             Kind::Roof(None),
             Kind::Railing(kentos_commands::RailingInfill::Balusters),
@@ -467,6 +508,15 @@ mod tests {
             Kind::Post,
             Kind::Rail,
             Kind::Covering("ASTV"),
+            // The foundations (docs/adr/8172): EK-2's Temel, by their kind.
+            Kind::Beam(kentos_commands::BeamRole::PadFooting),
+            Kind::Beam(kentos_commands::BeamRole::StripFooting),
+            Kind::Raft,
+            Kind::Moulding,
+            Kind::Coping(Some("Taş".into())),
+            // The shadow (docs/adr/8177) and a mass (docs/adr/8178): EK-2 has neither, GENL.
+            Kind::Shadow,
+            Kind::Mass,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -494,7 +544,8 @@ mod tests {
             ("MM-CATI-KIREMIT", "MM-CATI-GENEL")
         );
         // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill; an elevator's block (§5) its Asansör; a curtain
-        // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer.
+        // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer; the foundations (docs/adr/8172)
+        // Temel; the shadow and a mass none.
         assert_eq!(
             &names[25..],
             [
@@ -505,7 +556,14 @@ mod tests {
                 "MM-GIYC-GENEL",
                 "MM-DIGR-DIKME",
                 "MM-DIGR-KAYIT",
-                "MM-ASTV-GENEL"
+                "MM-ASTV-GENEL",
+                "MM-TEML-TEKIL",
+                "MM-TEML-SUREKLI",
+                "MM-TEML-RADYE",
+                "MM-CEPH-SILME",
+                "MM-HARP-TAS",
+                "MM-XXXX-GOLGE",
+                "MM-XXXX-KUTLE"
             ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");

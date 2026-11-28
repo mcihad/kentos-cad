@@ -2929,6 +2929,185 @@
       ]
     },
     {
+      "name": "radye: dış yüzlerden 50 cm taşar, 60 cm, tepesi −0,30",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "role": "raft",
+                "thickness": 0.6,
+                "offset": -0.3,
+                "edgeOffset": 0.5,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "role": "raft",
+                "thickness": 0.6,
+                "offset": -0.3,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.3,
+                  "grossArea": 26.4,
+                  "openingsArea": 0.0,
+                  "netArea": 26.4,
+                  "volume": 5.28,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.3,
+                  "grossArea": 16.5,
+                  "openingsArea": 0.0,
+                  "netArea": 16.5,
+                  "volume": 3.3000000000000003,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.3,
+                  "grossArea": 26.4,
+                  "openingsArea": 0.0,
+                  "netArea": 26.4,
+                  "volume": 5.28,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.3,
+                  "grossArea": 16.5,
+                  "openingsArea": 0.0,
+                  "netArea": 16.5,
+                  "volume": 3.3000000000000003,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.3,
+                  "grossArea": 16.5,
+                  "openingsArea": 0.0,
+                  "netArea": 16.5,
+                  "volume": 2.475,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 102.3,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 57.04,
+                "slabVolume": 34.224
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "raft",
+                  "level": "zemin",
+                  "thickness": 0.6,
+                  "offset": -0.3,
+                  "top": -0.3,
+                  "area": 57.04,
+                  "netArea": 57.04,
+                  "perimeter": 30.8,
+                  "volume": 34.224,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "dış konturdan döşemenin korkuluğunun serbest kenarı yok",
       "steps": [
         {
@@ -6101,6 +6280,204 @@
               "code": "invalid_slab",
               "message": "Balkon ve teras kaplama olamaz; kaplamanın türü Döşeme olmalı.",
               "path": "slabs[0].covering"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "radye kaplama olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "role": "raft",
+                "covering": {
+                  "predefined": "FLOORING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Radye kaplama olamaz; kaplamanın türü Döşeme olmalı.",
+              "path": "slabs[0].covering"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "radyenin kenarı olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 6.6
+                        },
+                        {
+                          "x": 2.0,
+                          "y": 6.6
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "role": "raft",
+                "edge": {
+                  "kind": "parapet",
+                  "width": 0.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Radyenin kenarı (korkuluk, parapet) olmaz.",
+              "path": "slabs[0].edge"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "radyeye eğim verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "role": "raft",
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.1
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Radyeye eğim verilmez: radye binanın düz tabanıdır.",
+              "path": "slabs[0].slope"
             }
           },
           "expect": {

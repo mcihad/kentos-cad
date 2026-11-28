@@ -264,8 +264,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.stairs.push(stair_row(uid(e), &s.stair));
                 }
             }
-            // Docs/adr/8041 §3; a rail is no beam of the frame (docs/adr/8070 §8).
-            Entity::Beam(b) if input.usages.is_none() && b.beam.member.is_none() => {
+            // Docs/adr/8041 §3; a rail (docs/adr/8070 §8) and a profile (docs/adr/8173) are no beams of the frame.
+            Entity::Beam(b) if input.usages.is_none() && b.beam.member.is_none() && b.beam.covering.is_none() => {
                 if takes(e, &b.beam.arch) {
                     out.beams.push(beam_row(doc, uid(e), &b.beam));
                 }

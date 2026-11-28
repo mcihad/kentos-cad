@@ -385,6 +385,42 @@ def level_height(arch):
     return None if lv is None else lv.get("height")
 
 
+def wall_height(d, w):
+    """A wall's height (docs/adr/8040 §1) as the cases have it: its own, else from its foot to its storey's top. Its foot
+    is the structure's top of the floor slab under the middle of its path (half a metre under its storey's floor to 10
+    cm over it, the highest; a raft's too, docs/adr/8172 §6), else its storey's floor. No case has a slab or a beam over
+    a wall within its storey."""
+    if w.get("height") is not None:
+        return w["height"]
+    arch = w.get("arch", {})
+    lv = next((x for x in LEVELS if x["id"] == arch.get("level")), None) if arch else None
+    if lv is None or lv.get("height") is None:
+        return None
+    floor = lv["elevation"]
+    pts = [(float(x), float(y)) for x, y in ((p["x"], p["y"]) for p in w["pts"])]
+    runs = list(zip(pts, pts[1:])) + ([(pts[-1], pts[0])] if w.get("closed") and len(pts) > 2 else [])
+    left = sum(math.dist(a, b) for a, b in runs) / 2
+    at = pts[0]
+    for a, b in runs:
+        length = math.dist(a, b)
+        if left <= length:
+            k = left / length if length > 0 else 0.0
+            at = (a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k)
+            break
+        left -= length
+    best = None
+    for _, (ly, sl, _) in sorted(d.slabs.items()):
+        parts = sl.get("parts")
+        if sl.get("covering") or parts is None or not any(sp.inside(o, at) and not any(sp.inside(h, at) for h in hs)
+                                                          for o, hs in parts):
+            continue
+        slv = next((x for x in LEVELS if x["id"] == sl.get("arch", {}).get("level")), None)
+        top = (slv["elevation"] if slv else 0.0) + sl.get("offset", 0.0)
+        if floor - 0.5 <= top <= floor + 0.1 and (best is None or top > best[0]):
+            best = (top, top - sum(x["thickness"] for x in (sl.get("layers") or {}).get("over", [])))
+    return floor + lv["height"] - (best[1] if best else floor)
+
+
 def room_inside(d, s):
     """A room's inside height (docs/adr/8040 §3), in the core's order of operations: its floor its own offset over its
     storey's floor, else the top of the floor slab under it (half a metre under the storey's floor to 10 cm over it,
@@ -731,7 +767,7 @@ def quantities(d, inp):
             if not takes(w["layerId"], arch):
                 continue
             length = float(path_len(from_json(w).pts, w.get("closed", False)))
-            height = w.get("height", level_height(arch))
+            height = wall_height(d, w)
             ops = on_wall.get(i, [])
             oa = sum(a for _, a in ops) if ops else 0.0
             gross = None if height is None else length * height

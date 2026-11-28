@@ -721,7 +721,17 @@ ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
 # Architecture data 40 (docs/adr/8172): a footing, a beam of a pad or strip footing role (`padFooting`, `stripFooting`).
 ARCH_WITH_FOOTINGS = 40
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_FOOTINGS), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
+# Architecture data 41 (docs/adr/8172 §6): a raft, a slab of the raft role (`raft`).
+ARCH_WITH_RAFTS = 41
+# Architecture data 42 (docs/adr/8173): a profile, a beam's band covering a wall (`covering`).
+ARCH_WITH_PROFILES = 42
+# Architecture data 43 (docs/adr/8174): the site's natural and graded ground, each its survey's layers.
+ARCH_WITH_GROUND = 43
+# Architecture data 44 (docs/adr/8176): the plan's colour plan (`colorPlan`, its scheme).
+ARCH_WITH_COLOR_PLAN = 44
+# Architecture data 45 (docs/adr/8178): a mass (`mass`), a massing study's prism, the drawing's only.
+ARCH_WITH_MASSES = 45
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_MASSES), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -3847,6 +3857,8 @@ class _Schema:
         self.kept_adjustments = version >= SCHEMA_WITH_KEPT_ADJUSTMENTS
         self.monitoring_reviews = version >= SCHEMA_WITH_MONITORING_REVIEWS
         self.tool_layers = version >= SCHEMA_WITH_TOOL_LAYERS
+        # A module's data versions (schema 254): what a mass (architecture data 45) needs.
+        self.module_data = version >= SCHEMA_WITH_MODULE_VERSIONS
         self.layer_mobile = version >= SCHEMA_WITH_LAYER_MOBILE
         self.name_links = version >= SCHEMA_WITH_NAME_LINKS
         self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
@@ -8621,7 +8633,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks) or (kind == "slab" and not self.slabs) or (kind == "beam" and not self.beams) or (kind == "roof" and not self.roofs) or (kind == "railing" and not self.railing_objects):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks) or (kind == "slab" and not self.slabs) or (kind == "beam" and not self.beams) or (kind == "roof" and not self.roofs) or (kind == "railing" and not self.railing_objects) or (kind == "mass" and not self.module_data):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -8672,6 +8684,13 @@ class _Schema:
         if kind == "railing" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında korkuluk olamaz")
+        # Nor a mass: it stands on the drawing's storeys (docs/adr/8178).
+        if kind == "mass" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında kütle olamaz")
+        if kind == "mass" and self.arch_version < ARCH_WITH_MASSES:
+            self.path.append(kind)
+            self.fail("unknown_field", "kütle mimari veri sürümü 45 gerektirir")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -8775,7 +8794,7 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
-        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark", "slab", "beam", "roof", "railing"):
+        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark", "slab", "beam", "roof", "railing", "mass"):
             fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
@@ -10241,16 +10260,7 @@ class _Schema:
     def slab_fields(self, v):
         """A slab's fields (schema 123, docs/adr/0722 §1), as the contract's JSON has them: each only when not its
         default (a floor, a top on its level, no edge runs, summed); then the contract's rule (`SlabFields::problem`)."""
-        def covering(x):
-            kinds = ("CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING",
-                     "ROOFING", "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED")
-            c = self.fields({"predefined": (self.enum(kinds), True), "name": (self.text, False)})(x)
-            name = c.get("name")
-            if name is not None and (not name or name.strip() != name or len(name) > 120 or any(unicodedata.category(ch) == "Cc" for ch in name)):
-                self.fail("bad_value", "Kaplama adı 1–120 karakter olmalı, kenar boşluğu veya denetim karakteri içeremez.")
-            if c["predefined"] == "USERDEFINED" and name is None:
-                self.fail("bad_value", "Kullanıcı tanımlı kaplama için ad gerekir.")
-            return c
+        covering = self.covering
 
         def not_default(read, default, words):
             def check(x):
@@ -10269,7 +10279,9 @@ class _Schema:
         edge = self.fields({"kind": (self.enum(("railing", "parapet")), True), "width": (self.float, True),
                             "runs": (not_default(self.array(run), [], "boş kenar parçası listesi yazılmaz"), False)})
         f = self.fields({"parts": (self.array(self.space_part), True),
-                         "role": (not_default(self.enum(("floor", "balcony", "terrace")), "floor", "varsayılan tür ('floor') yazılmaz"), False),
+                         "role": (not_default(self.enum(("floor", "balcony", "terrace")
+                                                        + (("raft",) if self.arch_version >= ARCH_WITH_RAFTS else ())),
+                                              "floor", "varsayılan tür ('floor') yazılmaz"), False),
                          "thickness": (self.float, True),
                          "offset": (not_default(self.float, 0.0, "sıfır kot farkı yazılmaz"), False),
                          "arch": (not_default(self.arch_info, {}, "boş mimari bilgi yazılmaz"), False),
@@ -10329,9 +10341,16 @@ class _Schema:
             return r
         # Schema 236 (docs/adr/8041 §3): its role and its base over its storey's floor.
         roles = {"role": (role, False), "baseOffset": (self.float, False)} if self.beam_roles else {}
+        # Architecture data 42 (docs/adr/8173): a profile, the band's covering.
+        profiles = {"covering": (self.covering, False)} if self.arch_version >= ARCH_WITH_PROFILES else {}
         f = self.fields({"pts": (self.array(self.jpoint), True), "width": (self.float, True), "height": (self.float, True),
                          "justify": (justify, False), "offset": (offset, False), **roles, "tag": (text, False),
-                         "material": (text, False), "arch": (self.arch_info, False)})(v)
+                         "material": (text, False), **profiles, "arch": (self.arch_info, False)})(v)
+        if "covering" in f:
+            if f.get("role", "beam") != "beam":
+                self.fail("bad_value", "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.")
+            if "baseOffset" not in f:
+                self.fail("bad_value", "Profilin kattan yüksekliği verilmeli: profil katın döşemesinden o kadar yukarıda durur.")
         pts = f["pts"]
         if not 2 <= len(pts) <= 1000:
             self.fail("bad_value", f"Kirişin ekseni en az iki, en çok 1000 noktadır; {len(pts)} verildi.")
@@ -10350,6 +10369,66 @@ class _Schema:
                 self.fail("bad_value", "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.")
         if "offset" in f and not (math.isfinite(f["offset"]) and abs(f["offset"]) <= 10):
             self.fail("bad_value", "Kirişin kot farkı en çok ±10 m olmalı.")
+        return f
+
+    def covering(self, x):
+        """A covering's type and name (docs/adr/8070 §10): a slab's plate, a beam's profile (docs/adr/8173)."""
+        kinds = ("CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING",
+                 "ROOFING", "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED")
+        c = self.fields({"predefined": (self.enum(kinds), True), "name": (self.text, False)})(x)
+        name = c.get("name")
+        if name is not None and (not name or name.strip() != name or len(name) > 120 or any(unicodedata.category(ch) == "Cc" for ch in name)):
+            self.fail("bad_value", "Kaplama adı 1–120 karakter olmalı, kenar boşluğu veya denetim karakteri içeremez.")
+        if c["predefined"] == "USERDEFINED" and name is None:
+            self.fail("bad_value", "Kullanıcı tanımlı kaplama için ad gerekir.")
+        return c
+
+    def mass_fields(self, v):
+        """A mass's fields (architecture data 45, docs/adr/8178): its footprint (one part or more, each an outer ring of
+        three corners or more, or two with an arc, and its holes; at most 10000 corners in all), its height (over 0, at
+        most 300 m); its bottom over its storey's floor (at most ±100 m), its storey and its name (not blank, no space
+        at its ends, no control character, at most 80 characters) only when not their defaults. The contract's rule
+        (`MassFields::problem`)."""
+        def ring(x):
+            r = self.fields({"pts": (self.array(self.jpoint), True), "bulges": (self.array(self.float), False)})(x)
+            n = len(r["pts"])
+            curved = any(b != 0 for b in r.get("bulges", []))
+            if n < 3 and not (n == 2 and curved):
+                self.fail("bad_value", f"Kütlenin halkası en az üç köşedir; {n} verildi.")
+            if any(not (math.isfinite(p["x"]) and math.isfinite(p["y"])) for p in r["pts"]):
+                self.fail("bad_value", "Halkanın köşelerinin koordinatları sonlu olmalı.")
+            if "bulges" in r and len(r["bulges"]) != n:
+                self.fail("bad_value", f"Halkanın {n} köşesi, {len(r['bulges'])} bükümü var; eşit olmalı.")
+            if any(not math.isfinite(b) for b in r.get("bulges", [])):
+                self.fail("bad_value", "Halkanın bükümleri sonlu olmalı.")
+            return r
+        def part(x):
+            p = self.fields({"outer": (ring, True), "holes": (self.array(ring), False)})(x)
+            if "holes" in p and not p["holes"]:
+                self.fail("bad_value", "boş delik listesi yazılmaz")
+            return p
+        def offset(x):
+            x = self.float(x)
+            if x == 0:
+                self.fail("bad_value", "varsayılan kot farkı (0) yazılmaz")
+            return x
+        f = self.fields({"parts": (self.array(part), True), "height": (self.float, True), "offset": (offset, False),
+                         "arch": (self.arch_info, False), "name": (self.text, False)})(v)
+        if not f["parts"]:
+            self.fail("bad_value", "Kütlenin oturumu yok: en az bir halka verin.")
+        total = sum(len(p["outer"]["pts"]) + sum(len(h["pts"]) for h in p.get("holes", [])) for p in f["parts"])
+        if total > 10000:
+            self.fail("bad_value", f"Kütlenin halkalarında {total} köşe var; en çok 10000.")
+        h = f["height"]
+        if not (math.isfinite(h) and 0 < h <= 300):
+            self.fail("bad_value", f"Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; {h} verildi.")
+        o = f.get("offset", 0.0)
+        if not (math.isfinite(o) and abs(o) <= 100):
+            self.fail("bad_value", f"Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; {o} verildi.")
+        name = f.get("name")
+        if name is not None and (name.strip() == "" or name.strip() != name or len(name) > 80
+                                 or any(unicodedata.category(c) == "Cc" for c in name)):
+            self.fail("bad_value", "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.")
         return f
 
     def railing_fields(self, v):
@@ -12889,12 +12968,20 @@ class _Schema:
                          **({"site": (self.fields({"parcel": (self.text, False),
                                                     "edges": (self.array(self.fields({"kind": (self.enum(("front", "back", "public")), False),
                                                                                       "setback": (self.float, False)})), False),
-                                                    "datum": (self.float, False), "envelope": (self.text, False)}), False)}
+                                                    "datum": (self.float, False), "envelope": (self.text, False),
+                                                    # Architecture data 43 (docs/adr/8174): the natural and the graded ground,
+                                                    # each its survey's layers.
+                                                    **({"naturalGround": (self.fields({"layers": (self.array(self.text), True)}), False),
+                                                        "gradedGround": (self.fields({"layers": (self.array(self.text), True)}), False)}
+                                                       if self.arch_version >= ARCH_WITH_GROUND else {})}), False)}
                             if self.site_plan else {}),
                          # Schema 225 (docs/adr/8034): the municipality's regulation.
                          **({"localRules": (self.enum(("sivas",)), False)} if self.local_rules else {}),
                          # Schema 226 (docs/adr/8035): the building's sprinkler system.
-                         **({"sprinklers": (self.only_true, False)} if self.sprinklers else {})})(v)
+                         **({"sprinklers": (self.only_true, False)} if self.sprinklers else {}),
+                         # Architecture data 44 (docs/adr/8176): the colour plan.
+                         **({"colorPlan": (self.fields({"scheme": (self.enum(("usage", "unit")), True)}), False)}
+                            if self.arch_version >= ARCH_WITH_COLOR_PLAN else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         if "zoning" in a:
@@ -12920,6 +13007,14 @@ class _Schema:
                     self.fail("bad_value", "bahçe mesafesi sıfırdan büyük, en çok 100 m olur")
             if "datum" in site and not (math.isfinite(site["datum"]) and abs(site["datum"]) <= 10000):
                 self.fail("bad_value", "±0,00 kotu en çok ±10 000 m olur")
+            for key in ("naturalGround", "gradedGround"):
+                layers = site.get(key, {}).get("layers")
+                if layers is not None and (not layers or len(layers) > 16 or any(not l.strip() for l in layers)
+                                           or len(set(layers)) != len(layers)):
+                    self.fail("bad_value", "zemin 1–16 katmandan kurulur; kimlikleri dolu ve birer kez")
+            if "naturalGround" in site and "gradedGround" in site \
+                    and set(site["naturalGround"]["layers"]) == set(site["gradedGround"]["layers"]):
+                self.fail("bad_value", "tabii ve tesviye zemin aynı katmanlardan kurulamaz")
         if "cutHeight" in a and not (math.isfinite(a["cutHeight"]) and CUT_HEIGHT_RANGE[0] <= a["cutHeight"] <= CUT_HEIGHT_RANGE[1]):
             self.fail("bad_value", "planın kesme yüksekliği 0,3 ile 3 m arasında olur")
         ids, names = set(), set()
@@ -13867,6 +13962,8 @@ ENTITY_KINDS = {
     "roof": lambda s: {"roof": (s.roof_fields, True)},
     # Schema 242 (docs/adr/8045 §3): a free-standing railing; its fields as one map.
     "railing": lambda s: {"railing": (s.railing_fields, True)},
+    # Architecture data 45 (docs/adr/8178): a mass; its fields as one map.
+    "mass": lambda s: {"mass": (s.mass_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

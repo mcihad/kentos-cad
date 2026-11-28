@@ -2887,6 +2887,288 @@
       ]
     },
     {
+      "name": "cephe silmesi: 5 cm çıkıntı, 20 cm, kattan 2.90",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "justify": "right",
+                "baseOffset": 2.9,
+                "covering": {
+                  "predefined": "MOLDING",
+                  "name": "Cephe silmesi"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "justify": "right",
+                "baseOffset": 2.9,
+                "covering": {
+                  "predefined": "MOLDING",
+                  "name": "Cephe silmesi"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "taş harpuşta: 35 cm, 5 cm, duvarın tepesinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.35,
+                "height": 0.05,
+                "baseOffset": 1.0,
+                "material": "Taş",
+                "covering": {
+                  "predefined": "COPING"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.35,
+                "height": 0.05,
+                "baseOffset": 1.0,
+                "material": "Taş",
+                "covering": {
+                  "predefined": "COPING"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "subasman silmesi, L eksen, kullanıcı tanımlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 54.0
+                  }
+                ],
+                "width": 0.03,
+                "height": 0.5,
+                "justify": "left",
+                "baseOffset": 0.0,
+                "covering": {
+                  "predefined": "USERDEFINED",
+                  "name": "Subasman silmesi"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 54.0
+                  }
+                ],
+                "width": 0.03,
+                "height": 0.5,
+                "justify": "left",
+                "baseOffset": 0.0,
+                "covering": {
+                  "predefined": "USERDEFINED",
+                  "name": "Subasman silmesi"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "Zemin katın altında 150/150/50 tekil temel: doğrula yazmaz",
       "steps": [
         {
@@ -4893,6 +5175,383 @@
               "code": "level_not_found",
               "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
               "path": "beams[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tabansız profil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "covering": {
+                  "predefined": "MOLDING",
+                  "name": "Cephe silmesi"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Profilin kattan yüksekliği verilmeli: profil katın döşemesinden o kadar yukarıda durur.",
+              "path": "beams[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lento profil olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "covering": {
+                  "predefined": "MOLDING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.",
+              "path": "beams[0].covering"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "temel profil olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.6,
+                "height": 0.5,
+                "role": "stripFooting",
+                "baseOffset": -0.8,
+                "covering": {
+                  "predefined": "COPING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Lento, hatıl ve temel profil olamaz; profilin türü Kiriş olmalı.",
+              "path": "beams[0].covering"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kayıt profil olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "baseOffset": 1.0,
+                "member": {
+                  "predefined": "PURLIN"
+                },
+                "covering": {
+                  "predefined": "MOLDING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Profil eleman (kayıt) olamaz: biri ya da öbürü verilir.",
+              "path": "beams[0].covering"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "listede olmayan profil tipi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "baseOffset": 1.0,
+                "covering": {
+                  "predefined": "SILL"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "“SILL” kaplamanın tiplerinden biri değil (CEILING, CLADDING, COPING, FLOORING, INSULATION, MEMBRANE, MOLDING, ROOFING, SKIRTINGBOARD, SLEEVING, TOPPING, WRAPPING, USERDEFINED).",
+              "path": "beams[0].covering.predefined"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "adsız kullanıcı tanımlı profil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "baseOffset": 1.0,
+                "covering": {
+                  "predefined": "USERDEFINED"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Kullanıcı tanımlı kaplamanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad verin ya da listeden bir tip seçin.",
+              "path": "beams[0].covering.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimli profil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.2,
+                "baseOffset": 1.0,
+                "covering": {
+                  "predefined": "MOLDING"
+                },
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Yalnız eleman eğimli olur (kayıt, mertek, payanda); çerçevenin kirişi, lento ve hatıl düzdür. Önce türünü Kayıt yapın.",
+              "path": "beams[0].rise"
             }
           },
           "expect": {

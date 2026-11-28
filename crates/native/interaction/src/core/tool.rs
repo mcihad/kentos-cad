@@ -1047,6 +1047,8 @@ pub struct Memory {
     /// Hizmet alanı writes its approximate areas (the second round's T35): off, only the reached ways.
     pub network_areas: bool,
     pub network_trace: kentos_geometry_core::ops::network::TraceKind,
+    /// Gölge's place typed, time zone, day and hours (docs/adr/8177 §3.3).
+    pub sun_shadow: crate::shadow_tool::Kept,
 }
 
 /// A picture file the host read for Resim ekle (docs/adr/0192 §5): its
@@ -1349,6 +1351,7 @@ impl Default for Memory {
             network_lines: false,
             network_areas: true,
             network_trace: kentos_geometry_core::ops::network::TraceKind::Connected,
+            sun_shadow: crate::shadow_tool::Kept::DEFAULT,
         }
     }
 }

@@ -750,18 +750,19 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz),
     tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height,
     infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null
-    PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); hepsinin level,
-    phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind),
-    renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi
-    değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine
-    bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
-    distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle
-    — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz
-    sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon
-    column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi
-    mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
-    bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
-    nesneleri olacakları gibi gösterir.
+    PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label
+    (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space);
+    hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
+    field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
+    start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
+    (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach
+    (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin
+    altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre
+    olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı
+    mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o
+    yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma
+    nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve
+    rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.arch.edit"
@@ -797,18 +798,19 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
         döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag,
         material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill
         (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY
-        38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); hepsinin level, phase;
-        null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber
-        (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince
-        bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,
-        merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
-        distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle
-        — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz
-        sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon
-        column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi
-        mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
-        bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
-        nesneleri olacakları gibi gösterir.
+        38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label (adı),
+        height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space);
+        hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
+        field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
+        start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
+        (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach
+        (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin
+        altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre
+        olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı
+        mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o
+        yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma
+        nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve
+        rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.

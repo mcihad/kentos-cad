@@ -210,6 +210,9 @@ macro_rules! core_cases {
             kentos_commands::CAD_RAILINGS_CREATE => {
                 arch!(railings_create, kentos_commands::RailingsCreate)
             }
+            kentos_commands::CAD_MASSES_CREATE => {
+                arch!(masses_create, kentos_commands::MassesCreate)
+            }
             kentos_commands::CAD_SHEETS_SET => {
                 $then!(sheets_set, kentos_commands::SheetsSet)
             }

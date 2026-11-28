@@ -15,6 +15,18 @@ use kentos_geometry_core::geom::region::{
 
 use super::*;
 
+/// The model's solids for a section (docs/adr/8042 §3), its frame joined: what the 3D view, the IFC and the drawn
+/// section read.
+pub fn model(doc: &Document) -> Model {
+    build(doc, true)
+}
+
+/// [`model`] with its columns and beams as drawn, not joined: an underlay's elements are recognised by them, another
+/// program joining its frame by its own rules (docs/adr/8102 §3; a structural model's beam runs over the columns).
+pub fn unjoined_model(doc: &Document) -> Model {
+    build(doc, false)
+}
+
 /// A slab as the section measures it: its rings, its top, its layers' thicknesses over and under its structure, its
 /// structure's thickness.
 pub(super) struct SlabAt {
@@ -143,6 +155,15 @@ pub(super) fn column(
     );
 }
 
+/// A profile's look (docs/adr/8173): on its covering's EK-2 element (Harpuşta, Cephe's silme) by its material (none:
+/// GENEL), cut heavy as a mass and unhatched; never the reinforced concrete's union, which a band covering a wall is
+/// not part of.
+fn profile_look(c: &kentos_commands::Covering, material: Option<&str>) -> Look {
+    let element = c.element_of();
+    let m = material.map(str::trim).filter(|m| !m.is_empty()).unwrap_or_default();
+    Look { key: format!("{element}:{}", fold(m)), layer: kentos_commands::ek4_layer(element, m), heavy: true, fill: None }
+}
+
 /// The EK-2 element a post or a rail is drawn on (docs/adr/8070 §8): Diğer (Diğer ögeler için), EK-2 having no post's or
 /// rail's own.
 pub const MEMBER_ELEMENT: &str = "DIGR";
@@ -166,6 +187,8 @@ pub(super) fn beam(
         return;
     }
     let element = match b.role {
+        // A profile (docs/adr/8173) on its covering's EK-2 element (Harpuşta, Cephe), by its material.
+        _ if b.covering.is_some() => b.covering.as_ref().map_or(MEMBER_ELEMENT, kentos_commands::Covering::element_of),
         // A rail (docs/adr/8070 §8), by its material.
         _ if b.member.is_some() => MEMBER_ELEMENT,
         BeamRole::Beam => "TASI",
@@ -174,7 +197,7 @@ pub(super) fn beam(
         // A footing on EK-2's Temel (docs/adr/8172).
         BeamRole::PadFooting | BeamRole::StripFooting => "TEML",
     };
-    let made_of = b.member.as_ref().and(b.material.as_deref());
+    let made_of = (b.member.is_some() || b.covering.is_some()).then_some(b.material.as_deref()).flatten();
     // A sloped member (docs/adr/8130): its start where a level one's is (its underside over its floor, else its top
     // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
     let height = match (b.rise, b.pts.as_slice()) {
@@ -206,7 +229,11 @@ pub(super) fn beam(
         marks: Vec::new(),
         finish: None,
     };
-    push(m, solid, material_look(element, made_of, None), owner);
+    let look = match &b.covering {
+        Some(c) => profile_look(c, b.material.as_deref()),
+        None => material_look(element, made_of, None),
+    };
+    push(m, solid, look, owner);
 }
 
 /// What a solid is to the joins: a column, or a beam with the order its object was drawn in.
@@ -235,7 +262,8 @@ pub(super) fn joins(doc: &Document, m: &mut Model) {
     for (order, (uid, e)) in doc.entities_with_uids().enumerate() {
         let role = match e {
             Entity::Column(_) => Role::Column,
-            Entity::Beam(_) => Role::Beam(order),
+            // A profile (docs/adr/8173) covers a wall: no structure, left as it is.
+            Entity::Beam(b) if b.beam.covering.is_none() => Role::Beam(order),
             _ => continue,
         };
         kinds.insert(uid.to_string(), role);

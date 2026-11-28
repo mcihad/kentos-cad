@@ -1238,6 +1238,9 @@ pub mod elevations_edit;
 #[path = "arch/elevations_query.rs"]
 pub mod elevations_query;
 #[cfg(feature = "mod-arch")]
+#[path = "arch/site_ground.rs"]
+pub mod site_ground;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/sections.rs"]
 pub mod sections;
 #[cfg(feature = "mod-arch")]
@@ -1405,7 +1408,7 @@ pub mod appearance_origin;
 pub mod revisions;
 #[cfg(feature = "mod-arch")]
 pub use arch_elements::{
-    beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create,
+    beams_create, columns_create, grids_create, masses_create, railings_create, ramps_create, roofs_create,
     stairs_create,
 };
 #[cfg(feature = "mod-arch")]
@@ -1499,6 +1502,12 @@ pub mod fire_audit;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/fire_marks.rs"]
 pub mod fire_marks;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/color_legend.rs"]
+pub mod color_legend;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/shadows.rs"]
+pub mod shadows;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/permit_set.rs"]
 pub mod permit_set;

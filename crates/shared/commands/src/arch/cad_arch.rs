@@ -34,6 +34,9 @@ pub const CAD_ROOFS_CREATE_VERSION: u32 = 1;
 /// Railings (docs/adr/8045 §3).
 pub const CAD_RAILINGS_CREATE: &str = "cad.railings.create";
 pub const CAD_RAILINGS_CREATE_VERSION: u32 = 1;
+/// Masses (docs/adr/8178).
+pub const CAD_MASSES_CREATE: &str = "cad.masses.create";
+pub const CAD_MASSES_CREATE_VERSION: u32 = 1;
 pub const CAD_ARCH_EDIT: &str = "cad.arch.edit";
 pub const CAD_ARCH_EDIT_VERSION: u32 = 1;
 /// A column's temporary distances (docs/adr/0712): on each side the clear distance to the nearest parallel face.
@@ -885,6 +888,11 @@ pub struct NewBeam {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub rise: Option<f64>,
+    /// A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;
+    /// absent: the frame's beam. Only a beam's, with its base.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub covering: Option<crate::Covering>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1154,6 +1162,88 @@ pub struct RailingsCreated {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RailingsPlan {
     pub railings: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// A mass to add (docs/adr/8178): its footprint, height and bottom, its name.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NewMass {
+    /// Its footprint: one part or more, each an outer ring and its holes.
+    pub parts: Vec<crate::SpacePart>,
+    /// Its height, above 0 and at most 300 m.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    /// Its bottom over its storey's floor; absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub offset: Option<f64>,
+    /// Its name ("Blok A"); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+}
+
+/// Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.
+///
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,
+/// `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+/// `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MassesCreate {
+    pub layer_id: String,
+    pub masses: Vec<NewMass>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.masses.create` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MassesCreated {
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub ids: Vec<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.masses.create` would write (plan mode): the objects as they would be stored, their `id` 0.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MassesPlan {
+    pub masses: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -1529,12 +1619,13 @@ pub enum ArchOperation {
     },
 }
 
-/// Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids
-/// changed as one undo step “Mimari nesneyi düzenle”, all or none.
+/// Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs, railings and masses named by their persistent
+/// ids changed as one undo step “Mimari nesneyi düzenle”, all or none.
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
 /// `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-/// `invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,
+/// `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,
+/// `level_not_found`,
 /// `invalid_revision`, `revision_conflict`, `layer_locked`.
 /// Warnings: those of the stairs and ramps written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

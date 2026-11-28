@@ -14,16 +14,18 @@
 
 use iced::widget::{Row, column, container, row, space, tooltip};
 use iced::{Background, Border, Center, Color, Element, Fill, Task, Theme};
+use kentos_interaction::shadow_tool::DAYS;
 use kentos_model_view_ui::look;
 use kentos_model_view_ui::scene::{self, Gesture, SceneView};
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::status_bar::Readout;
-use kentos_ui::widget::{Dialog as Frame, StatusBar, Tip, tip};
+use kentos_ui::widget::{Dialog as Frame, Menu, StatusBar, Tip, tip};
 
 use super::{CUT, EXAGGERATION, EXPORT, Event, FIT, FLAT, PARTS, SEE_THROUGH, TITLE, Window, msg};
 use crate::app::{App, Dialog, Message};
+use crate::scene3d_sun::{SunAt, SunChange};
 use crate::style::strip;
 use crate::traces::Control;
 use crate::viewport::Canvas;
@@ -139,7 +141,12 @@ impl App {
     /// What the window holds: a building's viewer, else the road's strip, scene and bar.
     fn scene3d_body<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         match &w.building {
-            Some(b) => b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), vec![b.storeys_menu()])),
+            Some(b) => {
+                let mut items = vec![b.storeys_menu()];
+                items.extend(sun_items(b.sun));
+                items.push(crate::scene3d_sheet::sheet_button());
+                b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), items))
+            }
             None => column![self.scene3d_strip(w), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
         }
     }
@@ -230,6 +237,7 @@ impl App {
             marked: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
             seen: w.seen.clone(),
             pending: w.pending.clone(),
+            sun: false,
         };
         let swatches: Vec<(&str, [f32; 4])> = PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect();
         look::framed(
@@ -323,4 +331,27 @@ pub(crate) fn sky(canvas: Canvas) -> Background {
 
 fn muted(t: &Theme) -> iced::widget::text::Style {
     iced::widget::text::Style { color: Some(Tokens::of(t).muted) }
+}
+
+/// Güneş's strip items (scene3d_sun.rs): its switch, and while it is on its day and its hour with the steps either side.
+fn sun_items<'a>(at: Option<SunAt>) -> Vec<Element<'a, Message>> {
+    let mut items = vec![strip::toggle(
+        Some(crate::icons::from_web(Some("sun"))),
+        "Güneş",
+        "Güneş: binayı seçilen gün ve saatin güneşiyle aydınlatır, gölgelerini düşürür. Konum projenin koordinat \
+         sisteminden, yoksa Gölge (GL) aracında yazılan enlem ve boylamdan.",
+        at.is_some(),
+        Message::Scene3d(Event::Sun(SunChange::Toggle)),
+    )];
+    let Some(at) = at else { return items };
+    items.push(strip::menu(Icon::Calendar, DAYS[at.day].1, "Tarih: güneşin günü.", move || {
+        DAYS.iter().enumerate().fold(Menu::new(), |m, (i, d)| {
+            m.radio(d.1.to_owned(), i == at.day, Message::Scene3d(Event::Sun(SunChange::Day(i))))
+        })
+    }));
+    let step = |by: i8| Some(Message::Scene3d(Event::Sun(SunChange::Hour(by))));
+    items.push(strip::icon_button(Icon::ChevronLeft, "Bir saat önce", step(-1)));
+    items.push(strip::readout(kentos_native_application::shadows::clock(at.hour), "Saat: yerel saat (Türkiye UTC+3).", 44.0));
+    items.push(strip::icon_button(Icon::ChevronRight, "Bir saat sonra", step(1)));
+    items
 }

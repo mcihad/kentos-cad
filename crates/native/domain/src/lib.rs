@@ -94,6 +94,7 @@ pub mod site;
 pub mod escape;
 pub mod fire_use;
 pub mod room_names;
+pub mod color_plan;
 pub mod room_openings;
 pub mod room_width;
 pub mod joinery_list;

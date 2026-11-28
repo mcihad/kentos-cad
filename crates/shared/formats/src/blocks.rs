@@ -730,6 +730,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         Entity::Opening(o) => crate::openings::core_opening(&o.opening),
         Entity::Space(s) => crate::spaces::core_space(&s.space),
         Entity::Slab(s) => crate::spaces::core_slab(&s.slab),
+        Entity::Mass(m) => crate::spaces::core_mass(&m.mass),
         Entity::Grid(g) => crate::arch_elements::core_grid(&g.grid),
         Entity::Column(c) => crate::arch_elements::core_column(&c.column),
         Entity::Stair(s) => crate::arch_elements::core_stair(&s.stair),

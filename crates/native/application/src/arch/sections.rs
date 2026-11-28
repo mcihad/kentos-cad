@@ -35,8 +35,12 @@ use sha2::{Digest, Sha256};
 
 #[path = "sections/frame.rs"]
 mod frame;
+#[path = "sections/ground.rs"]
+mod ground;
+#[path = "sections/mass.rs"]
+mod mass;
 use frame::{SlabAt, beam, column};
-pub use frame::MEMBER_ELEMENT;
+pub use frame::{MEMBER_ELEMENT, model, unjoined_model};
 
 /// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
 /// are; Mimarlar Odası's uygulama projesi 1/50 when the drawing has none. A section printed at another scale prints
@@ -90,7 +94,7 @@ pub struct Look {
 pub enum Left {
     /// The roof: the model has none (ADV-20).
     Roof,
-    /// The natural ground: the model has no survey of it (EK-4 4.30).
+    /// The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4 4.30).
     NaturalGround,
     /// A curved wall, slab or stair: the section draws its chords, not its curve (the IFC writes a wall's and a slab's
     /// arcs as arcs from [`Model::exact`], docs/adr/8071 §1).
@@ -318,8 +322,8 @@ fn floor_of(
         .map_or((0.0, None), |l| (l.2, l.3))
 }
 
-/// The model's solids for a section (docs/adr/8042 §3).
-pub fn model(doc: &Document) -> Model {
+/// The model's solids for a section (docs/adr/8042 §3), its frame joined (`frame::joins`) when `joined`.
+fn build(doc: &Document, joined: bool) -> Model {
     let mut m = Model {
         levels: levels(doc),
         ..Model::default()
@@ -328,7 +332,7 @@ pub fn model(doc: &Document) -> Model {
     if !doc.entities().any(|e| matches!(e, Entity::Roof(_))) {
         m.left.insert((Left::Roof, None));
     }
-    m.left.insert((Left::NaturalGround, None));
+    if !ground::natural_known(doc) { m.left.insert((Left::NaturalGround, None)); }
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
     // The building's floors: a covering is none (docs/adr/8070 §10).
     let slabs: Vec<SlabAt> = entities
@@ -366,6 +370,7 @@ pub fn model(doc: &Document) -> Model {
         let owner = Some(uid.to_string());
         match e {
             Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &voids, &mut m),
+            Entity::Mass(x) => mass::solid(&x.mass, &m.levels.clone(), owner, &mut m),
             Entity::Column(c) => column(&c.column, &slabs, &seats, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
@@ -376,10 +381,8 @@ pub fn model(doc: &Document) -> Model {
             _ => {}
         }
     }
-    for rain in std::mem::take(&mut m.rain) {
-        rain_water(&rain, &mut m);
-    }
-    frame::joins(doc, &mut m);
+    for rain in std::mem::take(&mut m.rain) { rain_water(&rain, &mut m); }
+    if joined { frame::joins(doc, &mut m); }
     m
 }
 
@@ -2558,11 +2561,8 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
     if bx0 > bx1 {
         (bx0, bx1) = (0.0, frame.length);
     }
-    // The graded ground at ±0.00 (EK-4 4.30), past the building on both sides, not across what is cut.
-    let ground = (bx0 - 2.0, bx1 + 2.0);
-    for (a, b) in uncut(&s.cut, ground, 0.0) {
-        out.line("MM-CVRE-TESVIYE", P::new(a, 0.0), P::new(b, 0.0), HEAVY);
-    }
+    // The ground (EK-4 4.30, docs/adr/8174), past the building on both sides, not across what is cut.
+    ground::draw(doc, frame, &s.cut, (bx0 - 2.0, bx1 + 2.0), &mut out);
     // The storeys' levels at the left (EK-4 Şekil 4.3): the line, the triangle on it, the words over it.
     let mut marks: Vec<(f64, Option<&str>)> = m.levels.iter().map(|l| (l.2, None)).collect();
     if let Some(top) = m

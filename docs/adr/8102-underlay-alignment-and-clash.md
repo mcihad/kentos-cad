@@ -28,8 +28,12 @@
 
 - **K163 — Elemanlar** (`kentos_ifc::clash`): dosyanın bir elemanı ile çizimin modelinin (IFC dışa aktarımının kurduğu
   gövdeler) aynı sınıftan bir elemanı, kutuları her kenarda toleransın içindeyse aynı elemandır (eşleşir; dosyanınkiler kendi
-  sırasıyla, çizimin ilk boştaki elemanını kalıcı kimlik sırasıyla alır; her eleman bir kez). Dosyanın eşleşmeyen
-  elemanları çizimin bütün elemanlarıyla denetlenir: kutular her eksende toleranstan çok örtüşmüyorsa çakışma değildir;
+  sırasıyla, çizimin ilk boştaki elemanını kalıcı kimlik sırasıyla alır; her eleman bir kez). **Çizimin kutusu iki
+  türlü olabilir (28 Kasım 2026):** çerçevesi birleşmiş gövdenin kutusu ya da elemanın çizildiği hâlinin kutusu
+  (`arch_ifc::unjoined_model`). Kesit modeli çerçeveyi birleştirir (ADR 8171 §2.1: kolon kirişi keser, döşemenin
+  taşıyıcısı içindekini tutar). Başka bir program kendi kuralıyla birleştirir: statik modelin kirişi kolonların üstünden
+  kesintisiz geçer. Yalnız birleşmiş kutuyla bölüm binasının 8 kirişi eşleşmiyor, kolon ve döşemelerle "çakışıyordu".
+  Dosyanın eşleşmeyen elemanları çizimin bütün elemanlarıyla (birleşmiş gövdeleriyle) denetlenir: kutular her eksende toleranstan çok örtüşmüyorsa çakışma değildir;
   örtüşüyorsa yüzeyleri kesişen (iki yanına kesin geçen üçgenler, ortak aralığı 1e-9 m'den uzun) ya da ortak kutunun 27
   tanık noktasından biri ikisinin de içinde olan çift çakışmadır. "İçinde": yüzeyler kesişmiyor ve biri ötekinin kutusunda.
   Dosyanın sınıflarından eşleşmeyen ve çakışmayan elemanlar iki yanda da "yalnız birinde"dir.

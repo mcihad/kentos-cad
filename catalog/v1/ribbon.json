@@ -2066,6 +2066,16 @@
           "command": "tool.flue",
           "title": "Boşluk",
           "label": "Baca"
+         },
+         {
+          "command": "tool.moulding",
+          "title": "Boşluk",
+          "label": "Cephe silmesi"
+         },
+         {
+          "command": "tool.coping",
+          "title": "Boşluk",
+          "label": "Duvar harpuştası"
          }
         ]
        },
@@ -2108,6 +2118,11 @@
           "command": "tool.footingStrip",
           "title": "Kiriş",
           "label": "Sürekli temel"
+         },
+         {
+          "command": "tool.raft",
+          "title": "Kiriş",
+          "label": "Radye"
          }
         ]
        },
@@ -2203,6 +2218,21 @@
           "command": "tool.spaceSeparator",
           "title": "Mahal",
           "label": "Mahal ayırıcı"
+         },
+         {
+          "command": "arch.colorPlan.usage",
+          "title": "Mahal",
+          "label": "Renk planı: Kullanım"
+         },
+         {
+          "command": "arch.colorPlan.unit",
+          "title": "Mahal",
+          "label": "Renk planı: Bağımsız bölüm"
+         },
+         {
+          "command": "tool.colorLegend",
+          "title": "Mahal",
+          "label": "Renk planı lejandı"
          }
         ]
        },
@@ -2536,6 +2566,10 @@
        "ifc.view",
        "arch.program",
        "tool.siteParcel",
+       "tool.mass",
+       "tool.siteGround",
+       "tool.groundLevel",
+       "tool.sunShadow",
        "tool.escapeRoutes",
        "tool.walkRoute",
        "arch.template",
@@ -7223,6 +7257,16 @@
          "command": "tool.flue",
          "title": "Boşluk",
          "label": "Baca"
+        },
+        {
+         "command": "tool.moulding",
+         "title": "Boşluk",
+         "label": "Cephe silmesi"
+        },
+        {
+         "command": "tool.coping",
+         "title": "Boşluk",
+         "label": "Duvar harpuştası"
         }
        ]
       }

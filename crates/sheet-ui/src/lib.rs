@@ -44,6 +44,7 @@ pub mod paint;
 pub mod painter;
 pub mod panels;
 pub mod pictures;
+mod placed_picture;
 pub mod publish_template;
 pub mod questions;
 pub mod ribbon;

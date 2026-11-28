@@ -83,7 +83,8 @@ pub struct BuildingSectionsEdit {
 pub enum BuildingSectionLeft {
     /// The roof: the model has none yet (ADV-20).
     Roof,
-    /// The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.
+    /// The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4
+    /// 4.30); the graded ground is drawn at ±0.00.
     NaturalGround,
     /// A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
     Curved,

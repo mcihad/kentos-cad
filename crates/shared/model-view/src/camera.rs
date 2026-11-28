@@ -117,6 +117,19 @@ impl OrbitCamera {
         [e.cos() * a.cos(), e.cos() * a.sin(), e.sin()]
     }
 
+    /// The camera as an axonometric (docs/adr/8175 §3.1): parallel lines, the view as tall at the target as the
+    /// perspective's there, so switching keeps the picture's size and the wheel still zooms; the eye backed off past
+    /// the model by `reach` (its farthest point from the target), an orthographic view's frustum starting at its eye.
+    pub fn axonometric(&self, ex: &Exaggeration, reach: f64) -> Camera {
+        let height = 2.0 * self.distance * (FOV.to_radians() / 2.0).tan();
+        let reach = reach.max(0.0);
+        let back = self.distance + reach + 1.0;
+        Camera::orbit(ex.shown(self.target), self.azimuth, self.elevation, back, Projection::Orthographic {
+            height,
+            depth: back + reach + 1.0,
+        })
+    }
+
     /// The camera in the shown space.
     pub fn camera(&self, ex: &Exaggeration) -> Camera {
         let near = (self.distance * 1e-3).clamp(0.05, 5.0);
@@ -199,5 +212,37 @@ mod tests {
         assert_eq!(at(225.0).seen_from(), "güneybatıdan");
         assert_eq!(at(-90.0).seen_from(), "güneyden");
         assert_eq!(at(359.0).seen_from(), "doğudan");
+    }
+
+    #[test]
+    fn the_axonometric_frames_the_target_as_the_perspective_does_and_sees_the_whole_model() {
+        use kentos_scene3d::Viewport;
+        let c = OrbitCamera { target: [5.0, 4.0, 3.0], azimuth: 45.0, elevation: 30.0, distance: 20.0 };
+        let ex = Exaggeration::NONE;
+        let viewport = Viewport { width: 800.0, height: 600.0 };
+        let (persp, axo) = (c.camera(&ex), c.axonometric(&ex, 12.0));
+        assert!(matches!(axo.projection, Projection::Orthographic { .. }));
+        // The target in the middle of both, a point beside it as far out in both (the same scale at the target).
+        let (px, py, _) = persp.project(c.target, &viewport).unwrap();
+        let (ax, ay, _) = axo.project(c.target, &viewport).unwrap();
+        assert!((px - 400.0).abs() < 1e-6 && (py - 300.0).abs() < 1e-6 && (ax - 400.0).abs() < 1e-6 && (ay - 300.0).abs() < 1e-6);
+        // A point beside the target across the view (at its depth): as far out in both, the same scale there.
+        let a = c.azimuth.to_radians();
+        let beside = [c.target[0] - a.sin(), c.target[1] + a.cos(), c.target[2]];
+        let (pb, _, _) = persp.project(beside, &viewport).unwrap();
+        let (ab, _, _) = axo.project(beside, &viewport).unwrap();
+        assert!((pb - ab).abs() < 1e-6 && (pb - 400.0).abs() > 10.0, "{pb} {ab}");
+        // Parallel: two equal verticals far apart are drawn equally long.
+        let len = |cam: &Camera, at: [f64; 3]| {
+            let (_, a, _) = cam.project(at, &viewport).unwrap();
+            let (_, b, _) = cam.project([at[0], at[1], at[2] + 1.0], &viewport).unwrap();
+            a - b
+        };
+        let (near, far) = ([c.target[0] - 5.0, c.target[1] - 5.0, 3.0], [c.target[0] + 5.0, c.target[1] + 5.0, 3.0]);
+        assert!((len(&axo, near) - len(&axo, far)).abs() < 1e-6);
+        assert!((len(&persp, near) - len(&persp, far)).abs() > 0.1, "the perspective's are not");
+        // The model's farthest point within reach, behind the target as seen: still in front of the eye.
+        let behind = [c.target[0] + 8.0, c.target[1] + 8.0, c.target[2]];
+        assert!(axo.project(behind, &viewport).is_some_and(|(_, _, z)| z > 0.0 && z < 1.0));
     }
 }

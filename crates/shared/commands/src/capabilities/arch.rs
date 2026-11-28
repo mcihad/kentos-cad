@@ -1141,6 +1141,17 @@ pub(super) const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.masses.create",
+        refusals: &[
+            &["no_objects", "not_finite", "invalid_space", "level_not_found", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.railings.create",
         refusals: &[
             &[
@@ -1174,6 +1185,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "invalid_beam",
                 "invalid_roof",
                 "invalid_railing",
+                "invalid_space",
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",

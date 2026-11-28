@@ -878,6 +878,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Opening(o) => kentos_formats::openings::core_opening(&o.opening),
         Entity::Space(s) => kentos_formats::spaces::core_space(&s.space),
         Entity::Slab(s) => kentos_formats::spaces::core_slab(&s.slab),
+        Entity::Mass(m) => kentos_formats::spaces::core_mass(&m.mass),
         Entity::Grid(g) => kentos_formats::arch_elements::core_grid(&g.grid),
         Entity::Column(c) => kentos_formats::arch_elements::core_column(&c.column),
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
@@ -1454,6 +1455,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 edge.width = look.width;
                 edge.runs = kentos_formats::spaces::runs(&look.runs);
             }
+        }
+        // A mass's footprint as a transform carried it (docs/adr/8178); its height and bottom are its own.
+        (Entity::Mass(e), Shape::Space { parts, .. }) => {
+            e.mass.parts = parts.iter().map(kentos_formats::spaces::part).collect();
         }
         // A grid's, column's, stair's or ramp's path or centre and the sizes a transform scales (docs/adr/0343 §2).
         (Entity::Grid(e), Shape::Grid { pts, bulges, .. }) => {

@@ -274,6 +274,54 @@
    "tests": 0
   },
   {
+   "id": "arch.colorPlan.off",
+   "kind": "command",
+   "title": "Renk planı: Kapalı",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.colorPlan.unit",
+   "kind": "command",
+   "title": "Renk planı: Bağımsız bölüm",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.colorPlan.usage",
+   "kind": "command",
+   "title": "Renk planı: Kullanım",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Mahal renk planı: projenin ayarı (arch.colorPlan, şeması); mahallerin dolgusunu ve renklerini model hesaplar, plan ve pafta onları çizer (ADR 8176).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.deliveries",
    "kind": "command",
    "title": "Teslim kaydı",
@@ -12031,6 +12079,23 @@
    "tests": 1
   },
   {
+   "id": "tool.colorLegend",
+   "kind": "command",
+   "title": "Renk planı lejandı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Renk planı lejandı: başlık, her satırın düz taramalı örneği, çerçevesi ve yazısı, toplam; Renk planı öznitelikli eski lejant silinir (ADR 8176 §3.3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.column",
    "kind": "command",
    "title": "Kolon",
@@ -12123,6 +12188,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.coping",
+   "kind": "command",
+   "title": "Duvar harpuştası",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Duvarın orta çizgisi ve tepesi araçta okunur; eksen, genişlik (duvar kalınlığı + iki taşma), kalınlık, kattan yükseklik, malzeme ve kaplama tipi (COPING) komuta verilir (ADR 8173).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.copy",
@@ -12919,6 +13000,22 @@
    "tests": 0
   },
   {
+   "id": "tool.groundLevel",
+   "kind": "command",
+   "title": "Zemin kotu",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Zemin kotu: kot simgesi (daire ve haç) ve iki yazı, “tzk 849.85 (-5.65)” ve “tsk 850.10 (-4.40)”, simgeler katmanına tek adımda; değerler aracın vaziyet zemininden okuduğudur, yazılar kendileri (ADR 8174 §7).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.hatch",
    "kind": "tool",
    "title": "Tarama",
@@ -13397,6 +13494,22 @@
    "tests": 15
   },
   {
+   "id": "tool.mass",
+   "kind": "command",
+   "title": "Kütle",
+   "level": "semantic",
+   "via": [
+    "cad.masses.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.masses.create",
+   "mcp": "cad.masses.create",
+   "note": "Oturumun halkaları (tıklanan köşeler, iki köşenin dikdörtgeni ya da tıklanan kapalı çizginin, alanın veya dairenin halkaları; yayları ve avluları), yükseklik, kot farkı, ad ve kat komuta verilir; kütlenin prizması, kesiti, 3B'si ve gölgesi modelin (ADR 8178).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.matchProperties",
    "kind": "tool",
    "title": "Özellik kopyala",
@@ -13500,6 +13613,22 @@
    "python": "kentos.cad.modules.edit",
    "mcp": "cad.modules.edit",
    "note": "Tıklanan nokta, açı, ayna, kat, tadilat durumu, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.moulding",
+   "kind": "command",
+   "title": "Cephe silmesi",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Silmenin ekseni (dış yüzler boyunca bulunduğunda araç onu halka olarak verir), çıkıntı, yükseklik, kattan yükseklik, hiza, malzeme ve kaplama tipi (MOLDING “Cephe silmesi”) komuta verilir; gövdesi, kesiti ve IFC sınıfı komutun ve modelin (ADR 8173).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -14077,6 +14206,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.raft",
+   "kind": "command",
+   "title": "Radye",
+   "level": "semantic",
+   "via": [
+    "cad.slabs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.slabs.create",
+   "mcp": "cad.slabs.create",
+   "note": "Döşeme aracı Radye türüyle: iç nokta ya da kontur, kalınlık, kot farkı, kenar ötelemesi ve malzeme komuta verilir; konturu, radyenin kuralları (kenar ve eğim yok) ve IFC sınıfı (IfcSlab BASESLAB) komutun ve modelin (ADR 8172 §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.rail",
@@ -14944,6 +15089,22 @@
    "tests": 0
   },
   {
+   "id": "tool.siteGround",
+   "kind": "command",
+   "title": "Arazi zemini",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Arazi zemini: yüzeyin tanımı (kotlu noktaların katmanı) projenin arazi yüzeylerine (road.surfaces), tabii ya da tesviye zeminin kimliği ve ±0,00'ın mutlak kotu vaziyete (arch.site) yazılır; yüzeyi, kesitteki çizgisi ve bahçe hafriyatı modelin (ADR 8174).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.siteParcel",
    "kind": "command",
    "title": "Parsel ve bahçe mesafeleri",
@@ -15338,6 +15499,23 @@
    "scope": "none",
    "desktop": "pending",
    "tests": 1
+  },
+  {
+   "id": "tool.sunShadow",
+   "kind": "command",
+   "title": "Gölge",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Gölge: kesit modelinin cisimleri güneş ışınları boyunca ±0,00'daki zemine süpürülür, birleşimlerinden binanın oturduğu alan çıkarılır; tek saat düz çizgi taramalı ve çerçeveli, birden çok saat çerçevesi ve saatiyle gölge katmanına; Gölge öznitelikli eski gölge silinir (ADR 8177 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.tag",

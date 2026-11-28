@@ -543,7 +543,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Image(i) => crate::blocks::image_corners(i),
         Entity::Raster(r) => crate::blocks::raster_corners(r),
         Entity::PointCloud(c) => crate::blocks::cloud_corners(c),
-        Entity::Record(_) => Vec::new(),
+        Entity::Record(_) | Entity::Mass(_) => Vec::new(), // No DXF holds a mass: its rings go as lines (ADR 8178).
         Entity::Wall(w) => w.wall.pts.clone(),
         Entity::Opening(o) => o.opening.place.clone(),
         Entity::Space(s) => s.as_polygon().pts,

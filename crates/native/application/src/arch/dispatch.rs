@@ -380,6 +380,9 @@ macro_rules! arch_commands {
             kentos_commands::CAD_RAILINGS_CREATE => {
                 crate::arch_dispatch::arch_arm!($command, $then, railings_create, RailingsCreate)
             }
+            kentos_commands::CAD_MASSES_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, masses_create, MassesCreate)
+            }
             _ => $else,
         }
     };

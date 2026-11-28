@@ -424,3 +424,146 @@ fn a_footing_round_trips_under_arch_data_40() {
     let refused = kentos_kcad::encode(&baseless).expect_err("a footing stands at its base");
     assert!(refused.message.contains("Temelin"), "{}", refused.message);
 }
+
+#[test]
+fn a_raft_round_trips_under_arch_data_41() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_rafts(&doc));
+    let slab = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Slab(s) if s.slab.covering.is_none() => Some(s),
+            _ => None,
+        })
+        .expect("a slab");
+    slab.slab.role = kentos_contracts::SlabRole::Raft;
+    slab.slab.thickness = 0.6;
+    slab.slab.offset = -0.3;
+    slab.slab.edge = None;
+    slab.slab.slope = None;
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_RAFTS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the raft reads back");
+    // A raft with a parapet is refused while written (docs/adr/8172 §6).
+    let mut edged = doc.clone();
+    if let Some(kentos_contracts::Entity::Slab(s)) =
+        edged.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.role == kentos_contracts::SlabRole::Raft))
+    {
+        s.slab.edge = Some(kentos_contracts::SlabEdge {
+            kind: kentos_contracts::SlabEdgeKind::Parapet,
+            width: 0.2,
+            runs: Vec::new(),
+        });
+    }
+    let refused = kentos_kcad::encode(&edged).expect_err("a raft has no edge");
+    assert!(refused.message.contains("Radyenin"), "{}", refused.message);
+}
+
+#[test]
+fn a_profile_round_trips_under_arch_data_42() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_profiles(&doc));
+    let beam = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Beam(b) => Some(b),
+            _ => None,
+        })
+        .expect("a beam");
+    // A coping (docs/adr/8173): a band on a wall's top, written as an IfcCovering.
+    beam.beam.role = kentos_contracts::BeamRole::Beam;
+    beam.beam.member = None;
+    beam.beam.rise = None;
+    beam.beam.offset = 0.0;
+    beam.beam.base_offset = Some(1.0);
+    beam.beam.width = 0.35;
+    beam.beam.height = 0.05;
+    beam.beam.covering = Some(kentos_contracts::Covering::coping());
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PROFILES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the coping reads back");
+    // A profile stands at its base: without one it is refused while written.
+    let mut baseless = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) =
+        baseless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    {
+        b.beam.base_offset = None;
+    }
+    let refused = kentos_kcad::encode(&baseless).expect_err("a profile stands at its base");
+    assert!(refused.message.contains("Profilin"), "{}", refused.message);
+}
+
+#[test]
+fn a_site_s_ground_round_trips_under_arch_data_43() {
+    use kentos_contracts::{CadWork, SiteGround};
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_ground(&doc));
+    // An architecture project's (docs/adr/8174 §3.1): its road settings would be refused.
+    assert_eq!(doc.settings.cad_work, Some(CadWork::Architecture));
+    assert!(doc.settings.road.is_none());
+    // The site's natural and graded ground: each its survey's layers, the site's own.
+    let arch = doc.settings.arch.get_or_insert_with(Default::default);
+    let site = arch.site.get_or_insert_with(Default::default);
+    site.datum = Some(1285.4);
+    site.natural_ground = Some(SiteGround::of_layer("arazi"));
+    site.graded_ground = Some(SiteGround { layers: vec!["tesviye".into(), "bahce".into()] });
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_GROUND);
+    let bytes = kentos_kcad::encode(&doc).expect("an architecture project writes its grounds");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grounds read back");
+    let refused = |change: &dyn Fn(&mut kentos_contracts::SitePlan)| {
+        let mut wrong = doc.clone();
+        change(wrong.settings.arch.as_mut().and_then(|a| a.site.as_mut()).unwrap());
+        kentos_kcad::encode(&wrong).expect_err("refused").message
+    };
+    // The same layers cannot be both: the earthwork is their difference.
+    let same = refused(&|s| s.graded_ground = Some(SiteGround { layers: vec!["arazi".into()] }));
+    assert!(same.contains("aynı katmanlardan"), "{same}");
+    assert!(refused(&|s| s.natural_ground = Some(SiteGround::default())).contains("en az bir"));
+    assert!(refused(&|s| s.natural_ground = Some(SiteGround { layers: vec![" ".into()] })).contains("boş olamaz"));
+    let twice = refused(&|s| s.natural_ground = Some(SiteGround { layers: vec!["arazi".into(), "arazi".into()] }));
+    assert!(twice.contains("birer kez"), "{twice}");
+}
+
+/// Architecture data 45 (docs/adr/8178): a mass (its footprint with a courtyard and an arc, its height, bottom, storey
+/// and name) is written with `modules.arch = 45` and read back as it was; a mass the contract refuses is not written, nor
+/// one in a block's definition, and a file saying an older version of the architecture data cannot hold one.
+#[test]
+fn a_mass_round_trips_under_arch_data_45() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_masses(&doc));
+    let id = doc.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    let mass: kentos_contracts::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "mass", "id": id, "layerId": "0", "attrs": {},
+        "parts": [
+            {"outer": {"pts": [{"x": 0.0, "y": 0.0}, {"x": 20.0, "y": 0.0}, {"x": 20.0, "y": 16.0}, {"x": 0.0, "y": 16.0}]},
+             "holes": [{"pts": [{"x": 6.0, "y": 5.0}, {"x": 14.0, "y": 5.0}, {"x": 14.0, "y": 11.0}, {"x": 6.0, "y": 11.0}]}]},
+            {"outer": {"pts": [{"x": 30.0, "y": 8.0}, {"x": 24.0, "y": 8.0}], "bulges": [1.0, 1.0]}}
+        ],
+        "height": 12.5, "offset": -1.5, "name": "Blok A", "arch": {"level": "k1"}
+    }))
+    .expect("a mass");
+    doc.entities.push(mass);
+    let mut uid = [0x22u8; 16];
+    uid[15] = 0x85;
+    doc.uids.push(kentos_contracts::EntityId(uid));
+    assert!(kentos_kcad::uses_masses(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_MASSES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the mass reads back");
+    // The independent reader's (tools/kcad/kcad.py) file to read: `kcad.py validate` on it.
+    std::fs::write(std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("mass.kcad"), &bytes).expect("written");
+    let edit = |change: &dyn Fn(&mut kentos_contracts::MassFields)| {
+        let mut doc = doc.clone();
+        if let Some(kentos_contracts::Entity::Mass(m)) = doc.entities.last_mut() {
+            change(&mut m.mass);
+        }
+        kentos_kcad::encode(&doc).expect_err("refused").message
+    };
+    assert!(edit(&|m| m.height = 0.0).contains("yüksekliği sıfırdan büyük"));
+    assert!(edit(&|m| m.offset = 150.0).contains("±100"));
+    assert!(edit(&|m| m.name = Some(" Blok".into())).contains("adı boş, kenarı boşluklu"));
+    assert!(edit(&|m| m.parts.clear()).contains("oturumu yok"));
+    assert!(edit(&|m| m.parts[0].outer.pts.truncate(2)).contains("en az üç köşedir"));
+}

@@ -51,8 +51,8 @@ fn left(d: Vec2) -> Vec2 {
     Vec2::new(-d.y, d.x)
 }
 
-/// The line `d` to the left of the axis, mitred at its turns.
-fn side(pts: &[Vec2], d: f64) -> Vec<Vec2> {
+/// The line `d` to the left of the axis, mitred at its turns: a band's side, a wall's middle (docs/adr/8173).
+pub fn side(pts: &[Vec2], d: f64) -> Vec<Vec2> {
     let n = pts.len();
     let dirs: Vec<Vec2> = pts
         .windows(2)

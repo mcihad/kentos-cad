@@ -14124,10 +14124,10 @@
       ]
     },
     {
-      "id": "cad.arch.edit",
+      "id": "cad.masses.create",
       "version": 1,
-      "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "title": "Kütle",
+      "summary": "Kütle çalışması için kütleler ekler; tek geri alma adımı “Kütle”. Her biri oturumu (parts: bir ya da daha çok parça, her biri dış halka ve delikleri — avlu; halka en az üç köşe), yüksekliği (height: sıfırdan büyük, en çok 300 m), katının döşemesine göre tabanı (offset: yoksa 0; en çok ±100 m), adı (name: Blok A, Podyum; en çok 80 karakter), kat ve tadilat durumu (arch). Kütle bir yapı elemanı değildir: IFC'ye yazılmaz (EK-5'in sınıflarında karşılığı yok), binanın denetimleri ve metrajı onu görmez; 3B görünüm, kesit, görünüş ve güneş gölgesi onu gösterir. Planda oturumu ve adıyla çizilir. Halkası ya da yüksekliği hatalı kütle invalid_space ile reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -14143,7 +14143,184 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids\nchanged as one undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
+        "description": "Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,\n`invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,\n`invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "properties": {
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "lineWeight": {
+            "format": "double",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "masses": {
+            "items": {
+              "$ref": "#/$defs/NewMass"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layerId",
+          "masses"
+        ],
+        "title": "MassesCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.masses.create` v1.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "ids",
+          "revision"
+        ],
+        "title": "MassesCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.masses.create` would write (plan mode): the objects as they would be stored, their `id` 0.",
+        "properties": {
+          "masses": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "masses",
+          "revision"
+        ],
+        "title": "MassesPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "not_finite",
+          "invalid_space",
+          "level_not_found",
+          "invalid_line_weight",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin katta 20 × 12 m, 15 m yüksek blok",
+          "input": {
+            "layerId": "kutle",
+            "masses": [
+              {
+                "arch": {
+                  "level": "zemin"
+                },
+                "height": 15.0,
+                "name": "Blok A",
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 12.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 12.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arch.edit",
+      "version": 1,
+      "title": "Mimari nesneyi düzenle",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs, railings and masses named by their persistent\nids changed as one undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,\n`level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -14248,6 +14425,7 @@
           "invalid_beam",
           "invalid_roof",
           "invalid_railing",
+          "invalid_space",
           "not_a_grid",
           "grids_parallel",
           "level_not_found",
@@ -121741,7 +121919,7 @@
       "code": "not_arch_element",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil."
+      "meaning": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil."
     },
     {
       "code": "field_not_for_kind",
@@ -128223,6 +128401,17 @@
           },
           "type": "array"
         },
+        "colorPlan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ColorPlan"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Mahal renk planı (docs/adr/8176; `.kcad` Mimari data 44): the plan's rooms filled by a scheme's colours. Absent:\nnone."
+        },
         "cutHeight": {
           "description": "The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).",
           "format": "double",
@@ -132237,6 +132426,17 @@
             "null"
           ]
         },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A profile (docs/adr/8173): a band covering a wall — a facade moulding (silme), a coping (harpuşta) — written as\nan `IfcCovering` of its type; absent: the frame's beam. It stands at its base (`baseOffset`) and is no\nstructure: walls, columns and slabs do not stop at it, the frame's joins pass it by."
+        },
         "height": {
           "description": "Its height (kiriş yüksekliği), metres: its top to its underside, the slab within it (TBDY 2018 7.4.1.1 b).",
           "format": "double",
@@ -133942,7 +134142,7 @@
         },
         {
           "const": "naturalGround",
-          "description": "The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.",
+          "description": "The natural ground: the site has none (Arazi zemini makes it) or no ±0.00 elevation (docs/adr/8174; EK-4\n4.30); the graded ground is drawn at ±0.00.",
           "type": "string"
         },
         {
@@ -137883,6 +138083,34 @@
         "areas"
       ],
       "type": "object"
+    },
+    "ColorPlan": {
+      "additionalProperties": false,
+      "description": "A colour plan: its scheme.",
+      "properties": {
+        "scheme": {
+          "$ref": "#/$defs/ColorScheme"
+        }
+      },
+      "required": [
+        "scheme"
+      ],
+      "type": "object"
+    },
+    "ColorScheme": {
+      "description": "What a colour plan colours the rooms by.",
+      "oneOf": [
+        {
+          "const": "usage",
+          "description": "Kullanım: the room's use as written, else the group its name reads as (oturma, yatma, ıslak hacim …).",
+          "type": "string"
+        },
+        {
+          "const": "unit",
+          "description": "Bağımsız bölüm: the program's unit the room belongs to (a flat, a common area, an outdoor area).",
+          "type": "string"
+        }
+      ]
     },
     "ColumnAnchor": {
       "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",
@@ -151487,6 +151715,20 @@
           "properties": {
             "kind": {
               "const": "slab",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/MassEntity",
+          "description": "A mass (docs/adr/8178): a massing study's prism, its footprint, bottom and height; never a building element.",
+          "properties": {
+            "kind": {
+              "const": "mass",
               "type": "string"
             }
           },
@@ -172606,6 +172848,174 @@
       ],
       "type": "object"
     },
+    "MassEntity": {
+      "description": "A mass: its base and its own fields.",
+      "properties": {
+        "arch": {
+          "$ref": "#/$defs/ArchInfo"
+        },
+        "attachments": {
+          "description": "The photos and documents it carries, in their order (docs/adr/0225\n§1); none on a block's objects.",
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "type": "array"
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+          "type": "object"
+        },
+        "byLayer": {
+          "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
+          "items": {
+            "$ref": "#/$defs/LookPart"
+          },
+          "type": "array"
+        },
+        "color": {
+          "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "Its height, metres: above 0, at most 300.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelPins": {
+          "description": "Its labels moved, turned, pinned or hidden by hand (docs/adr/0212\n§3.7), one a class at most.",
+          "items": {
+            "$ref": "#/$defs/LabelPin"
+          },
+          "type": "array"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "linePattern": {
+          "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own line type; absent: its source's (the layer's, or the insert's in a block)."
+        },
+        "lineTypeScale": {
+          "description": "Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "lineWeight": {
+          "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+          "format": "double",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "name": {
+          "description": "Its name (\"Blok A\", \"Podyum\"); absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its bottom above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "order": {
+          "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "parts": {
+          "description": "Its footprint: one part or more, each an outer ring and its holes (a courtyard).",
+          "items": {
+            "$ref": "#/$defs/SpacePart"
+          },
+          "type": "array"
+        },
+        "symbol": {
+          "description": "Library symbol overriding the layer's style.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transparency": {
+          "description": "How transparent it is, 0 to 0.9; absent: its source's (none for a layer).",
+          "format": "double",
+          "maximum": 0.9,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "wipeout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Wipeout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+        }
+      },
+      "required": [
+        "id",
+        "layerId",
+        "attrs",
+        "parts",
+        "height"
+      ],
+      "type": "object"
+    },
     "MatchProperty": {
       "description": "A property Özellik kopyala gives.",
       "oneOf": [
@@ -177514,6 +177924,17 @@
           ],
           "x-unit": "length"
         },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A profile (docs/adr/8173): a band covering a wall (a facade moulding, a coping), an `IfcCovering` of its type;\nabsent: the frame's beam. Only a beam's, with its base."
+        },
         "height": {
           "description": "Its height, the slab within it (TBDY 2018 7.4.1.1 b).",
           "format": "double",
@@ -177874,6 +178295,65 @@
       },
       "required": [
         "pts"
+      ],
+      "type": "object"
+    },
+    "NewMass": {
+      "additionalProperties": false,
+      "description": "A mass to add (docs/adr/8178): its footprint, height and bottom, its name.",
+      "properties": {
+        "arch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "Its height, above 0 and at most 300 m.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "name": {
+          "description": "Its name (\"Blok A\"); absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its bottom over its storey's floor; absent: 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "parts": {
+          "description": "Its footprint: one part or more, each an outer ring and its holes.",
+          "items": {
+            "$ref": "#/$defs/SpacePart"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "parts",
+        "height"
       ],
       "type": "object"
     },
@@ -214610,6 +215090,23 @@
         }
       ]
     },
+    "SiteGround": {
+      "additionalProperties": false,
+      "description": "A site's ground (docs/adr/8174 §3.1): the terrain surface of the points with a height on its layers (a survey's),\nmade when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps\nno road settings, where a road's and a map's surfaces are.",
+      "properties": {
+        "layers": {
+          "description": "The layers' ids, each once.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "layers"
+      ],
+      "type": "object"
+    },
     "SitePlan": {
       "additionalProperties": false,
       "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a\npolygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;\npast the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on\nthe parcel and the storeys.",
@@ -214635,6 +215132,28 @@
             "string",
             "null"
           ]
+        },
+        "gradedGround": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SiteGround"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none."
+        },
+        "naturalGround": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SiteGround"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Tabii zemin (docs/adr/8174; PAİY 4: \"arazinin hafredilmemiş veya doldurulmamış hali\", 57/2-a). Absent: none."
         },
         "parcel": {
           "type": [
@@ -215231,6 +215750,11 @@
         {
           "const": "terrace",
           "description": "Teras.",
+          "type": "string"
+        },
+        {
+          "const": "raft",
+          "description": "Radye (docs/adr/8172 §6): a raft, the building's foundation slab; IFC's `IfcSlab` BASESLAB.",
           "type": "string"
         }
       ]

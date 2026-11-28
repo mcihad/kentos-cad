@@ -2980,7 +2980,7 @@
       "id": "tool.footingPad",
       "title": "Tekil temel",
       "icon": "footingPad",
-      "description": "Tıklanan yere bir tekil temel koyar; bir kolona tıklanınca temeli kolonun altına ortalar ve kolonla döndürür. Genişlik (E), Boy (B), Yükseklik (Y: temelin kalınlığı), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Açı (D: kolonsuz temelin dönüşü), Numara (N: T101 gibi; her birinden sonra ilerler). 150 × 150 cm, 50 cm yükseklik ve −0,80 m ile başlar: tepesi döşemenin 30 cm altında. Kesitte, 3B'de ve IFC'de (IfcFooting, PAD_FOOTING) görünür; üstündeki kolon temelin tepesinde başlar. Etkin kata, MM-TEML-TEKIL katmanına yazılır.",
+      "description": "Tıklanan yere bir tekil temel koyar; bir kolona tıklanınca temeli kolonun altına ortalar ve kolonla döndürür. Genişlik (E), Uzunluk (U), Yükseklik (Y: temelin kalınlığı), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Açı (D: kolonsuz temelin dönüşü), Numara (N: T101 gibi; her birinden sonra ilerler). 150 × 150 cm, 50 cm yükseklik ve −0,80 m ile başlar: tepesi döşemenin 30 cm altında. Kesitte, 3B'de ve IFC'de (IfcFooting, PAD_FOOTING) görünür; üstündeki kolon temelin tepesinde başlar. Etkin kata, MM-TEML-TEKIL katmanına yazılır.",
       "aliases": [
         "TEKILTEMEL",
         "TEKİLTEMEL",
@@ -3001,6 +3001,59 @@
         "SUREKLITEMEL",
         "SÜREKLİTEMEL",
         "STRIPFOOTING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.raft",
+      "title": "Radye",
+      "icon": "raft",
+      "description": "Binanın altına bir radye (temel döşemesi) çizer: Döşeme aracı Radye türüyle başlar. Duvarların içine tıklanınca dış yüzlerinden Kenar ötelemesi (Ö) kadar taşan kontur bulunur; Sınır (S) ile odadan ya da köşeleri çizerek de verilir. Kalınlık (E), Kot farkı (F: tepesinin katın kotuna göre farkı), Malzeme (M). 60 cm kalınlık, −0,30 m kot ve 50 cm taşma ile başlar. Kesitte, 3B'de (Temel rengi) ve IFC'de (IfcSlab, BASESLAB) görünür; üstündeki kolonlar radyenin tepesine oturur. Korkuluk, parapet ve eğim almaz. Etkin kata, MM-TEML-RADYE katmanına yazılır.",
+      "aliases": [
+        "RADYE",
+        "RADYETEMEL",
+        "TEMELDOSEMESI",
+        "TEMELDÖŞEMESİ",
+        "RAFT",
+        "MATFOUNDATION"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.moulding",
+      "title": "Cephe silmesi",
+      "icon": "moulding",
+      "description": "Cephe silmesi (kat silmesi, subasman silmesi) çizer: binanın içine tıklanınca duvarların dış yüzü boyunca dolanır ve dışa taşar; Sınır (S) Çiz ile ekseni nokta nokta verilir, Enter yazar. Tür (T: Cephe silmesi, Duvar harpuştası), Çıkıntı (E), Yükseklik (Y), Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği), Hiza (H: Çiz'de), Malzeme (M). 5 cm çıkıntı, 20 cm yükseklik ve 2,80 m ile başlar: 3 m'lik katın döşeme hizası. IFC'de kaplama (IfcCovering, MOLDING); yapı değildir. Etkin kata, MM-CEPH-SILME katmanına yazılır.",
+      "aliases": [
+        "SILME",
+        "KATSILMESI",
+        "KAT SİLMESİ",
+        "SUBASMANSILMESI",
+        "MOULDING",
+        "MOLDING",
+        "WALLSWEEP",
+        "DUVARPROFILI",
+        "DUVARPROFİLİ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.coping",
+      "title": "Duvar harpuştası",
+      "icon": "coping",
+      "description": "Tıklanan duvarın tepesine duvar harpuştası koyar: duvarın ortasında, her iki yüzden Taşma (E) kadar taşar; kapalı duvarda çevresinde dolanır. Tür (T), Yükseklik (Y: kalınlığı), Malzeme (M: Taş gibi; katmanın adı olur). 5 cm taşma ve 5 cm kalınlıkla başlar. Parapetin, bahçe duvarının başlığı; IFC'de kaplama (IfcCovering, COPING), duvarı kısaltmaz. Duvarın katına, MM-HARP-<malzeme> katmanına yazılır.",
+      "aliases": [
+        "HARPUSTA",
+        "HARPUŞTA",
+        "COPING",
+        "DUVARBASLIGI",
+        "DUVARBAŞLIĞI"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3353,6 +3406,141 @@
         "YAKLASMASINIRI",
         "YAKLAŞMASINIRI",
         "SETBACK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.siteGround",
+      "title": "Arazi zemini",
+      "short": "Arazi zemini",
+      "icon": "siteGround",
+      "description": "Vaziyetin tabii ve tesviye zeminini kurar (Planlı Alanlar İmar Yönetmeliği 4, 57/2-a): kotlu bir ölçü noktasına tıklanınca o katmanın kotlu noktalarından bir arazi yüzeyi kurulur ve vaziyetin tabii zemini olur; Tür (T) Tesviye zemin'e geçer. Kesitler zemini kesit çizgisi boyunca çizer: tabii zemin ince ve kesikli (MM-CVRE-TABII), tesviye zemin kalın (MM-CVRE-TESVIYE). Tabii zemin kurulurken ±0,00'ın mutlak kotu yoksa bina köşelerinin tabii zemin kotlarının aritmetik ortalaması olur (12/4; zemin katın dış hattı). İki zemin ve parsel varsa bahçe hafriyatı söylenir: parselin içinde, bina oturumu dışında, kazı ve dolgu ayrı. Ayardır, geri alma adımı değildir; aynı zemin yeniden kurulunca eskisinin yerini alır.",
+      "aliases": [
+        "ARAZIZEMINI",
+        "ARAZİZEMİNİ",
+        "TABIIZEMIN",
+        "TABİİZEMİN",
+        "TESVIYEZEMIN",
+        "TESVİYEZEMİN",
+        "HAFRIYAT",
+        "HAFRİYAT",
+        "KAZIDOLGU",
+        "TOPOSURFACE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.groundLevel",
+      "title": "Zemin kotu",
+      "short": "Zemin kotu",
+      "icon": "groundLevel",
+      "description": "Vaziyetin tabii zemin kotunu ve tesviye zemin kotunu bir noktada yazar (EK-4 4.30, Şekil 4.6): tıklanan noktaya kot simgesi, sağına üstte “tzk 849.85 (-5.65)”, altta “tsk 850.10 (-4.40)”; önce mutlak kot, parantezde ±0,00'a göre farkı. İmleç gezerken değerler önizlemede görünür. Zeminler Arazi zemini ile kurulur; ±0,00'ın mutlak kotu yoksa yalnız mutlak kot yazılır. Simgeler katmanına (MM-XXXX-SEMBOL), tek geri alma adımında yazılır. Değerler yazı olarak kalır: zemin sonradan değişirse işaret yeniden konur.",
+      "aliases": [
+        "ZEMINKOTU",
+        "ZEMİNKOTU",
+        "TZK",
+        "TSK",
+        "TABIIZEMINKOTU",
+        "TABİİZEMİNKOTU",
+        "TESVIYEKOTU",
+        "TESVİYEKOTU"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.sunShadow",
+      "title": "Gölge",
+      "short": "Gölge",
+      "icon": "sunShadow",
+      "description": "Binanın ±0,00'daki zemine düşen gölgesini çizer: duvar, kolon, kiriş, döşeme, çatı ve merdiven cisimleri güneş ışınları boyunca zemine düşürülür, birleşimlerinden binanın oturduğu alan çıkarılır. Tarih (T) 21 Aralık, 21 Mart, 21 Haziran ya da 23 Eylül; saat (S) 09:00, 12:00, 15:00 ya da 09:00–15:00 arası saat saat. Güneşin yüksekliği ve azimutu enlem, boylam, gün ve saatten hesaplanır: konum projenin koordinat sisteminden, yoksa yazılan enlemden (E) ve boylamdan (B); saat dilimi (Z) Türkiye için UTC+3; coğrafi kuzey koordinat sisteminden ya da kuzey okundan, yoksa plan kuzeyi. Gölge ayarlar değiştikçe önizlenir; Enter ya da tıklama onu Gölge katmanına (MM-XXXX-GOLGE) tek geri alma adımında çizer: tek saat taramalı ve çerçeveli, birden çok saat her biri çerçevesi ve ucunda saatiyle. Yeniden çizilince eskisinin yerini alır; bina değişirse yeniden çizilir.",
+      "aliases": [
+        "GOLGE",
+        "GÖLGE",
+        "GUNESGOLGESI",
+        "GÜNEŞGÖLGESİ",
+        "GOLGEDIYAGRAMI",
+        "GÖLGEDİYAGRAMI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.mass",
+      "title": "Kütle",
+      "short": "Kütle",
+      "icon": "mass",
+      "description": "Tasarımın kütlesini çizer: duvarları ve döşemeleri çizilmeden önceki hacmi, oturumu ve yüksekliğiyle bir prizma. Oturum (S) köşeleri tıklanarak (Enter, Kapat ya da ilk köşeye tıklama yazar), iki karşı köşesiyle dikdörtgen ya da tıklanan kapalı çizgiden, alandan veya daireden (yapı yaklaşma sınırı, başka bir çizimden alınmış oturum; yayları ve avluları korunur). Yükseklik (Y) değiştirilene kadar 9,00 m, Kot farkı (F) tabanın katın döşemesinden farkı, Ad (A) Blok A gibi. Önizlemede oturum alanı ve hacim yazar; Etkin kata, Kütle katmanına (MM-XXXX-KUTLE) tek geri alma adımında yazılır. Planda çerçevesi, kesitte kesik yüzü, 3B görünümde hacmi görünür ve güneşte gölge düşürür. Binanın elemanı değildir: IFC'ye, metraja ve denetime girmez.",
+      "aliases": [
+        "KUTLE",
+        "KÜTLE",
+        "KUTLECALISMASI",
+        "KÜTLEÇALIŞMASI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.colorPlan.off",
+      "title": "Renk planı: Kapalı",
+      "short": "Kapalı",
+      "icon": "colorPlanOff",
+      "description": "Mahal renk planını kapatır: mahaller dolgusuz çizilir.",
+      "aliases": [
+        "RENKPLANIKAPALI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.colorPlan.usage",
+      "title": "Renk planı: Kullanım",
+      "short": "Kullanım",
+      "icon": "colorPlanUsage",
+      "description": "Planın mahallerini kullanımlarına göre renkle doldurur: yazılı kullanım, yoksa adın okunduğu grup (oturma, yatma, mutfak, ıslak hacim, dolaşım, teknik hacim, açık alan, şaft ve boşluk); gruba girmeyen bir kullanım kendi rengini alır, ikisi de yoksa Diğer. Her renk her katta ve lejantta aynıdır; dolgu mahalin çizgilerinin altındadır ve paftada da basılır. Aynı şema yeniden seçilince plan kapanır. Projenin ayarıdır (cad.settings.set).",
+      "aliases": [
+        "RENKPLANI",
+        "RENKPLANIKULLANIM",
+        "MAHALRENK",
+        "MAHALRENKLERI",
+        "COLORFILL"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.colorPlan.unit",
+      "title": "Renk planı: Bağımsız bölüm",
+      "short": "Bağımsız bölüm",
+      "icon": "colorPlanUnit",
+      "description": "Planın mahallerini programdaki bağımsız bölümlerine göre renkle doldurur: her bölüm programdaki sırasıyla bir renk, eklenti kendi bölümünün rengi; ortak alanlar bir, dış alanlar bir renk; bölüme atanmamış mahal dolgusuz. Aynı şema yeniden seçilince plan kapanır. Projenin ayarıdır (cad.settings.set).",
+      "aliases": [
+        "RENKPLANIBOLUM",
+        "BAGIMSIZBOLUMRENK",
+        "BAĞIMSIZBÖLÜMRENK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.colorLegend",
+      "title": "Renk planı lejandı",
+      "short": "Lejant",
+      "icon": "colorLegend",
+      "description": "Renk planının etkin kattaki lejandını tıklanan yere çizer: başlık (şema ve kat), her renk için dolgulu örnek, mahal sayısı ve alanı, toplam. Lejant katmanına (MM-XXXX-LEJANT) tek geri alma adımında; yeniden çizilince eskisinin yerini alır. Renk planı kapalıyken bunu söyler.",
+      "aliases": [
+        "RENKLEJANDI",
+        "RENKPLANILEJANDI"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -5601,7 +5789,7 @@
       "id": "tool.sectionDraw",
       "title": "Kesit çıkar",
       "icon": "sectionDraw",
-      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır: işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, ±0,00'da zemin, A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
+      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır: işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, zemin (vaziyetin tabii ve tesviye zemini kesit çizgisi boyunca, Arazi zemini ile; yoksa ±0,00'da düz), A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, rampa; vaziyette yoksa tabii zemin) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
       "aliases": ["KESITCIKAR", "KESİTÇIKAR", "BIMSECTION"],
       "shortcuts": [],
       "category": "Mimari",
@@ -5656,6 +5844,9 @@
     "rail": "<rect x=\"2.5\" y=\"8.5\" width=\"15\" height=\"3\"/><path d=\"M6 11.5v4M14 11.5v4\" stroke-width=\"1\"/>",
     "footingPad": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"6.5\" y=\"6.5\" width=\"7\" height=\"7\"/><path d=\"M6.5 6.5l7 7M13.5 6.5l-7 7\" stroke-width=\"0.9\"/>",
     "footingStrip": "<path d=\"M7 18V7h11M10.5 18v-7.5H18\"/><path d=\"M3 18V3h15M14.5 18v-3.5H18\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/>",
+    "raft": "<rect x=\"2\" y=\"3\" width=\"16\" height=\"14\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"5.5\" y=\"6.5\" width=\"9\" height=\"7\"/><path d=\"M5.5 10h9M10 6.5v7\" stroke-width=\"0.9\"/>",
+    "moulding": "<path d=\"M5.5 18V2.5h5V18\"/><path d=\"M10.5 7.5h4.5v3.5h-4.5\"/><path d=\"m6.6 5.4 2.8-2.8m-2.8 7.6 2.8-2.8m-2.8 7.6 2.8-2.8\" stroke-width=\"0.9\"/>",
+    "coping": "<path d=\"M7 18V7.5h6V18\"/><path d=\"M4.5 7.5h11V4.5h-11z\"/><path d=\"M4.5 7.5v1.2M15.5 7.5v1.2\" stroke-width=\"1\"/><path d=\"m8.1 11.4 3.8-3.8m-3.8 8.6 3.8-3.8\" stroke-width=\"0.9\"/>",
     "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",
     "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",
@@ -5953,6 +6144,14 @@
     "parkingTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 14.5v-9h3.5a2.5 2.5 0 0 1 0 5H7\"/>",
     "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
+    "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sunShadow": "<circle cx=\"4.5\" cy=\"4.5\" r=\"2\"/><path d=\"M4.5 1v.8M4.5 7.2V8M1 4.5h.8M7.2 4.5H8\" stroke-width=\"1\"/><path d=\"M1.5 16.5h17\"/><rect x=\"7.5\" y=\"8.5\" width=\"3.5\" height=\"8\"/><path d=\"M11 8.5 18 16.5H11z\" fill=\"currentColor\" fill-opacity=\".4\" stroke=\"none\"/>",
+    "mass": "<path d=\"M4 6.5 10 3.5l6 3-6 3z\" fill=\"currentColor\" fill-opacity=\".25\"/><path d=\"M4 6.5v8l6 3 6-3v-8M10 9.5v8\"/>",
+    "groundLevel": "<circle cx=\"5\" cy=\"10\" r=\"2.2\"/><path d=\"M1.5 10h7M5 6.5v7\" stroke-width=\"1\"/><path d=\"M10.5 7.5h7M10.5 12.5h7\"/>",
+    "colorPlanOff": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1\"/><path d=\"M3.5 15.5 16.5 4.5\" stroke-width=\"1\"/>",
+    "colorPlanUsage": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"6.5\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"10\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13M2.5 10h7.5\" stroke-width=\"1\"/>",
+    "colorPlanUnit": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1.4\"/><path d=\"M2.5 10h7.5M10 8h7.5\" stroke-width=\"1\"/>",
+    "colorLegend": "<rect x=\"2.5\" y=\"3\" width=\"6\" height=\"4\" fill=\"currentColor\" fill-opacity=\".45\"/><rect x=\"2.5\" y=\"8\" width=\"6\" height=\"4\" fill=\"currentColor\" fill-opacity=\".2\"/><rect x=\"2.5\" y=\"13\" width=\"6\" height=\"4\"/><path d=\"M11 5h6.5M11 10h6.5M11 15h6.5\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "walkRoute": "<circle cx=\"3.8\" cy=\"15.8\" r=\"1.8\"/><circle cx=\"16.2\" cy=\"4.2\" r=\"1.8\"/><path d=\"M5.6 15.8h5.5a2 2 0 0 0 2-2V6.2a2 2 0 0 1 2-2\"/>",
     "slabEdgeBind": "<path d=\"M2 9.5l7.5 4.2 8.5-5-7.5-4.2L2 9.5v3.8l7.5 4.2 8.5-5V8.7M9.5 13.7v3.8\"/><path d=\"M5 5.2l5.5-3.2 4.9 2.7\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.1\"/>",

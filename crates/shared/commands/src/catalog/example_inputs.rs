@@ -224,6 +224,9 @@ pub(super) fn parsed(id: &str, input: &serde_json::Value) -> serde_json::Result<
         crate::CAD_RAILINGS_CREATE => {
             serde_json::from_value::<crate::RailingsCreate>(input.clone()).map(|_| ())
         }
+        crate::CAD_MASSES_CREATE => {
+            serde_json::from_value::<crate::MassesCreate>(input.clone()).map(|_| ())
+        }
         crate::CAD_ARCH_EDIT => {
             serde_json::from_value::<crate::ArchEdit>(input.clone()).map(|_| ())
         }

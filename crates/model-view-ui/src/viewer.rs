@@ -79,6 +79,8 @@ pub enum Message {
     /// The spatial zones on or off (docs/adr/8123).
     Zones,
     SeeThrough,
+    /// Aksonometri: parallel lines, or the perspective again (docs/adr/8175 §3.1).
+    Axonometric,
     Cut(Cut),
     /// A section box about the chosen object.
     Boxed,
@@ -168,6 +170,13 @@ pub struct Viewer {
     /// is to be fitted again to it (docs/adr/8119): a narrow scene sees less across than up and down.
     aspect: f64,
     refit: bool,
+    /// Aksonometri (docs/adr/8175 §3.1): the camera's lines parallel; off: a perspective.
+    pub axonometric: bool,
+    /// Towards the sun in the model's space (docs/adr/8177 §4): the light, and the faces cast its shadows; none: the
+    /// light over the viewer's shoulder. The host sets it from the place, the day and the hour.
+    pub sun: Option<[f64; 3]>,
+    /// The scene's size as it last drew, logical pixels (0: not drawn yet): a picture of it is made at its shape.
+    pub(crate) size: (f32, f32),
     pub seen: Arc<Mutex<Seen>>,
     pub(crate) pending: Arc<AtomicBool>,
 }
@@ -209,6 +218,9 @@ impl Viewer {
             measuring: Measuring::default(),
             aspect: 0.0,
             refit: false,
+            axonometric: false,
+            sun: None,
+            size: (0.0, 0.0),
             seen: Arc::default(),
             pending: Arc::default(),
         }
@@ -324,7 +336,23 @@ impl Viewer {
 
     /// The camera in the shown space (nothing exaggerated: a building is seen as it is).
     pub fn camera(&self) -> Camera {
-        self.orbit.camera(&Exaggeration::NONE)
+        if self.axonometric {
+            self.orbit.axonometric(&Exaggeration::NONE, self.reach())
+        } else {
+            self.orbit.camera(&Exaggeration::NONE)
+        }
+    }
+
+    /// The model's farthest point from the camera's target (its box's farthest corner): how far behind the target an
+    /// axonometric's eye stays clear of it.
+    fn reach(&self) -> f64 {
+        let b = self.scene.bounds();
+        if b.is_empty() {
+            return self.orbit.distance;
+        }
+        let t = self.orbit.target;
+        let far = |i: usize| (t[i] - b.min[i]).abs().max((t[i] - b.max[i]).abs());
+        (far(0).powi(2) + far(1).powi(2) + far(2).powi(2)).sqrt()
     }
 
     /// The parts' styles: everything see-through when asked, the chosen and the found standing out.
@@ -432,6 +460,7 @@ impl Viewer {
                 self.changed();
             }
             Message::SeeThrough => self.see_through = !self.see_through,
+            Message::Axonometric => self.axonometric = !self.axonometric,
             Message::Cut(cut) => {
                 let (lo, hi) = self.span(cut)?;
                 self.facing = false;
@@ -564,6 +593,7 @@ impl Viewer {
             Gesture::Size(width, height) => {
                 if width > 0.0 && height > 0.0 {
                     self.aspect = f64::from(width) / f64::from(height);
+                    self.size = (width, height);
                 }
                 if std::mem::take(&mut self.refit) {
                     self.look(self.orbit.preset().unwrap_or(0));
@@ -958,5 +988,29 @@ mod tests {
         assert!(v.caps().is_none());
         assert!(Arc::ptr_eq(v.scene(), &scene));
         assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
+    }
+
+    #[test]
+    fn aksonometri_draws_with_parallel_lines_still_picks_and_its_picture_is_the_window_s() {
+        use crate::scene::Quality;
+        use kentos_scene3d::Projection;
+        let mut v = loaded();
+        assert!(v.picture(Quality::High).is_none(), "not drawn yet: no size");
+        v.update(Message::Gesture(Gesture::Size(800.0, 600.0)));
+        assert!(matches!(v.camera().projection, Projection::Perspective { .. }));
+        assert!(v.picture_name().starts_with("3B görünüm, perspektif, "));
+        v.update(Message::Axonometric);
+        assert!(matches!(v.camera().projection, Projection::Orthographic { .. }));
+        assert_eq!(v.picture_name(), format!("3B görünüm, aksonometri, {}", v.orbit.seen_from()));
+        // A click on the second wall's top still chooses it: the ray goes along the view, not from the eye.
+        assert_eq!(click_at(&mut v, [3.5, 0.5, 1.0]), Some(Out::Chosen(Some((3, "duvar-2".into())))));
+        let (picture, size) = v.picture(Quality::High).expect("drawn");
+        assert_eq!(size, (800.0, 600.0));
+        assert!(picture.marks.is_empty() && picture.handles.is_empty() && picture.marked.is_none());
+        assert!(matches!(picture.camera.projection, Projection::Orthographic { .. }));
+        v.update(Message::Cut(Cut::Level));
+        assert!(v.picture_name().ends_with(", kesit"), "{}", v.picture_name());
+        v.update(Message::Axonometric);
+        assert!(matches!(v.camera().projection, Projection::Perspective { .. }));
     }
 }

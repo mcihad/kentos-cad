@@ -59,6 +59,8 @@ fn draw_cut(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[&Conte
 thread_local! {
     /// The planes the next draw is cut by.
     static CLIP: std::cell::RefCell<Vec<[f64; 4]>> = const { std::cell::RefCell::new(Vec::new()) };
+    /// The box whose faces cast the sun's shadows in the next draw (docs/adr/8177 §4).
+    static SHADOWS: std::cell::RefCell<Option<[[f64; 3]; 2]>> = const { std::cell::RefCell::new(None) };
 }
 
 /// As `draw`, with the parts' styles, the light and its ambient share.
@@ -97,9 +99,11 @@ fn draw_lit(
         sky: 0.0,
         fill: 0.0,
         clip: &clip,
+        shadows: SHADOWS.with(|s| *s.borrow()),
     };
     let stats = r.prepare(&gpu.device, &gpu.queue, &frame);
     let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    r.render_shadows(&mut encoder);
     {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
@@ -294,6 +298,21 @@ fn draw_offscreen(
     size: (u32, u32),
     clip: &[[f64; 4]],
 ) -> Vec<u8> {
+    draw_offscreen_lit(gpu, r, camera, draws, styles, size, clip, ([0.0, 0.0, 1.0], 1.0, None))
+}
+
+/// As `draw_offscreen`, under a light (towards it), its ambient share and the box whose faces cast its shadows.
+#[allow(clippy::too_many_arguments)]
+fn draw_offscreen_lit(
+    gpu: &Gpu,
+    r: &mut Scene3dRenderer,
+    camera: &Camera,
+    draws: &[&Content],
+    styles: &[Style],
+    size: (u32, u32),
+    clip: &[[f64; 4]],
+    look: ([f64; 3], f32, Option<[[f64; 3]; 2]>),
+) -> Vec<u8> {
     let (width, height) = size;
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("scene3d output"),
@@ -313,11 +332,12 @@ fn draw_offscreen(
         viewport: Viewport { width: f64::from(width), height: f64::from(height) },
         draws,
         styles,
-        light: [0.0, 0.0, 1.0],
-        ambient: 1.0,
+        light: look.0,
+        ambient: look.1,
         sky: 0.0,
         fill: 0.0,
         clip,
+        shadows: look.2,
     };
     r.prepare(&gpu.device, &gpu.queue, &frame);
     r.place(&gpu.queue, [0.0, 0.0, 1.0, 1.0]);
@@ -542,4 +562,50 @@ pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
     // The cap's square, x 1 to 1.5 (pixels 160 to 176), y −0.5 to 0 (rows 128 to 144): east of the plane, drawn.
     let dark = (0.2f64 * 255.0).round() as u8;
     assert!(near(value(&px, 168, 136), dark), "a cap's part is not cut ({})", value(&px, 168, 136));
+}
+
+/// The sun's shadows (docs/adr/8177 §4): a 1 × 1 m column 3 m high on a 10 m square of ground, the sun in the south 45°
+/// up, seen from above. The ground north of the column lies in its shadow (the ambient share alone), south of it and
+/// north-east of it in the sun; with no shadows asked the north is as lit as the south. A section keeping the column's
+/// lowest metre shortens the shadow to a metre: what it takes away casts none. A sun 12° up leaves the lit ground even.
+pub(crate) fn the_sun_casts_shadows_and_a_section_takes_its_caster_away(gpu: &mut Gpu) {
+    let size = (256u32, 256u32);
+    let vp = Viewport { width: 256.0, height: 256.0 };
+    let styles = [Style::of([0.6, 0.6, 0.6, 1.0]), Style::of([0.8, 0.8, 0.8, 1.0])];
+    let c = contents(&[(0, block([0.0, 0.0, 0.0], [1.0, 1.0, 3.0])), (1, block([-4.5, -4.5, -0.2], [10.0, 10.0, 0.2]))], 80);
+    let draws: Vec<&Content> = c.iter().collect();
+    let camera = Camera::orbit([0.5, 0.5, 0.0], 270.0, 80.0, 16.0, Projection::Perspective { fov_y: 45f64.to_radians(), near: 0.05 });
+    let at = |p: [f64; 3]| {
+        let (x, y, _) = camera.project(p, &vp).expect("in front");
+        (x as usize, y as usize)
+    };
+    let value = |px: &[u8], (x, y): (usize, usize)| px[(y * 256 + x) * 4];
+    let s = 0.5_f64.sqrt();
+    let sun = [0.0, -s, s];
+    let ground = Some([[-4.5, -4.5, -0.2], [5.5, 5.5, 3.0]]);
+    let mut r = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
+    let lit = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (sun, 0.3, ground));
+    keep(&lit, size, "gunes-golgesi");
+    let (north, south, north_east) = (at([0.5, 2.5, 0.0]), at([0.5, -2.5, 0.0]), at([3.5, 2.5, 0.0]));
+    let (n, so, ne) = (value(&lit, north), value(&lit, south), value(&lit, north_east));
+    // Lit: 0.8 × (0.3 + 0.7 × 0.707) = 0.64; in shadow: 0.8 × 0.3 = 0.24.
+    assert!(so.abs_diff(163) <= 3 && ne.abs_diff(so) <= 2, "the sun on the ground: south {so}, north-east {ne}");
+    assert!(n.abs_diff(61) <= 3, "the column's shadow on the north: {n}");
+    let plain = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (sun, 0.3, None));
+    assert_eq!(value(&plain, north).abs_diff(value(&plain, south)) <= 1, true, "no shadows asked");
+    // Kept: z ≤ 1. The shadow runs a metre north of the column: lit two metres north, shaded a half.
+    let cut = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[[0.0, 0.0, -1.0, 1.0]], (sun, 0.3, ground));
+    keep(&cut, size, "gunes-golgesi-kesit");
+    let (two, half) = (value(&cut, north), value(&cut, at([0.5, 1.5, 0.0])));
+    assert!(two.abs_diff(so) <= 3 && half.abs_diff(61) <= 3, "cut: two metres north {two}, a half metre {half}");
+    // A low sun, 12° up: the lit ground south of the column is even, no grain of its own shadow at the grazing angle.
+    let low = [0.0, -12f64.to_radians().cos(), 12f64.to_radians().sin()];
+    let grazed = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (low, 0.3, ground));
+    keep(&grazed, size, "gunes-golgesi-alcak");
+    let patch: Vec<u8> = (0..=12)
+        .flat_map(|i| (0..=6).map(move |j| [-3.0 + 0.5 * f64::from(i), -4.0 + 0.5 * f64::from(j), 0.0]))
+        .map(|p| value(&grazed, at(p)))
+        .collect();
+    let (lo, hi) = (patch.iter().min().copied().unwrap_or(0), patch.iter().max().copied().unwrap_or(0));
+    assert!(hi - lo <= 2, "the lit ground even under a low sun: {lo}…{hi}");
 }

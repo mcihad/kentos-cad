@@ -523,6 +523,7 @@ fn the_3d_scene_on_a_real_gpu() {
     scene3d::the_3d_scene_draws_precisely(&mut gpu);
     scene3d::the_qualities_draw_edges_smooth_outlines_and_occlusion(&mut gpu);
     scene3d::a_cut_ends_at_its_samples_and_a_cap_is_not_cut(&mut gpu);
+    scene3d::the_sun_casts_shadows_and_a_section_takes_its_caster_away(&mut gpu);
 }
 
 #[test]

@@ -294,6 +294,10 @@ mod surface_analysis_window;
 pub mod scene3d_window;
 #[path = "shell/scene3d_building.rs"]
 pub mod scene3d_building;
+#[path = "shell/scene3d_sheet.rs"]
+pub mod scene3d_sheet;
+#[path = "shell/scene3d_sun.rs"]
+pub mod scene3d_sun;
 #[path = "shell/ifc_viewer.rs"]
 pub mod ifc_viewer;
 #[path = "shell/ifc_facts.rs"]

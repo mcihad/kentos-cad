@@ -177,9 +177,13 @@ cloud-upload
 cogo-check
 cogo-update
 color
+color-legend
 color-mode-color
 color-mode-gray
 color-mode-mono
+color-plan-off
+color-plan-unit
+color-plan-usage
 color-relief
 column
 columns
@@ -213,6 +217,7 @@ contours
 conversion
 coordinate-label
 coordinate-vertices
+coping
 copy
 copy-base
 copy-to-layer
@@ -414,6 +419,7 @@ grid
 grid-number
 grid-system
 grip
+ground-level
 guardrail-editor
 hatch
 hatch-align
@@ -677,6 +683,7 @@ map-crs
 maplibre-export
 maplibre-import
 mark-clear
+mass
 match-properties
 material-legend
 materials
@@ -703,6 +710,7 @@ module-update
 moon
 more
 mosaic
+moulding
 move
 move-down
 move-up
@@ -845,6 +853,7 @@ qml-export
 qml-import
 quality-form
 quantities
+raft
 rail
 railing
 ramp
@@ -1054,6 +1063,7 @@ shortest-line
 sign-in
 sign-out
 simplify
+site-ground
 site-parcel
 slab
 slab-edge-bind
@@ -1142,6 +1152,7 @@ subdivide-parts
 subtypes
 success
 sun
+sun-shadow
 superelevation-editor
 superelevation-new
 surface-add-point

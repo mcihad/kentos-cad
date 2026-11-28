@@ -166,6 +166,7 @@ pub(super) fn building_first(e: &Entity, sections: &mut Vec<Section>) {
             | Entity::Opening(_)
             | Entity::Space(_)
             | Entity::Slab(_)
+            | Entity::Mass(_)
             | Entity::Stair(_)
             | Entity::Ramp(_)
             | Entity::Beam(_)
@@ -500,8 +501,9 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         // A wall (docs/adr/0339 §6): its width, justification, offset, style, ends, height, level and phase, each
         // written through `cad.walls.edit`; its length along its path and its body's area.
         Entity::Wall(w) => geo.extend(wall::rows(&kit, w)),
-        // A grid, column, stair or ramp (docs/adr/0343 §5): their rows below.
+        // A grid, column, stair or ramp (docs/adr/0343 §5), a mass (docs/adr/8178): their rows below.
         Entity::Grid(_)
+        | Entity::Mass(_)
         | Entity::Column(_)
         | Entity::Stair(_)
         | Entity::Ramp(_)
