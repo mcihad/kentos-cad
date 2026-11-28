@@ -7,6 +7,9 @@ description: KentOS'ta bir dilimi (plan maddesini, düzeltmeyi, refactor adımı
 
 Bir dilim, sırasıyla aşağıdakiler yapılmadan bitmiş sayılmaz. Koşulmayan adım ve nedeni kullanıcıya söylenir.
 
+Bir düzeltmenin davranışı seçilmeden önce işin kendi ADR'sindeki kural okunur: kabul edilmiş karar çoğu zaman ne
+olması gerektiğini söyler (ADR 9401 §3.5'te ilk yazım ADR 0560'la çeliştiği için yeniden yazıldı).
+
 1. **Biçim.** `cargo fmt --all`. Dosyayı sınırın altında tutmak için satır sıkıştırılmaz; dosya bölünür (ADR 9400 §3).
 2. **Hedefli sınama.** Yalnız dokunulan crate, tek koşu, ağır iş kilidiyle:
    `scripts/dev/svc.sh heavy cargo test -p <crate> <süzgeç> [<süzgeç> …]`. Birden çok süzgeç tek koşuda verilir; tam
@@ -19,6 +22,12 @@ Bir dilim, sırasıyla aşağıdakiler yapılmadan bitmiş sayılmaz. Koşulmaya
    `make catalog`, `python3 scripts/python/sdk.py`, `python3 scripts/ui/ribbon.py`, `python3 scripts/cad/manifest.py`.
    Modül × kanal karar tablosu işin ADR'sine yazılır.
 4. **Bekçiler.** `make guard` yeşil (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim).
+   - Sonuç borudan okunmaz: `make guard | tail` ve `cargo clippy … | grep` hep başarılı döner, kırmızı bekçiyle commit
+     geçer (bu dalda üç kez oldu). `make guard && git commit …` yazılır; çıktı kısaltılacaksa önce dosyaya alınır
+     (`make guard > "$log" 2>&1 || { tail "$log"; exit 1; }`).
+   - Tabandaki bir dosya küçüldüyse taban düşürülür: `python3 scripts/dev/source_size.py --write`.
+   - Yeni sınamanın gerçekten yakaladığı bir kez denenir: koda ya da beklenen değere bilerek bir hata konur, sınamanın
+     kırmızıya döndüğü görülür, hata geri alınır.
 5. **Arayüz değiştiyse resim.** İlgili `screens` sınaması, resim `.run/gui-evidence/` altında; resme yakından bakılır,
    kusur düzeltilir, yeniden çekilir.
 6. **Belgeler.** İşin ADR'si; plan maddesi `[x]` ya da `[~]` (kalanıyla); `docs/kilavuz/00-guncel-karar-ozeti.md`'ye bir
