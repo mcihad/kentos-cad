@@ -298,6 +298,9 @@ impl App {
                     Err(why) => {
                         if let Some(Window::PermitSet(s)) = &mut self.exchange {
                             s.status = why;
+                        } else {
+                            // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                            self.error(why);
                         }
                     }
                     Ok((_, made, notes)) => {

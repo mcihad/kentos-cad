@@ -586,6 +586,9 @@ impl App {
                 Err(why) => {
                     if let Some(Window::AtlasExport(s)) = &mut self.exchange {
                         s.status = Some((true, format!("Atlas yazılamadı. {why}")));
+                    } else {
+                        // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                        self.error(format!("Atlas yazılamadı. {why}"));
                     }
                 }
             },

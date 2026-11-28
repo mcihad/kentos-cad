@@ -34,6 +34,52 @@ pub(super) fn said(app: &App, start: &str) -> bool {
         .any(|l| l.level != kentos_interaction::Level::Command && l.text.starts_with(start))
 }
 
+/// A worker's answer is its own window's (docs/adr/9401 §5): a file still being written when its window was closed and
+/// another opened finishes without closing that other window, and says what it wrote.
+#[test]
+fn a_late_answer_does_not_close_another_window() {
+    let mut app = app_with_drawing();
+    let path = scratch("gec-yanit").join("nesneler.csv");
+    run(&mut app, "file.export.csv");
+    assert!(matches!(app.exchange, Some(Window::CsvExport(_))));
+    // Kaydet: the write starts on a thread of its own; its answer is held back here.
+    let writing = app.update(Message::Exchange(Box::new(Event::Csv(
+        super::csv_exchange::Event::SavePicked(Some(path.clone())),
+    ))));
+    // Meanwhile the window is closed and DXF dışa aktar opened.
+    app.close_exchange();
+    run(&mut app, "file.export.dxf");
+    assert!(matches!(app.exchange, Some(Window::DxfExport(_))));
+    drive(&mut app, writing);
+    assert!(path.exists(), "the file is written");
+    assert!(
+        matches!(app.exchange, Some(Window::DxfExport(_))) && app.dialog == Some(Dialog::Exchange),
+        "the other window stays open"
+    );
+    assert!(
+        said(&app, &format!("{} yazıldı", path.display())),
+        "{}",
+        last_said(&app)
+    );
+}
+
+/// A worker's failure is said when its window is gone (docs/adr/9401 §5): it was written on the window only, and a
+/// write that failed after its window was closed said nothing at all.
+#[test]
+fn a_late_failure_is_said() {
+    let mut app = app_with_drawing();
+    // A folder: no file can be written in its place.
+    let folder = scratch("gec-hata");
+    run(&mut app, "file.export.csv");
+    let writing = app.update(Message::Exchange(Box::new(Event::Csv(
+        super::csv_exchange::Event::SavePicked(Some(folder)),
+    ))));
+    app.close_exchange();
+    drive(&mut app, writing);
+    assert!(app.exchange.is_none());
+    assert!(said(&app, "CSV yazılamadı."), "{}", last_said(&app));
+}
+
 pub(super) fn count(app: &App) -> usize {
     app.document.as_ref().expect("open").model.len()
 }

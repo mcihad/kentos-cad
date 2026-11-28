@@ -97,6 +97,8 @@ pub(crate) struct Window {
     pub marked: BTreeSet<(Tab, usize)>,
     pub author: String,
     pub said: Option<(Kind, String)>,
+    /// The comparison the window waits for: an answer of an earlier one is not its own (docs/adr/9401 §5).
+    run: u64,
 }
 
 impl Default for Window {
@@ -113,6 +115,7 @@ impl Default for Window {
                 .map(|u| u.trim().to_owned())
                 .unwrap_or_default(),
             said: None,
+            run: 0,
         }
     }
 }
@@ -124,7 +127,8 @@ pub enum Event {
     Picked(Side, Option<PathBuf>),
     Tolerance(String),
     Compare,
-    Compared(Box<Outcome>),
+    /// A comparison's answer, with the run that asked.
+    Compared(u64, Box<Outcome>),
     Tab(Tab),
     Choose(usize),
     Mark(usize, bool),
@@ -385,6 +389,10 @@ impl IfcCompareWindowApp for App {
             newer: w.newer.trim().to_owned(),
             tolerance,
         };
+        // A number of its own, in this window or one opened after it.
+        static RUNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let run = RUNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+        w.run = run;
         w.outcome = Some(Outcome::Running);
         w.chosen = None;
         w.marked.clear();
@@ -405,7 +413,7 @@ impl IfcCompareWindowApp for App {
             ));
             return Task::none();
         }
-        Task::perform(wait, |answer| {
+        Task::perform(wait, move |answer| {
             let outcome = match answer {
                 Ok(CommandResult::Completed { output, .. }) => Outcome::Done(Arc::new(output)),
                 Ok(
@@ -415,7 +423,7 @@ impl IfcCompareWindowApp for App {
                 ) => Outcome::Refused(error.message),
                 Ok(_) | Err(_) => Outcome::Refused("Karşılaştırma yarıda kaldı.".into()),
             };
-            msg(Event::Compared(Box::new(outcome)))
+            msg(Event::Compared(run, Box::new(outcome)))
         })
     }
 
@@ -504,7 +512,9 @@ impl IfcCompareWindowApp for App {
             Event::Picked(Side::Newer, Some(p)) => w.newer = p.display().to_string(),
             Event::Tolerance(t) => w.tolerance = t,
             Event::Compare => return self.ifc_compare_start(),
-            Event::Compared(outcome) => {
+            // An earlier run's answer: Karşılaştır was pressed again, the window waits for that one.
+            Event::Compared(run, _) if run != w.run => {}
+            Event::Compared(_, outcome) => {
                 if let Outcome::Done(c) = outcome.as_ref() {
                     w.tab = if !c.changed.is_empty() {
                         Tab::Changed

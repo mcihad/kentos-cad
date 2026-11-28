@@ -854,6 +854,9 @@ impl App {
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                         s.status = Some((true, error.message));
+                    } else {
+                        // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                        self.error(error.message);
                     }
                     return Task::none();
                 }
@@ -959,6 +962,9 @@ impl App {
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                         s.status = Some((true, error));
+                    } else {
+                        // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                        self.error(error);
                     }
                 }
                 Ok(applied) => {
@@ -980,6 +986,9 @@ impl App {
             Err(error) => {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
+                } else {
+                    // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                    self.error(error);
                 }
                 Task::none()
             }

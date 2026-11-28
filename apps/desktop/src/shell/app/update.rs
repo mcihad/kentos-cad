@@ -184,6 +184,10 @@ impl App {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        // An exchange window's worker answers the window that asked (exchange/mod.rs).
+        if let Message::ExchangeReply { run, reply } = message {
+            return self.exchange_reply(run, *reply);
+        }
         // A lock that changes with the pointer still shows at once (locks.rs);
         // the drawing area's own events move the pointer themselves.
         #[cfg(target_os = "macos")]
@@ -670,7 +674,9 @@ impl App {
             Message::CursorValueSubmit(token) => return self.value_field_submit(token),
             Message::InputFocusLost => self.input_focus_lost(),
             Message::CapturedEscape => unreachable!("checked before dispatch"),
-            Message::ScopedReply { .. } => unreachable!("checked before dispatch"),
+            Message::ScopedReply { .. } | Message::ExchangeReply { .. } => {
+                unreachable!("checked before dispatch")
+            }
             Message::Modifiers(modifiers) => {
                 let shift = self.modifiers.shift() != modifiers.shift();
                 self.modifiers = modifiers;
@@ -1007,7 +1013,10 @@ impl App {
             }
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
-            Message::Exchange(event) => return self.exchange_event(*event),
+            Message::Exchange(event) => {
+                let task = self.exchange_event(*event);
+                return self.exchange_scoped(task);
+            }
             Message::Project(event) => return self.project_event(*event),
             Message::AppMenu(event) => return self.app_menu_event(event),
             Message::Start(event) => return self.start_event(event),

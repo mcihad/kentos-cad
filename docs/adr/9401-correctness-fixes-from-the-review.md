@@ -241,6 +241,42 @@ söylüyordu. Kılavuz stilleri yalnız `Failed` cevabına bakıyordu: çakışm
 - `leader_tools::styles_tests::a_refused_style_leaves_the_others_unwritten`;
 - uygulama katmanında `changeset::tests::a_refused_step_s_error_is_given_back_as_its_own`.
 
+### 5. Arka plan yanıtı soran pencerenindir (BK-12)
+
+**Bulgu.** Plan beş aktarımı sayıyordu; kod bunun ortak düzenek olduğunu gösterdi. Aktarım pencerelerinin işi arayüz
+iş parçacığının dışında tek yardımcıyla koşar (`exchange::off_thread`, 30'dan çok çağrı). Yanıtın işleyicisi o anda
+hangi pencere açıksa ona dokunuyordu:
+
+- **Başarı:** `close_exchange()` koşulsuz çağrılıyordu. CSV yazılırken penceresi kapatılıp DXF dışa aktar açılınca,
+  CSV'nin yanıtı DXF penceresini kapatıyordu (sınamayla gösterildi).
+- **Hata:** 17 kol hatayı yalnız pencereye yazıyordu. Pencere kapatılmışsa hiçbir şey söylenmiyordu: yazılamayan dosya
+  sessiz kalıyordu.
+- **IFC revizyonlarını karşılaştır:** yanıt koşu kimliği taşımıyordu. Karşılaştır'a yeniden basılınca yavaş biten eski
+  koşunun yanıtı yenisinin üstüne yazıyordu.
+
+**Karar.**
+
+- **Pencerenin numarası.** `exchange::Runs` (`App.exchange_runs`): pencere açılınca ve kapanınca yeni bir numara.
+- **Yanıt numarayla döner.** Bir aktarım olayının başlattığı işin verdiği her ileti `Message::ExchangeReply { run, … }`
+  olarak gelir (`exchange_scoped`; `update`'teki tek dağıtım noktasında).
+- **Geç yanıt hiçbir pencereye dokunmaz.** Numara açık pencereninkiyse yanıt olduğu gibi işlenir. Değilse (pencere
+  kapandı ya da başkası açıldı) şimdiki pencere, diyalog ve numara kenara alınır, yanıt işlenir, sonra yerlerine konur
+  (`exchange_reply`). Yanıtın söylediği ileti günlüğüne düşer: geç biten yazma yine “… yazıldı” der.
+- **Hata sessiz kalmaz.** 17 kol hatayı soran pencere açıksa onda gösterir, değilse ileti günlüğüne yazar.
+- **IFC karşılaştırması.** Her koşu süreç genelinde tek bir numara alır; başka koşunun yanıtı yok sayılır.
+- **Seçilmeyenler.**
+  - Geç yanıtı atmak (`ScopedReply` başka çizimin yanıtını atar): aktarımın sonucu hâlâ kullanıcının haberidir.
+  - Yazma sürerken pencereyi kapattırmamak: uzun içe aktarma pencere kapatılarak durdurulur.
+- Pafta yayını kendi kimliğini zaten taşıyordu; dokunulmadı.
+
+**Sınama.**
+
+- `exchange::tests::a_late_answer_does_not_close_another_window`: kenara alma kapatılınca kırmızı (denendi).
+- `exchange::tests::a_late_failure_is_said`: düzeltmeden önce kırmızı.
+- `ifc_revisions_tests::an_earlier_comparison_s_answer_does_not_write_over_a_newer_one`: düzeltmeden önce kırmızı.
+- İleti akışı bütün aktarım pencerelerinde değiştiği için masaüstünün aktarım, iz, kaynak ve nokta sınamaları (488) ve
+  programlar arası iz sınaması koşuldu.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -256,6 +292,8 @@ söylüyordu. Kılavuz stilleri yalnız `Failed` cevabına bakıyordu: çakışm
 | Birleşik görünümler'in Kaydet'i (BK-11) | yok: veri katmanı türü yok | var | yok: profilinde yok | var | var: `cad.joins.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.joins.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Olay bağları'nın Kaydet'i (BK-11) | yok: profilinde yok | var | var | var | var: `cad.linearref.define`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.linearref.define` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Kılavuz stilleri'nin Kaydet'i (BK-11) | var | var | var | yok: profilinde yok (CAD açıklaması) | var: `cad.styles.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.styles.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Aktarım pencerelerinin arka plan yanıtı (BK-12) | var | var | var | var | yok: pencere yok, komut cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
+| IFC revizyonlarını karşılaştır'ın yanıtı (BK-12) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.ifc.compare` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal

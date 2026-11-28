@@ -466,6 +466,9 @@ impl App {
                 if let Some(Window::CoordImport(s)) = &mut self.exchange {
                     s.importing = false;
                     s.status = Some((true, format!("Noktalar okunamadı: {e}")));
+                } else {
+                    // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                    self.error(format!("Noktalar okunamadı: {e}"));
                 }
                 return Task::none();
             }
@@ -498,6 +501,9 @@ impl App {
                 if let Some(Window::CoordImport(s)) = &mut self.exchange {
                     s.importing = false;
                     s.status = Some((true, error));
+                } else {
+                    // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                    self.error(error);
                 }
                 Task::none()
             }

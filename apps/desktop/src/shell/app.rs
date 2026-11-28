@@ -633,6 +633,11 @@ pub enum Message {
         run: Option<u64>,
         reply: Box<Message>,
     },
+    /// An exchange window's worker answers the window that asked (exchange/mod.rs `Runs`, docs/adr/9401 §5).
+    ExchangeReply {
+        run: u64,
+        reply: Box<Message>,
+    },
     /// Shift, Ctrl, Alt or the logo key changed (Shift turns ortho over for a click).
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
@@ -1142,6 +1147,8 @@ pub struct App {
     pub cloud: CloudState,
     /// The open file exchange window (exchange/).
     pub exchange: Option<crate::exchange::Window>,
+    /// Which exchange window is the open one: a worker's answer names the window that asked.
+    pub exchange_runs: crate::exchange::Runs,
     /// The open project window (project/).
     pub project: Option<crate::project::Window>,
     /// The application menu, while it is open (app_menu.rs).

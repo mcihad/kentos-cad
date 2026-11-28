@@ -456,6 +456,9 @@ impl App {
             Err(error) => {
                 if let Some(Window::PhotoImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
+                } else {
+                    // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                    self.error(error);
                 }
             }
             Ok(applied) => {

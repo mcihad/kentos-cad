@@ -346,6 +346,33 @@ pub(crate) fn open_gpkg(path: PathBuf, table: Option<String>, bind: bool) -> Mes
     message(Event::Gpkg(gpkg::Event::Table(path, table, bind)))
 }
 
+/// Which exchange window is the open one (docs/adr/9401 §5). A window's worker answers later, when the window may be
+/// closed or another opened: its answer carries the window's number (`App::exchange_scoped`) and is that window's only
+/// while the number is still the open one's (`App::exchange_reply`).
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Runs {
+    now: u64,
+    given: u64,
+}
+
+impl Runs {
+    /// The open window's number.
+    pub fn now(&self) -> u64 {
+        self.now
+    }
+
+    /// A number no window has had: a window opened, or closed with its work still out.
+    pub fn fresh(&mut self) {
+        self.given += 1;
+        self.now = self.given;
+    }
+
+    /// Back to a window that was set aside.
+    fn back(&mut self, now: u64) {
+        self.now = now;
+    }
+}
+
 /// Runs `work` on a thread of its own and brings its answer back as a message.
 fn off_thread<T: Send + 'static>(
     work: impl FnOnce() -> T + Send + 'static,
@@ -473,8 +500,41 @@ impl App {
     }
 
     fn open_window(&mut self, window: Window) {
+        self.exchange_runs.fresh();
         self.exchange = Some(window);
         self.dialog = Some(Dialog::Exchange);
+    }
+
+    /// What a window's event started comes back as that window's (docs/adr/9401 §5): every message the task yields
+    /// carries the number of the window open now.
+    pub(crate) fn exchange_scoped(&self, task: Task<Message>) -> Task<Message> {
+        let run = self.exchange_runs.now();
+        task.map(move |reply| Message::ExchangeReply {
+            run,
+            reply: Box::new(reply),
+        })
+    }
+
+    /// An answer for the exchange window numbered `run`. While that window is the open one the answer is handled as
+    /// it comes. A worker (a file written off the interface thread) may answer after its window was closed or another
+    /// was opened: then the windows of now are set aside while it is handled, so it closes and marks none of them;
+    /// what it says goes to the message log.
+    pub(crate) fn exchange_reply(&mut self, run: u64, reply: Message) -> Task<Message> {
+        if run == self.exchange_runs.now() {
+            return self.update(reply);
+        }
+        let aside = (
+            self.exchange.take(),
+            self.dialog.take(),
+            self.exchange_runs.now(),
+        );
+        // A number of its own: what the late answer starts is not the open window's either.
+        self.exchange_runs.fresh();
+        let task = self.update(reply);
+        self.exchange = aside.0;
+        self.dialog = aside.1;
+        self.exchange_runs.back(aside.2);
+        task
     }
 
     /// Noktalar's Dışa aktar (docs/adr/0153 §5): the coordinate list window
@@ -666,6 +726,8 @@ impl App {
         if self.sheet_publish_stop_for_close() {
             return;
         }
+        // Work the window still waits for is no longer the open window's.
+        self.exchange_runs.fresh();
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }

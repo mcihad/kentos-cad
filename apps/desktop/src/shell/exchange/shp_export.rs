@@ -246,6 +246,9 @@ impl App {
                 Err(why) => {
                     if let Some(Window::ShpExport(s)) = &mut self.exchange {
                         s.status = Some((true, format!("Shapefile yazılamadı. {why}")));
+                    } else {
+                        // The window that asked is gone: a failure is never silent (docs/adr/9401 §5).
+                        self.error(format!("Shapefile yazılamadı. {why}"));
                     }
                     Task::none()
                 }

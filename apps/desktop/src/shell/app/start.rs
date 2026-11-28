@@ -276,6 +276,7 @@ impl App {
             recovery,
             cloud: CloudState::default(),
             exchange: None,
+            exchange_runs: Default::default(),
             project: None,
             app_menu: None,
             recent: crate::recent::RecentFiles::memory(),

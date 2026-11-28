@@ -77,6 +77,44 @@ fn compared(app: &mut App) {
     send(app, Event::Compare);
 }
 
+/// A comparison's answer is its own run's (docs/adr/9401 §5): the answer of a run started before Karşılaştır was
+/// pressed again does not write over the newer run's.
+#[test]
+fn an_earlier_comparison_s_answer_does_not_write_over_a_newer_one() {
+    let mut app = opened();
+    let _ = app.update(Message::Run("arch.ifcCompare"));
+    send(
+        &mut app,
+        Event::Path(Side::Older, fixture("arch/v1/ifc/kesit-binasi-tam.ifc")),
+    );
+    send(
+        &mut app,
+        Event::Path(Side::Newer, fixture("ifc/v1/revizyon/kesit-binasi-r2.ifc")),
+    );
+    // The first run's answer is held back.
+    let earlier = app.update(Message::from(crate::arch::Event::IfcCompare(
+        Event::Compare,
+    )));
+    // Another file, compared again: this run is refused (there is no such file).
+    send(
+        &mut app,
+        Event::Path(Side::Newer, "boyle-bir-dosya-yok.ifc".into()),
+    );
+    send(&mut app, Event::Compare);
+    let outcome = |app: &App| {
+        let w = app.modules.arch().ifc_compare_window.as_ref();
+        format!("{:?}", w.expect("the window").outcome)
+    };
+    let newer = outcome(&app);
+    assert!(newer.contains("Refused"), "{newer}");
+    drive(&mut app, earlier);
+    assert_eq!(
+        outcome(&app),
+        newer,
+        "the earlier run's answer is not the window's"
+    );
+}
+
 #[test]
 fn the_revisions_are_compared_written_as_issues_and_read_back_to_the_drawing() {
     let mut app = opened();
