@@ -3219,18 +3219,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-dxf-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-formats",
- "kentos-kcad",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-expression"
 version = "0.1.0"
 dependencies = [
@@ -3298,19 +3286,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-formats-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-formats",
- "kentos-geometry-core",
- "kentos-kcad",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-forms"
 version = "0.1.0"
 dependencies = [
@@ -3334,16 +3309,6 @@ dependencies = [
  "unicode-bidi",
  "unicode-script",
  "unicode-segmentation",
-]
-
-[[package]]
-name = "kentos-geometry-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-expression",
- "kentos-geometry-core",
- "kentos-style-core",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -3739,18 +3704,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-ncz-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-formats",
- "kentos-kcad",
- "kentos-ncz",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-plot"
 version = "0.1.0"
 dependencies = [
@@ -3785,10 +3738,6 @@ dependencies = [
  "serde",
  "serde_json",
 ]
-
-[[package]]
-name = "kentos-pointcloud-wasm"
-version = "0.1.0"
 
 [[package]]
 name = "kentos-postgis"
@@ -3909,18 +3858,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-raster-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-formats",
- "kentos-geometry-core",
- "kentos-raster",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-render-scene3d"
 version = "0.1.0"
 dependencies = [
@@ -3999,18 +3936,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-services-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-geometry-core",
- "kentos-services",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-sheet"
 version = "0.1.0"
 dependencies = [
@@ -4048,17 +3973,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kentos-sheet-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-sheet",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "kentos-standards"
 version = "0.1.0"
 dependencies = [
@@ -4093,15 +4007,6 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-style-core",
  "serde_json",
-]
-
-[[package]]
-name = "kentos-svg-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-geometry-core",
- "kentos-svg-core",
- "wasm-bindgen",
 ]
 
 [[package]]

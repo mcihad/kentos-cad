@@ -2,9 +2,8 @@
 // crate depends only in the allowed direction, and no runtime of another
 // platform reaches it, not even through a dependency of a dependency.
 //
-// Each crate is checked on the targets it is built for (the pure libraries
-// for the host and wasm32, the browser bindings for wasm32, the server for
-// the host) with `cargo tree`: the graph as Cargo builds it, features and
+// Each crate is checked on the target it is built for (the host) with
+// `cargo tree`: the graph as Cargo builds it, features and
 // target filters applied, normal and build dependencies (dev-dependencies do
 // not ship). `cargo metadata`'s resolve is not used: it also lists optional
 // dependencies no enabled feature asks for.
@@ -20,7 +19,6 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const cargo = (args) => execFileSync('cargo', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20, stdio: ['ignore', 'pipe', 'pipe'] });
 const HOST = execFileSync('rustc', ['-vV'], { encoding: 'utf8' }).match(/^host: (.+)$/m)[1];
-const WASM = 'wasm32-unknown-unknown';
 
 /**
  * Groups by path: the targets they are built for, the workspace groups they
@@ -35,11 +33,10 @@ const RUNTIMES = ['tokio', 'sqlx*', 'axum*', 'hyper*', 'tower*', 'reqwest'];
 const BROWSER = ['wasm-bindgen*', 'js-sys', 'web-sys'];
 const DESKTOP = ['iced*', 'wgpu*', 'winit', 'naga'];
 const GROUPS = [
-  // The pinned DWG codec is native-only: upstream's wasm clock binds JavaScript.
+  // The pinned DWG codec.
   // It may use only shared contracts/formats; no UI, runtime or browser reaches its native build (ADR 0580).
   { name: 'cad-codec', path: 'crates/native/dwg/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
-  { name: 'shared', path: 'crates/shared/', targets: [HOST, WASM], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
-  { name: 'wasm', path: 'crates/wasm/', targets: [WASM], uses: ['shared'], forbid: [...RUNTIMES, ...DESKTOP, 'pyo3*'] },
+  { name: 'shared', path: 'crates/shared/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native drawing document (docs/adr/0020): innermost native layer, pure like the shared
   // libraries but never built for the browser (the web keeps its TypeScript document). Listed
   // before `native`, whose path contains it. Only the contracts and other shared libraries below it.

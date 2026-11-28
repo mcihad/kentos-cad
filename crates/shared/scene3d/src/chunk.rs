@@ -134,9 +134,7 @@ impl Fragment {
 }
 
 /// Subtrees of at least this many triangles are built on threads of their own, down to this depth.
-#[cfg(not(target_arch = "wasm32"))]
 const PARALLEL_TRIANGLES: usize = 65_536;
-#[cfg(not(target_arch = "wasm32"))]
 const PARALLEL_DEPTH: u32 = 4;
 
 struct Cut<'a> {
@@ -233,9 +231,8 @@ impl Cut<'_> {
         out
     }
 
-    /// The two halves' subtrees, on two threads near the root of a large mesh (the browser has none: one after the
-    /// other there). The result does not depend on which.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// The two halves' subtrees, on two threads near the root of a large mesh. The result does not depend on which
+    /// thread built which.
     fn halves(&self, lower: &mut [Tri], upper: &mut [Tri], depth: u32) -> (Fragment, Fragment) {
         if depth < PARALLEL_DEPTH && lower.len() + upper.len() >= PARALLEL_TRIANGLES {
             std::thread::scope(|s| {
@@ -246,11 +243,6 @@ impl Cut<'_> {
         } else {
             (self.tile(lower, depth + 1), self.tile(upper, depth + 1))
         }
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    fn halves(&self, lower: &mut [Tri], upper: &mut [Tri], depth: u32) -> (Fragment, Fragment) {
-        (self.tile(lower, depth + 1), self.tile(upper, depth + 1))
     }
 
     fn content(&self, tris: &mut [Tri], bounds: Aabb) -> Content {

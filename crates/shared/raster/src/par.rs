@@ -1,10 +1,8 @@
-//! Work split over threads natively, one piece after another in WASM (the
-//! browser's analysis worker is one thread; docs/adr/0231 §11). Results come
-//! back in order, so every target writes the same bytes.
+//! Work split over threads (docs/adr/0231 §11). Results come back in order,
+//! so the bytes written do not depend on how many threads ran.
 
 /// `f` of each item, in order; at most `threads` at once.
 pub fn map<T: Sync, R: Send>(threads: usize, items: &[T], f: &(dyn Fn(&T) -> R + Sync)) -> Vec<R> {
-    #[cfg(not(target_arch = "wasm32"))]
     if threads > 1 && items.len() > 1 {
         let per = items.len().div_ceil(threads.min(items.len()));
         return std::thread::scope(|s| {
@@ -18,7 +16,6 @@ pub fn map<T: Sync, R: Send>(threads: usize, items: &[T], f: &(dyn Fn(&T) -> R +
                 .collect()
         });
     }
-    let _ = threads;
     items.iter().map(f).collect()
 }
 
@@ -31,7 +28,6 @@ pub fn rows<T: Send>(
     f: &(dyn Fn(usize, &mut [T]) + Sync),
 ) {
     let n = out.len().checked_div(row).unwrap_or(0);
-    #[cfg(not(target_arch = "wasm32"))]
     if threads > 1 && n > 1 {
         let per = n.div_ceil(threads.min(n));
         std::thread::scope(|s| {
@@ -41,14 +37,12 @@ pub fn rows<T: Send>(
         });
         return;
     }
-    let _ = (threads, n);
     f(0, out);
 }
 
 /// `f(k, item)` for each item, the threads taking the next item as they
-/// finish one (items of uneven work spread); one after another in WASM.
+/// finish one (items of uneven work spread).
 pub fn each_mut<T: Send>(threads: usize, items: &mut [T], f: &(dyn Fn(usize, &mut T) + Sync)) {
-    #[cfg(not(target_arch = "wasm32"))]
     if threads > 1 && items.len() > 1 {
         use std::sync::Mutex;
         use std::sync::atomic::{AtomicUsize, Ordering};
@@ -70,7 +64,6 @@ pub fn each_mut<T: Send>(threads: usize, items: &mut [T], f: &(dyn Fn(usize, &mu
         });
         return;
     }
-    let _ = threads;
     for (k, item) in items.iter_mut().enumerate() {
         f(k, item);
     }
@@ -78,14 +71,7 @@ pub fn each_mut<T: Send>(threads: usize, items: &mut [T], f: &(dyn Fn(usize, &mu
 
 /// Threads for an analysis on this machine: the cores but one, at least 1, at most 8.
 pub fn threads() -> usize {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        std::thread::available_parallelism()
-            .map_or(1, |n| n.get().saturating_sub(1))
-            .clamp(1, 8)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        1
-    }
+    std::thread::available_parallelism()
+        .map_or(1, |n| n.get().saturating_sub(1))
+        .clamp(1, 8)
 }

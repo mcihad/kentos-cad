@@ -1,10 +1,10 @@
 # KentOS Rust workspace (CLAUDE.md §14). crates/shared: platform-neutral libraries
-# (geometry core, contracts, file formats) that the web app (through crates/wasm), the
-# server (crates/server, apps/api) and the future desktop app share.
+# (geometry core, contracts, file formats) that the desktop programs, the server
+# (crates/server, apps/api) and the automation hosts share.
 [workspace]
 resolver = "3"
 members = [
-    # Platform-neutral libraries: the web app, the server and the desktop app share them.
+    # Platform-neutral libraries: the desktop programs, the server and the automation hosts share them.
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/commands",
@@ -55,29 +55,13 @@ members = [
     # regulation's classes, names and properties; later reading IFC and checking a model. A crate of its own: the IFC
     # work grows here.
     "crates/shared/ifc",
-    # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
+    # Sheet layouts, pafta düzeni (docs/sheet/design.md).
     "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",
-    # Browser bindings (wasm-bindgen) of the shared libraries.
-    "crates/wasm/geometry-wasm",
-    "crates/wasm/formats-wasm",
-    # Point clouds in a module of their own, loaded when a point cloud is added or drawn.
-    "crates/wasm/pointcloud-wasm",
-    # DXF and NCZ in modules of their own, loaded only when such a file is imported.
-    "crates/wasm/dxf-wasm",
-    "crates/wasm/ncz-wasm",
-    # The sheet core in a module of its own, loaded when the sheet mode opens.
-    "crates/wasm/sheet-wasm",
-    # Map services (docs/adr/0208) in a module of their own, loaded when a drawing shows a service.
-    "crates/wasm/services-wasm",
-    # Raster analysis (docs/adr/0231) in a module of its own, loaded in its worker when a job starts.
-    "crates/wasm/raster-wasm",
-    "crates/wasm/svg-wasm",
-    # Native libraries (desktop, later the server; never the browser): the drawing
-    # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
-    # product commands over it (docs/adr/0022), and the tool session, the counterpart
-    # of the web's tools (docs/adr/0021).
+    # Native libraries (desktop, later the server): the drawing document
+    # (docs/adr/0020), the product commands over it (docs/adr/0022), and the tool
+    # session (docs/adr/0021).
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
@@ -180,15 +164,6 @@ default-members = [
     "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",
-    "crates/wasm/geometry-wasm",
-    "crates/wasm/formats-wasm",
-    "crates/wasm/pointcloud-wasm",
-    "crates/wasm/dxf-wasm",
-    "crates/wasm/ncz-wasm",
-    "crates/wasm/sheet-wasm",
-    "crates/wasm/services-wasm",
-    "crates/wasm/raster-wasm",
-    "crates/wasm/svg-wasm",
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
@@ -238,10 +213,11 @@ publish = false
 acadrust = { git = "https://github.com/mcihad/acadrust.git", branch = "main", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }
 # float_roundtrip: parsed floats are exact (the default parser may be one ulp off), so
-# coordinates cross the WASM boundary and files bit for bit (docs/adr/0008).
+# coordinates cross files and the wire bit for bit (docs/adr/0008).
 serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
-# Transcendental functions of the geometry core: the same code on every target, so native
-# and WASM agree bit for bit (CLAUDE.md §23.4, docs/adr/0008).
+# Transcendental functions of the geometry core: the same code on every target, so every
+# platform gives the same bits (CLAUDE.md §23.4, docs/adr/0008). What takes its place is
+# decided in docs/adr/9402 §7 (BK-88).
 libm = "=0.2.16"
 # Regular expressions of the expression language (docs/adr/0214 §2.4, the owner's approval of
 # 10 Oct): rust-lang's small engine, no dependencies of its own, Unicode tables left out.
@@ -252,9 +228,8 @@ regex-lite = { version = "=0.1.9", default-features = false, features = ["std", 
 miniz_oxide = { version = "=0.9.1", default-features = false, features = ["with-alloc"] }
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
 # LAZ (LASzip) point records of point clouds (docs/adr/0207; the owner's approval, 2026-10-08):
-# laz-rs, the Rust port of LASzip, pure Rust (it builds for the browser too, whose point cloud
-# module waits); only its chunk compressors and decompressors are used, LAS and COPC are read and
-# written by KentOS.
+# laz-rs, the Rust port of LASzip, pure Rust; only its chunk compressors and decompressors are
+# used, LAS and COPC are read and written by KentOS.
 # Without `parallel` (rayon): the hosts decompress chunks on their own threads.
 laz = { version = "=0.14.0", default-features = false }
 # Geodesics and areas on the ellipsoid (Karney 2013): the measurements' ellipsoid and ground values
@@ -276,7 +251,6 @@ ts-rs = { version = "=12.0.1", features = ["serde-json-impl", "no-serde-warnings
 # JSON Schema of the contract types, for the product command catalog (docs/adr/0013):
 # the schemas are derived from the same serde types, so type and schema cannot drift.
 schemars = { version = "=1.2.3", default-features = false, features = ["derive", "std"] }
-wasm-bindgen = "=0.2.130"
 axum = { version = "=0.8.9", features = ["ws"] }
 # The response body of a streamed download (apps/api http/files.rs, docs/adr/0031): already in the
 # binary through axum and hyper; named here only for its `Frame` type.
@@ -331,14 +305,14 @@ tiny-skia = { version = "=0.11.4", default-features = false, features = ["std", 
 # `extension-module` feature is not used; a plain cargo build links the system's libpython.
 pyo3 = { version = "=0.30.1", default-features = false, features = ["macros", "abi3-py310"] }
 # SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
-# approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
+# approval, 2026-09-27). Locked already through fontdb.
 roxmltree = { version = "=0.21.2" }
 # SVG pictures of a sheet on the desktop (docs/sheet/design.md, open question 6; the owner's
 # approval, 2026-10-03): their size read when one is added (usvg through resvg). The version
 # Iced's SVG support draws them with; its default features come with Iced anyway.
 resvg = { version = "=0.45.1", default-features = false }
 # JPEG images of the style library on the desktop (docs/adr/0092; the owner's approval,
-# 2026-09-27); the web lets the browser decode them. Pure Rust, the image crate's JPEG decoder;
+# 2026-09-27). Pure Rust, the image crate's JPEG decoder;
 # without its SIMD paths (`x86`, `neon`): a picture is decoded once and kept.
 zune-jpeg = { version = "=0.5.15", default-features = false, features = ["std"] }
 # WebP tiles of a GeoPackage read and written in the formats core (docs/adr/0627 §1; the owner's
@@ -368,7 +342,7 @@ naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
 pollster = { version = "=1.0.3" }
 # The sheet layouts' PDF and GeoPDF writer (docs/sheet/design.md §9a; the owner's approval,
-# 2026-10-03): pure Rust, the same bytes in the browser and on the desktop. It writes the objects
+# 2026-10-03): pure Rust. It writes the objects
 # only; compression is miniz_oxide's.
 pdf-writer = { version = "=0.15.0" }
 # The sheet PDF's fonts embedded as subsets (design §9a; the owner's approval, 2026-10-03).
@@ -404,23 +378,6 @@ strip = "symbols"
 
 [profile.release.package.kentos-launcher]
 strip = "symbols"
-
-# The browser build of the core (pnpm rust:wasm): smallest and fastest code, and a
-# panic traps instead of unwinding (the app rebuilds the core then, docs/adr/0008).
-[profile.wasm]
-inherits = "release"
-lto = "fat"
-codegen-units = 1
-panic = "abort"
-
-# The same for the dev server, tests and e2e (scripts/wasm/ensure.mjs; `pnpm build` and
-# the perf scripts take `wasm`): no whole-program LTO and parallel code generation, so
-# a core edit rebuilds the six packages in a fraction of the time. The code is the same
-# Rust with the same float semantics; only inlining across crates differs.
-[profile.wasm-dev]
-inherits = "wasm"
-lto = false
-codegen-units = 16
 
 # Apple's blocks (wgpu-hal 27's Metal backend, through `metal`, under iced 0.14): the crates.io release of block 0.1.6
 # with its extern static declared of an inhabited opaque type (crates/vendor/block, written by scripts/vendor/block.py;

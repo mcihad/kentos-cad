@@ -428,7 +428,6 @@ fn a_piece_shows_only_while_its_own_layer_does() {
 
 /// Putting many objects on several cores makes the same store as one by one (docs/adr/1066 §4): every object's shape,
 /// box, pieces and layer, in the same order, and the same hits.
-#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn many_objects_put_on_several_cores_make_the_same_store() {
     use crate::api::json::Json;

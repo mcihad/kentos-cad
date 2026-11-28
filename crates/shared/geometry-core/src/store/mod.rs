@@ -591,8 +591,7 @@ impl Store {
 
     /// [`Store::put_many`] with the objects' pieces worked out on `threads` cores first (docs/adr/1066 §4: a
     /// million objects' blocks, walls and spaces expanded on the opening's frame): the same store as `put_many`, the
-    /// objects put in their order. Native only; the browser's build has no threads.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// objects put in their order.
     pub fn put_many_parallel(
         &mut self,
         items: Vec<(f64, &str, bool, Shape)>,

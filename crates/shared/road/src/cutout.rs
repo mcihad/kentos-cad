@@ -267,8 +267,7 @@ impl Job<'_> {
         out
     }
 
-    /// The runs, on threads of their own for a large terrain (the browser has none: one run there); in order.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// The runs, on threads of their own for a large terrain; in order.
     fn parts(&self) -> Vec<Part> {
         let n = self.triangles.len();
         let threads = std::thread::available_parallelism()
@@ -288,11 +287,6 @@ impl Job<'_> {
                 .map(|h| h.join().unwrap_or_else(|e| std::panic::resume_unwind(e)))
                 .collect()
         })
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    fn parts(&self) -> Vec<Part> {
-        vec![self.run(0..self.triangles.len())]
     }
 }
 

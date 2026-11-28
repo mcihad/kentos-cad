@@ -361,8 +361,11 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   içine açılır), `ts(export)` yalnız 110 kökte. Kanıt: sıyırmadan önce ve sonra üretilen 343 dosya bayt bayt aynı;
   üretilen küme tam olarak kapanış; portalın tür denetimi, sınamaları ve paketi değişmedi. Portalın kullandığı altı
   tür web'in klasöründe eskimişti (`Entity`, `BeamEntity`…); şimdi günceller.
-- [ ] **BK-84 — WASM.** Dokuz bağlayıcı crate (`crates/wasm`), `wasm-bindgen`, `wasm` ve `wasm-dev` profilleri,
-  ortak crate'lerdeki 13 `cfg(target_arch = "wasm32")` satırı (5 dosya), `scripts/wasm`.
+- [x] **BK-84 — WASM.** Dokuz bağlayıcı crate (`crates/wasm`), `wasm-bindgen`, `wasm` ve `wasm-dev` profilleri,
+  `scripts/wasm` silindi. Ortak crate'lerdeki 13 `cfg(target_arch = "wasm32")` satırı kalktı (5 dosya): iş parçacıklı
+  yol tek yol. Bağımlılık bekçisi ortak kitaplıkları yalnız ana makine hedefinde denetler (85 crate × 108 hedef →
+  76 × 76); tarayıcı bağımlılıklarının yasağı duruyor. Kanıt: çalışma alanının tamamı bütün hedefleriyle derlendi;
+  dokunulan crate'lerin sınamaları yeşil.
 - [ ] **BK-85 — `apps/web` silinir.** 5 535 izlenen dosya. pnpm çalışma alanı ve kilit dosyası, `.gitignore`,
   yalnız web'e yazan ya da web'in düzeneğini kullanan betikler (`scripts/ui/arrow_icons.py`, `hatch_icons.py`,
   `scripts/wgsl/browser-check.mjs`). Bekçi: `apps/web` ve `crates/wasm` geri gelemez (`make guard`).
