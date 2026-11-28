@@ -17,9 +17,9 @@
 
 use kentos_commands::ArrayLayout;
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::tools::editing::grid_array_transforms;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_num::round_half_up;
 
 use crate::Vec2;
 use crate::format::js_number;

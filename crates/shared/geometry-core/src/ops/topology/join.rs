@@ -11,8 +11,8 @@
 use std::collections::{BTreeMap, HashMap};
 
 use super::{Kind, Out, TOUCH, TopoWorks, Work};
-use crate::jsmath::hypot;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A vertex: its object, path and index.
 type V = (usize, usize, usize);

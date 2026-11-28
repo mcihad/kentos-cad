@@ -15,10 +15,10 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{hypot, log, maximum};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, ln, maximum};
 
 /// A link: a point of the drawing and where it is to go.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -75,7 +75,7 @@ pub struct Sheet {
 
 /// φ(r) of a squared distance: r²·ln r = ½·r²·ln r², 0 at 0.
 fn phi(r2: f64) -> f64 {
-    if r2 > 0.0 { 0.5 * r2 * log(r2) } else { 0.0 }
+    if r2 > 0.0 { 0.5 * r2 * ln(r2) } else { 0.0 }
 }
 
 /// A pivot at or below this share of the equations' largest number: they
@@ -228,7 +228,7 @@ impl Sheet {
             let (dx, dy) = (q.x - s.x, q.y - s.y);
             let r2 = dx * dx + dy * dy;
             if r2 > 0.0 {
-                let k = log(r2) + 1.0;
+                let k = ln(r2) + 1.0;
                 gx[0] += w[0] * dx * k;
                 gx[1] += w[1] * dx * k;
                 gy[0] += w[0] * dy * k;
@@ -254,7 +254,7 @@ impl Sheet {
             let (dx, dy) = (q.x - s.x, q.y - s.y);
             let r2 = dx * dx + dy * dy;
             if r2 > 0.0 {
-                let l = log(r2);
+                let l = ln(r2);
                 let f = 0.5 * r2 * l;
                 d[0] += w[0] * f;
                 d[1] += w[1] * f;

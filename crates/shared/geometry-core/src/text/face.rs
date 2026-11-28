@@ -32,7 +32,7 @@ impl Face {
     /// slant's tangent times `up` (0 without a typeface or a slant).
     pub fn lean(&self) -> f64 {
         match (self.font, self.oblique) {
-            (Some(_), Some(o)) => crate::jsmath::tan(o * crate::jsmath::PI / 180.0),
+            (Some(_), Some(o)) => kentos_num::tan(o * kentos_num::PI / 180.0),
             _ => 0.0,
         }
     }

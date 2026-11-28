@@ -16,8 +16,8 @@ pub mod traverse;
 pub mod trend;
 
 use crate::api::Op;
-use crate::jsmath::{PI, TAU, atan2, hypot};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, hypot};
 
 /// The project's angle unit: `"grad"` (400 to a turn) or `"deg"` (360).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -77,10 +77,7 @@ pub fn distance(a: Vec2, b: Vec2) -> f64 {
 
 /// The point at `d` from `a` along the bearing `t` (radians): the first fundamental task.
 pub fn from_bearing(a: Vec2, t: f64, d: f64) -> Vec2 {
-    Vec2::new(
-        a.x + d * crate::jsmath::sin(t),
-        a.y + d * crate::jsmath::cos(t),
-    )
+    Vec2::new(a.x + d * kentos_num::sin(t), a.y + d * kentos_num::cos(t))
 }
 
 /// A known point that must differ from another, or a message naming both.

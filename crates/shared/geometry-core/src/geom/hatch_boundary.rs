@@ -16,8 +16,8 @@ use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::{EllipseGeom, ellipse_point, is_full_ellipse, param_of_point};
 use crate::geom::nurbs::{self, Nurbs, OwnedNurbs};
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{TAU, atan2, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, cos, hypot, maximum, sin};
 use std::collections::HashMap;
 
 /// How far an edge's curve may end from its loop's point (m).

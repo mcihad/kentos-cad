@@ -23,10 +23,10 @@ use crate::api::json::{self, Json};
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::minimum;
 use crate::ops::parts::one_area;
 use crate::store::Store;
 use crate::vec2::Vec2;
+use kentos_num::minimum;
 
 /// A built network and the buffers its searches use again.
 pub struct NetworkSession {

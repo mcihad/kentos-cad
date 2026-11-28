@@ -1,7 +1,7 @@
 //! Colours (every CSS syntax and keyword, with alpha) and paints (the
 //! symbol's colours, references and their fallback chains).
 
-use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
+use kentos_num::{maximum, minimum, round_half_up};
 use kentos_style_core::js::text::{is_space, slice, trim};
 
 use super::number::{parse_float, parse_hex, split_on};

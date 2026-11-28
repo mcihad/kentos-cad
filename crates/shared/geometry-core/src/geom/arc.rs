@@ -1,9 +1,9 @@
 //! Angles, circles and arcs (`apps/web/src/model/geom/arc.ts`).
 
 use crate::api::Op;
-use crate::jsmath::{TAU, atan2, cos, hypot, maximum, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, cos, hypot, maximum, sin, tan};
 
 /// Normalizes an angle to [0, 2π).
 pub fn norm_angle(a: f64) -> f64 {

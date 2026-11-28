@@ -287,7 +287,7 @@ pub fn lay_out(p: &Paragraph<'_>) -> Layout {
                 let bold = p.bold || r.bold;
                 num + advance(p.font, '/', bold, true) + den
             } else {
-                crate::jsmath::maximum(num, den)
+                kentos_num::maximum(num, den)
             };
             Some((s, e, q, w))
         })
@@ -348,7 +348,7 @@ pub fn lay_out(p: &Paragraph<'_>) -> Layout {
         measured
             .iter()
             .map(|(x0, w)| x0 + w)
-            .fold(0.0, crate::jsmath::maximum)
+            .fold(0.0, kentos_num::maximum)
     });
     let pitch = PITCH * p.height * p.line_spacing;
     // Columns (docs/adr/0324 §2): `per` rows a column, the last taking the rest.
@@ -481,14 +481,14 @@ pub fn rise(up: f64, height: f64, count: usize, pitch: f64) -> f64 {
 /// point, its alignment the top's left) and its width along the turn; none
 /// for a width under a micrometre (no box: the lines end at their breaks).
 pub fn corner_box(a: Vec2, b: Vec2, rotation: f64) -> (Vec2, Option<f64>) {
-    let r = rotation * crate::jsmath::PI / 180.0;
-    let (c, s) = (crate::jsmath::cos(r), crate::jsmath::sin(r));
+    let r = rotation * kentos_num::PI / 180.0;
+    let (c, s) = (kentos_num::cos(r), kentos_num::sin(r));
     // Along the turn (u) and up from it (v).
     let along = |p: Vec2| p.x * c + p.y * s;
     let up = |p: Vec2| -p.x * s + p.y * c;
-    let left = crate::jsmath::minimum(along(a), along(b));
-    let right = crate::jsmath::maximum(along(a), along(b));
-    let top = crate::jsmath::maximum(up(a), up(b));
+    let left = kentos_num::minimum(along(a), along(b));
+    let right = kentos_num::maximum(along(a), along(b));
+    let top = kentos_num::maximum(up(a), up(b));
     let corner = Vec2::new(left * c - top * s, left * s + top * c);
     let width = right - left;
     (corner, (width >= 1e-6).then_some(width))

@@ -194,7 +194,7 @@ pub fn dense_map() -> DenseMap {
             r#"{}{{"x":{},"y":{}}}"#,
             if k > 0 { "," } else { "" },
             X0 - 100.0 + t * 1200.0,
-            Y0 + 330.0 + 90.0 * kentos_geometry_core::jsmath::sin(t * 9.0) + t * 60.0
+            Y0 + 330.0 + 90.0 * kentos_num::sin(t * 9.0) + t * 60.0
         );
     }
     let pid = add(

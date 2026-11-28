@@ -9,8 +9,11 @@ the way, and both are counted here; a count never grows:
    round differently from one build to another (`powi`, `mul_add`), in the crates that compute. The interface's own
    crates (the kit, the windows' drawing, the renderers) work in pixels and float32 and are left out; so are tests.
    What remains of `hypot` is float32 screen arithmetic in the desktop crates.
-2. The helpers the geometry core was ported from TypeScript with (`js_round`, `js_min`, `js_max`…, the module
-   `jsmath`): each family gets its own written rule in the numeric base and its uses move there.
+2. What is left of the helpers the geometry core was ported from TypeScript with (`kentos_num::port`: `js_cmp`,
+   `truthy`, `or`, `stable_sort`, `js_hypot_n`): each waits for a written rule of its own, and no new use is
+   written. So do the text helpers that still read and write numbers as JavaScript does (`js_trim`, `js_number`,
+   `js_text`…; plan/bakim.md BK-50). The others have their rules in the numeric base already; the module `jsmath`
+   is gone.
 
     python3 scripts/dev/platform_math.py           # the check (make guard)
     python3 scripts/dev/platform_math.py --write   # lowers the baseline to today's counts; writes nothing when one grew
@@ -34,8 +37,8 @@ METHODS = (
     "exp", "exp2", "exp_m1", "ln", "ln_1p", "log10", "log2", "powf", "powi", "cbrt", "hypot", "mul_add",
 )
 METHOD = re.compile(r"\.\s*(" + "|".join(METHODS) + r")\(")
-# The port's helpers: an identifier that starts with `js_`, and the module's name.
-PORT = re.compile(r"\b(js_[a-z0-9_]+|jsmath)\b")
+# The port's leftover helpers by their names; `or` only as a free call (`x.or(…)` is an Option's own method).
+PORT = re.compile(r"\b(js_[a-z0-9_]+|jsmath|truthy|stable_sort)\b|(?<![.\w])or\(")
 
 # Not computing crates: the interface works in pixels; the vendored code is its authors'; the base holds the rule.
 LEFT_OUT = (

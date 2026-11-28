@@ -3,8 +3,8 @@
 //! ends, the jambs of the edge's other openings, where other walls' faces cross it); this picks the nearest on each
 //! side by one rule, so the desktop, the headless server and the shared cases agree.
 
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// Slack, metres: a reference at a jamb (a touching opening) counts on that side.
 pub const TIE: f64 = 1e-9;

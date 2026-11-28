@@ -3,8 +3,8 @@
 //! names, arities and help are `library`'s table. Text a function makes is
 //! written at the end of the caller's buffer.
 
-use kentos_geometry_core::jsmath::{
-    PI, acos, asin, atan, atan2, cos, exp, log, log2, log10, maximum, maximum_of, minimum,
+use kentos_num::{
+    PI, acos, asin, atan, atan2, cos, exp, ln, log2, log10, maximum, maximum_of, minimum,
     minimum_of, round_half_up, sign, sin, tan,
 };
 
@@ -57,7 +57,7 @@ pub fn number_function(f: Func, xs: &[f64]) -> Option<V<'static>> {
     })
 }
 
-/// `log(base, x)`: base 10 and 2 by their own functions, else ln x / ln base.
+/// `ln(base, x)`: base 10 and 2 by their own functions, else ln x / ln base.
 #[inline]
 pub fn log_base(base: f64, x: f64) -> f64 {
     if base == 10.0 {
@@ -65,7 +65,7 @@ pub fn log_base(base: f64, x: f64) -> f64 {
     } else if base == 2.0 {
         log2(x)
     } else {
-        log(x) / log(base)
+        ln(x) / ln(base)
     }
 }
 
@@ -73,7 +73,7 @@ pub fn log_base(base: f64, x: f64) -> f64 {
 #[inline]
 fn math(f: Func, x: f64, y: f64) -> Option<f64> {
     Some(match f {
-        Func::Ln => log(x),
+        Func::Ln => ln(x),
         Func::Log10 => log10(x),
         Func::Log => log_base(x, y),
         Func::Exp => exp(x),

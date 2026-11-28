@@ -1121,8 +1121,8 @@ fn pie(cx: &mut Ctx, model: &Model, looks: Looks, frame: &Frame, pad: f32, line_
         if slices.len() > 1 {
             for a in bounds {
                 let (s, c) = (
-                    crate::jsmath::sin(f64::from(a)) as f32,
-                    crate::jsmath::cos(f64::from(a)) as f32,
+                    kentos_num::sin(f64::from(a)) as f32,
+                    kentos_num::cos(f64::from(a)) as f32,
                 );
                 cx.line(
                     ccx + s * (r0 - u),
@@ -1307,7 +1307,7 @@ pub fn hit(layout: &Layout, x: f32, y: f32) -> Option<u32> {
                     continue;
                 }
                 // Clockwise from twelve o'clock.
-                let mut a = crate::jsmath::atan2(f64::from(dx), f64::from(-dy)) as f32;
+                let mut a = kentos_num::atan2(f64::from(dx), f64::from(-dy)) as f32;
                 if a < 0.0 {
                     a += 2.0 * PI;
                 }

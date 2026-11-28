@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json as CoreJson;
-use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
+use kentos_num::{hypot, maximum, minimum};
 use kentos_style_core::style::compile::{Env, Values};
 use kentos_style_core::style::generate::{Gen, run};
 use kentos_style_core::style::model::{Exprs, Unit};

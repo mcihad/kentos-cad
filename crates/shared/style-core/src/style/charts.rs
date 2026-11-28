@@ -5,7 +5,7 @@
 //! per point: 10 000 pies are 720 000 points).
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{PI, cos, sin};
+use kentos_num::{PI, cos, sin};
 
 use super::model::ChartKind;
 use super::place::positive;

@@ -43,7 +43,7 @@ fn cross(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn len(a: Vec2) -> f64 {
-    crate::jsmath::hypot(a.x, a.y)
+    kentos_num::hypot(a.x, a.y)
 }
 
 /// The covered stretches of side `a → b` (lengths along it from `a`), and the walls that cover it.
@@ -116,16 +116,14 @@ fn covered(
                 .iter()
                 .map(|p| dot(u, sub(*p, a)))
                 .collect();
-            let lo = crate::jsmath::maximum(
-                ts.iter()
-                    .copied()
-                    .fold(f64::INFINITY, crate::jsmath::minimum),
+            let lo = kentos_num::maximum(
+                ts.iter().copied().fold(f64::INFINITY, kentos_num::minimum),
                 0.0,
             );
-            let hi = crate::jsmath::minimum(
+            let hi = kentos_num::minimum(
                 ts.iter()
                     .copied()
-                    .fold(f64::NEG_INFINITY, crate::jsmath::maximum),
+                    .fold(f64::NEG_INFINITY, kentos_num::maximum),
                 l,
             );
             if hi - lo > JOIN_TOLERANCE {
@@ -175,9 +173,7 @@ pub fn adopt(ring: &[Vec2], reference: Reference, walls: &[WallIn<'_>]) -> Adopt
     let mut merged: Vec<(f64, f64)> = Vec::new();
     for (x, y) in cover {
         match merged.last_mut() {
-            Some(last) if x <= last.1 + JOIN_TOLERANCE => {
-                last.1 = crate::jsmath::maximum(last.1, y)
-            }
+            Some(last) if x <= last.1 + JOIN_TOLERANCE => last.1 = kentos_num::maximum(last.1, y),
             _ => merged.push((x, y)),
         }
     }

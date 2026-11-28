@@ -5,11 +5,11 @@
 
 use crate::geom::wall::{self, Line, Spec};
 use crate::geom::wall_join::JOIN_TOLERANCE;
-use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::ops::dimension_set::{Openings, Point, Row, Span};
 use crate::ops::subref::Place;
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, hypot, maximum, minimum};
 
 /// How square an edge must be to count as parallel or perpendicular to the direction: the sine of its angle off.
 pub const SQUARE: f64 = 1e-6;

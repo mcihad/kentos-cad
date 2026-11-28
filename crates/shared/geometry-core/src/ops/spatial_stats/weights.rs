@@ -6,8 +6,8 @@
 use super::MOST_PAIRS;
 use super::kdtree::{KdTree, dist2};
 use super::nearest::nearest_distances;
-use crate::jsmath::maximum;
 use crate::vec2::Vec2;
+use kentos_num::maximum;
 
 /// How neighbours are found.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

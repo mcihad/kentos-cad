@@ -6,8 +6,8 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::lrs::{Route, RouteIndex, RoutePart};
+use kentos_num::{maximum, minimum};
 use serde_json::{Value, json};
 
 fn cases() -> Value {

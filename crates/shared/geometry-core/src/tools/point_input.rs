@@ -7,9 +7,9 @@ use crate::api::Op;
 use crate::api::json::Nullable;
 use crate::geom::survey::{along_line, polar_point};
 use crate::geometry::dist;
-use crate::jsmath::{PI, atan2, cos, hypot, round_half_up, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, round_half_up, sin};
 
 /// `@dY,dX`: the last point moved by the typed differences.
 pub fn relative_point(last: Vec2, dx: f64, dy: f64) -> Vec2 {

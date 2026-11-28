@@ -7,7 +7,7 @@
 //! the caller's transformation). Both platforms draw with these, so they ask
 //! for the same tiles and draw them in the same place.
 
-use crate::jsmath::{log, maximum, minimum};
+use kentos_num::{ln, maximum, minimum};
 
 /// Web Mercator's half side (EPSG:3857), metres: πR with R the WGS 84 semi-major axis.
 pub const MERCATOR_HALF: f64 = 20_037_508.342_789_244;
@@ -147,11 +147,11 @@ impl Grid {
         let last = self.matrices.len() - 1;
         let lo = (min as usize).min(last);
         let hi = (max as usize).clamp(lo, last);
-        let want = log(units_per_px);
+        let want = ln(units_per_px);
         let mut best = lo;
         let mut gap = f64::INFINITY;
         for (i, m) in self.matrices.iter().enumerate().take(hi + 1).skip(lo) {
-            let d = (log(m.resolution) - want).abs();
+            let d = (ln(m.resolution) - want).abs();
             if d <= gap {
                 best = i;
                 gap = d;
@@ -320,7 +320,7 @@ pub fn view_in(
     let c = to_grid(cx, cy)?;
     let e = to_grid(cx + step, cy)?;
     let n = to_grid(cx, cy + step)?;
-    let d = |p: (f64, f64)| crate::jsmath::hypot(p.0 - c.0, p.1 - c.1);
+    let d = |p: (f64, f64)| kentos_num::hypot(p.0 - c.0, p.1 - c.1);
     let units_per_px = (d(e) + d(n)) / 2.0;
     (units_per_px.is_finite() && units_per_px > 0.0).then_some(ViewInGrid {
         bbox: b,

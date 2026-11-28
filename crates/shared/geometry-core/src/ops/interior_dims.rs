@@ -9,9 +9,9 @@
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{line_circle_params, line_line};
-use crate::jsmath::{TAU, atan2, hypot};
 use crate::ops::subref::Place;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, hypot};
 
 /// The shortest cut, in the drawing's length: a millimetre of a metre drawing.
 pub const SHORTEST: f64 = 1e-3;
@@ -298,5 +298,5 @@ pub fn references(
 
 /// The direction of the cut, degrees counter-clockwise from east: a linear dimension's angle.
 pub fn angle_of(from: Vec2, to: Vec2) -> f64 {
-    atan2(to.y - from.y, to.x - from.x) * 180.0 / crate::jsmath::PI
+    atan2(to.y - from.y, to.x - from.x) * 180.0 / kentos_num::PI
 }

@@ -20,12 +20,12 @@
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sign, sin};
 use crate::ops::edge_shift_arcs::{Curve, meet, sweep_to};
 use crate::ops::wall_shift::{
     Gap, Moved, TIE, bulge, edge, edge_count, ends_at, host_at, inline, level,
 };
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, minimum, sign, sin};
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x - b.x, a.y - b.y)

@@ -10,10 +10,10 @@ use crate::entity::{Entity, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path, is_arc_bulge, reverse_bulge_path};
 use crate::geometry::dist_to_segment;
-use crate::jsmath::{PI, acos, atan, cos, hypot, maximum, minimum, sin, tan};
 use crate::op;
 use crate::ops::fillet::{CornerOp, CornerResult, corner_of_path};
 use crate::vec2::Vec2;
+use kentos_num::{PI, acos, atan, cos, hypot, maximum, minimum, sin, tan};
 
 /// Two directions closer than this (radians) make no corner.
 const STRAIGHT: f64 = 1e-6;

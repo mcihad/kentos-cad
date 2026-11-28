@@ -6,8 +6,8 @@
 
 use super::{DimensionGeom, DimensionLayout, add, lift, text_along};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, sin};
 
 /// The cross's arms reach h/2 from the centre; the axis lines start h/4 past them.
 const CROSS_GAP: f64 = 0.25;

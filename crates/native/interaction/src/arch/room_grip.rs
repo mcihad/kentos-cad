@@ -12,9 +12,9 @@
 use kentos_commands::{CommandResult, Entity, WallsEdit, WallsOperation};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geom::wall::left_face;
-use kentos_geometry_core::jsmath::hypot;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, wall_distances, walls_edit};
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::bond_refusal::Refused;

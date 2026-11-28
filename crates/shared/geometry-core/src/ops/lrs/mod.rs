@@ -13,8 +13,8 @@
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at as edge_point};
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
-use crate::jsmath::{cos, hypot, maximum, minimum, sin, tan};
 use crate::vec2::Vec2;
+use kentos_num::{cos, hypot, maximum, minimum, sin, tan};
 
 /// A unit enum read and written as one of its words.
 macro_rules! words {

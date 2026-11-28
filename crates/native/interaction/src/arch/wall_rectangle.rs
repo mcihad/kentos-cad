@@ -8,10 +8,10 @@ use kentos_commands::{
     fixed_width,
 };
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::tools::drawing::direction_angle;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_length_pair, parse_number};
 use kentos_native_application::{ExecutionContext, walls_rectangle};
+use kentos_num::PI;
 
 use crate::Vec2;
 use crate::format::{Format, short_degrees};

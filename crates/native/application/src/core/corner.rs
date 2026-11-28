@@ -31,7 +31,6 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::intersect::closest_on_edge;
-use kentos_geometry_core::jsmath::{PI, acos, cos, hypot, maximum, minimum, sin, tan};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::fillet::{
@@ -42,6 +41,7 @@ use kentos_geometry_core::tools::editing::{
     CornerGeom, chamfer_line, fillet_arc, lines_corner_at, path_corner_at,
 };
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, acos, cos, hypot, maximum, minimum, sin, tan};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};

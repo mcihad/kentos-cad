@@ -13,7 +13,6 @@ use std::time::Instant;
 
 use kentos_geometry_core::api::run_named;
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::jsmath::{cos, sin};
 use kentos_geometry_core::ops::spatial_stats::autocorrelation::{
     Neighbourhood, hot_spots, morans_i,
 };
@@ -22,6 +21,7 @@ use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan, k_means};
 use kentos_geometry_core::ops::spatial_stats::nearest::nearest;
 use kentos_geometry_core::ops::spatial_stats::weights::Concept;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 fn hash(i: u64) -> u64 {
     let mut h = i.wrapping_mul(0x9e37_79b9_7f4a_7c15);

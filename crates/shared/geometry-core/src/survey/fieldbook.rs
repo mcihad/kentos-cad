@@ -12,8 +12,8 @@ use super::Unit;
 use super::adjust::horizontal::NetRow;
 use super::adjust::levelling::LevelRow;
 use crate::api::Op;
-use crate::jsmath::{cos, sin};
 use crate::op;
+use kentos_num::{cos, sin};
 
 /// The earth's mean radius for the curvature term (m).
 pub const EARTH_RADIUS: f64 = 6_371_000.0;

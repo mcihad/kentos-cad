@@ -6,9 +6,9 @@ use crate::api::Op;
 use crate::geom::arc::{DEFAULT_STEP, circle_through, norm_angle};
 use crate::geom::intersect::Edge;
 use crate::geometry::{path_length, signed_area};
-use crate::jsmath::{PI, atan, atan2, cos, hypot, maximum, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan, atan2, cos, hypot, maximum, or, sin, tan};
 
 const EPS: f64 = 1e-12;
 

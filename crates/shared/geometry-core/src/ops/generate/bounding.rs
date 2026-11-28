@@ -5,9 +5,9 @@
 use std::f64::consts::PI;
 
 use super::voronoi::{centre, normalised};
-use crate::jsmath::{atan2, hypot, maximum, minimum};
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, maximum, minimum};
 
 /// Which bounding geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

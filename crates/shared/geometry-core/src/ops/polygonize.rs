@@ -14,12 +14,12 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::FaceIndex;
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::areas::line_source;
 use crate::ops::edges::entity_edges;
 use crate::store::rtree::{PackedTree, overlaps};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// “The same place”, “on” and “touching”, metres: the elevation rules' (ADR 0142).
 pub const TOUCH: f64 = 1e-6;

@@ -342,8 +342,7 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
                 for (index, &var) in r.edge_vars.iter().enumerate() {
                     if let Some((a, b)) = ma.edge_ends[var] {
                         let physical =
-                            crate::jsmath::hypot(ma.x[b] - ma.x[a], ma.x[b + 1] - ma.x[a + 1])
-                                * 0.5;
+                            kentos_num::hypot(ma.x[b] - ma.x[a], ma.x[b + 1] - ma.x[a + 1]) * 0.5;
                         if (ma.x[var] - mb.x[var]).abs() * physical > MOVED {
                             parts.push(Element::ArcEdge {
                                 part: r.part,

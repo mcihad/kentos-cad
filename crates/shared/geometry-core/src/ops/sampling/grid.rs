@@ -6,8 +6,8 @@
 
 use super::MOST;
 use crate::geometry::Bounds;
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// The most cells a grid looks at.
 pub const MOST_SCANNED: f64 = 4_000_000.0;

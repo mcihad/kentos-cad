@@ -9,10 +9,10 @@ use crate::entity::Shape;
 use crate::geom::affine::translation;
 use crate::geom::arc::sweep;
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{atan2, cos, maximum, sin};
 use crate::ops::transform::transform_shape;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, sin};
 
 mod path;
 mod places;

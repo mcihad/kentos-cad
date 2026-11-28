@@ -8,7 +8,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
+use kentos_num::{maximum, minimum, round_half_up};
 
 use super::model::Rgba;
 use super::place::positive;

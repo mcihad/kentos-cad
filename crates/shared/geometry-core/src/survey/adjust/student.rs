@@ -2,7 +2,7 @@
 //! continued fraction (as `chi2.rs`'s gamma), and the quantile by bisection. libm's lgamma, exp and log give every
 //! target the same bits.
 
-use crate::jsmath::{exp, log};
+use kentos_num::{exp, ln};
 
 const TINY: f64 = 1e-300;
 
@@ -59,8 +59,8 @@ pub fn incomplete_beta(a: f64, b: f64, x: f64) -> f64 {
     }
     let front = exp(
         kentos_num::lgamma(a + b) - kentos_num::lgamma(a) - kentos_num::lgamma(b)
-            + a * log(x)
-            + b * log(1.0 - x),
+            + a * ln(x)
+            + b * ln(1.0 - x),
     );
     if x < (a + 1.0) / (a + b + 2.0) {
         front * fraction(a, b, x) / a

@@ -21,8 +21,8 @@ use crate::geom::arch::{
 };
 use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::section::Flight;
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// A part of a stair's body.
 #[derive(Clone, Debug, PartialEq)]

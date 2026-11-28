@@ -18,9 +18,9 @@ use super::turns::{Level, TurnIn, level_value};
 use crate::geom::arrangement::{edge_box, edge_len, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
 #[derive(Clone, Copy, Debug, PartialEq)]

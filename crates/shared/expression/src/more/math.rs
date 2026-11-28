@@ -1,7 +1,7 @@
 //! `sınırla` and the scales (docs/adr/0600 §3), QGIS's rules: a value outside the source range is held at its end;
 //! a source range whose least end is not below its greatest, or a base not above 0, gives an empty value.
 
-use kentos_geometry_core::jsmath::pow;
+use kentos_num::pow;
 
 use crate::library::Func;
 use crate::scalar::{R, V, to_number};

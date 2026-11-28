@@ -21,11 +21,11 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::leader;
 use crate::geom::region::ring_area;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, hypot, js_cmp, maximum, minimum, stable_sort};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::holes::{HoleAt, hole_at, hole_ring};
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot, js_cmp, maximum, minimum, stable_sort};
 
 /// Kapsam denetimi's reach, in sides of the drawing's core box (the box
 /// of the middle half of the objects' centres, per axis).

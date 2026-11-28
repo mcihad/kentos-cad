@@ -8,8 +8,8 @@ use crate::block::{insert_local_xy, insert_matrix_xy, shows_nothing};
 use crate::block_dynamic::{GripKind, ParamGrip};
 use crate::entity::{ParamValue, Params, Shape};
 use crate::geom::affine::{apply, apply_linear};
-use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 impl Store {
     /// Insert `id`'s parameter grips on the drawing; none for an object that is not a dynamic block's insert. An

@@ -16,9 +16,9 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// A tag's words' height on paper by default, millimetres.
 pub const SIZE_MM: f64 = 2.5;

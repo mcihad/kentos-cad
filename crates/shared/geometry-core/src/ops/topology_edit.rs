@@ -370,7 +370,7 @@ pub fn inside_arc(
             if (dist(v, c) - r).abs() > SAME {
                 continue;
             }
-            let theta = crate::jsmath::atan2(v.y - c.y, v.x - c.x);
+            let theta = kentos_num::atan2(v.y - c.y, v.x - c.x);
             let d = if sweep > 0.0 {
                 norm_angle(theta - a0)
             } else {
@@ -716,8 +716,8 @@ fn merged(b: &Path, a: &Path) -> Vec<(Span, Span)> {
     }
     let (p, v, q) = (b.pts[prev], b.pts[j], b.pts[next]);
     let (l1, l2) = (
-        crate::jsmath::hypot(v.x - p.x, v.y - p.y),
-        crate::jsmath::hypot(q.x - v.x, q.y - v.y),
+        kentos_num::hypot(v.x - p.x, v.y - p.y),
+        kentos_num::hypot(q.x - v.x, q.y - v.y),
     );
     if !(l1 + l2 > 0.0) {
         return Vec::new();
@@ -735,7 +735,7 @@ fn fraction(edge: Span, v: Vec2) -> f64 {
         && let Some(arc) = crate::geom::bulge::bulge_arc(a, b, bulge)
     {
         use crate::geom::arc::norm_angle;
-        let theta = crate::jsmath::atan2(v.y - arc.c.y, v.x - arc.c.x);
+        let theta = kentos_num::atan2(v.y - arc.c.y, v.x - arc.c.x);
         let d = if arc.sweep > 0.0 {
             norm_angle(theta - arc.a0)
         } else {
@@ -761,8 +761,8 @@ fn at_fraction(edge: Span, t: f64) -> Vec2 {
     {
         let angle = arc.a0 + arc.sweep * t;
         return Vec2::new(
-            arc.c.x + arc.r * crate::jsmath::cos(angle),
-            arc.c.y + arc.r * crate::jsmath::sin(angle),
+            arc.c.x + arc.r * kentos_num::cos(angle),
+            arc.c.y + arc.r * kentos_num::sin(angle),
         );
     }
     Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
@@ -1031,7 +1031,7 @@ mod tests {
         let n = Neighbour {
             shape: Shape::Polyline {
                 pts: vec![Vec2::new(10.0, -10.0), Vec2::new(20.0, 0.0)],
-                bulges: Some(vec![crate::jsmath::tan(crate::jsmath::PI / 8.0)]),
+                bulges: Some(vec![kentos_num::tan(kentos_num::PI / 8.0)]),
                 holes: None,
                 parts: None,
                 closed: false,
@@ -1059,7 +1059,7 @@ mod tests {
         let new = (Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), 0.5);
         let b1 = area(&[(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)]);
         let got = carried(&[b1], &[(old, new)], false);
-        let sweep = 4.0 * crate::jsmath::atan(0.5);
+        let sweep = 4.0 * kentos_num::atan(0.5);
         assert_eq!(got.len(), 2, "{got:?}");
         let Change::Move { at, to } = got[0] else {
             panic!()
@@ -1081,7 +1081,7 @@ mod tests {
         };
         assert!(same(a, Vec2::new(0.0, 0.0)) && same(b, to) && from == 0.0);
         assert!(
-            (bulge - crate::jsmath::tan(sweep / 8.0)).abs() < 1e-12,
+            (bulge - kentos_num::tan(sweep / 8.0)).abs() < 1e-12,
             "{bulge}"
         );
     }

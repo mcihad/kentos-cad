@@ -1,7 +1,7 @@
 //! Transforms, lengths with units and the viewBox mapping with
 //! preserveAspectRatio.
 
-use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin, tan};
+use kentos_num::{PI, cos, maximum, minimum, sin, tan};
 use kentos_style_core::js::text::{is_space, trim};
 
 use crate::path::{IDENTITY, Matrix, multiply, number_len};

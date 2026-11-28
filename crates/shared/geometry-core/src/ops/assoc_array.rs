@@ -7,12 +7,12 @@
 
 use crate::entity::Shape;
 use crate::geom::affine::{Affine, apply};
-use crate::jsmath::atan2;
 use crate::tools::editing::{
     grid_array_transforms, lattice_array_transforms, line_array_transforms, path_array_transforms,
     polar_array_transforms,
 };
 use crate::vec2::Vec2;
+use kentos_num::atan2;
 
 /// Where an item's block goes: an insert's placement.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -96,9 +96,8 @@ pub fn item_placements(source: Placement, layout: &Layout<'_>) -> Option<Vec<Pla
                 || ![dx, dy, column_angle, row_angle]
                     .iter()
                     .all(|v| v.is_finite())
-                || crate::jsmath::sin(
-                    (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.))
-                        * crate::jsmath::PI
+                || kentos_num::sin(
+                    (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.)) * kentos_num::PI
                         / 180.,
                 )
                 .abs()

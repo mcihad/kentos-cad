@@ -16,11 +16,11 @@ use crate::api::json::{ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arrangement::Area;
 use crate::geom::region::net_area;
-use crate::jsmath::{PI, maximum};
 use crate::op;
 use crate::ops::areas::{areas_of_entity, polygon_of_area};
 use crate::ops::convert::{Elevations, Zs};
 use crate::ops::geoprocess::validity::problems;
+use kentos_num::{PI, maximum};
 
 fn is_path_kind(s: &Shape) -> bool {
     matches!(s, Shape::Polygon { .. } | Shape::Polyline { .. })

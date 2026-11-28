@@ -3231,6 +3231,7 @@ name = "kentos-expression"
 version = "0.1.0"
 dependencies = [
  "kentos-geometry-core",
+ "kentos-num",
  "regex-lite",
  "serde_json",
  "sha1 0.11.0",
@@ -4041,6 +4042,7 @@ name = "kentos-svg-core"
 version = "0.1.0"
 dependencies = [
  "kentos-geometry-core",
+ "kentos-num",
  "kentos-style-core",
  "serde_json",
 ]

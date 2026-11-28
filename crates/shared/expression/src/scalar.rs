@@ -8,7 +8,7 @@
 //! values are text, arithmetic reads numbers out of text, an empty value is
 //! empty, and no operation looks at another object.
 
-use kentos_geometry_core::jsmath::{maximum, pow};
+use kentos_num::{maximum, pow};
 
 use crate::compound::{is_compound, is_empty_compound, shown};
 use crate::js::collate;

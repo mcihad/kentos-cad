@@ -16,11 +16,11 @@ use kentos_geometry_core::entity::{HatchLoop, Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::hatch_boundary;
 use kentos_geometry_core::geom::region::{net_area, subtract_areas};
-use kentos_geometry_core::jsmath::TAU;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::hatch_region::seed_of;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::TAU;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};

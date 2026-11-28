@@ -5,7 +5,6 @@ use super::{
     model::Unit,
     prim::{FillPaint, Sink, StrokeStyle},
 };
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, maximum, sign, sin};
 use kentos_geometry_core::{
     Vec2,
     api::json::Json,
@@ -17,6 +16,7 @@ use kentos_geometry_core::{
         quadrature::integrate,
     },
 };
+use kentos_num::{atan2, cos, hypot, maximum, sign, sin};
 
 /// Exact carrier distances and tangents; rendering tessellation never changes
 /// the repetition phase. Straight callers retain their original path order.
@@ -891,8 +891,8 @@ mod tests {
                 );
                 for (i, p) in placed.iter().enumerate() {
                     let angle = sign * (first + i as f64 * 0.37) / 2.;
-                    assert!((p.at.x - 2. * kentos_geometry_core::jsmath::cos(angle)).abs() < 1e-12);
-                    assert!((p.at.y - 2. * kentos_geometry_core::jsmath::sin(angle)).abs() < 1e-12);
+                    assert!((p.at.x - 2. * kentos_num::cos(angle)).abs() < 1e-12);
+                    assert!((p.at.y - 2. * kentos_num::sin(angle)).abs() < 1e-12);
                     assert!(
                         (p.tangent - (angle + sign * std::f64::consts::FRAC_PI_2)).abs() < 1e-12
                     );
@@ -916,9 +916,9 @@ mod tests {
         let placed = m.placements_on(&route, 0., Unit::M, &env).unwrap();
         assert_eq!(placed.len(), 5);
         // At the vertex use the outgoing arc tangent, not the preceding line.
-        assert!((kentos_geometry_core::jsmath::sin(placed[1].tangent) + 1.).abs() < 1e-12);
-        assert!((placed[2].at.x - (2. - kentos_geometry_core::jsmath::cos(1f64))).abs() < 1e-12);
-        assert!((placed[2].at.y + kentos_geometry_core::jsmath::sin(1f64)).abs() < 1e-12);
+        assert!((kentos_num::sin(placed[1].tangent) + 1.).abs() < 1e-12);
+        assert!((placed[2].at.x - (2. - kentos_num::cos(1f64))).abs() < 1e-12);
+        assert!((placed[2].at.y + kentos_num::sin(1f64)).abs() < 1e-12);
         let circle = Route::of(&Shape::Circle {
             c: Vec2::new(0., 0.),
             r: 1.,
@@ -962,13 +962,11 @@ mod tests {
                 let angle = n as f64 * 0.5;
                 let p = &stroke["path"][0];
                 assert!(
-                    (p["x"].as_f64().unwrap() - kentos_geometry_core::jsmath::cos(angle)).abs()
-                        < 1e-12,
+                    (p["x"].as_f64().unwrap() - kentos_num::cos(angle)).abs() < 1e-12,
                     "{i}: {p}"
                 );
                 assert!(
-                    (p["y"].as_f64().unwrap() - kentos_geometry_core::jsmath::sin(angle)).abs()
-                        < 1e-12,
+                    (p["y"].as_f64().unwrap() - kentos_num::sin(angle)).abs() < 1e-12,
                     "{i}: {p}"
                 );
             }

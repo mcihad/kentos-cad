@@ -5,7 +5,7 @@
 //! (i.out ?? i) and (i+1.in ?? i+1): both missing makes it a straight line.
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, maximum, pow, round_half_up, sin, tan};
+use kentos_num::{PI, atan2, cos, maximum, pow, round_half_up, sin, tan};
 use kentos_style_core::js::number;
 
 use crate::shape::{PathNode, Pt, SubPath};

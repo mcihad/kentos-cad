@@ -13,10 +13,10 @@ use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle};
 use crate::geom::arrangement::Ring;
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::hatch_pattern::carried;
-use crate::jsmath::{PI, atan2, cos, hypot, or, sin};
 use crate::op;
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, or, sin};
 
 /// How a reflection treats texts (docs/adr/0292): AutoCAD's MIRRTEXT.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -771,7 +771,7 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                         spec.depth = Some(spec.width);
                         spec.width = depth;
                         spec.legs = Some([b, a]);
-                        spec.rotation = norm_angle(spec.rotation - crate::jsmath::PI / 2.0);
+                        spec.rotation = norm_angle(spec.rotation - kentos_num::PI / 2.0);
                         spec.anchor = (uy, ux);
                     }
                     None => spec.anchor = (ux, -uy),
@@ -808,15 +808,15 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             mark.at = mark.at.map(|a| apply(m, a));
             // The linear part: [a, b, c, d] maps (x, y) to (a x + c y, b x + d y).
             let (ma, mb, mc, md) = (m[0], m[1], m[2], m[3]);
-            let scale = crate::jsmath::hypot(ma, mb);
+            let scale = kentos_num::hypot(ma, mb);
             if let Some(r) = &mut mark.radius {
                 *r *= scale;
             }
             if let Some(a) = &mut mark.angle {
-                let rad = *a * crate::jsmath::PI / 180.0;
-                let (dx, dy) = (crate::jsmath::cos(rad), crate::jsmath::sin(rad));
-                *a = crate::jsmath::atan2(mb * dx + md * dy, ma * dx + mc * dy) * 180.0
-                    / crate::jsmath::PI;
+                let rad = *a * kentos_num::PI / 180.0;
+                let (dx, dy) = (kentos_num::cos(rad), kentos_num::sin(rad));
+                *a = kentos_num::atan2(mb * dx + md * dy, ma * dx + mc * dy) * 180.0
+                    / kentos_num::PI;
             }
             // A mirror turns which side a section looks to.
             if ma * md - mb * mc < 0.0 {

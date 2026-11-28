@@ -6,7 +6,7 @@
 //! of `fixtures/navigation/v1/cases.json` (scripts/fixtures/navigation_cases.py).
 
 use crate::geometry::Bounds;
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// From the drawing area's edges, logical pixels.
 pub const MARGIN: f64 = 8.0;

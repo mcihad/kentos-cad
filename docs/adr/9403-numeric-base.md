@@ -332,6 +332,12 @@ Kullanımların dökümü (159 çağrı yeri):
 
 Değer yuvarlayan yerlerin geçişi sonuçları eksi yarımlarda değiştirir; her biri kendi durumlarıyla gelir (açık).
 
+**`jsmath` silindi (28 Kasım 2026).** 446 dosya adları doğrudan `kentos_num`'dan alıyor; `log` adı `ln` oldu, π ve
+2π de temelden gelir. Taşımadan kalan beş yardımcı (`js_cmp`: NaN'ı eşit sayan karşılaştırma; `truthy` ve `or`:
+sıfır ve NaN'ı “verilmemiş” sayan sınama; `stable_sort`: böyle bir karşılaştırmayı taşıyan sıralama; `js_hypot_n`:
+çok parçalı uzunluk) `kentos_num::port`'ta toplandı: her biri kendi yazılı kuralını ya da açık bir koşulu
+bekliyor, bekçi kullanımlarını sayıyor. Davranış aynı.
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

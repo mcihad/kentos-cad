@@ -8,8 +8,8 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
 
-use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::statistics::{self, Dec};
+use kentos_num::{maximum, minimum};
 
 use crate::compound::{self, Item, MOST_ITEMS};
 use crate::js::collate::compare_tr;

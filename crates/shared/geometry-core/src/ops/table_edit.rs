@@ -29,10 +29,10 @@ use crate::api::Op;
 use crate::api::json::{FromJson, Json, read_field};
 use crate::entity::{CellRange, Shape};
 use crate::geom::table::{fit_widths, table_geom};
-use crate::jsmath::maximum;
 use crate::op;
 use crate::ops::table::{LEAST, MAX_CELLS, MAX_COLUMNS, MAX_ROWS, ROW, one_line};
 use crate::text::Font;
+use kentos_num::maximum;
 
 /// One of Tabloyu düzenle's edits.
 #[derive(Clone, Debug, PartialEq)]

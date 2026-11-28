@@ -4,9 +4,9 @@
 
 use crate::api::Op;
 use crate::geom::intersect::{circle_circle, line_line};
-use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, js_cmp, sin, stable_sort};
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x - b.x, a.y - b.y)

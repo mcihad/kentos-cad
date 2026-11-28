@@ -7,7 +7,7 @@
 //! reference's first.
 
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::maximum;
+use kentos_num::maximum;
 use serde_json::{Value, json};
 
 fn cases() -> Value {

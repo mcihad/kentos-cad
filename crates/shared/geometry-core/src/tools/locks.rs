@@ -7,11 +7,11 @@
 
 use crate::api::Op;
 use crate::geom::intersect::{Edge, on_edge_arc, point_at};
-use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::op;
 use crate::tools::point_input::{AngleFrom, Angles, Constrained, constrain_cursor};
 use crate::tools::point_text::{is_js_space, js_trim};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, sin};
 
 /// Two points closer than this give no direction (the core's `toward_point`).
 const SAME: f64 = 1e-9;

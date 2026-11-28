@@ -18,9 +18,9 @@
 use crate::api::Op;
 use crate::geom::arc::{ArcGeom, norm_angle, point_on_circle, sweep};
 use crate::geom::bulge::bulge_arc;
-use crate::jsmath::{TAU, tan};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, tan};
 
 mod ends;
 mod join;
@@ -182,10 +182,8 @@ impl Out {
             to,
             object,
         });
-        self.shift = crate::jsmath::maximum(
-            self.shift,
-            crate::jsmath::hypot(to.x - from.x, to.y - from.y),
-        );
+        self.shift =
+            kentos_num::maximum(self.shift, kentos_num::hypot(to.x - from.x, to.y - from.y));
     }
 }
 

@@ -11,10 +11,10 @@ fn rules_of(flow: &rich::Layout, piece: usize) -> &[rich::Rule] {
 use crate::{
     entity::TextPlace,
     geom::affine::{self, Affine},
-    jsmath::{PI, atan2, maximum, minimum},
     text::{Font, TextAlign, along::Walk},
     vec2::Vec2,
 };
+use kentos_num::{PI, atan2, maximum, minimum};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlacedGlyph {

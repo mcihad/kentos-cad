@@ -2,8 +2,8 @@
 //! Exhausting the budget is an error, never the false answer “zero crossings”.
 use crate::entity::{Shape, is_closed_path};
 use crate::geom::intersect::{Edge, intersect_edges};
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 pub(super) fn count(s: &Shape) -> Result<usize, String> {
     let pts = match s {
@@ -63,7 +63,7 @@ pub(super) fn count(s: &Shape) -> Result<usize, String> {
     Ok(count)
 }
 fn overlaps(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
-    let length = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
+    let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
     if length == 0. {
         return false;
     }

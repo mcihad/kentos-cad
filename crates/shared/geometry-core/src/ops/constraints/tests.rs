@@ -113,7 +113,7 @@ fn sub(a: Vec2, b: Vec2) -> Vec2 {
 }
 
 fn len(v: Vec2) -> f64 {
-    crate::jsmath::hypot(v.x, v.y)
+    kentos_num::hypot(v.x, v.y)
 }
 
 fn cross(a: Vec2, b: Vec2) -> f64 {

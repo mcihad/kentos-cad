@@ -6,8 +6,8 @@
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::wall::{self, Detail, Spec, View};
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::maximum;
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/cases.json");

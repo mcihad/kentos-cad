@@ -13,8 +13,8 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as P;
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::ops::overkill::{Turn, far, kept_bulges, merge_lines, same_points, thin};
+use kentos_num::maximum;
 use serde_json::Value;
 
 use crate::ExecutionContext;

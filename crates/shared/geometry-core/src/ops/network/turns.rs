@@ -10,8 +10,8 @@
 
 use super::rules::{TurnRule, UTurns, number};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{cos, sin};
 use crate::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 /// A turn layer's line as the host gives it: its object's id, its points (the first on the piece one comes along,
 /// the last on the piece one goes on, the second, when there are three or more, near their node), whether its

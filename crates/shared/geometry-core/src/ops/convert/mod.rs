@@ -18,8 +18,8 @@ pub mod table;
 use crate::entity::Shape;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{cos, sin};
 use crate::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 pub(crate) use calls::OPS;
 

@@ -12,10 +12,10 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_through, is_arc_bulge, segment_mid};
 use crate::geom::dimension::{dimension_offset_at, is_new_kind, layout_dimension};
 use crate::geom::ellipse::{closest_param, ellipse_from_center, ellipse_point, is_full_ellipse};
-use crate::jsmath::{PI, hypot};
 use crate::op;
 use crate::ops::transform::transform_entity;
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot};
 
 /// Construction lines show their direction grip this far (m) from the base point.
 const DIRECTION_GRIP: f64 = 10.0;
@@ -485,8 +485,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 frame.p = p;
             } else {
                 let c = corners.get(index)?;
-                let was = crate::jsmath::hypot(c.x - f.p.x, c.y - f.p.y);
-                let now = crate::jsmath::hypot(p.x - f.p.x, p.y - f.p.y);
+                let was = kentos_num::hypot(c.x - f.p.x, c.y - f.p.y);
+                let now = kentos_num::hypot(p.x - f.p.x, p.y - f.p.y);
                 let k = now / was;
                 if !(k > 0.0 && k.is_finite()) {
                     return None;

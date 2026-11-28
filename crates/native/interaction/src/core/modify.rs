@@ -25,11 +25,11 @@ use kentos_commands::{
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape_in};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::{shape, with_shape};
 use kentos_native_application::{ExecutionContext, array, transform};
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::format::Format;

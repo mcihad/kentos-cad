@@ -9,8 +9,8 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, minimum, sin};
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x - b.x, a.y - b.y)

@@ -16,8 +16,8 @@ use crate::geom::arrangement::{Area, Ring, TOL, WindingIndex, winding};
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::{Edge, intersect_edges, point_at};
 use crate::geom::region::{area_source, orient_ring, ring_area, ring_edges};
-use crate::jsmath::{atan2, sign};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, sign};
 
 /// The cutting line: `x = at` when `across_x`, else `y = at`.
 #[derive(Clone, Copy, Debug)]
@@ -149,7 +149,7 @@ fn cut_edge(
                 a: line.point(reach.0),
                 b: line.point(reach.1),
             };
-            let near = |p: Vec2, q: Vec2| crate::jsmath::hypot(p.x - q.x, p.y - q.y) <= TOL;
+            let near = |p: Vec2, q: Vec2| kentos_num::hypot(p.x - q.x, p.y - q.y) <= TOL;
             for h in intersect_edges(e, &across) {
                 // An end on the line is its own node.
                 if h.t > 1e-12 && h.t < 1.0 - 1e-12 && !near(h.p, start) && !near(h.p, end) {
@@ -287,8 +287,8 @@ pub fn cut_area(area: &Area, line: Line) -> [Vec<Area>; 2] {
         } else {
             (b.min_x, b.max_x)
         };
-        lo = crate::jsmath::minimum(lo, a);
-        hi = crate::jsmath::maximum(hi, z);
+        lo = kentos_num::minimum(lo, a);
+        hi = kentos_num::maximum(hi, z);
     }
     let reach = (lo - 1.0, hi + 1.0);
     let rings_in: Vec<Ring> = std::iter::once(orient_ring(&area.outer, true))

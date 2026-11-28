@@ -15,8 +15,8 @@ use super::{
 };
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 
 /// Why a dimension of docs/adr/0147 cannot be laid out: `layout_dimension`
 /// gives none exactly when `dimension_fault` gives one (for finite numbers).

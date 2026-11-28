@@ -74,7 +74,6 @@ use kentos_geometry_core::geom::bulge::{
 };
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
-use kentos_geometry_core::jsmath::{PI, hypot};
 use kentos_geometry_core::ops::trace::Traced;
 use kentos_geometry_core::tools::drawing::{
     arc_end_about, centre_bulge, chord_end, chord_sweep, offset_along, radial_point, radius_bulge,
@@ -84,6 +83,7 @@ use kentos_geometry_core::tools::locks::square_corner;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, parcels, polygon, polyline};
+use kentos_num::{PI, hypot};
 
 use crate::Vec2;
 use crate::adjoin;

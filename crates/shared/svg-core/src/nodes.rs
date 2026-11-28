@@ -6,9 +6,7 @@
 //! and distributing nodes. A node is addressed by its sub-path and index;
 //! every function returns new sub-paths and leaves its input alone.
 
-use kentos_geometry_core::jsmath::{
-    PI, acos, hypot, js_cmp, maximum, minimum, or, sin, stable_sort, tan,
-};
+use kentos_num::{PI, acos, hypot, js_cmp, maximum, minimum, or, sin, stable_sort, tan};
 
 use crate::bezier::{
     Cubic, bez, bez_tangent, param_at_distance, segment_count, segment_cubic, segment_is_line,

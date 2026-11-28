@@ -14,7 +14,7 @@ use kentos_geometry_core::geom::ellipse::{ellipse_sweep, is_full_ellipse, minor_
 use kentos_geometry_core::geom::nurbs;
 use kentos_geometry_core::geom::spline::catmull_rom_in_box;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::TAU;
+use kentos_num::TAU;
 
 use super::Deep;
 use crate::style::compile::Geom;
@@ -184,8 +184,8 @@ mod tests {
     use crate::style::build::{LayerObjects, MODE_SET, Program, View, build_layer_with};
     use kentos_geometry_core::api::json::Json;
     use kentos_geometry_core::geom::deep::COARSE_STEP;
-    use kentos_geometry_core::jsmath::{hypot, maximum};
     use kentos_geometry_core::store::Store;
+    use kentos_num::{hypot, maximum};
 
     const BOX: Bounds = Bounds {
         min_x: -1.0,

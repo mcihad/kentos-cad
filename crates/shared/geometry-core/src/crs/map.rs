@@ -4,7 +4,7 @@
 
 use super::{Choice, System, transform_in};
 use crate::Vec2;
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// The deepest an edge is halved.
 const DEPTH: u32 = 8;
@@ -94,7 +94,7 @@ impl MapProjection {
                     ms.iter().map(|p| p.y).sum::<f64>() / k,
                 );
                 self.forward(p)
-                    .map_or(0.0, |q| crate::jsmath::hypot(q.x - chord.x, q.y - chord.y))
+                    .map_or(0.0, |q| kentos_num::hypot(q.x - chord.x, q.y - chord.y))
             };
             for (i, j) in [(0, 1), (1, 2), (2, 0)] {
                 worst = maximum(worst, stray(&[t[i], t[j]], &[m[i], m[j]]));
@@ -232,7 +232,7 @@ impl MapProjection {
             let mid = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
             if let Some(mm) = self.forward(mid) {
                 let chord = Vec2::new((ma.x + mb.x) / 2.0, (ma.y + mb.y) / 2.0);
-                if crate::jsmath::hypot(mm.x - chord.x, mm.y - chord.y) > self.tolerance {
+                if kentos_num::hypot(mm.x - chord.x, mm.y - chord.y) > self.tolerance {
                     self.split(a, mid, ma, mm, depth - 1, out);
                     self.split(mid, b, mm, mb, depth - 1, out);
                     return;

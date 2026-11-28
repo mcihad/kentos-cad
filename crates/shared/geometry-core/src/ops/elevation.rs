@@ -20,9 +20,9 @@
 use crate::api::Op;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, param_on};
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// How near a vertex must be to lie on a source vertex or edge (m).
 pub const ON: f64 = 1e-6;
@@ -300,8 +300,8 @@ mod tests {
         let arc = bulge_arc(v(0.0, 0.0), v(10.0, 0.0), 1.0).unwrap();
         let mid = arc.a0 + arc.sweep / 2.0;
         let m = v(
-            arc.c.x + crate::jsmath::cos(mid) * arc.r,
-            arc.c.y + crate::jsmath::sin(mid) * arc.r,
+            arc.c.x + kentos_num::cos(mid) * arc.r,
+            arc.c.y + kentos_num::sin(mid) * arc.r,
         );
         let got = carry_elevations(&[m], false, None, &s, Carry::Along);
         let z = got[0].unwrap();
@@ -379,11 +379,11 @@ mod tests {
             &[v(0.0, 0.0), v(10.0, 0.0)],
             Some(&[1.0, 0.0]),
             false,
-            &[Some(0.0), Some(5.0 * crate::jsmath::PI)],
+            &[Some(0.0), Some(5.0 * kentos_num::PI)],
         )
         .unwrap();
         assert!(
-            (arc - 5.0 * crate::jsmath::PI * std::f64::consts::SQRT_2).abs() < 1e-9,
+            (arc - 5.0 * kentos_num::PI * std::f64::consts::SQRT_2).abs() < 1e-9,
             "{arc}"
         );
     }

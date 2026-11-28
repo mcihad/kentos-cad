@@ -35,9 +35,9 @@ use std::collections::{HashMap, HashSet};
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::Shape;
-use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{cos, maximum, minimum, sin};
 
 /// An object's attributes, in their order.
 #[derive(Clone, Debug, Default, PartialEq)]

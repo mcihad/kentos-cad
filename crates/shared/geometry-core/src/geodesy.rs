@@ -9,8 +9,8 @@
 //! §3; the reference is PROJ's `get_factors`, scripts/fixtures/ground_cases.py).
 
 use crate::api::Op;
-use crate::jsmath::PI;
 use crate::vec2::Vec2;
+use kentos_num::PI;
 
 /// A transverse Mercator projection: what the coordinate system registry
 /// holds of a TM3 zone or a UTM zone, with its ellipsoid.

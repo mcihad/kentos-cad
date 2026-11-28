@@ -16,9 +16,9 @@ use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, TAU, atan2, hypot, js_cmp, maximum, minimum, or, sin, stable_sort};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, hypot, js_cmp, maximum, minimum, or, sin, stable_sort};
 
 // ── Rings ─────────────────────────────────────────────────────────────
 
@@ -913,7 +913,7 @@ pub fn adjoin_faces(neighbours: &[Source], path: &Source) -> Vec<Area> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::cos;
+    use kentos_num::cos;
 
     /// The order rule before §23.3: the chord to 1e-4 of each piece, its
     /// angle taken from a point placed along the piece in local coordinates.

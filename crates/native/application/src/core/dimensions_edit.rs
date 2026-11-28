@@ -69,18 +69,15 @@ fn frame(d: &DimensionEntity) -> Option<(Vec2, Vec2, Vec2)> {
     let u = match d.style {
         None | Some(DimensionStyle::Aligned) => {
             let (dx, dy) = (d.b.x - d.a.x, d.b.y - d.a.y);
-            let l = kentos_geometry_core::jsmath::hypot(dx, dy);
+            let l = kentos_num::hypot(dx, dy);
             if l < 1e-9 {
                 return None;
             }
             Vec2::new(dx / l, dy / l)
         }
         Some(DimensionStyle::Linear) => {
-            let t = d.angle.unwrap_or(0.0) * kentos_geometry_core::jsmath::PI / 180.0;
-            Vec2::new(
-                kentos_geometry_core::jsmath::cos(t),
-                kentos_geometry_core::jsmath::sin(t),
-            )
+            let t = d.angle.unwrap_or(0.0) * kentos_num::PI / 180.0;
+            Vec2::new(kentos_num::cos(t), kentos_num::sin(t))
         }
         _ => return None,
     };

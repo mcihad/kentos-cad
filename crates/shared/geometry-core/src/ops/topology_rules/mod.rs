@@ -22,10 +22,10 @@ use crate::geom::arrangement::{Area, edge_box, edge_len};
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, hypot, maximum, minimum, stable_sort};
 use crate::ops::geoprocess::{Class, class_of};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot, maximum, minimum, stable_sort};
 
 /// The thirteen kinds (the contract's `TopologyRuleKind`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

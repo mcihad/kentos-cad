@@ -10,8 +10,8 @@
 //! the leader) and y a quarter turn counter-clockwise from x; a point (x, y)
 //! is `tip + d·x·L + n·y·L`.
 
-use crate::jsmath::{PI, cos, sin, tan};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, sin, tan};
 
 /// Segments of a full circle, as the store draws one.
 const CIRCLE_SEGMENTS: usize = 72;

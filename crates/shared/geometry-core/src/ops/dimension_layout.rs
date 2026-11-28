@@ -2,7 +2,7 @@
 //! places where they do not fit between their extension lines, and whether its rows' rounded values add up to its
 //! rounded overall. Pure: the caller gives the frame's numbers, the texts' widths and the written values.
 
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// A row's dimension line's offset at a sheet scale (docs/adr/0730 §1): its row `scale / plot_scale` times as far across
 /// from the reference line as at the drawing's scale (`delta` its distance there, signed along the frame's normal), its

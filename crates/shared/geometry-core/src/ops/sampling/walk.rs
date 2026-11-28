@@ -6,11 +6,11 @@
 
 use crate::entity::Shape;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{cos, hypot, maximum, minimum, sign, sin};
 use crate::ops::convert::{Zs, paths};
 use crate::ops::edges::edge_length;
 use crate::ops::path::path_of;
 use crate::vec2::Vec2;
+use kentos_num::{cos, hypot, maximum, minimum, sign, sin};
 
 pub struct Walk {
     pub edges: Vec<Edge>,

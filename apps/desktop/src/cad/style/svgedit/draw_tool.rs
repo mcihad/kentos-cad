@@ -7,7 +7,7 @@
 use iced::widget::canvas::{Frame, Path, Stroke};
 use iced::{Color, Point, Size};
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::jsmath::{PI, atan2, hypot, maximum, minimum};
+use kentos_num::{PI, atan2, hypot, maximum, minimum};
 use kentos_svg_core::model::{regular_polygon, rotate_about, transform_shape};
 use kentos_svg_core::shape::{Obj, PathNode, Pt, SubPath};
 

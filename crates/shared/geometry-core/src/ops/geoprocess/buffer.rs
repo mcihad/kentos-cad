@@ -10,8 +10,8 @@ use super::{Class, subtract_all, union_all};
 use crate::geom::arrangement::{Area, Ring, TOL};
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, sin};
 
 /// Which side of a path a buffer takes (paths only; areas and points take both).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -17,9 +17,9 @@ use kentos_contracts::{
 };
 
 use kentos_geometry_core::crs::text::{self as core_text, Refusal};
-use kentos_geometry_core::jsmath::{PI, atan2, hypot};
 use kentos_geometry_core::ops::fit::{self as solver, FitError, FitKind, FitPair};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, atan2, hypot};
 
 use crate::crs::{system, systems};
 use crate::systems::{definition_from, definition_system};

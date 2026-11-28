@@ -43,10 +43,10 @@ fn bounds_of(ring: &[Vec2]) -> Bounds {
         max_y: f64::NEG_INFINITY,
     };
     for p in ring {
-        b.min_x = crate::jsmath::minimum(b.min_x, p.x);
-        b.min_y = crate::jsmath::minimum(b.min_y, p.y);
-        b.max_x = crate::jsmath::maximum(b.max_x, p.x);
-        b.max_y = crate::jsmath::maximum(b.max_y, p.y);
+        b.min_x = kentos_num::minimum(b.min_x, p.x);
+        b.min_y = kentos_num::minimum(b.min_y, p.y);
+        b.max_x = kentos_num::maximum(b.max_x, p.x);
+        b.max_y = kentos_num::maximum(b.max_y, p.y);
     }
     b
 }

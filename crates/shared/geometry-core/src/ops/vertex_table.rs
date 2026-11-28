@@ -14,10 +14,10 @@
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::geom::bulge::{bulge_at, has_bulges, is_arc_bulge};
-use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::Elevated;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// Two vertices this close are one place (`clean_bulge_path`'s tolerance).
 pub const SAME: f64 = 1e-9;
@@ -520,12 +520,9 @@ mod tests {
         // Radius 25 about (20, 0), from 0° to 180° in three arcs of 60°: bulge tan 15° each.
         let at = |deg: f64| {
             let a = deg.to_radians();
-            Vec2::new(
-                20.0 + 25.0 * crate::jsmath::cos(a),
-                25.0 * crate::jsmath::sin(a),
-            )
+            Vec2::new(20.0 + 25.0 * kentos_num::cos(a), 25.0 * kentos_num::sin(a))
         };
-        let b = crate::jsmath::tan(15f64.to_radians());
+        let b = kentos_num::tan(15f64.to_radians());
         let path = Elevated {
             pts: vec![at(0.0), at(60.0), at(120.0), at(180.0)],
             bulges: Some(vec![b, b, b, 0.0]),

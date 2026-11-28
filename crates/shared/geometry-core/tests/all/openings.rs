@@ -8,8 +8,8 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::opening::{self, Spec as OpeningSpec};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::maximum;
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/openings.json");
@@ -310,7 +310,7 @@ fn cut_as_the_reference_says(text: &str) {
 /// `depth` in from its face; above the cut height its dashed back is that arc too.
 #[test]
 fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
-    let bulge = kentos_geometry_core::jsmath::tan(kentos_geometry_core::jsmath::PI / 8.0);
+    let bulge = kentos_num::tan(kentos_num::PI / 8.0);
     let pts = [Vec2::new(5.0, 0.0), Vec2::new(0.0, 5.0)];
     let bulges = [bulge, 0.0];
     let wall = Spec {
@@ -379,7 +379,7 @@ fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
 }
 
 fn js_hypot_of(p: Vec2) -> f64 {
-    kentos_geometry_core::jsmath::hypot(p.x, p.y)
+    kentos_num::hypot(p.x, p.y)
 }
 
 /// Pocket doors in arc walls (docs/adr/0787 §2; scripts/fixtures/arc_pocket_cases.py): the jambs radial, the leaves

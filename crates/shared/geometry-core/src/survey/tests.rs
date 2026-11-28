@@ -136,8 +136,8 @@ fn misclosures_are_the_errors_put_in() {
     distances[k] += 0.05;
     let r = traverse(&input(angles, distances.clone())).unwrap();
     let b = bearing(pts[k], pts[k + 1]);
-    assert!((r.fy.unwrap() - 0.05 * crate::jsmath::sin(b)).abs() < 1e-9);
-    assert!((r.fx.unwrap() - 0.05 * crate::jsmath::cos(b)).abs() < 1e-9);
+    assert!((r.fy.unwrap() - 0.05 * kentos_num::sin(b)).abs() < 1e-9);
+    assert!((r.fx.unwrap() - 0.05 * kentos_num::cos(b)).abs() < 1e-9);
     assert!((r.linear_misclosure.unwrap() - 0.05).abs() < 1e-9);
     // The corrections share it out by length and sum to the misclosure's opposite.
     let vy: f64 = r.legs.iter().map(|l| l.vy).sum();
@@ -338,7 +338,7 @@ fn polar_survey_and_stakeout_are_inverse() {
                 } else {
                     // A slope sight 3 grad (or degrees) off level; the point lies dz below the station mark.
                     let z = unit.rad(if unit == Unit::GRAD { 103.0 } else { 93.0 });
-                    let slope = st.distance / crate::jsmath::sin(z);
+                    let slope = st.distance / kentos_num::sin(z);
                     Shot {
                         reading,
                         distance: slope,
@@ -373,7 +373,7 @@ fn polar_survey_and_stakeout_are_inverse() {
             if k % 2 == 0 {
                 assert!(got.z.is_none());
             } else {
-                let dz = shots[k].distance * crate::jsmath::cos(unit.rad(shots[k].zenith.unwrap()))
+                let dz = shots[k].distance * kentos_num::cos(unit.rad(shots[k].zenith.unwrap()))
                     + ih
                     - 1.7;
                 assert!((got.z.unwrap() - (sz + dz)).abs() < 1e-9);
@@ -519,7 +519,7 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
     let back = Vec2::new(TM.x - 50.0, TM.y);
     let (angles, distances) = measure(unit, &sq, back, Some(back));
     // z such that S·cot z = 1, 2, −1.5 and −1.6 m: the last 0.1 m off the closure.
-    let zenith = |d: f64| 90.0 - crate::jsmath::atan(d / 100.0).to_degrees();
+    let zenith = |d: f64| 90.0 - kentos_num::atan(d / 100.0).to_degrees();
     let heights = TraverseHeights {
         start: 850.0,
         end: Some(850.0),
@@ -684,7 +684,7 @@ fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refrac
     use super::traverse::TraverseBackSight;
     let r = super::fieldbook::EARTH_RADIUS;
     let c = (1.0 - 0.13) * 1000.0 * 1000.0 / (2.0 * r);
-    let zenith = |cot: f64| 90.0 - crate::jsmath::atan(cot / 1000.0).to_degrees();
+    let zenith = |cot: f64| 90.0 - kentos_num::atan(cot / 1000.0).to_degrees();
     let back = Vec2::new(TM.x - 50.0, TM.y);
     let run = |k: f64, sighted_back: bool| {
         traverse(&TraverseInput {
@@ -847,12 +847,9 @@ fn a_leapfrog_setup_s_difference_is_fore_less_back() {
     };
     let (dh, length) = leapfrog(back, fore, Unit::GRAD, 0.13).expect("a setup");
     let a = 2.0 * std::f64::consts::PI / 400.0 * 2.0;
+    assert!((dh + 2.0 * 50.0 * kentos_num::sin(a)).abs() < 1e-12, "{dh}");
     assert!(
-        (dh + 2.0 * 50.0 * crate::jsmath::sin(a)).abs() < 1e-12,
-        "{dh}"
-    );
-    assert!(
-        (length - 100.0 * crate::jsmath::cos(a)).abs() < 1e-12,
+        (length - 100.0 * kentos_num::cos(a)).abs() < 1e-12,
         "{length}"
     );
     let (dh0, _) = leapfrog(back, fore, Unit::GRAD, 0.0).expect("a setup");

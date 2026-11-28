@@ -12,7 +12,7 @@
 //!
 //! Test code only.
 
-use kentos_geometry_core::jsmath::{cos, sin};
+use kentos_num::{cos, sin};
 
 use crate::app::App;
 use crate::files_testing::make_cad;

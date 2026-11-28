@@ -5,7 +5,7 @@
 //! tree not connected stands where it was put. The same trees give the same
 //! places on every platform.
 
-use kentos_geometry_core::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 use super::tree::{T, func_def, symbol, var_def};
 use super::types::{self, Type};

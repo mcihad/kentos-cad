@@ -5,11 +5,11 @@
 use crate::api::Op;
 use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part, leader_refused};
 use crate::geom::bulge::bulge_ring_area;
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::curve_cuts::{Cut, break_construction, break_ellipse, construction_of, ellipse_of};
 use crate::ops::path::{nearest_s, path_of, sub_path};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
     let s = &e.shape;

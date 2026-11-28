@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 const NODE: usize = 16;
 

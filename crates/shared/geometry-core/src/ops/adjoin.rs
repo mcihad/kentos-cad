@@ -15,11 +15,11 @@ use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::adjoin_faces;
 use crate::geom::region::{area_source, intersect_area_sets, ring_edges, subtract_areas};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::ops::topology_edit::{Neighbour, Path, SAME, padded, paths_of, shape_of};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// What the overlap control leaves of a new area (§2).
 pub struct Avoided {
@@ -507,7 +507,7 @@ mod tests {
         };
         assert_eq!(pts[2], top);
         let b = bulges.as_deref().unwrap_or_default();
-        let quarter = crate::jsmath::tan(crate::jsmath::PI / 8.0);
+        let quarter = kentos_num::tan(kentos_num::PI / 8.0);
         assert!(
             (b[1] - quarter).abs() < 1e-12 && (b[2] - quarter).abs() < 1e-12,
             "{b:?}"

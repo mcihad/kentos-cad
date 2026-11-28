@@ -758,7 +758,7 @@ impl SvgEditor {
 
 /// The turn of a drag on the rotation knob about the box's centre, in degrees; Shift in 15° steps (`knobTurn`).
 pub fn knob_turn(bx: &Bounds, p0: Pt, p: Pt, shift: bool) -> f64 {
-    use kentos_geometry_core::jsmath::{PI, atan2, round_half_up};
+    use kentos_num::{PI, atan2, round_half_up};
     let cx = (bx.min_x + bx.max_x) / 2.0;
     let cy = (bx.min_y + bx.max_y) / 2.0;
     let deg = ((atan2(p[1] - cy, p[0] - cx) - atan2(p0[1] - cy, p0[0] - cx)) * 180.0) / PI;

@@ -5,8 +5,8 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::round_half_up;
 use serde_json::{Value, json};
 
 const SAMPLE: &str = include_str!("../../../../../fixtures/kcad/v2/dynamic-blocks.json");

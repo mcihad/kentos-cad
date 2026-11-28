@@ -20,8 +20,8 @@ use super::{DimensionGeom, Look};
 use crate::entity::Shape;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{hypot, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, minimum};
 
 /// What Hızlı ölçü writes: the dimensions, and how many objects were
 /// neither a line, a polyline nor an area.

@@ -2,8 +2,8 @@
 use super::tests::{c, dim, r, solve_of};
 use super::*;
 use crate::geom::ellipse::{EllipseGeom, ellipse_point};
-use crate::jsmath::{PI, TAU, cos, hypot, sin};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, cos, hypot, sin};
 const CENTER: Element = Element::Point(PointAt::Center);
 const START: Element = Element::Point(PointAt::Start);
 const END: Element = Element::Point(PointAt::End);

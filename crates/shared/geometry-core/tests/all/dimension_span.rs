@@ -5,12 +5,12 @@
 //! (fixtures/commands/v1/cad.dimensionsets.create.span.json) hold the rest against an independent reference.
 
 use kentos_geometry_core::geom::wall::{Component, Justify, Spec};
-use kentos_geometry_core::jsmath::{cos, round_half_up, sin};
 use kentos_geometry_core::ops::dimension_set::{Openings, Point, Row};
 use kentos_geometry_core::ops::dimension_span::{
     Fault, GridIn, OpeningIn, Recipe, Reference, SpaceIn, WallIn, Why, plan,
 };
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{cos, round_half_up, sin};
 
 fn spec(width: f64) -> Spec {
     Spec {

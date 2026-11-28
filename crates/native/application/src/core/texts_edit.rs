@@ -15,9 +15,9 @@ use kentos_commands::{
 };
 use kentos_domain::text_fields::replace_letters;
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_geometry_core::jsmath::{PI, cos, sin};
 use kentos_geometry_core::text::edit::{find_all, whole_graphemes};
 use kentos_geometry_core::text::paragraph::{PITCH, rise};
+use kentos_num::{PI, cos, sin};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_blank};

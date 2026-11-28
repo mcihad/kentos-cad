@@ -29,9 +29,9 @@ use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::display::fixed;
 use crate::geodesy::{Tm, tm_forward, tm_inverse};
-use crate::jsmath::PI;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::PI;
 
 /// A coordinate system as the transforms read it: the registry's entry
 /// without its names, or the project's definition (docs/adr/0168 §1). A
@@ -324,13 +324,13 @@ pub fn transform_bounds(
     }
     let (mut lo_y, mut hi_y) = (f64::INFINITY, f64::NEG_INFINITY);
     for p in &moved {
-        lo_y = crate::jsmath::minimum(lo_y, p.y);
-        hi_y = crate::jsmath::maximum(hi_y, p.y);
+        lo_y = kentos_num::minimum(lo_y, p.y);
+        hi_y = kentos_num::maximum(hi_y, p.y);
     }
     let (mut lo_x, mut hi_x) = (f64::INFINITY, f64::NEG_INFINITY);
     for p in &moved {
-        lo_x = crate::jsmath::minimum(lo_x, p.x);
-        hi_x = crate::jsmath::maximum(hi_x, p.x);
+        lo_x = kentos_num::minimum(lo_x, p.x);
+        hi_x = kentos_num::maximum(hi_x, p.x);
     }
     // In degrees, a sampled edge that jumps more than half the world crosses the antimeridian: the box is the
     // longitudes' gap's complement.

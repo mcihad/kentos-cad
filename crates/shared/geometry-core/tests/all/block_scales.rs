@@ -7,9 +7,9 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, minimum, sin};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/blocks/v1/scales.json");

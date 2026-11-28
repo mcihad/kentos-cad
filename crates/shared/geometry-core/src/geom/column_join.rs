@@ -17,8 +17,8 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::line_line;
 use crate::geom::wall::{Body, ComponentFill, Detail, Drawn, Line, Spec, Stroke};
 use crate::geometry::{Bounds, point_in_polygon};
-use crate::jsmath::{TAU, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{TAU, cos, hypot, maximum, minimum, sin};
 
 /// Lengths and parameters closer than this are the same.
 const EPS: f64 = 1e-9;

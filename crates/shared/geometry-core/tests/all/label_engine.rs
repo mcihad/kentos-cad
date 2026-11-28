@@ -361,7 +361,6 @@ struct LabelScene {
 
 /// The timing scenes, the web's (`labels.test.ts`) built the same way.
 fn label_scenes() -> Vec<LabelScene> {
-    use kentos_geometry_core::jsmath;
     use std::fmt::Write as _;
     let (x0, y0) = (487_000.0, 4_420_000.0);
     let mut out = Vec::new();
@@ -464,10 +463,10 @@ fn label_scenes() -> Vec<LabelScene> {
             let mut pts = String::new();
             for k in 0..=72 {
                 let a = std::f64::consts::TAU * f64::from(k % 72) / 72.0;
-                let wobble = 1.0 + 0.06 * jsmath::sin(3.0 * a + hill as f64);
+                let wobble = 1.0 + 0.06 * kentos_num::sin(3.0 * a + hill as f64);
                 let (x, y) = (
-                    cx + r * wobble * jsmath::cos(a),
-                    cy + r * wobble * jsmath::sin(a),
+                    cx + r * wobble * kentos_num::cos(a),
+                    cy + r * wobble * kentos_num::sin(a),
                 );
                 let _ = write!(
                     pts,

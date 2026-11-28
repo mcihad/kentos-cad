@@ -10,10 +10,10 @@ use crate::geom::arrangement::{Area, Ring, Source};
 use crate::geom::bulge::{bulge_at, has_bulges};
 use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::is_full_ellipse;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// Polyline ends closer than this count as closed.
 const CLOSE_TOL: f64 = 1e-6;

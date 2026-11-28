@@ -152,15 +152,12 @@ pub fn paper_point_mm(doc: &Document, uids: &[&str]) -> Option<f64> {
         .filter_map(|u| doc.slot_of(u).and_then(|s| doc.get(s)))
         .filter_map(|e| match e {
             kentos_commands::Entity::Insert(i) => {
-                let s = kentos_geometry_core::jsmath::maximum(
-                    i.scale.abs(),
-                    i.y_scale.unwrap_or(i.scale).abs(),
-                );
+                let s = kentos_num::maximum(i.scale.abs(), i.y_scale.unwrap_or(i.scale).abs());
                 Some(25.4 / 72.0 * s)
             }
             _ => None,
         })
-        .reduce(kentos_geometry_core::jsmath::maximum)
+        .reduce(kentos_num::maximum)
 }
 
 /// The words that say why a measure read off an underlay differs from the source drawing's (docs/adr/1060 §7).

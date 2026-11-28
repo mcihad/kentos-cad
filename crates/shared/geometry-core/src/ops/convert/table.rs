@@ -6,10 +6,10 @@
 
 use crate::crs::{Choice, System, Unreached, parse_angle, transform_in};
 use crate::entity::Shape;
-use crate::jsmath::{cos, sin};
 use crate::ops::cogo::read_number;
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 /// Why a row gives nothing (§5–§7; docs/adr/0223 §5): a cell (by its place
 /// in the row) empty, no number (docs/adr/0180's rule: a sign, digits and one

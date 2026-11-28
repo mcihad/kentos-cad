@@ -20,8 +20,8 @@ use kentos_contracts::{BlockDefinition, Entity, InsertEntity, LeaderEntity, SubR
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
 use kentos_geometry_core::geom::leader::layout_of;
-use kentos_geometry_core::jsmath::{PI, cos, sin};
 use kentos_geometry_core::ops::subref::{Followed, follow, follow_path};
+use kentos_num::{PI, cos, sin};
 
 use crate::dimension_ties::{contract_place, core_place};
 use crate::document::Document;

@@ -14,7 +14,7 @@ use kentos_commands::{
 use kentos_domain::arrays::{item_insert, placements};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::entity_bounds_in;
-use kentos_geometry_core::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 use crate::checks::{Stop, error};
 use crate::codes;

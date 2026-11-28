@@ -10,8 +10,8 @@
 //! bit (`for_area`), the same steps on every platform.
 
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
-use crate::jsmath::{atan2, hypot, maximum};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, maximum};
 
 use super::edge_shift::{NO_AREA, NO_EDGE, PARALLEL, PASSED};
 

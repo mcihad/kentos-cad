@@ -43,12 +43,12 @@ use crate::block_dynamic::Dynamic;
 use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use crate::ops::warp::{Warp, warp_shape};
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, minimum, sin};
 
 /// Nested definitions followed at most this deep (`MAX_BLOCK_DEPTH` in the contracts).
 pub const MAX_DEPTH: usize = 16;
@@ -170,7 +170,7 @@ impl Underlay {
         let mut p = piece.clone();
         p.stroke.pdf_fill |= matches!(p.shape, Shape::Polygon { .. });
         if self.fade > 0.0 {
-            p.stroke.transparency = Some(crate::jsmath::maximum(
+            p.stroke.transparency = Some(kentos_num::maximum(
                 p.stroke.transparency.unwrap_or(0.0),
                 self.fade,
             ));

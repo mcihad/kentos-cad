@@ -10,10 +10,10 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{hypot, maximum, tan};
 use crate::op;
 use crate::tools::point_calc::Walk;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, tan};
 
 /// The most points a sampled centreline takes: more is refused, the step to be widened.
 pub const MOST_POINTS: f64 = 100_000.0;
@@ -72,12 +72,7 @@ fn ends_of(e: &Edge) -> (Vec2, Vec2) {
     match *e {
         Edge::Seg { a, b } => (a, b),
         Edge::Arc { c, r, a0, sweep } => {
-            let at = |t: f64| {
-                Vec2::new(
-                    c.x + r * crate::jsmath::cos(t),
-                    c.y + r * crate::jsmath::sin(t),
-                )
-            };
+            let at = |t: f64| Vec2::new(c.x + r * kentos_num::cos(t), c.y + r * kentos_num::sin(t));
             (at(a0), at(a0 + sweep))
         }
     }

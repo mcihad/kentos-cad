@@ -7,10 +7,10 @@ use crate::geom::arrangement::{Area, TOL, WindingIndex, tight_box};
 use crate::geom::intersect::closest_on_edge;
 use crate::geom::region::area_source;
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{maximum, minimum};
 use crate::ops::geoprocess::Place;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 pub struct Inside {
     index: WindingIndex<'static>,

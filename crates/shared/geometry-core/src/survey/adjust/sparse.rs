@@ -401,9 +401,7 @@ mod tests {
                 }
             }
         }
-        let b: Vec<f64> = (0..30)
-            .map(|i| crate::jsmath::sin(i as f64 * 0.37))
-            .collect();
+        let b: Vec<f64> = (0..30).map(|i| kentos_num::sin(i as f64 * 0.37)).collect();
         let pb: Vec<f64> = (0..30).map(|p| b[order[p]]).collect();
         let factor = env.cholesky().expect("positive definite");
         let x = factor.solve(&pb);

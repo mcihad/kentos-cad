@@ -3,12 +3,12 @@
 //! more than twice its area or be invalid stays as it is.
 
 use kentos_geometry_core::geom::region::net_area;
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::generalize::building::Building;
 use kentos_geometry_core::ops::generalize::calls::{BuildingCase, building_run};
 use kentos_geometry_core::ops::geoprocess::written_vertices;
 use kentos_native_application::geometry::shape;
+use kentos_num::PI;
 
 use super::super::convert::scopes;
 use super::super::geometry::{attrs_of, input_notes, layer_param, new_object};

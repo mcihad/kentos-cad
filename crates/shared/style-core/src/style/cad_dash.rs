@@ -9,11 +9,8 @@ use super::{
     cad_marks::Route,
     prim::{Sink, StrokeStyle},
 };
-use kentos_geometry_core::{
-    Vec2,
-    geom::ellipse::param_of_point,
-    jsmath::{atan2, cos, hypot, maximum, minimum, sign, sin},
-};
+use kentos_geometry_core::{Vec2, geom::ellipse::param_of_point};
+use kentos_num::{atan2, cos, hypot, maximum, minimum, sign, sin};
 use std::f64::consts::TAU;
 
 /// The most ink runs and dots one path may become; past it the renderer's

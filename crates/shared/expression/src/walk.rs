@@ -146,14 +146,8 @@ fn numbers(op: BinOp, x: f64, y: f64) -> Option<Value<'static>> {
     if !(x.is_finite() && y.is_finite()) {
         return None;
     }
-    let close = || {
-        (x - y).abs()
-            <= 1e-9
-                * kentos_geometry_core::jsmath::maximum(
-                    kentos_geometry_core::jsmath::maximum(1.0, x.abs()),
-                    y.abs(),
-                )
-    };
+    let close =
+        || (x - y).abs() <= 1e-9 * kentos_num::maximum(kentos_num::maximum(1.0, x.abs()), y.abs());
     Some(match op {
         BinOp::Add => Value::Num(x + y),
         BinOp::Sub => Value::Num(x - y),
@@ -169,7 +163,7 @@ fn numbers(op: BinOp, x: f64, y: f64) -> Option<Value<'static>> {
         BinOp::Ge => Value::Bool(x - y >= 0.0),
         BinOp::And => Value::Bool(x != 0.0 && y != 0.0),
         BinOp::Or => Value::Bool(x != 0.0 || y != 0.0),
-        BinOp::Pow => Value::Num(kentos_geometry_core::jsmath::pow(x, y)),
+        BinOp::Pow => Value::Num(kentos_num::pow(x, y)),
         BinOp::Join => return None,
     })
 }

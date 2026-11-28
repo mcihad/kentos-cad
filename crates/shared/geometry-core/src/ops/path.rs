@@ -12,10 +12,10 @@ use crate::geom::ellipse::{
     is_full_ellipse,
 };
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
-use crate::jsmath::{atan2, hypot, js_cmp, maximum, minimum, or, sign, stable_sort};
 use crate::op;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, js_cmp, maximum, minimum, or, sign, stable_sort};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Path {

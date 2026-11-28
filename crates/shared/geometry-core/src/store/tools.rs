@@ -25,7 +25,6 @@ use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::minor_axis;
 use crate::geom::intersect::Edge;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
@@ -34,6 +33,7 @@ use crate::ops::transform::transform_shape;
 use crate::ops::transform::{TextPolicy, transform_shape_in};
 use crate::ops::trim::{extend_entity, extended_edges, trim_entity};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// A box widened for the intersection tests' tolerances (1e-9 of an edge's
 /// parameter, a micrometre-scale margin besides): a boundary that could

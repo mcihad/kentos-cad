@@ -26,12 +26,12 @@ use kentos_commands::{
     GisTableExported, GisTableRole,
 };
 use kentos_domain::{Document, Uuid};
-use kentos_geometry_core::jsmath::TAU;
 use kentos_geometry_core::ops::derive as chords;
 use kentos_geometry_core::vec2::Vec2 as CorePoint;
 use kentos_geopackage::{
     self as gpkg, ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Value,
 };
+use kentos_num::TAU;
 use serde_json::Value as J;
 
 use crate::geopackage as gp;

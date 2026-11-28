@@ -6,10 +6,10 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::wall::Spec;
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::ops::interior_dims::{Columns, Faces, references};
 use kentos_geometry_core::ops::subref::Place;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::round_half_up;
 
 const PLAIN: &str = r#"{"width":0.2,"justify":"center"}"#;
 

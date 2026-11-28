@@ -3,8 +3,8 @@
 //! each.
 
 use super::{ON, RoutePart, dist, steps};
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 use std::collections::HashMap;
 
 /// How a route's measures are made from its pieces.

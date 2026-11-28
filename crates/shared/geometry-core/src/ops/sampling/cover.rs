@@ -12,11 +12,11 @@ use crate::geom::arrangement::{WindingIndex, tight_box};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::area_source;
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{maximum, minimum};
 use crate::ops::spatial_query::{TOLERANCE, edges_meet, geometry_of};
 use crate::predicates::orientation;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 pub struct Cover {
     edges: Vec<Edge>,

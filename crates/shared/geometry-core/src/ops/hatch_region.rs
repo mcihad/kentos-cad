@@ -10,11 +10,11 @@ use crate::block::Blocks;
 use crate::entity::{Entity, Shape, TextPlace, polygon_ring};
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{inside_area, intersect_areas, net_area, subtract_areas};
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// A text's box left open is this share of its height wider all round.
 pub const TEXT_MARGIN: f64 = 0.25;

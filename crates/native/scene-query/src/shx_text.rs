@@ -7,13 +7,13 @@ use kentos_commands::{
 };
 use kentos_geometry_core::{
     Vec2,
-    jsmath::{cos, sin, tan},
     text::{
         fonts,
         paragraph::{PITCH, rise},
         shx::{ShapeFile, TextChar, draw_text_advance, text_chars},
     },
 };
+use kentos_num::{cos, sin, tan};
 
 /// An attached SHX resource's bytes by the file a definition names (only its basename, ADR 0930).
 pub fn attached(resources: &ProjectStyles, file: &str, what: &str) -> Result<Vec<u8>, String> {

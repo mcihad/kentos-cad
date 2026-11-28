@@ -28,10 +28,10 @@ use crate::geom::intersect::{
     Edge, circle_circle, intersect_edges, line_circle_params, line_line, ray_edge,
 };
 use crate::geom::wall::{self, Body, DEFAULT_PRIORITY, Drawn, JoinMode, Line, Spec, Stroke};
-use crate::jsmath::{PI, TAU, acos, cos, hypot, maximum, minimum};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, acos, cos, hypot, maximum, minimum};
 
 #[path = "wall_wrap.rs"]
 mod wrap;
@@ -321,7 +321,7 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
     // straight end, or an arc whose circle never meets the target, along its tangent.
     let mut on: Option<(f64, Move)> = None;
     if let Some(arc) = bulge_arc(pts[n - 2], last, bulges[n - 2]) {
-        let a0 = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x);
+        let a0 = kentos_num::atan2(last.y - arc.c.y, last.x - arc.c.x);
         let ahead = TAU - arc.sweep.abs() - 1e-9;
         let round = Edge::Arc {
             c: arc.c,
@@ -376,12 +376,12 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
             Move::Round(more) => {
                 let (mut p, mut b) = (pts, bulges);
                 let arc = bulge_arc(p[n - 2], last, b[n - 2])?;
-                let a = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x) + more;
+                let a = kentos_num::atan2(last.y - arc.c.y, last.x - arc.c.x) + more;
                 p[n - 1] = Vec2::new(
                     arc.c.x + cos(a) * arc.r,
-                    arc.c.y + crate::jsmath::sin(a) * arc.r,
+                    arc.c.y + kentos_num::sin(a) * arc.r,
                 );
-                b[n - 2] = crate::jsmath::tan((arc.sweep + more) / 4.0);
+                b[n - 2] = kentos_num::tan((arc.sweep + more) / 4.0);
                 (p, b)
             }
         }

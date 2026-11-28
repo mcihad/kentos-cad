@@ -4,8 +4,8 @@
 //! arc bent away are all found.
 
 use super::{Route, RoutePart, Walk};
-use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// A point event's drift (m).
 pub fn point_drift(now: Vec2, placed: Vec2) -> f64 {

@@ -35,9 +35,9 @@ use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geodesy::tm_scale;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
-use crate::jsmath::{PI, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, maximum, minimum, sin};
 
 use super::measure::{Ring, arc_pieces};
 use super::{Plane, System};

@@ -13,7 +13,7 @@
 //! ids in their place (`apps/web/src/style/svg/pathOps.ts`).
 
 use kentos_geometry_core::api::json::{Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{PI, atan2, hypot, maximum};
+use kentos_num::{PI, atan2, hypot, maximum};
 
 use crate::bezier::{
     flatten_cubic, flatten_sub_path_tol, reverse_sub_path, ring_signed_area, segment_count,

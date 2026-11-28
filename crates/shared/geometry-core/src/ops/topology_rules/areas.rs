@@ -13,12 +13,12 @@ use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::overlay::overlay;
 use crate::geom::region::{area_source, net_area};
 use crate::geometry::Bounds;
-use crate::jsmath::{js_cmp, stable_sort};
 use crate::ops::areas::area_of_entity;
 use crate::ops::geoprocess::clip::within;
 use crate::ops::geoprocess::{Class, Place, Region, boundary_edges, intersect_all, subtract_all};
 use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
 use crate::vec2::Vec2;
+use kentos_num::{js_cmp, stable_sort};
 
 /// A region the rules measure: its area, perimeter and centroid.
 #[derive(Clone)]
@@ -601,10 +601,9 @@ pub(super) fn covered_by(
                             let tree = PackedTree::build(&entries);
                             (all, tree, odd)
                         });
-                        odd.iter().map(|&k| closest_on_edge(&all[k], p).d).fold(
-                            nearest_edge(tree, &mut queue, all, p),
-                            crate::jsmath::minimum,
-                        )
+                        odd.iter()
+                            .map(|&k| closest_on_edge(&all[k], p).d)
+                            .fold(nearest_edge(tree, &mut queue, all, p), kentos_num::minimum)
                     };
                     if d <= t {
                         continue;

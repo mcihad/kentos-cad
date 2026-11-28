@@ -15,7 +15,7 @@ use crate::Vec2;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
+use kentos_num::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
 
 /// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
 /// in the box (a quarter pixel at the view's scale), world units.
@@ -311,7 +311,7 @@ pub fn bulge_path_in_box(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::PI;
+    use kentos_num::PI;
 
     const BOX: Bounds = Bounds {
         min_x: -1.0,

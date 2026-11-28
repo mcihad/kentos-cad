@@ -7,7 +7,7 @@
 //! test, the refusals word for word; by name, as the web calls them.
 
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::{atan2, hypot, maximum, minimum};
+use kentos_num::{atan2, hypot, maximum, minimum};
 use serde_json::{Value, json};
 
 fn file() -> Value {

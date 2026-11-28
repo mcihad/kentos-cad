@@ -7,7 +7,7 @@
 //! the host's camera ([`ViewChange::Twist`]): nothing reaches the drawing,
 //! so the tool runs over a command without ending it (docs/adr/0283).
 
-use kentos_geometry_core::jsmath::atan2;
+use kentos_num::atan2;
 
 use crate::Vec2;
 use crate::format::Format;

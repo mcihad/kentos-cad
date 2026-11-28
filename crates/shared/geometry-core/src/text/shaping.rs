@@ -9,7 +9,7 @@ mod scripts;
 use std::ops::Range;
 use std::sync::OnceLock;
 
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 use rustybuzz::{BufferClusterLevel, Direction, Feature, UnicodeBuffer};
 use unicode_bidi::{BidiClass, BidiInfo, Level, ParagraphInfo, bidi_class};
 use unicode_script::Script as WritingScript;

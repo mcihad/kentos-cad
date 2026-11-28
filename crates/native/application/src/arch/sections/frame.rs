@@ -108,13 +108,13 @@ pub(super) fn column(
         .iter()
         .filter(|s| s.holds(centre) && (s.top - floor).abs() <= 0.5)
         .map(SlabAt::structure_top)
-        .fold(floor, kentos_geometry_core::jsmath::minimum);
+        .fold(floor, kentos_num::minimum);
     // Down to the highest footing under its middle, of its storey, below where it would stand.
     let bottom = seats
         .iter()
         .filter(|f| f.level == c.arch.level && f.at.top <= bottom && f.at.holds(centre))
         .map(|f| f.at.top)
-        .reduce(kentos_geometry_core::jsmath::maximum)
+        .reduce(kentos_num::maximum)
         .unwrap_or(bottom);
     let Some(h) = height else {
         m.left.insert((Left::NoHeight, owner));
@@ -124,7 +124,7 @@ pub(super) fn column(
         .iter()
         .filter(|s| s.holds(centre) && (s.top - (floor + h)).abs() <= 0.5)
         .map(SlabAt::structure_top)
-        .fold(floor + h, kentos_geometry_core::jsmath::minimum);
+        .fold(floor + h, kentos_num::minimum);
     if top - bottom <= 1e-6 {
         return;
     }
@@ -209,7 +209,7 @@ pub(super) fn beam(
     // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
     let height = match (b.rise, b.pts.as_slice()) {
         (Some(rise), [a, e]) => {
-            let length = kentos_geometry_core::jsmath::hypot(e.x - a.x, e.y - a.y);
+            let length = kentos_num::hypot(e.x - a.x, e.y - a.y);
             let g = rise / length;
             let (dx, dy) = (g * (e.x - a.x) / length, g * (e.y - a.y) / length);
             let upright = (top - bottom) * (1.0 + g * g).sqrt();

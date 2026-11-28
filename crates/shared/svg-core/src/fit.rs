@@ -6,7 +6,7 @@
 //! curve is not enough. Straight runs stay lines and sharp turns stay
 //! corners. Simplify, stroke to path and offsets use it.
 
-use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, or};
+use kentos_num::{PI, cos, hypot, maximum, minimum, or};
 
 use crate::bezier::{Cubic, bez, bez_deriv, bez_deriv2};
 use crate::shape::{PathNode, Pt, SubPath};

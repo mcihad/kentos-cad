@@ -9,8 +9,8 @@
 //! tolerance; measures, snaps and cuts use the curve itself.
 
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 const fn v(x: f64, y: f64) -> Vec2 {
     Vec2::new(x, y)
@@ -919,7 +919,7 @@ mod bounded_tests {
         assert_eq!(points.first(), Some(&ctrl[0]));
         assert_eq!(points.last(), Some(&ctrl[2]));
         for p in points {
-            assert!((crate::jsmath::hypot(p.x, p.y) - 1.).abs() < 1e-12);
+            assert!((kentos_num::hypot(p.x, p.y) - 1.).abs() < 1e-12);
         }
     }
 }

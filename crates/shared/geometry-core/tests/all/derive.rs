@@ -2,11 +2,11 @@
 //! `fixtures/gis-derivation/v1/chords.json` (`scripts/fixtures/cad_gis_derivation_cases.py`: the count and the
 //! sagitta at 50 digits with mpmath, no KentOS code).
 
-use kentos_geometry_core::jsmath::{PI, TAU, hypot, maximum};
 use kentos_geometry_core::ops::derive::{
     MAX_CHORDS, arc_chord_count, arc_chords, path_chords, sagitta,
 };
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, TAU, hypot, maximum};
 use serde_json::Value;
 
 fn cases() -> Value {

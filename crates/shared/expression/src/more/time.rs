@@ -4,8 +4,8 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::time;
+use kentos_num::round_half_up;
 
 use crate::dates;
 use crate::library::Func;

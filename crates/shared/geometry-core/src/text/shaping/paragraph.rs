@@ -5,8 +5,8 @@ use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::{Atom, Error, Format, Line, Paragraph, Style};
-use crate::jsmath::{maximum, minimum};
 use crate::text::paragraph::{DEFAULT_TAB, Flow, PITCH};
+use kentos_num::{maximum, minimum};
 
 /// Geometry in model units; em size retains the existing CAD height meaning.
 #[derive(Clone, Copy, Debug)]

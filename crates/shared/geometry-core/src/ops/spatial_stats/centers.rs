@@ -4,11 +4,11 @@
 
 use super::{NewObject, Placed, StatsRun, number_of, pair, text, unplaced_note, unread_note};
 use crate::entity::Shape;
-use crate::jsmath::{PI, TAU, atan2, cos, sin};
 use crate::ops::point_editor::natural_order;
 use crate::ops::statistics::{EMPTY_GROUP, figures};
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, sin};
 
 /// Which centre.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

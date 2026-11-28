@@ -13,8 +13,8 @@
 //! (dış açı). The values are the shared core's (`construct::angle_at`).
 
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, sin};
 use kentos_geometry_core::tools::construct::angle_at;
+use kentos_num::{PI, TAU, atan2, cos, sin};
 
 use crate::Vec2;
 use crate::format::Format;

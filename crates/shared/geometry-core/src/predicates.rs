@@ -859,7 +859,7 @@ mod tests {
     #[test]
     fn incircle_matches_exact_arithmetic_near_the_circle() {
         let g_unit = 1.0 / 1024.0;
-        let snap = |x: f64| crate::jsmath::round_half_up(x / g_unit) * g_unit;
+        let snap = |x: f64| kentos_num::round_half_up(x / g_unit) * g_unit;
         let mut g = Rng(0x1c1c_1e5e_ed00);
         let mut exact_needed = 0;
         let mut zeros = 0;
@@ -883,8 +883,8 @@ mod tests {
             }
             let t = g.range(0.0, std::f64::consts::TAU);
             let mut d = v(
-                snap(ux + r * crate::jsmath::cos(t)),
-                snap(uy + r * crate::jsmath::sin(t)),
+                snap(ux + r * kentos_num::cos(t)),
+                snap(uy + r * kentos_num::sin(t)),
             );
             // Every fourth: four points of a circle whose points are on the
             // grid (a Pythagorean triple round a grid point), so exactly

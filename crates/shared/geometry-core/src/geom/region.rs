@@ -7,9 +7,9 @@ use crate::geom::arrangement::{Area, Ring, Rule, Source, winding};
 use crate::geom::bulge::{bulge_path_edges, bulge_ring_area, has_bulges, reverse_bulge_path};
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::{FaceRing, face_rings, overlay};
-use crate::jsmath::{js_cmp, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{js_cmp, stable_sort};
 
 pub fn ring_area(r: &Ring) -> f64 {
     bulge_ring_area(&r.pts, r.bulges.as_deref())

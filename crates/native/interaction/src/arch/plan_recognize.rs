@@ -13,9 +13,9 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{ArchRecognize, CommandResult, Entity, OpeningForm, PlanLayerRole, PlanRole};
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::jsmath::{cos, sin};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, arch_recognize};
+use kentos_num::{cos, sin};
 
 use crate::Vec2;
 use crate::architecture_level as level;

@@ -707,7 +707,7 @@ fn radial_made(
     made: &mut Vec<Made>,
     ids: &mut Vec<Uuid>,
 ) -> Result<(), Stop> {
-    use kentos_geometry_core::jsmath::{PI, cos, sin, tan};
+    use kentos_num::{PI, cos, sin, tan};
     checks::point(r.center, "Eğrisel aks ağının merkezinin", "radial.center")?;
     finite_each(
         &[

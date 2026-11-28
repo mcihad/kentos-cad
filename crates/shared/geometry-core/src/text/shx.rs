@@ -4,11 +4,8 @@
 //! AutoCAD-86 shapes 1.0/1.1, unifont 1.0 and bigfont 1.0. Unsupported forms
 //! (an extended Big Font's scaled `7,0` primitive) fail explicitly; a requested
 //! shape or text run is either completely decoded or returns no geometry.
-use crate::{
-    Vec2,
-    geom::bulge::bulge_arc,
-    jsmath::{acos, cos, maximum, sin},
-};
+use crate::{Vec2, geom::bulge::bulge_arc};
+use kentos_num::{acos, cos, maximum, sin};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -861,7 +858,7 @@ mod tests {
         let circle = draw(&[10, 2, 0, 0]).unwrap();
         assert!(circle[0].len() > 100);
         for p in &circle[0] {
-            assert!((crate::jsmath::hypot(p.x + 2., p.y) - 2.).abs() < 1e-12);
+            assert!((kentos_num::hypot(p.x + 2., p.y) - 2.).abs() < 1e-12);
         }
         let positive = draw(&[13, 4, 0, 127, 4, 0, 129, 0, 0, 0]).unwrap();
         assert!(positive[0].iter().any(|p| p.y < -1.9));

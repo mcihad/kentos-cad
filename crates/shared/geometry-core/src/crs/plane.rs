@@ -4,8 +4,8 @@
 //! six coefficients; and back. PROJ's `affine` step is the reference
 //! (`scripts/fixtures/crs_custom_cases.py`).
 
-use crate::jsmath::PI;
 use crate::vec2::Vec2;
+use kentos_num::PI;
 
 /// This system → its base: base x = a·x + b·y + c, base y = d·x + e·y + f.
 #[derive(Clone, Copy, Debug, PartialEq)]

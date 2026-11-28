@@ -19,12 +19,12 @@ use crate::entity::{Entity, Shape, ellipse_geom, is_multi_part};
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point};
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{hypot, maximum};
 use crate::op;
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, tangent_at_s};
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// A path's point at a distance from its start; none when the distance is
 /// outside the path. `length` is the path's, for a refusal to say.

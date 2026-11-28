@@ -6,9 +6,9 @@ use crate::api::json::{Nullable, ToJson, field};
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::offset::offset_path;
 use crate::geometry::signed_area;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// Axis without repeated points (a double click must not make a zero-length leg).
 pub fn clean_axis(axis: &[Vec2], closed: bool) -> Vec<Vec2> {

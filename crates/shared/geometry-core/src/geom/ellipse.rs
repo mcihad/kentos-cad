@@ -5,9 +5,9 @@ use crate::api::Op;
 use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::intersect::{line_circle_params, tangent_points};
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct EllipseGeom {

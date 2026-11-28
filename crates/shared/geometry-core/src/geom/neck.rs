@@ -23,8 +23,8 @@ use std::f64::consts::{PI, SQRT_2};
 
 use crate::Vec2;
 use crate::geometry::{point_in_polygon, signed_area};
-use crate::jsmath::{maximum, minimum};
 use crate::labels::geom::{inside_rings, pole, segment_distance2, signed_distance};
+use kentos_num::{maximum, minimum};
 
 /// How far apart the chords square to an edge are tried, metres.
 pub const STEP: f64 = 0.01;

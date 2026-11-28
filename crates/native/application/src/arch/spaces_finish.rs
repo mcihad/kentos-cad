@@ -104,12 +104,12 @@ fn box_of(s: &SpaceEntity) -> Option<(Vec2, Vec2)> {
             None => (*p, *p),
             Some((lo, hi)) => (
                 Vec2 {
-                    x: kentos_geometry_core::jsmath::minimum(lo.x, p.x),
-                    y: kentos_geometry_core::jsmath::minimum(lo.y, p.y),
+                    x: kentos_num::minimum(lo.x, p.x),
+                    y: kentos_num::minimum(lo.y, p.y),
                 },
                 Vec2 {
-                    x: kentos_geometry_core::jsmath::maximum(hi.x, p.x),
-                    y: kentos_geometry_core::jsmath::maximum(hi.y, p.y),
+                    x: kentos_num::maximum(hi.x, p.x),
+                    y: kentos_num::maximum(hi.y, p.y),
                 },
             ),
         });

@@ -14,9 +14,9 @@
 use crate::geom::arch::{ColumnSpec, column_box};
 use crate::geom::wall::left_face;
 use crate::geom::wall_join::WallIn;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::wall_shift::{PARALLEL, TIE, edge, edge_count, level};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// A column as the rule takes it: its reference point, its shape and its level.
 #[derive(Clone, Copy, Debug)]

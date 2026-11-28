@@ -3,7 +3,7 @@
 //! the corners' bisectors to the other), the polygons' areas, the faults, and the grid path's bottleneck.
 
 use super::*;
-use crate::jsmath::minimum;
+use kentos_num::minimum;
 
 const X0: f64 = 487_000.0;
 const Y0: f64 = 4_420_000.0;

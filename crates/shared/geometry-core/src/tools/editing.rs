@@ -13,9 +13,6 @@ use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
 use crate::geom::intersect::{Edge, line_line};
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
-use crate::jsmath::{
-    PI, TAU, acos, atan2, cos, maximum, minimum, or, pow, round_half_up, sin, tan,
-};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{path_of, point_at_s, tangent_at_s};
@@ -23,6 +20,7 @@ use crate::ops::vertex::nearest_segment;
 use crate::text::Font;
 use crate::tools::point_input::midpoint;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, acos, atan2, cos, maximum, minimum, or, pow, round_half_up, sin, tan};
 
 /// Rotation by the direction from `base` to p, less a reference angle (radians).
 pub fn rotation_angle(base: Vec2, p: Vec2, reference: f64) -> f64 {

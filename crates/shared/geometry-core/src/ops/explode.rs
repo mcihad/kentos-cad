@@ -17,11 +17,11 @@ use crate::geom::hatch::hatch_lines;
 use crate::geom::hatch_pattern::pattern_pieces;
 use crate::geom::intersect::Edge;
 use crate::geom::leader;
-use crate::jsmath::{PI, cos, hypot, maximum, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
 use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, maximum, sin};
 
 /// The most lines and points a pattern's hatch explodes into (docs/adr/0186 §8).
 pub const EXPLODE_PIECES: usize = 20_000;
@@ -65,7 +65,7 @@ fn least_radius(e: &Shape, outline: &[Vec2]) -> f64 {
                     (ab * bc * ca) / (2.0 * cross.abs())
                 })
             })
-            .fold(f64::INFINITY, crate::jsmath::minimum),
+            .fold(f64::INFINITY, kentos_num::minimum),
     }
 }
 
@@ -107,7 +107,7 @@ pub fn curve_polyline(e: &Shape, density: Density) -> Option<Result<Shape, Strin
             let r = least_radius(e, &outline);
             if r.is_finite() && r > 0.0 {
                 // A chord of an arc of radius r subtending θ lies within r(1 − cos θ/2) of it.
-                let theta = 2.0 * crate::jsmath::acos((1.0 - tol / r).clamp(-1.0, 1.0));
+                let theta = 2.0 * kentos_num::acos((1.0 - tol / r).clamp(-1.0, 1.0));
                 (length / maximum(r * theta, f64::MIN_POSITIVE)).ceil()
             } else {
                 1.0

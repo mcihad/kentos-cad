@@ -1,25 +1,25 @@
 # The style core must give the same bits and the same text on every target and
 # match the TypeScript it replaces (docs/adr/0008, CLAUDE.md §23.4): the std
 # transcendental functions call the platform's C library natively, so they
-# are forbidden here; use kentos_geometry_core::jsmath (the numeric base's functions, kentos-num).
+# are forbidden here; use the numeric base (kentos-num).
 disallowed-methods = [
-  { path = "f64::sin", reason = "use jsmath::sin (kentos-num)" },
-  { path = "f64::cos", reason = "use jsmath::cos (kentos-num)" },
-  { path = "f64::tan", reason = "use jsmath::tan (kentos-num)" },
-  { path = "f64::sin_cos", reason = "use jsmath::sin and jsmath::cos (kentos-num)" },
-  { path = "f64::asin", reason = "use jsmath::asin (kentos-num)" },
-  { path = "f64::acos", reason = "use jsmath::acos (kentos-num)" },
-  { path = "f64::atan", reason = "use jsmath::atan (kentos-num)" },
-  { path = "f64::atan2", reason = "use jsmath::atan2 (kentos-num)" },
+  { path = "f64::sin", reason = "use kentos_num::sin" },
+  { path = "f64::cos", reason = "use kentos_num::cos" },
+  { path = "f64::tan", reason = "use kentos_num::tan" },
+  { path = "f64::sin_cos", reason = "use kentos_num::sin_cos" },
+  { path = "f64::asin", reason = "use kentos_num::asin" },
+  { path = "f64::acos", reason = "use kentos_num::acos" },
+  { path = "f64::atan", reason = "use kentos_num::atan" },
+  { path = "f64::atan2", reason = "use kentos_num::atan2" },
   { path = "f64::hypot", reason = "use kentos_num::hypot: the platform's is not correctly rounded" },
-  { path = "f64::exp", reason = "use jsmath::exp (kentos-num)" },
-  { path = "f64::ln", reason = "use jsmath::log (kentos-num)" },
+  { path = "f64::exp", reason = "use kentos_num::exp" },
+  { path = "f64::ln", reason = "use kentos_num::ln" },
   { path = "f64::log10", reason = "use kentos_num" },
-  { path = "f64::powf", reason = "use jsmath::pow (kentos-num)" },
+  { path = "f64::powf", reason = "use kentos_num::pow" },
   { path = "f64::powi", reason = "write the product, as the TypeScript did" },
   { path = "f64::mul_add", reason = "the TypeScript core has no fused multiply-add" },
-  { path = "f64::round", reason = "use jsmath::js_round (Math.round rounds halves up)" },
-  { path = "f64::signum", reason = "use jsmath::js_sign (Math.sign keeps zeros and NaN)" },
-  { path = "f64::min", reason = "use jsmath::js_min (Math.min keeps NaN)" },
-  { path = "f64::max", reason = "use jsmath::js_max (Math.max keeps NaN)" },
+  { path = "f64::round", reason = "use kentos_num::js_round (Math.round rounds halves up)" },
+  { path = "f64::signum", reason = "use kentos_num::js_sign (Math.sign keeps zeros and NaN)" },
+  { path = "f64::min", reason = "use kentos_num::js_min (Math.min keeps NaN)" },
+  { path = "f64::max", reason = "use kentos_num::js_max (Math.max keeps NaN)" },
 ]

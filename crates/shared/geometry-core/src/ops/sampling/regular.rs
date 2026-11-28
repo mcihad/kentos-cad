@@ -87,10 +87,10 @@ pub fn regular(
         all = Some(match all {
             None => b,
             Some(a) => Bounds {
-                min_x: crate::jsmath::minimum(a.min_x, b.min_x),
-                min_y: crate::jsmath::minimum(a.min_y, b.min_y),
-                max_x: crate::jsmath::maximum(a.max_x, b.max_x),
-                max_y: crate::jsmath::maximum(a.max_y, b.max_y),
+                min_x: kentos_num::minimum(a.min_x, b.min_x),
+                min_y: kentos_num::minimum(a.min_y, b.min_y),
+                max_x: kentos_num::maximum(a.max_x, b.max_x),
+                max_y: kentos_num::maximum(a.max_y, b.max_y),
             },
         });
     }

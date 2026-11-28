@@ -5,10 +5,10 @@
 
 use crate::api::Op;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc};
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::predicates::cross_accurate;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Edge {

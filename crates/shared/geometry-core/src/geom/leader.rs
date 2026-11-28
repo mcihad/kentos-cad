@@ -7,10 +7,10 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape, TextPlace};
 use crate::geom::arrowhead::{ArrowKind, Arrowhead, arrowhead};
-use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, sin};
 
 /// A leader's arm after its first (docs/adr/0326 §1): its tip first, then its bends; it ends at the leader's last vertex.
 #[derive(Clone, Debug, PartialEq, Default)]

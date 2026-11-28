@@ -255,7 +255,7 @@ fn a_turned_block_joins() {
     for (ox, oy) in [(0.0, 0.0), (15.0, 0.0), (0.0, 11.8), (15.0, 11.8)] {
         id += 1;
         let turn = ((id % 7) as f64 - 3.0) * 0.4 * std::f64::consts::PI / 180.0;
-        let (s, c) = (crate::jsmath::sin(turn), crate::jsmath::cos(turn));
+        let (s, c) = (kentos_num::sin(turn), kentos_num::cos(turn));
         let pts: Vec<Vec2> = shape
             .iter()
             .enumerate()

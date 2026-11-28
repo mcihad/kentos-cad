@@ -422,7 +422,7 @@ pub(crate) fn wire_all(pts: &[Vec2]) -> Vec<kentos_commands::Vec2> {
 /// `drawRef`: long enough to cross any view).
 pub(crate) fn reach(view: &dyn crate::tool::View, times: f64) -> f64 {
     let b = view.visible();
-    kentos_geometry_core::jsmath::hypot(b.max_x - b.min_x, b.max_y - b.min_y) * times
+    kentos_num::hypot(b.max_x - b.min_x, b.max_y - b.min_y) * times
 }
 
 /// The web's `PointInputTool.draw`: the points so far and the cursor as one

@@ -226,8 +226,9 @@ Masaüstü ve sunucu bunları native çağırır. Rust'tan üretilen veri/komut 
 Sıcak yollarda toplu tipli buffer kullanın; nesne başına JSON/FFI üretmeyin.
 Hesap sayısal temelden (`kentos-num`: en yakın çift duyarlıklı sayı, her platformda aynı; ADR 9403) ya da, işlevi
 oraya geçene kadar, `libm`'den yapılır: uzunluk `kentos_num::hypot`'tur. Platformun matematik yöntemleri (`x.sin()`,
-`x.hypot(y)`, `powi`…) hesap crate'lerinde yazılmaz ve `jsmath`'in taşınan yardımcılarına (`js_…`) yenisi eklenmez;
-`make guard` ikisini de sayar, sayı yalnız azalır (plan/bakim.md BK-88). Bir sonucun, girdisinin son basamağına
+`x.hypot(y)`, `powi`…) hesap crate'lerinde yazılmaz; taşımadan kalan yardımcılara (`kentos_num::js_cmp`, `truthy`,
+`or`, `stable_sort`, `js_hypot_n`) yeni kullanım eklenmez. `make guard` ikisini de sayar, sayı yalnız azalır
+(plan/bakim.md BK-88). Bir sonucun, girdisinin son basamağına
 dayanması kusurdur: kaynağında düzeltilir, tolerans büyütülmez (ADR 9403 §7).
 `unwrap/expect` ile kullanıcı girdisinde panic üretmeyin.
 Yeni hesap çağrısına sınır/rastgele fixture ve bağımsız referans

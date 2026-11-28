@@ -11,7 +11,7 @@
 use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
-use kentos_geometry_core::jsmath::{
+use kentos_num::{
     PI, atan2, cos, hypot, js_cmp, maximum, minimum, or, round_half_up, sin, stable_sort,
 };
 

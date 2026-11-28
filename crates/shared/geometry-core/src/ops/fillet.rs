@@ -7,10 +7,10 @@ use crate::entity::{Entity, Shape, area_parts, locate_part, outer_count, replace
 use crate::geom::arc::{ArcGeom, norm_angle, sweep};
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path};
 use crate::geom::intersect::line_line;
-use crate::jsmath::{PI, acos, atan2, hypot, maximum, minimum, sign, sin, tan};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::vec2::Vec2;
+use kentos_num::{PI, acos, atan2, hypot, maximum, minimum, sign, sin, tan};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Seg {

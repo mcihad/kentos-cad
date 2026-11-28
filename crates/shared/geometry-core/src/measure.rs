@@ -5,8 +5,8 @@
 //! Rust port of the outline (docs/adr/0002-contracts-fixtures.md).
 
 use crate::geom::bulge::{bulge_path_length, bulge_ring_area};
-use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// A ring in vertex + bulge form (a polygon's outer ring or one of its holes).
 #[derive(Clone, Debug, Default, PartialEq)]

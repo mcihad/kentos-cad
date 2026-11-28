@@ -15,7 +15,6 @@ use crate::entity::{
     tessellate_circle,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, cos, maximum, minimum, sin};
 use crate::labels::engine::{
     self, Drawn, Geo, Obstacle, Options, Pinned, Scene, Shape as Ob, Unit,
 };
@@ -24,6 +23,7 @@ use crate::labels::style::{
     AreaMode, Class, Labelling, LineMode, PointMode, read_class, read_labelling,
 };
 use crate::vec2::Vec2;
+use kentos_num::{TAU, cos, maximum, minimum, sin};
 
 use super::{IdMap, Item, Store};
 

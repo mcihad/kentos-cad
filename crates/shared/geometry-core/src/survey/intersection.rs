@@ -4,9 +4,9 @@
 
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
 use crate::api::Op;
-use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, sin};
 
 /// Önden kestirme. At A the angle `alpha` runs clockwise from B to the new
 /// point P, at B the angle `beta` clockwise from P to A: P lies right of the

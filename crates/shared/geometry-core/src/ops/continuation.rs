@@ -9,9 +9,9 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, segment_tangent};
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A drawn point this near the previous one is the same point.
 const SAME: f64 = 1e-9;

@@ -95,10 +95,7 @@ impl Format {
     pub fn in_ucs(&self, p: Vec2) -> Vec2 {
         match self.ucs {
             Some([ox, oy, a]) => {
-                let (c, s) = (
-                    kentos_geometry_core::jsmath::cos(a),
-                    kentos_geometry_core::jsmath::sin(a),
-                );
+                let (c, s) = (kentos_num::cos(a), kentos_num::sin(a));
                 let (dx, dy) = (p.x - ox, p.y - oy);
                 Vec2::new(dx * c + dy * s, -dx * s + dy * c)
             }
@@ -696,14 +693,14 @@ pub fn js_number(v: f64) -> String {
 /// An angle in radians as the rectangle tool writes its rotation (the web's
 /// `fmtDeg`: `+((rad / DEG) % 360).toFixed(4)` and a degree sign): `30°`, `12.3457°`.
 pub fn short_degrees(rad: f64) -> String {
-    let deg = (rad / (kentos_geometry_core::jsmath::PI / 180.0)) % 360.0;
+    let deg = (rad / (kentos_num::PI / 180.0)) % 360.0;
     let rounded = fixed(deg, 4).parse::<f64>().unwrap_or(f64::NAN);
     format!("{}°", js_number(rounded))
 }
 
 /// Radians in degrees as the arc tool writes them (the web's `deg`: `rad * 180 / π`).
 pub fn degrees(rad: f64) -> f64 {
-    (rad * 180.0) / kentos_geometry_core::jsmath::PI
+    (rad * 180.0) / kentos_num::PI
 }
 
 #[cfg(test)]
@@ -712,7 +709,7 @@ mod tests {
 
     #[test]
     fn degrees_read_as_the_web_writes_them() {
-        use kentos_geometry_core::jsmath::PI;
+        use kentos_num::PI;
         assert_eq!(short_degrees(0.0), "0°");
         assert_eq!(short_degrees(PI / 6.0), "30°");
         assert_eq!(short_degrees(-PI / 2.0), "-90°");

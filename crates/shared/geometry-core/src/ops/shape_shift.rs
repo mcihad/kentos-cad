@@ -20,9 +20,9 @@ use std::collections::BinaryHeap;
 
 use crate::entity::{Shape, entity_vertices};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{TAU, atan2, cos, sin};
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, cos, sin};
 
 /// The Hausdorff distance is found to within this many metres (a millionth of a millimetre).
 pub const HAUSDORFF_TOLERANCE: f64 = 1e-9;
@@ -88,7 +88,7 @@ fn point_at(e: &Edge, s: f64) -> Vec2 {
             Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
         }
         Edge::Arc { c, r, a0, sweep } => {
-            let ang = a0 + crate::jsmath::sign(sweep) * s / r;
+            let ang = a0 + kentos_num::sign(sweep) * s / r;
             Vec2::new(c.x + r * cos(ang), c.y + r * sin(ang))
         }
     }

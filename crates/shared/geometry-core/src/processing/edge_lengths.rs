@@ -11,10 +11,10 @@ use std::collections::HashSet;
 use crate::api::Op;
 use crate::api::json::Json;
 use crate::entity::{Entity, Shape};
-use crate::jsmath::round_half_up;
 use crate::op;
 use crate::ops::edge_labels::{EdgeLabel, edge_labels};
 use crate::vec2::Vec2;
+use kentos_num::round_half_up;
 
 /// A path whose edges are labelled: a line's two ends, a polyline's or a
 /// polygon's vertices (a polygon's holes are not labelled).

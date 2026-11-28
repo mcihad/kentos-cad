@@ -400,7 +400,7 @@ fn a_wall_askew_reads_along_its_own_line() {
     let mut d = Draw::new();
     // A 0.2 m wall at 30°.
     let turn = 30.0 * PI / 180.0;
-    let (c, s) = (crate::jsmath::cos(turn), crate::jsmath::sin(turn));
+    let (c, s) = (kentos_num::cos(turn), kentos_num::sin(turn));
     let p = |t: f64, r: f64| (t * c - r * s, t * s + r * c);
     d.line(p(0.0, -0.1), p(4.0, -0.1), Role::Wall);
     d.line(p(0.0, 0.1), p(4.0, 0.1), Role::Wall);

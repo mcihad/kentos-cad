@@ -529,10 +529,10 @@ pub fn paragraph_records(
     }
     let laid = t.layout(font);
     let o = t.origin(font);
-    let r = (t.rotation * crate::jsmath::PI) / 180.0;
+    let r = (t.rotation * kentos_num::PI) / 180.0;
     let (u, v) = (
-        crate::vec2::Vec2::new(crate::jsmath::cos(r), crate::jsmath::sin(r)),
-        crate::vec2::Vec2::new(-crate::jsmath::sin(r), crate::jsmath::cos(r)),
+        crate::vec2::Vec2::new(kentos_num::cos(r), kentos_num::sin(r)),
+        crate::vec2::Vec2::new(-kentos_num::sin(r), kentos_num::cos(r)),
     );
     if masked {
         let (h, m) = (t.height * 1.15, t.height * 0.1);

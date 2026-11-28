@@ -16,7 +16,7 @@
 use kentos_commands::{UcsSet, UcsTo, Vec2 as Wire};
 use kentos_native_application::{ExecutionContext, ucs_set};
 
-use kentos_geometry_core::jsmath::{atan2, cos, sin};
+use kentos_num::{atan2, cos, sin};
 
 use crate::Vec2;
 use crate::format::Format;

@@ -11,8 +11,8 @@
 
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_tangent};
 use crate::geometry::signed_area;
-use crate::jsmath::{TAU, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{TAU, cos, hypot, maximum, sin};
 
 /// How far a mitre may reach from its vertex, in the wider half width.
 pub const MITRE: f64 = 4.0;

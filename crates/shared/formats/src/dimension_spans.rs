@@ -502,8 +502,8 @@ pub fn scales_agree(
     delta: f64,
     plot_scale: f64,
 ) -> bool {
-    use kentos_geometry_core::jsmath::maximum;
     use kentos_geometry_core::ops::dimension_layout::scaled_offset;
+    use kentos_num::maximum;
     if set.scales.is_empty() {
         return true;
     }

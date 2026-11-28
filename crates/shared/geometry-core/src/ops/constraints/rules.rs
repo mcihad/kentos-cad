@@ -44,13 +44,13 @@ pub(super) fn rows(
             return vec![D::c(f64::NAN)];
         }
         let target = if matches!(rule, Rule::Vertical { .. }) {
-            crate::jsmath::PI / 2.0
+            kentos_num::PI / 2.0
         } else {
             0.0
         };
         let angle = D::atan2(d.y, d.x);
-        let turns = libm::floor((angle.v - target + crate::jsmath::PI / 2.0) / crate::jsmath::PI);
-        return vec![(angle - D::c(target + turns * crate::jsmath::PI)) * s];
+        let turns = libm::floor((angle.v - target + kentos_num::PI / 2.0) / kentos_num::PI);
+        return vec![(angle - D::c(target + turns * kentos_num::PI)) * s];
     }
     match rule {
         Rule::Coincident { b, .. } => {

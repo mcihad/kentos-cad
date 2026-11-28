@@ -51,12 +51,12 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{hypot, maximum};
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use kentos_geometry_core::ops::warp::{CHORD, Warp, sheet_shape, warp_shape};
 use kentos_geometry_core::text::Font;
+use kentos_num::{hypot, maximum};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};

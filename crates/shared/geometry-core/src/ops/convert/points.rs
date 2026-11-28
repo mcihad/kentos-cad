@@ -6,10 +6,10 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Shape, area_parts, entity_area};
 use crate::geom::centroid::shape_centroid;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, hypot, maximum_of, minimum_of, sin};
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::ops::path::{path_of, point_at_s};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum_of, minimum_of, sin};
 
 // ── Ağırlık merkezi ───────────────────────────────────────────────────
 

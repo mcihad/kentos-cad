@@ -165,7 +165,7 @@ fn arc_strokes(arc: &Edge, between: Option<(Vec2, Vec2)>, width: f32, tone: Tone
     let Some(ends) = arc_length_ends(arc, between) else {
         return Vec::new();
     };
-    let angle = |p: Vec2| kentos_geometry_core::jsmath::atan2(p.y - ends.c.y, p.x - ends.c.x);
+    let angle = |p: Vec2| kentos_num::atan2(p.y - ends.c.y, p.x - ends.c.x);
     let r = dist(ends.c, ends.a);
     Outline::of(
         &Shape::Arc {
@@ -628,7 +628,7 @@ impl Dimension {
                 DimensionMeasure::Linear {
                     a,
                     b,
-                    angle: Some(along + (frame.angle * 180.0) / kentos_geometry_core::jsmath::PI),
+                    angle: Some(along + (frame.angle * 180.0) / kentos_num::PI),
                 }
             }
             other => other,

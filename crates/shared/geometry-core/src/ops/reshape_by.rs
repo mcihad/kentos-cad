@@ -23,9 +23,9 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::region::{
     FaceIndex, intersect_areas, net_area, ring_edges, split_area, union_areas,
 };
-use crate::jsmath::{atan, hypot, maximum};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan, hypot, maximum};
 
 /// A sketch's end this near a path is on it (the snap's place, 1 µm).
 pub const TOUCH: f64 = 1e-6;

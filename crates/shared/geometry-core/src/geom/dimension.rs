@@ -7,9 +7,9 @@
 use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, maximum_of, minimum, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, maximum_of, minimum, or, sin};
 
 mod kinds;
 pub mod look;

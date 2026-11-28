@@ -3,8 +3,8 @@
 use crate::entity::Shape;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc, sweep};
 use crate::geom::intersect::{circle_circle, line_circle_params};
-use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, minimum, sin};
 
 const EPS: f64 = 1e-9;
 pub const KINDS: &str = "Bu yuvarlama çizgi, yay ve daire çiftlerinde çalışır; elips/NURBS ve yaylı çoklu çizgi için destek henüz yok.";

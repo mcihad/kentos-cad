@@ -8,9 +8,9 @@ use crate::entity::{Entity, Part, Shape, entity_geometry};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
 use crate::geometry::Bounds;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 fn inside(p: Vec2, r: &Bounds) -> bool {
     p.x >= r.min_x && p.x <= r.max_x && p.y >= r.min_y && p.y <= r.max_y

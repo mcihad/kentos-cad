@@ -14,13 +14,13 @@ use crate::geom::arrangement::{Area, Ring, TOL, tight_box};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geom::region::{ring_area, ring_edges};
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::areas::polygon_of_area;
 use crate::ops::convert::{Elevations, Zs, paths};
 use crate::ops::elevation::ON;
 use crate::ops::geoprocess::{Class, chain, class_of, path_shape};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// How deep the cutting goes.
 pub const DEPTH: u32 = 50;

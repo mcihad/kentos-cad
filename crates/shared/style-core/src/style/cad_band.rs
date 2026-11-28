@@ -15,8 +15,8 @@ use kentos_geometry_core::{
         band,
         bulge::{BulgeArc, bulge_arc, bulge_at, bulge_of_sweep},
     },
-    jsmath::{cos, hypot, minimum, sign, sin},
 };
+use kentos_num::{cos, hypot, minimum, sign, sin};
 
 const MAX_PIECES: usize = 20_000;
 const MAX_POINTS: usize = 500_000;
@@ -483,10 +483,7 @@ mod tests {
         assert_eq!(got.len(), 1);
         assert!((got[0].pts[1].x).abs() < 1e-12);
         assert!((got[0].pts[1].y - 1.).abs() < 1e-12);
-        assert!(
-            (got[0].bulges[0] - kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)).abs()
-                < 1e-12
-        );
+        assert!((got[0].bulges[0] - kentos_num::tan(std::f64::consts::PI / 8.)).abs() < 1e-12);
         assert_eq!(got[0].widths, vec![[2., 3.]]);
     }
     #[test]

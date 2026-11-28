@@ -7,12 +7,12 @@ use kentos_contracts::{
     DimensionTextPlace, DrawingFont, TextShift, same_scale,
 };
 use kentos_geometry_core::geom::dimension::look::DEFAULT_TEXT_GAP;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, sin};
 use kentos_geometry_core::ops::dimension_layout::{
     Placement, RowLine, ValueBox, fits, place_values, scaled_offset,
 };
 use kentos_geometry_core::text::{Font, width_em};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, sin};
 
 use crate::dimension_sets::PlannedDimensionSetMember;
 use crate::document::Document;
@@ -168,8 +168,8 @@ impl Document {
                 match rows.iter().position(|r| *r == row) {
                     Some(k) => {
                         line_of[i] = k;
-                        lines[k].t0 = kentos_geometry_core::jsmath::minimum(lines[k].t0, t0);
-                        lines[k].t1 = kentos_geometry_core::jsmath::maximum(lines[k].t1, t1);
+                        lines[k].t0 = kentos_num::minimum(lines[k].t0, t0);
+                        lines[k].t1 = kentos_num::maximum(lines[k].t1, t1);
                     }
                     None => {
                         line_of[i] = rows.len();

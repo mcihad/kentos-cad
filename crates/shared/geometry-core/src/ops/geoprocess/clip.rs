@@ -10,8 +10,8 @@ use crate::geom::arrangement::{Area, TOL, WindingIndex};
 use crate::geom::intersect::{Edge, intersect_edges, point_at};
 use crate::geom::region::net_area;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::hypot;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// The piece of an edge between parameters `t0` and `t1`, from `p0` to `p1` (exact ends kept).
 fn sub_edge(e: &Edge, t0: f64, t1: f64, p0: Vec2, p1: Vec2) -> Edge {

@@ -19,8 +19,8 @@
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::{ellipse_outline_tol, spline_outline_tol};
 use crate::geom::ellipse::EllipseGeom;
-use crate::jsmath::{PI, asin, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{PI, asin, cos, hypot, maximum, sin};
 
 /// The derivation's algorithm and its version, as a dataset records them.
 pub const ALGORITHM: &str = "kentos.chords/1";

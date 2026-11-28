@@ -11,8 +11,8 @@
 
 use kentos_geometry_core::geom::arrangement::{Rule, Source};
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, maximum, minimum};
 
 use crate::bezier::{
     bez_tangent, flatten_cubic, ring_signed_area, segment_count, segment_cubic, segment_is_line,

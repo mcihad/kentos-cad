@@ -12,7 +12,7 @@ use kentos_commands::{
     leader_problem,
 };
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_geometry_core::jsmath::{PI, cos, sin};
+use kentos_num::{PI, cos, sin};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_blank, is_uid_text};

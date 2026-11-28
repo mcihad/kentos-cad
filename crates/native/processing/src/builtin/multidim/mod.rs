@@ -139,9 +139,7 @@ pub fn run_profile(
         let raster = one_raster(r)?;
         let lines = line_shapes(r);
         let [_, a, _, _, c, _] = raster.raster.affine;
-        let step = r
-            .number("step")
-            .unwrap_or_else(|| kentos_geometry_core::jsmath::hypot(a, c));
+        let step = r.number("step").unwrap_or_else(|| kentos_num::hypot(a, c));
         let band = r.number("band").unwrap_or(1.0).max(1.0) as usize - 1;
         let (input, open) = input_of(&*files, raster)?;
         let mut job = profile::job(input, &lines, step, band, axes(ctx))?;

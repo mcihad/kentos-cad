@@ -6,9 +6,7 @@
 
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, maximum, minimum, round_half_up, sin, truthy,
-};
+use kentos_num::{PI, atan2, cos, hypot, maximum, minimum, round_half_up, sin, truthy};
 use kentos_style_core::js::number;
 
 use crate::path::{

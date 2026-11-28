@@ -21,10 +21,10 @@ use crate::api::Op;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{subtract_areas, union_areas};
 use crate::geometry::signed_area;
-use crate::jsmath::{atan2, hypot, js_cmp, stable_sort};
 use crate::op;
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, js_cmp, stable_sort};
 
 mod earcut;
 

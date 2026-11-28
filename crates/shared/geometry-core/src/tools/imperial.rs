@@ -19,7 +19,7 @@
 //! Exact: 1 inch is 0.0254 m, 1 foot 0.3048 m (the international foot).
 
 use crate::display::fixed;
-use crate::jsmath::round_half_up;
+use kentos_num::round_half_up;
 
 /// Metres in an inch, exactly.
 pub const METRES_PER_INCH: f64 = 0.0254;

@@ -32,10 +32,10 @@
 //! its rows, its lines and cells part after part; the outline holds them all.
 
 use crate::entity::{CellRange, Shape, TableBreaks};
-use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::text::face::Face;
 use crate::text::{Font, width_em_in};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 /// How far a cell's words sit in from its sides, in the text height.
 pub const PAD: f64 = 0.5;

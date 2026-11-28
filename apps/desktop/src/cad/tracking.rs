@@ -20,10 +20,10 @@
 use std::time::Duration;
 
 use iced::Task;
-use kentos_geometry_core::jsmath::{cos, sign, sin};
 use kentos_geometry_core::store::snap::Extension;
 use kentos_interaction::object_tracking::{Acquired, DWELL_MS};
 use kentos_interaction::{Format, SnapKind, Vec2, dist};
+use kentos_num::{cos, sign, sin};
 
 use crate::app::{App, Message};
 use crate::marks::{Guide, TrackingMarks};

@@ -5,9 +5,9 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::image::{Frame, clipped};
-use crate::jsmath::{atan2, hypot};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot};
 
 /// Why a clip gives nothing, in the tool's words.
 pub const CLIP_OUTSIDE: &str =

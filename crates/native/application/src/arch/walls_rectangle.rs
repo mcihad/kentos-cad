@@ -8,7 +8,7 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{cos, hypot, sin};
+use kentos_num::{cos, hypot, sin};
 
 use crate::checks::error;
 use crate::{ExecutionContext, codes, shapes, walls_create};

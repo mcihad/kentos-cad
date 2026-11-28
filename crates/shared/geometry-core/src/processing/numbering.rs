@@ -10,10 +10,10 @@ use std::collections::HashMap;
 
 use crate::api::Op;
 use crate::geometry::signed_area;
-use crate::jsmath::{hypot, js_cmp, maximum, or, stable_sort};
 use crate::op;
 use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, js_cmp, maximum, or, stable_sort};
 
 /// Where a ring's numbering starts (`StartCorner`).
 #[derive(Clone, Copy, Debug, PartialEq)]

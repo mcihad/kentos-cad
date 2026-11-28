@@ -5,8 +5,8 @@
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::{WallIn, solve};
-use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{maximum, round_half_up};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/joins.json");

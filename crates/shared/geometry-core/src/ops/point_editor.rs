@@ -9,13 +9,13 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use crate::api::Op;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::{Elevated, ON};
 use crate::text::edit::search;
 use crate::text::natural::natural_cmp;
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A point as the table reads it: its name (label) and code, both as written;
 /// its place (Y east, X north); its elevation; its layer's name; whether it is selected.

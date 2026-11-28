@@ -22,7 +22,7 @@ use crate::Expr;
 use crate::parser::{BinOp, Node};
 use crate::scalar;
 use crate::value::Value;
-use kentos_geometry_core::jsmath::maximum;
+use kentos_num::maximum;
 
 /// The SQL a source speaks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -7,8 +7,8 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::space::{self, Method};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::WallIn;
-use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{maximum, round_half_up};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/spaces.json");
@@ -178,7 +178,7 @@ fn a_void_is_crossed_inside_its_parts() {
     let cross = lines(space::void_cross(&[l]));
     let length: f64 = cross
         .iter()
-        .map(|(a, b)| kentos_geometry_core::jsmath::hypot(b.x - a.x, b.y - a.y))
+        .map(|(a, b)| kentos_num::hypot(b.x - a.x, b.y - a.y))
         .sum();
     assert!((length - 3.0 * 8f64.sqrt()).abs() < 1e-9, "{cross:?}");
     // A 4 × 4 void with a 2 × 2 hole in its middle: each diagonal in two pieces.

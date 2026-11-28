@@ -5,9 +5,9 @@ use crate::api::Op;
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::{bulge_arc, tangent_bulge};
 use crate::geometry::{dist, signed_area};
-use crate::jsmath::{PI, asin, atan2, cos, hypot, maximum, minimum, or, round_half_up, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, asin, atan2, cos, hypot, maximum, minimum, or, round_half_up, sin, tan};
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x - b.x, a.y - b.y)

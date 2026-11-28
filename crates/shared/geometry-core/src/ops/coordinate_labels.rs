@@ -15,12 +15,12 @@ use crate::api::Op;
 use crate::api::json::{FromJson, Json, read_field};
 use crate::display::fixed;
 use crate::entity::Shape;
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::table::Listed;
 use crate::ops::vertex_points::Grid;
 use crate::text::{Font, TextAlign, width_em_in};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// A place a label is written at: where it is, its elevation, its name and
 /// the middle of the box of the vertices of the object it first came from

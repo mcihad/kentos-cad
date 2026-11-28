@@ -10,8 +10,8 @@ use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap};
 
 use crate::entity::Shape;
-use crate::jsmath::maximum;
 use crate::vec2::Vec2;
+use kentos_num::maximum;
 
 /// A cloud's bounds (`[x₁, y₁, z₁, x₂, y₂, z₂]`); none for any other shape or bounds not finite.
 pub fn bounds(shape: &Shape) -> Option<[f64; 6]> {

@@ -2,7 +2,7 @@
 //! an arc one (docs/adr/0734); its limits straight or arc wall edges. No screen or document dependencies.
 use crate::Vec2;
 use crate::geom::bulge::bulge_arc;
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin, tan};
+use kentos_num::{PI, atan2, cos, hypot, maximum, minimum, sin, tan};
 
 #[derive(Clone, Copy)]
 pub struct Edge {

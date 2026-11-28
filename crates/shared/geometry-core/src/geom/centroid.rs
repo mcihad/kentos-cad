@@ -9,8 +9,8 @@
 use crate::entity::{Shape, area_parts, entity_anchor, entity_area, is_multi_part};
 use crate::geom::arrangement::Area;
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
-use crate::jsmath::sin;
 use crate::vec2::Vec2;
+use kentos_num::sin;
 
 /// A ring's signed area and first moments about `o`, a bulged edge's
 /// circular segment included (signed as the geometry core's area signs it).

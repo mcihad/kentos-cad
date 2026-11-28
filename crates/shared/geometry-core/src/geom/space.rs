@@ -18,8 +18,8 @@ use crate::geom::bulge::{bulge_path_length, segment_mid, segment_tangent};
 use crate::geom::intersect::closest_on_edge;
 use crate::geom::region::{net_area, orient_ring, ring_edges};
 use crate::geom::wall_join::{WallIn, solve};
-use crate::jsmath::maximum;
 use crate::vec2::Vec2;
+use kentos_num::maximum;
 
 /// How near a face's edge must run along a wall's face to be on it, metres.
 pub const ON_FACE: f64 = 1e-6;
@@ -407,7 +407,7 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
         let mut longest = 0.0;
         for i in 0..n {
             let (a, b) = (outer[i], outer[(i + 1) % n]);
-            let l = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
+            let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
             if l > longest {
                 longest = l;
                 along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
@@ -422,9 +422,9 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
         for p in &outer {
             let (dx, dy) = (p.x - o.x, p.y - o.y);
             let (u, v) = (dx * along.x + dy * along.y, dx * across.x + dy * across.y);
-            u0 = crate::jsmath::minimum(u0, u);
+            u0 = kentos_num::minimum(u0, u);
             u1 = maximum(u1, u);
-            v0 = crate::jsmath::minimum(v0, v);
+            v0 = kentos_num::minimum(v0, v);
             v1 = maximum(v1, v);
         }
         let at = |u: f64, v: f64| {

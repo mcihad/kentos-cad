@@ -276,7 +276,7 @@ fn a_pie_and_its_outline() {
             })
         })
         .sum();
-    let want = 0.5 * 72.0 * 25.0 * kentos_geometry_core::jsmath::sin(5f64.to_radians());
+    let want = 0.5 * 72.0 * 25.0 * kentos_num::sin(5f64.to_radians());
     assert!((area - want).abs() < 1e-3, "{area} ≠ {want}");
 }
 

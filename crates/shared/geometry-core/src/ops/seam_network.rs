@@ -111,11 +111,9 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
             let (a, b, c) = (r[(k + n - 1) % n], r[k], r[(k + 1) % n]);
             let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
             let cross = u[0] * v[1] - u[1] * v[0];
-            let len = crate::jsmath::maximum(
-                crate::jsmath::hypot(u[0], u[1]),
-                crate::jsmath::hypot(v[0], v[1]),
-            );
-            cross.abs() <= tol * len || crate::jsmath::hypot(u[0], u[1]) <= tol
+            let len =
+                kentos_num::maximum(kentos_num::hypot(u[0], u[1]), kentos_num::hypot(v[0], v[1]));
+            cross.abs() <= tol * len || kentos_num::hypot(u[0], u[1]) <= tol
         });
         match drop {
             Some(k) => {

@@ -7,7 +7,7 @@
 
 use kentos_geometry_core::api;
 use kentos_geometry_core::geodesy::{Tm, tm_forward};
-use kentos_geometry_core::jsmath::maximum;
+use kentos_num::maximum;
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/geodesy/v1/tm-forward.json");

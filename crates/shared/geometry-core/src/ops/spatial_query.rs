@@ -15,10 +15,10 @@ use crate::geom::centroid::shape_centroid;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geom::region::{inside_area, ring_edges};
 use crate::geometry::{Bounds, dist, empty_bounds, extend_bounds, is_empty_bounds};
-use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, minimum, sin};
 
 /// How near counts as on a boundary or meeting, metres (docs/adr/0200 §1).
 pub const TOLERANCE: f64 = 1e-3;

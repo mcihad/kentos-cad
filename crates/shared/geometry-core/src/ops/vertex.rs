@@ -10,12 +10,12 @@ use crate::geom::bulge::{
     bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
 };
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{hypot, minimum};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
 use crate::ops::offset::path_like;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, minimum};
 
 /// Index of the edge of an entity nearest to p (0 when it has none). Edges
 /// within 1e-9 m tie and the first wins: at a shared vertex both edges are

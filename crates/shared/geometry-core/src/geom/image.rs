@@ -8,8 +8,8 @@
 //! picture's own fraction up the frame is one less the frame's.
 
 use crate::entity::Shape;
-use crate::jsmath::{atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, sin};
 
 /// A picture's frame: its lower left corner and its two sides.
 #[derive(Clone, Copy, Debug, PartialEq)]

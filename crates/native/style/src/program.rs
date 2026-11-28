@@ -17,8 +17,8 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{Json, to_string as json_text};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::store::Store;
+use kentos_num::{maximum, round_half_up};
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
     LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_POINTCLOUD, MODE_RASTER,

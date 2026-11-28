@@ -12,9 +12,9 @@
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geom::bulge::{bulge_arc, bulge_at};
-use crate::jsmath::{acos, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{acos, cos, hypot, maximum, sin};
 
 use super::{Choice, System, Unreached, transform_in};
 

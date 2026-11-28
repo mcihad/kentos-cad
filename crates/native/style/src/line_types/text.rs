@@ -6,7 +6,6 @@ use kentos_geometry_core::geom::{
     intersect::Edge,
     overlay::overlay,
 };
-use kentos_geometry_core::jsmath::{hypot, tan};
 use kentos_geometry_core::{
     Vec2,
     entity::TextPlace,
@@ -15,6 +14,7 @@ use kentos_geometry_core::{
         shaping::{self, OutlineOp, placed},
     },
 };
+use kentos_num::{hypot, tan};
 use serde_json::{Value, json};
 
 const TOL: f64 = 0.0001;

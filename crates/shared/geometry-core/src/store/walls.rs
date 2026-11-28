@@ -401,7 +401,7 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
     s.put_json(&column(4.0, 0.0)).unwrap();
     let length = |pts: &[Vec2]| -> f64 {
         pts.windows(2)
-            .map(|w| crate::jsmath::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
             .sum()
     };
     let look = |s: &Store| {
@@ -460,7 +460,7 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
         .shapes
         .iter()
         .filter_map(|sh| match sh {
-            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.y).reduce(crate::jsmath::minimum),
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.y).reduce(kentos_num::minimum),
             _ => None,
         })
         .collect();
@@ -485,10 +485,10 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
         .shapes
         .iter()
         .filter_map(|sh| match sh {
-            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.x).reduce(crate::jsmath::maximum),
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.x).reduce(kentos_num::maximum),
             _ => None,
         })
-        .fold(0.0, crate::jsmath::maximum);
+        .fold(0.0, kentos_num::maximum);
     assert!(far > 4.0, "{far}");
 }
 

@@ -4,9 +4,9 @@
 
 use crate::api::Op;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_ring_area, segment_mid};
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, sin};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct EdgeLabel {

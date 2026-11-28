@@ -30,9 +30,9 @@ use kentos_commands::Meeting;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::line_line;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{TAU, atan2, cos, sin};
 use kentos_geometry_core::tools::construct::{bearing_bearing, distance_distance};
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_num::{TAU, atan2, cos, sin};
 
 use crate::Vec2;
 use crate::edge::Outline;

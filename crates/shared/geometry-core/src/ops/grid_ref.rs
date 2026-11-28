@@ -10,9 +10,9 @@
 //! - **Along a segment** (an opening on its wall's face): where grids cross the segment, before and after a point on
 //!   it; one at the point counts before.
 
-use crate::jsmath::{hypot, maximum};
 use crate::ops::wall_shift::{PARALLEL, TIE};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// A straight grid as the rule takes it: two points of its line and its level.
 #[derive(Clone, Copy, Debug)]

@@ -28,7 +28,7 @@
 use std::f64::consts::PI;
 
 use crate::Vec2;
-use crate::jsmath::{atan2, cos, hypot, maximum, maximum_of, minimum, round_half_up, sin};
+use kentos_num::{atan2, cos, hypot, maximum, maximum_of, minimum, round_half_up, sin};
 
 #[cfg(test)]
 mod tests;

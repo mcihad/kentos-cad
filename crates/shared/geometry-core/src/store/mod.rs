@@ -51,8 +51,8 @@ use crate::api::json::{FromJson, Json};
 use crate::block::Blocks;
 use crate::entity::{Entity, Shape, entity_bounds_in};
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
-use crate::jsmath::{maximum, minimum};
 use crate::text::Font;
+use kentos_num::{maximum, minimum};
 use rtree::{PackedTree, overlaps};
 
 /// What queries need from an object's layer (`LayerStore.isVisible`,

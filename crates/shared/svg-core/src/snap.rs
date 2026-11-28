@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, or, sin};
+use kentos_num::{PI, cos, hypot, maximum, minimum, or, sin};
 
 use crate::bezier::{
     Cubic, bez, bez_deriv, flatten_cubic, flatten_sub_path_tol, nearest_on_cubic, ring_signed_area,

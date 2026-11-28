@@ -28,9 +28,9 @@ use super::fieldbook::curvature;
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
 use crate::api::Op;
 use crate::crs::ground::{Grid, GridFactor, grid_factor};
-use crate::jsmath::{cos, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Shot {

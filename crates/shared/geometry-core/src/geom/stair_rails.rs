@@ -10,8 +10,8 @@
 
 use crate::geom::arch::{Railings, StairSpec, Walk, railing_line, riser_stations, stair_landings};
 use crate::geom::stair_body::winding_zones;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 const EPS: f64 = 1e-9;
 

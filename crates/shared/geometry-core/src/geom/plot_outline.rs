@@ -1,9 +1,6 @@
 //! Bounded CAD curve chords for physical output, independent of screen zoom and source measurement geometry.
-use crate::{
-    Vec2,
-    entity::Shape,
-    jsmath::{TAU, cos, hypot, maximum, sin},
-};
+use crate::{Vec2, entity::Shape};
+use kentos_num::{TAU, cos, hypot, maximum, sin};
 pub const MAX_POINTS: usize = 65_536;
 fn complex() -> String {
     "plot_curve_too_complex: Eğri baskının 0,005 mm toleransında 65536 noktayı aşıyor; eğriyi bölün veya daha küçük ölçekli bir görünüm seçin.".into()

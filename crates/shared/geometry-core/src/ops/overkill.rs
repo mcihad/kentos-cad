@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use crate::Vec2;
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// The distance between two points.
 pub fn far(a: Vec2, b: Vec2) -> f64 {

@@ -15,11 +15,11 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Shape, is_closed_outline};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
     FILL, FILLS, LINE, MARKER, MARKERS, MIXED, REVERSED, SOURCE, drawn, measure_record,
 };
+use kentos_num::maximum;
 
 use super::batch::{BatchSink, Batches, Picture};
 use super::compile::{
@@ -1998,10 +1998,7 @@ fn circle_path(c: Vec2, r: f64) -> Vec<Vec2> {
     (0..72)
         .map(|k| {
             let a = std::f64::consts::TAU * k as f64 / 72.0;
-            Vec2::new(
-                c.x + r * kentos_geometry_core::jsmath::cos(a),
-                c.y + r * kentos_geometry_core::jsmath::sin(a),
-            )
+            Vec2::new(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a))
         })
         .collect()
 }

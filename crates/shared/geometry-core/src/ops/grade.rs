@@ -11,8 +11,8 @@
 //! vertices up to it take the grade ahead, those after it the grade back.
 
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
-use crate::jsmath::{cos, hypot, sin};
 use crate::vec2::Vec2;
+use kentos_num::{cos, hypot, sin};
 
 /// What the range's end is given by.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -313,10 +313,10 @@ mod tests {
             "on the circle"
         );
         // Bulge 1 sweeps π: a quarter is π/4, its bulge tan(π/16); the rest tan(3π/16).
-        let pi = crate::jsmath::PI;
+        let pi = kentos_num::PI;
         assert!(
-            (b1 - crate::jsmath::tan(pi / 16.0)).abs() < 1e-12
-                && (b2 - crate::jsmath::tan(3.0 * pi / 16.0)).abs() < 1e-12,
+            (b1 - kentos_num::tan(pi / 16.0)).abs() < 1e-12
+                && (b2 - kentos_num::tan(3.0 * pi / 16.0)).abs() < 1e-12,
             "{b1} {b2}"
         );
     }

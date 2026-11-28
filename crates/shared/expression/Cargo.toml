@@ -11,6 +11,8 @@ publish.workspace = true
 # or a runtime. It uses the geometry core's JavaScript number semantics and
 # geometry (docs/adr/0008, docs/adr/0100).
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-geometry-core = { path = "../geometry-core" }
 # The regular expression functions (docs/adr/0214 §2.4): rust-lang's small engine.
 regex-lite = { workspace = true }

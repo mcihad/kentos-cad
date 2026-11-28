@@ -27,10 +27,8 @@ use kentos_geometry_core::geom::bulge::bulge_arc;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::overlay::{face_rings, overlay};
 use kentos_geometry_core::geom::region::{area_source, inside_area};
-use kentos_geometry_core::jsmath::{
-    PI, cos, js_cmp, maximum, minimum, sin, stable_sort, tan, truthy,
-};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, cos, js_cmp, maximum, minimum, sin, stable_sort, tan, truthy};
 
 use crate::bezier::{
     Cubic, bez, flatten_cubic, ring_signed_area, segment_count, segment_cubic, segment_is_line,
@@ -567,14 +565,14 @@ impl Builder {
 
     pub fn line_to(&mut self, p: Pt) {
         let Some(l) = self.nodes.last() else { return };
-        if kentos_geometry_core::jsmath::hypot(l.x - p[0], l.y - p[1]) < 1e-12 {
+        if kentos_num::hypot(l.x - p[0], l.y - p[1]) < 1e-12 {
             return;
         }
         self.nodes.push(PathNode::at(p[0], p[1]));
     }
 
     pub fn curve_to(&mut self, c1: Pt, c2: Pt, p: Pt) {
-        use kentos_geometry_core::jsmath::hypot;
+        use kentos_num::hypot;
         let Some(l) = self.nodes.last_mut() else {
             return;
         };
@@ -603,7 +601,7 @@ impl Builder {
         let n = self.nodes.len();
         if n > 1 {
             let (a, b) = (&self.nodes[0], &self.nodes[n - 1]);
-            if kentos_geometry_core::jsmath::hypot(a.x - b.x, a.y - b.y) < 1e-9 {
+            if kentos_num::hypot(a.x - b.x, a.y - b.y) < 1e-9 {
                 let b_in = b.in_;
                 self.nodes.pop();
                 self.nodes[0].in_ = b_in;

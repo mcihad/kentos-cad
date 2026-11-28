@@ -3,9 +3,9 @@
 //! neighbouring hatches line up across shared boundaries.
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, js_cmp, maximum, minimum, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, js_cmp, maximum, minimum, sin, stable_sort};
 
 /// Upper bound on generated hatch lines; beyond this the spacing is unusable anyway.
 pub const MAX_HATCH_LINES: f64 = 20_000.0;

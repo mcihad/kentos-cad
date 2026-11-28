@@ -26,8 +26,8 @@
 
 use std::ops::Range;
 
-use crate::jsmath::{js_cmp, stable_sort};
 use crate::vec2::Vec2;
+use kentos_num::{js_cmp, stable_sort};
 
 #[derive(Clone, Copy)]
 struct Node {

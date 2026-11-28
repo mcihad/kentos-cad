@@ -5,8 +5,8 @@
 //! that could round. Zone-less wall time: a zone given in the text is turned
 //! to UTC when it is read.
 
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::time::{self, civil_from_days, days_from_civil, days_in};
+use kentos_num::round_half_up;
 
 use crate::js::text::fold_turkish;
 use crate::library::Func;

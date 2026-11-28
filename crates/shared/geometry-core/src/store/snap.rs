@@ -22,10 +22,10 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::geom::leader;
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, round_half_up, sign, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, round_half_up, sign, sin};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SnapKind {
@@ -678,10 +678,7 @@ fn grid_node(p: Vec2, kinds: u32, extras: &SnapExtras) -> Option<SnapHit> {
 }
 
 fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
-    Vec2::new(
-        c.x + r * crate::jsmath::cos(a),
-        c.y + r * crate::jsmath::sin(a),
-    )
+    Vec2::new(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a))
 }
 
 /// The grid coordinate nearest `v` at spacing `g`: a whole number of steps,
@@ -1273,7 +1270,7 @@ mod tests {
     use super::*;
     use crate::geom::arrangement::Ring;
     use crate::geom::intersect::seg_seg;
-    use crate::jsmath::{PI, TAU, cos, exp, log, sin};
+    use kentos_num::{PI, TAU, cos, exp, ln, sin};
     use std::cell::Cell;
 
     /// Every pair, as before the pruning: the reference for `crossings`.
@@ -1593,7 +1590,7 @@ mod tests {
                 let tol = match rng.below(10) {
                     0 => 0.0,
                     1 => rng.range(0.001, 0.3),
-                    _ => exp(rng.range(log(0.3), log(40.0))),
+                    _ => exp(rng.range(ln(0.3), ln(40.0))),
                 };
                 let kinds = match rng.below(6) {
                     0 => 0xff,

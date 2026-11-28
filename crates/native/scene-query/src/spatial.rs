@@ -2787,7 +2787,7 @@ impl GripSet {
             return true;
         };
         let (a, b) = (view.to_screen(a), view.to_screen(b));
-        kentos_geometry_core::jsmath::hypot(b[0] - a[0], b[1] - a[1]) >= 28.0
+        kentos_num::hypot(b[0] - a[0], b[1] - a[1]) >= 28.0
     }
 }
 

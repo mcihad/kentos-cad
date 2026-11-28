@@ -1,9 +1,9 @@
 //! Pure architectural chain construction from authoritative source points.
 //! Source numbers are caller-owned stable identities, never render pieces.
 
-use crate::jsmath::{PI, atan2, hypot};
 use crate::ops::subref::Place;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, hypot};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Face {

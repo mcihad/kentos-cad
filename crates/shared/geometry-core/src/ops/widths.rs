@@ -24,9 +24,9 @@
 
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::jsmath::hypot;
 use crate::ops::elevation::{Carry, ON};
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A polyline before the edit, with its widths: one pair for each vertex,
 /// the start and the end of the edge leaving it (the last a closed line's

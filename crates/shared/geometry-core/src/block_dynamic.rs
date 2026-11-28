@@ -7,10 +7,10 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, ParamValue, Params};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, hypot, maximum, round_half_up, sin};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, round_half_up, sin};
 
 /// A parameter, as the variant needs it.
 #[derive(Clone, Debug, PartialEq)]

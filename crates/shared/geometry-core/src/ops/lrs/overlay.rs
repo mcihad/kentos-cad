@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// One side's events of a route: (event, least, most measure).
 type Spans = Vec<(usize, f64, f64)>;

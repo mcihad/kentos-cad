@@ -6,10 +6,10 @@ use kentos_commands::{DimensionRefs, Entity};
 use kentos_domain::dimension_ties::core_place;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{cos, sin};
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::subref::{piece, point};
 use kentos_native_application::blocks::core_entity;
+use kentos_num::{cos, sin};
 
 use crate::Vec2;
 

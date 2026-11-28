@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::hash::{BuildHasherDefault, Hasher};
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin};
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 use super::place::positive;
 
@@ -183,8 +183,5 @@ pub fn displaced(
 /// Kümeleme's symbol grows with its count `n` when asked: `min(2, 1 + ln n / ln 1000)`.
 pub fn growth(n: usize) -> f64 {
     let n = n.max(1) as f64;
-    minimum(
-        1.0 + kentos_geometry_core::jsmath::log(n) / kentos_geometry_core::jsmath::log(1000.0),
-        2.0,
-    )
+    minimum(1.0 + kentos_num::ln(n) / kentos_num::ln(1000.0), 2.0)
 }

@@ -33,10 +33,10 @@ use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::geom::intersect::line_line;
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, sin};
 use kentos_geometry_core::ops::subref::{
     Followed, Place, Reason, curve_centre, edge_line, follow, follow_path, piece, place_near, point,
 };
+use kentos_num::{atan2, cos, hypot, sin};
 
 use crate::document::Document;
 use crate::history::Op;

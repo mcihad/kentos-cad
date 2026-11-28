@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::{maximum, round_half_up};
+use kentos_num::{maximum, round_half_up};
 use sha1::Digest as _;
 
 use crate::compound::shown;

@@ -8,7 +8,7 @@
 //! the years 1–9999 is an integer far below 2^53, so it is exact and compares
 //! exactly. The calendar is worked in integers (`i64`), never in floats.
 
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// Milliseconds in a second, a minute, an hour, a day and a week.
 const SECOND: i64 = 1000;

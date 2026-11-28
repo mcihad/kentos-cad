@@ -20,7 +20,7 @@
 use super::{Body, Cut, Line, Path, Solver, Span, line_path, nearest_s};
 use crate::geom::opening::beside;
 use crate::geom::wall::{self, Spec};
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// A stretch of the wall near an end, `p0` to `p1` before it, between the distances `upper` and `lower` to the path's
 /// left: a turning layer's turn, or what an inner component keeps where the two faces' turns differ.

@@ -5,9 +5,9 @@ use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep, clean_bulge_path};
 use crate::geom::intersect::{circle_circle, line_circle_params, line_line};
-use crate::jsmath::{atan2, hypot, js_cmp, maximum, minimum, or, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, js_cmp, maximum, minimum, or, stable_sort};
 
 /// Beyond this multiple of the offset distance a corner is bevelled, not mitred.
 const MITER_LIMIT: f64 = 4.0;

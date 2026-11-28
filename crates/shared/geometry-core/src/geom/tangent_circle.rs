@@ -7,9 +7,9 @@
 use crate::api::Op;
 use crate::geom::arc::Circle;
 use crate::geom::intersect::{Edge, circle_circle, line_circle_params, line_line};
-use crate::jsmath::{hypot, js_hypot_n, maximum, maximum_of, or};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, js_hypot_n, maximum, maximum_of, or};
 
 enum Support {
     Line { a: Vec2, b: Vec2 },

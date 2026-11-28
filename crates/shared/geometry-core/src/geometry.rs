@@ -2,10 +2,10 @@
 //! operation for operation (docs/adr/0008).
 
 use crate::api::Op;
-use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, hypot, maximum, minimum};
 
 /// Axis-aligned box; empty when min > max (`emptyBounds`: ±∞).
 #[derive(Clone, Copy, Debug, PartialEq)]

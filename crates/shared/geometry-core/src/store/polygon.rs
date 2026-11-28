@@ -11,12 +11,12 @@ use crate::entity::{Shape, TextPlace, area_parts, entity_vertices, inside_polygo
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at, seg_seg};
 use crate::geom::leader;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::predicates::orientation;
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// How a polygon selects: what lies wholly inside it, what it touches too,
 /// or every visible object it does not touch.

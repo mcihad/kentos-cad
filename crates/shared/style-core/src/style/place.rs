@@ -6,9 +6,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::centroid;
-use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort,
-};
+use kentos_num::{PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort};
 
 /// A marker place: where, and the path's direction there (radians).
 #[derive(Clone, Copy, Debug, PartialEq)]

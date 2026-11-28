@@ -8,12 +8,12 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity;
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::subref::{
     Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in,
     range_length,
 };
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::hypot;
 use serde_json::Value;
 use serde_json::json;
 

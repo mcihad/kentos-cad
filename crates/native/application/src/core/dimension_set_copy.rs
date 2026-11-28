@@ -7,8 +7,8 @@ use std::collections::{HashMap, HashSet};
 use kentos_commands::{DimensionSet, DimensionSetId, Entity, EntityId, Vec2};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::affine::{Affine, apply, apply_linear, is_reflection};
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::vec2::Vec2 as CoreVec2;
+use kentos_num::hypot;
 
 use crate::checks::{Stop, error};
 

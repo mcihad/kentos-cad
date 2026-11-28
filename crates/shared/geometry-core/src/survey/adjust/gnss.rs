@@ -16,7 +16,7 @@ pub use super::session::GnssSession;
 use super::session::{Group, whitener};
 use super::sparse::{Envelope, reverse_cuthill_mckee};
 use super::{ObservationResult, Observed, Statistics, name_key, statistics};
-use crate::jsmath::{atan2, cos, hypot, maximum, sin};
+use kentos_num::{atan2, cos, hypot, maximum, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
 /// deviations (m) or their full covariance xx, xy, xz, yy, yz, zz (m²; a known point's north, east, up deviations turned
@@ -1054,9 +1054,9 @@ mod tests {
                         let (a, b) = (at(r, c), at(r + dr, c + dc));
                         let k = baselines.len() as f64;
                         let noise = [
-                            0.003 * crate::jsmath::sin(k * 0.7),
-                            0.003 * crate::jsmath::cos(k * 1.3),
-                            0.006 * crate::jsmath::sin(k * 0.9),
+                            0.003 * kentos_num::sin(k * 0.7),
+                            0.003 * kentos_num::cos(k * 1.3),
+                            0.006 * kentos_num::sin(k * 0.9),
                         ];
                         baselines.push(Baseline {
                             from: format!("S{}", r * w + c),

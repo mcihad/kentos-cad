@@ -1,8 +1,8 @@
 //! A kitchen run's leg frame (docs/adr/0706, 0727): where a point of a leg lies, along its line and into the run's side.
 //! How a run lays its modules is the document's rule (`kentos_domain::casework`).
 
-use crate::jsmath::{atan2, hypot};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot};
 
 /// A line shorter than this has no length.
 const SLACK: f64 = 1e-9;

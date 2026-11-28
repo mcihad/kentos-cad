@@ -19,9 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use kentos_geometry_core::api::json::{FromJson, Json};
-use kentos_geometry_core::jsmath::{
-    hypot, maximum, minimum, or, round_half_up, stable_sort, truthy,
-};
+use kentos_num::{hypot, maximum, minimum, or, round_half_up, stable_sort, truthy};
 use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, slice, trim, utf16_len};
 

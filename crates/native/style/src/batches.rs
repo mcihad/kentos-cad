@@ -1528,7 +1528,7 @@ fn order_of(d: &Value, style: &Value) -> (f64, u64) {
 /// the very pattern it would from the anchor (docs/adr/0157 §3). The rest
 /// of the period is the whole: a remainder is never below zero.
 fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
-    use kentos_geometry_core::jsmath::{cos, sin};
+    use kentos_num::{cos, sin};
     if o == [0.0, 0.0] {
         return paint;
     }
@@ -2165,7 +2165,7 @@ mod fold_tests {
     //! anchor. The platforms' agreement is `fixtures/style/v1/batches.json`'s;
     //! this is the rule itself.
     use super::*;
-    use kentos_geometry_core::jsmath::{cos, sin};
+    use kentos_num::{cos, sin};
 
     /// The far tile of `fixtures/interaction/v1/vector-fit.kcad`'s local survey.
     const O: [f64; 2] = [-458_752.0, -4_390_912.0];

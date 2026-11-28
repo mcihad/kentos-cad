@@ -11,8 +11,8 @@ use super::{
     unread_note,
 };
 use crate::entity::Shape;
-use crate::jsmath::maximum;
 use crate::ops::sampling::random::Sequence;
+use kentos_num::maximum;
 
 /// The neighbourhood a run asks for: the concept, the band (none: the
 /// largest nearest-neighbour distance) and k.

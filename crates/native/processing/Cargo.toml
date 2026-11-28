@@ -18,6 +18,8 @@ linker_messages = "allow"
 # language from the style core: the same code the web reaches through WASM.
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 # The dated scope decision's particulars the audit facts' permit section reads (docs/adr/8063).
 kentos-digital-project = { path = "../../shared/digital-project" }
@@ -63,8 +65,6 @@ serde_json = { workspace = true }
 # The audit facts' architecture drawing is a .kcad v2 file (fixtures/audit-facts/v1/mimari.kcad), read as the other
 # architecture fixtures are.
 [dev-dependencies]
-# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
-kentos-num = { path = "../../shared/num" }
 kentos-kcad = { path = "../../shared/kcad" }
 
 [features]

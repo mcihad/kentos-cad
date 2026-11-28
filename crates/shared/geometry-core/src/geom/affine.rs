@@ -3,9 +3,9 @@
 
 use crate::api::Op;
 use crate::geometry::dist;
-use crate::jsmath::{atan2, cos, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, or, sin};
 
 pub type Affine = [f64; 6];
 

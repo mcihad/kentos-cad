@@ -38,9 +38,9 @@ use kentos_commands::{
     EntityGeometry, PointCreate, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::text::edit::increment;
 use kentos_native_application::{ExecutionContext, edit, point, set};
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::format::{Format, fixed};

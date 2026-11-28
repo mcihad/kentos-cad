@@ -14,9 +14,9 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::arc::{ON_ARC_EPS, on_arc, sweep};
-use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, sin};
 
 /// Most rings and rays (§3).
 pub const MAX_RINGS: u32 = 100;

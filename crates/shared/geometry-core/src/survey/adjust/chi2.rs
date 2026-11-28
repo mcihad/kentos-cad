@@ -4,8 +4,8 @@
 //! exp and log give every target the same bits.
 
 use crate::api::Op;
-use crate::jsmath::{exp, log};
 use crate::op;
+use kentos_num::{exp, ln};
 
 const TINY: f64 = 1e-300;
 
@@ -14,7 +14,7 @@ pub fn lower_gamma(a: f64, x: f64) -> f64 {
     if !(x > 0.0) {
         return 0.0;
     }
-    let front = exp(-x + a * log(x) - kentos_num::lgamma(a));
+    let front = exp(-x + a * ln(x) - kentos_num::lgamma(a));
     if x < a + 1.0 {
         let mut ap = a;
         let mut del = 1.0 / a;

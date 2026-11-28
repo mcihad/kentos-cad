@@ -34,11 +34,11 @@ use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::grips::mid_grip_segment;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::{edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit};
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::edge::Outline;

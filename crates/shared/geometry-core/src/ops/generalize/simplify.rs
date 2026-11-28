@@ -11,9 +11,9 @@ use std::collections::{BinaryHeap, HashSet};
 
 use super::Track;
 use super::coverage::Coverage;
-use crate::jsmath::{maximum, minimum};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// A corner waiting: its area and its vertex, the smallest first, then the first vertex.
 #[derive(Clone, Copy, PartialEq)]

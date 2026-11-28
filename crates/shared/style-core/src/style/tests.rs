@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{PointPart, Shape};
-use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin};
 use kentos_geometry_core::store::Store;
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 use super::batch::Batches;
 use super::build::{

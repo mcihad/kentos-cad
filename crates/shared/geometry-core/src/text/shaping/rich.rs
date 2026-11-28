@@ -4,10 +4,8 @@ use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::{Atom, Error, Format, Glyph, Line, Shift, Style, paragraph};
-use crate::{
-    jsmath::{maximum, minimum},
-    text::paragraph::{Run, SCRIPT_SIZE, STACK_BAR, STACK_OVER, STACK_UNDER, Script},
-};
+use crate::text::paragraph::{Run, SCRIPT_SIZE, STACK_BAR, STACK_OVER, STACK_UNDER, Script};
+use kentos_num::{maximum, minimum};
 
 /// A filled decoration in the piece's em coordinates, positive y up. Its
 /// colour follows its original run; no renderer estimates its width again.

@@ -14,10 +14,10 @@ use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessel
 use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
 use crate::geom::leader::note_place;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, hypot, js_cmp, maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot, js_cmp, maximum, minimum};
 
 fn infinite(s: &Shape) -> bool {
     matches!(s, Shape::Xline { .. } | Shape::Ray { .. })
@@ -173,9 +173,9 @@ impl Store {
                 std::cmp::Ordering::Equal
             }
         };
-        crate::jsmath::stable_sort(&mut edges, &mut |a, b| order(a, b));
-        crate::jsmath::stable_sort(&mut areas, &mut |a, b| order(a, b));
-        crate::jsmath::stable_sort(&mut rooms, &mut |a, b| order(a, b));
+        kentos_num::stable_sort(&mut edges, &mut |a, b| order(a, b));
+        kentos_num::stable_sort(&mut areas, &mut |a, b| order(a, b));
+        kentos_num::stable_sort(&mut rooms, &mut |a, b| order(a, b));
         edges
             .into_iter()
             .chain(areas)
@@ -318,7 +318,7 @@ impl Store {
             .filter(|&(_, d)| d <= tol)
             .collect();
         // Stable, and −0 equals 0 as in `d < best.d`: equal distances keep the document's order.
-        crate::jsmath::stable_sort(&mut out, &mut |a, b| js_cmp(a.1, b.1));
+        kentos_num::stable_sort(&mut out, &mut |a, b| js_cmp(a.1, b.1));
         out
     }
 

@@ -60,7 +60,7 @@ pub fn at_lattice(seed: u64, i: i64, j: i64) -> Sequence {
 /// A typed seed as a sequence's: its whole part, none below zero.
 pub fn seed_of(v: f64) -> u64 {
     if v.is_finite() && v > 0.0 {
-        crate::jsmath::minimum(v, 9_007_199_254_740_991.0) as u64
+        kentos_num::minimum(v, 9_007_199_254_740_991.0) as u64
     } else {
         0
     }

@@ -4,8 +4,8 @@
 //! and its elevation.
 
 use super::walk::Walk;
-use crate::jsmath::{atan2, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, maximum, minimum};
 
 /// How the points are spaced.
 #[derive(Clone, Copy, Debug, PartialEq)]

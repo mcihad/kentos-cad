@@ -434,7 +434,9 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [x] Davranışı değişmeyen adlar: `js_min`/`js_max` → `minimum`/`maximum` (IEEE 754-2019), `js_min_all`/`js_max_all`
     → `minimum_of`/`maximum_of`, `js_sign` → `sign` (tanımları `kentos-num`'da), `js_floor` → `f64::floor`
     (1 969 kullanım, 279 dosya).
-  - [ ] Kalan taşınmış yardımcılar: `js_cmp`, `truthy`/`or`, `stable_sort`, `js_hypot_n` (tek tek karar).
+  - [x] `jsmath` silindi: 446 dosya adları doğrudan `kentos_num`'dan alıyor (`log` → `ln`; π ve 2π de oradan).
+  - [ ] Taşımadan kalan beş yardımcı `kentos_num::port`'ta bekliyor (`js_cmp`, `truthy`/`or`, `stable_sort`,
+    `js_hypot_n`; bekçide sayılıyor): her biri kendi kuralıyla ya da açık koşulla değişecek (tek tek karar).
   - [~] Yuvarlama: `js_round` kuralının adıyla tek tanım oldu (`kentos_num::round_half_up`: yarım +∞'a, kafesin
     kuralı; 201 kullanım, davranış aynı; `style`'daki ikinci kopya kalktı). Kalan: değer yuvarlayan yerlerin (döküm
     ADR 9403 §6: 46'sı ondalık basamağa yuvarlıyor) yarımı sıfırdan uzağa yuvarlayan kurala tek tek geçişi; her biri
@@ -447,7 +449,8 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [x] Platformun yöntemleriyle yapılan 1 190 çağrı (`x.sin()`, `x.atan2(y)`, `powi`…) sayısal temele (33 crate);
     kalanlar masaüstü çiziminin float32 ekran hesabı ve sınırı aşan üç dosyadaki altı çağrı (bekçide; BK-40 ile).
     Hiçbir ortak durum ya da saklı çıktı oynamadı.
-  - [ ] Platform kitaplığı yasağının bütün hesap crate'lerine yayılması; `jsmath`'in silinmesi.
+  - [x] Platform kitaplığı yasağı bütün hesap crate'lerinde bekçiyle tutuluyor (`scripts/dev/platform_math.py`);
+    `jsmath` silindi.
 
 ## Doğrulama
 

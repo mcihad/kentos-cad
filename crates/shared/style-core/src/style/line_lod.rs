@@ -8,7 +8,7 @@
 //! Ranking with the distance to the chord's segment (not its line) keeps a path's spikes and turns back.
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::maximum;
+use kentos_num::maximum;
 
 /// Fewest vertices a path must have (a closed path's ring) before it comes with levels.
 pub(crate) const LEAST_POINTS: usize = 8;
@@ -103,10 +103,8 @@ mod tests {
         let mut most: f64 = 0.0;
         for w in kept.windows(2) {
             for p in &pts[w[0]..=w[1]] {
-                most = kentos_geometry_core::jsmath::maximum(
-                    most,
-                    segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt(),
-                );
+                most =
+                    kentos_num::maximum(most, segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt());
             }
         }
         most

@@ -18,11 +18,11 @@ use kentos_commands::{
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
 use kentos_geometry_core::geometry::point_in_rings;
-use kentos_geometry_core::jsmath::{atan2, hypot};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_pattern, shape};
 use kentos_native_application::viewmarks::references_of;
 use kentos_native_application::{ExecutionContext, spaces_finish, viewmarks_create};
+use kentos_num::{atan2, hypot};
 
 use crate::Vec2;
 use crate::edge::Outline;

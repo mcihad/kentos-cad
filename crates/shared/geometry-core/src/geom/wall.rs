@@ -22,8 +22,8 @@ use crate::geom::bulge::{bulge_path_outline, has_bulges};
 use crate::geom::hatch_pattern::library_pattern;
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
 use crate::geometry::signed_area;
-use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, hypot, maximum, minimum};
 
 /// Conservative path box used by the native wall join candidate search.
 /// Keep this arithmetic identical for changed walls and indexed stored walls;
@@ -701,7 +701,7 @@ fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
             .iter()
             .filter_map(|o| nearest_on(o, p))
             .min_by(|a, b| {
-                crate::jsmath::js_cmp(hypot(a.x - p.x, a.y - p.y), hypot(b.x - p.x, b.y - p.y))
+                kentos_num::js_cmp(hypot(a.x - p.x, a.y - p.y), hypot(b.x - p.x, b.y - p.y))
             })
     };
     let mut out = Vec::new();
@@ -1049,7 +1049,7 @@ fn curtain_pieces(
             let (s0, s1) = crate::geom::curtain::frame_span(
                 &lines,
                 k,
-                crate::jsmath::minimum(face, length / 2.0),
+                kentos_num::minimum(face, length / 2.0),
             );
             out.push(piece(
                 Shape::Polygon {
@@ -1225,15 +1225,11 @@ mod tests {
                 Shape::Polygon { pts, .. } => {
                     let xs: Vec<f64> = pts.iter().map(|q| q.x).collect();
                     let ys: Vec<f64> = pts.iter().map(|q| q.y).collect();
-                    let lo = |v: &[f64]| {
-                        v.iter()
-                            .cloned()
-                            .fold(f64::INFINITY, crate::jsmath::minimum)
-                    };
+                    let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, kentos_num::minimum);
                     let hi = |v: &[f64]| {
                         v.iter()
                             .cloned()
-                            .fold(f64::NEG_INFINITY, crate::jsmath::maximum)
+                            .fold(f64::NEG_INFINITY, kentos_num::maximum)
                     };
                     assert!(
                         (lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12,
@@ -1296,7 +1292,7 @@ mod tests {
                 Shape::Polygon { pts, .. } => Some(
                     pts.iter()
                         .map(|q| q.x)
-                        .fold(f64::INFINITY, crate::jsmath::minimum),
+                        .fold(f64::INFINITY, kentos_num::minimum),
                 ),
                 _ => None,
             })
@@ -1327,8 +1323,8 @@ mod tests {
             Shape::Polyline { pts, .. } => pts.windows(2).any(|w| {
                 (w[0].y - w[1].y).abs() < 1e-12
                     && w[0].y.abs() > 0.07
-                    && crate::jsmath::minimum(w[0].x, w[1].x) < 3.0
-                    && crate::jsmath::maximum(w[0].x, w[1].x) > 3.0
+                    && kentos_num::minimum(w[0].x, w[1].x) < 3.0
+                    && kentos_num::maximum(w[0].x, w[1].x) > 3.0
             }),
             _ => false,
         });

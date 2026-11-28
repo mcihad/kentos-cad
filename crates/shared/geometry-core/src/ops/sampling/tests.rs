@@ -18,12 +18,12 @@ use crate::entity::Shape;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{inside_area, net_area};
 use crate::geometry::Bounds;
-use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::ops::geoprocess::{Class, class_of};
 use crate::ops::spatial_query::{geometry_of, intersects};
 use crate::vec2::Vec2;
+use kentos_num::{cos, maximum, minimum, sin};
 
 fn v(x: f64, y: f64) -> Vec2 {
     Vec2::new(x, y)
@@ -521,7 +521,7 @@ fn corners(areas: &[Area]) -> Vec<(f64, f64)> {
         .flat_map(|r| r.pts.iter().map(|p| (p.x, p.y)))
         .collect();
     // By the micrometre: the overlay's cut points are within a few units of the last place off the line.
-    let k = |v: f64| crate::jsmath::round_half_up(v * 1e6);
+    let k = |v: f64| kentos_num::round_half_up(v * 1e6);
     out.sort_by(|a, b| k(a.0).total_cmp(&k(b.0)).then(k(a.1).total_cmp(&k(b.1))));
     out
 }

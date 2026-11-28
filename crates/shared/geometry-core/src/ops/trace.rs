@@ -21,11 +21,11 @@ use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::{joinable, localize, origin_of};
 use crate::geometry::Bounds;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::areas::line_source;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A traced way: its corners (the given ends first and last), one bulge
 /// per edge, and its length.

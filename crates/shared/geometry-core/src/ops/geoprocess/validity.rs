@@ -12,10 +12,10 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, param_on, p
 use crate::geom::overlay::overlay;
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// A problem's kind, in the order a check finds them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

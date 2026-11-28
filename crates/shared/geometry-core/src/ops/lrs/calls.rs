@@ -10,10 +10,10 @@ use crate::api::Op;
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_arc;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 /// A route calibrated (its parts) or why not, and which marks it used.
 #[derive(Clone, Debug, PartialEq)]

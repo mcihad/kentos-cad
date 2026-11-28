@@ -6,7 +6,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::minimum;
+use kentos_num::minimum;
 
 use crate::library::Func;
 use crate::scalar::{R, V, to_number};

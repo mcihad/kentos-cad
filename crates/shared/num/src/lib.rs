@@ -16,6 +16,7 @@
 mod elementary;
 mod hypot;
 mod order;
+mod port;
 mod rounding;
 
 pub use elementary::{
@@ -24,4 +25,8 @@ pub use elementary::{
 };
 pub use hypot::hypot;
 pub use order::{maximum, maximum_of, minimum, minimum_of, sign};
+pub use port::{js_cmp, js_hypot_n, or, stable_sort, truthy};
 pub use rounding::round_half_up;
+
+/// π and 2π: the doubles nearest to them.
+pub use std::f64::consts::{PI, TAU};

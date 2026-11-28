@@ -15,13 +15,13 @@ use std::hash::BuildHasherDefault;
 
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{
-    PI, TAU, atan2, cos, hypot, js_cmp, maximum, maximum_of, minimum, minimum_of, round_half_up,
-    sign, sin, stable_sort,
-};
 use crate::predicates::{orient2d, orientation};
 use crate::store::IdHasher;
 use crate::vec2::Vec2;
+use kentos_num::{
+    PI, TAU, atan2, cos, hypot, js_cmp, maximum, maximum_of, minimum, minimum_of, round_half_up,
+    sign, sin, stable_sort,
+};
 
 /// A map on the store's fast hash: the overlay's grids and indexes are never walked in their order.
 type FastMap<K, V> = HashMap<K, V, BuildHasherDefault<IdHasher>>;

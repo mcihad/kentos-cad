@@ -426,7 +426,7 @@ fn run_checked(
         hi[axis] = libm::fmax(hi[axis], *v);
     }
     let extent = if lo[0].is_finite() {
-        crate::jsmath::hypot(hi[0] - lo[0], hi[1] - lo[1])
+        kentos_num::hypot(hi[0] - lo[0], hi[1] - lo[1])
     } else {
         0.0
     };
@@ -668,7 +668,7 @@ fn run_checked(
     let weight = |x: &[f64], j: usize| match model.kinds[j] {
         VarKind::Bulge => model.edge_ends[j].map_or(1.0, |(a, b)| {
             libm::fmax(
-                crate::jsmath::hypot(x[b] - x[a], x[b + 1] - x[a + 1]) * 0.5,
+                kentos_num::hypot(x[b] - x[a], x[b + 1] - x[a + 1]) * 0.5,
                 1e-9,
             )
         }),
@@ -702,7 +702,7 @@ fn run_checked(
         let a = crate::vec2::Vec2::new(x[vars[0]], x[vars[1]]);
         let b = crate::vec2::Vec2::new(x[vars[2]], x[vars[3]]);
         if let Some(bulge) =
-            crate::geom::bulge::bulge_of_radius(a, b, radius * crate::jsmath::sign(x[j]))
+            crate::geom::bulge::bulge_of_radius(a, b, radius * kentos_num::sign(x[j]))
         {
             x[j] = if x[j].abs() > 1.0 { 1.0 / bulge } else { bulge };
         }

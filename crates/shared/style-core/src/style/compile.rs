@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, round_half_up, sin};
+use kentos_num::{PI, cos, hypot, maximum, minimum, round_half_up, sin};
 
 use super::generate::{self, Gen};
 use super::model::{

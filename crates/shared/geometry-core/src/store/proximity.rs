@@ -12,13 +12,13 @@ use std::collections::HashMap;
 use super::rtree::{Nearer, NearestQueue, PackedTree};
 use super::{Store, padded};
 use crate::geometry::Bounds;
-use crate::jsmath::maximum;
 use crate::ops::proximity::{
     center_distance, interiors_overlap, nearest_points, overlap_area, shared_boundary,
 };
 use crate::ops::spatial_query::{Geometry, TOLERANCE, geometry_of};
 use crate::survey::bearing;
 use crate::vec2::Vec2;
+use kentos_num::maximum;
 
 /// Numbers per `nearest` record: the input's place, the target's, the
 /// distance, the input's nearest point (x, y), the target's (x, y) and the

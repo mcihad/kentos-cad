@@ -40,9 +40,9 @@
 use super::{Unit, bearing, distinct, finite, positive, signed};
 use crate::api::Op;
 use crate::crs::ground::{Grid, grid_factor};
-use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, sin};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TraverseInput {

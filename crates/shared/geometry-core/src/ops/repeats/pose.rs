@@ -91,7 +91,7 @@ pub(super) fn work(s: &Shape) -> usize {
     }
 }
 fn angle(a: f64, b: f64) -> bool {
-    crate::jsmath::minimum(
+    kentos_num::minimum(
         (a - b).rem_euclid(std::f64::consts::TAU),
         (b - a).rem_euclid(std::f64::consts::TAU),
     ) <= 1e-10

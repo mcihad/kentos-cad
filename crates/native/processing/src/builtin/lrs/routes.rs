@@ -5,13 +5,13 @@ use std::collections::BTreeMap;
 use kentos_commands::{Entity, LineEntity, Vec2 as Point};
 use kentos_domain::Slot;
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{TAU, cos, sin, tan};
 use kentos_geometry_core::ops::elevation::{Carry, carry_elevations};
 use kentos_geometry_core::ops::lrs::{
     CalibrateRules, CreateRules, Mark, Method, Piece, PieceFault, Priority, RoutePart, calibrate,
     create, summary,
 };
 use kentos_native_application::elevation;
+use kentos_num::{TAU, cos, sin, tan};
 use serde_json::{Value, json};
 
 use super::{

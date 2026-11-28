@@ -101,8 +101,8 @@ pub fn rect_path(x: f32, y: f32, w: f32, h: f32, rt: f32, rb: f32) -> String {
 pub fn wedge_path(cx: f32, cy: f32, r0: f32, r1: f32, a0: f32, a1: f32) -> String {
     let at = |r: f32, a: f32| {
         let (s, c) = (
-            crate::jsmath::sin(f64::from(a)) as f32,
-            crate::jsmath::cos(f64::from(a)) as f32,
+            kentos_num::sin(f64::from(a)) as f32,
+            kentos_num::cos(f64::from(a)) as f32,
         );
         (cx + r * s, cy - r * c)
     };

@@ -7,8 +7,8 @@
 //! cannot be made leaves the edge; after one is made the short edges are
 //! read again.
 
-use crate::jsmath::{PI, atan2};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2};
 
 /// Bina sadeleştir's settings: the least edge length (m) and the parallel
 /// and perpendicular limits (radians).

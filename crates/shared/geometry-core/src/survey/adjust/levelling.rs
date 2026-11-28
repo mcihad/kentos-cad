@@ -299,7 +299,7 @@ pub fn adjust(input: &LevelInput) -> Result<LevelResult, String> {
         for k in &points {
             let d = delta[col[k]];
             *h.entry(k.clone()).or_insert(0.0) += d;
-            biggest = crate::jsmath::maximum(biggest, d.abs());
+            biggest = kentos_num::maximum(biggest, d.abs());
         }
         if biggest <= 1e-9 {
             break;

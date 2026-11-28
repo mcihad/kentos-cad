@@ -13,7 +13,7 @@
 //! ([`ViewChange`]).
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::hypot;
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::format::Format;

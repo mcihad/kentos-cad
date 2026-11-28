@@ -1220,7 +1220,7 @@ impl Reader<'_> {
                 ramp: ramp(v.get("ramp")),
                 quality: match v.get("quality") {
                     Json::Num(q) if q.is_finite() => {
-                        kentos_geometry_core::jsmath::round_half_up(*q).clamp(1.0, 5.0) as u32
+                        kentos_num::round_half_up(*q).clamp(1.0, 5.0) as u32
                     }
                     _ => 2,
                 },

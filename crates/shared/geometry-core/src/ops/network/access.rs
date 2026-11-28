@@ -31,7 +31,7 @@
 
 use super::rules::{caseless, number};
 use crate::api::json::Json;
-use crate::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 /// A vehicle profile as the rules read it.
 #[derive(Clone, Debug, PartialEq)]

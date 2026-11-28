@@ -16,10 +16,7 @@ fn ring(c: Vec2, r: f64, n: usize) -> Vec<Vec2> {
     (0..n)
         .map(|k| {
             let a = TAU * k as f64 / n as f64;
-            p(
-                c.x + r * kentos_geometry_core::jsmath::cos(a),
-                c.y + r * kentos_geometry_core::jsmath::sin(a),
-            )
+            p(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a))
         })
         .collect()
 }
@@ -34,7 +31,7 @@ fn a_circle_vertex_is_at_r_theta_not_at_the_chords_sum() {
         assert!((d - 2. * FRAC_PI_4 * k as f64).abs() < 1e-9, "{k}: {d}");
     }
     // Chords would give 8·2·2·sin(π/8) = 12.25 for 4π = 12.57.
-    assert!((2. * 2. * kentos_geometry_core::jsmath::sin(PI / 8.) * 8. - 4. * PI).abs() > 0.3);
+    assert!((2. * 2. * kentos_num::sin(PI / 8.) * 8. - 4. * PI).abs() > 0.3);
 }
 
 #[test]
@@ -58,8 +55,8 @@ fn every_chord_carries_the_same_half_dash_and_the_seam_joins_ink() {
         let _ = b;
         let half = PI / 8. * (2 * k + 1) as f64;
         assert!(
-            (piece[1].x - kentos_geometry_core::jsmath::cos(half)).abs() < 1e-12
-                && (piece[1].y - kentos_geometry_core::jsmath::sin(half)).abs() < 1e-12
+            (piece[1].x - kentos_num::cos(half)).abs() < 1e-12
+                && (piece[1].y - kentos_num::sin(half)).abs() < 1e-12
         );
     }
     // Phase π/16 puts ink across the seam: the last run joins the first.
@@ -103,10 +100,7 @@ fn a_bulge_path_keeps_its_phase_from_the_line_through_the_arc() {
     let mut path = vec![p(0., 0.), p(3., 0.)];
     for k in 1..=6 {
         let a = -PI / 2. + PI * k as f64 / 6.;
-        path.push(p(
-            3. + kentos_geometry_core::jsmath::cos(a),
-            1. + kentos_geometry_core::jsmath::sin(a),
-        ));
+        path.push(p(3. + kentos_num::cos(a), 1. + kentos_num::sin(a)));
     }
     path.push(p(1., 2.));
     let d = distances(&r, &path).unwrap();
@@ -173,12 +167,7 @@ fn a_rational_nurbs_circle_is_measured_by_its_own_arc() {
     assert!((r.total - PI / 2.).abs() < 1e-12);
     let path: Vec<Vec2> = [0., 0.3, 0.7, 1.2, PI / 2.]
         .iter()
-        .map(|&a| {
-            p(
-                kentos_geometry_core::jsmath::cos(a),
-                kentos_geometry_core::jsmath::sin(a),
-            )
-        })
+        .map(|&a| p(kentos_num::cos(a), kentos_num::sin(a)))
         .collect();
     let d = distances(&r, &path).unwrap();
     for (k, a) in [0., 0.3, 0.7, 1.2, PI / 2.].iter().enumerate() {
@@ -249,9 +238,9 @@ fn only_a_cad_phase_build_is_cut_on_the_curve() {
     // The cut is the arc's own point at 29 m: 2.9 rad, on the 10 m circle.
     let (x, y) = (end["x"].as_f64().unwrap(), end["y"].as_f64().unwrap());
     assert!(
-        (kentos_geometry_core::jsmath::atan2(y, x) - 2.9).abs() < 1e-12,
+        (kentos_num::atan2(y, x) - 2.9).abs() < 1e-12,
         "{}",
-        kentos_geometry_core::jsmath::atan2(y, x)
+        kentos_num::atan2(y, x)
     );
-    assert!((kentos_geometry_core::jsmath::hypot(x, y) - 10.).abs() < 1e-12);
+    assert!((kentos_num::hypot(x, y) - 10.).abs() < 1e-12);
 }

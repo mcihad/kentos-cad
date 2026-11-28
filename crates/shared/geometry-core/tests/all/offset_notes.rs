@@ -4,10 +4,10 @@
 
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::curve_outline::{CURVE_TOL, spline_outline};
-use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::offset::{collapses, offset_noted};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 fn v(x: f64, y: f64) -> Vec2 {
     Vec2::new(x, y)

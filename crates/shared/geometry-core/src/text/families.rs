@@ -108,7 +108,7 @@ fn row_of(family: &str, weight: u16) -> [u16; 352] {
             .and_then(|c| face.glyph_index(c))
             .and_then(|g| face.glyph_hor_advance(g));
         if let Some(a) = advance {
-            *cell = crate::jsmath::round_half_up(f64::from(a) * 1000.0 / em)
+            *cell = kentos_num::round_half_up(f64::from(a) * 1000.0 / em)
                 .clamp(0.0, f64::from(u16::MAX)) as u16;
         }
     }

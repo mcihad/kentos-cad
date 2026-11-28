@@ -14,8 +14,8 @@ use super::inference::{
 use super::weights::neighbours;
 use super::{Number, ObjectCopy, StatsRun, p_value, pair, text};
 use crate::entity::Shape;
-use crate::jsmath::maximum;
 use crate::ops::sampling::random::Sequence;
+use kentos_num::maximum;
 
 /// The conditional draws of a run (`inference::conditional_rows`).
 pub struct Draws {

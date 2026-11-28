@@ -7,7 +7,7 @@
 //! edges of the dot's horizontal band (the answer is the full test's).
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 use super::place::positive;
 

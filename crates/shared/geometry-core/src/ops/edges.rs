@@ -15,9 +15,9 @@ use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::intersect::{Edge, closest_on_edge, full_circle};
 use crate::geometry::Bounds;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// The edges of `e` that can come into `area`: a fit-point curve's and an
 /// ellipse's only from the pieces that can reach it (docs/adr/0149 §5.3),

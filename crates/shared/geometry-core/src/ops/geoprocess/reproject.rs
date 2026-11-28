@@ -9,8 +9,8 @@ use crate::crs::{Choice, System, Unreached, transform_in};
 use crate::entity::Shape;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{acos, maximum};
 use crate::vec2::Vec2;
+use kentos_num::{acos, maximum};
 
 /// How far a chord may stand off its arc (m).
 pub const SAGITTA: f64 = 0.001;

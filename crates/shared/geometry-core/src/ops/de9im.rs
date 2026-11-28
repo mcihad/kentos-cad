@@ -15,10 +15,10 @@ use crate::entity::{Shape as Kind, area_parts};
 use crate::geom::intersect::point_at as at;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::ops::spatial_query::{Geometry, geometry_of, inside};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// Where a point lies against an object.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

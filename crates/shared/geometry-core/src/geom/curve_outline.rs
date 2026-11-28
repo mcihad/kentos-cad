@@ -22,8 +22,8 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// How far a chord may come from the curve it stands for in a computation (m).
 pub const CURVE_TOL: f64 = 1e-4;
@@ -223,7 +223,7 @@ fn overlaps(a: &Bounds, b: &Bounds) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::{hypot, maximum};
+    use kentos_num::{hypot, maximum};
 
     /// The distance from p to the segment a–b.
     fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {

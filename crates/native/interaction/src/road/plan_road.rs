@@ -28,12 +28,12 @@ use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geom::parallel::clean_axis;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::TAU;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::parts::one_area;
 use kentos_geometry_core::ops::road::{RoadParts, median_ring, road_junctions, road_parts};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{edit_geometry, shape};
+use kentos_num::TAU;
 
 use crate::Vec2;
 use crate::edge;

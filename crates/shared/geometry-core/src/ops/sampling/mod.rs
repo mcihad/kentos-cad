@@ -28,10 +28,10 @@ pub mod walk;
 
 use crate::entity::{Shape, entity_bounds};
 use crate::geometry::{Bounds, is_empty_bounds};
-use crate::jsmath::{maximum, minimum};
 use crate::ops::convert::Zs;
 use crate::ops::geoprocess::{Class, class_of};
 use inside::Inside;
+use kentos_num::{maximum, minimum};
 use scatter::Target;
 use walk::walks_of;
 

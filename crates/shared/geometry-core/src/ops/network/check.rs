@@ -9,8 +9,8 @@ use std::collections::{HashMap, HashSet};
 use super::graph::{BuildReport, Graph};
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::{closest_on_edge, intersect_edges};
-use crate::jsmath::{hypot, round_half_up};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, round_half_up};
 
 /// How far an end may be from another edge to be called a near miss (metres).
 pub const NEAR_MISS: f64 = 1.0;

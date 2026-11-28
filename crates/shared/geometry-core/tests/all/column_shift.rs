@@ -7,9 +7,9 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::WallIn;
-use kentos_geometry_core::jsmath::{cos, sin};
 use kentos_geometry_core::ops::column_shift::{ColumnIn, Target, gaps, moved};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{cos, sin};
 
 const PLAIN: &str = r#"{"width":0.2,"justify":"center"}"#;
 

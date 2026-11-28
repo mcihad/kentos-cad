@@ -28,10 +28,10 @@
 use kentos_commands::{RectangleCorners, RectangleCreate, RectangleFrame};
 use kentos_geometry_core::geom::shapes::rect_side_for_area;
 use kentos_geometry_core::geometry::{dist, signed_area};
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::tools::drawing::direction_angle;
 use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
 use kentos_native_application::{ExecutionContext, shapes};
+use kentos_num::PI;
 
 use crate::Vec2;
 use crate::format::{Format, short_degrees};

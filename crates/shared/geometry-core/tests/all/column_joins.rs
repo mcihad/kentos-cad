@@ -8,8 +8,8 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::column_join::{Foot, WallAt, cut, joined};
 use kentos_geometry_core::geom::wall::{Drawn, Spec, drawn};
-use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/column-joins.json");

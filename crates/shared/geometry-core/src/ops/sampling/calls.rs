@@ -152,7 +152,7 @@ fn random_run(
         .map(|(i, e)| target_of(&e.shape, zs_at(zs, i)))
         .collect();
     let tries = if tries.is_finite() && tries >= 1.0 {
-        crate::jsmath::minimum(tries, 1000.0) as u32
+        kentos_num::minimum(tries, 1000.0) as u32
     } else {
         1
     };

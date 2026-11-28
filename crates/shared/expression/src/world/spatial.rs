@@ -8,10 +8,10 @@
 use std::rc::Rc;
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::ops::geoprocess::{self, Class, clip};
 use kentos_geometry_core::ops::spatial_query::{self, Geometry, Relation, geometry_of};
 use kentos_geometry_core::store::Store;
+use kentos_num::maximum;
 
 use super::{Session, Table, WorldCall};
 use crate::compound::{self, Item};

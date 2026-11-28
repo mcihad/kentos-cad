@@ -54,7 +54,7 @@ fn font(t: &Value) -> Font {
 }
 
 fn tolerance(scale: f64) -> f64 {
-    1e-9 * kentos_geometry_core::jsmath::maximum(scale.abs(), 1.0)
+    1e-9 * kentos_num::maximum(scale.abs(), 1.0)
 }
 
 fn near(got: f64, want: f64, what: &str) {

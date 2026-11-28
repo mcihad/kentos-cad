@@ -30,9 +30,9 @@ use super::turns::{Level, TurnIn, TurnTable, heading};
 use crate::geom::arrangement::{edge_len, reverse_edge, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// An edge as the host gives it: its object's id and part, its path, its
 /// direction field's value, its costs' fields' values (one each, in the

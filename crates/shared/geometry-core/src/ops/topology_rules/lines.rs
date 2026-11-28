@@ -10,12 +10,12 @@ use crate::entity::Shape;
 use crate::geom::arrangement::{edge_box, edge_len};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, maximum, sign, sin, stable_sort};
 use crate::ops::edges::entity_edges;
 use crate::ops::geoprocess::validity::{Kind as Problem, problems, repair};
 use crate::ops::geoprocess::{Class, boundary_edges};
 use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, sign, sin, stable_sort};
 
 fn paths_of(taken: &[Taken], i: usize) -> &[Vec<Edge>] {
     match &taken[i].class {

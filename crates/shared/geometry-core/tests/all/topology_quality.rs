@@ -48,9 +48,9 @@ fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Vec2> {
 /// A circular segment's area over a chord `c` of an edge of bulge `b` (tan of a quarter of its sweep): the sweep
 /// θ = 4·atan|b|, the radius c / (2 sin(θ/2)), the area r²/2 (θ − sin θ).
 fn segment(c: f64, b: f64) -> f64 {
-    let theta = 4.0 * kentos_geometry_core::jsmath::atan(b.abs());
-    let r = c / (2.0 * kentos_geometry_core::jsmath::sin(theta / 2.0));
-    r * r / 2.0 * (theta - kentos_geometry_core::jsmath::sin(theta))
+    let theta = 4.0 * kentos_num::atan(b.abs());
+    let r = c / (2.0 * kentos_num::sin(theta / 2.0));
+    r * r / 2.0 * (theta - kentos_num::sin(theta))
 }
 
 struct Drawing {

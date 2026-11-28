@@ -13,10 +13,10 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::{Shape, entity_vertices, is_multi_part};
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geometry::dist;
-use crate::jsmath::{PI, atan, atan2, cos, hypot, sin};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan, atan2, cos, hypot, sin};
 
 /// Two points this close are one (the elevations' “at a vertex”, docs/adr/0142).
 pub const SAME: f64 = 1e-6;

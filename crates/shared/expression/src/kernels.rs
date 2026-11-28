@@ -4,7 +4,7 @@
 //! take the objects that were not. A fast pass settles only objects where
 //! the rules would give the same.
 
-use kentos_geometry_core::jsmath::{maximum, pow};
+use kentos_num::{maximum, pow};
 
 use crate::exec::{BOOL, Col, NULL, NUM, Out, TEXT, THROWN};
 use crate::functions;

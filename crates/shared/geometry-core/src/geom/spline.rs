@@ -3,9 +3,9 @@
 
 use crate::api::Op;
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{hypot, maximum, minimum, or};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum, or};
 
 pub fn catmull_rom(pts: &[Vec2], closed: bool, per_span: f64) -> Vec<Vec2> {
     let n = pts.len();

@@ -48,9 +48,9 @@ use crate::geom::bulge::has_bulges;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::leader;
 use crate::geometry::{Bounds, signed_area};
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 pub const NONE: f64 = 0.0;
 pub const MARKER: f64 = 1.0;
@@ -398,7 +398,7 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         } => {
             out.extend([LINE, 1.0]);
             if bulges.is_some() {
-                let step = crate::jsmath::TAU / OUTLINE_SEGMENTS;
+                let step = kentos_num::TAU / OUTLINE_SEGMENTS;
                 path(
                     out,
                     true,

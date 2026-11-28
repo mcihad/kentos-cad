@@ -15,10 +15,10 @@ use crate::api::json::Json;
 use crate::block::{Blocks, pieces_bounds};
 use crate::entity::{Entity, Shape, entity_bounds_in};
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
-use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// What the tool's methods and the command's `mode` do.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

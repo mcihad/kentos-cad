@@ -18,9 +18,9 @@ use crate::entity::{Entity, Shape, is_multi_part};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_path_edges, bulge_ring_area};
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// Why an edge is not shifted, in the tool's words.
 pub const NOT_PATH: &str =

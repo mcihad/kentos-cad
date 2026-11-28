@@ -7,8 +7,8 @@
 use super::written;
 use crate::entity::Shape;
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// An object's source vertices kept and moved by a repair, and the farthest and total distance moved.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

@@ -10,9 +10,9 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, sin};
 
 /// A control point (docs/adr/0156 §1): where it is in the drawing, where it
 /// is to go, and whether it takes part in the solution.

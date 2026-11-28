@@ -3,7 +3,7 @@
 use super::{PATH_VERTEX_LIMIT, Shape, Vec2, finite};
 use crate::geom::bulge::{bulge_arc, bulge_at, is_arc_bulge, segment_mid};
 use crate::geometry::dist;
-use crate::jsmath::maximum;
+use kentos_num::maximum;
 
 #[derive(Clone, Copy)]
 struct Path<'a> {
@@ -375,7 +375,7 @@ mod tests {
             unreachable!()
         };
         let angle = i as f64 * 0.17;
-        let (s, c) = (crate::jsmath::sin(angle), crate::jsmath::cos(angle));
+        let (s, c) = (kentos_num::sin(angle), kentos_num::cos(angle));
         let mirror = i % 2 == 1;
         let reverse = i % 3 == 1;
         let start = if closed {

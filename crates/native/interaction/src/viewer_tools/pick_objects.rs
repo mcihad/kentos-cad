@@ -27,7 +27,7 @@
 //! selecting step, Otomatik seçim narrows it to the active layer.
 
 use kentos_domain::Slot;
-use kentos_geometry_core::jsmath::hypot;
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::data_search::kind_name;

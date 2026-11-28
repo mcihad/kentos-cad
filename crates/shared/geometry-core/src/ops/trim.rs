@@ -13,13 +13,13 @@ use crate::geom::intersect::{
     Edge, circle_circle, full_circle, line_circle_params, on_edge_arc, point_at, ray_edge,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, maximum_of, minimum, minimum_of, sin};
 use crate::op;
 use crate::ops::curve_cuts::{
     Cut, Geometry, construction_of, ellipse_of, extend_ellipse, trim_construction, trim_ellipse,
 };
 use crate::ops::path::{cuts_on, nearest_s, path_of, sub_path};
 use crate::vec2::Vec2;
+use kentos_num::{TAU, acos, atan2, cos, hypot, maximum, maximum_of, minimum, minimum_of, sin};
 
 /// Removes the part of `target` between the two cuts that bracket `pick`.
 pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {

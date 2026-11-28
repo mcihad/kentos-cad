@@ -7,9 +7,9 @@ use super::concave::concave_hull;
 use super::points::outline_points;
 use super::voronoi::{Cell, Frame, delaunay_triangles, frame_of, normalised, voronoi};
 use crate::entity::Shape;
-use crate::jsmath::hypot;
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// A fixed sequence of numbers in [0, 1).
 struct Lcg(u64);

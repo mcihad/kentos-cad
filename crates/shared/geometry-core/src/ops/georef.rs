@@ -20,12 +20,12 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{hypot, maximum};
 use crate::op;
 use crate::ops::fit::{self, Fit, FitKind, FitPair};
 use crate::ops::rubber::{Link, Sheet};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// A transform's kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

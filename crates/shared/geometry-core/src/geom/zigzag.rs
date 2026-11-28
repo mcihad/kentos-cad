@@ -4,9 +4,9 @@
 //! a size of their own, break into pieces in a band thinner than them or sloping across them.
 
 use crate::geometry::point_in_polygon;
-use crate::jsmath::hypot;
 use crate::ops::generate::bounding::convex_hull;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// At most this many points in one band's zigzag: a band longer than that many vees draws its first ones.
 const MOST: usize = 4000;

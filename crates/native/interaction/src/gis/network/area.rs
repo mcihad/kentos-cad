@@ -16,10 +16,10 @@ use kentos_commands::{NetworkCostKind, NetworkDef, NetworkKind};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::jsmath::TAU;
 use kentos_geometry_core::ops::network::Served;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::edit_geometry;
+use kentos_num::TAU;
 
 use serde_json::{Value, json};
 

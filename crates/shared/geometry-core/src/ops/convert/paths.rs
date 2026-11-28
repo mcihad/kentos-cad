@@ -8,11 +8,11 @@ use crate::entity::{Part, Shape, entity_area, is_multi_part};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{cos, hypot, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::elevation::{Carry, Elevated, carry_elevations};
 use crate::ops::path::{path_of, sub_path};
 use crate::vec2::Vec2;
+use kentos_num::{cos, hypot, sin};
 
 // ── Çizginin parçası ─────────────────────────────────────────────────
 

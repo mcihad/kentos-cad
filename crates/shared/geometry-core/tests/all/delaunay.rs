@@ -9,9 +9,9 @@
 use kentos_geometry_core::geom::delaunay::{
     Delaunay, Located, NONE, TOO_FEW, fill_star, next, triangulate,
 };
-use kentos_geometry_core::jsmath::{cos, round_half_up, sin};
 use kentos_geometry_core::predicates::{incircle, orient2d};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{cos, round_half_up, sin};
 use serde_json::Value;
 
 fn cases() -> Value {

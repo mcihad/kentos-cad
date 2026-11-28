@@ -19,7 +19,7 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_geometry_core::entity::TextPlace;
-use kentos_geometry_core::jsmath::{cos, sin};
+use kentos_num::{cos, sin};
 
 use crate::checks::Stop;
 use crate::codes;

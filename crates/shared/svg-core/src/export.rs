@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 
 use kentos_geometry_core::api::json::{FromJson, Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
+use kentos_num::{maximum, minimum, round_half_up};
 use kentos_style_core::js::text::{slice, utf16_len};
 
 use crate::import::{ReferenceSpec, text_of};

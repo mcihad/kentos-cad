@@ -16,12 +16,12 @@ use crate::entity::Shape;
 use crate::geom::bulge::bulge_ring_area;
 use crate::geom::intersect::closest_on_edge;
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{hypot, maximum};
 use crate::ops::generate::pole::pole;
 use crate::ops::spatial_query::{Geometry, geometry_of, in_or_on};
 use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
 use crate::tools::point_calc::Walk;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// An area layer's level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

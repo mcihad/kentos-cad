@@ -13,7 +13,6 @@
 use crate::entity::{Shape, TextPlace};
 use crate::geom::leader;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::store::Store;
 use crate::store::label_memo::{Part, TableKept};
 use crate::store::labels::{
@@ -23,6 +22,7 @@ use crate::store::labels::{
 use crate::store::placing::{PlaceOptions, Shown};
 use crate::text::width_em;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 /// How the drawing's text is sized on the screen (docs/adr/0205 §5).
 #[derive(Clone, Copy, Debug, PartialEq)]

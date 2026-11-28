@@ -9,9 +9,9 @@
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::nurbs::{Nurbs, OwnedNurbs, of, with_curve};
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::curve_cuts::Cut;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// The drawing's chords a crossing is first found on.
 const CHORDS: f64 = 1e-3;

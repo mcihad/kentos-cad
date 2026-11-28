@@ -8,11 +8,11 @@
 
 use crate::api::Op;
 use crate::entity::Entity;
-use crate::jsmath::{atan2, cos, maximum, round_half_up, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::tools::point_calc::{Walk, km_text};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, round_half_up, sin};
 
 /// The most stations a route takes: more is refused, the interval to be widened.
 pub const MOST_STATIONS: usize = 20_000;

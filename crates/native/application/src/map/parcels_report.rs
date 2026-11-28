@@ -32,10 +32,10 @@ use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::{Shape, entity_area};
 use kentos_geometry_core::geom::bulge::{bulge_arc, bulge_ring_area};
 use kentos_geometry_core::geom::table::{PAD, table_geom};
-use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::table::one_line;
 use kentos_geometry_core::text::width_em_in;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::hypot;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};

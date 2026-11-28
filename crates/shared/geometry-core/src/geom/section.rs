@@ -30,8 +30,8 @@
 //! `scripts/fixtures/section_cases.py` computes the same from these rules without KentOS's code, in exact fractions.
 
 use crate::geometry::point_in_rings;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// Two heights or two places closer than this are one, metres.
 const EPS: f64 = 1e-9;
@@ -941,8 +941,8 @@ fn canonical(ring: Vec<Vec2>) -> Vec<Vec2> {
 /// A point to a micrometre, to tell the same edge again.
 fn key(p: Vec2) -> (i64, i64) {
     (
-        crate::jsmath::round_half_up(p.x * 1e6) as i64,
-        crate::jsmath::round_half_up(p.y * 1e6) as i64,
+        kentos_num::round_half_up(p.x * 1e6) as i64,
+        kentos_num::round_half_up(p.y * 1e6) as i64,
     )
 }
 

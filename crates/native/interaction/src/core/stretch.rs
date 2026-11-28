@@ -29,10 +29,10 @@
 use kentos_commands::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
-use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, stretch};
+use kentos_num::{hypot, maximum, minimum};
 
 use crate::Vec2;
 use crate::edge::Outline;

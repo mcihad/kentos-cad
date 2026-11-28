@@ -5,8 +5,8 @@
 
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::opening::{self, Spec};
-use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 const TOL: f64 = 1e-9;
 

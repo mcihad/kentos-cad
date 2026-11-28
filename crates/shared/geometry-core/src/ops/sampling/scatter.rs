@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use super::inside::Inside;
 use super::random::Sequence;
 use super::walk::Walk;
-use crate::jsmath::minimum;
 use crate::vec2::Vec2;
+use kentos_num::minimum;
 
 /// How many draws a candidate in an area may take.
 pub const DRAWS: usize = 10_000;

@@ -370,10 +370,7 @@ fn timing() {
             .map(|k| {
                 let a = k as f64 / 24.0 * std::f64::consts::TAU;
                 let r = 19.5 + if k % 2 == 0 { 0.4 } else { -0.3 };
-                Vec2::new(
-                    cx + r * kentos_geometry_core::jsmath::cos(a),
-                    cy + r * kentos_geometry_core::jsmath::sin(a),
-                )
+                Vec2::new(cx + r * kentos_num::cos(a), cy + r * kentos_num::sin(a))
             })
             .collect();
         Shape::Polygon {
@@ -481,7 +478,7 @@ fn closings_of_near_blocks_are_exact() {
 #[test]
 #[ignore = "zorlama: KENTOS_CLOSINGS_OUT=… cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored"]
 fn closings_of_random_blocks() {
-    use kentos_geometry_core::jsmath::{cos, sin};
+    use kentos_num::{cos, sin};
     let var = |k: &str, d: f64| {
         std::env::var(k)
             .ok()

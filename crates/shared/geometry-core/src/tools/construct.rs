@@ -10,9 +10,9 @@ use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{BulgePath, bulge_of_sweep};
 use crate::geom::dimension::{DimensionGeom, layout_dimension};
 use crate::geom::intersect::{circle_circle, line_line};
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, minimum, sin};
 
 /// Daire dilimi: the closed ring of a sector centred on `c`, of radius `r`,
 /// swept counter-clockwise from `a0` to `a1` (radians from east): the
@@ -270,11 +270,11 @@ mod tests {
     fn a_quarter_sector_is_three_vertices_and_one_arc() {
         let s = sector(v(0.0, 0.0), 10.0, 0.0, PI / 2.0).expect("sector");
         assert!(close(s.pts[1], v(10.0, 0.0)) && close(s.pts[2], v(0.0, 10.0)));
-        assert!((bulge_at(s.bulges.as_deref(), 1) - crate::jsmath::tan(PI / 8.0)).abs() < 1e-12);
+        assert!((bulge_at(s.bulges.as_deref(), 1) - kentos_num::tan(PI / 8.0)).abs() < 1e-12);
         // The sweep runs counter-clockwise past east: 350° to 10° is 20°.
         let t = sector(v(0.0, 0.0), 1.0, 350f64.to_radians(), 10f64.to_radians()).expect("sector");
         assert!(
-            (bulge_at(t.bulges.as_deref(), 1) - crate::jsmath::tan(20f64.to_radians() / 4.0)).abs()
+            (bulge_at(t.bulges.as_deref(), 1) - kentos_num::tan(20f64.to_radians() / 4.0)).abs()
                 < 1e-12
         );
         assert!(sector(v(0.0, 0.0), 1.0, 1.0, 1.0).is_none());

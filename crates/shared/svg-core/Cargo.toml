@@ -12,6 +12,8 @@ publish.workspace = true
 # overlay; numbers are written as JavaScript writes them (the style core's
 # `js::number`), docs/adr/0008.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-geometry-core = { path = "../geometry-core" }
 kentos-style-core = { path = "../style-core" }
 

@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use super::ntv2::{self, Grid};
 use crate::api::json::{FromJson, Json, ToJson, read_field};
-use crate::jsmath::PI;
+use kentos_num::PI;
 
 /// A datum: one of the registry's, or one the project defines.
 #[derive(Clone, Debug, PartialEq)]

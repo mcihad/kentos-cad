@@ -11,9 +11,9 @@ use std::sync::OnceLock;
 use crate::api::Op;
 use crate::entity::HatchPattern;
 use crate::geom::hatch::MAX_HATCH_LINES;
-use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort};
 
 /// One family of a pattern's lines: lines at `angle` (degrees) through
 /// `origin`, each the next `offset` on (`[along, across]` the line), drawn

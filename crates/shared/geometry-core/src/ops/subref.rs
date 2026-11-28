@@ -36,10 +36,10 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_point};
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{TAU, atan2, hypot, maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, hypot, maximum, minimum};
 
 /// A place on an object.
 #[derive(Clone, Copy, Debug, PartialEq)]

@@ -113,7 +113,7 @@ fn together(a: &Line, b: &Line) -> bool {
         (None, None) => cross(a.dir, b.dir).abs() <= PARALLEL,
         (Some(x), Some(y)) => {
             let d = sub(x.c, y.c);
-            crate::jsmath::hypot(d.x, d.y) <= CONCENTRIC
+            kentos_num::hypot(d.x, d.y) <= CONCENTRIC
         }
         _ => false,
     }

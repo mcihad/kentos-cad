@@ -8,9 +8,7 @@
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{
-    PI, cos, js_cmp, maximum, minimum, round_half_up, sin, stable_sort, tan,
-};
+use kentos_num::{PI, cos, js_cmp, maximum, minimum, round_half_up, sin, stable_sort, tan};
 
 use crate::model::{rotate_about as rotation, shape_box, transform_shape};
 use crate::ops::Ids;

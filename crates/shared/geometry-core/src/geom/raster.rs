@@ -126,7 +126,7 @@ pub fn visible(
     view: [f64; 4],
     out: &mut Vec<DrawTile>,
 ) {
-    use crate::jsmath::{maximum, minimum};
+    use kentos_num::{maximum, minimum};
     out.clear();
     let Some(&(lw, lh)) = sizes.get(level) else {
         return;

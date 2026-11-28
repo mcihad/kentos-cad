@@ -7,10 +7,10 @@
 /// two ends among them; one bay for a stretch not longer than `most`. `[0, length]` when either is not above 0.
 pub fn divisions(length: f64, most: f64) -> Vec<f64> {
     if !(length > 0.0 && length.is_finite() && most > 0.0 && most.is_finite()) {
-        return vec![0.0, crate::jsmath::maximum(length, 0.0)];
+        return vec![0.0, kentos_num::maximum(length, 0.0)];
     }
     // A stretch that is a whole number of spacings is that many bays: the ratio's last bit does not add one.
-    let n = crate::jsmath::maximum(libm::ceil(length / most - 1e-9), 1.0) as usize;
+    let n = kentos_num::maximum(libm::ceil(length / most - 1e-9), 1.0) as usize;
     (0..=n).map(|k| length * k as f64 / n as f64).collect()
 }
 
@@ -108,7 +108,7 @@ pub fn fill(
     let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let length = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
+        let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if middle >= start - EPS && middle <= start + length + EPS && length > 2.0 * face {
             let bays = divisions(length, spacing);
             let (k0, k1) = chosen(&bays, s0 - start, s1 - start, middle - start, false)?;

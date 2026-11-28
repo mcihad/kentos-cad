@@ -57,7 +57,7 @@ fn refine(f: &dyn Fn(f64) -> f64, a: f64, b: f64, whole: f64, tol: f64, depth: u
 #[cfg(test)]
 mod tests {
     use super::integrate;
-    use crate::jsmath::{PI, cos, sin};
+    use kentos_num::{PI, cos, sin};
 
     #[test]
     fn polynomials_and_smooth_functions_come_out_exact() {

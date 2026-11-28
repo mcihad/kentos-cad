@@ -12,9 +12,9 @@ use std::collections::HashMap;
 use std::f64::consts::FRAC_PI_4;
 
 use crate::geom::delaunay::{Delaunay, MOST_POINTS, NONE, TOO_FEW, next, prev, triangulate};
-use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::predicates::{incircle, orient2d};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, minimum, sin};
 
 /// Why the sites have no Voronoi cells.
 pub const TOO_FEW_SITES: &str = "Voronoi alanları için en az iki ayrı yerde nokta gerekir.";

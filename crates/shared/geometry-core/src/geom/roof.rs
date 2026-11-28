@@ -20,8 +20,8 @@ use crate::Vec2;
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
 use crate::geom::arch::{HEAD_MM, LABEL_MM, Level};
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::text::TextAlign;
+use kentos_num::{hypot, maximum, minimum};
 
 /// Lengths, heights and areas closer than this are one, metres.
 const EPS: f64 = 1e-9;
@@ -139,7 +139,7 @@ pub fn part_ring(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<Vec<Vec2>
         PartKind::Downpipe => return None,
         PartKind::Chimney | PartKind::Vent => {
             let r = part.rotation.unwrap_or(0.0);
-            let (sin, cos) = (crate::jsmath::sin(r), crate::jsmath::cos(r));
+            let (sin, cos) = (kentos_num::sin(r), kentos_num::cos(r));
             (
                 Vec2::new(cos, sin),
                 Vec2::new(-sin, cos),
@@ -399,10 +399,10 @@ fn crosses(ring: &[Vec2]) -> bool {
         }
     };
     let on = |a: Vec2, b: Vec2, c: Vec2| {
-        c.x >= crate::jsmath::minimum(a.x, b.x)
-            && c.x <= crate::jsmath::maximum(a.x, b.x)
-            && c.y >= crate::jsmath::minimum(a.y, b.y)
-            && c.y <= crate::jsmath::maximum(a.y, b.y)
+        c.x >= kentos_num::minimum(a.x, b.x)
+            && c.x <= kentos_num::maximum(a.x, b.x)
+            && c.y >= kentos_num::minimum(a.y, b.y)
+            && c.y <= kentos_num::maximum(a.y, b.y)
     };
     let meet = |a: Vec2, b: Vec2, c: Vec2, d: Vec2| {
         let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));
@@ -680,7 +680,7 @@ fn segment(a: Vec2, b: Vec2) -> Shape {
 
 /// A slope as a plan writes it: "%33", "%32,5".
 pub fn slope_words(s: f64) -> String {
-    let r = crate::jsmath::round_half_up(s * 10.0) / 10.0;
+    let r = kentos_num::round_half_up(s * 10.0) / 10.0;
     if r.fract() == 0.0 {
         format!("%{r:.0}")
     } else {
@@ -690,7 +690,7 @@ pub fn slope_words(s: f64) -> String {
 
 /// A height as a level mark writes it (EK-4 4.27): "+8.45", "±0.00".
 pub fn level_words(z: f64) -> String {
-    let r = crate::jsmath::round_half_up(z * 100.0) / 100.0;
+    let r = kentos_num::round_half_up(z * 100.0) / 100.0;
     if r == 0.0 {
         "±0.00".into()
     } else {
@@ -805,7 +805,7 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
         let tip = Vec2::new(c.x + down.x * len / 2.0, c.y + down.y * len / 2.0);
         out.push(piece(segment(tail, tip)));
         for w in [std::f64::consts::FRAC_PI_6, -std::f64::consts::FRAC_PI_6] {
-            let (sin, cos) = (crate::jsmath::sin(w), crate::jsmath::cos(w));
+            let (sin, cos) = (kentos_num::sin(w), kentos_num::cos(w));
             let back = Vec2::new(-down.x * cos + down.y * sin, -down.x * sin - down.y * cos);
             out.push(piece(segment(
                 tip,
@@ -813,13 +813,13 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
             )));
         }
         // Its slope beside the arrow, along it, read from below or from the right.
-        let mut turn = crate::jsmath::atan2(down.y, down.x);
+        let mut turn = kentos_num::atan2(down.y, down.x);
         if turn > std::f64::consts::FRAC_PI_2 + 1e-9 {
             turn -= std::f64::consts::PI;
         } else if turn <= -std::f64::consts::FRAC_PI_2 + 1e-9 {
             turn += std::f64::consts::PI;
         }
-        let up = Vec2::new(-crate::jsmath::sin(turn), crate::jsmath::cos(turn));
+        let up = Vec2::new(-kentos_num::sin(turn), kentos_num::cos(turn));
         out.push(piece(text(
             Vec2::new(c.x + up.x * gap, c.y + up.y * gap),
             slope_words(f.slope),
@@ -1027,13 +1027,13 @@ fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> 
         } else {
             Vec2::new(-along.y, along.x)
         };
-        let mut turn = crate::jsmath::atan2(along.y, along.x);
+        let mut turn = kentos_num::atan2(along.y, along.x);
         if turn > std::f64::consts::FRAC_PI_2 + 1e-9 {
             turn -= std::f64::consts::PI;
         } else if turn <= -std::f64::consts::FRAC_PI_2 + 1e-9 {
             turn += std::f64::consts::PI;
         }
-        let up = Vec2::new(-crate::jsmath::sin(turn), crate::jsmath::cos(turn));
+        let up = Vec2::new(-kentos_num::sin(turn), kentos_num::cos(turn));
         // On the line's own side, a gap off it: over it when that side is up, under it when down.
         let toward = Vec2::new(outward.x * side, outward.y * side);
         let above = up.x * toward.x + up.y * toward.y >= 0.0;
@@ -1097,7 +1097,7 @@ fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
             out.push(piece(Shape::Circle { c: part.at, r }));
             out.push(piece(text(
                 Vec2::new(part.at.x + r + h * 0.5, part.at.y),
-                format!("Ø{}", crate::jsmath::round_half_up(part.width * 1000.0)),
+                format!("Ø{}", kentos_num::round_half_up(part.width * 1000.0)),
                 h,
                 0.0,
                 TextAlign::MiddleLeft,

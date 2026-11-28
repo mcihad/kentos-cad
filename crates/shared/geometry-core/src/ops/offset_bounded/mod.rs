@@ -12,10 +12,10 @@ use crate::entity::Shape;
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point, ellipse_sweep};
 use crate::geom::nurbs::{self, Nurbs, OwnedNurbs};
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{cos, hypot, maximum, minimum, sin};
 use crate::ops::curve_cuts::ellipse_of;
 use crate::vec2::Vec2;
 use bezier::Bezier;
+use kentos_num::{cos, hypot, maximum, minimum, sin};
 
 const LIMIT: usize = 16_384;
 const DEPTH: u32 = 24;

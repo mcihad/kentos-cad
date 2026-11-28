@@ -19,10 +19,8 @@ use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{
-    atan2, cos, hypot, js_cmp, maximum, round_half_up, sin, stable_sort,
-};
 use kentos_geometry_core::triangulate::fill_into;
+use kentos_num::{atan2, cos, hypot, js_cmp, maximum, round_half_up, sin, stable_sort};
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
 use super::resolve::Scale;

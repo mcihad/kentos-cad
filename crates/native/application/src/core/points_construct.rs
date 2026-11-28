@@ -14,10 +14,10 @@ use kentos_commands::{
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{cos, hypot, sign, sin};
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::tools::ucs::Frame;
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{cos, hypot, sign, sin};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};

@@ -14,8 +14,8 @@ use kentos_expression::{
     Builtin, Expr, FieldType, Geometry, Measured, Objects, Schema, Scope, Value, Variable, compile,
     compile_with, geometry,
 };
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
+use kentos_num::maximum;
 use serde_json::{Map, Value as Json};
 
 const FIXTURE: &str = concat!(

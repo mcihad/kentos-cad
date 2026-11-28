@@ -31,11 +31,11 @@ use kentos_geometry_core::geom::arc::{
     ArcGeom, DEFAULT_STEP, norm_angle, point_on_circle, tessellate_arc,
 };
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{PI, atan2};
 use kentos_geometry_core::tools::drawing::{end_tangent, start_tangent};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::curves_construct::{arc_geom, curve, curve_at};
 use kentos_native_application::{ExecutionContext, arc};
+use kentos_num::{PI, atan2};
 
 use crate::Vec2;
 use crate::format::{Format, degrees, fixed};

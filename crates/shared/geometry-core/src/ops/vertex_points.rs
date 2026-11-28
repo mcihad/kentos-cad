@@ -9,11 +9,11 @@
 use std::collections::HashMap;
 
 use crate::api::Op;
-use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::Elevated;
 use crate::text::edit::increment;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// “The same place”, metres: the elevation rules' (ADR 0142).
 pub const TOUCH: f64 = 1e-6;

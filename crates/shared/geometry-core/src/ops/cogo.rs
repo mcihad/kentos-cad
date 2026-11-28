@@ -24,11 +24,11 @@ use crate::api::Op;
 use crate::api::json::{Json, ToJson};
 use crate::entity::Shape;
 use crate::geometry::{bearing_grad, dist};
-use crate::jsmath::{PI, cos, sin};
 use crate::op;
 use crate::ops::compare::Attrs;
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, sin};
 
 /// The four attributes' names.
 pub const SEMT: &str = "Kayıtlı semt";

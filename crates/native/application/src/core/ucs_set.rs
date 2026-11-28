@@ -74,8 +74,7 @@ fn check_input(input: &UcsSet) -> Result<(), Stop> {
             ));
     }
     if let UcsTo::TwoPoints { origin, x_point } = &input.to
-        && kentos_geometry_core::jsmath::hypot(x_point.x - origin.x, x_point.y - origin.y)
-            < UCS_SAME
+        && kentos_num::hypot(x_point.x - origin.x, x_point.y - origin.y) < UCS_SAME
     {
         return Err(fail(
                 codes::SAME_POINTS,
@@ -137,7 +136,7 @@ fn next(doc: &Document, input: &UcsSet) -> Result<(ProjectSettings, Vec<CommandW
         UcsTo::Rotate { angle } => Some(Ucs::new(now.origin, now.angle + angle)),
         UcsTo::TwoPoints { origin, x_point } => Some(Ucs::new(
             *origin,
-            kentos_geometry_core::jsmath::atan2(x_point.y - origin.y, x_point.x - origin.x),
+            kentos_num::atan2(x_point.y - origin.y, x_point.x - origin.x),
         )),
         UcsTo::Object { uid, at } => {
             let found = Uuid::parse_str(uid)

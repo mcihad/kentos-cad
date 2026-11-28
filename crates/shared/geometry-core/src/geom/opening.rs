@@ -14,10 +14,10 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::Shape;
 use crate::geom::wall::{self, Spec as WallSpec, path_shape};
-use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, hypot, maximum, minimum, sin};
 
 /// How far past a vertex or an end an interval may reach and still be on one edge, metres.
 pub const SPAN_TOLERANCE: f64 = 1e-9;
@@ -715,7 +715,7 @@ fn mid(a: Vec2, b: Vec2) -> Vec2 {
 }
 
 fn rotated(v: Vec2, deg: f64) -> Vec2 {
-    let r = deg * crate::jsmath::PI / 180.0;
+    let r = deg * kentos_num::PI / 180.0;
     let (c, s) = (cos(r), sin(r));
     Vec2::new(v.x * c - v.y * s, v.x * s + v.y * c)
 }
@@ -861,9 +861,9 @@ fn along(a: Vec2, b: Vec2, centre: Option<Vec2>) -> Shape {
     };
     let r = hypot(a.x - c.x, a.y - c.y);
     let (aa, ab) = (atan2(a.y - c.y, a.x - c.x), atan2(b.y - c.y, b.x - c.x));
-    let tau = 2.0 * crate::jsmath::PI;
+    let tau = 2.0 * kentos_num::PI;
     let ccw = (ab - aa).rem_euclid(tau);
-    let (a0, a1) = if ccw <= crate::jsmath::PI {
+    let (a0, a1) = if ccw <= kentos_num::PI {
         (aa, ab)
     } else {
         (ab, aa)
@@ -1592,7 +1592,7 @@ fn revolving(p: &Parts, spec: &Spec) -> Vec<Shape> {
         return Vec::new();
     }
     let n = f64::from(spec.leaves.clamp(3, 4));
-    let pi = crate::jsmath::PI;
+    let pi = kentos_num::PI;
     let a = atan2(p.f.along.y, p.f.along.x);
     let half = pi / n;
     let mut out = vec![Shape::Circle { c, r }];
@@ -1659,7 +1659,7 @@ fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
         p.along_start(start + p.clear, p.middle()),
     );
     let th0 = atan2(e0.y - c.y, e0.x - c.x);
-    let pi = crate::jsmath::PI;
+    let pi = kentos_num::PI;
     let mut d = atan2(e1.y - c.y, e1.x - c.x) - th0;
     if d > pi {
         d -= 2.0 * pi;
@@ -1669,7 +1669,7 @@ fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
     let (r1, r2) = (r - t / 2.0, r + t / 2.0);
     let at = |rr: f64, th: f64| Vec2::new(c.x + rr * cos(th), c.y + rr * sin(th));
     let band = |a: f64, z: f64| {
-        let q = crate::jsmath::tan((z - a) / 4.0);
+        let q = kentos_num::tan((z - a) / 4.0);
         Shape::Polyline {
             pts: vec![at(r1, a), at(r1, z), at(r2, z), at(r2, a)],
             bulges: Some(vec![q, 0.0, -q, 0.0]),
@@ -1738,7 +1738,7 @@ fn fold_groups(p: &Parts, spec: &Spec) -> Vec<FoldGroup> {
     let width = p.clear / f64::from(n);
     let face = p.face(spec);
     let o = p.out(!spec.side_right);
-    let r = spec.swing * crate::jsmath::PI / 180.0;
+    let r = spec.swing * kentos_num::PI / 180.0;
     let (c, s) = (cos(r), sin(r));
     let at0 = p.along_start(p.fit + p.fr, face);
     let at1 = p.along_end(p.fit + p.fr, face);
@@ -1780,7 +1780,7 @@ pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
             let steps = 32;
             let ring = (0..steps)
                 .map(|k| {
-                    let a = 2.0 * crate::jsmath::PI * f64::from(k) / f64::from(steps);
+                    let a = 2.0 * kentos_num::PI * f64::from(k) / f64::from(steps);
                     add(c, Vec2::new(r * cos(a), r * sin(a)))
                 })
                 .collect();

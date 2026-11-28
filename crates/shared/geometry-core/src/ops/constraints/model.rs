@@ -11,8 +11,8 @@
 use crate::entity::Shape;
 use crate::geom::arc::sweep;
 use crate::geom::bulge::is_arc_bulge;
-use crate::jsmath::{TAU, atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
+use kentos_num::{TAU, atan2, cos, hypot, sin};
 
 use super::dual::{D, P};
 use super::{Element, PointAt};

@@ -1,8 +1,8 @@
 //! Rational Bézier interval bounds for a parallel curve. Bounds use positive
 //! Bernstein weights; subdivision refines bounds, never a sampled error guess.
 
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 #[derive(Clone, Debug)]
 pub(super) struct Bezier(pub Vec<[f64; 3]>);

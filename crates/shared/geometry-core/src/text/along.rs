@@ -13,13 +13,13 @@ use crate::entity::{Shape, area_parts};
 use crate::geom::affine::{Affine, apply, apply_linear, is_reflection, length_scale};
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::store::labels::{LABEL_LINE, LABEL_PARAGRAPH_MASK, LABEL_PIECE_LINE};
 use crate::text::paragraph::Run;
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
+use kentos_num::{PI, atan2, cos, hypot, maximum, minimum, sin};
 
 /// A text's curve (`TextPath`): its vertices after its point, in its frame,
 /// metres, and each edge's bulge (none: all straight).

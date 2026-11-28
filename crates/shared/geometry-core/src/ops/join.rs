@@ -8,9 +8,9 @@ use crate::api::json::{Json, ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, bulge_from_arc, norm_angle};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, reverse_bulge_path};
-use crate::jsmath::{atan2, hypot, maximum};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, hypot, maximum};
 
 /// An open run of vertices with segment bulges (bulges[i] for pts[i] → pts[i+1]).
 #[derive(Clone)]

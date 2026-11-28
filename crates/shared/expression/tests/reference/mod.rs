@@ -18,7 +18,7 @@ use kentos_expression::library::{Func, Var};
 use kentos_expression::parser::{BinOp, Node, Parser};
 use kentos_expression::rows::{As, BOOL, Column, EMPTY, MEASURE_STRIDE, NUMBER, RowsInput, TEXT};
 use kentos_expression::{CompileError, Measured, Needs, Scope, Value};
-use kentos_geometry_core::jsmath::{maximum, maximum_of, minimum, minimum_of, round_half_up, sign};
+use kentos_num::{maximum, maximum_of, minimum, minimum_of, round_half_up, sign};
 
 /// A parsed expression: its tree, the fields and variables it reads.
 pub struct Old {

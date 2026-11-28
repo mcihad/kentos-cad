@@ -12,9 +12,9 @@
 //! `triangles[e]` to `triangles[next(e)]`; its twin runs the other way in the
 //! triangle across, or is `NONE` on the convex hull.
 
-use crate::jsmath::{maximum, minimum};
 use crate::predicates::{incircle, orient2d};
 use crate::vec2::Vec2;
+use kentos_num::{maximum, minimum};
 
 /// No half-edge: a hull edge's twin.
 pub const NONE: u32 = u32::MAX;

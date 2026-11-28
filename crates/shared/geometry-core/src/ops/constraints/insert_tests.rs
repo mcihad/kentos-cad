@@ -28,7 +28,7 @@ fn point(p: Vec2) -> Shape {
 #[test]
 fn rotated_mirrored_nonuniform_inserts_translate_only_their_anchor_at_large_coordinates() {
     for mirror in [false, true] {
-        for angle in [0., 0.37, crate::jsmath::PI / 2., -2.3] {
+        for angle in [0., 0.37, kentos_num::PI / 2., -2.3] {
             let origin = Vec2::new(3e6, 1e7);
             let target = Vec2::new(origin.x + 8., origin.y - 3.);
             let old = insert(origin, mirror, angle);

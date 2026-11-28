@@ -17,8 +17,8 @@
 
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{INLINE_DEGREES, JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot, maximum, minimum, sin};
 
 /// Slack, metres.
 pub const TIE: f64 = 1e-9;

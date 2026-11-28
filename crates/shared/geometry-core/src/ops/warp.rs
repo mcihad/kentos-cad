@@ -16,11 +16,11 @@ use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::hatch_pattern::carried;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::ops::rubber::{Link, RubberError, Sheet};
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, maximum, sin};
 
 /// The largest chord error of straight vertices along a curve's image (m;
 /// docs/adr/0149's bound).

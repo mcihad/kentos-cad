@@ -18,8 +18,8 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{Shape, ellipse_geom, is_closed_outline, tessellate_circle};
 use kentos_geometry_core::geom::arc::{ArcGeom, tessellate_arc};
 use kentos_geometry_core::geom::ellipse::tessellate_ellipse;
-use kentos_geometry_core::jsmath::{TAU, acos, hypot, maximum, minimum};
 use kentos_geometry_core::store::{Expanded, Item, Store};
+use kentos_num::{TAU, acos, hypot, maximum, minimum};
 
 use super::super::batch::{BatchSink, CURVE_LEVELS, CURVE_TOLERANCE_PX, Def};
 use super::super::compile::{Env, Geom};
@@ -267,8 +267,7 @@ mod tests {
         assert_eq!(chords(0.3, 4.0), 5.0);
         // 24 px: the sagitta within a quarter pixel, one chord fewer not.
         let n = chords(6.0, 4.0);
-        let sag =
-            |n: f64| 24.0 * (1.0 - kentos_geometry_core::jsmath::cos(std::f64::consts::PI / n));
+        let sag = |n: f64| 24.0 * (1.0 - kentos_num::cos(std::f64::consts::PI / n));
         assert!(
             sag(n) <= CURVE_TOLERANCE_PX && sag(n - 1.0) > CURVE_TOLERANCE_PX,
             "{n}"

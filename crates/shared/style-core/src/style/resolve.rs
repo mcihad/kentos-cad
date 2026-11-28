@@ -3,7 +3,7 @@
 //! several rules (each draws, as the style window's rules say); every match carries the scale
 //! range it is drawn in, so the GPU switches it per frame without a rebuild.
 
-use kentos_geometry_core::jsmath::{maximum, minimum};
+use kentos_num::{maximum, minimum};
 
 use super::compile::Values;
 use super::model::{Renderer, Rule, SymbolSet, Unit};

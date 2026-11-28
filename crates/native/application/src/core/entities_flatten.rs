@@ -28,14 +28,8 @@ impl Tally {
         let z = z?;
         if plane != Some(z) {
             self.vertices += 1;
-            self.low = Some(
-                self.low
-                    .map_or(z, |l| kentos_geometry_core::jsmath::minimum(l, z)),
-            );
-            self.high = Some(
-                self.high
-                    .map_or(z, |h| kentos_geometry_core::jsmath::maximum(h, z)),
-            );
+            self.low = Some(self.low.map_or(z, |l| kentos_num::minimum(l, z)));
+            self.high = Some(self.high.map_or(z, |h| kentos_num::maximum(h, z)));
         }
         plane
     }

@@ -6,10 +6,10 @@
 //! The viewport feeds it world coordinates and a world tolerance.
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, hypot, round_half_up, sin, truthy};
 use crate::op;
 use crate::store::snap::Extension;
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, hypot, round_half_up, sin, truthy};
 
 /// An alignment line: its origin and direction in degrees, counter-clockwise from east.
 #[derive(Clone, Copy, Debug, PartialEq)]

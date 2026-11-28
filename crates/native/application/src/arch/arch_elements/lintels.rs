@@ -24,7 +24,7 @@ pub fn lintel_over(
         y: (a.y + b.y) / 2.0,
     };
     let (a, b) = (mid(l0, r0), mid(l1, r1));
-    let len = kentos_geometry_core::jsmath::hypot(b.x - a.x, b.y - a.y);
+    let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
     if len.is_nan() || len <= 0.0 {
         return None;
     }
@@ -32,7 +32,7 @@ pub fn lintel_over(
         x: (b.x - a.x) / len,
         y: (b.y - a.y) / len,
     };
-    let width = kentos_geometry_core::jsmath::hypot(l0.x - r0.x, l0.y - r0.y);
+    let width = kentos_num::hypot(l0.x - r0.x, l0.y - r0.y);
     let head = o.head.unwrap_or(match o.form {
         kentos_commands::OpeningForm::Window => 2.2,
         _ => 2.1,

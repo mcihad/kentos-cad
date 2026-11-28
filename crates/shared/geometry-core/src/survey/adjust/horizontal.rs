@@ -12,10 +12,10 @@ use super::{
 };
 use crate::api::Op;
 use crate::crs::ground::{Grid, grid_factor};
-use crate::jsmath::{PI, cos, sin};
 use crate::op;
 use crate::survey::{Unit, bearing, distance, positive, signed};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, sin};
 
 /// A known point: its name, its place and, when weighted, its standard
 /// deviation (m, the same in Y and X); none: fixed.
@@ -560,16 +560,16 @@ pub fn adjust(input: &NetworkInput) -> Result<NetworkResult, String> {
             let p = net.pos[k];
             net.pos
                 .insert(k.clone(), Vec2::new(p.x + delta[c], p.y + delta[c + 1]));
-            coords = crate::jsmath::maximum(
+            coords = kentos_num::maximum(
                 coords,
-                crate::jsmath::maximum(delta[c].abs(), delta[c + 1].abs()),
+                kentos_num::maximum(delta[c].abs(), delta[c + 1].abs()),
             );
         }
         let mut angles: f64 = 0.0;
         for s in &net.stations {
             let c = ocol[s];
             *net.orient.entry(s.clone()).or_insert(0.0) += delta[c];
-            angles = crate::jsmath::maximum(angles, delta[c].abs());
+            angles = kentos_num::maximum(angles, delta[c].abs());
         }
         if coords <= 1e-7 && angles <= 1e-10 {
             break;
@@ -587,7 +587,7 @@ pub fn adjust(input: &NetworkInput) -> Result<NetworkResult, String> {
             let (qyy, qxx, qyx) = (q.get(c, c), q.get(c + 1, c + 1), q.get(c, c + 1));
             let half = (qyy + qxx) / 2.0;
             let root = (((qyy - qxx) / 2.0) * ((qyy - qxx) / 2.0) + qyx * qyx).sqrt();
-            let mut theta = crate::jsmath::atan2(2.0 * qyx, qxx - qyy) / 2.0 % PI;
+            let mut theta = kentos_num::atan2(2.0 * qyx, qxx - qyy) / 2.0 % PI;
             if theta < 0.0 {
                 theta += PI;
             }
@@ -601,7 +601,7 @@ pub fn adjust(input: &NetworkInput) -> Result<NetworkResult, String> {
                 sx,
                 sp: (sy * sy + sx * sx).sqrt(),
                 a: s0 * (half + root).sqrt(),
-                b: s0 * crate::jsmath::maximum(half - root, 0.0).sqrt(),
+                b: s0 * kentos_num::maximum(half - root, 0.0).sqrt(),
                 theta,
             }
         })

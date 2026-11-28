@@ -26,9 +26,9 @@ use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::tools::navigation::{Fit, fit};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, maximum, minimum, sin};
 
 /// The fill's opacity, of 255.
 pub const FILL_ALPHA: u8 = 64;

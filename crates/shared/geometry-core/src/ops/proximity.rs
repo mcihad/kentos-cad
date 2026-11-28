@@ -10,13 +10,13 @@
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{PI, hypot, maximum, minimum};
 use crate::ops::geoprocess;
 use crate::ops::spatial_query::{
     Geometry, TOLERANCE, arc_toward, boxes_meet, edge_gap, ends, inside, intersects, meets_point,
     strictly_inside,
 };
 use crate::vec2::Vec2;
+use kentos_num::{PI, hypot, maximum, minimum};
 
 /// The nearest points of two objects, one on each, and their distance.
 #[derive(Clone, Copy, Debug, PartialEq)]

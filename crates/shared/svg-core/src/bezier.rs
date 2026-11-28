@@ -4,7 +4,7 @@
 //! nearest points. A straight segment is a cubic whose controls sit on its
 //! ends, so every segment has one form.
 
-use kentos_geometry_core::jsmath::{hypot, maximum, minimum, or};
+use kentos_num::{hypot, maximum, minimum, or};
 
 use crate::shape::{PathNode, Pt, SubPath};
 

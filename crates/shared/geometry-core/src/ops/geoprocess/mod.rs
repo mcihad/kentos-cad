@@ -19,11 +19,11 @@ use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::overlay::{overlay, overlay_buffers};
 use crate::geom::region::{area_source, net_area, ring_edges};
-use crate::jsmath::hypot;
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::ops::parts::one_area;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// An object as the geometry tools take it (docs/adr/0201 §1).
 #[derive(Clone, Debug, PartialEq)]

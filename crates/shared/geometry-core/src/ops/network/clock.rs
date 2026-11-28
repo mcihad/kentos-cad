@@ -504,7 +504,7 @@ mod tests {
             .map(|d| {
                 (
                     f64::from(d) * DAY + 1320.0,
-                    crate::jsmath::minimum(f64::from(d) * DAY + 1800.0, 17.0 * DAY),
+                    kentos_num::minimum(f64::from(d) * DAY + 1800.0, 17.0 * DAY),
                 )
             })
             .collect();

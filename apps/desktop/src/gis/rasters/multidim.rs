@@ -1084,8 +1084,8 @@ impl App {
         let pixel = match i.affine {
             Some([_, a, b, _, c, d]) => format!(
                 "{} × {} {}",
-                side(kentos_geometry_core::jsmath::hypot(a, c)),
-                side(kentos_geometry_core::jsmath::hypot(b, d)),
+                side(kentos_num::hypot(a, c)),
+                side(kentos_num::hypot(b, d)),
                 self.multidim_plan_unit()
             ),
             None => "—".to_owned(),

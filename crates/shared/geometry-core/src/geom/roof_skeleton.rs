@@ -13,7 +13,7 @@
 //! the edge's first line). The positions of an event are worked out once and shared by every face it bounds.
 
 use crate::Vec2;
-use crate::jsmath::hypot;
+use kentos_num::hypot;
 
 /// Why the skeleton cannot be had.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -79,8 +79,7 @@ fn velocity(a: &Edge, b: &Edge) -> Option<Vec2> {
     let same = a.n.x * b.n.x + a.n.y * b.n.y > 0.0;
     (same
         && (a.speed - b.speed).abs()
-            <= 1e-12
-                * crate::jsmath::maximum(crate::jsmath::maximum(a.speed.abs(), b.speed.abs()), 1.0))
+            <= 1e-12 * kentos_num::maximum(kentos_num::maximum(a.speed.abs(), b.speed.abs()), 1.0))
     .then(|| Vec2::new(a.n.x * a.speed, a.n.y * a.speed))
 }
 
@@ -109,9 +108,9 @@ pub(crate) type Face = Vec<(Vec2, f64)>;
 /// their rise; none for a gable end.
 pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, Fail> {
     let n = ring.len();
-    let size = crate::jsmath::maximum(
+    let size = kentos_num::maximum(
         ring.iter().fold(0.0_f64, |m, q| {
-            crate::jsmath::maximum(crate::jsmath::maximum(m, q.x.abs()), q.y.abs())
+            kentos_num::maximum(kentos_num::maximum(m, q.x.abs()), q.y.abs())
         }),
         1.0,
     );
@@ -254,7 +253,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
                 if gap < -tol || rate >= -1e-15 {
                     continue;
                 }
-                let at = t + crate::jsmath::maximum(gap, 0.0) / -rate;
+                let at = t + kentos_num::maximum(gap, 0.0) / -rate;
                 let p = cr.at(at);
                 let (a, b) = (cu.at(at), cv.at(at));
                 let (s, len) = (dot(e.d, sub(p, a)), dot(e.d, sub(b, a)));
@@ -270,7 +269,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
         if at > t + tol && live.iter().any(|&c| corners[c].held) {
             return Err(Fail::Collinear);
         }
-        t = crate::jsmath::maximum(at, t);
+        t = kentos_num::maximum(at, t);
         match event {
             Event::Collapse(u) => {
                 let v = corners[u].next;
@@ -406,7 +405,7 @@ mod tests {
             assert!((area(r) - 30.0).abs() < 1e-9, "{k}: {r:?}");
             assert!(
                 r.iter()
-                    .all(|(q, z)| (z - crate::jsmath::minimum(q.y, 6.0 - q.y)).abs() < 1e-9),
+                    .all(|(q, z)| (z - kentos_num::minimum(q.y, 6.0 - q.y)).abs() < 1e-9),
                 "{k}: {r:?}"
             );
         }
@@ -449,7 +448,7 @@ mod tests {
             .iter()
             .flat_map(|r| r.iter())
             .map(|(_, z)| *z)
-            .fold(0.0, crate::jsmath::maximum);
+            .fold(0.0, kentos_num::maximum);
         assert!((top - 2.0).abs() < 1e-9);
     }
 
@@ -503,7 +502,7 @@ mod tests {
             .flatten()
             .flat_map(|r| r.iter())
             .map(|(_, z)| *z)
-            .fold(0.0, crate::jsmath::maximum);
+            .fold(0.0, kentos_num::maximum);
         assert!((top - 3.0).abs() < 1e-9);
     }
 
@@ -528,7 +527,7 @@ mod tests {
             .flatten()
             .flat_map(|r| r.iter())
             .map(|(_, z)| *z)
-            .fold(0.0, crate::jsmath::maximum);
+            .fold(0.0, kentos_num::maximum);
         assert!((top - 2.0).abs() < 1e-9);
     }
 

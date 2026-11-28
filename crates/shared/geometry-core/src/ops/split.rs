@@ -15,11 +15,11 @@ use crate::entity::{Entity, Part, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, clean_bulge_path};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{Division, Path, cuts_on, division_params, path_of, sub_path};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum};
 
 /// The kinds Parçala cuts: lines, open polylines, arcs and circles; not a
 /// multi-part polyline, whose cut part would not be known (docs/adr/0174).
@@ -631,7 +631,7 @@ pub(crate) static OPS: &[Op] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::PI;
+    use kentos_num::PI;
 
     fn v(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)

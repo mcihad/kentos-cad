@@ -7,9 +7,9 @@ use kentos_commands::AnnotationKind;
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape as GeomShape;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_input::Tracking;
+use kentos_num::round_half_up;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -1536,7 +1536,7 @@ impl Context<'_> {
     /// How far the UCS's x axis is turned from east, degrees (docs/adr/0261 §4):
     /// a new hatch's pattern angle is from it.
     pub fn ucs_degrees(&self) -> f64 {
-        (self.frame().angle * 180.0) / kentos_geometry_core::jsmath::PI
+        (self.frame().angle * 180.0) / kentos_num::PI
     }
 
     /// Typed point text (the web's `pointFromText`): an absolute, relative or

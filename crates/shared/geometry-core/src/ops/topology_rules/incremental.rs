@@ -13,9 +13,9 @@ use super::{
     is_areas, is_paths, is_points, taken,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum, round_half_up};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum, round_half_up};
 
 /// A finding's lasting key: its rule's id, its objects' uids in the finding's order and its place on the
 /// tolerance's grid, as 16 hexadecimal digits (FNV-1a, 64 bits). The same finding found again keeps its key; a

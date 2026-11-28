@@ -1633,11 +1633,11 @@ pub fn carry_space_separator(from: &Entity, entity: Entity) -> Result<Entity, St
         }
         Entity::Arc(a)=> {
             let sweep=kentos_geometry_core::geom::arc::sweep(a.a0,a.a1);
-            if sweep==kentos_geometry_core::jsmath::TAU {circle(a.base,a.c,a.r)} else {
+            if sweep==kentos_num::TAU {circle(a.base,a.c,a.r)} else {
                 let c=kentos_geometry_core::Vec2::new(a.c.x,a.c.y);
                 let start=kentos_geometry_core::geom::arc::point_on_circle(c,a.r,a.a0);
                 let end=kentos_geometry_core::geom::arc::point_on_circle(c,a.r,a.a1);
-                path(a.base,vec![Point{x:start.x,y:start.y},Point{x:end.x,y:end.y}],Some(vec![kentos_geometry_core::jsmath::tan(sweep/4.),0.]),false)
+                path(a.base,vec![Point{x:start.x,y:start.y},Point{x:end.x,y:end.y}],Some(vec![kentos_num::tan(sweep/4.),0.]),false)
             }
         }
         Entity::Circle(c)=>circle(c.base,c.c,c.r),

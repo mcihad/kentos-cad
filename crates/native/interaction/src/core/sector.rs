@@ -23,9 +23,9 @@ use kentos_commands::SectorCreate;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{TAU, atan2};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, shapes};
+use kentos_num::{TAU, atan2};
 
 use crate::Vec2;
 use crate::edge::Outline;

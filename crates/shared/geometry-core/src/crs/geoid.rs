@@ -12,8 +12,8 @@ use std::sync::{Arc, Mutex};
 use super::System;
 use super::Unreached;
 use super::datum::{from_geocentric, to_geocentric};
-use crate::jsmath::{PI, maximum, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{PI, maximum, minimum};
 
 /// The largest grid file read (1 GiB: EGM2008 at 1′ is 933 MB as GTX).
 pub const MAX_BYTES: usize = 1 << 30;

@@ -5,8 +5,8 @@
 //! kept. An open path's ends and an arc edge's ends stay.
 
 use super::Track;
-use crate::jsmath::{PI, cos, minimum};
 use crate::vec2::Vec2;
+use kentos_num::{PI, cos, minimum};
 
 /// Below this squareness a shape is square (QGIS's 1e-8).
 pub const SQUARE: f64 = 1e-8;

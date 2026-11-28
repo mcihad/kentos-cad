@@ -1,23 +1,12 @@
-//! JavaScript's number semantics, from the port of the TypeScript core
-//! (docs/adr/0008): `Math.round` rounds halves up, and `Math.sign`/`min`/`max`
-//! keep NaN and signed zeros their own way. The numeric base takes their place
-//! family by family (`kentos-num`, docs/adr/9403); a length is its already.
-//! Transcendental functions are the numeric base's too: correctly rounded, so
-//! every system gives the same bits (CLAUDE.md §23.4); `clippy.toml` forbids
-//! the std methods, which call the platform's library.
+//! What is left of the helpers the geometry core was ported from TypeScript with (docs/adr/9403 §1): each still
+//! waits for a rule of its own. A comparison that calls a NaN equal, a number taken as "given" when it is neither
+//! zero nor NaN, a sort that bears such a comparison, and a length of many parts by a scaled sum. They are here so
+//! that one crate holds every number rule; a new use is not written (`make guard` counts them).
 
 use std::cmp::Ordering;
 
-pub use kentos_num::{
-    acos, asin, atan, atan2, cos, exp, hypot, ln as log, log2, log10, maximum, maximum_of, minimum,
-    minimum_of, pow, round_half_up, sign, sin, tan,
-};
-
-pub const PI: f64 = std::f64::consts::PI;
-pub const TAU: f64 = PI * 2.0;
-
 /// The length of a vector of any number of parts: every part divided by the largest, the squares summed with
-/// Kahan compensation, then scaled back (the port's form; two parts go to [`hypot`], which is correctly rounded).
+/// Kahan compensation, then scaled back (the port's form; two parts go to [`crate::hypot`], which is correctly rounded).
 pub fn js_hypot_n(xs: &[f64]) -> f64 {
     let mut max = 0.0_f64;
     let mut nan = false;
@@ -146,15 +135,5 @@ mod tests {
         assert!(js_hypot_n(&[f64::NAN, 1.0]).is_nan());
         // Large coordinates do not overflow.
         assert_eq!(js_hypot_n(&[1e300, 1e300]), 1e300 * 2f64.sqrt());
-    }
-
-    /// A length is the numeric base's: the nearest double, where the port's scaled sum was one place off (the
-    /// base's own cases are in fixtures/numeric/v1/hypot.json).
-    #[test]
-    fn a_length_is_the_nearest_double() {
-        assert_eq!(hypot(3.0, 4.0), 5.0);
-        assert_eq!(hypot(f64::NAN, f64::INFINITY), f64::INFINITY);
-        let (x, y) = (896.809_549_769_400_7, -294.254_883_547_293_4);
-        assert_eq!(hypot(x, y), 943.850_255_627_992_3);
     }
 }

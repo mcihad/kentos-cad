@@ -12,9 +12,9 @@ use super::{Out, TOUCH, TopoPath, TopoWorks, Work};
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, ray_edge};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, maximum, minimum, tan};
 use crate::store::rtree::{PackedTree, overlaps};
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum, minimum, tan};
 
 /// A cut: its distance along the path, its edge, the fraction along that edge, the place.
 #[derive(Clone, Copy, Debug)]

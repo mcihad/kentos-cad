@@ -16,7 +16,7 @@ use std::collections::BinaryHeap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::{Bounds, signed_area};
-use kentos_geometry_core::jsmath::minimum;
+use kentos_num::minimum;
 
 use super::place::positive;
 

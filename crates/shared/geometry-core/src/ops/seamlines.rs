@@ -34,9 +34,9 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::jsmath::{hypot, maximum};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, maximum};
 
 /// A point (east, north).
 pub type Pt = [f64; 2];

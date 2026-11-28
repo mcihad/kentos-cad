@@ -14,11 +14,11 @@ use crate::geom::ellipse::{
     EllipseGeom, ellipse_length, ellipse_sweep, is_full_ellipse, param_of_point,
 };
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, or, sign, sin};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::path::{nearest_s, path_of, sub_path};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, atan2, cos, hypot, maximum, or, sign, sin};
 
 /// A closed polyline has no end to move (docs/adr/0258 §1), nor a whole ellipse.
 fn can_lengthen(e: &Shape) -> bool {

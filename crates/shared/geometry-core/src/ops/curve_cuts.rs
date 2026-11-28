@@ -13,10 +13,10 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, line_circle_params, line_line, on_edge_arc,
 };
-use crate::jsmath::{
+use crate::vec2::Vec2;
+use kentos_num::{
     TAU, atan2, hypot, js_cmp, maximum, maximum_of, minimum, minimum_of, or, stable_sort,
 };
-use crate::vec2::Vec2;
 
 /// Pieces of a cut object, or why it could not be cut.
 pub enum Cut {

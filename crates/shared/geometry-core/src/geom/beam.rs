@@ -27,7 +27,7 @@ impl BeamSpec {
     /// Its size as a construction plan writes it: its width over its height in centimetres ("25/50").
     pub fn size(&self) -> String {
         let cm = |m: f64| {
-            let c = crate::jsmath::round_half_up(m * 1000.0) / 10.0;
+            let c = kentos_num::round_half_up(m * 1000.0) / 10.0;
             if c.fract() == 0.0 {
                 format!("{c:.0}")
             } else {
@@ -153,11 +153,11 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &BeamSpec, scale: f64, level: Level)
     if !words.is_empty() {
         let middle = side(pts, spec.middle);
         if let Some(w) = middle.windows(2).max_by(|a, b| {
-            let l = |w: &[Vec2]| crate::jsmath::hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+            let l = |w: &[Vec2]| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y);
             l(a).total_cmp(&l(b))
         }) {
             let (a, b) = (w[0], w[1]);
-            let mut turn = crate::jsmath::atan2(b.y - a.y, b.x - a.x);
+            let mut turn = kentos_num::atan2(b.y - a.y, b.x - a.x);
             // Read from below or from the right (ISO 128's reading directions).
             if turn > std::f64::consts::FRAC_PI_2 + 1e-9 {
                 turn -= std::f64::consts::PI;
@@ -165,7 +165,7 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &BeamSpec, scale: f64, level: Level)
                 turn += std::f64::consts::PI;
             }
             // Over its band as read: up from the reading direction, past half its width and the gap.
-            let up = Vec2::new(-crate::jsmath::sin(turn), crate::jsmath::cos(turn));
+            let up = Vec2::new(-kentos_num::sin(turn), kentos_num::cos(turn));
             let off = spec.width / 2.0 + WORDS_GAP_MM * scale / 1000.0;
             let h = LABEL_MM * scale / 1000.0;
             out.push(piece(Shape::Text {

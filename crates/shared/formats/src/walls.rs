@@ -575,7 +575,7 @@ mod tests {
             WallEntity,
         };
         use kentos_geometry_core::geom::wall::Detail;
-        use kentos_geometry_core::jsmath::{maximum, minimum};
+        use kentos_num::{maximum, minimum};
         let wall = WallFields {
             pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 6.0, y: 0.0 }],
             bulges: None,
@@ -715,12 +715,7 @@ mod tests {
                     Entity::Polyline(l) => Some(
                         l.pts
                             .windows(2)
-                            .map(|w| {
-                                kentos_geometry_core::jsmath::hypot(
-                                    w[1].x - w[0].x,
-                                    w[1].y - w[0].y,
-                                )
-                            })
+                            .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                             .sum::<f64>(),
                     ),
                     _ => None,

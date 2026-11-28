@@ -6,10 +6,10 @@
 //! `store::proximity`'s and `ops::proximity`'s unit tests.
 
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::jsmath::minimum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::proximity::{Measure, NEAREST_STRIDE, NEIGHBOR_STRIDE};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::minimum;
 
 /// The scene's objects: their ids by kind.
 pub struct Scene {

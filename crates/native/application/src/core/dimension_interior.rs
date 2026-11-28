@@ -11,9 +11,9 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::jsmath::{PI, cos, sin};
 use kentos_geometry_core::ops::interior_dims::{self, Columns, Faces};
 use kentos_geometry_core::vec2::Vec2;
+use kentos_num::{PI, cos, sin};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};

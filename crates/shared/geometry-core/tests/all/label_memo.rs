@@ -5,12 +5,12 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::table::table_geom;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::label_memo::LabelMemo;
 use kentos_geometry_core::store::labels::{LABEL_CELL, LABEL_STRIDE};
 use kentos_geometry_core::store::legible::{LABEL_SHOWN_STRIDE, LabelSize};
 use kentos_geometry_core::store::placing::PlaceOptions;
+use kentos_num::maximum;
 
 /// Knuth's MMIX generator: the same draws everywhere.
 struct Dice(u64);

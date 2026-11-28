@@ -10,8 +10,8 @@
 //! Stage one: one outer ring of straight edges, the cut one straight chord. A line that crosses the boundary more than
 //! twice would leave more than two pieces and is refused.
 
-use crate::jsmath::hypot;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 /// Why no cut is given, in the tool's words.
 pub const TOO_FEW: &str = "Alanla bölmek için en az üç köşeli, alanı olan kapalı bir alan gerekir.";
@@ -172,7 +172,7 @@ pub fn cut_for_area(ring: &[Vec2], edge: usize, target: f64) -> Result<Cut, &'st
         let k = (w2 - w1) * 3.0 / span;
         let w0 = w1 - k * span / 3.0;
         let c = target - a_lo;
-        let root = crate::jsmath::maximum(w0 * w0 + 2.0 * k * c, 0.0).sqrt();
+        let root = kentos_num::maximum(w0 * w0 + 2.0 * k * c, 0.0).sqrt();
         let x = if w0 + root > 0.0 {
             2.0 * c / (w0 + root)
         } else {

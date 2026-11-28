@@ -12,9 +12,9 @@ use crate::geom::bulge::{bulge_at, bulge_of_sweep, segment_tangent};
 use crate::geom::ellipse::{EllipseGeom, param_at_polar};
 use crate::geom::shapes::regular_polygon;
 use crate::geometry::dist;
-use crate::jsmath::{PI, asin, atan2, cos, hypot, or, sign, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
+use kentos_num::{PI, asin, atan2, cos, hypot, or, sign, sin, tan};
 
 const DEG: f64 = PI / 180.0;
 

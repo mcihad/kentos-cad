@@ -2,10 +2,10 @@
 //! cutting on lines and areas, the neighbours' shared edges together when
 //! asked; elevations go along.
 
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::ops::generalize::calls::smooth_run;
 use kentos_geometry_core::ops::generalize::smooth::Smoothing;
 use kentos_geometry_core::ops::geoprocess::written_vertices;
+use kentos_num::PI;
 use serde_json::json;
 
 use super::super::convert::{placed, scopes};

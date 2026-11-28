@@ -19,13 +19,13 @@ use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
 use crate::geom::region::{subtract_areas, union_areas};
 use crate::geometry::point_in_polygon;
-use crate::jsmath::{hypot, minimum};
 use crate::op;
 use crate::ops::curve_cuts::{
     Geometry, construction_of, ellipse_of, offset_construction, offset_ellipse,
 };
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+use kentos_num::{hypot, minimum};
 
 /// A path of `like`'s kind: an area's ring, or a polyline open or closed as `like` is
 /// (docs/adr/0258 §1).

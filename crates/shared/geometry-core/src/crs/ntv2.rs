@@ -15,7 +15,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::jsmath::PI;
+use kentos_num::PI;
 
 /// A file larger than this is not read.
 pub const MAX_BYTES: usize = 256 * 1024 * 1024;
@@ -452,10 +452,10 @@ impl Grid {
         for &i in &self.top {
             let e = self.subs[i].extent;
             b = [
-                crate::jsmath::minimum(b[0], e.west * deg),
-                crate::jsmath::minimum(b[1], e.south * deg),
-                crate::jsmath::maximum(b[2], e.east * deg),
-                crate::jsmath::maximum(b[3], e.north * deg),
+                kentos_num::minimum(b[0], e.west * deg),
+                kentos_num::minimum(b[1], e.south * deg),
+                kentos_num::maximum(b[2], e.east * deg),
+                kentos_num::maximum(b[3], e.north * deg),
             ];
         }
         (self.subs.len(), b)

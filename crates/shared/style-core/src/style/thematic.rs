@@ -3,7 +3,7 @@
 //! class among breaks, and a symbol with its main colour or its size
 //! changed (Sürekli renk, İki değişkenli renk, Orantılı sembol).
 
-use kentos_geometry_core::jsmath::{maximum, minimum, pow, round_half_up};
+use kentos_num::{maximum, minimum, pow, round_half_up};
 
 use super::compile::MM_PER_PX;
 use super::model::{

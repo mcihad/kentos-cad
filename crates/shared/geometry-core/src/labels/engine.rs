@@ -6,9 +6,9 @@
 
 use std::collections::HashMap;
 
-use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::text::Font;
 use crate::vec2::Vec2;
+use kentos_num::{atan2, cos, maximum, minimum, sin};
 
 use super::geom::{
     Obb, Walk, box_inside, inside_rings, long_axis, norm, segment_distance2, upright, wrap,

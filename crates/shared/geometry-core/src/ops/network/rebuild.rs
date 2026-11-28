@@ -32,8 +32,8 @@ use super::turns::{Level, TurnIn};
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::Edge;
 use crate::geometry::Bounds;
-use crate::jsmath::hypot;
 use crate::vec2::Vec2;
+use kentos_num::hypot;
 
 const NONE: u32 = u32::MAX;
 

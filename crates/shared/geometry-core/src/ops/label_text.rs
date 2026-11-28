@@ -11,7 +11,6 @@
 use crate::api::Op;
 use crate::api::json::Json;
 use crate::entity::{Entity, Shape};
-use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::labels::engine::{CURVED, UNPLACED};
 use crate::op;
 use crate::store::Store;
@@ -22,6 +21,7 @@ use crate::store::placing::{
 };
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
+use kentos_num::{cos, maximum, minimum, sin};
 
 /// CSS px per metre of paper: 96 px an inch.
 pub const PX_PER_M: f64 = 96.0 / 0.0254;

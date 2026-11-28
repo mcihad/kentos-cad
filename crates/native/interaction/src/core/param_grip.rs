@@ -11,8 +11,8 @@ use kentos_commands::{BlocksParameters, ParametersOperation};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
 use kentos_geometry_core::entity::{ParamValue as CoreValue, Params, Shape};
-use kentos_geometry_core::jsmath::hypot;
 use kentos_native_application::{ExecutionContext, block_params};
+use kentos_num::hypot;
 
 use crate::Vec2;
 use crate::format::Format;

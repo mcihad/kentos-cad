@@ -24,10 +24,10 @@ use crate::geom::spline::{catmull_rom, spline_length};
 use crate::geometry::{
     Bounds, centroid, empty_bounds, extend_bounds, path_length, point_in_polygon, signed_area,
 };
-use crate::jsmath::{PI, TAU, cos, maximum, sin};
 use crate::op;
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
+use kentos_num::{PI, TAU, cos, maximum, sin};
 
 /// Half-length (1000 km) an infinite line gets when it meets finite geometry
 /// on the CPU (`CONSTRUCTION_REACH`).
@@ -1634,10 +1634,10 @@ impl<'a> TextPlace<'a> {
             return Some((self.p, self.rotation));
         };
         let d = Vec2::new(last.mid.x - first.mid.x, last.mid.y - first.mid.y);
-        let turn = if plan.clusters.len() == 1 || crate::jsmath::hypot(d.x, d.y) <= 1e-9 {
+        let turn = if plan.clusters.len() == 1 || kentos_num::hypot(d.x, d.y) <= 1e-9 {
             first.turn
         } else {
-            crate::text::along::degrees(crate::jsmath::atan2(d.y, d.x))
+            crate::text::along::degrees(kentos_num::atan2(d.y, d.x))
         };
         Some((
             Vec2::new(self.p.x + first.at.x, self.p.y + first.at.y),

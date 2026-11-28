@@ -1449,9 +1449,7 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
     };
     let curve = Curve {
         pts: vec![Vec2::new(10., 10.)],
-        bulges: Some(vec![kentos_geometry_core::jsmath::tan(
-            std::f64::consts::PI / 8.,
-        )]),
+        bulges: Some(vec![kentos_num::tan(std::f64::consts::PI / 8.)]),
     };
     let runs = [Run {
         start: 3,
@@ -1493,29 +1491,21 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
         let left = group
             .iter()
             .map(|g| g.glyph.pen)
-            .fold(f64::INFINITY, kentos_geometry_core::jsmath::minimum);
+            .fold(f64::INFINITY, kentos_num::minimum);
         let right = group
             .iter()
             .map(|g| g.glyph.pen + g.glyph.advance)
-            .fold(f64::NEG_INFINITY, kentos_geometry_core::jsmath::maximum);
+            .fold(f64::NEG_INFINITY, kentos_num::maximum);
         let middle = (left + right) / 2.;
         let theta = middle / 10.;
         let m = group[0].transform;
-        assert!((m[0] - kentos_geometry_core::jsmath::cos(theta)).abs() < 1e-12);
-        assert!((m[1] - kentos_geometry_core::jsmath::sin(theta)).abs() < 1e-12);
+        assert!((m[0] - kentos_num::cos(theta)).abs() < 1e-12);
+        assert!((m[1] - kentos_num::sin(theta)).abs() < 1e-12);
         assert!(
-            (m[4]
-                - (10. * kentos_geometry_core::jsmath::sin(theta)
-                    - middle * kentos_geometry_core::jsmath::cos(theta)))
-            .abs()
-                < 1e-12
+            (m[4] - (10. * kentos_num::sin(theta) - middle * kentos_num::cos(theta))).abs() < 1e-12
         );
         assert!(
-            (m[5]
-                - (10.
-                    - 10. * kentos_geometry_core::jsmath::cos(theta)
-                    - middle * kentos_geometry_core::jsmath::sin(theta)))
-            .abs()
+            (m[5] - (10. - 10. * kentos_num::cos(theta) - middle * kentos_num::sin(theta))).abs()
                 < 1e-12
         );
     }

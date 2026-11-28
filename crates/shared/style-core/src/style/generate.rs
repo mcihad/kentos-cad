@@ -11,12 +11,10 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{
-    PI, TAU, acos, atan, atan2, cos, hypot, maximum, minimum, round_half_up, sin,
-};
 use kentos_geometry_core::ops::generate::bounding::convex_hull;
 use kentos_geometry_core::ops::geoprocess::Class;
 use kentos_geometry_core::ops::geoprocess::buffer::{Side, buffer};
+use kentos_num::{PI, TAU, acos, atan, atan2, cos, hypot, maximum, minimum, round_half_up, sin};
 
 use super::compile::{Env, Geom, Values, dd_number, to_world};
 use super::model::{Dd, Step, Unit};

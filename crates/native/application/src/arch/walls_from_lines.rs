@@ -15,7 +15,7 @@ use kentos_commands::{
     WallsFromMode,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, sin, tan};
+use kentos_num::{atan2, cos, hypot, sin, tan};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};

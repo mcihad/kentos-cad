@@ -9,7 +9,7 @@
 //! - Huber (1964): c / |w|;
 //! - Danish (Krarup, Juhl and Kubik 1980), in the form exp(−((|w| − c) / c)²).
 
-use crate::jsmath::exp;
+use kentos_num::exp;
 
 /// The weight function.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -94,6 +94,6 @@ mod tests {
             c: 2.0,
         };
         assert_eq!(d.factor(Some(2.0)), 1.0);
-        assert!((d.factor(Some(4.0)) - crate::jsmath::exp(-1.0)).abs() < 1e-15);
+        assert!((d.factor(Some(4.0)) - kentos_num::exp(-1.0)).abs() < 1e-15);
     }
 }

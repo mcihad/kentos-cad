@@ -7,10 +7,10 @@ use crate::entity::Shape;
 use crate::geom::bulge::{reverse_bulge_path, segment_tangent};
 use crate::geom::intersect::{Edge, intersect_edges, ray_edge};
 use crate::geom::wall::path_shape;
-use crate::jsmath::maximum;
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
+use kentos_num::maximum;
 
 /// A wall's path.
 #[derive(Clone, Debug, PartialEq)]

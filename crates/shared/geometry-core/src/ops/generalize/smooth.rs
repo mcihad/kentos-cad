@@ -5,8 +5,8 @@
 //! whole. Elevations go along by the same fraction.
 
 use super::Track;
-use crate::jsmath::atan2;
 use crate::vec2::Vec2;
+use kentos_num::atan2;
 
 /// Yumuşat's settings: how many times, the fraction cut off each end of an
 /// edge, the largest turn (radians) of a vertex that is smoothed.
