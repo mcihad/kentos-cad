@@ -406,6 +406,7 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   (2 616 sınama), dört modül paketi, birleşik program, başsız konak ve MCP (313 sınama) sınamaları yeşil; portalın
   tür denetimi, 9 sınaması ve paketi taşımadan önceki hâliyle aynı. Koşulmayan: sunucunun veritabanı sınamaları,
   Python'ın tam takımı, eklenti sınamaları.
+- Kılavuzun güncel karar özetine (§0) iki giriş yazıldı: ADR 9401'in düzeltmelerinden çıkan kurallar ve ADR 9402.
 - Aşama 1'in sonunda kalan iki eski kırmızı sınama kapandı (ADR 9401 §11): `module_features` (27 Kasım'da `gis/`
   altına özelliksiz eklenen `lineage` çekirdeğe taşındı) ve `ifc_revisions` (BCF'nin kamerası platformun `tan`'ını
   kullanıyordu; IFC crate'indeki beş platform çağrısı `libm`'e bağlandı, crate'e clippy.toml eklendi; saklanan dosya

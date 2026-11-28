@@ -4,6 +4,42 @@
 
 ## 0. Güncel karar özeti
 
+- **Web uygulaması ve WASM kaldırıldı; TypeScript yalnız Bulut için (28 Kasım 2026;
+  [ADR 9402](../adr/9402-web-and-wasm-removed.md), plan/bakim.md Aşama 8).**
+  - `apps/web` ve `crates/wasm` yoktur, geri gelemez (`make guard`, `scripts/dev/removed_paths.py`). Son hâlleri
+    `b00e8afb6` commit'indedir.
+  - Komut kataloğu `catalog/v1/commands.json`, ayar şeması `catalog/v1/settings-schema.json`.
+  - TypeScript `apps/portal/src/api/generated`'a, yalnız portalın kullandığı türler için üretilir: portalın kullandığı
+    tür `derive(TS)`, adını andığı tür `ts(export)` alır.
+  - Konaklar: komut `desktop` ya da `server`; ayar `desktop`. Tarayıcı istemcisi (`x-kentos-client: web`) portaldır.
+  - Kaynakta kaldırılanları anan satırlar yalnız azalır; dokunulan dosyada temizlenir.
+  - `jsmath`'in yerine geçecek sayısal temel araştırılıyor (BK-88); karar çıkana kadar bugünkü kurallar sürer.
+
+- **İncelemenin doğruluk düzeltmeleri ve onlardan çıkan kurallar (28 Kasım 2026;
+  [ADR 9401](../adr/9401-correctness-fixes-from-the-review.md), plan/bakim.md Aşama 1).**
+  - **Halka hesapları tek yerde:** nokta halkanın içinde mi (`point_in_ring`, `point_in_rings`, `ray_crosses`),
+    alan ve yön (`ring_area`), ağırlık merkezi (`ring_centroid`) geometri çekirdeğindedir
+    (`kentos_geometry_core::geometry`), her nokta türü için. Yerel kopya yazılmaz: ham TM koordinatıyla toplanan
+    merkez metrelerce, alan dördüncü basamakta kayar; küçük halkanın yönü ters okunur.
+  - **Çizime yazılan sayı** gösterim kuralıyla yuvarlanır (`display::fixed`, ADR 0149), dilin kendi biçimlemesiyle
+    değil.
+  - **Dosyaya yazılan sayı** platformun matematik kitaplığına gitmez: aşkın işlevler `libm`'dendir, crate'in
+    clippy.toml'u std yöntemlerini yasaklar (IFC crate'ine eklendi; bir BCF kamerası sistemden sisteme 1 ulp
+    değişiyordu).
+  - **Bir Kaydet birkaç komut yazıyorsa** hepsi ya da hiçbiri: `App::save_together` (`cad.changeset.apply`).
+    `transact` ve `begin_group` ayarları geri almaz.
+  - **Arka plan yanıtı soranındır:** aktarım pencereleri koşu numarası taşır (`exchange::Runs`); geç yanıt başka
+    pencereyi kapatmaz. Ağır okuma arayüz iş parçacığında koşmaz.
+  - **Kilitli katman:** komutun dışından silen yer kuralı atlar. Aracın kendi işaretleri `marks::take_away` ile
+    kalkar; eskisi kilitli katmandaysa yenisi çizilmez. Dış başvuruyu kaldırma ve Yol çizimini yeniden üretme
+    kilitli katmandaki nesneyi silmez.
+  - **Kişiye ulaşan metin** her crate'te denetlenir (`other_names_tests`): başka program adı yok; arayüzün, komutun,
+    aracın ve işlem aracının metninde ADR atfı yok.
+  - **Üreteçler** sabit ortamda koşar (`scripts/fixtures/py`, ADR 9303). Kübaj ve Brükner üreteçlerinin dosyaları o
+    ortamla son basamakta ayrışıyor (açık).
+  - Sorgu katmanının metni SQLite'a tek deyim olarak gider; ifade ve süzgeç ayrıştırıcılarının derinlik sınırı var;
+    hata kodu tablosu altı dosyada.
+
 - **Bakım planı: kod incelemesi, biçim tabanı, tek denetim komutu (28 Kasım 2026;
   [ADR 9400](../adr/9400-maintenance-plan.md), [plan/bakim.md](../../plan/bakim.md)).**
   - İnceleme kodun okunmasından çıkar: bulgu dosyası ve satırıyla yazılır, alt ajanın bulgusu kodda doğrulanmadan plana
