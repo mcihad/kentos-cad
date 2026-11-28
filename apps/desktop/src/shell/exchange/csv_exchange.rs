@@ -526,7 +526,7 @@ impl App {
                 Sep(s.separator),
                 |p| event(Event::Separator(p)),
             ),
-            Some("Excel Türkçe ayarlarda noktalı virgülle ayrılmış dosyayı doğrudan açar; sayılarda ondalık ayırıcı her zaman noktadır.".to_owned()),
+            Some("Türkçe bölge ayarlı tablo programları noktalı virgülle ayrılmış dosyayı doğrudan açar; sayılarda ondalık ayırıcı her zaman noktadır.".to_owned()),
         ));
         let mut lines = Vec::new();
         let ready = match &s.plan {

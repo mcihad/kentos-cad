@@ -308,6 +308,35 @@ hangi pencere açıksa ona dokunuyordu:
   içinde yazılıyordu; ayrıca art arda iki düzenlemeyi ve yazma sürerken Vazgeç'i denetler.
 - Sınama yardımcısı (`form_scenes::designer`) artık taslağın yanıtını bekler; 390 form sınaması geçti.
 
+### 7. Arayüz metninde başka programın adı (BK-18)
+
+**Bulgu.** İnceleme üç metin saymıştı. Bekçi (`other_names_tests`) bunları görmüyordu, iki nedenle: listesinde yalnız
+on iki ad vardı ve arayüz kitlerinin crate'lerini (`crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`) taramıyordu.
+Bekçi genişletilince sekiz metin çıktı:
+
+| Yer | Ad |
+|---|---|
+| CSV dışa aktar'ın ayırıcı ipucu | bir tablo programı |
+| Uygulama menüsünün KML satırları (iki) ve KML dışa aktar'ın ipucu | bir yer küresi görüntüleyicisi |
+| GeoPDF'in ipucu (`sheet-ui`) | bir kitaplık, bir CBS programı ve bir PDF okuyucu |
+| SVG dışa aktar'ın seçeneği | bir çizim programı |
+| Tablo yaz'ın ODS seçeneği | bir ofis takımı |
+| Katalogdaki iki açıklama (`file.export.kml`, `file.import.kml`; ipuçları ve Komut ara gösterir) | bir yer küresi görüntüleyicisi |
+
+**Karar.**
+
+- Sekiz metin, programın adı yerine ne yaptığını söyleyerek yeniden yazıldı.
+- Bekçi dört ad daha arar ve arayüz kitlerinin üç crate'ini de tarar.
+- **Açık bırakılanlar (sahibin kararı ya da sonraki iş):**
+  - “Excel (.xlsx)” 27 yerde biçimin adı olarak yazılı. Kural dosya biçimi adlarını uygulama adı saymıyor; “.xlsx”in
+    herkesin bildiği adı da budur. Dokunulmadı; karar sahibindir.
+  - Sözleşmelerin belge yorumlarında bir kitaplığın adı 17 yerde geçiyor (8 dosya) ve Python'un `help()` metnine
+    14 satır olarak çıkıyor. Sözleşmeleri değiştirmek kataloğu ve SDK'yı yeniden üretir; BK-16 ile birlikte yapılır.
+  - Bir ortak durumun örnek grup adı (`gis_import_cases.py`) arayüz metni değildir; üretecine dokunan işte değişir.
+
+**Sınama.** `other_names_tests` (genişletilmiş hâliyle; düzeltmeden önce iki katalog açıklamasını ve GeoPDF ipucunu
+gösterdi), `kentos-sheet-ui` sınamaları, dokunulan pencerelerin sınamaları.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |

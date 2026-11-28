@@ -4161,7 +4161,7 @@
       "title": "KML/KMZ…",
       "category": "Dosya",
       "icon": "exportKml",
-      "description": "Seçili, görünen ya da bütün nesneleri Google Earth'ün açtığı KML ya da KMZ olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; katmanlar klasör, nesneler yer imi olur, renkler ve kalınlıklar biçem, öznitelikler veri olarak yazılır. Eğriler örneklenir, yazılar adlı nokta olur.",
+      "description": "Seçili, görünen ya da bütün nesneleri KML ya da KMZ olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; katmanlar klasör, nesneler yer imi olur, renkler ve kalınlıklar biçem, öznitelikler veri olarak yazılır. Eğriler örneklenir, yazılar adlı nokta olur.",
       "aliases": [
         "KMLVER",
         "KMLYAZ",
@@ -4385,7 +4385,7 @@
       "title": "KML/KMZ…",
       "category": "Dosya",
       "icon": "importKml",
-      "description": "Google Earth'ün KML ya da KMZ dosyasını içe aktarır: klasörler katman, yer imleri nesne olur; adı, açıklaması ve verileri öznitelik, biçemindeki renk ve kalınlık nesnenin olur. Koordinatlar WGS 84 boylam, enlemdir; projenin sistemine ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
+      "description": "KML ya da KMZ dosyasını içe aktarır: klasörler katman, yer imleri nesne olur; adı, açıklaması ve verileri öznitelik, biçemindeki renk ve kalınlık nesnenin olur. Koordinatlar WGS 84 boylam, enlemdir; projenin sistemine ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
       "aliases": [
         "KML",
         "KMZ",

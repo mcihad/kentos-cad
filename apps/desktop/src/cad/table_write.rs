@@ -40,7 +40,7 @@ pub const FORMATS: [Choice; 3] = [
         format: WorkbookFormat::Ods,
         label: "OpenDocument hesap tablosu (.ods)",
         icon: "exportOds",
-        detail: "LibreOffice için; sayılar sayı, tarihler tarih olarak",
+        detail: "Açık belge biçimi; sayılar sayı, tarihler tarih olarak",
         extension: "ods",
         filter: "OpenDocument hesap tablosu (.ods)",
     },

@@ -29,7 +29,7 @@ pub mod texts {
     }
     pub fn geo(name: &str) -> String {
         format!(
-            "Konumlu her harita koordinat taşır ({name}): GDAL, QGIS ve Acrobat haritadan koordinat okur."
+            "Konumlu her harita koordinat taşır ({name}): GeoPDF okuyan programlar haritadan koordinat okur."
         )
     }
     pub const LAYERS: &str =

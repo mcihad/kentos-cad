@@ -357,7 +357,7 @@ impl App {
         let (kind_label, kind_hint) = match s.format {
             Format::Kml => (
                 "Dosya",
-                "KMZ, KML'nin sıkıştırılmış hâlidir (içinde doc.kml); Google Earth ikisini de açar.",
+                "KMZ, KML'nin sıkıştırılmış hâlidir (içinde doc.kml); KML açan programlar ikisini de açar.",
             ),
             Format::Gpx => (
                 "Çizgiler",

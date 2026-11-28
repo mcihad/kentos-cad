@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 
 /// Other programs' names, as written.
-const NAMES: [&str; 12] = [
+const NAMES: [&str; 16] = [
     "Netcad",
     "NETCAD",
     "AutoCAD",
@@ -27,6 +27,10 @@ const NAMES: [&str; 12] = [
     "NETPRO",
     "Netpro",
     "Revit",
+    "Google Earth",
+    "Acrobat",
+    "Inkscape",
+    "LibreOffice",
 ];
 
 /// (file ending, name, why): a name kept because it is a protocol, a service type or a file signature.
@@ -194,6 +198,10 @@ fn rust_string_literals_name_no_other_program_and_cite_no_adr() {
         root.join("apps/kentos-cad/src"),
         root.join("crates/shared/commands/src"),
         root.join("crates/shared/contracts/src"),
+        // The interface kits: their texts reach the person as the programs' own do.
+        root.join("crates/ui/src"),
+        root.join("crates/sheet-ui/src"),
+        root.join("crates/model-view-ui/src"),
     ];
     for entry in std::fs::read_dir(root.join("apps")).expect("the apps folder").flatten() {
         if entry.file_name().to_string_lossy().starts_with("desktop") {

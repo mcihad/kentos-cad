@@ -326,7 +326,7 @@ pub fn view<'a>(
                 }),
                 &[
                     "Sembol rengi currentColor, ikinci renk param(stroke) kalır; kitaplığa ya da başka bir KentOS’a",
-                    "Önizleme renkleri yazılır, boyut mm olarak; Inkscape ve öteki programlar için",
+                    "Önizleme renkleri yazılır, boyut mm olarak; öteki çizim programları için",
                     "Piksel görüntü",
                 ],
                 |v| with_dialog(move |d| {

@@ -156,7 +156,7 @@ const IMPORTS: [Format; 9] = [
     Format {
         id: "file.import.kml",
         label: "KML/KMZ",
-        detail: "Google Earth; klasörler katman, yer imleri nesne",
+        detail: "Klasörler katman, yer imleri nesne olur",
         badge: "KML",
     },
     Format {
@@ -195,7 +195,7 @@ const EXPORTS: [Format; 7] = [
     Format {
         id: "file.export.kml",
         label: "KML/KMZ",
-        detail: "Google Earth için; WGS 84'e çevrilir",
+        detail: "Yer küresi görüntüleyicileri için; WGS 84'e çevrilir",
         badge: "KML",
     },
     Format {
