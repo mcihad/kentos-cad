@@ -478,6 +478,8 @@ pub fn path_length(pts: &[[f64; 2]], bulges: &[f64], closed: bool) -> f64 {
 }
 
 #[cfg(test)]
+// A test's own arithmetic may use the platform's functions: its values are compared with a tolerance, never written.
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
 

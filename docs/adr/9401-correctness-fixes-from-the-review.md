@@ -588,6 +588,36 @@ katman kilitlenir, `edited` ile istenir; ret, hiçbir şey yazılmaz). Düzeltme
 çalıştırıcısı ve Python kanalı geçiyor. Üretecin yazdığı `road.project.query.json` son basamaklarda eskimiş çıktı
 (bu işten önce de; üreteç ortamının farkı): dokunulmadı.
 
+### 11. Yazılan dosya platformun matematik kitaplığına bağlı olmaz (IFC ve BCF)
+
+**Bulgu.** `ifc_revisions` sınaması (taşınan duvarın BCF'si saklanan dosyayla bayt bayt aynı mı) bu makinede
+kırmızıydı: kameranın üç koordinatı on altıncı basamakta farklıydı. Neden: `kentos_ifc::bcf::camera_for` uzaklığı
+`30f64.to_radians().tan()` ile hesaplıyordu, yani platformun C kitaplığının `tan`'ıyla. Bu makinede o değer
+0,577 350 269 189 625 6'dır: doğru yuvarlanmış değerden (…625 7) 1 ulp aşağıda. Saklanan dosya başka bir sistemde
+yazılmıştı.
+
+Crate kendi kuralını yazıyor (`math.rs`: aşkın işlevler `libm`'den, “std yöntemleri clippy.toml ile yasak”), ama
+crate'te clippy.toml yoktu. Üretim kodunda platforma bağlı beş çağrı bulundu:
+
+| Yer | Çağrı | Nereye gidiyor |
+|---|---|---|
+| `bcf.rs` `camera_for` | `tan` | BCF dosyasının kamerası |
+| `arch.rs` (iki yer) | `atan` | IFC dosyasına yazılan eğim açısı (döşeme, kiriş) |
+| `read/facts_bodies.rs` | `hypot` | okunan modelin olguları (halka uzunluğu) |
+| `read/units.rs` | `powi` | birim önekinin çarpanı |
+
+**Karar.** Beşi de belirli olanlara bağlandı: `crate::math` (`libm`) ve, `powi` için, çarpımın kendisi. Crate'e
+clippy.toml eklendi: platformun aşkın işlevleri, `powi` ve `mul_add` üretim kodunda derlenmez. Sınamaların kendi
+aritmetiği serbesttir (toleransla karşılaştırır, dosyaya yazmaz).
+
+**Sınama.** `ifc_revisions` düzeltmeden önce kırmızıydı; saklanan dosya yeniden yazılmadan yeşile döndü (`libm`'in
+değeri saklanan dosyanınkiyle aynı). IFC crate'inin sınamaları (112, görüntüleyici özelliğiyle) ve uygulama
+katmanının IFC, BCF ve BIM sınamaları (46) geçti; hiçbir IFC örnek dosyası değişmedi.
+
+**Genel sonuç (BK-88'e girdi).** “Her platformda aynı bit” kuralı bugün crate başına clippy.toml ile tutuluyor ve
+yedi crate'te var. Olmayan crate'lerde platformun kitaplığına giden çağrı serbest. Sayısal temel işinde bu denetim
+bütün hesap crate'lerine yayılır.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -612,6 +642,7 @@ katman kilitlenir, `edited` ile istenir; ret, hiçbir şey yazılmaz). Düzeltme
 | Renk planı lejandı, Kaçış yolları, Gölge, Parsel'in ölçüleri (BK-19, §10.1) | var | yok: Mimari'nin araçları | yok | yok | yok: araçların komutu yok (BK-19'un kalanı) | yok: aynı | yok: aynı | yok: aynı |
 | Dış başvuruyu kaldır (BK-19, §10.2) | var | var | var | yok: profilinde yok (CAD dış başvurusu) | var: `cad.xrefs.edit` | var: `kentos.cad.xrefs.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Yol çizimlerini yeniden üret (BK-19, §10.3) | yok: Yol'un işi | yok | var | yok | var: `road.project.rebuild` | var: `kentos.cad.road.project.rebuild` | var: `run`, `document.write` izniyle | var: aynı komut |
+| IFC yazımı ve BCF sorunları (§11) | var | yok: Mimari'nin işi | yok | yok | var: `file.export.ifc`, `cad.bcf.write` | var: aynı komutlar | yok: dosya işleri eklentiye kapalı | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal

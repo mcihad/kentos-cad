@@ -123,7 +123,7 @@ fn ring_length(r: &Ring) -> f64 {
     (0..n)
         .map(|i| {
             let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
-            (b.x - a.x).hypot(b.y - a.y)
+            crate::math::hypot(b.x - a.x, b.y - a.y)
         })
         .sum()
 }

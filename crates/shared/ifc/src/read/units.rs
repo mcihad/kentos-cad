@@ -84,10 +84,15 @@ fn unit(
         "CUBIC_METRE" => 3,
         _ => 1,
     };
-    let to_si = prefix
+    // The prefix's factor to the unit's power, as products: `powi` is not the same bits on every platform.
+    let factor = prefix
         .as_deref()
-        .map_or(1.0, ifc_lite_core::get_si_prefix_multiplier)
-        .powi(power);
+        .map_or(1.0, ifc_lite_core::get_si_prefix_multiplier);
+    let to_si = match power {
+        2 => factor * factor,
+        3 => factor * factor * factor,
+        _ => factor,
+    };
     Some((
         kind,
         Unit {

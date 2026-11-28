@@ -144,7 +144,7 @@ pub fn camera_for(b: [f64; 6]) -> Camera {
     let k = 1.0 / 3f64.sqrt();
     let direction = [k, k, -k];
     // The diagonal fills a 60° view at twice its half over tan 30°, and a little more.
-    let distance = diagonal / (2.0 * (30f64.to_radians()).tan()) * 1.2;
+    let distance = diagonal / (2.0 * crate::math::tan(30f64.to_radians())) * 1.2;
     let eye = [
         middle[0] - direction[0] * distance,
         middle[1] - direction[1] * distance,

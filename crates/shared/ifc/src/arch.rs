@@ -1127,7 +1127,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 if let Some(sl) = s.slab.slope {
                     props.push((
                         "PitchAngle".into(),
-                        Value::PlaneAngle(sl.grade().abs().atan()),
+                        Value::PlaneAngle(crate::math::atan(sl.grade().abs())),
                     ));
                 }
                 vec![Pset {
@@ -2361,7 +2361,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     &mut elements[i].psets,
                     "Pset_MemberCommon",
                     "Slope",
-                    Value::PlaneAngle(b.beam.grade().abs().atan()),
+                    Value::PlaneAngle(crate::math::atan(b.beam.grade().abs())),
                 );
             }
             if let (Some(set), Some(x)) = (common_set(class), exit)

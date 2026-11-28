@@ -1,0 +1,21 @@
+# What this crate writes (an IFC file, a BCF issue) and reads must be the same bits on every platform
+# (CLAUDE.md §23.4): the std transcendental methods call the platform's C library, whose last digit differs from one
+# system to another, so they are forbidden here; use crate::math (libm). A BCF camera written with the platform's
+# tangent differed between two systems in its sixteenth digit (docs/adr/9401 §11).
+disallowed-methods = [
+  { path = "f64::sin", reason = "use crate::math::sin (libm)" },
+  { path = "f64::cos", reason = "use crate::math::cos (libm)" },
+  { path = "f64::tan", reason = "use crate::math::tan (libm)" },
+  { path = "f64::sin_cos", reason = "use crate::math::sin and crate::math::cos (libm)" },
+  { path = "f64::asin", reason = "use libm through crate::math" },
+  { path = "f64::acos", reason = "use libm through crate::math" },
+  { path = "f64::atan", reason = "use crate::math::atan (libm)" },
+  { path = "f64::atan2", reason = "use crate::math::atan2 (libm)" },
+  { path = "f64::hypot", reason = "use crate::math::hypot (libm)" },
+  { path = "f64::exp", reason = "use libm through crate::math" },
+  { path = "f64::ln", reason = "use libm through crate::math" },
+  { path = "f64::log10", reason = "use libm through crate::math" },
+  { path = "f64::powf", reason = "use libm through crate::math" },
+  { path = "f64::powi", reason = "write the product: powi is not the same bits on every platform" },
+  { path = "f64::mul_add", reason = "a fused multiply-add rounds once where two operations round twice" },
+]

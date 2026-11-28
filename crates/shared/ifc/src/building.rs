@@ -1938,7 +1938,7 @@ mod tests {
     #[test]
     fn a_prism_s_arcs_are_written_as_arc_segments() {
         let (r1, r2) = (6.15, 5.85);
-        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let quarter = crate::math::tan(std::f64::consts::PI / 8.0);
         let wall = Element {
             class: Class::Wall,
             id: Some(7),
