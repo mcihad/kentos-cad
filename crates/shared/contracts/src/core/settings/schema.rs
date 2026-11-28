@@ -15,7 +15,7 @@ use super::{
     SettingGroup, SettingHost, SettingScope, SettingType, SettingsPreset, SettingsSchema,
 };
 
-use SettingHost::{Desktop, Web};
+use SettingHost::Desktop;
 
 /// Every setting, group and preset of this version, and the messages.
 pub fn settings_schema() -> SettingsSchema {
@@ -94,21 +94,21 @@ fn settings() -> Vec<SettingDescriptor> {
         // ── Drafting aids ───────────────────────────────────────────────
         boolean("drafting.ortho", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Orto",
                 "Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner (F8).",
             ),
         boolean("drafting.rightAngle", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Dik açı",
                 "Aracın ikinci kenarından başlayarak her kenar öncekine dik çizilir; hangi yöne gideceğini imleç seçer. Elle kilitlenen doğrultu önce gelir.",
             ),
         boolean("drafting.polar", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kutupsal izleme",
                 "Son noktadan açı adımlarında kılavuz çıkar; imleç yaklaşınca yapışır (F10). Orto açıksa önceliklidir.",
@@ -121,7 +121,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 (json!(90), "90°"),
             ])
             .unit("deg")
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kutupsal izleme açı adımı",
                 "Kutupsal izleme açıkken imleç bu açının katlarına kilitlenir.",
@@ -129,7 +129,7 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("drafting.snapAperture", 11)
             .range(4.0, 30.0)
             .unit("px")
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kenet yarıçapı",
                 "İmlecin bir noktaya yapışması için gereken yakınlık; kapalı alanın ilk köşesine tıklayıp kapatmak da bu yakınlıktadır.",
@@ -137,13 +137,13 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("drafting.pickAperture", 5)
             .range(2.0, 15.0)
             .unit("px")
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Seçim yarıçapı",
                 "Tıklamanın bir çizgiyi yakalaması için gereken yakınlık.",
             ),
         boolean("drafting.cursorInput", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "İmleç yanında değer girişi",
                 "Komut sırasında yazılan mesafe ve koordinatlar imlecin yanında açılır; kapalıyken komut satırına gider.",
@@ -151,13 +151,13 @@ fn settings() -> Vec<SettingDescriptor> {
         // Off by default (the owner, 26 Sep 2026): the command line shows the same step and
         // options more neatly; the strip stays a choice.
         boolean("drafting.commandBar", false)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Komut şeridi",
                 "Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.",
             ),
         boolean("drafting.hoverInfo", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Nesne bilgi kartı",
                 "Seçim aracında bir nesnenin üzerinde durunca türü, katmanı, uzunluğu ya da alanı gösterilir.",
@@ -204,18 +204,18 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         boolean("drafting.snap", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kenetleme",
                 "Seçili kenet türlerinin tümünü birlikte açıp kapatır (F3).",
             ),
         boolean("drafting.grid", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text("Izgara", "Çizim alanında ızgarayı gösterir (F7)."),
         boolean("drafting.tracking", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Nesne izleme",
                 "Bir kenet noktasının üzerinde kısa süre beklenince o noktadan yatay ve dikey kılavuzlar çıkar (Shift+F3).",
@@ -223,14 +223,14 @@ fn settings() -> Vec<SettingDescriptor> {
         // Topological editing (docs/adr/0160 §1): off at the start of every session.
         boolean("drafting.topology", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Topolojik düzenleme",
                 "Tutamaçla taşınan köşe, kenar ortasından eklenen köşe ve biçimlenen yay, görünen ve kilitsiz katmanlardaki komşu nesnelerin ortak köşe ve kenarlarında da birlikte değişir.",
             ),
         boolean("drafting.topologyPoints", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Noktalar da",
                 "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
@@ -254,7 +254,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ],
         )
         .scope(SettingScope::Session)
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Çakışma denetimi",
             "Çizilen yeni alanın komşu alanlarla örtüşen kısmı: serbest bırakılır ya da yeni alanın katmanındaki veya seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.",
@@ -262,7 +262,7 @@ fn settings() -> Vec<SettingDescriptor> {
         // The selection filter (docs/adr/0187 §5): off at the start of every session; its kinds are the session's.
         boolean("drafting.selectFilter", false)
             .scope(SettingScope::Session)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Seçim süzgeci",
                 "Açıkken yalnız süzgeçte işaretli türlerin nesneleri seçilir: tıklama, pencere ve kesişim, seçim araçları, Tümünü seç, Ters çevir ve komutların nesne seçme adımı.",
@@ -347,7 +347,7 @@ fn settings() -> Vec<SettingDescriptor> {
         number("snap.gridEast", 1)
             .range(0.001, 100_000.0)
             .unit("m")
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Karelaj aralığı Y",
                 "Karelaj düğümleri arasındaki doğu (Y) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
@@ -355,27 +355,27 @@ fn settings() -> Vec<SettingDescriptor> {
         number("snap.gridNorth", 1)
             .range(0.001, 100_000.0)
             .unit("m")
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Karelaj aralığı X",
                 "Karelaj düğümleri arasındaki kuzey (X) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
             ),
         boolean("snap.self", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Çizilmekte olan nesneye",
                 "Çizilen yolun önceki köşelerine ve kenarlarına da kenetlenir.",
             ),
         integer("snap.scaleMin", 0)
             .range(0.0, 100_000_000.0)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kenedin en yakın ölçeği",
                 "Görünüm 1:N'den yakınken kenet kapalı (N bu değer); 0: sınır yok.",
             ),
         integer("snap.scaleMax", 0)
             .range(0.0, 100_000_000.0)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Kenedin en uzak ölçeği",
                 "Görünüm 1:N'den uzakken kenet kapalı (N bu değer); 0: sınır yok.",
@@ -394,7 +394,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("highContrast", "Yüksek karşıtlık"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Tema",
             "Arayüzün renkleri: koyu grafit, açık pafta, karanlık odada parlamayan gece ya da siyah zeminli yüksek karşıtlık.",
@@ -416,7 +416,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ])
             .color()
             .version(2)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Vurgu rengi",
                 "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar. Hazır renklerden biri ya da #RRGGBB; renk temanın zemininde okunur kalacak kadar ayarlanır.",
@@ -434,7 +434,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("system", "Sistem yazı tipi"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Yazı tipi",
             "Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları; çizimdeki yazı nesneleri etkilenmez.",
@@ -444,7 +444,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "plexMono",
             &[("plexMono", "IBM Plex Mono"), ("jetbrains", "JetBrains Mono")],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Eş aralıklı yazı",
             "Komut satırının, koordinatların ve ifade alanlarının yazısı.",
@@ -453,7 +453,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .range(11.0, 18.0)
             .unit("px")
             .version(2)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Yazı boyutu",
                 "Menüler, paneller ve komut satırı; arayüz onunla büyür. Çizim etiketleri etkilenmez.",
@@ -469,7 +469,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("round", "Yuvarlak"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Köşeler",
             "Düğmelerin, alanların, menülerin ve pencerelerin köşeleri: klasik CAD gibi keskin, yumuşak ya da yuvarlak.",
@@ -479,7 +479,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "soft",
             &[("off", "Kapalı"), ("soft", "Hafif"), ("strong", "Belirgin")],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Gölgeler",
             "Menülerin, açılır listelerin, ipuçlarının ve pencerelerin gölgesi; yerleşik paneller her zaman düzdür.",
@@ -509,10 +509,10 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("full", "Tam ekran"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text("Artı imleç", "Çizim alanındaki imlecin kol uzunluğu."),
         boolean("appearance.startScreen", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Başlangıç ekranı",
                 "Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir.",
@@ -532,7 +532,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "dms",
             &[("dms", "Derece, dakika, saniye"), ("dd", "Ondalık derece")],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Coğrafi koordinatlar",
             "İkinci koordinat sistemi coğrafiyken enlem ve boylamın yazılışı: 40°45′12.3456″K ya da 40.7534293°K.",
@@ -555,7 +555,7 @@ fn settings() -> Vec<SettingDescriptor> {
         // ── New projects ────────────────────────────────────────────────
         integer("newProjects.srid", 5256)
             .range(1.0, 999_999.0)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Koordinat sistemi (EPSG)",
                 "Yeni projelerde önerilen koordinat sistemi; açık projenin sistemi değişmez.",
@@ -565,7 +565,7 @@ fn settings() -> Vec<SettingDescriptor> {
             "gis",
             &[("cad", "CAD"), ("gis", "CBS")],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Proje türü",
             "Yeni proje sihirbazında önce seçili gelen tür: proje kendi türünü saklar.",
@@ -581,31 +581,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("ft", "Ayak"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Çizim birimi",
             "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar.",
         ),
         choice("newProjects.drawingFont", "arial", DRAWING_FONTS)
             .font()
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Çizim yazı tipi",
                 "Yeni projelerin çizim yazı tipi; proje kendi yazı tipini saklar.",
             ),
         // ── Graphics ────────────────────────────────────────────────────
-        choice(
-            "graphics.backend",
-            "webgl2",
-            &[("webgl2", "WebGL2"), ("webgpu", "WebGPU")],
-        )
-        .scope(SettingScope::Device)
-        .hosts(&[Web])
-        .apply(SettingApply::Recreate)
-        .text(
-            "Çizim arka ucu",
-            "WebGL2 tüm güncel tarayıcılarda çalışır; WebGPU yeni nesil arayüzdür. Başlatılamazsa WebGL2'ye dönülür.",
-        ),
         integer("graphics.msaa", 4)
             .steps(&[
                 (json!(1), "Kapalı"),
@@ -616,7 +604,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ])
             .unit("sample")
             .scope(SettingScope::Device)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .apply(SettingApply::Recreate)
             .text(
                 "Kenar yumuşatma (MSAA)",
@@ -624,7 +612,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         boolean("graphics.hiDpi", true)
             .scope(SettingScope::Device)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .apply(SettingApply::Recreate)
             .text(
                 "Tam çözünürlük (HiDPI)",
@@ -658,13 +646,13 @@ fn settings() -> Vec<SettingDescriptor> {
             &[("plot", "Çizim ölçeğinde"), ("screen", "Ekranda sabit")],
         )
         // The desktop draws styled layers too (docs/adr/0090).
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Semboller",
             "Çizim ölçeğinde: basılı paftadaki boyları, harita ile büyür ve küçülür. Ekranda sabit: her yakınlıkta aynı boy.",
         ),
         boolean("graphics.lineWeights", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Çizgi kalınlığı",
                 "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir.",
@@ -680,7 +668,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("screen", "Ekranda sabit"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Yazıların boyu",
             "Türe göre: CAD projesinde gerçek boy, CBS projesinde kaybolmasın. Gerçek boy: her yazı çizimdeki boyunda, çizgilerle birlikte büyür ve küçülür; okunamayacak kadar küçük kalan ince bir şerit olarak görünür. Kaybolmasın: ekranda 8 pikselden küçük kalan yazı bu boyda ve birbirinin üstüne binmeden çizilir. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
@@ -691,19 +679,19 @@ fn settings() -> Vec<SettingDescriptor> {
             "color",
             &[("color", "Renkli"), ("mono", "Tek renk"), ("gray", "Gri")],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Renk kipi",
             "Renkli: nesnelerin kendi renkleri. Tek renk: her şey zeminin karşıt renginde. Gri: her renk kendi parlaklığında. Resimler kendi renkleriyle kalır.",
         ),
         boolean("graphics.fills", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Dolgular ve taramalar",
                 "Alan dolguları ve taramalar çizilir. Kapalıyken yalnız çizgiler görünür; resimler görünür kalır.",
             ),
         boolean("graphics.areaEdges", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Alan sınırları",
                 "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
@@ -723,20 +711,20 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Noktaların etiketlerine kodları (Kod özniteliği) adlarından sonra yazılır; etiketi olmayan noktaya yazılmaz. Çizim değişmez.",
             ),
         boolean("graphics.transparency", true)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Saydamlık",
                 "Yarı saydam dolgular ve resimler saydamlıklarıyla çizilir. Kapalıyken tam örtücü çizilir.",
             ),
         // The label engine's views (docs/adr/0212 §4): what was moved or pinned by hand, what found no place.
         boolean("graphics.pinnedLabels", false)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Sabit etiketleri vurgula",
                 "Elle taşınan, döndürülen ya da sabitlenen etiketlerin çevresi vurgu rengiyle çizilir. Çizim değişmez.",
             ),
         boolean("graphics.unplacedLabels", false)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Yerleşmeyen etiketleri göster",
                 "Başka etiketlerle ya da engellerle çakıştığı için yer bulamayan etiketler en iyi yerlerinde kırmızı çizilir. Çizim değişmez.",
@@ -753,14 +741,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("magenta", "Eflatun"),
             ],
         )
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Vurgu rengi",
             "Seçilen ve üzerine gelinen nesnenin vurgusunun rengi.",
         ),
         integer("graphics.highlightWidth", 1)
             .range(1.0, 5.0)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Vurgu kalınlığı",
                 "Seçilen ve üzerine gelinen nesnenin vurgusunun çizgi kalınlığı, piksel.",
@@ -770,7 +758,7 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("project.srid", 5256)
             .range(1.0, 999_999.0)
             .scope(SettingScope::Project)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Koordinat sistemi (EPSG)",
                 "Projenin koordinat sistemi. Atamak koordinatları dönüştürmez.",
@@ -778,7 +766,7 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("project.lengthDecimals", 3)
             .range(0.0, 4.0)
             .scope(SettingScope::Project)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Uzunluk basamağı",
                 "Koordinatlar, kenar uzunlukları ve mesafeler kaç ondalıkla gösterilir; kaynak koordinat değişmez.",
@@ -786,7 +774,7 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("project.areaDecimals", 2)
             .range(0.0, 4.0)
             .scope(SettingScope::Project)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Alan basamağı",
                 "Alanlar kaç ondalıkla gösterilir; kaynak geometri değişmez.",
@@ -801,7 +789,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ],
         )
         .scope(SettingScope::Project)
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text("Alan birimi", "Alanların gösterildiği birim."),
         choice(
             "project.angleUnit",
@@ -809,12 +797,12 @@ fn settings() -> Vec<SettingDescriptor> {
             &[("grad", "Grad"), ("deg", "Derece")],
         )
         .scope(SettingScope::Project)
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text("Açı birimi", "Semt ve açıların gösterildiği birim."),
         number("project.plotScale", 1000)
             .range(1.0, 1_000_000.0)
             .scope(SettingScope::Project)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Pafta ölçeği",
                 "Çizim ölçeğindeki sembollerin ve yazıların basılı boyunu belirler (1:1000 → 1000).",
@@ -830,7 +818,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ],
         )
         .scope(SettingScope::Project)
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(
             "Proje türü",
             "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir.",
@@ -838,7 +826,7 @@ fn settings() -> Vec<SettingDescriptor> {
         choice("project.drawingFont", "barlow", DRAWING_FONTS)
             .font()
             .scope(SettingScope::Project)
-            .hosts(&[Web, Desktop])
+            .hosts(&[Desktop])
             .text(
                 "Çizim yazı tipi",
                 "Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler. Projeyi açan herkes aynı harfleri görür.",
@@ -985,7 +973,7 @@ fn choice(key: &str, default: &str, choices: &[(&str, &str)]) -> Build {
 fn snap_kind(key: &str, default: bool, title: &str, description: &str) -> Build {
     // The desktop's tools snap by the same kinds (docs/adr/0029).
     boolean(key, default)
-        .hosts(&[Web, Desktop])
+        .hosts(&[Desktop])
         .text(title, description)
 }
 

@@ -12,7 +12,7 @@ use iced::widget::{button, row, text};
 use iced::{Center, Element, Task};
 use serde_json::Value;
 
-use kentos_commands::{ResolvedSetting, SettingErrorCode, SettingHost, SettingScope, same_value};
+use kentos_commands::{ResolvedSetting, SettingErrorCode, SettingScope, same_value};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::number::Unit;
@@ -330,17 +330,6 @@ impl App {
                 draft.note = Some((true, format!("“{name}” alınamadı. {}", code.message())));
             }
             Ok((file, diagnostics)) => {
-                // The web's own values (its classic interface, its drawing engine) have
-                // nothing to go to here: said by name, never dropped in silence
-                // (docs/inventory/parity-audit.md A1). The look is shared (docs/adr/0126).
-                let web_only: Vec<String> = file
-                    .user
-                    .keys()
-                    .chain(file.device.keys())
-                    .filter_map(|key| schema().get(key))
-                    .filter(|d| !d.hosts.contains(&SettingHost::Desktop))
-                    .map(|d| d.title.clone())
-                    .collect();
                 let layers = kentos_commands::SettingsLayers {
                     user: file.user,
                     device: file.device,
@@ -366,25 +355,16 @@ impl App {
                     .filter(|d| d.code != SettingErrorCode::UnknownKey)
                     .map(|d| d.key.clone())
                     .collect();
-                let web = if web_only.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        " Web uygulamasına özgü {} değerin masaüstünde karşılığı yok, alınmadı: {}.",
-                        web_only.len(),
-                        web_only.join(", ")
-                    )
-                };
                 draft.note = Some(if left.is_empty() {
                     (
                         false,
-                        format!("“{name}” okundu. Değerleri pencerede; Kaydet ile uygulanır.{web}"),
+                        format!("“{name}” okundu. Değerleri pencerede; Kaydet ile uygulanır."),
                     )
                 } else {
                     (
                         true,
                         format!(
-                            "“{name}” okundu; geçersiz {} değer alınmadı: {}.{web}",
+                            "“{name}” okundu; geçersiz {} değer alınmadı: {}.",
                             left.len(),
                             left.join(", ")
                         ),
@@ -922,13 +902,11 @@ mod tests {
         assert_eq!(said.last(), Some(&"Uygulama ayarları kaydedildi."));
     }
 
-    /// A web settings file: its values the desktop has are taken, the look
-    /// too (docs/adr/0126; an older one's five text sizes as pixels); its own
-    /// (the drawing engine) are said by name, not dropped in silence
-    /// (docs/inventory/parity-audit.md A1); a retired one (the classic
-    /// shell's, docs/adr/0155) is dropped without a word.
+    /// A settings file the removed web app wrote: the values the desktop has are taken, the look
+    /// too (docs/adr/0126; an older one's five text sizes as pixels); its retired keys (the classic
+    /// shell's, docs/adr/0155; the web's drawing back end, docs/adr/9402) are dropped without a word.
     #[test]
-    fn a_web_settings_file_says_what_has_no_place_here() {
+    fn an_older_settings_file_is_read_and_its_retired_keys_dropped() {
         let (mut app, _) = App::boot(None);
         let _ = app.run("tools.options");
         let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter","appearance.uiScale":"large","appearance.shell":"ribbon"},"device":{"graphics.backend":"webgpu"}}"#;
@@ -955,7 +933,7 @@ mod tests {
         assert!(!warn, "nothing invalid");
         assert_eq!(
             note,
-            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 1 değerin masaüstünde karşılığı yok, alınmadı: Çizim arka ucu."
+            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır."
         );
     }
 

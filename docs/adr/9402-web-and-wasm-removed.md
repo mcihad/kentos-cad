@@ -57,6 +57,14 @@ silinen klasörlere yazan, birleşmemiş bir iş yok.
 4. **Kalır:** sunucunun tarayıcı istemcisi (`x-kentos-client: web`) ve ortak tanımdaki `Client::Web`. Tarayıcı
    istemcisi portaldır. Masaüstü kataloğunun tabanı olan `docs/inventory/web.json` BK-23'e (tek masaüstü kataloğu)
    kadar yerinde durur; `apps/web`'in parçası değildir.
+   - **Konaklar.** Komut kataloğunun konak listesinden `web` çıktı (24 komut; `CommandHost` artık `desktop` ve
+     `server`). Ayar şemasında da öyle: 68 ayar `web` ve `desktop` diyordu, artık yalnız `desktop`
+     (`SettingHost`'un tek değeri; ayar tutan başka bir istemci gelince oraya eklenir). Yalnız web'in kullandığı tek
+     ayar, çizim arka ucu (`graphics.backend`: WebGL2 ya da WebGPU), emekli anahtar oldu: eski bir ayar dosyasında
+     bulunursa okunurken sessizce düşer (arayüz kabuğu seçiminin ADR 0155'teki kuralı). Masaüstünün ayar dosyası içe
+     almasındaki “web uygulamasına özgü N değer alınmadı” iletisi kalktı: öyle bir değer artık yok. Ortak
+     durumlarda bu anahtarı örnek alan sekiz durum, kuralları aynı kalarak, masaüstünün aygıt kapsamlı seçenek
+     ayarına (`graphics.scene3dQuality`) taşındı; emekli anahtarın kendi durumu eklendi.
 5. **Geri getirme:** web uygulamasının ve WASM bağlayıcılarının son hâli `b00e8afb6` commit'indedir.
 6. **Bekçi:** `apps/web` ve `crates/wasm` klasörleri geri gelemez (`make guard`). Eski bir daldan gelen birleştirme
    üretilen dosyaları eski yerine yazarsa bekçi kırmızı olur.

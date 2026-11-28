@@ -55,7 +55,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -71,7 +70,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -87,7 +85,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -122,7 +119,6 @@
       "unit": "deg",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -141,7 +137,6 @@
       "unit": "px",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -160,7 +155,6 @@
       "unit": "px",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -176,7 +170,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -192,7 +185,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -208,7 +200,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -299,7 +290,6 @@
       "default": true,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -315,7 +305,6 @@
       "default": true,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -331,7 +320,6 @@
       "default": true,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -347,7 +335,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -363,7 +350,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -408,7 +394,6 @@
       ],
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -424,7 +409,6 @@
       "default": false,
       "scope": "session",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -440,7 +424,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -456,7 +439,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -472,7 +454,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -488,7 +469,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -519,7 +499,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -535,7 +514,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -551,7 +529,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -567,7 +544,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -583,7 +559,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -599,7 +574,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -615,7 +589,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -631,7 +604,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -650,7 +622,6 @@
       "unit": "m",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -669,7 +640,6 @@
       "unit": "m",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -685,7 +655,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -703,7 +672,6 @@
       "max": 100000000.0,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -721,7 +689,6 @@
       "max": 100000000.0,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -755,7 +722,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -815,7 +781,6 @@
       "color": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 2,
@@ -861,7 +826,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -887,7 +851,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -906,7 +869,6 @@
       "unit": "px",
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 2,
@@ -936,7 +898,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -966,7 +927,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1033,7 +993,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1049,7 +1008,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1090,7 +1048,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1140,7 +1097,6 @@
       "max": 999999.0,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1166,7 +1122,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1204,7 +1159,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1259,7 +1213,6 @@
       "font": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1268,31 +1221,6 @@
       "description": "Yeni projelerin çizim yazı tipi; proje kendi yazı tipini saklar.",
       "sensitive": false,
       "apply": "live"
-    },
-    {
-      "key": "graphics.backend",
-      "type": "enum",
-      "default": "webgl2",
-      "choices": [
-        {
-          "value": "webgl2",
-          "label": "WebGL2"
-        },
-        {
-          "value": "webgpu",
-          "label": "WebGPU"
-        }
-      ],
-      "scope": "device",
-      "hosts": [
-        "web"
-      ],
-      "version": 1,
-      "group": "graphics",
-      "title": "Çizim arka ucu",
-      "description": "WebGL2 tüm güncel tarayıcılarda çalışır; WebGPU yeni nesil arayüzdür. Başlatılamazsa WebGL2'ye dönülür.",
-      "sensitive": false,
-      "apply": "recreate"
     },
     {
       "key": "graphics.msaa",
@@ -1323,7 +1251,6 @@
       "unit": "sample",
       "scope": "device",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1339,7 +1266,6 @@
       "default": true,
       "scope": "device",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1409,7 +1335,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1425,7 +1350,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1459,7 +1383,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1489,7 +1412,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1505,7 +1427,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1521,7 +1442,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1567,7 +1487,6 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1583,7 +1502,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1599,7 +1517,6 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1641,7 +1558,6 @@
       ],
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1659,7 +1575,6 @@
       "max": 5.0,
       "scope": "user",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1677,7 +1592,6 @@
       "max": 999999.0,
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1695,7 +1609,6 @@
       "max": 4.0,
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1713,7 +1626,6 @@
       "max": 4.0,
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1743,7 +1655,6 @@
       ],
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1769,7 +1680,6 @@
       ],
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1787,7 +1697,6 @@
       "max": 1000000.0,
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1821,7 +1730,6 @@
       ],
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,
@@ -1876,7 +1784,6 @@
       "font": true,
       "scope": "project",
       "hosts": [
-        "web",
         "desktop"
       ],
       "version": 1,

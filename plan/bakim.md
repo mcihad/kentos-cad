@@ -383,13 +383,12 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   satırların sayısı (`apps/web` 484, `wasm` 319) yalnız azalır. Kanıt: çalışma alanı bütün hedefleriyle derlendi;
   masaüstü çekirdeğinin ve dört modül paketinin bütün sınamaları koşuldu (çekirdekte bu daldan önce kırmızı olan iki
   sınama dışında yeşil); portalın tür denetimi, sınamaları ve paketi değişmedi; SDK ve manifest denetimleri yeşil.
-- [~] **BK-86 — Katalogda `web` konağı.** Yapılan (`f6809f193`): `CommandHost`'tan `Web` çıktı; 24 komutun konağı
-  yalnız `desktop`; katalogda tam 24 satır değişti, SDK ve manifest aynı çıktı. Sunucunun tarayıcı istemcisi
+- [x] **BK-86 — Konaklardan `web` çıktı.** Komut kataloğu (`f6809f193`): `CommandHost`'tan `Web` çıktı; 24 komutun
+  konağı yalnız `desktop`; katalogda tam 24 satır değişti, SDK ve manifest aynı çıktı. Ayar şeması: 68 ayar artık
+  yalnız `desktop`; yalnız web'in kullandığı `graphics.backend` emekli anahtar (eski dosyada sessizce düşer, ADR 0155
+  kuralı); masaüstünün içe almasındaki “web'e özgü değer” iletisi kalktı. Ortak durumlarda o anahtarı örnek alan
+  sekiz durum `graphics.scene3dQuality`'ye taşındı, emekli anahtarın durumu eklendi. Sunucunun tarayıcı istemcisi
   (`x-kentos-client: web`, `Client::Web`) kalır: o portaldır.
-  - Kalan: ayar şemasının konakları. 86 ayarın 68'i `web` ve `desktop`, 17'si `desktop`, biri yalnız `web`
-    (`graphics.backend`). Masaüstünün ayar dosyası içe alması web'e özgü ayarı adıyla söylüyor
-    (`apps/desktop/src/shell/settings_view.rs`); `SettingHost::Web` kalkarsa eski bir web ayar dosyasındaki bu
-    anahtar “bilinmeyen anahtar” olur. Davranış değişikliği olduğu için ayrı dilimdir.
 - [~] **BK-87 — Kurallar ve belgeler.** Yapılan: CLAUDE.md bugünkü durumu söylüyor (kaldırma, kataloğun yeri,
   TypeScript kuralı, bekçi; `native/WASM` koşulu çıktı); kılavuz §4 tarih olarak işaretlendi (koddaki 14 “§4.N”
   atfının gösterdiği davranış kuralları masaüstünde geçerli); envanter belgesi dondurulmuş olduğunu söylüyor;

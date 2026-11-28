@@ -484,9 +484,10 @@ pub const RENAMED: &[(&str, &str)] = &[
 
 /// Keys earlier versions kept settings under that no longer mean anything:
 /// dropped as they are read, without a report (a key from a newer version is
-/// kept and reported). The web's shell, since it shows the ribbon only
-/// (docs/adr/0155).
-pub const RETIRED: &[&str] = &["appearance.shell"];
+/// kept and reported). The interface's shell, since the ribbon is the only one
+/// (docs/adr/0155); the drawing back end of the web app, since that app is
+/// removed (docs/adr/9402).
+pub const RETIRED: &[&str] = &["appearance.shell", "graphics.backend"];
 
 /// Values earlier versions kept that no longer mean anything: dropped as they
 /// are read, without a report, so the default applies. The former Hibrit

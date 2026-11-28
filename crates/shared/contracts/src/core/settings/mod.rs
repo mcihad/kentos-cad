@@ -101,12 +101,12 @@ pub enum SettingApply {
     Restart,
 }
 
-/// An app that uses a setting. A file keeps the values other hosts use.
+/// An app that uses a setting. A file keeps the values other hosts use. The desktop programs are the only host
+/// today (the web app is removed, docs/adr/9402); another client that keeps typed settings is named here.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum SettingHost {
-    Web,
     Desktop,
 }
 

@@ -430,7 +430,7 @@ fn every_setting_is_described_completely() {
         }
     }
     // The graphics settings are the device's (TODOS.md §7), the project's stay in the project.
-    for key in ["graphics.msaa", "graphics.hiDpi", "graphics.backend"] {
+    for key in ["graphics.msaa", "graphics.hiDpi", "graphics.scene3dQuality"] {
         assert_eq!(schema.get(key).map(|d| d.scope), Some(SettingScope::Device));
     }
     for key in ["project.srid", "project.drawingFont"] {

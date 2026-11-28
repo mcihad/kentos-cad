@@ -1,7 +1,7 @@
 {
   "format": "kentos.settings-cases",
   "version": 1,
-  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126), emekli anahtarlar sessizce düşer (ADR 0155). presets: hazır ayarın tanınması ve doldurduğu değerler. chords: kısayolun tek yazılışı ve KentOS'un kendine ayırdığı tuşlar; aliases: takma adın Türkçe büyük harfle saklanışı (ADR 9308; web dondurulduğu için yalnız Rust çalıştırıcısı okur). Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
+  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Kuralların tek uygulaması crates/shared/contracts/src/core/settings'tedir (masaüstü ve ileride sunucu aynı kodu çağırır); tests/settings.rs bu dosyayı okur. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126), emekli anahtarlar sessizce düşer (ADR 0155). presets: hazır ayarın tanınması ve doldurduğu değerler. chords: kısayolun tek yazılışı ve KentOS'un kendine ayırdığı tuşlar; aliases: takma adın Türkçe büyük harfle saklanışı (ADR 9308). Kural değişikliği kodda ve burada birlikte yapılır.",
   "values": [
     { "name": "anahtar açık", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
     { "name": "vurgu: hazır renk", "key": "appearance.accent", "value": "navy", "expect": { "value": "navy" } },
@@ -37,10 +37,10 @@
     { "name": "MSAA 2.5: önce tam sayı", "key": "graphics.msaa", "value": 2.5, "expect": { "error": "not_integer" } },
     { "name": "MSAA \"4\" metin", "key": "graphics.msaa", "value": "4", "expect": { "error": "wrong_type" } },
     { "name": "MSAA 4.0 = 4", "key": "graphics.msaa", "value": 4.0, "expect": { "value": 4 } },
-    { "name": "seçenek", "key": "graphics.backend", "value": "webgpu", "expect": { "value": "webgpu" } },
-    { "name": "seçenek: büyük harf başka değerdir", "key": "graphics.backend", "value": "WebGPU", "expect": { "error": "not_allowed" } },
-    { "name": "seçenek: boş metin", "key": "graphics.backend", "value": "", "expect": { "error": "not_allowed" } },
-    { "name": "seçenek: sayı değil", "key": "graphics.backend", "value": 2, "expect": { "error": "wrong_type" } },
+    { "name": "seçenek", "key": "graphics.scene3dQuality", "value": "balanced", "expect": { "value": "balanced" } },
+    { "name": "seçenek: büyük harf başka değerdir", "key": "graphics.scene3dQuality", "value": "Balanced", "expect": { "error": "not_allowed" } },
+    { "name": "seçenek: boş metin", "key": "graphics.scene3dQuality", "value": "", "expect": { "error": "not_allowed" } },
+    { "name": "seçenek: sayı değil", "key": "graphics.scene3dQuality", "value": 2, "expect": { "error": "wrong_type" } },
     { "name": "seçenek: nesne değil", "key": "appearance.theme", "value": { "value": "dark" }, "expect": { "error": "wrong_type" } },
     { "name": "ondalıklı sayı", "key": "project.plotScale", "value": 2500.5, "expect": { "value": 2500.5 } },
     { "name": "ondalıklı sayı: sıfır aralık dışı", "key": "project.plotScale", "value": 0, "expect": { "error": "out_of_range" } },
@@ -72,7 +72,7 @@
     { "name": "tercih oturumda geçersiz kılınır", "layer": "session", "key": "drafting.cursorInput", "value": false, "expect": { "value": false } },
     { "name": "cihaz ayarı kullanıcı katmanına yazılmaz", "layer": "user", "key": "graphics.msaa", "value": 4, "expect": { "error": "wrong_scope" } },
     { "name": "cihaz ayarı cihazda", "layer": "device", "key": "graphics.msaa", "value": 8, "expect": { "value": 8 } },
-    { "name": "cihaz ayarı oturumda geçersiz kılınır (?renderer=)", "layer": "session", "key": "graphics.backend", "value": "webgpu", "expect": { "value": "webgpu" } },
+    { "name": "cihaz ayarı oturumda geçersiz kılınır", "layer": "session", "key": "graphics.scene3dQuality", "value": "fast", "expect": { "value": "fast" } },
     { "name": "oturum ayarı cihaza yazılmaz", "layer": "device", "key": "drafting.ortho", "value": true, "expect": { "error": "wrong_scope" } },
     { "name": "oturum ayarı kullanıcıya yazılmaz", "layer": "user", "key": "drafting.polar", "value": true, "expect": { "error": "wrong_scope" } },
     { "name": "oturum ayarı oturumda", "layer": "session", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
@@ -113,8 +113,8 @@
     },
     {
       "name": "oturum cihazı geçersiz kılar",
-      "layers": { "device": { "graphics.backend": "webgl2" }, "session": { "graphics.backend": "webgpu" } },
-      "expect": { "graphics.backend": { "requested": "webgpu", "source": "session", "effective": "webgpu" } },
+      "layers": { "device": { "graphics.scene3dQuality": "high" }, "session": { "graphics.scene3dQuality": "fast" } },
+      "expect": { "graphics.scene3dQuality": { "requested": "fast", "source": "session", "effective": "fast" } },
       "diagnostics": []
     },
     {
@@ -177,10 +177,10 @@
       "diagnostics": []
     },
     {
-      "name": "tarayıcıda WebGPU yok",
-      "layers": { "device": { "graphics.backend": "webgpu" } },
-      "constraints": { "graphics.backend": { "allowed": ["webgl2"], "reason": "device_unsupported", "detail": "Bu tarayıcı WebGPU sunmuyor." } },
-      "expect": { "graphics.backend": { "requested": "webgpu", "source": "device", "effective": "webgl2", "reason": "device_unsupported" } },
+      "name": "aygıt yüksek kaliteyi çizemiyor",
+      "layers": { "device": { "graphics.scene3dQuality": "high" } },
+      "constraints": { "graphics.scene3dQuality": { "allowed": ["fast"], "reason": "device_unsupported", "detail": "Bu aygıt yalnız hızlı kaliteyi çizebiliyor." } },
+      "expect": { "graphics.scene3dQuality": { "requested": "high", "source": "device", "effective": "fast", "reason": "device_unsupported" } },
       "diagnostics": []
     },
     {
@@ -227,9 +227,9 @@
     },
     {
       "name": "kurumun izin verdiği değerler",
-      "layers": { "device": { "graphics.backend": "webgpu" } },
-      "policy": { "source": "Kurum politikası", "rules": { "graphics.backend": { "allowed": ["webgl2"] } } },
-      "expect": { "graphics.backend": { "requested": "webgpu", "source": "device", "effective": "webgl2", "reason": "organization_limit" } },
+      "layers": { "device": { "graphics.scene3dQuality": "high" } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.scene3dQuality": { "allowed": ["fast"] } } },
+      "expect": { "graphics.scene3dQuality": { "requested": "high", "source": "device", "effective": "fast", "reason": "organization_limit" } },
       "diagnostics": []
     },
     {
@@ -369,9 +369,14 @@
       "expect": { "user": { "appearance.accent": "bordeaux", "appearance.textSize": 17 }, "device": {}, "migrations": 0, "diagnostics": [] }
     },
     {
-      "name": "emekli anahtar sessizce düşer: web'in kabuk seçimi (ADR 0155)",
+      "name": "emekli anahtar sessizce düşer: arayüzün kabuk seçimi (ADR 0155)",
       "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.shell": "classic", "drafting.snapAperture": 14 }, "device": { "appearance.shell": "ribbon" } },
       "expect": { "user": { "drafting.snapAperture": 14 }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "emekli anahtar sessizce düşer: kaldırılan web uygulamasının çizim arka ucu (ADR 9402)",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "drafting.snapAperture": 14 }, "device": { "graphics.backend": "webgpu", "graphics.msaa": 8 } },
+      "expect": { "user": { "drafting.snapAperture": 14 }, "device": { "graphics.msaa": 8 }, "migrations": 0, "diagnostics": [] }
     },
     {
       "name": "emekli değer sessizce düşer, varsayılan geçer: eski Hibrit modu (ADR 0165)",
