@@ -77,7 +77,7 @@ fn positions(n: Node<'_, '_>, r: Reading<'_>) -> Vec<Json> {
         match c.tag_name().name() {
             "posList" => {
                 let nums = numbers(&text_of(c).unwrap_or_default(), cr.bad);
-                if nums.len() % cr.dim != 0 {
+                if !nums.len().is_multiple_of(cr.dim) {
                     cr.bad.set(true);
                 }
                 for p in nums.chunks_exact(cr.dim) {
