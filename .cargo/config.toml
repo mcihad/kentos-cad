@@ -10,5 +10,6 @@ jobs = 4
 # functions overflow the default 2 MB (the MCP acceptance test, the desktop's tests). A test program started by hand,
 # not by cargo, needs the variable given.
 RUST_MIN_STACK = "67108864"
-# ts-rs writes the TypeScript contract types here (crates/shared/contracts, `cargo test`).
-TS_RS_EXPORT_DIR = { value = "apps/web/src/contracts/generated", relative = true }
+# ts-rs writes the cloud portal's TypeScript contract types here (crates/shared/contracts, `cargo test`): the types
+# the portal names and what they are made of, no others (docs/adr/9402).
+TS_RS_EXPORT_DIR = { value = "apps/portal/src/api/generated", relative = true }

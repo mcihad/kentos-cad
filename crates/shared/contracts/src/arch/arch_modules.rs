@@ -9,9 +9,6 @@
 //! (docs/adr/0796, KCAD 152): a module may span several levels (a duplex, a stair core), each member on its storey above
 //! the instance's base level.
 
-#[cfg(feature = "ts")]
-use ts_rs::TS;
-
 use serde::{Deserialize, Serialize};
 
 use crate::{ArchPhase, Entity, Vec2};
@@ -26,10 +23,8 @@ pub const MAX_MODULE_STOREYS: u32 = 16;
 /// One object of a module's definition: its key (the id of the object it was taken from) and the object in the
 /// definition's frame, its level and phase left to the instance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleMember {
     pub key: String,
     pub entity: Entity,
@@ -38,16 +33,13 @@ pub struct ModuleMember {
     /// dimension or a text follows what it is on.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     pub storey: u32,
 }
 
 /// One object of an instance: the definition's key and the drawing object that stands for it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleObject {
     pub key: String,
     pub uid: String,
@@ -58,10 +50,8 @@ pub struct ModuleObject {
 /// turns its side and its single doors' hands over) among the instance's walls: each instance's run is a run of its own,
 /// following its own walls; its objects are the run's, not the module's members.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleRun {
     /// Its key: the id of the run it was taken from.
     pub key: String,
@@ -69,22 +59,17 @@ pub struct ModuleRun {
     /// Its storey above the instance's base level (docs/adr/0796 §1), as a member's.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     pub storey: u32,
 }
 
 /// How an instance numbers its spaces, openings and tags' marks: the definition's number with a prefix and a suffix.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleNumbering {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub prefix: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub suffix: Option<String>,
 }
 
@@ -106,10 +91,8 @@ impl ModuleNumbering {
 
 /// Why an instance's link broke: its module's definition was removed; its objects stay as they last were.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ModuleBreak {
     SourceGone,
 }
@@ -118,39 +101,30 @@ pub enum ModuleBreak {
 /// its own y axis, before the turn), its level and phase, its numbering, the definition's version it took, its
 /// objects and the keys it keeps as its own.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleInstance {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     pub rotation: f64,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phase: Option<ArchPhase>,
     #[serde(default, skip_serializing_if = "ModuleNumbering::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<ModuleNumbering>", optional))]
     pub numbering: ModuleNumbering,
     /// The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
     /// placed again is another flat. None: its spaces keep the definition's group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     /// One storey of a module of several (docs/adr/0811): the instance holds only the
     /// definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub storey: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -158,14 +132,11 @@ pub struct ModuleInstance {
     pub members: Vec<ModuleObject>,
     /// Its kitchen runs (docs/adr/8050 §5): the definition's run key and the id of the instance's run.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleObject>>", optional))]
     pub runs: Vec<ModuleObject>,
     /// The keys it keeps as its own: its objects' and its runs'.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub exceptions: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<ModuleBreak>,
 }
 
@@ -180,27 +151,21 @@ fn is_zero_u32(v: &u32) -> bool {
 /// A room module: its id and name, its definition's version and members, and its instances. A removed module keeps
 /// its instances, broken, and no members.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchModule {
     pub id: String,
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub version: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleMember>>", optional))]
     pub members: Vec<ModuleMember>,
     /// Its kitchen runs (docs/adr/8050 §5, KCAD 245).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleRun>>", optional))]
     pub runs: Vec<ModuleRun>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleInstance>>", optional))]
     pub instances: Vec<ModuleInstance>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub removed: bool,
 }
 

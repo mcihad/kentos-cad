@@ -6,8 +6,6 @@
 //! `fixtures/commands/v1/road.stakeout.query.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{RoadSource, RoadSurfaceSource};
 
@@ -17,10 +15,8 @@ pub const ROAD_STAKEOUT_QUERY_VERSION: u32 = 1;
 /// How the table gives the offsets: as the plan (grid) lengths, or as ground lengths (each over the line's scale and
 /// the project's mean height's factor).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StakeoutDistances {
     #[default]
     Grid,
@@ -29,10 +25,8 @@ pub enum StakeoutDistances {
 
 /// A point's side of the axis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StakeSide {
     Left,
     Axis,
@@ -50,29 +44,22 @@ pub enum StakeSide {
 /// one scale at a point). Warnings: the corridor's own (`corridor_stale`, `corridor_gap`, `corridor_unsolved`,
 /// `corridor_folded`, …), `stakeout_unsolved` (stations with no section, which give no points).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutQuery {
     pub corridor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub codes: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "is_grid")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<StakeoutDistances>", optional))]
     pub distances: StakeoutDistances,
 }
 
@@ -83,10 +70,8 @@ fn is_grid(d: &StakeoutDistances) -> bool {
 /// A stakeout point: its station and km, its region, its code and side, its offset from the axis (right positive; on
 /// the grid), its plan place and elevation, and its offset as a ground length where the table asks for it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -104,17 +89,14 @@ pub struct StakeRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub z: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ground_offset: Option<f64>,
 }
 
 /// An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutVolume {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
@@ -126,33 +108,26 @@ pub struct StakeoutVolume {
 /// profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
 /// earthwork volumes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutSources {
     pub corridor: RoadSource,
     pub alignment: RoadSource,
     pub profile: RoadSource,
     pub templates: Vec<RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<RoadSurfaceSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StakeoutVolume>>", optional))]
     pub volumes: Vec<StakeoutVolume>,
 }
 
 /// Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in
 /// station order (a station shared by two regions once for each), left to right.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutQueried {
     pub corridor: String,
     pub name: String,
@@ -173,10 +148,8 @@ pub const ROAD_STAKEOUT_SEND_VERSION: u32 = 1;
 /// as strings, what Trimble Access, Leica Captivate and Topcon MAGNET read), or the points to an instrument's
 /// coordinate file (docs/adr/0169 §4's writers).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StakeoutSendFormat {
     Landxml,
     Gsi16,
@@ -201,50 +174,38 @@ pub enum StakeoutSendFormat {
 /// off), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's
 /// systems in its `CoordinateSystem`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutSend {
     pub corridor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub codes: Option<Vec<String>>,
     pub format: StakeoutSendFormat,
     pub path: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub first: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub job: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
 }
 
 /// A point the format did not carry: its name and why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutLeft {
     pub name: String,
     pub problem: String,
@@ -254,10 +215,8 @@ pub struct StakeoutLeft {
 /// those left out, the codes left off, the strings (LandXML), the alignment and the profile written (LandXML), its
 /// bytes and SHA-256.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutSent {
     pub path: String,
     pub format: StakeoutSendFormat,
@@ -273,10 +232,8 @@ pub struct StakeoutSent {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub strings: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignment: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,

@@ -8,14 +8,10 @@
 //! §Sapmalar). `libm` keeps native and WASM bit for bit equal.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// A transverse Mercator projection (TM3 zones, UTM): what `geo/crs.ts` holds.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct TmParams {
     /// Degrees east of Greenwich.
     pub central_meridian: f64,

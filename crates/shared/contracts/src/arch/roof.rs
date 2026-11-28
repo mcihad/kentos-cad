@@ -46,7 +46,6 @@ pub const MAX_ROOF_LAYER: f64 = 1.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RoofLayerKind {
     Covering,
     Battens,
@@ -96,7 +95,6 @@ impl RoofLayerKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoofLayer {
     pub kind: RoofLayerKind,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -131,7 +129,6 @@ pub const DEFAULT_SNOW_GUARD: f64 = 0.3;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RoofPartKind {
     /// Duman bacası: its top 0.80 m over the ridge unless given.
     #[default]
@@ -171,7 +168,6 @@ impl RoofPartKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoofPart {
     pub kind: RoofPartKind,
     /// Its middle in plan.
@@ -217,7 +213,6 @@ fn is_zero(v: &f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoofFields {
     /// Its eaves line, closed: at least three points, either way round.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -539,7 +534,6 @@ pub fn needs_roof_edges(e: &crate::Entity) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoofEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

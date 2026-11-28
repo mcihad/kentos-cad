@@ -2,15 +2,11 @@
 //! same in every storey and in the legend.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// What a colour plan colours the rooms by.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ColorScheme {
     /// Kullanım: the room's use as written, else the group its name reads as (oturma, yatma, ıslak hacim …).
     #[default]
@@ -33,10 +29,8 @@ impl ColorScheme {
 
 /// A colour plan: its scheme.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ColorPlan {
     pub scheme: ColorScheme,
 }

@@ -7,8 +7,6 @@
 //! The file reader checks the structure here; the command checks the drawing (that a review note exists).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most deliveries a drawing keeps.
 pub const MAX_DELIVERIES: usize = 1000;
@@ -22,10 +20,8 @@ pub const MAX_DELIVERY_NOTES: usize = 1000;
 /// How a package went to the authority (e-PYS Yönetmeliği 4/3, 6): the ministry's system, the authority's own software
 /// (whose records go to e-PYS, 7/7), on paper by hand (6: with no e-signature, a printed set besides), another way.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DeliveryChannel {
     /// e-PYS.
     #[default]
@@ -59,10 +55,8 @@ impl DeliveryChannel {
 
 /// What came back (e-PYS Yönetmeliği 5/2–3): accepted, or returned with its reasons.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DeliveryOutcome {
     /// Kabul.
     Accepted,
@@ -82,10 +76,8 @@ impl DeliveryOutcome {
 /// The package a delivery took: its publication's manifest's SHA-256, the files it holds, where it was written and the
 /// drawing's revision it was published from.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeliveryPackage {
     /// `yayin.json`'s SHA-256, 64 lowercase hexadecimal digits.
     pub manifest: String,
@@ -94,43 +86,34 @@ pub struct DeliveryPackage {
     pub files: u32,
     /// Its folder, as the author's machine names it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// The drawing's revision it was published from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
 }
 
 /// The authority's answer: accepted or returned, when, why (a return's reason is said), the review notes the reasons are
 /// bound to objects by, and the system's receipt.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeliveryResponse {
     pub outcome: DeliveryOutcome,
     /// The day it came, YYYY-AA-GG.
     pub at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     /// The review notes' ids, each a reason bound to the objects it is about.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub notes: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub receipt: Option<String>,
 }
 
 /// One delivery of the project's package to an authority.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Delivery {
     /// Lowercase, hyphenated UUID; unique in the drawing.
     pub id: String,
@@ -148,14 +131,11 @@ pub struct Delivery {
     pub at: String,
     /// Who published it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub by: Option<String>,
     /// The system's receipt for the delivery.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub receipt: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub response: Option<DeliveryResponse>,
 }
 

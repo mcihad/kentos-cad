@@ -10,8 +10,6 @@
 //! Coordinates are metres on the wire (x east (Y), y north (X)).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -25,10 +23,8 @@ pub const CAD_DIMENSIONS_CREATE_VERSION: u32 = 1;
 
 /// A measured point: coordinates, or a place on an object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MeasuredPoint {
     /// Coordinates: the point follows nothing.
     At {
@@ -45,7 +41,6 @@ pub enum MeasuredPoint {
         place: SubPlace,
         /// When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         path: Vec<u32>,
     },
@@ -54,10 +49,8 @@ pub enum MeasuredPoint {
 /// An object's edge as a click picks it: of the object's edges of the kind
 /// the measure takes (straight, an arc, a circle), the one nearest `near`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EdgeNear {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -70,10 +63,8 @@ pub struct EdgeNear {
 
 /// What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147), Zincir ölçü and Baz ölçü (docs/adr/0320).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionMeasure {
     /// Hizalı: the distance from `a` to `b`.
     Aligned { a: MeasuredPoint, b: MeasuredPoint },
@@ -83,7 +74,6 @@ pub enum DimensionMeasure {
         a: MeasuredPoint,
         b: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
     },
@@ -92,7 +82,6 @@ pub enum DimensionMeasure {
     Ordinate {
         a: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
     },
@@ -104,11 +93,9 @@ pub enum DimensionMeasure {
         a: MeasuredPoint,
         b: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         za: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zb: Option<f64>,
     },
@@ -134,7 +121,6 @@ pub enum DimensionMeasure {
     ArcLength {
         of: EdgeNear,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         between: Option<[Vec2; 2]>,
     },
@@ -180,11 +166,9 @@ pub enum DimensionMeasure {
     Elevation {
         a: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         z: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         level: Option<crate::DimensionLevel>,
     },
 }
@@ -215,10 +199,8 @@ pub enum DimensionMeasure {
 /// `layer_locked`, `invalid_line_weight`); a hidden layer gives a
 /// `layer_hidden` warning; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsCreate {
     pub measure: DimensionMeasure,
     /// Where the dimension goes: its line, its arc or its leader through it.
@@ -230,7 +212,6 @@ pub struct DimensionsCreate {
     /// (out positive), Kırıklı yarıçap's jog along the radius from the
     /// centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     /// The layer the dimension goes to.
@@ -238,27 +219,22 @@ pub struct DimensionsCreate {
     /// The project's dimension style by its name (docs/adr/0183); absent or
     /// “Standart”: Standart.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension_style: Option<String>,
     /// The value's height, metres; absent: the style's at the project's
     /// scale, Standart's the project's Ölçü height (docs/adr/0205).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     /// The value drawn over the drawing's background (Zemin, docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mask: Option<bool>,
     /// The dimension's colour, weight, attributes, label and symbol.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -269,10 +245,8 @@ pub const CAD_DIMENSIONS_INTERIOR_VERSION: u32 = 1;
 
 /// The lines of a crossed wall the chain measures (docs/adr/0711 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum InteriorFaces {
     /// Its two faces.
     #[default]
@@ -283,10 +257,8 @@ pub enum InteriorFaces {
 
 /// What of a crossed column the chain measures (docs/adr/0711 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum InteriorColumns {
     /// A rectangular column's sides the cut crosses; a round column's centre.
     #[default]
@@ -299,10 +271,8 @@ pub enum InteriorColumns {
 
 /// An interior dimension chain along a cut (docs/adr/0711 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsInterior {
     /// The cut's start.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -312,48 +282,38 @@ pub struct DimensionsInterior {
     pub to: Vec2,
     /// Where the chain's line goes: through this point, along the cut; absent: on the cut.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<Vec2>,
     /// A crossed wall's faces (`outer`, absent) or every line between its components (`skins`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub faces: Option<InteriorFaces>,
     /// A crossed column's sides (`ends`, absent), its centre (`centers`) or nothing (`none`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<InteriorColumns>,
     /// Also the overall dimension from the first to the last, one row further (8 paper millimetres), on `at`'s side.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub total: Option<bool>,
     /// Only the walls and columns of this architectural level (its id); absent: every one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// The layer the dimensions go to.
     pub layer_id: String,
     /// The project's dimension style by its name (docs/adr/0183); absent or “Standart”: Standart.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension_style: Option<String>,
     /// The values' height; absent: the style's at the project's scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     /// The values drawn over the drawing's background (Zemin, docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mask: Option<bool>,
     /// The dimensions' colour, weight, attributes, label and symbol.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -365,10 +325,8 @@ pub const CAD_DIMENSIONS_REASSOCIATE_VERSION: u32 = 1;
 /// A dimension's measured point: `a`, `b` or `c` (its third point: an
 /// angle's vertex, a radius's centre and the like).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionPoint {
     A,
     B,
@@ -388,10 +346,8 @@ impl DimensionPoint {
 
 /// A place on an object named by the object's persistent id.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlaceOn {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -399,17 +355,14 @@ pub struct PlaceOn {
     pub place: SubPlace,
     /// When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
 }
 
 /// One point's new binding.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointBinding {
     pub point: DimensionPoint,
     /// The place the point follows from now on; null frees it (it keeps its
@@ -435,10 +388,8 @@ pub struct PointBinding {
 /// `no_such_place` (a place its object does not have, at
 /// `points[i].to.place`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsReassociate {
     /// The dimension's persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -449,17 +400,14 @@ pub struct DimensionsReassociate {
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.dimensions.reassociate` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsReassociated {
     /// The points whose binding or coordinates changed (an undo step was
     /// written when any did).
@@ -477,10 +425,8 @@ pub struct DimensionsReassociated {
 
 /// What `cad.dimensions.reassociate` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsReassociatePlan {
     /// The dimension as execute would write it.
     pub dimension: Entity,
@@ -502,10 +448,8 @@ pub const CAD_DIMENSIONS_EDIT_VERSION: u32 = 1;
 
 /// One edit of `cad.dimensions.edit` (docs/adr/0321 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionEdit {
     /// Ölçü aralığı: the dimensions' lines put `spacing` apart from the base's, each side of it
     /// in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
@@ -517,7 +461,6 @@ pub enum DimensionEdit {
         uids: Vec<String>,
         /// Metres between two lines, 0 or more; absent: three times the base's value height (Baz ölçü's level).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         spacing: Option<f64>,
     },
@@ -527,7 +470,6 @@ pub enum DimensionEdit {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         objects: Option<Vec<String>>,
     },
@@ -580,24 +522,19 @@ pub enum DimensionEdit {
 /// dimension not parallel to its base), `invalid_dimension` (Level's dimension no Kot), `level_not_found` (Level's
 /// level not the project's). Break warns `no_crossing` for a dimension no object crosses.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsEdit {
     pub edit: DimensionEdit,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.dimensions.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsEdited {
     /// The dimensions that changed, by their persistent ids, in the input's order.
     pub changed: Vec<String>,
@@ -607,10 +544,8 @@ pub struct DimensionsEdited {
 
 /// What `cad.dimensions.edit` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsEditPlan {
     /// The dimensions that would change, as execute would write them.
     pub dimensions: Vec<Entity>,
@@ -626,24 +561,19 @@ pub const CAD_DIMENSIONS_QUERY_VERSION: u32 = 1;
 /// value it shows (a written value is an override: what it says is not what the geometry measures), and what its
 /// points follow. Refusals: `invalid_uid`, `entity_not_found`, `not_a_dimension`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsQuery {
     /// The dimensions; absent: every dimension of the drawing, in its order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Option<Vec<String>>,
 }
 
 /// What a dimension's points follow.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionBond {
     /// Nothing: its points are free.
     Free,
@@ -657,10 +587,8 @@ pub enum DimensionBond {
 
 /// One dimension as `cad.dimensions.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionRead {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -680,10 +608,8 @@ pub struct DimensionRead {
 
 /// Output of `cad.dimensions.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionsRead {
     pub dimensions: Vec<DimensionRead>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

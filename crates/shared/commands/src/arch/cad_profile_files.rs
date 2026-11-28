@@ -10,8 +10,6 @@
 //! what it names is said.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -54,10 +52,8 @@ pub fn profile_file_name_ok(name: &str) -> bool {
 
 /// What becomes of a value that does not go through a field's new rule.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConvertFail {
     /// The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.
     #[default]
@@ -68,28 +64,22 @@ pub enum ConvertFail {
 
 /// One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ValueMap {
     pub from: String,
     pub to: String,
     /// Another field of the layer whose value decides (a split: one old code becomes two by it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub when_field: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub when_equals: Option<String>,
 }
 
 /// A step of a migration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MigrationStep {
     /// The layer at the path is renamed (its place in the tree stays).
     #[serde(rename_all = "camelCase")]
@@ -147,10 +137,8 @@ impl MigrationStep {
 
 /// The steps that move the data of release `from` to release `to` (`from + 1`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileMigration {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub from: u32,
@@ -305,10 +293,8 @@ fn step_problem(s: &MigrationStep) -> Option<String> {
 
 /// A profile's code and what the institution calls it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MappingCode {
     pub profile: String,
     pub name: String,
@@ -316,10 +302,8 @@ pub struct MappingCode {
 
 /// A profile field's coded values and the institution's codes for them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MappingCodes {
     /// The profile's field name.
     pub field: String,
@@ -328,10 +312,8 @@ pub struct MappingCodes {
 
 /// A profile's field and what the institution calls it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MappingField {
     pub profile: String,
     pub name: String,
@@ -339,31 +321,24 @@ pub struct MappingField {
 
 /// A profile class as the institution keeps it: its layer's path, its fields' names, its codes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MappingClass {
     /// The profile's class id.
     pub class: String,
     /// The institution's layer path; none: the profile's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layer: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MappingField>>", optional))]
     pub fields: Vec<MappingField>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MappingCodes>>", optional))]
     pub codes: Vec<MappingCodes>,
 }
 
 /// An institution's mapping file: its own layer, field and code names for a profile's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileMapping {
     /// `kentos.profile-mapping`.
     pub format: String,
@@ -375,11 +350,9 @@ pub struct ProfileMapping {
     /// The name of the profile it is for.
     pub profile: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub description: String,
     /// The form of the names of the fields the mapping does not write itself (docs/adr/5180); none: the profile's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub names: Option<crate::MappingNames>,
     /// Empty only with `names`: the form alone, every class at the profile's layer path.
     pub classes: Vec<MappingClass>,
@@ -654,10 +627,8 @@ pub fn retire_in(d: &mut FieldDomain, code: &str) -> bool {
 
 /// Where a profile or a mapping is from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileSource {
     /// KentOS's own (`catalog/v1/profiles/`).
     Builtin,
@@ -669,10 +640,8 @@ pub enum ProfileSource {
 
 /// Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileStore {
     /// A file of the `profiller` folder beside the drawing's file (docs/adr/0558).
     #[default]
@@ -686,30 +655,24 @@ pub enum ProfileStore {
 /// folder is the drawing's own (`drawing`): without it the folder is not read. Refusals: none; a file that does not read
 /// is listed with its problem; a folder file whose name and kind the drawing carries too is listed `shadowed`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesList {
     /// The open drawing's own file, an absolute path, when it has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// A profile or a mapping of the list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileListed {
     pub kind: ProfileFileKind,
     pub source: ProfileSource,
     /// The name it is given to the commands by: a built-in's, or the file's up to its suffix.
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub title: String,
     /// A profile's release; a mapping's: 0.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -722,34 +685,27 @@ pub struct ProfileListed {
     pub migrations: u32,
     /// The profile a mapping is for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     /// A project file's path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// Why a file is not usable: it does not read, or does not hold.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
     /// A folder file the drawing's copy of the same name and kind stands for: the commands read the drawing's.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub shadowed: bool,
 }
 
 /// Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and
 /// mappings by name, then the folder's by name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesListed {
     pub items: Vec<ProfileListed>,
     /// The project's folder, when the drawing has a file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub folder: Option<String>,
 }
 
@@ -767,46 +723,35 @@ pub struct ProfilesListed {
 /// `profile_exists` (the drawing), `file_unwritable`. Warnings: `mapping_unchecked` (the profile it is for was not
 /// found), `profile_replaced`, `profile_shadowed` (the drawing and the folder both have one of the name and kind).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesImport {
     /// A JSON file, an absolute path or from the drawing's folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<ProfileMapping>,
     /// The open drawing's own file, an absolute path: the folder is beside it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// A file of the same name is written over (a profile of the same or an earlier release too).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overwrite: Option<bool>,
     /// Where it is kept: the folder (the default) or the drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub store: Option<ProfileStore>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output (and plan) of `cad.profiles.import` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileImported {
     pub kind: ProfileFileKind,
     pub name: String,
@@ -816,7 +761,6 @@ pub struct ProfileImported {
     pub release: u32,
     /// The release of the file it replaced, when it replaced a profile's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub previous_release: Option<u32>,
     /// A profile's classes, a mapping's classes it names.
@@ -829,7 +773,6 @@ pub struct ProfileImported {
     pub store: ProfileStore,
     /// The file written, when it is kept in the folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// Whether a file (or the drawing's copy) was replaced.
     pub replaced: bool,
@@ -845,30 +788,24 @@ pub struct ProfileImported {
 /// carry), `unknown_mapping` (a mapping the drawing does not carry). Warnings: `profile_still_named` (a mapping the
 /// project keeps names the profile, and no other copy of it is left).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesRemove {
     pub kind: ProfileFileKind,
     pub name: String,
     /// The open drawing's own file, an absolute path: its folder is looked in for a file of the same name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output (and plan) of `cad.profiles.remove` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileRemoved {
     pub kind: ProfileFileKind,
     pub name: String,
@@ -877,7 +814,6 @@ pub struct ProfileRemoved {
     pub bytes: u64,
     /// The folder's file of the same name and kind, read from now on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub folder_path: Option<String>,
 }
 
@@ -894,48 +830,37 @@ pub struct ProfileRemoved {
 /// `invalid_revision`, `revision_conflict`, `layer_refused` (a step the drawing refuses; nothing is written). Warnings:
 /// `migration_step_skipped`, `profile_layer_skipped` (a locked layer), `values_unfit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesMigrate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
     /// The release the data is at.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub from: u32,
     /// The release it goes to; none: the profile's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub to: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// The institution's mapping the data is written with (docs/adr/0647 §4): each step is read through it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<ProfileMapping>,
     /// The mapping by its name, from the project's `profiller` folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One step as it was run.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MigratedStep {
     /// The release its migration goes from.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -946,7 +871,6 @@ pub struct MigratedStep {
     pub kind: String,
     /// The layer's id, when the step has a layer and the drawing has it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// Whether it changed the drawing; a step left out is `false`.
     pub applied: bool,
@@ -958,10 +882,8 @@ pub struct MigratedStep {
 
 /// Why a value was not carried through.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LossKind {
     /// The value did not fit the new rule and stays as written.
     Kept,
@@ -971,10 +893,8 @@ pub enum LossKind {
 
 /// Objects whose value did not go through a changed field's new rule.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MigrationLoss {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub migration: u32,
@@ -994,10 +914,8 @@ pub struct MigrationLoss {
 
 /// Output (and plan) of `cad.profiles.migrate` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesMigrated {
     /// Whether anything was written.
     pub changed: bool,
@@ -1013,7 +931,6 @@ pub struct ProfilesMigrated {
     pub objects: u32,
     /// The mapping the steps were read through.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

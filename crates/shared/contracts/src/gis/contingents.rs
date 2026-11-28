@@ -5,8 +5,6 @@
 //! The choices of a group's field are the codes some row allows with the record's other values.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::{LayerField, js_trim};
 
@@ -17,10 +15,8 @@ pub const MOST_COMBINATIONS: usize = 10_000;
 
 /// A group of fields whose values go together.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldGroup {
     /// The group's name, once in the layer.
     pub name: String,
@@ -28,7 +24,6 @@ pub struct FieldGroup {
     pub fields: Vec<String>,
     /// A combination none of its rows allows is refused (advisory: warned).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub restrictive: bool,
     /// The combinations allowed.
     pub rows: Vec<Combination>,
@@ -36,24 +31,19 @@ pub struct FieldGroup {
 
 /// One combination: a cell for each field of its group, in the group's order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Combination {
     pub cells: Vec<Cell>,
     /// The subtype whose records it is for (docs/adr/0422); none: every record's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub subtype: Option<String>,
 }
 
 /// A cell of a combination: a code of its field's list, any value (empty too), or empty.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Cell {
     Any,
     Empty,

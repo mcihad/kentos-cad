@@ -10,8 +10,6 @@
 //! shows (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -23,10 +21,8 @@ pub const CAD_ENTITIES_STRETCH_VERSION: u32 = 1;
 
 /// The window: the vertices inside it move (its edges count as inside).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StretchWindow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min: Vec2,
@@ -37,19 +33,15 @@ pub struct StretchWindow {
 /// Topolojik düzenleme (docs/adr/0160 §3): the shown objects sharing a
 /// moved vertex go with the stretched ones, in the same step.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StretchTopology {
     /// Noktalar da: a point is a corner too.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub points: bool,
     /// Kilitli komşuda durdur (docs/adr/1261): a neighbour on a locked layer refuses the whole edit
     /// (`shared_boundary_locked`) instead of staying behind with the shared boundary split.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub stop_on_locked: bool,
 }
 
@@ -78,10 +70,8 @@ pub struct StretchTopology {
 /// `nothing_to_stretch` (no object left to stretch); on the desktop also
 /// `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesStretch {
     /// The window over the vertices to move, metres.
     pub window: StretchWindow,
@@ -93,28 +83,23 @@ pub struct EntitiesStretch {
     pub dy: f64,
     /// Only these objects (the selection); absent: every shown object the window meets.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Option<Vec<String>>,
     /// Topolojik düzenleme: the neighbours sharing a moved vertex follow; absent: they stay.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<StretchTopology>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.stretch` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesStretched {
     /// The objects stretched, in the input's (or the drawing's) order.
     pub stretched: Vec<String>,
@@ -123,7 +108,6 @@ pub struct EntitiesStretched {
     /// The objects tied to them that followed at the step's end (docs/adr/0297 §3): associative dimensions,
     /// associative hatches, linked texts; absent: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub dependents: Vec<String>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -132,18 +116,14 @@ pub struct EntitiesStretched {
 
 /// What `cad.entities.stretch` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesStretchPlan {
     /// Source-driven new dependents, with provisional identities (ADR0695).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
     /// Source-driven removed dependents, by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     /// The objects as they would be, with their slots.
     pub stretched: Vec<Entity>,
@@ -152,7 +132,6 @@ pub struct EntitiesStretchPlan {
     /// The objects tied to them as they would follow (docs/adr/0297 §3): associative dimensions, associative
     /// hatches, linked texts; absent: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub dependents: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

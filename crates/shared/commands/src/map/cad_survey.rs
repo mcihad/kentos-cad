@@ -5,8 +5,6 @@
 //! The windows write through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -18,10 +16,8 @@ pub const CAD_SURVEY_POINTS_VERSION: u32 = 1;
 
 /// A known point: a named point of the drawing (its label or its `Ad`, big and small letters alike), or coordinates.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum KnownPoint {
     Named {
         name: String,
@@ -40,17 +36,13 @@ pub enum KnownPoint {
 /// end (none: not sighted back); such a leg's height difference is the mean of its two one-way differences, k falling
 /// out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveyTraverseHeights {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub start: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub end: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
@@ -60,20 +52,14 @@ pub struct SurveyTraverseHeights {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub targets: Vec<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<Option<SurveyBackSight>>>", optional)
-    )]
     pub back: Vec<Option<SurveyBackSight>>,
 }
 
 /// A traverse leg sighted back from its far end (docs/adr/4500): the zenith angle there to the leg's station (in the
 /// project's unit, 0 straight up), the instrument's height at the far end and the target's height at the station (m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveyBackSight {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
     pub zenith: f64,
@@ -85,10 +71,8 @@ pub struct SurveyBackSight {
 
 /// A traverse's shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TraverseShape {
     /// Bağlı: from a known point to another, oriented at the end when `fore` is given.
     Connected,
@@ -100,10 +84,8 @@ pub enum TraverseShape {
 
 /// One shot of Kutupsal alım.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveyShot {
     pub name: String,
     /// The horizontal reading, in the angle unit.
@@ -113,21 +95,17 @@ pub struct SurveyShot {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub distance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
     pub zenith: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub target_height: Option<f64>,
 }
 
 /// What is computed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SurveyWork {
     /// Poligon hesabı (docs/adr/0070): from `start` oriented on `back`, the angles (at the start, at every new point
     /// and, oriented at the end, at the end) and the legs' lengths; a connected traverse ends on `end` (oriented on
@@ -138,21 +116,17 @@ pub enum SurveyWork {
         start: KnownPoint,
         back: KnownPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         end: Option<KnownPoint>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         fore: Option<KnownPoint>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
         angles: Vec<f64>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         distances: Vec<f64>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
         names: Vec<String>,
         /// The new points' heights by trigonometric heighting (docs/adr/4100); none: the points without heights.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         heights: Option<SurveyTraverseHeights>,
     },
     /// Kutupsal alım (docs/adr/0070): from `station` oriented on `back` read at `backReading`, each shot a point;
@@ -162,15 +136,12 @@ pub enum SurveyWork {
         station: KnownPoint,
         back: KnownPoint,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<f64>"))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
         back_reading: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         station_z: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         instrument_height: Option<f64>,
         shots: Vec<SurveyShot>,
@@ -205,57 +176,46 @@ pub enum SurveyWork {
 /// Refusals, in this order: `not_finite`, `point_not_found`, then the computation's (`survey_refused`), then
 /// `cad.entities.create`'s (`layer_locked` …).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveyPoints {
     pub layer_id: String,
     pub work: SurveyWork,
     /// The angles' unit; the project's when none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<crate::AngleUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `cad.survey.points` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveyPointsWritten {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
     pub uids: Vec<String>,
     /// Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
     pub angle_misclosure: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub linear_misclosure: Option<f64>,
     /// Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub height_misclosure: Option<f64>,
     /// Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
     /// al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<f64>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refractions: Vec<Option<f64>>,
     /// The legs' measured refraction coefficients together (docs/adr/4900), when at least one pair gives one: the
     /// value a project may take (`cad.settings.set`'s `refraction`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub refraction: Option<MeasuredRefraction>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -265,21 +225,17 @@ pub struct SurveyPointsWritten {
 /// more their standard deviation s = √(Σ(kᵢ − k̄)²/(n − 1)) and the mean's s/√n. Each pair weighs the same (no source
 /// weighs them otherwise).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MeasuredRefraction {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub mean: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub pairs: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub sd: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub sigma: Option<f64>,
 }

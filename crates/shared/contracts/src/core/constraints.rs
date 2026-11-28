@@ -10,8 +10,6 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::constraint_expr::{
     param_expr_names, param_order, parameter_name_valid, parse_param_expr,
@@ -27,10 +25,8 @@ pub const PARAMETERS_MAX: usize = 10_000;
 
 /// A part of an object a constraint names.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CadElement {
     /// A point: a line's or an arc's start or end, a circle's or an arc's centre, a point object's node, a path's
     /// vertex. Not a place along a curve nor an edge's middle.
@@ -91,10 +87,8 @@ pub enum CadElement {
 
 /// Which line of a wall's edge an architectural constraint names (docs/adr/0770 §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallLine {
     LeftFace,
     RightFace,
@@ -128,10 +122,8 @@ impl WallLine {
 
 /// An opening's jamb: at its start or at its end along its wall (docs/adr/0770 §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JambEnd {
     Start,
     End,
@@ -173,10 +165,8 @@ impl CadElement {
 
 /// A part of an object by the object's persistent id.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElementRef {
     pub uid: EntityId,
     pub element: CadElement,
@@ -184,10 +174,8 @@ pub struct ElementRef {
 
 /// Which way a distance is measured: along the line between its points, or across or along the drawing's axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DistanceAxis {
     #[default]
     Aligned,
@@ -204,10 +192,8 @@ fn aligned(axis: &DistanceAxis) -> bool {
 /// What a constraint holds. The geometric kinds come first in the toolbar's order; the
 /// dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConstraintRule {
     /// A point on a point, or on a segment's line or a circle.
     Coincident {
@@ -218,14 +204,12 @@ pub enum ConstraintRule {
     Horizontal {
         a: ElementRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         b: Option<ElementRef>,
     },
     /// A segment upright, or two points one above the other.
     Vertical {
         a: ElementRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         b: Option<ElementRef>,
     },
     Parallel {
@@ -243,10 +227,8 @@ pub enum ConstraintRule {
         a: ElementRef,
         b: ElementRef,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         inside: bool,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         left: bool,
     },
     Concentric {
@@ -280,10 +262,8 @@ pub enum ConstraintRule {
         a: ElementRef,
         b: ElementRef,
         #[serde(default, skip_serializing_if = "aligned")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<DistanceAxis>", optional))]
         axis: DistanceAxis,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         left: bool,
         parameter: String,
     },
@@ -298,7 +278,6 @@ pub enum ConstraintRule {
             skip_serializing_if = "std::ops::Not::not",
             rename = "reverseA"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional, rename = "reverseA"))]
         reverse_a: bool,
         // A struct variant's fields keep their Rust names under the enum's `rename_all`: named here.
         #[serde(
@@ -306,7 +285,6 @@ pub enum ConstraintRule {
             skip_serializing_if = "std::ops::Not::not",
             rename = "reverseB"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional, rename = "reverseB"))]
         reverse_b: bool,
         parameter: String,
     },
@@ -380,26 +358,21 @@ impl ConstraintRule {
 
 /// One constraint.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Constraint {
     pub id: ConstraintId,
     pub rule: ConstraintRule,
     /// A dimensional constraint that only measures: it never moves anything and its
     /// parameter, read-only, takes the measured value.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reference: bool,
 }
 
 /// What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ParameterKind {
     Length,
     Angle,
@@ -408,44 +381,34 @@ pub enum ParameterKind {
 
 /// A named parameter: a dimensional constraint's own, or the user's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CadParameter {
     pub name: String,
     pub kind: ParameterKind,
     /// Its value as written ([`crate::constraint_expr`]); empty for a reference constraint's parameter, whose value
     /// is measured.
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub expression: String,
     /// The least and the most its value may be, in its own unit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "parameter")))]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "parameter")))]
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub description: String,
 }
 
 /// A drawing's constraints and parameters.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintSet {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CadParameter>>", optional))]
     pub parameters: Vec<CadParameter>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Constraint>>", optional))]
     pub constraints: Vec<Constraint>,
 }
 
@@ -465,10 +428,8 @@ impl ConstraintSet {
 
 /// How a solve ended (docs/adr/0334 §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SolveStatus {
     /// Every constraint holds and nothing can move without breaking one.
     Fully,
@@ -486,10 +447,8 @@ pub enum SolveStatus {
 
 /// What a solve found, by the constraints' and the objects' ids.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintDiagnosis {
     pub status: SolveStatus,
     /// The freedoms left: unknowns less the independent equations.
@@ -497,23 +456,18 @@ pub struct ConstraintDiagnosis {
     pub dof: u32,
     /// Constraints that repeat what the ones before them already say.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
     pub redundant: Vec<ConstraintId>,
     /// Constraints that cannot hold together with the ones before them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
     pub conflicting: Vec<ConstraintId>,
     /// Constraints that lost their meaning (a segment of no length …).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
     pub singular: Vec<ConstraintId>,
     /// Constraints whose objects or parts are gone, or are not what the rule takes.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
     pub broken: Vec<ConstraintId>,
     /// Objects that can still move.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub free: Vec<EntityId>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub iterations: u32,
@@ -524,29 +478,24 @@ pub struct ConstraintDiagnosis {
 /// whether taking it away alone lets the write through. A refusal (`CommandError.bonds`) carries them so that a
 /// program removes the right one (`cad.constraints.edit` `remove`) and the desktop marks them in place.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BondInTheWay {
     pub id: ConstraintId,
     /// Its Turkish name (`Mesafe`, `Sabit`).
     pub label: String,
     /// A distance's parameter (`d1`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parameter: Option<String>,
     /// The wall lines and jambs it names, in the rule's order (`a`, `b`, `axis`).
     pub parts: Vec<ElementRef>,
     /// A distance's value, metres: what it keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub kept: Option<f64>,
     /// A distance's clear distance as the write leaves the drawing before the bonds follow, metres (along the wall
     /// for two jambs); none when its parts no longer fit it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub measured: Option<f64>,
     /// Taking this bond away alone lets the write through.
@@ -555,7 +504,6 @@ pub struct BondInTheWay {
     /// together does, this one in it (docs/adr/0790 §2): two, else three. Empty when a single bond frees it, when no
     /// set within the search's bound does, and on the bonds outside the set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
     pub frees_with: Vec<ConstraintId>,
 }
 

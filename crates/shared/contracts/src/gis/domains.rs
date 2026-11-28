@@ -4,8 +4,6 @@
 //! whenever a list changes, in the same undo step. A field whose list is gone keeps its copy.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::{FieldChoice, LayerField, LayerFieldKind, field_problem};
 use crate::layer::LayerNode;
@@ -18,42 +16,33 @@ const MOST_DESCRIPTION: usize = 500;
 
 /// A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldDomain {
     /// Its stable id: what a field links to.
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// The kind of field it fits: a field linking it is of this kind.
     pub kind: LayerFieldKind,
     /// A coded list's values, in their order (labels, retired codes as a field's list has them).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub values: Option<Vec<FieldChoice>>,
     /// A range's least value, in its canonical text; included.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<String>,
     /// A range's greatest value, in its canonical text; included.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<String>,
     /// `min` itself left out of the range (docs/adr/0438 §4); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub min_exclusive: bool,
     /// `max` itself left out of the range; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub max_exclusive: bool,
     /// The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
 }
 

@@ -13,8 +13,6 @@
 use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::kinds::TextFit;
 use crate::style::{HAlign, TextStyle, VAlign};
@@ -214,9 +212,7 @@ pub fn runs(f: &'static FaceMetrics, text: &str) -> Vec<Run> {
 /// A piece of a text with the face that draws it (`textRuns`): how a host writes a line so that
 /// every letter comes from the drawing's faces, as the PDF writes it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct TextRun {
     pub text: String,
     /// A `DRAWING_FONTS` id.

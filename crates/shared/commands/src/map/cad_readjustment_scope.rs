@@ -18,8 +18,6 @@
 //! `fixtures/commands/v1/cad.readjustment.scope.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_READJUSTMENT_SCOPE: &str = "cad.readjustment.scope";
 pub const CAD_READJUSTMENT_SCOPE_VERSION: u32 = 1;
@@ -34,23 +32,18 @@ pub const CAD_READJUSTMENT_SCOPE_VERSION: u32 = 1;
 /// 1e-6), `invalid_uid`, `entity_not_found` and `not_an_area` (`boundary`), then `invalid_uid`, `entity_not_found` and
 /// `not_a_parcel` (`uids[i]`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReadjustmentScope {
     pub boundary: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub scale: u32,
     pub rounding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -67,10 +60,8 @@ pub struct ReadjustmentScope {
 /// (docs/adr/2680): the parts' corners in their order (each part's rings in order, each ring's corners in order), a
 /// corner met again (the same coordinates exactly) keeping its number; each ring's `numbers` name its corners by them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReadjustmentScopeParcel {
     pub uid: String,
     pub parcel: String,
@@ -81,18 +72,15 @@ pub struct ReadjustmentScopeParcel {
     pub parsel: String,
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recorded_text: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub calculated: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub difference: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub limit: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub within: Option<bool>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub inside: f64,
@@ -103,23 +91,17 @@ pub struct ReadjustmentScopeParcel {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub slivers: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub basis: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub outside_recorded: Option<String>,
     pub status: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub duplicate: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub no_identity: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ScopePart>>", optional))]
     pub parts: Vec<ScopePart>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub points: Vec<[f64; 2]>,
 }
@@ -128,10 +110,8 @@ pub struct ReadjustmentScopeParcel {
 /// the boundary, its area (square metres), its rings. The parts: those inside, then those outside, each side's in the
 /// order of their first corner (east, then north); only the pieces the tolerance counts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScopePart {
     pub side: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -144,19 +124,15 @@ pub struct ScopePart {
 /// its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out. `numbers`
 /// are the corners' point numbers on the separation sheet (the parcel's `points`, from 1; docs/adr/2680).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScopeRing {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub numbers: Vec<u32>,
 }
@@ -167,10 +143,8 @@ pub struct ScopeRing {
 /// metres); the bases' exact sum (decimal text); the counts (whole, partial, with a basis, needing review); the parcels
 /// in the drawing's order (or the uids').
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReadjustmentScoped {
     pub rule: String,
     pub field: String,

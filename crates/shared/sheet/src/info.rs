@@ -4,8 +4,6 @@
 //! of them itself.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::model::{ASSET_MAX_BYTES, BOOK_SCHEMA, TEMPLATE_ASSETS_MAX_BYTES};
 use crate::preflight::PLACEHOLDERS;
@@ -14,9 +12,7 @@ use crate::template::TEMPLATE_SCHEMA;
 use crate::units::Um;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct EngineInfo {
     /// The core's version (`kentos-sheet`).
     pub version: String,

@@ -7,8 +7,6 @@
 //! camera, not the drawing's: no command writes it.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -32,14 +30,11 @@ pub const MOST_VIEW_SIZE: f64 = 2.0e7;
 /// screen's x axis from the world's x (east), counter-clockwise, in radians,
 /// in [0, 2π). A view with twist 0 shows the north up.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NamedView {
     /// Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub id: String,
     /// Trimmed, 1–64 characters, no control characters; unique.
     pub name: String,
@@ -58,7 +53,6 @@ pub struct NamedView {
     /// Its architectural recipe (docs/adr/0774 §1): the level, phase, layer state, categories and scale a sheet's map
     /// linked to it draws with; none: the map's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recipe: Option<ViewRecipe>,
 }
 
@@ -69,10 +63,8 @@ pub const MOST_RECIPE_SCALE: u32 = 100_000;
 
 /// What kind of objects a view leaves out (docs/adr/0774 §1): its own category hide, the model untouched.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ViewCategory {
     /// Dimensions and dimension sets' members.
     Dimensions,
@@ -136,23 +128,18 @@ impl ViewCategory {
 
 /// The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecipeLevel {
     pub id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub below: bool,
 }
 
 /// A reflected ceiling plan's upward view interval above the selected storey's reference floor, metres.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CeilingRange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub low: f64,
@@ -189,71 +176,55 @@ pub const CEILING_SPACE_ATTR: &str = "Tavan mahali";
 /// sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
 /// screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewRecipe {
     /// Upward view; the regular plan is used when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ceiling: Option<CeilingRange>,
     /// 1 for a new recipe, one more at each change; given in an input, it is ignored.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: u32,
     /// The level the map draws; none: the map's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<RecipeLevel>,
     /// The phases it shows (docs/adr/0346 §2); none: the project's phase view.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phase: Option<crate::arch::PhaseView>,
     /// A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_state: Option<String>,
     /// The categories left out, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ViewCategory>>", optional))]
     pub hidden: Vec<ViewCategory>,
     /// The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     /// The walls' detail the map draws (docs/adr/0781 §1);
     /// none: its scale's, or the project's when it fixes one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<crate::arch::WallDetail>,
     /// The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub crop: bool,
     /// The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a
     /// view), each category once, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecipePen>>", optional))]
     pub pens: Vec<RecipePen>,
     /// Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mono: bool,
     /// The view template it follows by its id (docs/adr/0783 §2): the template gives
     /// everything but the level and the crop, which stay the view's. An input may name it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     /// The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionChoice>>", optional))]
     pub options: Vec<crate::OptionChoice>,
     /// The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub combo: Option<String>,
 }
 
@@ -296,10 +267,8 @@ pub const MONO_LINE: &str = "#000000";
 
 /// What a pen draws (docs/adr/0783 §1): the objects of a kind; `others` everything no category names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PenCategory {
     Walls,
     Openings,
@@ -385,20 +354,16 @@ impl PenCategory {
 
 /// A pen of a recipe (docs/adr/0783 §1): a category's paper weight, its colour, or both.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecipePen {
     pub of: PenCategory,
     /// Paper millimetres, 0 to 5; none: the objects' own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub weight: Option<f64>,
     /// `#rrggbb`; none: the objects' own (black with `mono`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
 }
 
@@ -409,10 +374,8 @@ pub fn pen_color_ok(c: &str) -> bool {
 
 /// A view template of the project (docs/adr/0783 §2): a recipe kept under a name, which views follow.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewTemplate {
     /// `t-` and its first name's FNV-1a; kept when renamed.
     pub id: String,
@@ -731,14 +694,12 @@ pub fn sanitized_named_views(views: Vec<NamedView>) -> Vec<NamedView> {
 
 /// What `cad.views.edit` does (docs/adr/0285 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ViewsOp {
     /// Kaydet: a view kept under a name; one of that name is replaced.
     Save {
@@ -751,7 +712,6 @@ pub enum ViewsOp {
         height: f64,
         /// Radians, any turn; kept in [0, 2π). None: 0, the north up.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         twist: Option<f64>,
     },
@@ -771,7 +731,6 @@ pub enum ViewsOp {
         height: f64,
         /// Radians, any turn; kept in [0, 2π). None: the view's own twist.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         twist: Option<f64>,
     },
@@ -780,7 +739,6 @@ pub enum ViewsOp {
     Recipe {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         recipe: Option<ViewRecipe>,
     },
     /// Görünüş şablonu (docs/adr/0783 §2): a template kept or changed under its name (its version one more) or, no
@@ -788,7 +746,6 @@ pub enum ViewsOp {
     Template {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         recipe: Option<ViewRecipe>,
     },
     /// Şablonu yeniden adlandır: its id kept, the views following it too.
@@ -805,39 +762,31 @@ pub enum ViewsOp {
 /// Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe. An area
 /// change (`area`) is one undo step “Görünümün alanı” (docs/adr/0789 §1); the other changes are settings edits.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewsEdit {
     pub edit: ViewsOp,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.views.edit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewsEdited {
     /// The project's named views afterwards, in order.
     pub views: Vec<NamedView>,
     /// The view saved or renamed, as kept; none for a delete.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<NamedView>,
     /// The project's view templates afterwards (docs/adr/0783 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ViewTemplate>>", optional))]
     pub templates: Vec<ViewTemplate>,
     /// The template kept, changed or renamed; none otherwise.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<ViewTemplate>,
     /// Whether the settings changed.
     pub changed: bool,

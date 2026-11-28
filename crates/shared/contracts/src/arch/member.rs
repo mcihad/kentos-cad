@@ -12,7 +12,6 @@ use ts_rs::TS;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Member {
     /// Its IFC 4.3 type ([`Member::TYPES`]): `POST` a post (dikme), `PURLIN` an aşık, `RAFTER` a mertek…;
     /// `USERDEFINED` takes `name` as its object type.

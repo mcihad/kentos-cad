@@ -8,8 +8,6 @@
 //! limits and the rules a file, a command and the server check alike.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The tolerance a new network takes (metres).
 pub const NETWORK_TOLERANCE: f64 = 0.01;
@@ -78,10 +76,8 @@ const EXPRESSION_LENGTH: usize = 1000;
 
 /// A network (docs/adr/0209 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkDef {
     /// Lower-case letters, digits and hyphens; one of its kind in the project.
     pub id: String,
@@ -92,7 +88,6 @@ pub struct NetworkDef {
     pub edges: Vec<NetworkLayer>,
     /// The point layers whose points are junctions, sources or valves.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JunctionLayer>>", optional))]
     pub junctions: Vec<JunctionLayer>,
     pub connect: NetworkConnect,
     /// Metres, within [`NETWORK_TOLERANCES`].
@@ -101,40 +96,32 @@ pub struct NetworkDef {
     pub direction: NetworkDirection,
     /// The costs besides the length, in the order the tools offer them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<NetworkCost>>", optional))]
     pub costs: Vec<NetworkCost>,
     /// An expression: the edges it holds for are out of service, travelled by nothing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub closed: Option<String>,
     /// Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub turns: Option<NetworkTurns>,
     /// Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
     /// one at one level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub levels: Option<NetworkLevels>,
     /// Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which
     /// of them connect through it; a trace goes through a device only along those paths. None: a device is a point.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub terminals: Option<NetworkTerminals>,
     /// Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an
     /// attribute by `cad.subnetworks.update`. None: the network has no subnetworks.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub subnetworks: Option<NetworkSubnetworks>,
     /// Araç profilleri (docs/adr/0567 §1): what a vehicle may travel (its weight, height, width against the edges'
     /// limits; the edges its kind may not) and how fast; a question names one. None: every vehicle the same.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<NetworkProfile>>", optional))]
     pub profiles: Vec<NetworkProfile>,
     /// Tarihli kapanmalar (docs/adr/0567 §2): the edge fields of the first and the last day an edge is closed; a
     /// question with a date passes none closed that day. None: no edge is closed by date.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub closures: Option<NetworkClosures>,
 }
 
@@ -142,22 +129,17 @@ pub struct NetworkDef {
 /// below its value), what forbids an edge to it (a field's values), its top speed and whether it goes against one-way
 /// edges (a pedestrian).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkProfile {
     /// Trimmed, at most 40 characters; one of its kind in the network, Turkish case aside.
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileLimit>>", optional))]
     pub limits: Vec<ProfileLimit>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileForbid>>", optional))]
     pub forbidden: Vec<ProfileForbid>,
     /// The highest speed (km/h) the vehicle goes on any edge: a speed cost's edges slower; none: the edges' own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub top_speed: Option<f64>,
     /// Whether the vehicle goes both ways on one-way edges (closed edges stay closed).
@@ -168,10 +150,8 @@ pub struct NetworkProfile {
 /// A profile's limit: the vehicle's value (tonnes, metres …) against the edge field's: closed where the field reads
 /// a number below it; an empty field, no limit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileLimit {
     pub field: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -180,10 +160,8 @@ pub struct ProfileLimit {
 
 /// What forbids an edge to a profile: the edge field's values (Turkish case aside).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileForbid {
     pub field: String,
     pub values: Vec<String>,
@@ -195,20 +173,16 @@ pub struct ProfileForbid {
 /// any, only in those hours (`22:00-06:00`, `07:00-09:00, 17:00-19:00`; empty: the whole day). An edge whose four
 /// values are all empty is not closed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkClosures {
     pub from: String,
     pub to: String,
     /// The edge field of the weekdays an edge is closed on (docs/adr/0568 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub days: Option<String>,
     /// The edge field of the hours an edge is closed in (docs/adr/0568 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hours: Option<String>,
 }
 
@@ -229,10 +203,8 @@ impl NetworkClosures {
 /// The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and
 /// its end are attached to, and the devices.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkTerminals {
     /// The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.
     pub start: String,
@@ -246,10 +218,8 @@ pub struct NetworkTerminals {
 /// goes on through the device only to a terminal on a path with it; an edge that names none (or one the device does
 /// not have) passes to every terminal and the trace is said to be unverified.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerminalDevice {
     /// A junction layer of the network (its id).
     pub layer: String,
@@ -261,21 +231,17 @@ pub struct TerminalDevice {
     /// a configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the
     /// device's own (an unknown value is said). None: every point has the device's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub by: Option<String>,
     /// The configurations besides the device's own: 1–16 when `by` is named, none otherwise.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerminalConfig>>", optional))]
     pub configs: Vec<TerminalConfig>,
 }
 
 /// A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds
 /// `value` (caseless).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerminalConfig {
     pub value: String,
     /// 2–8 terminals.
@@ -286,10 +252,8 @@ pub struct TerminalConfig {
 
 /// A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeviceTerminal {
     pub id: String,
     pub name: String,
@@ -297,10 +261,8 @@ pub struct DeviceTerminal {
 
 /// Which way a subnetwork reaches from its controller (docs/adr/0557 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SubnetworkReach {
     /// Akış aşağı: the way the edges' directions lead.
     Downstream,
@@ -311,14 +273,11 @@ pub enum SubnetworkReach {
 /// A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a
 /// controller reaches (not past another controller, a closed junction or a closed edge).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkSubnetworks {
     /// The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined
     /// with `; ` where it is in more than one; taken away where it is in none.
@@ -327,16 +286,13 @@ pub struct NetworkSubnetworks {
     /// Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its
     /// own step; when it cannot, the command says `subnetwork_dirty`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep_current: bool,
 }
 
 /// Where U-turns are made (docs/adr/0521 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkUTurns {
     /// Her yerde: at every node.
     Allowed,
@@ -350,32 +306,25 @@ pub enum NetworkUTurns {
 /// pieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the
 /// edge at its start to the edge at its end through their common node: forbidden, or its own delay.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkTurns {
     pub u_turns: NetworkUTurns,
     /// Going straight on (within 30° of the way one came), seconds.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
     pub straight: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
     pub right: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
     pub left: f64,
     /// A U-turn, wherever it is made, seconds.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
     pub back: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TurnLayer>>", optional))]
     pub layers: Vec<TurnLayer>,
 }
 
@@ -386,62 +335,49 @@ fn is_zero(x: &f64) -> bool {
 /// A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;
 /// without a field every turn of the layer is forbidden.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TurnLayer {
     pub layer: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
 }
 
 /// The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else
 /// its ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkLevels {
     pub start: String,
     pub end: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub inside: Option<String>,
 }
 
 /// A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their
 /// speed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkPeriod {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "day-min")))]
     pub from: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "day-min")))]
     pub to: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub factor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
 }
 
 /// Yol ağı or Şebeke: what the tools offer first; the graph is the same.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkKind {
     Road,
     Utility,
@@ -449,43 +385,34 @@ pub enum NetworkKind {
 
 /// An edge layer and, optionally, which of its objects are edges.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkLayer {
     /// The layer's id. A layer the project no longer has is said when the network is built.
     pub layer: String,
     /// An expression: only the objects it holds for; absent: all of them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
 }
 
 /// A junction layer: its points' role and, optionally, which of them it takes and which are closed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionLayer {
     pub layer: String,
     pub role: JunctionRole,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     /// An expression: the junctions it holds for (a closed valve) are passed by no analysis.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub closed: Option<String>,
 }
 
 /// What a junction is (docs/adr/0209 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JunctionRole {
     /// Bağlantı: splits the edges it lies on.
     Junction,
@@ -497,10 +424,8 @@ pub enum JunctionRole {
 
 /// Where edges connect (docs/adr/0209 §3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkConnect {
     /// Uçlarda: at their ends, and an end on another edge splits it there.
     Ends,
@@ -510,10 +435,8 @@ pub enum NetworkConnect {
 
 /// Which way the edges go (docs/adr/0209 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkDirection {
     /// Every edge both ways.
     Both,
@@ -534,10 +457,8 @@ pub enum NetworkDirection {
 
 /// A cost besides the length (docs/adr/0209 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkCost {
     pub name: String,
     pub kind: NetworkCostKind,
@@ -548,21 +469,17 @@ pub struct NetworkCost {
     pub unit: String,
     /// A speed cost's speed (km/h) where the field gives none it can read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
     /// A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the
     /// edges' own speeds. Read when a question gives a time.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<NetworkPeriod>>", optional))]
     pub periods: Vec<NetworkPeriod>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkCostKind {
     /// Süre, minutes: the length over the speed.
     Speed,

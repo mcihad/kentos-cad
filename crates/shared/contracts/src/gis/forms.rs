@@ -13,8 +13,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The forms' format and profile, as a form's tools name them.
 pub const FORMS_PROFILE: &str = "kentos.forms/1 core";
@@ -38,10 +36,8 @@ pub const MOST_FORM_DEPTH: usize = 4;
 
 /// A form of the project.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectForm {
     /// Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.
     pub id: String,
@@ -53,49 +49,39 @@ pub struct ProjectForm {
     pub draft: FormBody,
     /// The frozen releases, oldest first; data entry uses the last.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormRelease>>", optional))]
     pub releases: Vec<FormRelease>,
     /// The latest release's rules hold for every attribute write on the layer (the write profile);
     /// written only as `true`, and only with a release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub enforce: bool,
     /// Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps
     /// what was typed. Written only as `true`, and only with a release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub withdrawn: bool,
     /// The reviewers' comments on the form, oldest first (docs/adr/0441 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormComment>>", optional))]
     pub comments: Vec<FormComment>,
 }
 
 /// A reviewer's comment on a form or one of its items (docs/adr/0441 §5).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormComment {
     /// 1, 2, …: one more than the form's last.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub id: u32,
     /// The item it is about; none: the form.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<String>,
     /// Who wrote it and when (as the command was given them).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub author: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     pub text: String,
     /// Settled; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub resolved: bool,
 }
 
@@ -104,10 +90,8 @@ pub const MOST_FORM_COMMENTS: usize = 200;
 
 /// A form's content: its items and the draft's revision (each kept change adds one).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormBody {
     /// Raised by one with every saved change to the draft: an update names the revision it was made on.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
@@ -116,41 +100,29 @@ pub struct FormBody {
     /// A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
     /// as `true`. Without it a hidden field keeps its value.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub clear_hidden: bool,
     /// The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
     /// them, run again whenever the form changes.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormTest>>", optional))]
     pub tests: Vec<FormTest>,
     /// The records' workflow (docs/adr/0428): their state, the steps between states, the states that
     /// lock a record.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub workflow: Option<FormWorkflow>,
     /// Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with
     /// an error is not left forward. Only a form of tabs; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub steps: bool,
     /// The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its
     /// name and its items' labels and help. Only what is shown changes; the values, codes and rules are
     /// the form's own.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(
-            as = "Option<std::collections::BTreeMap<String, FormTranslation>>",
-            optional
-        )
-    )]
     pub translations: std::collections::BTreeMap<String, FormTranslation>,
     /// Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi
     /// reads and writes, through this form, only the records it holds true for (`@kullanici`,
     /// `@kullanici_eposta` the person signed in). None: every record of the layer. At most
     /// `MOST_SCOPE_LETTERS` letters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<String>,
 }
 
@@ -159,48 +131,32 @@ pub const MOST_SCOPE_LETTERS: usize = 2000;
 
 /// A form's words in one language (docs/adr/0443 §5).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormTranslation {
     /// The form's name; none: its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Item ids to their words.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<std::collections::BTreeMap<String, ItemWords>>", optional)
-    )]
     pub items: std::collections::BTreeMap<String, ItemWords>,
 }
 
 /// An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a
 /// note's text) and its help line.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ItemWords {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub help: Option<String>,
     /// A field's text shown in it while empty.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub placeholder: Option<String>,
     /// A listed field's values' labels by their codes; the codes written are the list's own.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
-    )]
     pub choices: std::collections::BTreeMap<String, String>,
 }
 
@@ -225,10 +181,8 @@ pub fn language_tag_ok(tag: &str) -> bool {
 /// says so and a reason written when it names one; a locked state's record is read-only until a step
 /// takes it out.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormWorkflow {
     /// The state field's key: a single-valued field with a value list.
     pub field: String,
@@ -236,50 +190,41 @@ pub struct FormWorkflow {
     pub initial: String,
     /// The states whose records are read-only.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub locked: Vec<String>,
     /// The steps, in their order (the editor's buttons).
     pub steps: Vec<WorkflowStep>,
     /// A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
     /// the states and the reason; read-only in the form.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub log: Option<String>,
     /// The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own
     /// requirements warn; the layer's and the subtype's still refuse.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub drafts: Vec<String>,
     /// A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the
     /// latest step's notes as canonical JSON (`{"<field key>":"<note>"}`), emptied by a step without;
     /// read-only in the form, shown under the fields.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub notes: Option<String>,
 }
 
 /// One step of a workflow.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkflowStep {
     /// The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.
     pub label: String,
     /// The states it is taken from; empty: any state.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub from: Vec<String>,
     /// The state it leads to.
     pub to: String,
     /// The record must be valid by the form (no error) to take it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub valid: bool,
     /// A text field's key the step writes its reason to; it must be given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
 }
 
@@ -442,57 +387,44 @@ pub const MOST_FORM_TESTS: usize = 50;
 /// A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,
 /// locked, wrote and said for them.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormTest {
     /// Unique in the form; trimmed, 1–64 characters.
     pub name: String,
     /// The values typed, by the layer fields' keys, onto an empty record.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// A new record: the form's defaults fill it. Written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub new: bool,
     pub expect: FormTestExpect,
 }
 
 /// What a scenario expects.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormTestExpect {
     /// The record after the form: its attributes by the fields' names.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub attrs: BTreeMap<String, String>,
     /// The items shown, required and read-only, by their ids in the form's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub shown: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub required: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub read_only: Vec<String>,
     /// What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub issues: Vec<String>,
 }
 
 /// A frozen copy of a form's body: what data entry and the write profile use.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormRelease {
     /// 1, 2, …: one more than the release before.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
@@ -502,21 +434,17 @@ pub struct FormRelease {
     pub body: FormBody,
     /// What changed, as the publisher wrote it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     /// The layer's fields the body binds as they were at publishing ([`bound_fields_digest`]): a
     /// release whose fields changed since is said (docs/adr/0444 §2). None: published before it was kept.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<String>,
 }
 
 /// How a related item shows its objects (docs/adr/0425).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelatedView {
     /// Their names, one a line.
     #[default]
@@ -539,10 +467,8 @@ impl RelatedView {
 /// What a related item lets the record's user do with its children (docs/adr/0762 §1): the form's
 /// offer; whether the user may is asked apart (the child layer's lock, the project role).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelatedAction {
     /// Yeni: a child made, linked to the record.
     Create,
@@ -621,14 +547,12 @@ pub const MOST_RELATED_COUNT: u32 = 1000;
 
 /// An item of a form: a tab (only at the top), a group, a field or a note.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "type",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 // A form's items are data read once per form, never a hot path: a field's settings stay inline.
 #[allow(clippy::large_enum_variant)]
 pub enum FormItem {
@@ -640,31 +564,25 @@ pub enum FormItem {
         items: Vec<FormItem>,
         /// The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
     /// A group: a titled box of items, in one or two columns, that a rule may hide.
     Group {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
         /// 1 or 2; none: 1.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         columns: Option<u8>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
         /// It opens closed (its title opens it); written only as `true`.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         collapsed: bool,
         /// In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else
         /// down the first column, then the second. Written only as `true`.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         across: bool,
         items: Vec<FormItem>,
     },
@@ -678,38 +596,31 @@ pub enum FormItem {
     Related {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
         /// The other layer's id.
         layer: String,
         /// Its field's key that holds this record's id.
         field: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
         /// How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`.
         #[serde(default, skip_serializing_if = "RelatedView::is_list")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<RelatedView>", optional))]
         view: RelatedView,
         /// The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         columns: Vec<String>,
         /// The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it
         /// must have (docs/adr/0444 §1).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         min: Option<u32>,
         /// The most (1–1000): 1 one to one.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         max: Option<u32>,
         /// What it lets do with the children (docs/adr/0762 §1), each once; none: every action but
         /// deleting; empty: the children only listed.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         actions: Option<Vec<RelatedAction>>,
     },
     /// The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
@@ -717,24 +628,19 @@ pub enum FormItem {
     Attachments {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
         /// What counts and is added: every attachment, only photos or only documents and addresses.
         #[serde(default, skip_serializing_if = "AttachmentAccept::is_any")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<AttachmentAccept>", optional))]
         accept: AttachmentAccept,
         /// The fewest (0–100) the record holds while the item is shown.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         min: Option<u32>,
         /// The most (0–100).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         max: Option<u32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
     /// The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its
@@ -742,20 +648,16 @@ pub enum FormItem {
     Location {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
     /// A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.
     Divider {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
     /// An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered
@@ -766,29 +668,23 @@ pub enum FormItem {
         label: String,
         /// What it does; written unless `tool`.
         #[serde(default, skip_serializing_if = "ActionKind::is_tool")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<ActionKind>", optional))]
         kind: ActionKind,
         /// A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted
         /// parts; an extension's tool as `ext.<eklenti>.<araç>` (docs/adr/8057 §12).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(regex(pattern = ACTION_TOOL_TEXT)))]
         tool: Option<String>,
         /// A `step` action's workflow step, by its label.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         step: Option<String>,
         /// Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`.
         #[serde(default, skip_serializing_if = "ActionRuns::is_auto")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<ActionRuns>", optional))]
         runs: ActionRuns,
         /// The extension a `tool` action's extension tool came from when it was chosen (docs/adr/8057
         /// §12); the host says when the one installed differs or is missing.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         pin: Option<ExtensionPin>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
 }
@@ -797,10 +693,8 @@ pub enum FormItem {
 /// model's step. The package's content digest covers the tool's descriptor, its code, its environment's lock and the
 /// capabilities it asks for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtensionPin {
     /// The extension's id (`tr.ornek.vitrin`).
     pub extension: String,
@@ -819,10 +713,8 @@ pub const MOST_EXTENSION_TOOL: usize = 196;
 
 /// What a form action does (docs/adr/0442 §5).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ActionKind {
     /// Opens a registered processing tool with the record chosen; the tool writes by its own rules.
     #[default]
@@ -851,10 +743,8 @@ impl ActionKind {
 
 /// Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ActionRuns {
     #[default]
     Auto,
@@ -930,10 +820,8 @@ pub fn extension_pin_ok(pin: &ExtensionPin, tool: Option<&str>) -> bool {
 
 /// What an attachments item counts and adds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AttachmentAccept {
     /// Photos, files and addresses.
     #[default]
@@ -955,10 +843,8 @@ pub const MOST_FORM_ATTACHMENTS: u32 = 100;
 
 /// A field's list of values from another layer (docs/adr/0404 §1, docs/adr/0439 §1).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormLookup {
     /// The list's layer id.
     pub layer: String,
@@ -966,48 +852,38 @@ pub struct FormLookup {
     pub key: String,
     /// Its field's key shown; none: the key's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookupMatch>>", optional))]
     pub matches: Vec<LookupMatch>,
     /// Asked of each of the list's objects (its fields by name, the project's `@` values).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     /// The list's order (docs/adr/0439 §1): by a field of its layer; none: the labels' natural order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sort: Option<LookupSort>,
     /// Its layer's fields shown beside a value's label in the list and under the chosen value
     /// (docs/adr/0439 §2), in order; at most [`MOST_LOOKUP_COLUMNS`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub columns: Vec<String>,
     /// How many values a page of the list holds (docs/adr/0439 §1): a form's state carries the
     /// first ones and the count of the rest; searching reaches them all. None: every value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     /// The chosen object's fields copied into the record's when the value is chosen (docs/adr/0439
     /// §3): a copy, kept when the source changes.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookupCopy>>", optional))]
     pub copy: Vec<LookupCopy>,
     /// A text field of the record that is told where the copy came from (docs/adr/0439 §3): the
     /// layer, the code, the copied values' fingerprint and the day.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
     /// What a code held by more than one of the list's objects is (docs/adr/0439 §4).
     #[serde(default, skip_serializing_if = "LookupDuplicates::is_warn")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<LookupDuplicates>", optional))]
     pub duplicates: LookupDuplicates,
     /// Only the list's objects standing so to the record's geometry are offered (docs/adr/0439 §5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub spatial: Option<LookupSpatial>,
 }
 
@@ -1022,25 +898,20 @@ pub const MOST_MIN_SEARCH: u32 = 10;
 
 /// A list's order by a field of its layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LookupSort {
     /// The field's key: numbers by value, dates as written, text in natural order; empty ones last.
     pub field: String,
     /// The greatest first; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub descending: bool,
 }
 
 /// A field of the chosen object copied into a field of the record.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LookupCopy {
     /// The list's field's key.
     pub from: String,
@@ -1050,10 +921,8 @@ pub struct LookupCopy {
 
 /// What a code held by more than one of the list's objects is (docs/adr/0439 §4).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LookupDuplicates {
     /// The first object's is taken and a record holding it is warned (`form_lookup_duplicate`).
     #[default]
@@ -1072,15 +941,12 @@ impl LookupDuplicates {
 
 /// The objects of the list a record's geometry takes (docs/adr/0439 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LookupSpatial {
     pub relation: LookupRelation,
     /// How far apart still counts, in the drawing's unit; none: 0 (nearest: any distance).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -1090,10 +956,8 @@ impl Eq for LookupSpatial {}
 
 /// How a list's object stands to the record's geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LookupRelation {
     /// The object holds the record (a building's parcel).
     Contains,
@@ -1136,10 +1000,8 @@ impl LookupRelation {
 
 /// A field of the list's layer that must equal a field of the record.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LookupMatch {
     /// The list's field's key.
     pub field: String,
@@ -1148,7 +1010,6 @@ pub struct LookupMatch {
     /// Compared without regard to case, Turkish letters folded (`İ` and `i`, `I` and `ı`), ends
     /// trimmed (docs/adr/0439 §4); written only as `true`. Numbers are compared by their values.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub fold: bool,
 }
 
@@ -1157,10 +1018,8 @@ pub const LOOKUP_UID: &str = "$uid";
 
 /// A field of a form: the layer's field it edits (by its key) and how.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormField {
     /// The item's id, unique in the form.
     pub id: String,
@@ -1168,106 +1027,84 @@ pub struct FormField {
     pub field: String,
     /// The label; none: the field's alias or name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// A line under the field.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub help: Option<String>,
     /// The empty box's hint.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub placeholder: Option<String>,
     /// How it is edited; none: the field kind's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub widget: Option<FormWidget>,
     /// Shown, never edited; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub read_only: bool,
     /// May not be left empty while shown; written only as `true`. The layer field's own `required`
     /// holds as well.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub required: bool,
     /// Shown only when this expression is true (the record's fields by name).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub visible_when: Option<String>,
     /// Required when this expression is true (and the field is shown).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub required_when: Option<String>,
     /// Locked when this expression is true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub read_only_when: Option<String>,
     /// The value an empty field shows when the form opens, in the field's canonical text; written
     /// only when the record is saved.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub default: Option<String>,
     /// The value of a new record's empty field: an expression over the record (its plain defaults
     /// in), evaluated in the form's order. Not with `default`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub default_expr: Option<String>,
     /// The field's value, worked out from the record at every write; the field is read-only. Not
     /// with `default`, `defaultExpr` or `readOnlyWhen`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub calculate: Option<String>,
     /// Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its
     /// label; a value it is not true for is not offered.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub choice_filter: Option<String>,
     /// No two objects of the layer have the same value (empty ones aside); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unique: bool,
     /// A new record's field opens with the value last written through the form in the session (the
     /// form's interface keeps it); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reuse_last: bool,
     /// The calculation may be overridden (docs/adr/0417): it fills the field while the field is
     /// empty, the field stays open to typing, and emptying it calculates it again. Only with
     /// `calculate`; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overridable: bool,
     /// The layer's values of the field offered while typing, the value staying free (docs/adr/0407
     /// §3): text fields without a list; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub suggest: bool,
     /// The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
     /// `choiceFilter`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub lookup: Option<FormLookup>,
     /// A searched list searches once this many letters are typed (docs/adr/0439 §6); none: from the
     /// first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub min_search: Option<u32>,
     /// What the record must satisfy, in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormCheck>>", optional))]
     pub checks: Vec<FormCheck>,
     /// A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the
     /// field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
     /// only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
     /// Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as
     /// `‹gizli›` in the Python and replay a call is copied as. Written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub redact: bool,
 }
 
@@ -1325,30 +1162,24 @@ impl FormField {
 /// A check of a field: an expression that must be true when the field is shown and filled, and what
 /// the form says when it is not.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormCheck {
     pub rule: String,
     pub message: String,
     /// A soft check: when not true it warns and the record is still written; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub warning: bool,
     /// When it is asked (docs/adr/0438 §2); none: as the value changes. A check asked later is still
     /// asked of every save that reaches it: the moment only says when the form shows it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub on: Option<CheckMoment>,
 }
 
 /// When a check is asked (docs/adr/0438 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CheckMoment {
     /// When the record is saved: not while the value is typed.
     Save,
@@ -1361,10 +1192,8 @@ pub enum CheckMoment {
 
 /// How a field is edited.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormWidget {
     /// One line of text.
     Text,
@@ -1442,10 +1271,8 @@ impl FormWidget {
 
 /// How much an issue weighs: an error stops a save or a publish, a warning is said.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormSeverity {
     Error,
     Warning,
@@ -1454,86 +1281,67 @@ pub enum FormSeverity {
 /// What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,
 /// where (the item, the field's key, the rule) and the sentence that says it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormIssue {
     /// `form_field_unknown`, `form_required`, … (the forms core's `codes`).
     pub code: String,
     pub severity: FormSeverity,
     /// The item it is about.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<String>,
     /// The layer field's key it is about.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     /// The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<String>,
     pub message: String,
 }
 
 /// An item's state for a record: shown (its own rule and its group's), required, read-only.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormItemState {
     pub id: String,
     pub shown: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub required: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub read_only: bool,
     /// The listed values a field with a choice filter offers for the record, in the list's order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub choices: Option<Vec<String>>,
     /// A note's text with the record's values put in (a note whose text has `{…}`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     /// A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub options: Option<Vec<crate::FieldChoice>>,
     /// How many more values the list offers past its page (docs/adr/0439 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub more: Option<u32>,
     /// The chosen object's columns, live (docs/adr/0439 §2): each column's label and its value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub preview: Option<Vec<FormPreviewValue>>,
     /// A related item's objects: their persistent ids (docs/adr/0404 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub related: Option<Vec<String>>,
     /// A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub suggestions: Option<Vec<String>>,
     /// An attachments item's count of what it counts (docs/adr/0407 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub attachments: Option<u32>,
 }
 
 /// A column of the chosen object (docs/adr/0439 §2).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormPreviewValue {
     pub label: String,
     pub value: String,
@@ -2209,10 +2017,8 @@ pub fn forms_of_layer<'a>(forms: &'a [ProjectForm], layer: &str) -> Vec<&'a Proj
 // A form's change between two versions (`cad.forms.compare`, docs/adr/0427): `kentos_forms::compare` writes them.
 /// What happened to an item from one version to the other.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormChangeKind {
     Added,
     Removed,
@@ -2224,23 +2030,18 @@ pub enum FormChangeKind {
 
 /// One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<String>,
     pub kind: FormChangeKind,
     /// The properties that changed, by their names in the form's JSON, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub properties: Vec<String>,
     /// What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
     /// `workflow`, `tests`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub areas: Vec<String>,
     /// Turkish, for people.
     pub words: String,
@@ -2519,10 +2320,8 @@ mod tests {
 
 /// What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelationDelete {
     /// The link stays as it is: a reference to a deleted object.
     Keep,
@@ -2544,10 +2343,8 @@ impl RelationDelete {
 /// A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
 /// persistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectRelation {
     /// Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
     pub id: String,
@@ -2561,11 +2358,9 @@ pub struct ProjectRelation {
     /// The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's
     /// `M1`; none: the parent's persistent id. Written only when given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent_key: Option<String>,
     /// Written only when not `unlink`.
     #[serde(default, skip_serializing_if = "RelationDelete::is_default")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<RelationDelete>", optional))]
     pub on_delete: RelationDelete,
 }
 

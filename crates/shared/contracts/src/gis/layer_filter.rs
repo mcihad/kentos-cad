@@ -6,8 +6,6 @@
 //! reader does not know the language).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::identity::EntityId;
 use crate::layer::{LayerNode, LayerNodeType};
@@ -20,20 +18,16 @@ pub const FILTER_OBJECTS_MAX: usize = 100_000;
 /// A layer's filter (docs/adr/0211 §2): an object passes when the condition
 /// holds for it and, when there is a list, the list names it.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerFilter {
     /// The condition (İfadeyle seç's language, docs/adr/0100): an object
     /// passes when it is true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expression: Option<String>,
     /// Only these objects, by their persistent ids (Seçimden süzgeç); an id
     /// the drawing does not hold is not wrong.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub objects: Vec<EntityId>,
 }
 

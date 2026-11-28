@@ -24,7 +24,6 @@ pub const MAX_FIELD_DECIMALS: u8 = 10;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextField {
     /// Its first letter and the one past its last, counting Unicode scalar values (as a run's); its letters are the
     /// value last written.
@@ -48,7 +47,6 @@ pub struct TextField {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FieldSource {
     /// An object, by its persistent id.
     #[serde(rename_all = "camelCase")]
@@ -76,7 +74,6 @@ pub enum FieldSource {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ObjectValue {
     /// A closed object's area, its holes taken off.
     Area,
@@ -102,7 +99,6 @@ pub enum ObjectValue {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectValue {
     /// The project's name.
     Name,
@@ -123,7 +119,6 @@ pub enum ProjectValue {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldFormat {
     /// Absent: the project's length or area decimals.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -152,7 +147,6 @@ pub struct FieldFormat {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FieldUnit {
     Mm,
     Cm,
@@ -199,7 +193,6 @@ impl FieldUnit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FieldBroken {
     /// The object is gone.
     Removed,

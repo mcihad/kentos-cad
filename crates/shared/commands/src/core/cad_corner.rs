@@ -10,8 +10,6 @@
 //! Lengths and coordinates are metres on the wire.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const CAD_ENTITIES_CHAMFER_VERSION: u32 = 1;
 
 /// Which corner, or corners.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CornerPick {
     /// A polyline's or a closed area's vertex between two straight edges;
     /// an area's vertices counted part after part (docs/adr/0143), its holes
@@ -76,10 +72,8 @@ pub enum CornerPick {
 /// a corner at a polyline's inner vertex, an object of another kind), `fillet_failed` (the
 /// radius does not fit; with `all`, none fits).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesFillet {
     pub corner: CornerPick,
     /// The arc's radius, metres.
@@ -87,10 +81,8 @@ pub struct EntitiesFillet {
     pub radius: f64,
     /// Kırp: the sides are cut back to the arc (the default).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub trim: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -101,10 +93,8 @@ pub struct EntitiesFillet {
 /// codes `chamfer_failed` and `invalid_distance` (a negative distance; both
 /// zero without Kırp or with `all`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesChamfer {
     pub corner: CornerPick,
     /// The cut's distance along the first side (a vertex's: the edge before it), metres.
@@ -112,24 +102,19 @@ pub struct EntitiesChamfer {
     pub distance: f64,
     /// Along the other side; absent: `distance`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub second: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub trim: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.fillet` v1 and `cad.entities.chamfer` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCornered {
     /// The objects that took new geometry.
     pub changed: Vec<String>,
@@ -147,10 +132,8 @@ pub struct EntitiesCornered {
 /// What `cad.entities.fillet` or `.chamfer` would write (plan mode); nothing
 /// is written. Execute against the plan's revision writes exactly this.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCornerPlan {
     pub changed: Vec<Entity>,
     pub created: Vec<Entity>,

@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/road.terrains.cloud.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -40,10 +38,8 @@ pub const CLOUD_TERRAIN_PIECE: usize = 10_000;
 /// `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsFromCloud {
     pub clouds: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -51,47 +47,37 @@ pub struct TerrainsFromCloud {
     #[serde(default)]
     pub returns: CloudReturns,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cell: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub z_tolerance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub near: Option<f64>,
     pub layer_id: String,
     /// A project's surface by its id or name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// A new surface's name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// A new surface's breaklines.
     #[serde(default, skip_serializing_if = "SurfaceSources::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SurfaceSources>", optional))]
     pub breaklines: SurfaceSources,
     /// A new surface's boundary: a closed polyline's or an area's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     /// The open drawing's file, a relative source's folder (the host gives it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
     /// The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
     /// turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub heights: Option<crate::HeightReference>,
 }
 
@@ -99,30 +85,22 @@ pub struct TerrainsFromCloud {
 /// record written on the surface (read, kept, coverage, density, error), the kept points by why (a cell's, a steep
 /// cell's, beside a breakline), the objects written, and the surface made now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsFromCloudWritten {
     pub cloud: SurfaceCloudDef,
     /// The points of the clouds read (every class).
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub scanned: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub by_cell: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub by_slope: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub by_line: u64,
     /// The area's cells and those holding a ground point.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub cells: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub occupied: u64,
     /// The area's plan area, m².

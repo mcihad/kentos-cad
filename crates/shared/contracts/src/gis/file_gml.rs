@@ -6,8 +6,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drawing's layers as one GML.
 pub const FILE_EXPORT_GML: &str = "file.export.gml";
@@ -35,20 +33,16 @@ fn is_yes(b: &bool) -> bool {
 /// `invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings:
 /// `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportGml {
     /// An absolute path ending `.gml` (or `.xml`).
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Write the `.xsd` beside the file (GIS readers take the fields' types from it); absent: written.
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub schema: bool,
     /// Write over the GML and its `.xsd` when they are there.
     #[serde(default)]
@@ -56,16 +50,13 @@ pub struct ExportGml {
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// A file written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GmlFileWritten {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -75,10 +66,8 @@ pub struct GmlFileWritten {
 
 /// A feature type written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GmlLayerWritten {
     /// The feature type's element name in the file.
     pub name: String,
@@ -95,10 +84,8 @@ pub struct GmlLayerWritten {
 
 /// What `file.export.gml` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GmlExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -108,12 +95,10 @@ pub struct GmlExported {
     pub files: Vec<GmlFileWritten>,
     /// Objects not written, by kind (a text, a dimension …).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// What the file could not hold, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
@@ -128,24 +113,19 @@ pub struct GmlExported {
 /// `locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`,
 /// `import_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportGml {
     /// An absolute path to a `.gml` (or `.xml`).
     pub path: String,
     /// The feature types to take (their element names); empty: every one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub tables: Vec<String>,
     /// A feature type → the drawing's layer (its id) its features go onto.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     /// The system the coordinates are in when the file names none (EPSG), in east–north order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move coordinates in another system into the project's.
@@ -154,20 +134,16 @@ pub struct ImportGml {
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }
 
 /// Which positions an XYZ file holds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum XyzVertices {
     /// The points' positions (a multi point's parts too); every other object is left out, counted.
     #[default]
@@ -179,10 +155,8 @@ pub enum XyzVertices {
 
 /// The XYZ file's column separator.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum XyzSeparator {
     #[default]
     Space,
@@ -193,10 +167,8 @@ pub enum XyzSeparator {
 
 /// What a position without an elevation becomes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum XyzWithoutZ {
     /// Written with Z 0 (the file has three columns; the drawing's position stays without an elevation).
     #[default]
@@ -211,16 +183,13 @@ pub enum XyzWithoutZ {
 /// not at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),
 /// `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportXyz {
     /// An absolute path ending `.xyz` (or `.txt`, `.csv`, `.pts`).
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     #[serde(default)]
     pub vertices: XyzVertices,
@@ -228,7 +197,6 @@ pub struct ExportXyz {
     pub separator: XyzSeparator,
     /// Decimal places (0 to 15), fixed; absent: the shortest text that reads back to the number.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub decimals: Option<u8>,
     /// A first line naming the columns (`X Y Z`).
@@ -242,16 +210,13 @@ pub struct ExportXyz {
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// What `file.export.xyz` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct XyzExported {
     pub path: String,
     /// Position lines written (the header aside).
@@ -268,16 +233,13 @@ pub struct XyzExported {
     pub sha256: String,
     /// The system the numbers are in (EPSG), which the file does not name; none for a project without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Objects not written, by kind (with points only, every object that is no point).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// What the file could not hold, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }

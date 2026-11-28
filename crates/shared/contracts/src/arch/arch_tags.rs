@@ -71,7 +71,6 @@ pub const TAG_SIZE_MM: f64 = 2.5;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TagShape {
     #[default]
     Circle,
@@ -171,7 +170,6 @@ pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TagBreak {
     /// Its object is gone.
     TargetGone,
@@ -188,7 +186,6 @@ impl TagBreak {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TagFields {
     /// The object it tags, by its persistent id.
     pub of: String,
@@ -230,7 +227,6 @@ pub struct TagFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TagEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

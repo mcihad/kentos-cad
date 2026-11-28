@@ -6,8 +6,6 @@
 //! its finding. The shared cases are in `fixtures/commands/v1/cad.topology.repair.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -22,10 +20,8 @@ pub const TOPOLOGY_REPAIR_STEPS_MAX: usize = 1000;
 /// A step: the finding (its lasting key in the drawing as the steps before left it) and the fix (`subtractFirst`,
 /// `removeVertex` …; one the finding offers).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRepairStep {
     pub key: String,
     pub fix: String,
@@ -42,24 +38,19 @@ pub struct TopologyRepairStep {
 /// `repair_beyond_acceptance` (`steps[i]`, the step that moved a source vertex farthest past the quality profile's
 /// acceptance threshold). A job asked to stop answers `cancelled` and writes nothing.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRepair {
     pub steps: Vec<TopologyRepairStep>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A step as applied: the finding it put right, its rule, its problem and its objects' persistent ids.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRepairApplied {
     pub key: String,
     pub fix: String,
@@ -72,30 +63,23 @@ pub struct TopologyRepairApplied {
 /// is deleted, how many of its source vertices stayed bit for bit and how many moved, the farthest and the total
 /// distance they moved to the new geometry (metres), and the steps that changed it (0-based).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRepairChange {
     pub uid: String,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub removed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_before: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_after: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length_before: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length_after: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -116,10 +100,8 @@ pub struct TopologyRepairChange {
 /// metres; a deleted area's whole area), the open findings before and after (of every rule), and the revision after
 /// (a plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRepaired {
     pub recipe: Vec<TopologyRepairApplied>,
     pub changes: Vec<TopologyRepairChange>,
@@ -130,7 +112,6 @@ pub struct TopologyRepaired {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub total_moved: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub below_precision: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]

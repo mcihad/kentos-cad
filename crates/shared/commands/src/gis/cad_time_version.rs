@@ -9,8 +9,6 @@
 //! day's midnight.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -21,10 +19,8 @@ pub const CAD_TIME_VERSION_VERSION: u32 = 1;
 
 /// What is written at the date.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TimeVersionKind {
     /// Yeni sürüm oluştur: each object ends at the date and its copy starts there.
     #[default]
@@ -42,10 +38,8 @@ pub enum TimeVersionKind {
 /// `invalid_attribute`, a typed end field (or, for the new versions, start field) that does not take the date as its
 /// text. The new versions are written as `cad.entities.create` writes them, by their layer's fields and rules.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TimeVersion {
     /// The objects' persistent ids, at least one; a repeat counts once.
     pub uids: Vec<String>,
@@ -55,17 +49,14 @@ pub struct TimeVersion {
     #[serde(default)]
     pub kind: TimeVersionKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// The date written on a layer's objects.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TimeVersionLayer {
     /// The layer's id.
     pub layer: String,
@@ -76,10 +67,8 @@ pub struct TimeVersionLayer {
 
 /// What `cad.time.version` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TimeVersioned {
     pub kind: TimeVersionKind,
     /// The objects ended at the date, in the input's order (a repeat once).

@@ -47,7 +47,6 @@ pub const STANDARD_STYLE: &str = "Standart";
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextFace {
     /// The project's text style it follows, by its id; absent: Standart.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -282,7 +281,6 @@ impl TextFace {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionArrow {
     /// A filled triangle, its tip on the dimension line's end (Dolu ok).
     Closed,
@@ -324,7 +322,6 @@ impl DimensionArrow {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionTextPlace {
     /// Its middle on the line, the line hidden under it.
     Centre,
@@ -338,7 +335,6 @@ pub enum DimensionTextPlace {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionLook {
     /// The project's dimension style it follows, by its id; absent: Standart.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -644,10 +640,8 @@ impl DimensionLook {
 
 /// A named text style (docs/adr/0183 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextStyleDef {
     /// One of its kind among the project's text styles (a UUIDv7).
     pub id: String,
@@ -656,44 +650,35 @@ pub struct TextStyleDef {
     pub name: String,
     pub font: DrawingFont,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub bold: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub italic: bool,
     /// As a text's (`TextFace::oblique`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub oblique: Option<f64>,
     /// The texts' height on paper, mm; absent: the tool's height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     /// As a text's; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     /// The typeface file a DXF named for it, written back as it came.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub font_file: Option<String>,
     /// The Big Font (SHX) a DXF STYLE named beside its font (group 4), written
     /// back as it came (docs/adr/1120 §4; KCAD schema 184).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub big_font_file: Option<String>,
 }
 
 /// A named leader style (docs/adr/0326 §4): its arrowhead, the arrowhead's length in the note's height, the note's
 /// height on paper (mm) and its mask.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeaderStyleDef {
     /// One of its kind among the project's leader styles (a UUIDv7).
     pub id: String,
@@ -704,20 +689,16 @@ pub struct LeaderStyleDef {
     pub height: f64,
     /// Absent: a filled arrow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arrow: Option<crate::LeaderArrow>,
     /// Times the note's height; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub arrow_size: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
     /// The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an
     /// embedded SHX file, the font draws the note. Schema 187.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_style: Option<String>,
 }
 
@@ -765,10 +746,8 @@ impl LeaderStyleDef {
 
 /// A named dimension style (docs/adr/0183 §3): sizes in paper mm.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionStyleDef {
     /// One of its kind among the project's dimension styles (a UUIDv7).
     pub id: String,
@@ -778,78 +757,58 @@ pub struct DimensionStyleDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arrow: Option<DimensionArrow>,
     /// The arrowhead's length, mm; absent: the arrowhead's default times the height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub arrow_size: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_beyond: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub text_gap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_place: Option<DimensionTextPlace>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(max = 8)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub prefix: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub suffix: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub font: Option<DrawingFont>,
     /// The project text style its value is written in, by its name: when that
     /// style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
     /// (a DXF's reader sets both). Schema 186.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_style: Option<String>,
     /// The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dim_line_color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub dim_line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dim_line_type: Option<LineType>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ext_color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ext_line_type: Option<LineType>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_color: Option<String>,
     /// The value's fit and writing (docs/adr/0321 §1, §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub options: Option<Box<crate::DimensionOptions>>,
 }
 

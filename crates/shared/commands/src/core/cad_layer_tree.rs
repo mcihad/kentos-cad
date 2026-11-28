@@ -10,8 +10,6 @@
 //! `fixtures/commands/v1`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -33,10 +31,8 @@ pub const CAD_LAYERS_EDIT_VERSION: u32 = 1;
 
 /// What `cad.layers.edit` does; it names the undo step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerEditOperation {
     /// A new layer or group (“Katman ekle”, “Grup ekle”).
     Add,
@@ -64,10 +60,8 @@ pub enum LayerEditOperation {
 
 /// A layer's type as `cad.layers.edit` gives it (docs/adr/0622 §5): one of the four, or `mixed`, any kind (no type).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerGeometryChoice {
     Point,
     Line,
@@ -105,10 +99,8 @@ impl LayerGeometryChoice {
 /// A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
 /// key `from` becomes `to`, its values kept.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldRename {
     pub from: String,
     pub to: String,
@@ -169,50 +161,38 @@ pub struct FieldRename {
 /// the same place, the same fields, nothing to purge) writes nothing and
 /// answers `changed` false.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersEdit {
     pub operation: LayerEditOperation,
     /// The node it acts on; merge's target.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// Merge's sources; purge's layers and groups.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
     /// Purge's block definitions, by their ids.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blocks: Option<Vec<String>>,
     /// Add's kind of node; absent: a layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<LayerNodeType>,
     /// Add's and duplicate's name, trimmed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer
     /// schema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,
     /// `_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<LineType>,
     /// add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
     /// unless `lineType` is given; null: none (a `lineType` given alone takes it away too).
@@ -221,37 +201,28 @@ pub struct LayersEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub line_pattern: Option<Option<String>>,
     /// Plot line weight, mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub visible: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locked: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub activate: Option<bool>,
     /// The layer's fields (docs/adr/0199 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
     /// add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<LayerGeometryChoice>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub renames: Option<Vec<FieldRename>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -286,15 +257,12 @@ impl LayersEdit {
 
 /// Output of `cad.layers.edit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersEdited {
     /// The node added or copied (a new `layer-N`), the node changed, merge's
     /// target; absent for purge.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// Whether anything was written (an undo step).
     pub changed: bool,
@@ -324,10 +292,8 @@ pub const CAD_LAYERS_SET_VERSION: u32 = 1;
 
 /// What `cad.layers.set` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerSetOperation {
     Rename,
     Visible,
@@ -404,35 +370,26 @@ pub enum LayerSetOperation {
 /// (`classes[i]` names none of its classes), `mobile_not_offered` (mobile `edit` on a node the mobile app does not
 /// write). A change that changes nothing answers `changed` false.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersSet {
     pub operation: LayerSetOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<bool>,
     /// `classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub classes: Option<Vec<String>>,
     /// `mobile`: the node on the mobile clients (docs/adr/9198).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mobile: Option<crate::LayerMobile>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -455,10 +412,8 @@ impl LayersSet {
 
 /// Output of `cad.layers.set` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersChanged {
     /// Whether the tree changed.
     pub changed: bool,
@@ -478,10 +433,8 @@ pub const CAD_LAYERS_STATES_VERSION: u32 = 1;
 
 /// What `cad.layers.states` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerStatesOperation {
     Save,
     Update,
@@ -497,10 +450,8 @@ pub enum LayerStatesOperation {
 /// A file of exported layer states (docs/adr/0311 §3): each node with its
 /// path, so another drawing finds it by its names.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerStatesFile {
     /// Always `kentos.layer-states`.
     pub format: String,
@@ -582,40 +533,30 @@ pub fn layer_states_file_problem(file: &LayerStatesFile) -> Option<String> {
 /// export's `states[i]`), `duplicate_name` (another state has the name,
 /// spaces at its ends aside).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersStates {
     pub operation: LayerStatesOperation,
     /// The state's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub state: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locks: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<bool>,
     /// Export's states, by id; absent, every one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub states: Option<Vec<String>>,
     /// Import's file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<LayerStatesFile>,
     /// Import: a state whose name the project has written over (absent: skipped).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -639,10 +580,8 @@ impl LayersStates {
 
 /// Output of `cad.layers.states` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerStatesDone {
     /// The state saved, updated, renamed, removed or applied.
     pub state: String,
@@ -668,20 +607,16 @@ pub struct LayerStatesDone {
     /// Import's states added, written over and skipped (their name the
     /// project's, without `replace`).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub added: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub replaced: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u32,
     /// Export's file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<LayerStatesFile>,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.

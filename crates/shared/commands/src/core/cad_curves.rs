@@ -9,8 +9,6 @@
 //! an angle is radians counter-clockwise from east (a geometry angle, not a surveying bearing).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::cad_dimensions::{EdgeNear, MeasuredPoint};
 use crate::cad_points::ObjectEnd;
@@ -23,14 +21,12 @@ pub const CAD_CURVES_CONSTRUCT_VERSION: u32 = 1;
 /// One curve to construct: Daire's, Yay's and Elips's methods. A circle by
 /// its centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CurveConstruction {
     /// Daire, 2 nokta: the circle on the diameter from `a` to `b`.
     CircleTwoPoints { a: MeasuredPoint, b: MeasuredPoint },
@@ -118,19 +114,15 @@ pub enum CurveConstruction {
         a: MeasuredPoint,
         b: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         other: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         start_angle: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         end_angle: Option<f64>,
     },
@@ -139,19 +131,15 @@ pub enum CurveConstruction {
         centre: MeasuredPoint,
         axis_end: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         other: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         start_angle: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         end_angle: Option<f64>,
     },
@@ -159,10 +147,8 @@ pub enum CurveConstruction {
 
 /// A constructed curve, as the create commands take it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConstructedCurve {
     /// `cad.circle.create`'s `c` and `r`.
     Circle {
@@ -212,10 +198,8 @@ pub enum ConstructedCurve {
 /// above zero, or both or neither of it and the rotation), `not_tangent_kind` (an object a circle cannot touch),
 /// `no_tangent_circle` (no circle touches them so), `not_an_end` (an object Devam cannot continue).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CurvesConstruct {
     /// One to 10 000 constructions.
     pub constructions: Vec<CurveConstruction>,
@@ -223,10 +207,8 @@ pub struct CurvesConstruct {
 
 /// Output of `cad.curves.construct` v1, and its plan: the curves, one per construction, in their order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CurvesConstructed {
     pub curves: Vec<ConstructedCurve>,
 }

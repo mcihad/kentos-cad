@@ -5,13 +5,9 @@ use crate::{
     viewport::ScaleRatio,
 };
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotArea"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PlotArea {
@@ -24,9 +20,7 @@ pub enum PlotArea {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotScale"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PlotScale {
@@ -45,9 +39,7 @@ impl Default for PlotScale {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPrintDevice"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PrintDevice {
@@ -59,14 +51,11 @@ pub enum PrintDevice {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotSettings"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile_snapshot: Option<crate::plot_profile::PlotProfile>,
     #[serde(default)]
     pub area: PlotArea,
@@ -78,7 +67,6 @@ pub struct PlotSettings {
     #[serde(default)]
     pub center: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default)]
     pub device: PrintDevice,
@@ -98,9 +86,7 @@ impl Default for PlotSettings {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperNamedPageSetup"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NamedPageSetup {
@@ -113,30 +99,23 @@ pub struct NamedPageSetup {
 
 /// Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAppliedPageSetup"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AppliedPageSetup {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     pub settings: PlotSettings,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSavePageSetups"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SavePageSetups {
     pub setups: Vec<NamedPageSetup>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperApplyPageSetup"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ApplyPageSetup {
@@ -144,9 +123,7 @@ pub struct ApplyPageSetup {
     pub setup: String,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSetSheetPlot"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetSheetPlot {

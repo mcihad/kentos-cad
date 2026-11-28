@@ -6,15 +6,11 @@
 //! `scripts/fixtures/crs_vertical_cases.py` checks them against PROJ's database).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// What a drawing's elevations are.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HeightKind {
     /// Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.
     Ellipsoidal,
@@ -28,15 +24,12 @@ pub enum HeightKind {
 
 /// A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeoidModel {
     /// “TG-20”, “EGM2008 (2.5′)”.
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sha256: Option<String>,
 }
 
@@ -44,18 +37,14 @@ pub struct GeoidModel {
 /// [`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is
 /// the horizontal system's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HeightReference {
     pub kind: HeightKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub vertical_srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geoid: Option<GeoidModel>,
 }
 

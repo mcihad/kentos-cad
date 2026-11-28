@@ -9,8 +9,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -29,14 +27,12 @@ pub const ELEVATION_GROUP: &str = "İç görünüşler";
 
 /// What `cad.elevations.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ElevationsOperation {
     /// İç görünüş üret: the space `space`'s sides (`sides`, its outer rings' edges numbered from 0 in order, part by
     /// part; absent: all) drawn left to right from `at` (absent: 3 m right of the space's box, at its bottom), `gap`
@@ -45,19 +41,15 @@ pub enum ElevationsOperation {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         space: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         sides: Vec<u32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
     },
     /// Yeniden üret: the elevation on the layer `layer` drawn again from the model as it is now, its objects kept by
@@ -73,14 +65,11 @@ pub enum ElevationsOperation {
 /// `elevation_space_not_net`, `elevation_no_sides`, `layer_not_found`, `elevation_not_found`,
 /// `elevation_source_gone`, `layer_locked`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationsEdit {
     pub operation: ElevationsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -89,10 +78,8 @@ pub struct ElevationsEdit {
 /// its drawing begins, the walls whose faces it shows and the openings drawn on it, and the stretches along it no wall's
 /// face covers (from its left end as one looks at it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationSide {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub side: u32,
@@ -100,29 +87,23 @@ pub struct ElevationSide {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub walls: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub openings: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub open: Vec<[f64; 2]>,
 }
 
 /// Why something of the room is not drawn (or drawn only in part).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ElevationLeft {
     /// A curved side: an interior elevation of a curved wall is not unrolled.
     CurvedSide,
@@ -144,36 +125,28 @@ pub enum ElevationLeft {
 
 /// Something of the room the elevation does not draw, or draws in part: the side it is on, if one, and the object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationLeftOut {
     pub why: ElevationLeft,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub side: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
 }
 
 /// Output of `cad.elevations.edit` (and its plan): the elevation's layer and name, its sides, its objects after (a
 /// plan's new ones without an id), how many were made, changed and deleted, what it left out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationsEdited {
     pub layer: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ElevationSide>>", optional))]
     pub sides: Vec<ElevationSide>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub drawn: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub made: u32,
@@ -182,7 +155,6 @@ pub struct ElevationsEdited {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ElevationLeftOut>>", optional))]
     pub left_out: Vec<ElevationLeftOut>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -193,26 +165,20 @@ pub struct ElevationsEdited {
 ///
 /// Refusals: `layer_not_found`, `elevation_not_found`, `invalid_uid`, `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
 }
 
 /// Whether a derived elevation still is what the model would draw.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ElevationState {
     /// Güncel: drawn again it would be the same, and all its objects are there.
     Current,
@@ -224,21 +190,17 @@ pub enum ElevationState {
 
 /// A derived elevation as `cad.elevations.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationRow {
     pub layer: String,
     pub name: String,
     pub space: String,
     /// The space's number and name now (“101 Salon”); none when it is gone or has neither.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub space_label: Option<String>,
     /// The sides asked for; empty: all.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub sides: Vec<u32>,
     pub state: ElevationState,
@@ -246,11 +208,9 @@ pub struct ElevationRow {
     pub members: u32,
     /// Its objects deleted from the drawing.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub missing: Vec<String>,
     /// Its objects changed by hand (a refresh writes them back). Older records can detect this while their source is unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub edited: Vec<String>,
     /// The drawing's revision it was derived at.
     pub derived_at: String,
@@ -258,10 +218,8 @@ pub struct ElevationRow {
 
 /// Output of `cad.elevations.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElevationsQueried {
     pub elevations: Vec<ElevationRow>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

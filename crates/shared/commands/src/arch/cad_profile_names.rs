@@ -9,8 +9,6 @@
 //! what is wrong with it (a name the form cannot spell, two fields falling on one name).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{DataProfile, ProfileClass, ProfileMapping};
 
@@ -19,10 +17,8 @@ pub const CAD_PROFILES_NAMES_VERSION: u32 = 1;
 
 /// How the words of a name are joined and cased.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NameCase {
     /// `kapiNo`: the first word small, every later word with a capital first letter; a word of capitals only (two
     /// letters or more) is an abbreviation and stays as it is, except as the first word.
@@ -33,10 +29,8 @@ pub enum NameCase {
 
 /// What becomes of the Turkish letters.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NameLetters {
     /// Kept, cased the Turkish way (i ↔ İ, ı ↔ I).
     #[default]
@@ -47,14 +41,11 @@ pub enum NameLetters {
 
 /// A mapping's form for the names it does not write itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MappingNames {
     pub case: NameCase,
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(as = "Option<NameLetters>", optional))]
     pub letters: NameLetters,
 }
 
@@ -190,10 +181,8 @@ pub fn styled_name(name: &str, names: &MappingNames) -> Result<String, String> {
 
 /// Where a field's name in the institution comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NameSource {
     /// The profile's own name: no mapping names it and no form is given.
     Profile,
@@ -205,10 +194,8 @@ pub enum NameSource {
 
 /// What is wrong with a field's name in the institution.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NameProblem {
     /// The form cannot spell the name: the mapping must write it.
     Unfit,
@@ -218,10 +205,8 @@ pub enum NameProblem {
 
 /// A profile field and its name in the institution.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileNameRow {
     /// The profile's class id and title.
     pub class: String,
@@ -232,11 +217,9 @@ pub struct ProfileNameRow {
     pub name: String,
     pub source: NameSource,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<NameProblem>,
     /// The problem in words, with what to do.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub message: Option<String>,
 }
 
@@ -352,49 +335,37 @@ pub fn institution_name(p: &DataProfile, m: &ProfileMapping, class: &str, field:
 /// the profile's (`unknown_profile`, `invalid_profile`) and the mapping's (`unknown_mapping`, `invalid_profile_mapping`
 /// for anything but its names: those are said row by row).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesNames {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<ProfileMapping>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping_name: Option<String>,
     /// The form to read the names with instead of the mapping's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub names: Option<MappingNames>,
     /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// Output of `cad.profiles.names`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileNames {
     /// The profile's name.
     pub profile: String,
     /// The mapping's name, when one is read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<String>,
     /// The form the names were read with, when there is one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub names: Option<MappingNames>,
     pub rows: Vec<ProfileNameRow>,
     /// Fields whose name in the institution is not the profile's, and that have no problem.

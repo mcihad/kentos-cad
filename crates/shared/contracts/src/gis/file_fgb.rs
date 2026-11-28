@@ -5,8 +5,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drawing's layers as one FlatGeobuf.
 pub const FILE_EXPORT_FGB: &str = "file.export.fgb";
@@ -21,16 +19,13 @@ pub const FILE_IMPORT_FGB_VERSION: u32 = 1;
 /// Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`.
 /// Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportFgb {
     /// An absolute path ending `.fgb`.
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Write over the file when it is there.
     #[serde(default)]
@@ -38,16 +33,13 @@ pub struct ExportFgb {
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// What `file.export.fgb` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FgbExported {
     pub path: String,
     /// The layer's name in the file (the file's name without `.fgb`).
@@ -66,12 +58,10 @@ pub struct FgbExported {
     pub sha256: String,
     /// Objects not written, by kind (a text, a dimension …).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// What the file could not hold, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
@@ -82,20 +72,16 @@ pub struct FgbExported {
 /// `file.import.gpkg`'s: `invalid_file_path`, `file_not_found`, `import_unreadable`, `layer_not_found`, `not_a_layer`,
 /// `locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportFgb {
     /// An absolute path to a `.fgb`.
     pub path: String,
     /// The layer the features go onto, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The system the coordinates are in when the file names none (EPSG).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move coordinates in another system into the project's.
@@ -104,10 +90,8 @@ pub struct ImportFgb {
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }

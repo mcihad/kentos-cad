@@ -6,8 +6,6 @@
 //! (docs/adr/4140) are followed too: a corrected class that is retired or split, a given field that is dropped.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::DataProfile;
 #[cfg(feature = "schema")]
@@ -26,34 +24,25 @@ pub const MAX_COMPARE_UIDS: usize = 1000;
 /// Refusals: `unknown_profile` (a catalog not named or not found; path `from` or `to`), `invalid_profile` (a
 /// catalog that does not hold; path `fromProfile` or `toProfile`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesCompare {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from_profile: Option<DataProfile>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to_profile: Option<DataProfile>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// A catalog as the report names it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ComparedCatalog {
     pub name: String,
     pub title: String,
@@ -63,10 +52,8 @@ pub struct ComparedCatalog {
 
 /// What became of an old class in the new catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogClassChangeKind {
     /// Aynı: the same id, layer, geometry, codes and fields.
     Same,
@@ -86,14 +73,11 @@ pub enum CatalogClassChangeKind {
 
 /// A class's row.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogClassChange {
     /// The old class's id; none for an added class.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     /// The new classes it leads to, in the new catalog's order (an added class: itself).
     pub to: Vec<String>,
@@ -121,10 +105,8 @@ pub struct CatalogClassChange {
 
 /// What became of an old class's field in its one new class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogFieldChangeKind {
     /// Kalktı: the new class has no field of the name.
     Removed,
@@ -140,10 +122,8 @@ pub enum CatalogFieldChangeKind {
 
 /// A field's row.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogFieldChange {
     /// The old class's id.
     pub class: String,
@@ -167,10 +147,8 @@ pub struct CatalogFieldChange {
 
 /// What became of a value list's code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogCodeChangeKind {
     /// Kalktı: the new catalog's list (or the list itself) does not have it.
     Removed,
@@ -184,10 +162,8 @@ pub enum CatalogCodeChangeKind {
 
 /// A value list's code's row.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogCodeChange {
     /// The list's id.
     pub domain: String,
@@ -208,10 +184,8 @@ pub struct CatalogCodeChange {
 
 /// What becomes of a recorded reconcile decision.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogDecisionChangeKind {
     /// Korunur: its class is the same (or changed) and its fields are all there.
     Kept,
@@ -227,10 +201,8 @@ pub enum CatalogDecisionChangeKind {
 
 /// A recorded decision's row.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogDecisionChange {
     /// The review note's number.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -239,7 +211,6 @@ pub struct CatalogDecisionChange {
     pub candidate: String,
     /// The asset's persistent id, when the decision wrote or tied one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,
     /// The old class it concerns: its correction, else the class whose layer holds the asset.
     pub class: String,
@@ -254,10 +225,8 @@ pub struct CatalogDecisionChange {
 
 /// Output (and plan) of `cad.profiles.compare` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesCompared {
     pub from: ComparedCatalog,
     pub to: ComparedCatalog,

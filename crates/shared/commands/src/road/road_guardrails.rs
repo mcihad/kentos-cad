@@ -8,8 +8,6 @@
 //! `fixtures/commands/v1/road.guardrails.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -30,34 +28,25 @@ pub const ROAD_GUARDRAILS_DRAW_VERSION: u32 = 1;
 /// `road_problem`: a rule without its source or rows, a height, slope or length out of bounds, a step or an offset out
 /// of bounds; a corridor that does not build), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub guardrail: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corridor: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<GuardrailRuleDef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -65,10 +54,8 @@ pub struct GuardrailsEdit {
 /// A guardrail run on a side (`left` or `right`): where it starts and ends (stations and km), its length, the stretch
 /// where the barrier is warranted within it, and the highest fill and steepest slope (1:n) it guards.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailRun {
     pub side: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -90,10 +77,8 @@ pub struct GuardrailRun {
 /// A guardrail as read now: its definition's names, whether its corridor changed since (`stale`), the rule's source,
 /// the crosses read, its runs left then right in station order, and each side's total length.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailReport {
     pub id: String,
     pub name: String,
@@ -113,10 +98,8 @@ pub struct GuardrailReport {
 
 /// A guardrail in the project's list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailListed {
     pub id: String,
     pub name: String,
@@ -127,14 +110,11 @@ pub struct GuardrailListed {
 
 /// Output of `road.guardrails.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsWritten {
     /// The guardrail written, read; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub guardrail: Option<GuardrailReport>,
     pub guardrails: Vec<GuardrailListed>,
     pub revision: String,
@@ -145,22 +125,17 @@ pub struct GuardrailsWritten {
 /// Refusals: `not_a_road_project`, `unknown_guardrail`, `invalid_guardrail` (its corridor does not build). Warnings:
 /// `guardrail_stale`, and the corridor's own (`corridor_stale`, `corridor_surface_gone`, `corridor_unsolved`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub guardrail: Option<String>,
 }
 
 /// Output of `road.guardrails.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsQueried {
     pub guardrails: Vec<GuardrailReport>,
 }
@@ -173,18 +148,14 @@ pub struct GuardrailsQueried {
 /// `invalid_guardrail` (its corridor does not build), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
 /// `layer_hidden`, `guardrail_stale`, `corridor_stale`, `corridor_unsolved`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsDraw {
     pub guardrail: String,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -192,10 +163,8 @@ pub struct GuardrailsDraw {
 /// Output of `road.guardrails.draw` v1, and its plan: the runs drawn, their total length and the objects written (in
 /// the plan, none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailsDrawn {
     pub guardrail: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

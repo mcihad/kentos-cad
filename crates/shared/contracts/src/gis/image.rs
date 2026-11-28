@@ -25,7 +25,6 @@ pub const MAX_IMAGE_PATH: usize = 4096;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImageEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -41,7 +40,6 @@ pub struct ImageEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImageFields {
     /// Its lower left corner.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

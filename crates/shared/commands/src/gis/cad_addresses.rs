@@ -6,8 +6,6 @@
 //! writing it makes the drawing dirty and is no undo step.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::address::AddressLocator;
 #[cfg(feature = "schema")]
@@ -19,10 +17,8 @@ pub const CAD_ADDRESSES_DEFINE_VERSION: u32 = 1;
 
 /// What `cad.addresses.define` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AddressesDefineOperation {
     /// The locator replaces the project's of its id, or goes last.
     Set,
@@ -44,21 +40,16 @@ pub enum AddressesDefineOperation {
 /// project has no locator of the id). A locator naming a layer the drawing
 /// does not have is written, with the warning `unknown_layer`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesDefine {
     pub operation: AddressesDefineOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locator: Option<AddressLocator>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -66,10 +57,8 @@ pub struct AddressesDefine {
 /// Output of `cad.addresses.define` v1, and its plan: the project's locators
 /// as the write leaves them and the revision after it (a plan: before it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesDefined {
     pub locators: Vec<AddressLocator>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -89,26 +78,20 @@ pub const ADDRESS_CHECK_LIMIT: u32 = 100;
 /// Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `no_address_data` (the project defines
 /// none), `unknown_locator`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locator: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
 }
 
 /// A door number one street has more than once.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressRepeat {
     pub street: String,
     pub neighbourhood: String,
@@ -119,10 +102,8 @@ pub struct AddressRepeat {
 
 /// An address code on more than one door.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressCodeRepeat {
     pub code: String,
     pub uids: Vec<String>,
@@ -130,10 +111,8 @@ pub struct AddressCodeRepeat {
 
 /// One way a street's name is written and how many of its doors write it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressWritten {
     pub text: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -142,10 +121,8 @@ pub struct AddressWritten {
 
 /// A street whose doors write its name in more than one way: the ways, the most written first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressSpelling {
     pub neighbourhood: String,
     pub district: String,
@@ -155,10 +132,8 @@ pub struct AddressSpelling {
 
 /// A neighbourhood or a district whose doors write its name in more than one way (docs/adr/0647 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressNameSpelling {
     /// The district its first door writes (a neighbourhood's); empty for a district.
     pub within: String,
@@ -169,10 +144,8 @@ pub struct AddressNameSpelling {
 /// Output of `cad.addresses.check` v1, and its plan: what the address data holds, what it left out, and what in it
 /// repeats or is written in more than one way (each list's count, then its first `limit`, by their first door).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesChecked {
     pub locator: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

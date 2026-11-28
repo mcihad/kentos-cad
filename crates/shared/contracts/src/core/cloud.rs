@@ -50,28 +50,22 @@ pub const PROJECT_ACCESS_CHANGED: &str = "project.access";
 
 /// `GET /v1/auth/config`: which ways of signing in this server offers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AuthConfig {
     pub local: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub oidc: Option<OidcLoginInfo>,
     /// Where people open the web app (`KENTOS_PUBLIC_URL`, ending in `/`):
     /// the base of an invitation's link from a desktop, which has no address
     /// of its own (docs/adr/0111). The web uses its own address.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub public_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OidcLoginInfo {
     /// Button text, e.g. the organisation's name.
     pub label: String,
@@ -81,9 +75,7 @@ pub struct OidcLoginInfo {
 
 /// `POST /v1/auth/login` (local accounts).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LoginRequest {
     pub login: String,
     pub password: String,
@@ -93,7 +85,6 @@ pub struct LoginRequest {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SignInMethod {
     Local,
     Oidc,
@@ -121,7 +112,6 @@ pub enum TenantRole {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TenantKind {
     /// Opened by the server for one person; its only member is its owner, others come through sharing.
     Personal,
@@ -132,10 +122,8 @@ pub enum TenantKind {
 /// (organisations by name, then the personal space, which the server opens
 /// on the first sign-in).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Me {
     pub user: UserView,
     pub memberships: Vec<MembershipView>,
@@ -145,7 +133,6 @@ pub struct Me {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UserView {
     pub id: String,
     pub display_name: String,
@@ -156,10 +143,8 @@ pub struct UserView {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MembershipView {
     pub tenant_id: String,
     pub tenant_slug: String,
@@ -225,10 +210,8 @@ impl ProjectRole {
 
 /// A role a share gives: every project role but the owner's (ownership is transferred, not shared).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GrantRole {
     Viewer,
     Commenter,
@@ -273,7 +256,6 @@ impl From<GrantRole> for ProjectRole {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectPermission {
     /// See it in lists, open it, read its objects and events.
     #[serde(rename = "project.read")]
@@ -448,26 +430,21 @@ pub struct ProjectSummary {
 /// A tenant's projects the caller may see (`GET /v1/tenants/{tenant}/projects`), or
 /// the caller's own and shared ones across tenants (`GET /v1/me/projects`); newest first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectList {
     pub projects: Vec<ProjectSummary>,
 }
 
 /// `POST /v1/tenants/{tenant}/projects`: a new project's metadata (its objects follow as commands).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectCreate {
     pub name: String,
     pub settings: ProjectSettings,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
@@ -475,49 +452,29 @@ pub struct ProjectCreate {
     pub styles: ProjectStyles,
     /// The project's sheet book and its pictures (docs/adr/0251); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
     /// The project's associative arrays (docs/adr/0300); absent: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
-    )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// Persistent architectural dimension recipes; older responses without this field have none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
-    )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// The project's kitchen runs (docs/adr/0727 §5); absent: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
-    )]
     pub casework: Vec<crate::casework::CaseworkRecord>,
     /// The project's constraints and parameters (docs/adr/0336 §3); absent: none.
     #[serde(
         default,
         skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
     )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
-    )]
     pub constraints: crate::constraints::ConstraintSet,
     /// The catalog's description (docs/adr/0028); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// Absent: the general type (`cad`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project_type: Option<ProjectType>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tags: Option<Vec<String>>,
     /// How the project is kept, for good (docs/adr/0031); absent: its type's
     /// (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
@@ -526,16 +483,13 @@ pub struct ProjectCreate {
     /// object in PostGIS (`database`), refused as a file. A `file` project
     /// gets its content from its first committed revision.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub storage: Option<ProjectStorage>,
 }
 
 /// `GET /v1/tenants/{tenant}/projects/{project}`: what opening needs before the objects.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectInfo {
     pub id: String,
     pub tenant_id: String,
@@ -550,7 +504,6 @@ pub struct ProjectInfo {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
@@ -559,38 +512,21 @@ pub struct ProjectInfo {
     /// A database project's sheet book and its pictures (docs/adr/0251); an
     /// older server's answer without it has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
     /// A database project's associative arrays (docs/adr/0300); an older server's answer without them has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
-    )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// Persistent architectural dimension recipes; older responses without this field have none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
-    )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// A database project's kitchen runs (docs/adr/0727 §5); an older server's answer without them has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
-    )]
     pub casework: Vec<crate::casework::CaseworkRecord>,
     /// A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
     /// none.
     #[serde(
         default,
         skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
-    )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
     )]
     pub constraints: crate::constraints::ConstraintSet,
     pub meta_version: String,
@@ -607,16 +543,13 @@ pub struct ProjectInfo {
     /// (docs/adr/0144 §5), in the order they were made. An older server's
     /// answer without them has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockRecord>>", optional))]
     pub blocks: Vec<BlockRecord>,
 }
 
 /// One stored block definition (docs/adr/0144 §5) and its version.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockRecord {
     pub version: String,
     pub block: BlockDefinition,
@@ -625,10 +558,8 @@ pub struct BlockRecord {
 /// `GET …/blocks`: the project's block definitions, as `ProjectInfo.blocks`
 /// (a client asks after an event names changed blocks).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockList {
     pub blocks: Vec<BlockRecord>,
 }
@@ -693,20 +624,16 @@ pub struct FeatureLayer {
 /// Input of `project.changes`: v1 for legacy changes, v2 when architectural
 /// dimension recipes accompany one atomic feature/metadata commit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectChanges {
     pub features: Vec<FeatureChange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project: Option<ProjectPatch>,
     /// Block definitions made, replaced or removed (docs/adr/0144 §5), in
     /// the same commit as the objects: an insert may place a block this
     /// commit makes, and a block may go with the last insert placing it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockChange>>", optional))]
     pub blocks: Vec<BlockChange>,
 }
 
@@ -761,10 +688,8 @@ pub fn dimension_sets_touched(sets: &[crate::DimensionSet], features: &[FeatureC
 /// A change of one block definition. An update replaces it whole and a
 /// delete removes it, each guarded by `expectedVersions["block:<id>"]`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "op", rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockChange {
     /// A new definition; its id is the client's, as an object's.
     Create {
@@ -779,10 +704,8 @@ pub enum BlockChange {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "op", rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FeatureChange {
     /// A new object; the client picks the UUID so a retry cannot create it twice.
     Create {
@@ -809,25 +732,18 @@ pub enum FeatureChange {
 
 /// Metadata to replace; absent fields stay. Needs `expectedVersions["@project"]`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectPatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub settings: Option<ProjectSettings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<LayerNode>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub active_layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<ProjectStyles>,
     /// The sheet book and its pictures, whole (docs/adr/0251); null: the
     /// project has none any more. Held to the file format's rules
@@ -838,10 +754,6 @@ pub struct ProjectPatch {
         skip_serializing_if = "Option::is_none"
     )]
     #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::sheets::ProjectSheets>>", optional)
-    )]
-    #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<crate::sheets::ProjectSheets>")
     )]
@@ -849,40 +761,25 @@ pub struct ProjectPatch {
     /// The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's
     /// rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
-    )]
     pub arrays: Option<Vec<crate::assoc_array::AssocArray>>,
     /// Architectural dimension recipes, whole; an empty list explicitly removes all recipes.
     /// Requires project.changes version 2, in the same transaction as member changes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
-    )]
     pub dimension_sets: Option<Vec<crate::dimension_set::DimensionSet>>,
     /// The kitchen runs, whole (docs/adr/0727 §5); an empty list: none any more. Held to the contract's rules
     /// (`casework_problem`) but for the objects and walls they name, which the document keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
-    )]
     pub casework: Option<Vec<crate::casework::CaseworkRecord>>,
     /// The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
     /// contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<crate::constraints::ConstraintSet>,
 }
 
 /// The committed result; a retry with the same idempotency key gets the same one (`replayed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommitResult {
     pub data_revision: String,
     pub meta_version: String,
@@ -895,15 +792,12 @@ pub struct CommitResult {
     /// The objects of `edit` changes the server merged with someone else's newer version (docs/adr/0648 §1), as
     /// written: the client takes them into its drawing.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FeatureRecord>>", optional))]
     pub merged: Vec<FeatureRecord>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConflictReason {
     /// Someone saved a newer version.
     Changed,
@@ -917,21 +811,16 @@ pub enum ConflictReason {
 
 /// Why one object could not be saved, with the server's current copy to show the difference.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeatureConflict {
     pub id: String,
     pub reason: ConflictReason,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub actual: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub current: Option<FeatureRecord>,
 }
 
@@ -942,30 +831,24 @@ pub struct FeatureConflict {
 /// whether and when the same request may be sent again. UI, Python and AI
 /// present the same error in their own way from these fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ApiError {
     /// The stable code (`invalid`, `conflict`, `not_found` …); the name `error` is kept for older clients.
     pub error: String,
     pub message: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub request_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub conflicts: Option<Vec<FeatureConflict>>,
     /// The field the error is about, when the server knows it: relative to a
     /// command's input as in `CommandError` (`name`, `tags[2]`,
     /// `features[0].entity`), or a query parameter's name (`q`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// The project's data revision now, as decimal text (DOM-12), when the
     /// error depends on it: a conflict says which revision the server is at.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// The same request may be sent again unchanged (the server was briefly
     /// away or asked to wait); false when something must change first. The
@@ -974,7 +857,6 @@ pub struct ApiError {
     pub retryable: bool,
     /// Seconds to wait before sending it again, when the server says so (also the `Retry-After` header).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub retry_after: Option<u32>,
 }
 
@@ -983,44 +865,36 @@ pub struct ApiError {
 /// Input of `project.share` v1: gives a person a role in the project, or
 /// changes the one they have. In an organisation the person must be a member.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectShare {
     /// The account id (`UserView.id`).
     pub user_id: String,
     pub role: GrantRole,
     /// RFC 3339; the grant ends by itself then. Absent: until revoked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expires_at: Option<String>,
 }
 
 /// Input of `project.access.revoke` v1: takes a person's grant away (nothing
 /// changes if they have none). Their open connections are closed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAccessRevoke {
     pub user_id: String,
 }
 
 /// A person's grant in a project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectGrant {
     pub user_id: String,
     pub display_name: String,
     pub role: GrantRole,
     /// RFC 3339, when it ends by itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expires_at: Option<String>,
     /// RFC 3339.
     pub updated_at: String,
@@ -1033,7 +907,6 @@ pub struct ProjectGrant {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectStorage {
     /// Object by object in the server's PostGIS database (managed): every
     /// save is one transaction and the others see it at once.
@@ -1047,10 +920,8 @@ pub enum ProjectStorage {
 
 /// Why a person listed with a project cannot use it now.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AccessBlock {
     /// Their grant has ended (`expiresAt` passed).
     Expired,
@@ -1067,37 +938,29 @@ pub enum AccessBlock {
 /// One person with a role or a grant in a project, as the share dialog shows
 /// them: the role they work with now and where it comes from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAccessHolder {
     pub user_id: String,
     pub display_name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub email: Option<String>,
     /// The role they work with now: the highest of ownership, the
     /// organisation's policy and an unexpired grant, the same the server
     /// works out when they open it. Absent when none lets them in now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub role: Option<ProjectRole>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub via: Option<AccessSource>,
     /// Why they cannot use it now (when `role` is absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blocked: Option<AccessBlock>,
     /// Their grant, also an ended one: what sharing gives, changes and takes
     /// away (ownership and the policy are not grants).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grant: Option<GrantRole>,
     /// RFC 3339, when the grant ends by itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expires_at: Option<String>,
     /// The grant's end has passed: it no longer counts.
     pub expired: bool,
@@ -1112,10 +975,8 @@ pub struct ProjectAccessHolder {
 /// owners and admins its policy lets in, and every grant (ended ones
 /// included), the owner first, then by name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAccessList {
     pub tenant_kind: TenantKind,
     pub storage: ProjectStorage,
@@ -1129,16 +990,13 @@ pub struct ProjectAccessList {
 
 /// A person the project can be shared with.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShareCandidate {
     /// The account id `project.share` takes.
     pub user_id: String,
     pub display_name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub email: Option<String>,
 }
 
@@ -1149,10 +1007,8 @@ pub struct ShareCandidate {
 /// members of the caller's own organisations. The caller and the owner are
 /// left out; at most 20, by name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShareCandidates {
     pub candidates: Vec<ShareCandidate>,
 }
@@ -1160,21 +1016,17 @@ pub struct ShareCandidates {
 /// The result of `project.share` and `project.access.revoke`; a retry with the
 /// same idempotency key gets the same one (`replayed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAccessChange {
     pub user_id: String,
     /// The grant now; absent after a revoke.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grant: Option<ProjectGrant>,
     /// Whether anything changed (sharing the same role again, or revoking what is not there, does not).
     pub changed: bool,
     /// The `project.access` event, when something changed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub event_seq: Option<String>,
     #[serde(default)]
     pub replayed: bool,
@@ -1183,10 +1035,8 @@ pub struct ProjectAccessChange {
 // ── Events (outbox) ──────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FeatureOp {
     Create,
     Update,
@@ -1194,24 +1044,19 @@ pub enum FeatureOp {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EventFeature {
     pub id: String,
     pub op: FeatureOp,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
 }
 
 /// One committed change of a project, in commit order (`seq` is the cursor).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EventRecord {
     pub seq: String,
     pub data_revision: String,
@@ -1221,11 +1066,9 @@ pub struct EventRecord {
     /// and `project.metadata` (the catalog, docs/adr/0028; no objects).
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub actor: Option<String>,
     /// The request that made it: a client recognises its own commits.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub request_id: Option<String>,
     pub features: Vec<EventFeature>,
     /// Name, settings, layer tree or styles changed.
@@ -1233,28 +1076,22 @@ pub struct EventRecord {
     /// Block definitions made, changed or removed (docs/adr/0144 §5): a
     /// client takes them with `GET …/blocks`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EventBlock>>", optional))]
     pub blocks: Vec<EventBlock>,
 }
 
 /// One block definition an event changed (docs/adr/0144 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EventBlock {
     pub id: String,
     pub op: FeatureOp,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EventPage {
     pub events: Vec<EventRecord>,
     /// Cursor to ask from next time (the last seq, or the given one when nothing is new).
@@ -1264,10 +1101,8 @@ pub struct EventPage {
 // ── WebSocket (`/v1/ws`) ─────────────────────────────────────────────────
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ClientMessage {
     /// Follow a project's events from `after` (missed ones are replayed first).
     #[serde(rename_all = "camelCase")]
@@ -1284,10 +1119,8 @@ pub enum ClientMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ServerMessage {
     #[serde(rename_all = "camelCase")]
     Subscribed {

@@ -7,8 +7,6 @@
 //! the language).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::layer::{LayerNode, LayerNodeType};
 
@@ -28,10 +26,8 @@ pub const MAX_CARD_FIELDS: usize = 200;
 /// An action of a layer's objects (docs/adr/0225 §4): its name and the
 /// address or file it opens, a template.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerAction {
     /// The name in the menus and on the card.
     pub name: String,
@@ -49,30 +45,23 @@ fn is_yes(b: &bool) -> bool {
 
 /// What the Bilgi tool shows of a layer's objects (docs/adr/0225 §5).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InfoCard {
     /// The card's title, a template; absent: the object's kind and label.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub title: Option<String>,
     /// The attributes shown, in order; empty: all the object has.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fields: Vec<String>,
     /// Lines under the attributes, a template.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     /// Whether the object's attachments show (absent: they do).
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub attachments: bool,
     /// Whether the layer's actions show (absent: they do).
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub actions: bool,
 }
 

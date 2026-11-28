@@ -17,8 +17,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -32,10 +30,8 @@ pub const CAD_ENTITIES_CREATE_VERSION: u32 = 1;
 /// The drawing tool or Hesap window whose step has its own name; without
 /// one the step is “Ekle”, as for every object a drawing tool adds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CreateOperation {
     /// Paralel çizgi: the lines beside an axis, the corridor between them, the axis.
     Parallel,
@@ -160,49 +156,40 @@ pub enum CreateOperation {
 /// One new object: its geometry and what else it carries. The layer is the
 /// input's; the persistent id and the slot are given when it is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewObject {
     /// Its kind and the fields that place and shape it.
     pub geometry: EntityGeometry,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its
     /// nearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The object whose label this new text writes (Etiketleri yazıya
     /// çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
@@ -210,7 +197,6 @@ pub struct NewObject {
     /// text only; with `labelScale` the text then follows the object as its
     /// label, without it a point's name (`TextEntity.label_of`). Absent: a text of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub label_of: Option<String>,
     /// The scale's denominator (1:N) the linked label is written at:
@@ -218,20 +204,17 @@ pub struct NewObject {
     /// `labelOf` without it links the text to a point as its name, which
     /// moves with the point (docs/adr/9314; another object: `invalid_link`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub label_scale: Option<f64>,
     /// Its own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0260 §2): Tarama's
     /// (docs/adr/0332 §1). Absent: its layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub transparency: Option<f64>,
     /// Its place in its layer's draw order (`ObjectLook.order`, docs/adr/0260 §4): Tarama's Sıra (docs/adr/0332 §1).
     /// Absent: 0, drawn by its slot after the objects before it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub order: Option<i32>,
 }
@@ -279,10 +262,8 @@ pub struct NewObject {
 /// too (`attribute_required`); a field an object does not give takes its
 /// default. A required field without a value or a default is not refused.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCreate {
     /// The layer they go on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -294,23 +275,19 @@ pub struct EntitiesCreate {
     /// kestirme, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya
     /// çevir. Absent: “Ekle”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<CreateOperation>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.create` v1: the objects written, in the input's order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCreated {
     /// Their persistent ids (UUIDv7, docs/adr/0014): the names files, the
     /// cloud, Python and AI use.
@@ -328,10 +305,8 @@ pub struct EntitiesCreated {
 
 /// What `cad.entities.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCreatePlan {
     /// The objects as they would be stored, in the input's order: `id` 0,
     /// as their slots are given when they are written.

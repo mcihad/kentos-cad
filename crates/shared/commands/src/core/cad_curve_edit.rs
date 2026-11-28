@@ -7,8 +7,6 @@
 //! wrapped copies not counted.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -21,10 +19,8 @@ pub const CAD_CURVES_EDIT_VERSION: u32 = 1;
 /// What changes (Close, Open, Decurve, Spline; for a spline: Close, Open, Fit data, Edit vertex,
 /// Refine, convert to Polyline).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CurveEdit {
     /// Kapat: a polyline's last vertex joins its first (its closing edge's bulge and widths as stored); a NURBS
     /// curve closes smoothly: one with fit points drawn again through them, closed, one by control points with its
@@ -40,12 +36,10 @@ pub enum CurveEdit {
     /// vertices.
     ToSpline {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 11)))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         degree: Option<u32>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         through: bool,
     },
     /// A fit point added before `index` (its count: after the last); the curve drawn again through them.
@@ -71,11 +65,9 @@ pub enum CurveEdit {
     /// again leaving and arriving along them.
     Tangents {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         start: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         end: Option<Vec2>,
     },
@@ -123,10 +115,8 @@ pub enum CurveEdit {
 /// them), `invalid_index`, `invalid_knot` (outside the domain or a full knot), `coincident_points` and
 /// `invalid_nurbs` (the curve the edit makes), `too_few_points`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CurvesEdit {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -136,7 +126,6 @@ pub struct CurvesEdit {
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

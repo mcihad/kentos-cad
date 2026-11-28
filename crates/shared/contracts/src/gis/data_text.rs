@@ -8,36 +8,28 @@
 //! another program names its own columns: the mapping says which they are.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::TextAlign;
 
 /// Which columns of a data layer's rows make its texts.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DataText {
     /// The column of the words.
     pub text: String,
     /// The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub height: Option<String>,
     /// The column of the angle, degrees counter-clockwise from east; absent or empty: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub angle: Option<String>,
     /// The column of the alignment: Yazı's names (“sol alt”, “orta”, “sağ üst” …) or the contract's (`bottomLeft`);
     /// absent, empty or another word: the left of the baseline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub align: Option<String>,
     /// The column of the width factor; absent, empty, 1 or out of (0, 100]: none (1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub width: Option<String>,
 }
 

@@ -7,8 +7,6 @@
 //! north diagram, design §8a).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use super::{Ctx, Note, Pen};
 use crate::geodesy;
@@ -480,9 +478,7 @@ pub(crate) fn declination(ctx: &Ctx, n: &NorthArrowItem) -> Declination {
 /// Where a north arrow's date came from (`@tarih`): a sheet's variable, the project's, or the
 /// host's today.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum DateSource {
     Sheet,
     Project,
@@ -491,9 +487,7 @@ pub enum DateSource {
 
 /// Where a north arrow's declination comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum DeclinationSource {
     /// Typed by hand (“elle”).
     Hand,
@@ -503,9 +497,7 @@ pub enum DeclinationSource {
 
 /// Why a north arrow's declination is not known.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum NorthMissing {
     /// The map has no place on the ground the core can work out (no map, no centre, a system that is not TM or UTM).
     NoPlace,
@@ -518,40 +510,30 @@ pub enum NorthMissing {
 /// worked out for with where that date came from. The inspector's lines; a host needs no lat/lon
 /// of its own.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct NorthInfo {
     /// The map it points on, when it names one that is on the sheet.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map: Option<String>,
     /// The map's centre, geodetic latitude and longitude in degrees (GRS80/WGS84), when the
     /// project's system is one the core turns back (TM, UTM).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub lat: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub lon: Option<f64>,
     /// From grid north to true north at the centre, degrees (the sign the arrow writes).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub convergence: Option<f64>,
     /// The declination the arrow uses, degrees, east positive; none: not known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub declination: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<DeclinationSource>,
     /// The year a typed value is for, when one was given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hand_year: Option<u16>,
     /// Why the declination is not known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub missing: Option<NorthMissing>,
     /// The model (“WMM2025”) and the decimal years it holds for.
     pub model: String,
@@ -559,17 +541,13 @@ pub struct NorthInfo {
     pub valid_until: f64,
     /// The date used (`@tarih`, ISO, as written), and where it came from; none: no date at all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date_source: Option<DateSource>,
     /// The date as a decimal year (NOAA's count), and whether it is inside the model's years.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub year: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub in_model: Option<bool>,
 }
 

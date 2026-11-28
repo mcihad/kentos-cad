@@ -9,8 +9,6 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_PROCESSING_TOOLS: &str = "cad.processing.tools";
 pub const CAD_PROCESSING_TOOLS_VERSION: u32 = 1;
@@ -23,28 +21,21 @@ pub const CAD_PROCESSING_BATCH_VERSION: u32 = 1;
 /// (case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too
 /// (docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingTools {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub query: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub models: bool,
 }
 
 /// A parameter of a tool.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ToolParameter {
     pub name: String,
     pub label: String,
@@ -59,7 +50,6 @@ pub struct ToolParameter {
     #[serde(default)]
     pub advanced: bool,
     /// Its value when not given, for this drawing (null: none).
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<serde_json::Value>"))]
     pub default: Option<Value>,
     /// A choice's values (empty for another kind).
@@ -69,10 +59,8 @@ pub struct ToolParameter {
 
 /// A tool.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingTool {
     pub id: String,
     pub label: String,
@@ -82,11 +70,9 @@ pub struct ProcessingTool {
     /// What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),
     /// beside `description`, which is the user's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model_description: Option<String>,
     /// An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub extension: Option<crate::ExtensionPin>,
     /// The modules whose projects run it (`cbs`, `harita`, `mimari`, `yol`; docs/adr/9310): a project of another module
     /// does not list it and refuses its run (`tool_not_in_module`).
@@ -98,16 +84,13 @@ pub struct ProcessingTool {
     pub parameters: Vec<ToolParameter>,
     /// What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingToolOutput>>", optional))]
     pub outputs: Vec<ProcessingToolOutput>,
 }
 
 /// A tool's output, as a model's step is wired to it: `{"kind": "output", "step": …, "output": name}`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingToolOutput {
     pub name: String,
     pub label: String,
@@ -118,10 +101,8 @@ pub struct ProcessingToolOutput {
 
 /// What `cad.processing.tools` lists.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingToolsListed {
     pub tools: Vec<ProcessingTool>,
 }
@@ -145,14 +126,11 @@ pub struct ProcessingToolsListed {
 /// `environment` is the raster tools' analysis environment (docs/adr/0643 §1); its own refusals are
 /// `invalid_parameters` with the path `environment.…` (an area or snap raster not found, a cell size not above 0).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingRun {
     pub tool: String,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
@@ -160,26 +138,21 @@ pub struct ProcessingRun {
     pub parameters: BTreeMap<String, Value>,
     /// The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub selection: Vec<String>,
     /// The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[f64; 4]>,
     /// Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<RunSink>,
     /// The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
     /// folder (then in the project's search paths), a result written beside it. The host gives it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
     /// takes it. A tool's own area (Kapsam) comes before the environment's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub environment: Option<RasterEnvironment>,
     /// A model written for this run, as the library keeps one (`id`, `label`, `inputs`, `steps` with each step's
     /// `tool` and `values` wired by `{"kind": "input" | "output" | "value", …}`, `outputs`): run as a saved model is,
@@ -188,49 +161,39 @@ pub struct ProcessingRun {
     /// custom). Refused when it does not read (`invalid_parameters`, path `model`), names a tool this host has not
     /// (`unknown_tool`, path `model.steps[i].tool`) or its wiring does not hold (`invalid_parameters`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(type = "unknown", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<serde_json::Value>"))]
     pub model: Option<Value>,
 }
 
 /// A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterEnvironment {
     /// The analysis area as a box: minimum east, north, maximum east, north.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub area: Option<[f64; 4]>,
     /// The analysis area as the box of these objects (persistent ids); with `area`, the box of both.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub area_objects: Vec<String>,
     /// The result's cell size, a side.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cell: Option<f64>,
     /// The raster object (persistent id) whose cells the result lines up with.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub snap: Option<String>,
     /// The value a result cell without a value takes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub nodata: Option<f64>,
 }
 
 /// What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SinkMode {
     /// A new file: one that is there is replaced only with `overwrite`.
     #[default]
@@ -250,29 +213,23 @@ pub enum SinkMode {
 /// `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
 /// transaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RunSink {
     /// The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the
     /// tables go in `schema`, docs/adr/0592 §2).
     pub path: String,
     /// The database schema the tables go in (`public` when none); a GeoPackage has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub schema: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
     /// New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
     #[serde(default, skip_serializing_if = "is_new")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SinkMode>", optional))]
     pub mode: SinkMode,
     /// Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
     /// label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub tables: bool,
 }
 
@@ -282,10 +239,8 @@ fn is_new(mode: &SinkMode) -> bool {
 
 /// Whether a geometry column holds Z (or M) in the rows of a sink's table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SinkDimension {
     /// No row has it.
     None,
@@ -297,10 +252,8 @@ pub enum SinkDimension {
 
 /// A column of a sink's table and the attribute it holds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SinkColumn {
     pub attribute: String,
     /// The column's name; it differs from the attribute's when the name had to change (a column of the same name in
@@ -310,31 +263,25 @@ pub struct SinkColumn {
 
 /// One table of a sink: what it holds and how it was made.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SinkTable {
     pub table: String,
     /// The layer of the copy the rows are the objects of; none for a table output.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The tool's output a table holds (`sink.tables`); none for a layer's table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub output: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
     /// The geometry column's type; none for a table of records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     pub z: SinkDimension,
     pub m: SinkDimension,
     /// A table of the file taken out and written again (`replaceTables`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub replaced: bool,
     /// The columns in order, each with its attribute.
     pub columns: Vec<SinkColumn>,
@@ -343,16 +290,13 @@ pub struct SinkTable {
 /// What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out
 /// or written as chords is in the answer's `sink` and its `export_losses` warning.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SinkReport {
     pub mode: SinkMode,
     pub tables: Vec<SinkTable>,
     /// The tables the file already had that the write did not touch (a new file has none).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub untouched: Vec<String>,
     /// The batches the rows went in, and how many rows a batch holds at most.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -365,43 +309,34 @@ pub struct SinkReport {
 
 /// A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RunInput {
     pub layer: String,
     /// The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
     /// (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
     pub digest: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
     /// bound layer's) and how many of its records were read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u64>,
     /// The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it
     /// again reads, and where `revision`'s SHA-256 is compared.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
 }
 
 /// A note the tool made while it ran.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ToolNote {
     /// `info` or `warn`.
     pub level: String,
@@ -410,32 +345,25 @@ pub struct ToolNote {
 
 /// What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingRan {
     pub tool: String,
     /// The tool's sentence of what it did.
     pub summary: String,
     /// The objects it made and changed (persistent ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub added: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub changed: Vec<String>,
     /// The objects it chose (a selecting tool's result; persistent ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub selected: Vec<String>,
     /// The layers it made (ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
@@ -443,23 +371,18 @@ pub struct ProcessingRan {
     pub outputs: BTreeMap<String, Value>,
     /// Its notes (what resolving left out, what it skipped).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ToolNote>>", optional))]
     pub notes: Vec<ToolNote>,
     /// The layers the features inputs read, in the inputs' order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RunInput>>", optional))]
     pub inputs: Vec<RunInput>,
     /// The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<crate::GpkgExported>,
     /// How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink_report: Option<SinkReport>,
     /// The undo step's name; none when the drawing did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<String>,
     /// What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again.
     pub record: ProcessingRecord,
@@ -473,10 +396,8 @@ pub struct ProcessingRan {
 /// (`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same
 /// revision, the same data under another revision, or changed data.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingRecord {
     /// Always `kentos.run-record`.
     pub format: String,
@@ -493,11 +414,9 @@ pub struct ProcessingRecord {
     pub tool_version: u32,
     /// A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub definition: Option<String>,
     /// The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its
     /// name and path, not its rows: giving them to `cad.processing.run` runs it again.
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "BTreeMap<String, serde_json::Value>")
@@ -505,26 +424,21 @@ pub struct ProcessingRecord {
     pub parameters: BTreeMap<String, Value>,
     /// The input's own `selection` and `view`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub selection: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[f64; 4]>,
     /// The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RunInput>>", optional))]
     pub inputs: Vec<RunInput>,
     /// The drawing's revision when the run began.
     pub document_revision: String,
     /// The project's coordinate system (EPSG/SRID); none for a local project.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The seed a tool with one took (its `seed` parameter).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub seed: Option<u64>,
     /// `KentOS <version>`.
@@ -539,7 +453,6 @@ pub struct ProcessingRecord {
     /// The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same
     /// grids gives the same cells.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordGrid>>", optional))]
     pub grids: Vec<RecordGrid>,
     /// The tool as one step, a model's steps in order, a batch's rows in order.
     pub steps: Vec<RecordStep>,
@@ -547,65 +460,52 @@ pub struct ProcessingRecord {
     pub total: RecordTotal,
     /// A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordFailure>>", optional))]
     pub failed: Vec<RecordFailure>,
     /// Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables
     /// and their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<RecordSink>,
 }
 
 /// Where a run's result was written (docs/adr/0593 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordSink {
     /// The GeoPackage's path, or the database's address (without a password).
     pub path: String,
     /// The database's schema; none for a file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub schema: Option<String>,
     pub mode: SinkMode,
     pub tables: Vec<RecordSinkTable>,
     /// The file's size and SHA-256 once written; none for a database.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sha256: Option<String>,
 }
 
 /// A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordSinkTable {
     pub table: String,
     /// The layer's id, or the table output's name.
     pub of: String,
     /// The batch row that made it (`rows[i]`); none for a run's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub row: Option<String>,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u64,
 }
 
 /// A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordFailure {
     /// `rows[i]`.
     pub id: String,
@@ -618,16 +518,13 @@ pub struct RecordFailure {
 /// A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the
 /// band read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordGrid {
     /// `input` or `output`.
     pub role: String,
     /// The raster's file (its path as the object names it), or none for one embedded.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
     /// `[x₀, a, b, y₀, c, d]`, the affine geotransform's usual order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -638,32 +535,26 @@ pub struct RecordGrid {
     pub height: u32,
     /// The band read (1 and up); none for a result.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub band: Option<u32>,
     /// The value taken as empty; none: NaN only (or the file's own for a source read with its own).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub nodata: Option<f64>,
     /// The raster's EPSG/SRID; none when it has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// A source's cells worked out: first column, first row, columns, rows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub window: Option<[u32; 4]>,
 }
 
 /// A step of a run (docs/adr/0529 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordStep {
     /// A model step's id, a batch row's `rows[i]`, a tool's own id.
     pub id: String,
@@ -672,13 +563,10 @@ pub struct RecordStep {
     pub label: String,
     /// The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when
     /// the step ended, so exact.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub records_in: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub records_out: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
     pub ms: u64,
     pub summary: String,
@@ -689,33 +577,25 @@ pub struct RecordStep {
 /// The steps' own counts are exact too; a tool that reports only approximate progress while it runs
 /// (`Feedback::progress`) has this last, exact total.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordTotal {
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub records_in: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub records_out: u64,
 }
 
 /// The values one row of a batch takes over the batch's (docs/adr/0529 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BatchRow {
     /// Its name in the answer (“Satır 3” when not given).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The parameters it gives its own value to; every other parameter takes the batch's, then the default.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
@@ -733,15 +613,12 @@ pub struct BatchRow {
 /// time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
 /// nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingBatch {
     pub tool: String,
     /// The values every row takes unless it gives its own.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
@@ -750,31 +627,25 @@ pub struct ProcessingBatch {
     pub rows: Vec<BatchRow>,
     /// As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub selection: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[f64; 4]>,
     /// As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
     /// folder (then in the project's search paths), a result written beside it. The host gives it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
     /// back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
     #[serde(default, skip_serializing_if = "is_stop")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BatchOnError>", optional))]
     pub on_error: BatchOnError,
     /// Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
     /// one after another on a copy of the drawing and what they made is written in one write, a table for each layer
     /// a row made. A row's or the batch's input read from its source (`scope: source`) needs it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<RunSink>,
     /// As `cad.processing.run`'s: the raster tools' analysis environment every row takes (docs/adr/0643 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub environment: Option<RasterEnvironment>,
 }
 
@@ -784,10 +655,8 @@ fn is_stop(on_error: &BatchOnError) -> bool {
 
 /// What a batch does when a row stops at run time (docs/adr/0551 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BatchOnError {
     /// The whole batch is taken back and nothing is written (`batch_row_failed`).
     #[default]
@@ -798,12 +667,9 @@ pub enum BatchOnError {
 
 /// A row of a batch as it ran.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BatchRowRan {
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u32,
     pub label: String,
@@ -813,12 +679,9 @@ pub struct BatchRowRan {
 
 /// A row of a batch that stopped at run time and was taken back (`onError: continue`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BatchRowFailed {
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u32,
     pub label: String,
@@ -829,10 +692,8 @@ pub struct BatchRowFailed {
 
 /// What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingBatched {
     pub tool: String,
     pub summary: String,
@@ -840,19 +701,15 @@ pub struct ProcessingBatched {
     pub rows: Vec<BatchRowRan>,
     /// With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BatchRowFailed>>", optional))]
     pub failed: Vec<BatchRowFailed>,
     /// The undo step's name; none when the drawing did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<String>,
     /// With a sink: the file or database the rows' results went to (or with `plan` would go to), and how
     /// (docs/adr/0593 §1). The drawing then does not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<crate::GpkgExported>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sink_report: Option<SinkReport>,
     /// The batch's own record: its rows as steps.
     pub record: ProcessingRecord,

@@ -5,8 +5,6 @@
 //! A project setting (`.kcad` schema 97, `linearEvents`): what follows what, never the places.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most links a project holds, and the most route layers a link names.
 pub const MOST_EVENT_LINKS: usize = 50;
@@ -16,10 +14,8 @@ pub const DEFAULT_EVENT_TOLERANCE: f64 = 0.001;
 
 /// What an event object is: a point at a measure, or a line between two.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EventLinkKind {
     /// A point at one measure (`measure`).
     Point,
@@ -29,10 +25,8 @@ pub enum EventLinkKind {
 
 /// Which side of the route a positive offset lies on.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EventSide {
     /// The right of the measure's direction.
     #[default]
@@ -49,10 +43,8 @@ impl EventSide {
 
 /// A link: the events of one layer on the routes of some others.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EventLink {
     /// Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
     pub id: String,
@@ -69,26 +61,20 @@ pub struct EventLink {
     pub event_route: String,
     /// A point event's measure attribute (`point` only, and then required).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub measure: Option<String>,
     /// A line event's from and to measure attributes (`line` only, and then both required).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<String>,
     /// The attribute of the offset from the route (m, perpendicular); none: the event is on the route.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset: Option<String>,
     /// The side a positive offset lies on; written only when not `right`.
     #[serde(default, skip_serializing_if = "EventSide::is_default")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<EventSide>", optional))]
     pub side: EventSide,
     /// How far (m) an event may lie from its route's place before a write moves it; none: 0,001.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }

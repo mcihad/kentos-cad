@@ -3,13 +3,9 @@
 //! and where in the input it is, when that is known.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetError {
     /// Stable, `snake_case` (`duplicate_id`, `unknown_item`, `bad_json` …).
     pub code: String,
@@ -17,7 +13,6 @@ pub struct SheetError {
     pub message: String,
     /// Where: `sheets[0].items[2].frame.width`, an item's id, a JSON path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
 }
 

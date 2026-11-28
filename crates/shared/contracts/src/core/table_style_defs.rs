@@ -8,8 +8,6 @@
 use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::annotation::names_problem;
 use crate::hatch::is_hex_colour;
@@ -22,59 +20,46 @@ pub const MAX_TABLE_TEXT_STYLE_NAME: usize = 255;
 
 /// One of a table style's cell styles, every field optional.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableCellStyleDef {
     /// The text style its words are written in, by its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_style: Option<String>,
     /// Its words' height on the paper, mm (group 140).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     /// Its words' horizontal alignment (group 170's left, centre or right).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub align: Option<TableAlign>,
     /// Its words' colour, `#rrggbb` (group 62).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its background, `#rrggbb` (groups 63 and 283).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     /// The room between its words and its left and right borders, paper mm (group 40).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub horizontal_margin: Option<f64>,
     /// The room between its words and its top and bottom borders, paper mm (group 41).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub vertical_margin: Option<f64>,
     /// Its borders' weight on the paper, mm, 0 the thinnest line (groups 274–279).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub border_weight: Option<f64>,
     /// Its borders' colour, `#rrggbb` (groups 64–69).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub border_color: Option<String>,
 }
 
 /// A named table style (docs/adr/1126 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableStyleDef {
     /// One of its kind among the project's table styles.
     pub id: String,
@@ -82,15 +67,12 @@ pub struct TableStyleDef {
     pub name: String,
     /// The title row's cells: the first row when it is one merged range across every column.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub title: Option<TableCellStyleDef>,
     /// The heading row's cells: the first row after the title, when the table has a heading.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub header: Option<TableCellStyleDef>,
     /// Every other row's cells.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub data: Option<TableCellStyleDef>,
 }
 

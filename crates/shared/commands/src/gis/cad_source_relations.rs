@@ -5,18 +5,14 @@
 //! cases are `fixtures/commands/v1/cad.sources.relate.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_SOURCES_RELATE: &str = "cad.sources.relate";
 pub const CAD_SOURCES_RELATE_VERSION: u32 = 1;
 
 /// What `cad.sources.relate` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelateOp {
     /// Says how the relation is kept now; writes nothing.
     Check,
@@ -28,10 +24,8 @@ pub enum RelateOp {
 
 /// How a project relation is kept in its sources.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelationState {
     /// A layer of the relation is not bound to a source.
     Unbound,
@@ -61,10 +55,8 @@ pub enum RelationState {
 /// of it), `relation_dangling` (a reference to an object the table does not hold); for `unmap`: `relation_not_mapped`.
 /// `file_unwritable` when the file cannot be written (nothing is).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesRelate {
     /// The project relation's id.
     pub relation: String,
@@ -72,41 +64,33 @@ pub struct SourcesRelate {
     /// `map`: the mapping table's name (letters, digits and `_`, 1–64, not starting with a digit or `gpkg`);
     /// none: the child's table and the parent's joined with `_`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<String>,
 }
 
 /// Output of `cad.sources.relate` v1, and its plan: how the relation is kept (after the op; a plan says what it
 /// would be), its mapping table and rows.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesRelated {
     pub relation: String,
     pub state: RelationState,
     /// The mapping table (mapped).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<String>,
     /// The mapping rows (mapped; `map`: those written).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
     /// The child's table and the parent's, when both are bound.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub child: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     /// Why a foreign or broken relation is not rewritten.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub why: Option<String>,
     /// The file's SHA-256 after (plan, check: now); none for an unbound or split relation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     pub revision: String,
 }

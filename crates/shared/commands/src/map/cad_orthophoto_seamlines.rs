@@ -18,8 +18,6 @@
 //! nothing. The shared cases are `fixtures/commands/v1/cad.orthophoto.seamlines.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ORTHOPHOTO_SEAMLINES: &str = "cad.orthophoto.seamlines";
 pub const CAD_ORTHOPHOTO_SEAMLINES_VERSION: u32 = 1;
@@ -31,10 +29,8 @@ pub const SEAMLINE_LAYER_NAME: &str = "Mozaik elemanları";
 
 /// How the seam is drawn through the overlap (docs/adr/4700).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OrthoSeamMethod {
     /// Equally far from the two images' own parts (the area Voronoi diagram with overlap).
     #[default]
@@ -60,57 +56,45 @@ pub enum OrthoSeamMethod {
 /// `layer_locked`;
 /// `invalid_revision`, `revision_conflict`; the files' (`invalid_file_path`, `file_not_found`, `import_unreadable`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoSeamlines {
     pub first: String,
     pub second: String,
     /// The two images' footprints' persistent ids, in the images' order; none: each raster's extent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub footprints: Option<[String; 2]>,
     #[serde(default)]
     pub method: OrthoSeamMethod,
     /// Voronoi: a curved stretch's points every `step` metres along the line from the seam's start to its end.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub step: Option<f64>,
     /// Radiometry: a cell's side in the first image's pixels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub cell: Option<u32>,
     /// Radiometry: how far from the Voronoi seam a searched cell's centre may lie.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub corridor: Option<f64>,
     /// Radiometry: a layer whose areas (and closed polylines) the seam keeps out of, as buildings and bridges (USGS:
     /// a seam does not cut a roof): a cell with a pixel centre inside one is not searched.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub avoid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub folder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// A seam's end (docs/adr/4700): where the two footprints' boundaries cross (`crossing`), or on a stretch the two
 /// share (`shared`: the union's outer boundary), the point of it equally far from the two images' own parts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoSeamEnd {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub at: [f64; 2],
@@ -120,10 +104,8 @@ pub struct OrthoSeamEnd {
 /// An image's seamline polygon: the raster's persistent id, its ring (east, north; counter-clockwise, closed back to
 /// its start by its last edge), its area, the part of the overlap it keeps (m²), and the object written (execute).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoSeamPolygon {
     pub image: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -133,7 +115,6 @@ pub struct OrthoSeamPolygon {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub kept: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
 }
 
@@ -141,10 +122,8 @@ pub struct OrthoSeamPolygon {
 /// bottleneck no path between the ends goes under), the mean along it and over every searched cell; the path's cells,
 /// the searched cells and a cell's side on the ground (metres).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoSeamDifference {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bottleneck: f64,
@@ -164,10 +143,8 @@ pub struct OrthoSeamDifference {
 /// end (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for
 /// radiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoSeamlinesBuilt {
     pub method: OrthoSeamMethod,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -181,11 +158,9 @@ pub struct OrthophotoSeamlinesBuilt {
     pub ends: [OrthoSeamEnd; 2],
     pub polygons: [OrthoSeamPolygon; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub difference: Option<OrthoSeamDifference>,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub opened: bool,
     pub notes: Vec<String>,
     pub revision: String,

@@ -29,7 +29,6 @@ pub const FOLD_DRAWN: f64 = 30.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningForm {
     /// Kapı.
     #[default]
@@ -100,7 +99,6 @@ impl OpeningForm {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningOperation {
     /// Kanatlı: about a hinge.
     #[default]
@@ -183,7 +181,6 @@ impl OpeningOperation {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningAnchor {
     /// Its jamb nearer the wall's start.
     Start,
@@ -198,7 +195,6 @@ pub enum OpeningAnchor {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningHand {
     /// At its jamb nearer the wall's start.
     #[default]
@@ -220,7 +216,6 @@ impl OpeningHand {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningSide {
     #[default]
     Left,
@@ -241,7 +236,6 @@ impl OpeningSide {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningBreak {
     /// Its wall is gone, or is no wall.
     HostGone,
@@ -287,7 +281,6 @@ impl OpeningBreak {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningFields {
     /// Its wall's persistent id.
     pub host: String,
@@ -408,7 +401,6 @@ pub struct OpeningFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -837,10 +829,8 @@ impl OpeningFields {
 
 /// A door's, window's or bare opening's values (docs/adr/0341 §1): KentOS's own types.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningTypeDef {
     pub id: String,
     pub name: String,
@@ -851,24 +841,19 @@ pub struct OpeningTypeDef {
     pub leaves: u8,
     pub operation: OpeningOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub swing: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub frame: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub sill: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub head: Option<f64>,
     /// A niche's or flue's depth (docs/adr/0719).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
 }

@@ -3,8 +3,6 @@
 //! `casework`). The commands' plans and answers and `cad.casework.edit` and `.query` are `kentos-commands`'.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -28,10 +26,8 @@ pub const CASEWORK_MEMBERS_MAX: usize = 10_000;
 
 /// Which side of its path a run stands on, as one walks from `from` (the room's side).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkSide {
     #[default]
     Left,
@@ -41,10 +37,8 @@ pub enum CaseworkSide {
 /// How a run turns a corner (docs/adr/0727 §1): the leg before keeps the corner (a blind corner, a 5 cm filler after
 /// it), or both legs stop a cabinet's depth from it (an open corner, its square a filler).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkCorner {
     #[default]
     Blind,
@@ -53,10 +47,8 @@ pub enum CaseworkCorner {
 
 /// An end of a run's path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkEnd {
     Start,
     End,
@@ -64,10 +56,8 @@ pub enum CaseworkEnd {
 
 /// The side a single door hinges on, as one faces the cabinet.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkDoor {
     Left,
     Right,
@@ -75,22 +65,18 @@ pub enum CaseworkDoor {
 
 /// A module's own values (docs/adr/0727 §2): its width instead of the run's default, its door's hand.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkModuleSetting {
     /// The module, counted from `from` along the path (1 the first).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub module: u32,
     /// Its width, one of the cabinet block's widths.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     /// Its door's hinge; a double door (over 0.60 m) and an appliance have none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hand: Option<CaseworkDoor>,
 }
 
@@ -113,27 +99,22 @@ pub struct CaseworkModuleSetting {
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warnings: `layer_hidden`,
 /// `casework_filler`, `casework_blind_corner`, `casework_clash`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkRun {
     /// The layer the run goes on, a layer's id.
     pub layer_id: String,
     /// Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<CaseworkEnd>>>", optional))]
     pub filler_ends: Vec<Option<CaseworkEnd>>,
     /// Where the run starts, on the line its backs stand on.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Vec2,
     /// Its corners in order: one an L, two a U; absent: a straight run.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub through: Option<Vec<Vec2>>,
     /// Where its path ends.
@@ -141,62 +122,48 @@ pub struct CaseworkRun {
     pub to: Vec2,
     /// The side it stands on; absent: left.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub side: Option<CaseworkSide>,
     /// A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub module: Option<f64>,
     /// The countertop's depth, from 0.30 to 1.20 m; absent: 0.60.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
     /// How it turns its corners; absent: blind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corner: Option<CaseworkCorner>,
     /// The sink's module, counted from `from` (1 the first); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub sink: Option<u32>,
     /// The cooktop's module; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub cooktop: Option<u32>,
     /// The dishwasher's module; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub dishwasher: Option<u32>,
     /// An oven under the cooktop.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub oven: Option<bool>,
     /// The fridge at an end of the path; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fridge: Option<CaseworkEnd>,
     /// Modules' own widths and doors.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub per_module: Option<Vec<CaseworkModuleSetting>>,
     /// Wall cabinets over the modules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub upper: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -224,10 +191,8 @@ impl CaseworkRun {
 
 /// What a module of the run holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkModuleKind {
     Base,
     Sink,
@@ -237,10 +202,8 @@ pub enum CaseworkModuleKind {
 
 /// A module's door: single, hinged on a side, or double (wider than 0.60 m).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkHand {
     Left,
     Right,
@@ -249,10 +212,8 @@ pub enum CaseworkHand {
 
 /// One module of a run, along its leg from the leg's start.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkModule {
     /// Its number, from `from` along the path.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -265,29 +226,23 @@ pub struct CaseworkModule {
     pub width: f64,
     /// Its leg, from 0; absent: the first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub leg: Option<u32>,
     /// Its door; an appliance has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hand: Option<CaseworkHand>,
     /// The cooktop's module with an oven under it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub oven: Option<bool>,
     /// In a blind corner: the next leg's cabinets stand before part of its front (docs/adr/0727 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blind: Option<bool>,
 }
 
 /// One leg of a run: its length, the span its modules and filler take, its filler and the wall it stands on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkLeg {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
@@ -300,23 +255,19 @@ pub struct CaseworkLeg {
     pub filler: f64,
     /// The wall whose face it stands on, by its persistent id; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<String>,
 }
 
 /// The fridge's place: along its leg, from the leg's start.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkFridge {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub start: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub leg: Option<u32>,
 }
@@ -325,10 +276,8 @@ pub struct CaseworkFridge {
 
 /// What an object of a run is in it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkPart {
     /// A module's floor unit: a base cabinet, the dishwasher, the oven.
     Module,
@@ -350,25 +299,20 @@ pub enum CaseworkPart {
 /// An object of a run: its persistent id, its part and, for modules, uppers, fillers and corners, its number (a
 /// module's, a leg's from 0, a corner's from 1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkMember {
     pub uid: EntityId,
     pub part: CaseworkPart,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 /// A wall's face, relative to its path's direction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkFace {
     Left,
     Right,
@@ -376,10 +320,8 @@ pub enum CaseworkFace {
 
 /// The wall face edge a leg stands on (docs/adr/0727 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkTie {
     pub wall: EntityId,
     /// The face's edge, from 0 along the wall's path.
@@ -390,10 +332,8 @@ pub struct CaseworkTie {
 
 /// Why a run did not follow its walls: one is gone, or the path they give lays no run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkBreak {
     WallGone,
     NotBuilt,
@@ -411,17 +351,14 @@ impl CaseworkBreak {
 /// A kitchen run as the drawing keeps it (docs/adr/0727 §5): its recipe (`cad.casework.run`'s input without an
 /// expected revision), each leg's wall face (none: it stands free), its objects and why it no longer follows.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkRecord {
     pub id: CaseworkId,
     pub recipe: CaseworkRun,
     pub ties: Vec<Option<CaseworkTie>>,
     pub members: Vec<CaseworkMember>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<CaseworkBreak>,
 }
 

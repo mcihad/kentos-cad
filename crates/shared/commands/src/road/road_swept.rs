@@ -7,8 +7,6 @@
 //! they and the Python SDK pass the shared cases in `fixtures/commands/v1/road.swept.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -26,10 +24,8 @@ pub const MOST_SWEPT_OBSTACLES: usize = 1000;
 /// ahead of it), from the kingpin to the trailer's axle, the trailer's body ahead of the kingpin and behind its axle,
 /// and its width; m.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptTrailerDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub kingpin: f64,
@@ -46,13 +42,10 @@ pub struct SweptTrailerDef {
 /// A design vehicle: its wheelbase, its body ahead of the front axle and behind the rear axle, its width (m) and an
 /// optional trailer. KentOS gives no vehicle: the sizes are the agency's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptVehicleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub wheelbase: f64,
@@ -63,7 +56,6 @@ pub struct SweptVehicleDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub trailer: Option<SweptTrailerDef>,
 }
 
@@ -71,10 +63,8 @@ pub struct SweptVehicleDef {
 /// order), the front axle's distance outward of the curb (`offset`, m; the path runs at the return's radius plus it)
 /// and the straight run along each leg before and after the return (`approach`, m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptJunctionPath {
     pub junction: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -97,38 +87,30 @@ pub struct SweptJunctionPath {
 /// returns), `entity_not_found`, `invalid_swept` (an object not of the kinds, more than [`MOST_SWEPT_SAMPLES`]
 /// samples). Warnings: `swept_touches` (a body meets an obstacle).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptQuery {
     pub vehicle: SweptVehicleDef,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub path: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub junction: Option<SweptJunctionPath>,
     #[serde(default)]
     pub reverse: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub obstacles: Vec<String>,
 }
 
 /// The least clearance: its distance (0 where a body meets the obstacle), how far the front had gone, the front's
 /// place then, which body (0 the tractor, 1 the trailer) and the obstacle (its uid; the junction's id for its curb).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptClearance {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub distance: f64,
@@ -146,10 +128,8 @@ pub struct SweptClearance {
 /// the bodies' corners' tracks (front left, front right, rear right, rear left; the trailer's four after the
 /// tractor's), the largest off-tracking of the rear axle and of the trailer's (m), and the least clearance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptQueried {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: f64,
@@ -160,7 +140,6 @@ pub struct SweptQueried {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub rear: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub trailer: Vec<[f64; 2]>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -168,11 +147,9 @@ pub struct SweptQueried {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offtracking: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub trailer_offtracking: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clearance: Option<SweptClearance>,
 }
 
@@ -182,31 +159,25 @@ pub struct SweptQueried {
 ///
 /// Refusals: the query's, `invalid_swept` (`every` zero), the layer's, `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptDraw {
     pub query: SweptQuery,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub every: Option<u32>,
     #[serde(default)]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `road.swept.draw` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SweptDrawn {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

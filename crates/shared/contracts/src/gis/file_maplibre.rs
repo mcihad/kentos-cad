@@ -4,8 +4,6 @@
 //! dropped silently.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// A layer's look, or the visible layers', written as a MapLibre style.
 pub const FILE_EXPORT_MAPLIBRE: &str = "file.export.maplibre";
@@ -16,10 +14,8 @@ pub const FILE_IMPORT_MAPLIBRE_VERSION: u32 = 1;
 
 /// What kind of source `sourceUrl` names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaplibreSourceKind {
     /// A GeoJSON file at the URL (`type: geojson`, `data`).
     Geojson,
@@ -36,41 +32,33 @@ pub enum MaplibreSourceKind {
 /// `not_a_layer`, `no_system`, `nothing_to_export` (no class or rule MapLibre's layers here can draw),
 /// `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportMaplibre {
     /// An absolute path ending `.json`.
     pub path: String,
     /// The layer's id; absent, the visible layers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// Write over files that are there.
     #[serde(default)]
     pub overwrite: bool,
     /// The source's URL, instead of GeoJSON files written beside the style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source_url: Option<String>,
     /// What the URL is; absent, vector tiles when it has `{z}` or ends `.pbf` or `.mvt`, else GeoJSON.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source_kind: Option<MaplibreSourceKind>,
     /// The glyph server's URL for the labels' fonts (`{fontstack}` and `{range}` in it); absent, MapLibre's demo
     /// server. Only a style with labels has it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub glyphs: Option<String>,
 }
 
 /// A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaplibreData {
     pub layer: String,
     pub path: String,
@@ -84,10 +72,8 @@ pub struct MaplibreData {
 
 /// What `file.export.maplibre` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaplibreExported {
     pub path: String,
     /// The ids of the layers written, the bottom one first.
@@ -100,7 +86,6 @@ pub struct MaplibreExported {
     pub rules: u32,
     /// Label style layers written (docs/adr/0635 §1); absent for none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub labels: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -108,16 +93,13 @@ pub struct MaplibreExported {
     pub sha256: String,
     /// The GeoJSON files written beside the style.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MaplibreData>>", optional))]
     pub data: Vec<MaplibreData>,
     /// The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape
     /// markers' icons.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub sprite: Vec<String>,
     /// What the style could not say, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
@@ -131,40 +113,31 @@ pub struct MaplibreExported {
 /// `text`), `file_unreadable`, `invalid_maplibre`, `layer_not_found`, `not_a_layer`, `service_layer`,
 /// `style_layer_not_found`, `revision_conflict`. Warnings: `import_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportMaplibre {
     /// The layer's id; absent, every layer the style is for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The style's `source-layer` or layer `id` to take for `layer`, when the style does not name it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     /// An absolute path to a `.json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// The style itself, instead of a path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One layer's look `file.import.maplibre` made.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaplibreLayerImported {
     pub layer: String,
     /// The style layers taken, by their ids.
@@ -175,16 +148,13 @@ pub struct MaplibreLayerImported {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
     /// The renderer as the layer now has it; null when the file gave only labels.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub renderer: serde_json::Value,
     /// The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
     /// absent when the file had no label KentOS could take.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub labels: Option<crate::labels::LayerLabels>,
     /// The single label the file gave, with `labels`' `single`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<crate::layer::LabelStyle>,
     /// Whether the layer's look changed.
     pub changed: bool,
@@ -192,17 +162,14 @@ pub struct MaplibreLayerImported {
 
 /// What `file.import.maplibre` made of the layers' looks.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaplibreImported {
     pub layers: Vec<MaplibreLayerImported>,
     /// Whether any layer's look changed (an undo step was written).
     pub changed: bool,
     /// What KentOS could not take, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]

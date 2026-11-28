@@ -10,8 +10,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -45,10 +43,8 @@ pub const DEFAULT_PAIR_ANGLE: f64 = 1.0;
 /// What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path
 /// counter-clockwise; the existing free wall keeps its own direction and justification.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallRectangleReference {
     /// The clear inner face; the wall body lies outside the rectangle.
     #[default]
@@ -98,10 +94,8 @@ impl WallRectangleReference {
 /// component thicknesses do not fit the width is refused. For outer/centre references the clear
 /// inner dimensions must remain positive. A plot scale or display-unit change never rescales input.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsRectangle {
     pub layer_id: String,
     pub frame: crate::RectangleFrame,
@@ -109,58 +103,44 @@ pub struct WallsRectangle {
     pub reference: WallRectangleReference,
     /// Direction of the rectangle's sides from east, counter-clockwise. Absent: zero; not used for `edge`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: Option<f64>,
     /// Wall thickness, metres. Absent: the style's width, else 0.2 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
     /// Ortak duvar (docs/adr/0770 §1): the sides that run on an existing wall's matching line (same level) are not
     /// drawn, the existing wall adopted; what is left is written as open walls. Absent or false: one closed wall.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub adopt: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One wall to write: its path as drawn and what the user chose for it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewWall {
     /// The path's vertices, two or more (three or more for a closed one of straight edges); no two in a row at one
     /// place.
@@ -169,56 +149,44 @@ pub struct NewWall {
     /// One per edge (DXF's bulge, tan(θ/4), counter-clockwise positive): one fewer than the points, as many on a
     /// closed path. Absent: every edge straight.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// Kapat: the path's last vertex joins its first.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub closed: bool,
     /// Metres, above 0, at most 100. Absent: the style's new width, else 0.2 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     /// Where the body lies across the path. Absent: centred.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<WallJustify>,
     /// The base line offset, metres, positive to the path's left. Absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     /// A wall style by its id or its name: the project's, or KentOS's own (taken into the project). Absent: a plain
     /// wall of one body.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     /// Its ends. Absent: the style's, else closed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub caps: Option<WallCaps>,
     /// Its height above its level's floor, metres. Absent: the level's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     /// Its level (a project level's id), phase, construction status and discipline. Absent: none said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Giydirme cephe (docs/adr/8070 §7): its grid; the wall takes no style's components. Absent: a wall.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub curtain: Option<crate::CurtainGrid>,
 }
 
@@ -236,41 +204,33 @@ pub struct NewWall {
 /// `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on
 /// the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsCreate {
     /// The layer they go on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
     pub walls: Vec<NewWall>,
     /// Their own colour (`EntityBase.color`). Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Their own line weight, paper mm (0 to 100). Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Their own line type. Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// The document revision the input was prepared against, as decimal text; another one writes nothing (`conflict`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.walls.create` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsCreated {
     /// The walls' persistent ids, in the input's order.
     pub uids: Vec<String>,
@@ -279,15 +239,12 @@ pub struct WallsCreated {
     pub ids: Vec<u32>,
     /// The ids of KentOS's wall styles taken into the project.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub styles_added: Vec<String>,
     /// `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub adopted: Vec<String>,
     /// `cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub bonds: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -295,10 +252,8 @@ pub struct WallsCreated {
 
 /// An opening's depth (its wall's thickness, what its frame must fill) before and after, metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningDepthChange {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -310,20 +265,16 @@ pub struct OpeningDepthChange {
 
 /// What `cad.walls.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsPlan {
     /// The walls as they would be stored, their `id` 0.
     pub walls: Vec<Entity>,
     /// KentOS's wall styles the project would take.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WallStyleDef>>", optional))]
     pub styles_added: Vec<WallStyleDef>,
     /// `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub adopted: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -331,10 +282,8 @@ pub struct WallsPlan {
 
 /// How lines become walls.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallsFromMode {
     /// Tek tek: a wall along each line, polyline, area's ring, arc or circle.
     #[default]
@@ -375,10 +324,8 @@ pub enum WallsFromMode {
 /// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
 /// `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsFromLines {
     /// The sources' persistent ids, at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -386,64 +333,51 @@ pub struct WallsFromLines {
     /// Architectural information of every new wall, including an explicit project level.
     /// Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
     #[serde(default)]
     pub mode: WallsFromMode,
     /// Each mode's width, metres. Absent: the style's new width, else 0.2 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     /// Each mode's justification. Absent: centred.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<WallJustify>,
     /// A wall style by its id or name. Absent: plain walls.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     /// Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only
     /// read: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep_sources: bool,
     /// Pairs: the widest wall, metres. Absent: 0.6 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_width: Option<f64>,
     /// Pairs: degrees two lines may be apart and be parallel. Absent: 1°.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: Option<f64>,
     /// The layer the walls go on. Absent: each source's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.walls.convert` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsFromLinesDone {
     /// The walls written, in the sources' order (a pair's at its first line's place).
     pub uids: Vec<String>,
     /// The sources taken away.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     /// The sources no wall was drawn from: another kind, or a line without a pair.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub left: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -451,20 +385,15 @@ pub struct WallsFromLinesDone {
 
 /// What `cad.walls.convert` would write (plan mode): the walls, the sources that would go and those left.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsFromLinesPlan {
     pub walls: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub left: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WallStyleDef>>", optional))]
     pub styles_added: Vec<WallStyleDef>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -472,26 +401,20 @@ pub struct WallsFromLinesPlan {
 
 /// A wall's own fields to change; absent ones stay (`cad.walls.edit`'s `set`). A nullable field's null takes it away.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallChange {
     /// Metres, above 0, at most 100; the component without a thickness takes the rest.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     /// Sabit referans (docs/adr/0771 §2): the line that stays where it is when the width or the style changes (its
     /// offset moved to keep it); absent: the path, as before. Not with `offset` or `justify`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub keep: Option<crate::WallReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<WallJustify>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     /// A wall style by its id or name: its components, ends and fill; null: no style, one plain body.
@@ -500,11 +423,9 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub style: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub caps: Option<WallCaps>,
     /// The schematic fill (`#RRGGBB`); null: none.
     #[serde(
@@ -512,7 +433,6 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub fill: Option<Option<String>>,
     /// Metres above its level's floor; null: the level's.
@@ -521,7 +441,6 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<Option<f64>>,
@@ -531,7 +450,6 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub level: Option<Option<String>>,
     #[serde(
@@ -539,7 +457,6 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::ArchPhase>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchPhase>"))]
     pub phase: Option<Option<crate::ArchPhase>>,
     #[serde(
@@ -547,17 +464,12 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::ArchStatus>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchStatus>"))]
     pub status: Option<Option<crate::ArchStatus>>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
-    )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::ArchDiscipline>>", optional)
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchDiscipline>"))]
     pub discipline: Option<Option<crate::ArchDiscipline>>,
@@ -568,20 +480,14 @@ pub struct WallChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::CurtainGrid>>", optional)
-    )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::CurtainGrid>"))]
     pub curtain: Option<Option<crate::CurtainGrid>>,
 }
 
 /// A wall's end.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallEnd {
     Start,
     End,
@@ -589,10 +495,8 @@ pub enum WallEnd {
 
 /// What `cad.walls.edit` does to the walls (docs/adr/0339 §5, 0340 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallsOperation {
     /// Değiştir: the fields given, on every wall named.
     Set(WallChange),
@@ -612,7 +516,6 @@ pub enum WallsOperation {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         to: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         end: Option<WallEnd>,
     },
     /// Buda: each wall cut back where its path crosses the path of the wall `to`: the part `keep` is nearest stays
@@ -621,7 +524,6 @@ pub enum WallsOperation {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         to: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         keep: Option<Vec2>,
     },
@@ -635,19 +537,15 @@ pub enum WallsOperation {
         to: String,
         /// The line that stays where it is (docs/adr/0771 §2); absent: the path.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         keep: Option<crate::WallReference>,
     },
     /// Birleşim: the ends' joins (a closed wall has none) and the components' cleanup, the ones given.
     Joins {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         start: Option<WallJoin>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         end: Option<WallJoin>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         cleanup: Option<bool>,
         /// Düğüm kararı (docs/adr/0771 §1): where the start tees into a host, how many of the host's components each
         /// of the wall's passes (one number per component, a plain wall one); null: by the priorities again.
@@ -657,7 +555,6 @@ pub enum WallsOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<u8>>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<u8>>", extend("x-unit" = "count")))]
         start_pass: Option<Option<Vec<u8>>>,
         /// The same at its end.
@@ -667,7 +564,6 @@ pub enum WallsOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<u8>>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<u8>>", extend("x-unit" = "count")))]
         end_pass: Option<Option<Vec<u8>>>,
     },
@@ -679,7 +575,6 @@ pub enum WallsOperation {
     /// the ends of the walls standing in the edge slide with it. In one step, their openings in place.
     Shift {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         edge: Option<u32>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -690,20 +585,17 @@ pub enum WallsOperation {
     /// §1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.
     Distance {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         edge: Option<u32>,
         side: crate::DimensionSetFace,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
         #[serde(default, skip_serializing_if = "DistanceTo::is_face")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<DistanceTo>", optional))]
         to: DistanceTo,
         /// Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`
         /// (its face towards this one), this wall's face on that side `b`, a new parameter its value; with `to: grid`
         /// (docs/adr/8049 §2) the grid `a`, this wall's axis `b`.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         keep: bool,
     },
     /// Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,
@@ -711,13 +603,11 @@ pub enum WallsOperation {
     /// wall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.
     Length {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         edge: Option<u32>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         length: f64,
         #[serde(default, skip_serializing_if = "WallAnchor::is_start")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<WallAnchor>", optional))]
         anchor: WallAnchor,
     },
 }
@@ -725,10 +615,8 @@ pub enum WallsOperation {
 /// What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a
 /// face's end), or the nearest grid, from the object's axis.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DistanceTo {
     #[default]
     Face,
@@ -743,10 +631,8 @@ impl DistanceTo {
 
 /// Which end of an edge stays when its length changes (docs/adr/0728 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallAnchor {
     /// The edge's start stays, its end moves.
     #[default]
@@ -775,60 +661,45 @@ impl WallAnchor {
 /// `wall_node_unsupported` (a node decision where the end tees into no straight wall, docs/adr/0771 §1),
 /// `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsEdit {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     pub operation: WallsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.walls.edit` v1 (its plan's too: the walls as they would be, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsEdited {
     /// Derived source-following preview changes; absent when none. New identities are provisional.
     #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
-    )]
     pub followers: crate::DerivedEntitiesPlan,
 
     /// The walls as written, in the input's order (Birleştir: the one they became).
     pub walls: Vec<Entity>,
     /// The new walls (Böl: each second part).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
     /// The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub joined: Vec<Entity>,
     /// The walls gone, by their ids (Birleştir: all but the first).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub styles_added: Vec<String>,
     /// Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3); a width or style change kept at a
     /// reference (`keep`, docs/adr/0771 §2): the spaces' areas and the openings' depths, in the plan.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub effects: Option<WallEffects>,
     /// Mesafe's `keep`: the new bond's id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub bonds: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -836,10 +707,8 @@ pub struct WallsEdited {
 
 /// A clear distance beside a moved edge, before and after (docs/adr/0770 §3), metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GapChange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub before: f64,
@@ -849,17 +718,13 @@ pub struct GapChange {
 
 /// A space whose boundary a move changes, its area before and after by its method (m²).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceAreaChange {
     pub uid: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub number: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub before: f64,
@@ -867,72 +732,55 @@ pub struct SpaceAreaChange {
     pub after: f64,
     /// The walls no longer close round it (`lostEnclosure`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub broken: bool,
 }
 
 /// What a wall's move does round it (docs/adr/0770 §3): the clear distances beside the moved edge, the spaces, the
 /// openings, dimensions and kitchen runs that follow, and the walls the bonds shift.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallEffects {
     /// The moved edge's left and right clear distances (absent: no parallel wall on that side).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left: Option<GapChange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<GapChange>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpaceAreaChange>>", optional))]
     pub spaces: Vec<SpaceAreaChange>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub openings: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub dimensions: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fixtures: Vec<String>,
     /// The walls the bonds shift (docs/adr/0770 §4), besides the joined ones.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub bonded: Vec<String>,
     /// A width or style change kept at a reference (docs/adr/0771 §2): the hosted openings' depths before and after.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningDepthChange>>", optional))]
     pub depths: Vec<OpeningDepthChange>,
 }
 
 /// Input of `cad.walls.joins` v1 (read-only, docs/adr/0340 §2): how the walls named (none: every wall) join the walls
 /// round them, and where walls meet but do not join, each with what resolves it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsJoins {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     /// Düğümler (docs/adr/0771 §1): each joint's ends say whether the user decided them, and a tee's joining end how
     /// many of the host's components each of its own passes.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub nodes: bool,
 }
 
 /// A joint's kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallJointKind {
     /// Two ends at an angle, mitred or butt.
     Corner,
@@ -946,32 +794,25 @@ pub enum WallJointKind {
 
 /// A wall in a joint: by its end, or along it (a tee's host, a cross's walls).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallJointMember {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end: Option<WallEnd>,
     /// With `nodes`: who decided this end's joint, the rule or the user (its join mode or its passes).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub decided: Option<WallNodeDecision>,
     /// With `nodes`, a tee's joining end: how many of the host's components each of its components passes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub passes: Option<Vec<u8>>,
 }
 
 /// Who decided a joint's end (docs/adr/0771 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallNodeDecision {
     /// Otomatik: the components' priorities and the join rule.
     Auto,
@@ -980,10 +821,8 @@ pub enum WallNodeDecision {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallJoint {
     pub kind: WallJointKind,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -994,10 +833,8 @@ pub struct WallJoint {
 /// Walls that meet and do not join: the code, what is wrong and what resolves it, where, the walls, and the edit that
 /// resolves it (an end's join), to run as it is.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallJoinIssue {
     pub code: String,
     pub message: String,
@@ -1006,16 +843,13 @@ pub struct WallJoinIssue {
     pub at: Vec2,
     pub uids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fix: Option<WallsEdit>,
 }
 
 /// Output of `cad.walls.joins` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsJoined {
     pub joints: Vec<WallJoint>,
     pub issues: Vec<WallJoinIssue>,
@@ -1028,25 +862,20 @@ pub struct WallsJoined {
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `invalid_wall` (no such edge, an arc).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsDistancesInput {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub edge: Option<u32>,
 }
 
 /// One side's clear distance: square to the edge, from its face to the facing face of the nearest parallel wall.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallGap {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
@@ -1066,10 +895,8 @@ pub struct WallGap {
 /// A distance to a grid (docs/adr/0728 §1): from the object's axis to the nearest parallel (or, along an opening's
 /// face, crossing) straight grid, square to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GridGap {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
@@ -1086,10 +913,8 @@ pub struct GridGap {
 /// An edge's length (docs/adr/0728 §3): its baseline from its start to its end, and which ends a length can move (its
 /// path's ends that are free, end to end with a wall in line or a corner's; not a tee or where more walls meet).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallLength {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
@@ -1104,38 +929,29 @@ pub struct WallLength {
 /// A wall's edge and its two sides' clear distances; a side without a parallel wall is absent. Each side's nearest
 /// parallel grid from the edge's axis, and the edge's length when an end of it is the path's (docs/adr/0728).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallGaps {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub edge: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left: Option<WallGap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<WallGap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left_grid: Option<GridGap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right_grid: Option<GridGap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub length: Option<WallLength>,
 }
 
 /// Output of `cad.walls.distances` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsDistances {
     pub walls: Vec<WallGaps>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -13,8 +13,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -60,10 +58,8 @@ pub const CAD_BLOCKS_INSERT_VERSION: u32 = 1;
 /// definition, but not deleted); on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden` (the insert's layer).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksDefine {
     /// The block's name, unique in the drawing (Turkish case folded).
     pub name: String,
@@ -74,46 +70,37 @@ pub struct BlocksDefine {
     pub uids: Vec<String>,
     /// What the block is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// True: the objects are replaced by an insert of the new block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
     /// With `replace`: the layer the insert goes on, a layer's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// The unit it is drawn in (docs/adr/0315 §4); absent: the drawing's. `unitless`: its numbers are kept in the
     /// drawing's units, an insert scaled by the drawing's unit wherever it goes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<crate::entity::BlockUnits>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.blocks.define` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockDefined {
     /// The new definition's id.
     pub block: BlockId,
     /// With `replace`: the insert's persistent id and its slot.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub insert: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: Option<u32>,
     /// With `replace`: the objects deleted, in the input's order.
@@ -125,10 +112,8 @@ pub struct BlockDefined {
 
 /// What `cad.blocks.define` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksDefinePlan {
     /// The definition as execute would write it; its id the nil UUID, as the
     /// id is given when it is written.
@@ -136,7 +121,6 @@ pub struct BlocksDefinePlan {
     /// With `replace`: the insert as execute would write it, `id` 0 and its
     /// `block` the nil UUID.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub insert: Option<Entity>,
     /// With `replace`: the objects execute would delete, in the input's order.
     pub removed: Vec<String>,
@@ -147,10 +131,8 @@ pub struct BlocksDefinePlan {
 
 /// What `cad.blocks.edit` does; it names the undo step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockEditOperation {
     /// A new name (“Blok değiştir”).
     Rename,
@@ -277,113 +259,88 @@ pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefin
 /// `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
 /// (inserts of it in the drawing or in another definition).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEdit {
     /// `card`: publisher-assigned family/type/release; absent keeps it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub publication: Option<crate::BlockPublication>,
     /// `card`: explicitly detach the publication identity; incompatible with `publication`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clear_publication: Option<bool>,
     pub operation: BlockEditOperation,
     /// The definition; every operation but `purge`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<BlockId>,
     /// `rename`: the new name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// `redefine`: the objects it is made of now, by persistent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     /// `rebase`: the new base point; `redefine`: the base point (absent: kept).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Option<Vec2>,
     /// `redefine`: true, the objects are replaced by an insert of the block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
     /// `redefine` with `replace`: the layer the insert goes on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// `attributes`: the definition's attribute definitions, the whole list
     /// in its order (empty: it has none).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attributes: Option<Vec<crate::entity::AttributeDefinition>>,
     /// `export`: the definitions, by id (absent: every one).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blocks: Option<Vec<BlockId>>,
     /// `import`: a `kentos.blocks` file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
     /// docs/adr/0316 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub entities: Option<Vec<Entity>>,
     /// `units`: the unit it is drawn in (docs/adr/0315 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<crate::entity::BlockUnits>,
     /// `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
     /// its size (only the unit's name changes).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rescale: Option<bool>,
     /// `attributes`, `update`: false leaves the inserts' values as they are; absent or true syncs them as `sync`
     /// does (docs/adr/0317 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sync: Option<bool>,
     /// `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub renames: Option<BTreeMap<String, String>>,
     /// `attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other
     /// definitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity
     /// migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
     /// target or affected locked ancestor refuses the entire operation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rename_nested: Option<bool>,
 
     /// `sync`: tags whose values are taken off the inserts though no attribute has them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub remove_tags: Option<Vec<String>>,
     /// `place`: the movable attribute's tag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tag: Option<String>,
     /// `place`: where the attribute's text stands, a point of the drawing; absent: where the definition puts it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<Vec2>,
     /// `card`: its category (empty: none).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
     /// `card`: the words it is found by.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tags: Option<Vec<String>>,
     /// `card`: its description (empty: none).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// `card`: what it is as a building element (docs/adr/8070 §5): its class, type and body; absent keeps it, null
     /// takes it away.
@@ -393,31 +350,23 @@ pub struct BlocksEdit {
         skip_serializing_if = "Option::is_none"
     )]
     #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::entity::BlockElement>>", optional)
-    )]
-    #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<crate::entity::BlockElement>")
     )]
     pub element: Option<Option<crate::entity::BlockElement>>,
     /// `dynamic`: the parameters and actions (absent: none, a plain block).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dynamic: Option<crate::block_dynamic::DynamicBlock>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.blocks.edit` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEdited {
     /// The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).
     pub changed: Vec<BlockId>,
@@ -425,11 +374,9 @@ pub struct BlocksEdited {
     pub removed: Vec<BlockId>,
     /// `redefine` with `replace`: the insert's persistent id and its slot.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub insert: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: Option<u32>,
     /// `redefine` with `replace`: the objects deleted, in the input's order.
@@ -442,11 +389,9 @@ pub struct BlocksEdited {
     pub skipped: Vec<String>,
     /// `export`: the file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// `attributes`, `update`, `sync`, `fields`, `place`: what was done to the inserts' values (docs/adr/0317 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sync: Option<AttributeSync>,
     /// The document's revision after the write (the same when nothing was
     /// written), as decimal text.
@@ -457,10 +402,8 @@ pub struct BlocksEdited {
 /// What syncing a block's inserts with its definition did (docs/adr/0317 §2): each list in the definition's order,
 /// then the inserts' (a tag once).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AttributeSync {
     /// The inserts written.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -481,7 +424,6 @@ pub struct AttributeSync {
     pub fields: u32,
     /// Parameter values dropped: the block's dynamic part no longer has them or they no longer fit (docs/adr/0318).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub parameters: u32,
 }
@@ -492,10 +434,8 @@ fn is_zero(n: &u32) -> bool {
 
 /// What `cad.blocks.edit` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEditPlan {
     /// The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).
     pub changed: Vec<BlockDefinition>,
@@ -506,7 +446,6 @@ pub struct BlocksEditPlan {
     pub removed: Vec<BlockId>,
     /// `redefine` with `replace`: the insert as execute would write it, `id` 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub insert: Option<Entity>,
     /// `redefine` with `replace`: the objects execute would delete.
     pub deleted: Vec<String>,
@@ -532,84 +471,66 @@ pub struct BlocksEditPlan {
 /// `conflict`); `unknown_block` (no such id or name, Turkish case folded); `unknown_tag`; `layer_not_found`,
 /// `not_a_layer`, `layer_locked`; on the desktop `slots_exhausted`. Warnings: `layer_hidden`, `block_units_differ`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksInsert {
     /// The block, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<BlockId>,
     /// The block, by name, when `block` is absent (Turkish case folded).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Where its base point goes.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     /// The factor along its x axis (absent: 1), before the unit's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: Option<f64>,
     /// The factor along its y axis (absent: `scale`), before the unit's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub y_scale: Option<f64>,
     /// Radians, counter-clockwise from east (absent: 0).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: Option<f64>,
     /// Mirrored in its x axis, before the turn.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mirror: Option<bool>,
     /// The layer it goes on, a layer's id.
     pub layer_id: String,
     /// Its own colour (absent: its layer's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its attribute values by tag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attributes: Option<std::collections::BTreeMap<String, String>>,
     /// Its other data (an object template's), under the attribute values.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<std::collections::BTreeMap<String, String>>,
     /// Its label.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// A library symbol over its layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// A dynamic block's parameter values (docs/adr/0318 §3): by name; a lookup's row by its label.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parameters: Option<std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>>,
     /// The document revision the input was prepared against, as decimal text.
     /// Its level and phase (docs/adr/0733 §1): a fixture's, as a level view reads it; absent: on no level.
     #[serde(default, skip_serializing_if = "crate::ArchInfo::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::ArchInfo>", optional))]
     pub arch: crate::ArchInfo,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.blocks.insert` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockInserted {
     /// The insert's persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -628,10 +549,8 @@ pub struct BlockInserted {
 
 /// What `cad.blocks.insert` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksInsertPlan {
     /// The insert as execute would write it, `id` 0.
     pub insert: Entity,
@@ -645,10 +564,8 @@ pub struct BlocksInsertPlan {
 
 /// How `file.import.block` takes a drawing (docs/adr/0316 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockFileMode {
     /// The drawing's objects as one block (pictures and tables left out), its base the lower left of their extent.
     #[default]
@@ -669,10 +586,8 @@ pub enum BlockFileMode {
 /// `nothing_to_import` (no object a block may hold; no block of the names), `unknown_block` (a name the file has
 /// not), `block_refused` (the drawing's block rules), `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportBlock {
     /// The drawing to read, an absolute path.
     pub path: String,
@@ -680,29 +595,23 @@ pub struct ImportBlock {
     pub mode: BlockFileMode,
     /// `drawing`: the block's name (absent: the file's name without its extension).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// `blocks`: the names to take (absent: every block of the file).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub names: Option<Vec<String>>,
     /// `blocks`: a name the drawing has is redefined from the file's block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
     /// A DXF's or a DWG's unit (docs/adr/0726 §2): its numbers are read in it, whatever the file names; a file that
     /// names none needs it. A KentOS drawing carries its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source_unit: Option<crate::document::DrawingUnit>,
     /// The category written on the cards of the blocks taken that have none (docs/adr/0726 §1): a library's folders,
     /// `/` between them (`Kitaplık/Mobilya`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -710,16 +619,13 @@ pub struct ImportBlock {
 /// A block's size as `file.import.block` took it (docs/adr/0726 §2): the extent of what it draws at scale 1, its
 /// numbers metres (a unitless block's: drawing units).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockSize {
     pub block: BlockId,
     pub name: String,
     /// The unit it was drawn in; absent: none named.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<crate::entity::BlockUnits>,
     /// Along its x axis.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -731,14 +637,11 @@ pub struct BlockSize {
 
 /// Output of `file.import.block` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockFileImported {
     /// `drawing`: the new block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<BlockId>,
     /// The definitions added and redefined, in the drawing's order.
     pub added: Vec<BlockId>,
@@ -751,11 +654,9 @@ pub struct BlockFileImported {
     pub layers: u32,
     /// The blocks added and redefined with their sizes, in the drawing's order (docs/adr/0726 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockSize>>", optional))]
     pub sizes: Vec<BlockSize>,
     /// A CAD file's unit as it was decided: named by the file or given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<crate::formats::UnitDecision>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -777,54 +678,42 @@ pub const CAD_BLOCKS_REPLACE_VERSION: u32 = 1;
 /// `unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of
 /// `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`, `invalid_parameter_value`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksReplace {
     /// Optional `kentos.blocks` version 2 or 3 text: `to` is its source block id.
     /// Requires the same publication family/type and a strictly newer release than `from`.
     /// Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
     /// Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// The block whose inserts are replaced.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<BlockId>,
     /// The block they place instead.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<BlockId>,
     /// Only these inserts of `from`, by persistent id (absent: every one of the drawing's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     /// Deletes `from` when no insert uses it after.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub purge: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.blocks.replace` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksReplaced {
     /// With a publication library: the resolved drawing target, distinct from the library's source id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub target: Option<BlockId>,
     /// With a publication library: definitions actually added, including nested dependencies.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockId>>", optional))]
     pub added: Vec<BlockId>,
     /// The inserts that place `to` now, in the drawing's order.
     pub replaced: Vec<String>,
@@ -852,10 +741,8 @@ pub const CAD_BLOCKS_PARAMETERS_VERSION: u32 = 1;
 
 /// What `cad.blocks.parameters` does (docs/adr/0318 §3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ParametersOperation {
     /// Every parameter's value of the inserts; nothing is written.
     Get,
@@ -868,34 +755,27 @@ pub enum ParametersOperation {
 /// Input of `cad.blocks.parameters` v1: a dynamic block's inserts' parameter values read, set or reset, as one undo
 /// step “Blok parametreleri” (docs/adr/0318 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksParameters {
     pub operation: ParametersOperation,
     /// The inserts, by persistent id; each of a dynamic block.
     pub uids: Vec<String>,
     /// `set`: the values by parameter name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub values: Option<std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>>,
     /// `reset`: the parameters (absent: all).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub names: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One insert's parameters.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertParameters {
     pub uid: String,
     pub block: BlockId,
@@ -906,10 +786,8 @@ pub struct InsertParameters {
 
 /// Output of `cad.blocks.parameters` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksParametersOut {
     /// The inserts' values after the operation, in the order given.
     pub inserts: Vec<InsertParameters>,
@@ -921,10 +799,8 @@ pub struct BlocksParametersOut {
 
 /// What `cad.blocks.query` reports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockReport {
     /// Each block's inserts counted: in the drawing, by layer, and placed through other blocks' inserts.
     Count,
@@ -937,10 +813,8 @@ pub enum BlockReport {
 /// How an attribute's value is compared (docs/adr/0317 §3). Text comparisons fold Turkish case; `lt` and `gt` compare
 /// numbers (a value that is not a number does not match).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AttributeOp {
     Eq,
     Ne,
@@ -954,16 +828,13 @@ pub enum AttributeOp {
 /// One condition on an insert's attribute: its value (the insert's, else the definition's default) compared with
 /// `value`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AttributeFilter {
     pub tag: String,
     pub op: AttributeOp,
     /// Absent for `empty` and `notEmpty`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
 }
 
@@ -973,37 +844,29 @@ pub struct AttributeFilter {
 /// (`where[i]`: no tag, no value where one is needed, a number expected), `unknown_tag` (`columns[i]`: no block
 /// asked has it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksQuery {
     pub report: BlockReport,
     /// Only these blocks' inserts (absent: every block's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blocks: Option<Vec<BlockId>>,
     /// Only inserts on these layers, by id (absent: every layer's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
     /// Every condition holds (`instances`, `schedule`).
     #[serde(default, rename = "where", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, rename = "where"))]
     pub filters: Option<Vec<AttributeFilter>>,
     /// `schedule`: the attribute columns, by tag (absent: every tag of the blocks reported, each once, in their
     /// order).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<Vec<String>>,
 }
 
 /// A block's inserts counted (`count`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockCount {
     pub block: BlockId,
     pub name: String,
@@ -1021,10 +884,8 @@ pub struct BlockCount {
 
 /// One cell of a schedule: a number (x, y, turn) or a text.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
-#[cfg_attr(feature = "ts", ts(export))]
 #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
 pub enum ScheduleCell {
     Number(f64),
@@ -1033,10 +894,8 @@ pub enum ScheduleCell {
 
 /// Output of `cad.blocks.query` v1: the part its report asks for.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksQueried {
     /// `count`: each block asked, in the drawing's order (those with no insert too).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1059,10 +918,8 @@ pub const CAD_BLOCKS_PROXY_VERSION: u32 = 1;
 
 /// Input of `cad.blocks.proxy` v1: the inserts whose drawn objects are asked for.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksProxy {
     /// The inserts, by persistent id; a plain block's draws its definition.
     pub uids: Vec<String>,
@@ -1070,10 +927,8 @@ pub struct BlocksProxy {
 
 /// One insert's drawn objects.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertProxy {
     pub uid: String,
     pub block: BlockId,
@@ -1088,10 +943,8 @@ pub struct InsertProxy {
 
 /// Output of `cad.blocks.proxy` v1, the inserts in the order given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksProxied {
     pub inserts: Vec<InsertProxy>,
 }
@@ -1102,30 +955,24 @@ pub const CAD_BLOCKS_FREEZE_VERSION: u32 = 1;
 
 /// Input of `cad.blocks.freeze` v1, one undo step “Sabit bloğa çevir”.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksFreeze {
     /// The inserts, by persistent id; each of a dynamic block.
     pub uids: Vec<String>,
     /// The new blocks' name: the first variant's, the next ones' with “ 2”, “ 3” …; absent: the block's name and
     /// “(sabit)”, “(sabit 2)” … past the names taken.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A plain block made of a variant.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FrozenBlock {
     pub block: BlockId,
     pub name: String,
@@ -1138,10 +985,8 @@ pub struct FrozenBlock {
 
 /// Output of `cad.blocks.freeze` v1: a new block for each distinct block and values, in the order first given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksFrozen {
     pub blocks: Vec<FrozenBlock>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

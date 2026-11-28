@@ -7,8 +7,6 @@
 //! The file reader checks the structure here; the commands check the drawing.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most symbol choices a project keeps.
 pub const MAX_KEPT_SYMBOLS: usize = 1000;
@@ -39,24 +37,19 @@ pub const DRAFT_FIELDS: [&str; 9] = [
 
 /// The user's symbol for a use at a level: a library id among the level's choices.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolPick {
     pub level: String,
     #[serde(rename = "use")]
-    #[cfg_attr(feature = "ts", ts(rename = "use"))]
     pub usage: String,
     pub symbol: String,
 }
 
 /// A change a draft makes to a decision area: the field and its value before (empty: the area had none) and after.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanDraftChange {
     /// The decision area's persistent id.
     pub area: String,
@@ -69,10 +62,8 @@ pub struct PlanDraftChange {
 /// A plan change draft: its id, the plan (`PlanKimlik`) it changes, the drawing's revision it was made from, its
 /// reason and its changes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanDraft {
     pub id: String,
     pub plan: String,
@@ -83,16 +74,12 @@ pub struct PlanDraft {
 
 /// The project's zoning plan data (schema 250): the kept symbol choices and the plan change drafts.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningPlanData {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningSymbolPick>>"))]
     pub symbols: Vec<ZoningSymbolPick>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<PlanDraft>>"))]
     pub drafts: Vec<PlanDraft>,
 }
 

@@ -46,7 +46,6 @@ pub const PERCENT_HIGH: f64 = 0.98;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RasterSample {
     U8,
     I8,
@@ -134,7 +133,6 @@ impl RasterSample {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RasterRender {
     /// Three bands as red, green and blue, a fourth as alpha.
     Rgb,
@@ -175,7 +173,6 @@ impl RasterRender {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RasterStretch {
     /// As they are (8 bit).
     #[default]
@@ -193,7 +190,6 @@ pub enum RasterStretch {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RasterResampling {
     #[default]
     Bilinear,
@@ -205,7 +201,6 @@ pub enum RasterResampling {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterStyle {
     pub render: RasterRender,
     /// The bands drawn, from 1: three or four for `rgb`, one otherwise.
@@ -360,7 +355,6 @@ impl RasterStyle {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DatasetDim {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -383,7 +377,6 @@ pub struct DatasetDim {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterTiles {
     /// The tile table (`gpkg_contents`'s `tiles` or `2d-gridded-coverage`).
     pub table: String,
@@ -406,7 +399,6 @@ pub const MAX_TILE_TABLE_NAME: usize = 256;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterDataset {
     /// The variable's name in the file (a vector's x component).
     pub variable: String,
@@ -526,7 +518,6 @@ impl RasterDataset {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -542,7 +533,6 @@ pub struct RasterEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterFields {
     /// `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
     /// upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine

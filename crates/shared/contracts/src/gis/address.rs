@@ -9,8 +9,6 @@
 //! file, a command and the server check alike.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most address locators a project holds.
 pub const ADDRESS_LOCATOR_LIMIT: usize = 16;
@@ -30,10 +28,8 @@ const FIELD_LENGTH: usize = 64;
 
 /// A project's address data (docs/adr/0229 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressLocator {
     /// Lower-case letters, digits and hyphens; one of its kind in the project.
     pub id: String,
@@ -41,15 +37,12 @@ pub struct AddressLocator {
     pub name: String,
     /// Kapı noktaları: a point per door.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub doors: Option<DoorSource>,
     /// Yollar: the streets' centre lines.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub streets: Option<StreetSource>,
     /// Bölgeler: at most one area layer of each level.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AreaSource>>", optional))]
     pub areas: Vec<AreaSource>,
     /// The least score a match takes, within [`ADDRESS_MIN_SCORES`].
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
@@ -61,10 +54,8 @@ pub struct AddressLocator {
 
 /// The doors' layer and which of its attributes say what.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DoorSource {
     /// The layer's id. A layer the project no longer has is said when the locator is built.
     pub layer: String,
@@ -73,66 +64,51 @@ pub struct DoorSource {
     /// Kapı no: the outer door number (“12”, “12/A”).
     pub door: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub neighbourhood: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub district: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub province: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub postcode: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
     /// Adres kodu (UAVT): a query that is one finds its door.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
 }
 
 /// The streets' layer and which of its attributes say what.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StreetSource {
     pub layer: String,
     /// Yol adı.
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub neighbourhood: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub district: Option<String>,
 }
 
 /// An area layer: its level and which attribute names its areas.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AreaSource {
     pub layer: String,
     pub level: AreaLevel,
     pub name: String,
     /// A neighbourhood's district; only at that level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub district: Option<String>,
 }
 
 /// What an area layer's areas are.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AreaLevel {
     /// Mahalle (or köy).
     Neighbourhood,

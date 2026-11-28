@@ -19,8 +19,6 @@
 //! reference is `scripts/fixtures/program_share_cases.py`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{BuildingProgram, UnitKind};
 
@@ -33,10 +31,8 @@ pub const WEIGHT_SCALE: i128 = 1_000_000;
 
 /// How the common areas are shared out.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ShareRule {
     /// The same for each unit of the scope.
     #[default]
@@ -69,10 +65,8 @@ impl ShareRule {
 
 /// A unit's part of the common areas: its own rooms, its shares and their sum, m² as decimals.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramUnitShare {
     pub net: String,
     pub share: String,
@@ -81,10 +75,8 @@ pub struct ProgramUnitShare {
 
 /// One unit's share of one pool.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramPoolShare {
     /// The unit's id.
     pub unit: String,
@@ -98,39 +90,31 @@ pub struct ProgramPoolShare {
 
 /// A common area shared out.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramPool {
     /// The common area's id and number.
     pub unit: String,
     pub number: String,
     /// Its scope: its building, its wing; neither: the whole program.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wing: Option<String>,
     /// Its rooms taken to the step, m².
     pub area: String,
     /// The units' shares, in the program's order; empty when it is not shared.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProgramPoolShare>>", optional))]
     pub shares: Vec<ProgramPoolShare>,
     /// Why it is not shared.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unshared: Option<String>,
 }
 
 /// The common areas shared out (docs/adr/0784 §2).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramShares {
     /// The rule and its weights (`kentos.share/1 · Net alana göre`).
     pub rule: String,

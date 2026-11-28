@@ -8,8 +8,6 @@
 //! decisions with their source and writes nothing; İmar durum belgesi (PAİY 4/1-ll) stays the administration's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::UID_TEXT;
@@ -25,17 +23,13 @@ pub const CAD_ZONING_PARCEL_VERSION: u32 = 1;
 ///
 /// Refusals: `parcel_missing`, `entity_not_found`, `not_a_parcel`, `invalid_input`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningParcel {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub parcel: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -43,10 +37,8 @@ pub struct ZoningParcel {
 /// A decision's value as the plan writes it (its field in the profile `imar-plani`: Kullanim, Nizam, TAKS, KAKS,
 /// KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme, Belirtilmeyen); the text kept, never read through a number.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanValue {
     pub field: String,
     pub value: String,
@@ -54,44 +46,34 @@ pub struct PlanValue {
 
 /// The plan a decision belongs to: its boundary's persistent id and its fields as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanSource {
     pub uid: String,
     /// PlanKimlik.
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Seviye (msp, cdp, nip, uip).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// Durum (taslak, askida, onayli, yururlukte, iptal).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// OnayTarihi as written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<String>,
     /// Dayanak: the document the plan rests on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub basis: Option<String>,
 }
 
 /// A plan note a decision names (or a note of its whole plan): its number, text and scope.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanNoteText {
     pub number: String,
     pub text: String,
@@ -101,10 +83,8 @@ pub struct PlanNoteText {
 
 /// A decision area on the parcel.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDecision {
     pub uid: String,
     /// KararKimlik.
@@ -115,7 +95,6 @@ pub struct ParcelDecision {
     /// Its values as written, in the profile's order; a field it leaves empty is not here.
     pub values: Vec<PlanValue>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plan: Option<PlanSource>,
     /// The notes it names, then its plan's general notes, by number.
     pub notes: Vec<PlanNoteText>,
@@ -124,10 +103,8 @@ pub struct ParcelDecision {
 /// Two decisions saying different things over the same piece of the parcel: the field, the piece's area (m²), each
 /// decision's id and value as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanConflict {
     pub field: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -139,10 +116,8 @@ pub struct PlanConflict {
 /// The project's typed İmar durumu where the plan's decisions on the parcel say otherwise: KAKS (emsal) or TAKS, the
 /// typed value and the plan's as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanAgainst {
     pub field: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -152,10 +127,8 @@ pub struct PlanAgainst {
 
 /// What `cad.zoning.parcel` answers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningParcelDecided {
     pub parcel: String,
     /// The parcel's area, m².

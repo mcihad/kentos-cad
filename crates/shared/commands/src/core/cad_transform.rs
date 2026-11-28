@@ -13,8 +13,6 @@
 //! it (arcs stay counter-clockwise, mirrored text stays readable).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 /// What a mirror does to the texts (docs/adr/0292): texts, multi-line texts, texts along a
 /// curve, leaders' notes and tables.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MirrorText {
     /// Okunur (MIRRTEXT = 0): in its mirrored place, reading upright; its alignment turned so that it fills that
     /// place.
@@ -47,10 +43,8 @@ pub enum MirrorText {
 /// (docs/adr/0158). Coordinates are x east (Y), y north (X), in the
 /// project's units (m), float64.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Transform {
     /// Move (taşı) by a displacement: `dx` east, `dy` north.
     Move {
@@ -82,7 +76,6 @@ pub enum Transform {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         b: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         text: Option<MirrorText>,
     },
     /// Align (hizala): `source` goes onto `target`. With a
@@ -98,15 +91,12 @@ pub enum Transform {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         target: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         source2: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         target2: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         scale: Option<bool>,
     },
     /// Oturt (docs/adr/0156): a similarity between centred frames, `from`
@@ -171,7 +161,6 @@ pub enum Transform {
     Arrange {
         mode: ArrangeMode,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<f64>,
     },
@@ -179,10 +168,8 @@ pub enum Transform {
 
 /// What Hizala ve dağıt does (docs/adr/0194): six alignments and two spreads.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArrangeMode {
     Left,
     Center,
@@ -196,10 +183,8 @@ pub enum ArrangeMode {
 
 /// A link of Kauçuk levha: a point of the drawing and where it is to go.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RubberLink {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Vec2,
@@ -256,10 +241,8 @@ pub struct RubberLink {
 /// count; a rubber sheet with `rubber_bends` (objects whose kept edges or
 /// curves lie over 0.1 mm from their true image, and the largest, mm).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTransform {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -269,18 +252,15 @@ pub struct EntitiesTransform {
     /// True: copies are made and the originals stay (Kopyala, Kopya (K),
     /// Aynala keeping its source). Absent or false: the objects themselves change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub copy: Option<bool>,
     /// Katmana kopyala (docs/adr/0177 §2): the copies go on this layer, not their sources'. Only with `copy`; the
     /// step is then “Katmana kopyala”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -288,10 +268,8 @@ pub struct EntitiesTransform {
 /// Output of `cad.entities.transform` v1: what changed, what was made and
 /// what stayed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTransformed {
     /// In place: the ids of the objects transformed, in the input's order (a
     /// repeated one once). Empty for copies.
@@ -310,10 +288,8 @@ pub struct EntitiesTransformed {
 
 /// What `cad.entities.transform` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTransformPlan {
     /// The ids of the objects execute would transform or copy, in the input's order.
     pub sources: Vec<String>,

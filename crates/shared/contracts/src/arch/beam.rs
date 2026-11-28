@@ -40,7 +40,6 @@ fn is_center(j: &WallJustify) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BeamRole {
     #[default]
     Beam,
@@ -91,7 +90,6 @@ fn is_zero(v: &f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BeamFields {
     /// Its axis: straight stretches from point to point, at least two points.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -372,7 +370,6 @@ pub fn needs_beam_roles(e: &crate::Entity) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BeamEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

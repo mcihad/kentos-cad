@@ -1,8 +1,6 @@
 //! The vertical alignments: their intersection points and crossings. A part of the road project's settings (docs/adr/8054 §9).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[allow(unused_imports)]
 use super::*;
@@ -11,10 +9,8 @@ use super::*;
 /// was last made or rebound (a newer one makes it stale), its PVIs, and the surface whose terrain profile it is read
 /// against.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileDef {
     /// Unique in the project.
     pub id: String,
@@ -24,31 +20,25 @@ pub struct ProfileDef {
     pub alignment: String,
     /// The alignment's revision it was made or rebound against; absent: 0.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     /// Grows by one with every change; absent: 0.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub pvis: Vec<ProfilePvi>,
     /// The terrain surface's id; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// What the road crosses (docs/adr/0946; KCAD schema 172).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileCrossingDef>>", optional))]
     pub crossings: Vec<ProfileCrossingDef>,
 }
 
 /// Where a crossed structure is against the road (docs/adr/0946).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CrossingSide {
     /// Over the road (a bridge, an overpass, a line): its elevation is its underside, the road passes under it.
     Above,
@@ -59,10 +49,8 @@ pub enum CrossingSide {
 /// Something a road crosses (docs/adr/0946): its name, station on the profile's alignment, side, elevation (underside
 /// or top) and the clearance under it or the cover over it (m). The values are the project's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileCrossingDef {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -76,10 +64,8 @@ pub struct ProfileCrossingDef {
 
 /// A template component's kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TemplateComponentKind {
     Lane,
     Shoulder,

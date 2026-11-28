@@ -9,8 +9,6 @@
 //!   the seamlines take as a footprint. Written as an area on the footprints' layer.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ORTHOPHOTO_NETWORK: &str = "cad.orthophoto.network";
 pub const CAD_ORTHOPHOTO_NETWORK_VERSION: u32 = 1;
@@ -32,30 +30,23 @@ pub const MOST_FOOTPRINT_PIXELS: u64 = 25_000_000;
 /// footprint is wholly another's nearer one: no element); `layer_not_found`, `layer_locked`; `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoNetwork {
     pub images: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub footprints: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// An image's mosaic element: its parts (each an outer ring, counter-clockwise, from its southernmost corner, the
 /// westernmost of equals; and its holes, clockwise), its area, its footprint's centre, the ids written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoNetworkElement {
     pub image: String,
     pub parts: Vec<OrthoNetworkPart>,
@@ -64,31 +55,25 @@ pub struct OrthoNetworkElement {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub centre: [f64; 2],
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 
 /// A part of an element: its outer ring and holes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoNetworkPart {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub ring: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<[f64; 2]>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub holes: Vec<Vec<[f64; 2]>>,
 }
 
 /// A junction: a place three or more elements meet, and their images (in the input's order).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthoNetworkJunction {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub at: [f64; 2],
@@ -98,10 +83,8 @@ pub struct OrthoNetworkJunction {
 /// Output of `cad.orthophoto.network` v1: the elements in the input's order, the junctions (south to north, west to
 /// east), the union's area, the layer (and whether it was made), notes and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoNetworkBuilt {
     pub elements: Vec<OrthoNetworkElement>,
     pub junctions: Vec<OrthoNetworkJunction>,
@@ -109,7 +92,6 @@ pub struct OrthophotoNetworkBuilt {
     pub covered: f64,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub opened: bool,
     pub notes: Vec<String>,
     pub revision: String,
@@ -122,33 +104,25 @@ pub struct OrthophotoNetworkBuilt {
 /// pixel NoData); `layer_not_found`, `layer_locked`; `invalid_revision`, `revision_conflict`. A raster without a NoData
 /// value has every pixel valid: its footprint is its bounds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoFootprint {
     pub raster: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub hull: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub folder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.orthophoto.footprint` v1: the footprint's parts (as the network's elements'), its area, the pixels
 /// read and valid, the NoData value, whether it is the hull, the layer, the id written, notes and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrthophotoFootprintBuilt {
     pub parts: Vec<OrthoNetworkPart>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -158,18 +132,14 @@ pub struct OrthophotoFootprintBuilt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub valid: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub nodata: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub hull: bool,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub opened: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     pub notes: Vec<String>,
     pub revision: String,

@@ -80,7 +80,7 @@ fn intern(name: &str) -> Option<&'static str> {
 /// contract numbers the own faces, the folder families after them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 pub enum DrawingFont {
     Barlow,
     Arimo,

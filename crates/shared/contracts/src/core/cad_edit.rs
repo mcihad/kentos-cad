@@ -17,8 +17,6 @@
 //! piece inherits, the locked layer, one undo step.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -34,10 +32,8 @@ pub const CAD_ENTITIES_EDIT_VERSION: u32 = 1;
 
 /// The modify tool an edit comes from; it names the undo step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EditOperation {
     /// Ötele: a parallel copy.
     Offset,
@@ -202,16 +198,13 @@ pub enum EditOperation {
 /// label, symbol). Coordinates are x east (Y), y north (X), in the project's
 /// units (m), float64; angles in radians unless said otherwise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EntityGeometry {
     Point {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         z: Option<f64>,
         /// A multi-point object's points past its first, each with its
@@ -219,7 +212,6 @@ pub enum EntityGeometry {
         /// absent, it has one point, so an edit of a multi-point object
         /// writes every point.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         parts: Option<Vec<PointPart>>,
     },
     Line {
@@ -230,13 +222,11 @@ pub enum EntityGeometry {
         /// The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
         /// absent: each takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
         ms: Option<Vec<Option<f64>>>,
     },
@@ -246,21 +236,18 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
         /// The vertices' elevations as written (docs/adr/0142): as many as
         /// the vertices, `null` for one without; all `null`: none. Absent:
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// The vertices' measures (M) as written (docs/adr/0224 §2), as
         /// `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
         /// takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
         ms: Option<Vec<Option<f64>>>,
         /// A multi-part polyline's parts past its first, each its vertices,
@@ -268,13 +255,11 @@ pub enum EntityGeometry {
         /// is the whole polyline: absent, it has one part, so an edit of a
         /// multi-part polyline writes every part.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         parts: Option<Vec<AreaPart>>,
         /// A closed line, not an area (docs/adr/0258 §1): its last vertex
         /// joins its first by the edge the last of `bulges` bends. Absent:
         /// open. One part only.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         closed: bool,
         /// The edges' widths as written (docs/adr/0258 §2): a start and an
         /// end for each vertex's edge, in the drawing's length (the last
@@ -282,7 +267,6 @@ pub enum EntityGeometry {
         /// its widths from the objects the edit names, where it runs along
         /// one of their edges, as elevations do. One part only.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         widths: Option<Vec<[f64; 2]>>,
     },
@@ -291,17 +275,14 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         holes: Option<Vec<RingGeometry>>,
         /// The vertices' elevations as written (docs/adr/0142): as many as
         /// the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// A multi-part area's parts past its first, each its ring, arcs,
@@ -309,7 +290,6 @@ pub enum EntityGeometry {
         /// area: absent, it has one part, so an edit of a multi-part area
         /// writes every part.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         parts: Option<Vec<AreaPart>>,
     },
     Circle {
@@ -358,25 +338,19 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         knots: Vec<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         weights: Option<Vec<f64>>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         closed: bool,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         periodic: bool,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         fit: Option<Vec<Vec2>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         tangents: Option<[Option<Vec2>; 2]>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         fit_tolerance: Option<f64>,
     },
@@ -405,7 +379,6 @@ pub enum EntityGeometry {
         rotation: f64,
         /// Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<TextAlign>,
         /// The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
         #[serde(
@@ -413,17 +386,14 @@ pub enum EntityGeometry {
             rename = "widthFactor",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         width_factor: Option<f64>,
         /// Its box filled with the drawing area's colour before it is drawn.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
         /// A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
         #[serde(default, rename = "boxWidth", skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         box_width: Option<f64>,
         /// Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
@@ -432,31 +402,25 @@ pub enum EntityGeometry {
             rename = "lineSpacing",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.25, max = 4.0)))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         line_spacing: Option<f64>,
         /// Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextRun>>", optional))]
         runs: Vec<crate::TextRun>,
         /// The style it follows and the face it is drawn in (docs/adr/0183 §2).
         #[serde(flatten)]
-        #[cfg_attr(feature = "ts", ts(flatten))]
         face: crate::TextFace,
         /// The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         path: Option<crate::TextPath>,
         /// Its indents, tab stops and columns (docs/adr/0324 §1); absent: an object updated keeps its own, a new one
         /// has none; an empty layout (`{}`) takes it away.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         layout: Option<Box<crate::ParagraphLayout>>,
         /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
         /// `cad.annotations.scales` takes them away), a new one has none.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
@@ -476,59 +440,43 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         text: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         style: Option<DimensionStyle>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Option<Vec2>,
         /// The value over the drawing's background (docs/adr/0147).
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
         /// A slope's two elevations, metres (docs/adr/0147).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         za: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zb: Option<f64>,
         /// The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         refs: Option<Box<crate::DimensionRefs>>,
         /// Its value moved from its place (docs/adr/0321 §1).
         #[serde(default, rename = "textShift", skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         text_shift: Option<crate::TextShift>,
         /// The gaps in its lines (docs/adr/0321 §1).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(
-            feature = "ts",
-            ts(as = "Option<Vec<crate::DimensionBreak>>", optional)
-        )]
         breaks: Vec<crate::DimensionBreak>,
         /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
         #[serde(flatten)]
-        #[cfg_attr(feature = "ts", ts(flatten))]
         look: crate::DimensionLook,
         /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
         /// `cad.annotations.scales` takes them away), a new one has none.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
         /// A Kot's level (docs/adr/0721 §2); absent: an elevation mark updated keeps its own, a new one has none.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         level: Option<Box<crate::DimensionLevel>>,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
@@ -536,22 +484,18 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         ring: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
         /// The objects its region follows (docs/adr/0186 §6).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         assoc: Option<crate::HatchAssoc>,
         /// Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
         /// drawn from it and may be left empty.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         boundary: Option<Vec<crate::HatchLoop>>,
         /// Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
     },
     /// A block placed (docs/adr/0144): the definition's base point goes to
@@ -566,13 +510,11 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: f64,
         #[serde(default, rename = "yScale", skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional, rename = "yScale"))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         y_scale: Option<f64>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mirror: bool,
     },
     /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
@@ -586,7 +528,6 @@ pub enum EntityGeometry {
         pts: Vec<Vec2>,
         /// The note, one line; absent: the arrow alone. Never empty.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         text: Option<String>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
@@ -594,27 +535,22 @@ pub enum EntityGeometry {
         rotation: f64,
         /// The arrowhead; absent: a filled arrow.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         arrow: Option<LeaderArrow>,
         /// The arrowhead's length, times the note's height (docs/adr/0205
         /// §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
         #[serde(default, rename = "arrowSize", skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         arrow_size: Option<f64>,
         /// The note's box filled with the drawing area's colour before it is drawn.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
         /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
         /// `cad.annotations.scales` takes them away), a new one has none.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
         /// Its other arms' points, each its tip first (docs/adr/0326 §1); absent: an object updated keeps its own, a new
         /// one has none; an arm kept keeps what its tip follows.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         arms: Option<Vec<Vec<Vec2>>>,
     },
@@ -637,42 +573,32 @@ pub enum EntityGeometry {
         cells: Vec<Vec<String>>,
         /// Merged ranges, their words in their top left cells.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellRange>>", optional))]
         merges: Vec<crate::CellRange>,
         /// Each column's alignment; absent: all left.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         aligns: Option<Vec<crate::TableAlign>>,
         /// The first row is its heading.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         header: bool,
         /// Which lines are drawn; absent: all.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         grid: Option<crate::TableGrid>,
         /// Its frame's width, metres (Kalın çerçeve); absent: a line.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         frame: Option<f64>,
         /// Its cells' style and face (docs/adr/0183 §2).
         #[serde(flatten)]
-        #[cfg_attr(feature = "ts", ts(flatten))]
         face: crate::TextFace,
         /// Where its rows came from; absent: written by hand.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<crate::TableSource>,
         /// Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         styles: Option<Vec<crate::CellStyle>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         formulas: Option<Vec<crate::CellFormula>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         fields: Option<Vec<crate::CellField>>,
         /// The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127
         /// §3); null: none. Absent in an edit: the table's kept.
@@ -681,10 +607,6 @@ pub enum EntityGeometry {
             rename = "tableStyle",
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
-        )]
-        #[cfg_attr(
-            feature = "ts",
-            ts(as = "Option<Option<String>>", optional, rename = "tableStyle")
         )]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         table_style: Option<Option<String>>,
@@ -730,10 +652,8 @@ impl EntityGeometry {
 /// One change of an edit. The objects are named by their persistent ids
 /// (docs/adr/0014).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EntityEdit {
     /// A full ellipse's named source axis grip: +major, +minor, -major, -minor (0..3).
     /// Only operation=grip. The shared core computes the new geometry; constraints hold this
@@ -765,7 +685,6 @@ pub enum EntityEdit {
         geometry: EntityGeometry,
         /// True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         #[serde(rename = "keepData", default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,
     },
     /// A new object made from `from`: its layer, colour and line weight; its
@@ -779,15 +698,12 @@ pub enum EntityEdit {
         geometry: EntityGeometry,
         /// True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         #[serde(rename = "keepData", default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,
         /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
         #[serde(rename = "layerId", default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         layer_id: Option<String>,
         /// Its own colour (`EntityBase.color`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         color: Option<String>,
         /// Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
         #[serde(
@@ -795,17 +711,14 @@ pub enum EntityEdit {
             default,
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
         line_weight: Option<f64>,
         /// Its attributes, whatever `keepData` says.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         attrs: Option<std::collections::BTreeMap<String, String>>,
         /// Its label, whatever `keepData` says.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         label: Option<String>,
     },
     /// The object is deleted.
@@ -864,10 +777,8 @@ impl EntityEdit {
 /// `not_a_layer`, `layer_locked`; `unknown_block` (each insert's block, in
 /// order); on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesEdit {
     /// The modify tool the edit comes from; it names the undo step: Ötele,
     /// Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
@@ -882,17 +793,14 @@ pub struct EntitiesEdit {
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.edit` v1: what changed, what was made and what went.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesEdited {
     /// The objects updated or replaced in place, in the input's order.
     pub changed: Vec<String>,
@@ -909,10 +817,8 @@ pub struct EntitiesEdited {
 
 /// What `cad.entities.edit` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesEditPlan {
     /// The objects updated or replaced, each as execute would write it, with
     /// its own slot (`id`), in the input's order.

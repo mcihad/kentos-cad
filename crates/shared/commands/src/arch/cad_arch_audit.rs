@@ -10,8 +10,6 @@
 //! Lengths are metres and areas square metres on the wire, whatever unit the project shows (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -36,10 +34,8 @@ pub const ARCH_AUDIT_MIN_WIDTH: f64 = 0.15;
 
 /// A group of the audit's checks, in the order its findings come.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchAuditCheck {
     /// Joins that are not made, ends that stop short of another wall or of another end.
     Walls,
@@ -88,10 +84,8 @@ pub enum ArchAuditCheck {
 
 /// What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchAuditNature {
     /// Fiziksel çarpışma: two things in one place.
     Physical,
@@ -114,10 +108,8 @@ impl ArchAuditNature {
 /// A finding that is no failure (docs/adr/8078; plan/bim-plan.md BIM-13): the rule could not decide. A finding without
 /// one is a failure (kaldı); a rule that holds or does not apply says it in its summary, never as a finding.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchAuditState {
     /// Eksik veri: what the rule needs is not in the project (an application date its result turns on, a value it
     /// could not read).
@@ -137,10 +129,8 @@ impl ArchAuditState {
 
 /// An article's outcome in the national regulation's rule set (docs/adr/8078): every rule says one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchAuditOutcome {
     /// Geçti: the drawing meets the article's version.
     Passed,
@@ -168,10 +158,8 @@ impl ArchAuditOutcome {
 
 /// An article read by the version in force on the application date (docs/adr/8078).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditRule {
     /// “PAİY 34/1”, “Sivas 34/8”.
     pub rule: String,
@@ -179,11 +167,9 @@ pub struct ArchAuditRule {
     pub title: String,
     /// The version's first day as the gazette writes it (“1.7.2026”); absent when KentOS holds no text of the day.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// Its gazette (“1.7.2026/33297”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub gazette: Option<String>,
     pub state: ArchAuditOutcome,
     /// What was measured and asked: “bodrum dahil 4 kat: asansör; binada asansör var”.
@@ -193,14 +179,11 @@ pub struct ArchAuditRule {
 /// The national regulation's rule set as the standards package read it (docs/adr/8078): where the application date
 /// came from and each article's outcome by its version.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditRuleSet {
     /// The application date as the permit's particulars give it (ISO), absent when they give none that reads.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     /// Where the date came from, or why there is none: “Başvuru tarihi künyeden: 2.7.2026”.
     pub date_note: String,
@@ -305,10 +288,8 @@ impl ArchAuditCheck {
 
 /// Which findings marked as exceptions `cad.arch.audit` lists (docs/adr/0732 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchAuditExceptionView {
     /// Left out and counted (`excepted`).
     #[default]
@@ -322,19 +303,15 @@ pub enum ArchAuditExceptionView {
 /// The part of the drawing `cad.arch.audit` reports on (docs/adr/0732 §2): a finding is kept when one of its objects
 /// lies on one of `levels` and one of them is among `uids`; either absent: no bound.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditWithin {
     /// Levels by their ids; null, the objects on no level. An object's level is the level view's (docs/adr/0715): an
     /// opening's its wall's, a tag's its object's, a dimension's its bonds'.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub levels: Option<Vec<Option<String>>>,
     /// Objects by their persistent ids: the findings about them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Option<Vec<String>>,
 }
@@ -348,71 +325,56 @@ pub struct ArchAuditWithin {
 /// `level_not_found` (`level`, then `within.levels[i]`), `entity_not_found` (`within.uids[i]`). Warning:
 /// `exception_lapsed` (an exception whose finding changed: listed open again).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAudit {
     /// The groups to check; absent or empty: every group. The findings keep the groups' own order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditCheck>>", optional))]
     pub checks: Vec<ArchAuditCheck>,
     /// A free wall end this near another wall's body, or another free end, is said; metres, at least 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_gap: Option<f64>,
     /// A space smaller than this is said; square metres, at least 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub min_area: Option<f64>,
     /// A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_width: Option<f64>,
     /// The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
     /// absent: the project's ground level (the one at elevation 0, else its first).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
     /// ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those measures are not taken.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub profiles: Vec<String>,
     /// An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_length: Option<f64>,
     /// A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:
     /// not measured.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_clear_width: Option<f64>,
     /// Design clearance profile for front approaches, separately on the pull and push faces.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub door_approach: Option<DoorApproachProfile>,
     /// The part of the drawing reported on; absent: all of it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub within: Option<ArchAuditWithin>,
     /// The exceptions listed; absent: hidden and counted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub exceptions: Option<ArchAuditExceptionView>,
 }
 
 /// Front clearance dimensions for the project's single hinged doors, in metres.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DoorApproachProfile {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pull_depth: f64,
@@ -436,10 +398,8 @@ impl DoorApproachProfile {
 
 /// Point-to-point design route on one storey. Width is the envelope's diameter, in metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchWalk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub start: Vec2,
@@ -448,20 +408,16 @@ pub struct ArchWalk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// Exclude movable furniture and equipment when inspecting the architectural shell.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub shell_only: bool,
 }
 
 /// A verified centreline, or a location to inspect when no route was found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchWalked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub points: Vec<Vec2>,
@@ -470,21 +426,17 @@ pub struct ArchWalked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub blocked: Option<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub obstacle: Option<String>,
 }
 
 /// What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it
 /// is; one undo step).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditFix {
     /// What the call does, as a button says it (“Bitiş ucunu öbür duvara uzat”).
     pub label: String,
@@ -493,10 +445,8 @@ pub struct ArchAuditFix {
 
 /// One thing `cad.arch.audit` found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditFinding {
     /// Its lasting key (docs/adr/0732 §1): `code:uids`, a wall end's `:start` or `:end`, `#2` for a second alike.
     pub key: String,
@@ -577,47 +527,37 @@ pub struct ArchAuditFinding {
     pub at: Vec2,
     /// Boundary of the affected area in model coordinates, when the finding has one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec2>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub outline: Vec<Vec2>,
     /// The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fix: Option<ArchAuditFix>,
     /// Marked as left on purpose, and the finding is as it was then (docs/adr/0732 §3).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub exception: bool,
     /// Marked as left on purpose, but the finding changed since: open again.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub lapsed: bool,
     /// The exception's note.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     /// A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub nature: Option<ArchAuditNature>,
     /// A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
     /// regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<String>,
     /// A finding that is no failure (docs/adr/8078): eksik veri or uzman incelemesi. Absent: the drawing does not meet
     /// the rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub state: Option<ArchAuditState>,
 }
 
 /// Output of `cad.arch.audit` v1 (its plan's too).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAudited {
     /// By group, then by code within it, then along x and y.
     pub findings: Vec<ArchAuditFinding>,
@@ -629,13 +569,11 @@ pub struct ArchAudited {
     pub excepted: u32,
     /// The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub stale: Vec<String>,
     /// The national regulation's rule set by the application date (docs/adr/8078): given by a host that runs the
     /// standards package (MCP, Python, the desktop) when the regulation group is asked of the whole drawing; its
     /// findings are listed with the others. Absent: not asked, or the rule did not answer (a warning says why).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule_set: Option<ArchAuditRuleSet>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -643,10 +581,8 @@ pub struct ArchAudited {
 
 /// What `cad.arch.exceptions` does (docs/adr/0732 §3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchExceptionOperation {
     /// İstisna yap: the findings of `keys` left on purpose, bound to the findings as they are now (a lapsed exception is
     /// marked again; a note given replaces the old one).
@@ -672,28 +608,21 @@ pub enum ArchExceptionOperation {
 /// no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
 /// change nothing and write no step. `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchExceptions {
     pub operation: ArchExceptionOperation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub keys: Vec<String>,
     /// Why the findings are left, for mark.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub audit: Option<ArchAudit>,
     /// The standards packages' findings the caller holds, as `cad.arch.audit` listed them (docs/adr/8078), for mark.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditFinding>>", optional))]
     pub findings: Vec<ArchAuditFinding>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -701,10 +630,8 @@ pub struct ArchExceptions {
 /// Output of `cad.arch.exceptions` v1, and its plan: the keys marked, unmarked or dropped (those already so are not
 /// counted), how many exceptions the project keeps after it, and the revision after it (a plan: before it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchExceptionsEdited {
     pub changed: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -716,10 +643,8 @@ pub struct ArchExceptionsEdited {
 /// An architectural profile (docs/adr/0723 §4, 0724 §2): versioned values ramps and stairs are measured against, with
 /// their sources and what they are not (a regulation's approval).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchProfile {
     /// `kentos.arch-profile`.
     pub format: String,
@@ -730,19 +655,15 @@ pub struct ArchProfile {
     pub note: String,
     pub sources: Vec<ProfileReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ramp: Option<RampRules>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stair: Option<StairRules>,
 }
 
 /// Where a profile's values come from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileReference {
     pub title: String,
     pub url: String,
@@ -750,10 +671,8 @@ pub struct ProfileReference {
 
 /// A ramp's rules in a profile.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RampRules {
     /// The steepest slope by the rise's size, in order: the first whose `upTo` (metres) the rise does not pass, the
     /// last having none.
@@ -770,10 +689,8 @@ pub struct RampRules {
 
 /// A stair's rules in a profile (docs/adr/0724 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StairRules {
     /// The highest riser, metres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -798,13 +715,10 @@ pub struct StairRules {
 
 /// One band of [`RampRules::slopes`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlopeBand {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub up_to: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
@@ -813,10 +727,8 @@ pub struct SlopeBand {
 
 /// [`RampRules::long_run`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LongRun {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub over: f64,

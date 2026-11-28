@@ -1,12 +1,8 @@
 //! Shared physical paper/model ratio; available without the sheet schema feature.
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperScaleRatio"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PaperScaleRatio {
     /// Paper and model lengths in the same physical unit: 2:1 enlarges twice.

@@ -7,8 +7,6 @@
 //! way (docs/adr/0165 §2, docs/adr/0245 §3).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -20,10 +18,8 @@ pub const CAD_UNITS_CHANGE_VERSION: u32 = 1;
 
 /// What becomes of the drawing when its unit changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UnitGeometry {
     /// The sizes stay: only the unit lengths are read and typed in changes
     /// (4000 mm reads 4 m). Nothing of the drawing moves.
@@ -57,10 +53,8 @@ pub enum UnitGeometry {
 /// a locked layer, whose `uids` the error lists, the first 100), `far_point`
 /// (with `scale`: a current or named UCS origin would leave its allowed range).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnitsChange {
     /// The drawing's unit now: said, not assumed, so a script written for
     /// another drawing does not scale this one.
@@ -73,17 +67,14 @@ pub struct UnitsChange {
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.units.change` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnitsChanged {
     pub from: DrawingUnit,
     pub to: DrawingUnit,

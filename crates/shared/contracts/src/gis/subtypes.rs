@@ -5,8 +5,6 @@
 //! field (the value's check, the choices offered, the forms) reads that one.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::{LayerField, check_value};
 
@@ -15,10 +13,8 @@ pub const MOST_SUBTYPES: usize = 256;
 
 /// A layer's subtypes: the field that sorts the records (its key) and the subtypes, in their order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerSubtypes {
     /// The subtype field's key (its id, else its name): a field with a value list, one value each.
     pub field: String,
@@ -27,41 +23,32 @@ pub struct LayerSubtypes {
 
 /// One subtype: a code of the subtype field's list, its label, and what it narrows.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Subtype {
     pub code: String,
     /// What it is called; empty: the subtype field's label of its code.
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub label: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SubtypeField>>", optional))]
     pub fields: Vec<SubtypeField>,
 }
 
 /// What a subtype changes on one field; a field it does not name keeps the layer's rules.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubtypeField {
     /// The field's key.
     pub field: String,
     /// The codes of its value list this subtype offers (a field with a value list); none: all of them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub values: Option<Vec<String>>,
     /// The value a new record of this subtype starts with, in its field's canonical text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub default: Option<String>,
     /// A record of this subtype has a value (in addition to the field's own rule).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub required: bool,
 }
 

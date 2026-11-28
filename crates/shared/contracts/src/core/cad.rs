@@ -9,8 +9,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::entity::{Entity, RingGeometry, Vec2};
 
@@ -33,10 +31,8 @@ pub const CAD_POLYGON_CREATE_VERSION: u32 = 1;
 /// Geometric validity (self-intersection, zero area, a hole outside the
 /// ring) is not checked, as the drawing tools and the file reader do not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolygonCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -48,60 +44,49 @@ pub struct PolygonCreate {
     /// tan(θ/4) of the edge's included angle, positive counter-clockwise, 0
     /// straight. Absent: every edge is straight.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub holes: Option<Vec<RingGeometry>>,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers
     /// what is drawn before it, its frame drawn or not. Absent: an ordinary area.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wipeout: Option<crate::look::Wipeout>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// Çakışma and Topoloji (docs/adr/0162, 0622 §9): what the new area must not overlap and whether it shares
     /// corners with its neighbours. Absent: written as given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<AreaRules>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -116,19 +101,14 @@ pub struct PolygonCreate {
 ///   on their edges go to them, theirs on its edges to it, the neighbours in the same undo step (`corners_joined`);
 ///   a locked layer's neighbour takes none (`neighbours_locked`). `points`: points too (Noktalar da).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AreaRules {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub avoid: Vec<String>,
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub topology: bool,
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub points: bool,
 }
 
@@ -151,10 +131,8 @@ pub const REVISION_TEXT: &str = "^(0|[1-9][0-9]*)$";
 
 /// Output of `cad.polygon.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolygonCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -170,10 +148,8 @@ pub struct PolygonCreated {
 
 /// What `cad.polygon.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolygonPlan {
     /// The polygon as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
@@ -201,10 +177,8 @@ pub const CAD_LINE_CREATE_VERSION: u32 = 1;
 /// all the same). A line whose ends coincide is not refused: geometric
 /// validity is not checked, as for `cad.polygon.create`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LineCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -216,51 +190,42 @@ pub struct LineCreate {
     pub b: Vec2,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.line.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LineCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -276,10 +241,8 @@ pub struct LineCreated {
 
 /// What `cad.line.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LinePlan {
     /// The line as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
@@ -309,10 +272,8 @@ pub const CAD_POLYLINE_CREATE_VERSION: u32 = 1;
 /// Geometric validity (a path crossing itself, zero-length edges) is not
 /// checked, as for `cad.polygon.create`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolylineCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -327,69 +288,57 @@ pub struct PolylineCreate {
     /// document keeps one value per point, as DXF does: an open polyline is
     /// stored with a 0 after these, for the closing edge it does not have.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// A closed line, not an area (docs/adr/0258 §1): its last point joins
     /// its first by one edge more. Absent: open.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub closed: bool,
     /// Each edge's start and end width, one pair per edge as `bulges`, in
     /// the project's length (m), not the paper's line weight (docs/adr/0258
     /// §2): finite, 0 or above. Absent or all 0: none, the line is drawn with
     /// its line weight.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub widths: Option<Vec<[f64; 2]>>,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.polyline.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolylineCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -405,10 +354,8 @@ pub struct PolylineCreated {
 
 /// What `cad.polyline.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolylinePlan {
     /// The polyline as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
@@ -443,10 +390,8 @@ pub const UID_TEXT: &str = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 /// `invalid_uid` (each id in order), `invalid_revision`, `revision_conflict`
 /// (status `conflict`), `entity_not_found` (each id in order), `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDelete {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -455,17 +400,14 @@ pub struct EntitiesDelete {
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is deleted and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.delete` v1: what was deleted and what stayed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDeleted {
     /// The ids deleted, in the input's order (a repeated one once). Undo
     /// brings them back with the same ids, in their places.
@@ -475,11 +417,9 @@ pub struct EntitiesDeleted {
     /// What the project's relations did to the deleted objects' children (docs/adr/0440 §1), in the
     /// relations' order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RelationFollowed>>", optional))]
     pub followed: Vec<RelationFollowed>,
     /// The attachments the deleted objects (their followed children too) held (docs/adr/0440 §1).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub attachments: u32,
     /// The document's revision after the delete, as decimal text. Inside an
@@ -491,17 +431,11 @@ pub struct EntitiesDeleted {
 
 /// What `cad.entities.delete` would delete (plan mode); nothing is deleted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDeletePlan {
     /// Derived changes when sources disappear; absent when there are none.
     #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
-    )]
     pub followers: crate::DerivedEntitiesPlan,
     /// The ids execute would delete, in the input's order.
     pub removed: Vec<String>,
@@ -509,11 +443,9 @@ pub struct EntitiesDeletePlan {
     pub locked: Vec<String>,
     /// What the project's relations would do to the children (docs/adr/0440 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RelationFollowed>>", optional))]
     pub followed: Vec<RelationFollowed>,
     /// The attachments that would go with the objects (docs/adr/0440 §1).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub attachments: u32,
     /// The document revision the plan was made against. Give it as
@@ -524,10 +456,8 @@ pub struct EntitiesDeletePlan {
 
 /// What a relation did to a deleted parent's children (docs/adr/0440 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RelationFollowed {
     /// The relation's id.
     pub relation: String,

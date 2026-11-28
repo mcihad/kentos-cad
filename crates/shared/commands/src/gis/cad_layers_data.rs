@@ -3,8 +3,6 @@
 //! stay in the source and are never written into the drawing (plan/veri.md VY-02).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -17,10 +15,8 @@ pub const CAD_LAYERS_DATA_VERSION: u32 = 1;
 
 /// What `cad.layers.data` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerDataOperation {
     /// Veri katmanı ekle.
     Add,
@@ -44,50 +40,39 @@ pub enum LayerDataOperation {
 /// `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer` (a group), `not_a_data_layer` (update or
 /// remove of a layer that is not a data layer).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersData {
     pub operation: LayerDataOperation,
     /// `update`, `remove`: the layer's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// `add`: the new layer's name; `update`: a new name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The group it goes into, or a layer whose group it goes into; absent, the top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     /// Its place among the group's nodes, first on top; absent or past the end, last.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
     /// `add`: where its rows are; `update`: where they are now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub data: Option<DataLayer>,
     /// The table's columns as the layer's fields (docs/adr/0199 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.data` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersDataDone {
     /// The layer added, changed or removed.
     pub layer: String,
@@ -98,14 +83,11 @@ pub struct LayersDataDone {
 
 /// What `cad.layers.data` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersDataPlan {
     /// The layer as execute would leave it (`add`: with the id it would be given); absent for `remove`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub node: Option<LayerNode>,
     /// The document revision the plan was made against.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

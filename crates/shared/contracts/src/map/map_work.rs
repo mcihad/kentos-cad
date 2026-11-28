@@ -15,8 +15,6 @@
 //! an item that moved on since shows it.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::EntityId;
 use crate::sheets::is_sha256_text;
@@ -34,10 +32,8 @@ pub const MAX_ITEM_LAYERS: usize = 1000;
 
 /// What an item is in the map's work.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WorkKind {
     /// A survey campaign: GNSS, total station or scan data gathered in the field.
     Campaign,
@@ -71,10 +67,8 @@ impl WorkKind {
 
 /// Where an item's work stands, as the office records it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WorkStatus {
     /// Taslak.
     #[default]
@@ -93,10 +87,8 @@ impl WorkStatus {
 
 /// The file an item is: where it is and the content the project last accepted.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkFile {
     /// An absolute path, as added or last found.
     pub path: String,
@@ -105,16 +97,13 @@ pub struct WorkFile {
     /// Its path from the project file's folder, `/` between its parts, written when the project is saved (schema 193,
     /// docs/adr/1201 §1): a project moved with its data finds the file again; none on another drive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub relative: Option<String>,
 }
 
 /// An item of the map's work.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkItem {
     /// `is-N`.
     pub id: String,
@@ -122,59 +111,48 @@ pub struct WorkItem {
     /// 1–200 characters, no space at either end.
     pub name: String,
     #[serde(default, skip_serializing_if = "WorkStatus::is_draft")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<WorkStatus>"))]
     pub status: WorkStatus,
     /// Layer or group ids; a layer is in one item at most.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub layers: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<WorkFile>,
     /// The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision
     /// or, without a file, its content revision then; only on an approved item. None on an item approved before 206.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<String>,
     /// The objects its approval stamped (schema 210, docs/adr/2880): `[persistent id, object digest]` by id, the very
     /// list whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most
     /// [`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<(EntityId, String)>>"))]
     pub approved_objects: Vec<(EntityId, String)>,
     /// Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,
     /// attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
     /// Empty: approved before 211, or no `approved_objects`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<[String; 4]>>"))]
     pub approved_parts: Vec<[String; 4]>,
     /// Each approved object's value as approved (schema 213, docs/adr/3680), in `approved_objects`' order: the very text
     /// its object digest is the SHA-256 of (`kentos.object-digest/1`: its snapshot form without the slot id, keys
     /// sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
     /// 213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub approved_values: Vec<String>,
     /// Its typed layers' profile (schema 247, docs/adr/4880): a data profile by name whose classes type the item's
     /// layers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<WorkProfile>,
 }
 
 /// An item's typed layers' profile (docs/adr/4880): a data profile (`catalog/v1/profiles/`, or the project's own) by
 /// name and the classes of it the item holds; none listed, all of them.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkProfile {
     /// The profile's name, 1–200 characters without space at its ends.
     pub name: String,
     /// Class ids, each once, at most [`MAX_PROFILE_CLASS_IDS`]; empty: every class of the profile.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub classes: Vec<String>,
 }
 
@@ -242,10 +220,8 @@ fn is_part_digest(d: &str) -> bool {
 
 /// Objects made from an item: the item, its revision then, the operation that made them and the objects.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkDerivation {
     /// `tr-N`.
     pub id: String,
@@ -261,16 +237,12 @@ pub struct WorkDerivation {
 
 /// A map project's work structure.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MapWork {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<WorkItem>>"))]
     pub items: Vec<WorkItem>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<WorkDerivation>>"))]
     pub derivations: Vec<WorkDerivation>,
 }
 

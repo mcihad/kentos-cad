@@ -6,8 +6,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::QueryOrder;
 
@@ -25,69 +23,54 @@ pub const LAYER_ROWS_PAGE_MOST: u32 = 1000;
 /// other objects), `source_unreachable` (the source could not be read; the message says why). A job stopped answers
 /// `cancelled`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersRows {
     /// The data layer (its id).
     pub layer: String,
     /// Rows whose geometry's box meets this one, in the project's system: west, south, east, north (Görünümdekiler).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bbox: Option<[f64; 4]>,
     /// Rows of these keys only (Seçililer).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub keys: Option<Vec<i64>>,
     /// Rows any of whose fields, read as text, holds these words, case aside the Turkish way (Ara).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub search: Option<String>,
     /// A condition in İfadeyle seç's language: the rows it holds for (İfade süzgeci).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     /// The fields returned, by name; none: all of them in the table's order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<String>>,
     /// Return each row's geometry in the project's system (ISO WKT).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<bool>,
     /// The order, field after field; then by key. A text is ordered in the Turkish alphabet's order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub order: Option<Vec<QueryOrder>>,
     /// How many of the ordered rows come before the page.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub offset: Option<u64>,
     /// How many rows the page holds, 0–1 000; none: 100.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     /// Count every row the question keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub count: Option<bool>,
     /// Return every kept row's key, in the order (a selection of the rows a filter keeps, a table's pages).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub all_keys: Option<bool>,
 }
 
 /// A row of a data layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerRow {
     /// Its key in the source.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -96,16 +79,13 @@ pub struct LayerRow {
     pub attrs: BTreeMap<String, String>,
     /// Its geometry in the project's system, ISO WKT (with `geometry`; none for a row without one).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wkt: Option<String>,
 }
 
 /// Where a question's filter was checked.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RowsChecked {
     /// By the source: the box, the keys, the search and the filter, if any, which the source answered exactly
     /// (docs/adr/9109).
@@ -116,10 +96,8 @@ pub enum RowsChecked {
 
 /// Output of `cad.layers.rows` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerRowsAnswer {
     /// The fields of the rows, in the table's order.
     pub fields: Vec<String>,
@@ -130,18 +108,15 @@ pub struct LayerRowsAnswer {
     pub offset: u64,
     /// How many rows the question keeps (with `count`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: Option<u64>,
     /// Every kept row's key in the order (with `allKeys`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub keys: Option<Vec<i64>>,
     pub checked: RowsChecked,
     /// The layer's fields its table does not have (docs/adr/9318): not read, each row empty in them, the others read as
     /// they are. Veri kaynağına sütun ekle adds the column, Kaynak şemasını yenile takes the field off the layer.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub missing: Vec<String>,
 }

@@ -8,8 +8,6 @@
 //! docs/adr/0261), as the catalog's `conventions` say.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::UID_TEXT;
@@ -27,10 +25,8 @@ pub const MAX_CONSTRUCTIONS: usize = 10_000;
 /// An object's end an extension starts from: a line's or an arc's start or end, an open path's first or last
 /// vertex (as a place, docs/adr/0249); inside an insert, the piece's (docs/adr/0263 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ObjectEnd {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -38,17 +34,14 @@ pub struct ObjectEnd {
     pub place: SubPlace,
     /// When `uid` is an insert, the piece inside it the end is on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
 }
 
 /// One point to construct.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PointConstruction {
     /// İki nokta ortası: halfway from `a` to `b`.
     Mid { a: MeasuredPoint, b: MeasuredPoint },
@@ -97,10 +90,8 @@ pub enum PointConstruction {
 /// an inner vertex, a circle), `no_straight_edge` (Paralel's object has none), `same_points` (Hat üzerinde's two
 /// points in one place).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointsConstruct {
     /// One to 10 000 constructions.
     pub constructions: Vec<PointConstruction>,
@@ -108,10 +99,8 @@ pub struct PointsConstruct {
 
 /// Output of `cad.points.construct` v1, and its plan: the points, one per construction, in their order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointsConstructed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub points: Vec<Vec2>,

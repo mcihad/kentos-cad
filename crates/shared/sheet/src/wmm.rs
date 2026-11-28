@@ -12,8 +12,6 @@
 use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The table as the script writes it (the fields the core reads).
 #[derive(Debug, Deserialize)]
@@ -37,9 +35,7 @@ fn table() -> Option<&'static Table> {
 
 /// The model a host names (`wmmInfo`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct WmmInfo {
     /// “WMM2025”.
     pub model: String,
@@ -52,9 +48,7 @@ pub struct WmmInfo {
 
 /// The magnetic field at a place and time.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MagneticField {
     /// Declination: from true north to magnetic north, degrees, east positive.
     pub declination: f64,

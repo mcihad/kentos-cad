@@ -5,8 +5,6 @@
 //! the readers', the commands' and the server's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::layer::{LayerNode, LayerNodeType};
 
@@ -21,59 +19,45 @@ pub const SCENARIO_NAME_MAX: usize = 80;
 /// known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
 /// (or a layer without them) names them in `fields`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueryTime {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub known_at: Option<String>,
     /// The fields holding the times, as a layer's time settings name them; none: the layer's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<LayerTime>,
 }
 
 /// A layer's time setting (docs/adr/0210 §2): its objects' start (or
 /// moment) and end are the values of these attributes.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerTime {
     /// The attribute holding the start (an instant layer's moment).
     pub start: String,
     /// The attribute holding the end; absent, the objects are moments.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end: Option<String>,
     /// The attribute naming an object across its versions (Zamanı karşılaştır's key).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// Birikimli: an object shows from its start on, whatever its end; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cumulative: bool,
     /// The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):
     /// what was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recorded_start: Option<String>,
     /// The attribute holding when the version was superseded (its system time's end); empty: still current.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recorded_end: Option<String>,
 }
 
@@ -143,13 +127,10 @@ impl LayerTime {
 /// A group made a scenario (docs/adr/0210 §9): its layers are an alternative
 /// kept apart from the field state (Mevcut durum).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScenarioInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }
 

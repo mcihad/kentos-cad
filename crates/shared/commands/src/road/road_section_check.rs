@@ -6,8 +6,6 @@
 //! written. The shared cases are `fixtures/commands/v1/road.terrains.sectioncheck.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::ContourRules;
 
@@ -27,25 +25,20 @@ pub const ROAD_TERRAINS_SECTIONCHECK_VERSION: u32 = 1;
 /// under the limit; warning `section_spacing_exceeded`: two neighbouring places of the section (its ends and its points
 /// on it) are farther apart than the package's spacing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsSectionCheck {
     pub from: String,
     pub to: String,
     pub points: Vec<String>,
     pub contours: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub corridor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<ContourRules>,
 }
 
@@ -55,10 +48,8 @@ pub struct TerrainsSectionCheck {
 /// less the read height. `state`: `compared`, `noContour` (no crossing on one side), `outside` (its foot before `from`
 /// or after `to`), `offLine` (farther than the corridor).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionPointRow {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -70,15 +61,12 @@ pub struct SectionPointRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub measured: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub contour: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub between: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub difference: Option<f64>,
     pub state: String,
@@ -86,10 +74,8 @@ pub struct SectionPointRow {
 
 /// Two neighbouring places of the section farther apart than the package's spacing: how far along each is, and the gap.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionGap {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: f64,
@@ -105,10 +91,8 @@ pub struct SectionGap {
 /// compared, their RMS and largest difference (metres; none without a compared point), KOH_Z and the limit
 /// (`factor` · KOH_Z, metres), the spacing, and whether the RMS is under the limit (none without a compared point).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsSectionChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
@@ -126,11 +110,9 @@ pub struct TerrainsSectionChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub compared: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub rms: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub largest: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -138,10 +120,8 @@ pub struct TerrainsSectionChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub limit: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub spacing: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub within: Option<bool>,
 }

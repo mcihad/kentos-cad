@@ -5,8 +5,6 @@
 //! after the tool. The tools write through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -18,10 +16,8 @@ pub const CAD_ANNOTATIONS_WRITE_VERSION: u32 = 1;
 
 /// Where a coordinate label leans (Yön).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelLean {
     /// Away from the middle of its object's box; north-east without one.
     #[default]
@@ -34,10 +30,8 @@ pub enum LabelLean {
 
 /// The side the km text goes on (Yazı), or none.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StationText {
     Left,
     Right,
@@ -46,10 +40,8 @@ pub enum StationText {
 
 /// What is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AnnotationWork {
     /// Koordinat yaz and Köşelere koordinat yaz (docs/adr/0185): a label at each place `at`, its elevation and name the
     /// visible objects' there, or at every vertex of the objects `ids`; `template`'s lines (`{Y}`, `{X}`, `{Z}`,
@@ -58,24 +50,18 @@ pub enum AnnotationWork {
     #[serde(rename_all = "camelCase")]
     Coordinates {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<Vec<Vec2>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         ids: Option<Vec<String>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         template: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         decimals: Option<u8>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         leader: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<LabelLean>"))]
         lean: LabelLean,
     },
     /// Km yaz (docs/adr/0189): the route `id`'s stations at the multiples of `interval` of its km (from `start` at
@@ -88,28 +74,21 @@ pub enum AnnotationWork {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         interval: f64,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<f64>"))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         start: f64,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         reverse: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         measures: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         ends: bool,
         text: StationText,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         tick: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<f64>"))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         section: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         point: Option<f64>,
     },
@@ -123,7 +102,6 @@ pub enum AnnotationWork {
         at: Vec2,
         text: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<crate::TextAlign>,
     },
     /// Hızlı ölçü (docs/adr/0147 §7): the straight edges of the lines, polylines and areas `ids` measured at once,
@@ -135,14 +113,11 @@ pub enum AnnotationWork {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         style: Option<String>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         mask: bool,
     },
     /// Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a
@@ -152,20 +127,15 @@ pub enum AnnotationWork {
     /// masked, with `linked` each text tied to its object (`labelOf`, `labelScale`).
     Labels {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         ids: Option<Vec<String>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: Option<f64>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         every: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         mask: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         linked: bool,
     },
 }
@@ -175,41 +145,32 @@ pub enum AnnotationWork {
 /// Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`invalid_input`,
 /// `not_a_path`, `no_route`, `invalid_distance`, `nothing_derived` …), then `cad.entities.create`'s.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsWrite {
     /// The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.
     pub layer_id: String,
     pub work: AnnotationWork,
     /// The texts' paper height, mm (the project's for the kind when none); in the drawing it is this times the scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub face: Option<crate::TextFace>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `cad.annotations.write` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsWritten {
     /// The new objects' slots and persistent ids, in order.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]

@@ -10,8 +10,6 @@
 //! the Python SDK pass the shared cases in `fixtures/commands/v1/road.terrains.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -40,45 +38,35 @@ pub const MAX_TERRAIN_PLACES: usize = 100_000;
 /// outside; the message says where). What the definition names and the drawing cannot give is the warning
 /// `terrain_source_left`, one for each, by the object's or the layer's id.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCreate {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "SurfaceSources::is_empty")]
     pub points: SurfaceSources,
     #[serde(default, skip_serializing_if = "SurfaceSources::is_empty")]
     pub breaklines: SurfaceSources,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub voids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub max_edge: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `road.terrains.edit` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TerrainsEditOperation {
     /// `surface` replaces the project's definition of its id; it keeps the digest it was last accepted from, so a
     /// changed definition is out of date until accepted.
@@ -95,20 +83,15 @@ pub enum TerrainsEditOperation {
 /// without `id`), `invalid_terrain` (set: the definition, given without `built`, or the surfaces with it),
 /// `invalid_revision`, `revision_conflict`, `unknown_terrain` (no surface of the id), `terrain_unbuildable` (accept).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsEdit {
     pub operation: TerrainsEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<TerrainSurfaceDef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -120,30 +103,23 @@ pub struct TerrainsEdit {
 /// Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
 /// `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub along: Vec<[f64; 2]>,
 }
 
 /// A surface's state against its sources.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TerrainState {
     /// Made from the sources it was last accepted from.
     Current,
@@ -158,10 +134,8 @@ pub enum TerrainState {
 /// What a surface names and could not use, and why: `missing` (not in the drawing), `no_height`, `arc_edge`,
 /// `wrong_kind`, `not_closed`, `too_few`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainLeft {
     /// The object's or the layer's id.
     pub id: String,
@@ -173,15 +147,12 @@ pub struct TerrainLeft {
 /// Why no surface is made: the core's code (`too_few_points`, `height_ambiguous`, `height_conflict`,
 /// `constraints_cross`, `boundary_outside` …), its words and its place.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainProblem {
     pub code: String,
     pub message: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<[f64; 2]>,
 }
@@ -189,10 +160,8 @@ pub struct TerrainProblem {
 /// A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the
 /// kept corners' lowest and highest heights.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainFigures {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub vertices: u32,
@@ -203,11 +172,9 @@ pub struct TerrainFigures {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub min_z: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub max_z: Option<f64>,
     /// Records at one place within the tolerance, made one corner.
@@ -221,7 +188,6 @@ pub struct TerrainFigures {
     pub trimmed: u32,
     /// Triangles its edits took out (docs/adr/1560); unwritten when none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
 }
@@ -232,10 +198,8 @@ fn is_zero(n: &u32) -> bool {
 
 /// Where a place is on a surface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TerrainPlace {
     Inside,
     Outside,
@@ -251,37 +215,30 @@ pub enum TerrainPlace {
 /// `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,
 /// `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsContours {
     /// The surface's id or name.
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub interval: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub major_every: Option<u32>,
     /// The layer they go on.
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A contour line as written: its level, whether major and closed, its places.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainContour {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: f64,
@@ -294,14 +251,11 @@ pub struct TerrainContour {
 /// Output of `road.terrains.contours` v1, and its plan: the lines in their order (by level, then by their first
 /// place), the objects written (a plan: none) and the revision after it (a plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsContoured {
     pub lines: Vec<TerrainContour>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -309,54 +263,44 @@ pub struct TerrainsContoured {
 
 /// A place's height: none outside and in a void.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainHeight {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     pub place: TerrainPlace,
     /// The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: Option<f64>,
     /// The azimuth it falls towards, radians clockwise from north; none on a flat triangle.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub aspect: Option<f64>,
     /// The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by
     /// x, then y.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub corners: Option<[[f64; 3]; 3]>,
     /// That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub longest: Option<f64>,
     /// The plan distance from the place to the nearest of those corners.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub corner: Option<f64>,
 }
 
 /// How a height between a surface's points is read (docs/adr/1033).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TerrainInterpolation {
     /// On the plane through the corners of the triangle the place is in; nothing outside the surface or in a void,
     /// nothing extrapolated.
@@ -366,10 +310,8 @@ pub enum TerrainInterpolation {
 /// A place of a section: its distance from the line's start, where it is, its height (none off the surface), and
 /// `gap`: the line from the previous place to this one is off the surface.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainSectionPoint {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub station: f64,
@@ -378,20 +320,16 @@ pub struct TerrainSectionPoint {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub gap: bool,
 }
 
 /// A surface as its sources give it now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainReport {
     pub id: String,
     pub name: String,
@@ -400,35 +338,27 @@ pub struct TerrainReport {
     pub digest: String,
     /// The digest it was last accepted from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub built: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainLeft>>", optional))]
     pub left: Vec<TerrainLeft>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub figures: Option<TerrainFigures>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<TerrainProblem>,
     /// The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's
     /// constrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub algorithm: Option<String>,
 }
 
 /// Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,
 /// the one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsWritten {
     pub surfaces: Vec<TerrainSurfaceDef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<TerrainReport>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -437,21 +367,16 @@ pub struct TerrainsWritten {
 /// Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights
 /// and section.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsQueried {
     pub surfaces: Vec<TerrainReport>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainHeight>>", optional))]
     pub heights: Vec<TerrainHeight>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSectionPoint>>", optional))]
     pub section: Vec<TerrainSectionPoint>,
     /// How the heights and the section were read, when either was asked (docs/adr/1033).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub interpolation: Option<TerrainInterpolation>,
 }
 
@@ -467,10 +392,8 @@ pub struct TerrainsQueried {
 /// `terrain_unbuildable`. Warnings: `landxml_left` (faces naming a missing point, a point id twice, a second outer
 /// boundary), `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportLandxml {
     /// The file's path.
     pub path: String,
@@ -478,24 +401,19 @@ pub struct ImportLandxml {
     pub layer_id: String,
     /// The file's surface by its name; absent: its first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// The terrain surface's name; absent: the file's surface's (or “LandXML”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `file.import.landxml` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LandxmlImported {
     /// The file's surface taken.
     pub surface: String,
@@ -516,14 +434,12 @@ pub struct LandxmlImported {
     /// The greatest height difference at the file's faces' centroids between the file's face and the surface made
     /// again (m); none without faces or with no centroid on the surface.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub differs: Option<f64>,
     /// The terrain surface as its sources give it.
     pub terrain: TerrainReport,
     /// The objects written (a plan: none).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

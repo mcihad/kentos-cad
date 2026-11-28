@@ -8,8 +8,6 @@
 //! both pass the shared cases in `fixtures/commands/v1`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -23,10 +21,8 @@ pub const CAD_LAYERS_SERVICE_VERSION: u32 = 1;
 
 /// What `cad.layers.service` does; it names the undo step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerServiceOperation {
     /// A layer drawn from a service (“Harita servisi ekle”).
     Add,
@@ -66,54 +62,41 @@ pub enum LayerServiceOperation {
 /// (update giving a service to a layer with objects), `unknown_connection`
 /// (a service or feed naming a connection the project does not have).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersService {
     pub operation: LayerServiceOperation,
     /// `update`, `remove`: the layer's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// `add`, `addFeed`: the new layer's name; `update`: a new name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub service: Option<ServiceLayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub feed: Option<FeatureFeed>,
     /// `addFeed`: the layer's fields (docs/adr/0199 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
     /// Connections added to the project, or replacing its own of the same id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub connections: Option<Vec<ServiceConnection>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.service` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersServiced {
     /// The layer added, changed or removed.
     pub layer: String,
@@ -124,15 +107,12 @@ pub struct LayersServiced {
 
 /// What `cad.layers.service` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersServicePlan {
     /// The layer as execute would leave it (`add`, `addFeed`: its id the one
     /// it would be given); absent for `remove`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub node: Option<LayerNode>,
     /// The project's connections as execute would leave them.
     pub connections: Vec<ServiceConnection>,
@@ -154,30 +134,24 @@ pub const CAD_LAYERS_TIME_VERSION: u32 = 1;
 /// (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
 /// `service_layer` (a layer drawn from a service: it holds no objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersTime {
     /// The layer's id.
     pub layer: String,
     /// Its new time setting; absent or null takes it away.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::LayerTime>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.time` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersTimed {
     pub layer: String,
     /// Whether the setting differed (an undo step was written).
@@ -189,10 +163,8 @@ pub struct LayersTimed {
 
 /// What `cad.layers.time` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersTimePlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,
@@ -217,30 +189,24 @@ pub const CAD_LAYERS_FILTER_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn
 /// from a service: it holds no objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersFilter {
     /// The layer's id.
     pub layer: String,
     /// Its new filter; absent or null takes it away.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<crate::layer_filter::LayerFilter>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.filter` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersFiltered {
     pub layer: String,
     /// Whether the filter differed (an undo step was written).
@@ -258,10 +224,8 @@ pub struct LayersFiltered {
 
 /// What `cad.layers.filter` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersFilterPlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,
@@ -295,30 +259,24 @@ pub const CAD_LAYERS_RENDERER_VERSION: u32 = 1;
 /// (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
 /// `service_layer` (a layer drawn from a service: it holds no objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersRenderer {
     /// The layer's id.
     pub layer: String,
     /// Its new renderer; absent or null takes it away.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub renderer: Option<serde_json::Value>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.renderer` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersRendered {
     pub layer: String,
     /// Whether the renderer differed (an undo step was written).
@@ -330,10 +288,8 @@ pub struct LayersRendered {
 
 /// What `cad.layers.renderer` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersRendererPlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,
@@ -364,29 +320,23 @@ pub const CAD_LAYERS_COMPOSE_VERSION: u32 = 1;
 /// `mask_target_not_a_layer` (a group). A target deleted later is skipped
 /// when the mask is drawn.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersCompose {
     /// The layer's id.
     pub layer: String,
     /// 0–1; absent, 1 (opaque).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// Absent, normal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blend: Option<crate::layer_compose::BlendMode>,
     /// The mask its labels and markers cut into other layers; absent, none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mask: Option<crate::layer_compose::LayerMask>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -405,10 +355,8 @@ impl LayersCompose {
 
 /// Output of `cad.layers.compose` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersComposed {
     pub layer: String,
     /// Whether it differed (an undo step was written).
@@ -420,10 +368,8 @@ pub struct LayersComposed {
 
 /// What `cad.layers.compose` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersComposePlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,
@@ -448,10 +394,8 @@ pub const CAD_LAYERS_TABLE_VERSION: u32 = 1;
 /// `styles/<i>/field`), `invalid_expression` (a condition that does not compile over the layer's
 /// fields, path `styles/<i>/condition`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersTable {
     /// The layer's id.
     pub layer: String,
@@ -461,7 +405,6 @@ pub struct LayersTable {
     pub styles: Vec<crate::table_styles::TableStyle>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -478,10 +421,8 @@ pub const CAD_LAYERS_RULES_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_rules` (rules that do not fit the
 /// layer, `layer_rules_problem`, or an expression that does not compile, path `rules/<where>`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersRules {
     /// The layer's id.
     pub layer: String,
@@ -490,7 +431,6 @@ pub struct LayersRules {
     pub rules: Vec<crate::layer_rules::LayerRule>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -508,10 +448,8 @@ pub const CAD_LAYERS_INDEXES_VERSION: u32 = 1;
 /// path `indexes/<where>`), `index_not_unique` (a new or newly unique index two records already break, its records'
 /// ids in `uids`). Warning: `index_not_in_source` (a bound layer: KentOS keeps the key, the table does not get it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersIndexes {
     /// The layer's id.
     pub layer: String,
@@ -520,7 +458,6 @@ pub struct LayersIndexes {
     pub indexes: Vec<crate::layer_indexes::LayerIndex>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -536,10 +473,8 @@ pub const CAD_LAYERS_CONTINGENTS_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_contingents` (groups that do not
 /// fit the layer's fields, `contingents_problem`, path `groups/<where>`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersContingents {
     /// The layer's id.
     pub layer: String,
@@ -548,7 +483,6 @@ pub struct LayersContingents {
     pub groups: Vec<crate::contingents::FieldGroup>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -564,20 +498,16 @@ pub const CAD_LAYERS_SUBTYPES_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_subtypes` (subtypes that do not fit
 /// the layer's fields, `subtypes_problem`, path `subtypes/<where>`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersSubtypes {
     /// The layer's id.
     pub layer: String,
     /// The subtypes; none: the layer has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub subtypes: Option<crate::subtypes::LayerSubtypes>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -602,37 +532,27 @@ pub const CAD_LAYERS_INFO_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
 /// drawn from a service: it holds no objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersInfo {
     /// The layer's id.
     pub layer: String,
     /// Its actions, in order; absent or empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::layer_info::LayerAction>>", optional)
-    )]
     pub actions: Vec<crate::layer_info::LayerAction>,
     /// Its information card; absent or null: the default card.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub card: Option<crate::layer_info::InfoCard>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.info` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersInformed {
     pub layer: String,
     /// Whether they differed (an undo step was written).
@@ -644,10 +564,8 @@ pub struct LayersInformed {
 
 /// What `cad.layers.info` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersInfoPlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,

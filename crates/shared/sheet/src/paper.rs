@@ -4,17 +4,13 @@
 use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::model::{Orientation, Page, Paper};
 use crate::units::{Margins, SizeUm, Um};
 
 /// A paper of the table, portrait.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PaperSize {
     pub id: Paper,
     /// “A4”.

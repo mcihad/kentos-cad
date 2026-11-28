@@ -23,8 +23,6 @@ pub use table::{coordinate_headings, coordinate_summary};
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub use inputs::*;
 pub(crate) use map::MapFrame;
@@ -42,9 +40,7 @@ use crate::units::*;
 
 /// An arc of an ellipse: its centre, radii, the ellipse's turn, the start angle and the sweep (clockwise on the paper, from the ellipse's own +x axis).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ArcSeg {
     pub center: PointUm,
     pub radius: [Um; 2],
@@ -55,9 +51,7 @@ pub struct ArcSeg {
 
 /// A path's step: move, line, arc (a line to its start first, as Canvas does) or close.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum Seg {
     M(PointUm),
     L(PointUm),
@@ -68,9 +62,7 @@ pub enum Seg {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RectPrim {
     pub item: ItemId,
     /// Before its turn, about its own centre.
@@ -78,25 +70,19 @@ pub struct RectPrim {
     pub rotation: Mdeg,
     pub radius: Um,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PathPrim {
     pub item: ItemId,
     pub segments: Vec<Seg>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
     /// Even-odd filling (holes); otherwise non-zero.
     #[serde(default)]
@@ -105,9 +91,7 @@ pub struct PathPrim {
 
 /// A line of text: drawn from `at` (the start of its baseline), turned by `rotation` about that point, left-aligned.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct TextPrim {
     pub item: ItemId,
     pub text: String,
@@ -123,14 +107,11 @@ pub struct TextPrim {
     pub width: Um,
     /// A light outline under the letters (labels over a map).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub halo: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ImagePrim {
     pub item: ItemId,
     /// The asset's SHA-256.
@@ -142,16 +123,12 @@ pub struct ImagePrim {
 
 /// What a map frame shows: the host paints its content into the clip with this view.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapViewPrim {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotation_scale: Option<f64>,
     /// None: the map has no place yet (a template's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
     #[serde(serialize_with = "crate::viewport::serialize_denominator")]
     pub scale: f64,
@@ -166,12 +143,9 @@ impl MapViewPrim {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapPrim {
     #[serde(default, skip_serializing_if = "crate::clip::Clip::is_frame")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::clip::Clip>", optional))]
     pub clip_shape: crate::clip::Clip,
     pub item: ItemId,
     /// The content's rectangle, before the frame's turn about its own centre.
@@ -184,56 +158,36 @@ pub struct MapPrim {
     pub layer_overrides: Vec<crate::kinds::LayerOverride>,
     /// The level the map draws (docs/adr/0716); none: every level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<crate::kinds::MapLevel>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ceiling: Option<kentos_contracts::CeilingRange>,
     /// The phases it shows (docs/adr/0774 §3: its linked view's recipe); none: the project's phase view.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phase: Option<kentos_contracts::PhaseView>,
     /// The categories it leaves out (docs/adr/0774 §3: its linked view's recipe).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<kentos_contracts::ViewCategory>>", optional)
-    )]
     pub hidden: Vec<kentos_contracts::ViewCategory>,
     /// The detail it draws the walls at whatever its scale (docs/adr/0781 §1: its linked view's recipe); none: the
     /// scale's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall_detail: Option<kentos_contracts::WallDetail>,
     /// The pens it draws its categories with (docs/adr/0783 §1: its linked view's recipe, its template resolved).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<kentos_contracts::RecipePen>>", optional)
-    )]
     pub pens: Vec<kentos_contracts::RecipePen>,
     /// Every line black, hatches grey (docs/adr/0783 §1).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mono: bool,
     /// The design options it shows (docs/adr/0788 §3: its linked view's recipe); empty: each set's primary. A boxed
     /// slice: the primitives' enum stays small.
     #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<kentos_contracts::OptionChoice>>", optional)
-    )]
     pub options: Box<[kentos_contracts::OptionChoice]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
     /// The ground the clip covers: min east, min north, max east, max north.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub extent: Option<[f64; 4]>,
     /// Clip the content to this atlas object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clip_feature: Option<String>,
 }
 
@@ -256,9 +210,7 @@ impl MapPrim {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ClipPrim {
     pub item: ItemId,
     pub rect: RectUm,
@@ -266,9 +218,7 @@ pub struct ClipPrim {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct GroupPrim {
     pub item: ItemId,
     /// 0–100.
@@ -276,17 +226,13 @@ pub struct GroupPrim {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ItemTag {
     pub item: ItemId,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 // A map is the display list's largest primitive (its recipe's pens and the like); the list is built once per change and
 // read in order, so the variants stay unboxed.
 #[allow(clippy::large_enum_variant)]
@@ -319,9 +265,7 @@ impl Prim {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct DisplayList {
     pub sheet: SheetId,
     pub size: SizeUm,
@@ -850,9 +794,7 @@ fn glyphs(prims: &mut [Prim], notes: &mut Vec<Note>) {
 /// drawn as it is; what is the theme's ink on the drawing area (`fg`, `fg-dim`, `ink`), and the
 /// drawing's text, take these (the web's `LEGEND_PAPER`, app/sheet/mapFrames.ts `paperPalette`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PaperPalette {
     pub paper: String,
     pub ink: String,

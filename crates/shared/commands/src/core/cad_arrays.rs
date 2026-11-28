@@ -10,8 +10,6 @@
 //! polar layout's `fill` degrees as the array command's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -24,10 +22,8 @@ pub const CAD_ARRAYS_EDIT_VERSION: u32 = 1;
 
 /// What changes in the array.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArrayEdit {
     /// The rows, columns, count, spacing, fill or path: every item is laid out again. An item keeps its number
     /// (a grid's its row and column); a removed one stays removed, a kept one where it is; the places that are new
@@ -37,19 +33,15 @@ pub enum ArrayEdit {
     /// are neither removed nor kept follow. Absent fields stay.
     Placement {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         mirror: Option<bool>,
     },
     /// These items insert the block named `block` instead (Değiştir): each is kept from then on.
@@ -67,7 +59,6 @@ pub enum ArrayEdit {
     /// place with the array's block (Sıfırla).
     Reset {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         items: Option<Vec<u32>>,
     },
@@ -84,10 +75,8 @@ pub enum ArrayEdit {
 /// Sil on a removed item), `unknown_block`, a path layout's `entity_not_found`, `invalid_path` and
 /// `invalid_spacing`, `not_finite` (places past the largest float64), `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArraysEdit {
     /// The array's id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -97,7 +86,6 @@ pub struct ArraysEdit {
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

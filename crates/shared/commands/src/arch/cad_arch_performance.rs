@@ -8,8 +8,6 @@
 //! (docs/adr/8124); `exits` writes the doors' and stairs' exit roles the escape routes suggest, once confirmed.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -25,10 +23,8 @@ pub const CAD_ARCH_PERFORMANCE_VERSION: u32 = 1;
 
 /// What `cad.arch.performance` declares.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 // An operation is read once per call: boxing its largest variant would save nothing worth the indirection.
 #[allow(clippy::large_enum_variant)]
 pub enum PerformanceOperation {
@@ -46,7 +42,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
         fire_rating: Option<Option<Declared>>,
         #[serde(
@@ -54,7 +49,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredExit>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredExit>"))]
         exit: Option<Option<DeclaredExit>>,
         #[serde(
@@ -62,7 +56,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredBearing>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredBearing>"))]
         load_bearing: Option<Option<DeclaredBearing>>,
         /// A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
@@ -72,7 +65,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredExternal>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredExternal>"))]
         external: Option<Option<DeclaredExternal>>,
         /// A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
@@ -82,7 +74,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredShaftVent>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredShaftVent>"))]
         shaft_vent: Option<Option<DeclaredShaftVent>>,
         /// A shaft room's protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; null: not declared
@@ -92,7 +83,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredProtected>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredProtected>"))]
         protected: Option<Option<DeclaredProtected>>,
         /// A wall's or a slab's fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); null: not declared again.
@@ -101,7 +91,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredFireStop>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredFireStop>"))]
         fire_stop: Option<Option<DeclaredFireStop>>,
     },
@@ -129,7 +118,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
         fire_rating: Option<Option<Declared>>,
         #[serde(
@@ -137,7 +125,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredBearing>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredBearing>"))]
         load_bearing: Option<Option<DeclaredBearing>>,
     },
@@ -160,7 +147,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         strength: Option<Option<String>>,
         #[serde(
@@ -168,7 +154,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
         reaction: Option<Option<Declared>>,
         #[serde(
@@ -176,7 +161,6 @@ pub enum PerformanceOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
         roof_class: Option<Option<Declared>>,
     },
@@ -197,14 +181,11 @@ pub enum PerformanceOperation {
 /// `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
 /// `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchPerformance {
     pub operation: PerformanceOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -213,10 +194,8 @@ pub struct ArchPerformance {
 /// or a type's on its walls or openings without their own; none for a material's or the building's), by persistent id
 /// in the drawing's order; the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchPerformanceDone {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,

@@ -109,10 +109,8 @@ pub struct PortalMe {
 
 /// `GET /v1/portal/signup`: whether the platform takes sign-ups now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SignupInfo {
     pub open: bool,
     /// The form's ticket while sign-ups are open: brought back with the sign-up, no sooner than a few seconds and no
@@ -149,10 +147,8 @@ pub struct Signup {
 
 /// `PUT /v1/portal/me/professional`: what a professional changes in their own profile.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfessionalEdit {
     pub office_name: Option<String>,
     pub phone: Option<String>,
@@ -162,10 +158,8 @@ pub struct ProfessionalEdit {
 
 /// `POST /v1/portal/me/password`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PasswordChange {
     pub current: String,
     pub new: String,
@@ -178,7 +172,6 @@ pub struct PasswordChange {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DocTypeOption {
     pub code: String,
     pub label: String,
@@ -205,7 +198,6 @@ pub struct KindOption {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfessionOption {
     pub code: Profession,
     pub label: String,
@@ -285,10 +277,8 @@ pub struct OrganizationPortal {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OrganizationPortalEdit {
     pub accepts_applications: bool,
     pub application_kinds: Vec<String>,
@@ -313,10 +303,8 @@ pub struct MemberView {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MemberCreate {
     pub login: String,
     pub password: String,
@@ -326,10 +314,8 @@ pub struct MemberCreate {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MemberEdit {
     pub role: TenantRole,
     pub status: String,
@@ -404,10 +390,8 @@ pub struct PlatformTenant {
 
 /// The first owner of a new organisation: an existing account, or a new one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewOwner {
     pub user_id: Option<String>,
     pub login: Option<String>,
@@ -417,10 +401,8 @@ pub struct NewOwner {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformTenantCreate {
     pub slug: String,
     pub name: String,
@@ -432,10 +414,8 @@ pub struct PlatformTenantCreate {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformTenantEdit {
     pub name: String,
     pub category: OrganizationCategory,
@@ -478,10 +458,8 @@ pub struct PlatformUser {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformUserCreate {
     pub login: String,
     pub password: String,
@@ -491,20 +469,16 @@ pub struct PlatformUserCreate {
 
 /// An account's status (`active`, `disabled`) or a new password; either or both.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformUserEdit {
     pub status: Option<String>,
     pub password: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfessionalReview {
     pub status: ProfessionalStatus,
     pub note: String,

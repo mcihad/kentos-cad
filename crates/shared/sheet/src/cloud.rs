@@ -20,8 +20,6 @@
 
 use kentos_contracts::{ProjectType, Workspace};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::template::{PaperChoice, Template};
 
@@ -45,9 +43,7 @@ pub const EVENT_CHANGED: &str = "sheet_template.changed";
 /// What the caller may do with a template.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum TemplateRole {
     /// Its own (an organisation's template: the one who published it).
     Owner,
@@ -62,9 +58,7 @@ pub enum TemplateRole {
 /// An organisation a template's library is in: its id and name (the gallery's “Kurum: <ad>”).
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct CloudOrganization {
     pub tenant_id: String,
     pub name: String,
@@ -73,9 +67,7 @@ pub struct CloudOrganization {
 /// What sharing gives (ownership is not given in phase 1).
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum TemplateGrantRole {
     Viewer,
     Editor,
@@ -83,9 +75,7 @@ pub enum TemplateGrantRole {
 
 /// A template in a list: its metadata and the caller's role, without its content.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateSummary {
     pub id: String,
     pub name: String,
@@ -111,19 +101,15 @@ pub struct SheetTemplateSummary {
     pub updated_at: String,
     /// The organisation whose library it is in; none: a person's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub organization: Option<CloudOrganization>,
     /// The template it was published from (“Kuruma yayımla…”), when it was.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub published_from: Option<String>,
 }
 
 /// An organisation's template library as the caller sees it (design §13 “Kurum şablonları”).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct OrganizationTemplates {
     pub tenant_id: String,
     pub name: String,
@@ -170,9 +156,7 @@ impl SheetTemplateList {
 /// `GET /v1/me/sheet-templates`: the caller's own and those shared with them; and the libraries
 /// of the organisations the caller is an active member of, with a seat.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateList {
     pub templates: Vec<SheetTemplateSummary>,
     #[serde(default)]
@@ -181,9 +165,7 @@ pub struct SheetTemplateList {
 
 /// `GET /v1/sheet-templates/{id}`: the metadata and the latest content.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateDetail {
     pub summary: SheetTemplateSummary,
     pub content: Template,
@@ -192,9 +174,7 @@ pub struct SheetTemplateDetail {
 /// Input of `sheet.template.create` v1: the metadata the catalogue shows comes from `content.meta`.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateCreate {
     /// The template file (`kentos.sheet.template/1`); the server gives it its id and revision.
     #[cfg_attr(feature = "schema", schemars(with = "serde_json::Value"))]
@@ -204,9 +184,7 @@ pub struct SheetTemplateCreate {
 /// Input of `sheet.template.update` v1: a new revision based on `expectedRevision` (a later one is a conflict).
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateUpdate {
     pub template_id: String,
     pub expected_revision: u32,
@@ -218,23 +196,18 @@ pub struct SheetTemplateUpdate {
 /// Input of `sheet.template.delete` v1.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateDelete {
     pub template_id: String,
     /// The revision the caller deletes; a later one is a conflict.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<u32>,
 }
 
 /// Input of `sheet.template.share` v1: only the owner shares, only with people of a common organisation (ADR 0024).
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateShare {
     pub template_id: String,
     pub user_id: String,
@@ -244,9 +217,7 @@ pub struct SheetTemplateShare {
 /// Input of `sheet.template.unshare` v1: the template leaves the person's “Benimle paylaşılanlar”; sheets made from it stay.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateUnshare {
     pub template_id: String,
     pub user_id: String,
@@ -257,9 +228,7 @@ pub struct SheetTemplateUnshare {
 /// 1), its source kept (`publishedFrom`). Only those who may publish there do it.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplatePublish {
     /// The template to publish: the caller's own.
     pub template_id: String,
@@ -270,9 +239,7 @@ pub struct SheetTemplatePublish {
 /// What a command did; a retry with the same idempotency key gets the same one (`replayed`). Also the event's body.
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateChanged {
     pub template_id: String,
     pub revision: u32,
@@ -287,14 +254,11 @@ pub struct SheetTemplateChanged {
 
 /// A person a template is shared with.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateGrant {
     pub user_id: String,
     pub display_name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub email: Option<String>,
     pub role: TemplateGrantRole,
     pub granted_by_name: String,
@@ -304,9 +268,7 @@ pub struct SheetTemplateGrant {
 
 /// `GET …/{id}/access` (the owner only).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateAccess {
     pub owner_id: String,
     pub owner_name: String,
@@ -314,22 +276,17 @@ pub struct SheetTemplateAccess {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateCandidate {
     pub user_id: String,
     pub display_name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub email: Option<String>,
 }
 
 /// `GET …/{id}/access/candidates?q=`: active members of the caller's organisations whose name or e-mail holds every word (no open e-mail search).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateCandidates {
     pub candidates: Vec<SheetTemplateCandidate>,
 }
@@ -425,9 +382,7 @@ impl DeviceCloudState {
 
 /// What happened to a template, as the people who hear it are told.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum SheetTemplateEventKind {
     Created,
     /// A new revision.
@@ -441,9 +396,7 @@ pub enum SheetTemplateEventKind {
 
 /// `sheet_template.changed`: one change, for one of the people who should hear it. It names the template and revision, never content or people.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateEvent {
     /// The cursor (decimal text).
     pub seq: String,
@@ -452,15 +405,12 @@ pub struct SheetTemplateEvent {
     pub kind: SheetTemplateEventKind,
     /// Who made the change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub actor: Option<String>,
 }
 
 /// `GET /v1/me/sheet-templates/events?after=&limit=&wait=`: the caller's events after a cursor; `next` is where to go on.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SheetTemplateEventPage {
     pub events: Vec<SheetTemplateEvent>,
     pub next: String,

@@ -8,8 +8,6 @@
 //! `fixtures/commands/v1/road.templates.edit.json` and `road.sections.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -26,10 +24,8 @@ pub const ROAD_SECTIONS_DRAW_VERSION: u32 = 1;
 
 /// What an edit of a template or a set does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RoadEditOperation {
     /// Writes it: a new one when none of the id or name is in the project (its id the given one, else the first free),
     /// else the given fields replace its.
@@ -47,48 +43,36 @@ pub enum RoadEditOperation {
 /// `road_problem`, path the field's), `road_template_in_use` (remove while a sample line set uses it), `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplatesEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left: Option<TemplateSideDef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<TemplateSideDef>,
     /// The right side mirrors the left (its own goes).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
     /// The pavement under the finish grade (docs/adr/0975 §2), replacing the template's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<PavementDef>,
     /// The template's pavement goes.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub remove_pavement: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A template in the project's list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateListed {
     pub id: String,
     pub name: String,
@@ -100,14 +84,11 @@ pub struct TemplateListed {
 
 /// Output of `road.templates.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplatesWritten {
     /// The template written; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<TemplateDef>,
     pub templates: Vec<TemplateListed>,
     pub revision: String,
@@ -123,53 +104,39 @@ pub struct TemplatesWritten {
 /// not on it, a line that is not a line or polyline or does not cross the alignment, no station at all),
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignment: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
     /// its id or name, empty clears.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stations: Option<SectionStations>,
     /// Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set
     /// does not).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clip: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -177,10 +144,8 @@ pub struct SectionsEdit {
 /// Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far
 /// out on each.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionCrossing {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub first: f64,
@@ -196,10 +161,8 @@ pub struct SectionCrossing {
 /// A sample line set as it is now: its definition's names and its stations (none when they no longer come out: its line
 /// erased or no longer crossing, its alignment shortened; the set's own query says why).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionSetReport {
     pub id: String,
     pub name: String,
@@ -207,16 +170,12 @@ pub struct SectionSetReport {
     pub revision: u32,
     pub alignment: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     /// The alignment changed since it was made or rebound.
     pub stale: bool,
@@ -224,24 +183,19 @@ pub struct SectionSetReport {
     pub stations: Vec<f64>,
     /// Lines shortened where they meet (docs/adr/0933 §1).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub clip: bool,
     /// The pairs of lines meeting on their full widths, by the stations' order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SectionCrossing>>", optional))]
     pub crossings: Vec<SectionCrossing>,
 }
 
 /// Output of `road.sections.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsWritten {
     /// The set written; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<SectionSetReport>,
     pub sets: Vec<SectionSetReport>,
     pub revision: String,
@@ -256,16 +210,12 @@ pub struct SectionsWritten {
 /// (the alignment changed since), `section_surface_gone` (the surface is not in the project or makes no surface),
 /// `section_open` (a side whose slope meets the terrain nowhere on the swath).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
 }
@@ -273,15 +223,12 @@ pub struct SectionsQuery {
 /// A place of the terrain along a sample line: offset (right positive), height (none off the surface), whether the
 /// stretch before it is off the surface.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionGround {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     pub gap: bool,
@@ -290,16 +237,13 @@ pub struct SectionGround {
 /// A side of a section as built: `cut`, `fill` or `open`, its hinge, its daylight point and its points outward from
 /// the axis (offset, elevation).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionSide {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub hinge: [f64; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub daylight: Option<[f64; 2]>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -309,10 +253,8 @@ pub struct SectionSide {
 /// A cross section: where it is, the terrain along it and, with a profile, a template and a surface, the platform
 /// built on it and its cut and fill areas (m²).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -324,32 +266,25 @@ pub struct SectionRow {
     pub ends: [[f64; 2]; 2],
     /// The axis' design elevation; absent without a profile or outside it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub axis: Option<f64>,
     pub ground: Vec<SectionGround>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left: Option<SectionSide>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<SectionSide>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub cut: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill: Option<f64>,
     /// The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<SectionPavement>,
     /// The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no
     /// height there, and no cut or fill counted under the design there.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub missing: Vec<[f64; 2]>,
 }
@@ -358,10 +293,8 @@ pub struct SectionRow {
 /// the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
 /// (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionPavement {
     pub layers: Vec<SectionLayer>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -380,10 +313,8 @@ pub struct SectionPavement {
 
 /// A pavement layer on a section: its name and area (m²).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionLayer {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -394,39 +325,30 @@ pub struct SectionLayer {
 /// its profile, template and superelevation schedule where it names them, and its terrain surface with the digest it
 /// was last accepted from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionSources {
     pub set: crate::RoadSource,
     pub alignment: crate::RoadSource,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<crate::RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<crate::RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<crate::RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<crate::RoadSurfaceSource>,
 }
 
 /// Output of `road.sections.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsQueried {
     pub sets: Vec<SectionSetReport>,
     pub sections: Vec<SectionRow>,
     /// With a set asked, what its sections are computed from, each as it is now (docs/adr/1039).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sources: Option<SectionSources>,
 }
 
@@ -445,33 +367,26 @@ pub struct SectionsQueried {
 /// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`.
 /// Warnings: `layer_hidden`, `section_set_stale`, `section_open`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsDraw {
     pub set: String,
     pub layer_id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub columns: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub exaggeration: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -479,10 +394,8 @@ pub struct SectionsDraw {
 /// A section view drawn: its station and km, its frame's lower left and upper right, its datum and top elevations, its
 /// cut and fill areas (m²) when the platform was built.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionView {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -496,11 +409,9 @@ pub struct SectionView {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub top: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub cut: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill: Option<f64>,
 }
@@ -508,10 +419,8 @@ pub struct SectionView {
 /// Output of `road.sections.draw` v1, and its plan: the views in order, the elevation grid's and the offset grid's
 /// steps, the exaggeration, the objects written (none in a plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionsDrawn {
     pub set: String,
     pub views: Vec<SectionView>,

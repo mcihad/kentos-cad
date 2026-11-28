@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/map.features.code.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -28,33 +26,25 @@ pub const DEFAULT_CODE_FIELD: &str = "Kod";
 /// `class_layer_missing` (a class a code names has no layer in the drawing: apply the profile first), `layer_locked`
 /// (a point to move or a class's layer locked).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeaturesCode {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What one class got: its points put on its layer, its lines and areas made.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CodedClass {
     pub class: String,
     pub title: String,
@@ -72,10 +62,8 @@ pub struct CodedClass {
 
 /// A code no class of the profile has, and how many points wrote it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnknownCode {
     pub code: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -85,17 +73,13 @@ pub struct UnknownCode {
 /// Output of `map.features.code` v1 (and its plan): each class a code named, in the profile's order; the objects made,
 /// by their lasting ids (the plan's are empty); the codes no class has; and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeaturesCoded {
     pub classes: Vec<CodedClass>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub created: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<UnknownCode>>", optional))]
     pub unknown: Vec<UnknownCode>,
     pub revision: String,
 }
@@ -117,10 +101,8 @@ pub const MAX_CANDIDATE_SOURCES: usize = 8;
 /// A source of candidates (docs/adr/1760): a layer of the drawing and the name the answer and the assets give it
 /// (LiDAR, Ortofoto, Saha …).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CandidateSource {
     pub layer: String,
     pub name: String,
@@ -129,26 +111,17 @@ pub struct CandidateSource {
 /// A reviewer's decision on a candidate: its class corrected (`class`, a class of the profile), a single source's
 /// candidate accepted (`accept`), rejected with a reason (`reject`), or the asset's missing fields given (`fields`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CandidateDecision {
     pub candidate: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub accept: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reject: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<std::collections::BTreeMap<String, String>>")
-    )]
     pub fields: std::collections::BTreeMap<String, String>,
 }
 
@@ -174,49 +147,38 @@ pub struct CandidateDecision {
 /// `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
 /// `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeaturesReconcile {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     pub sources: Vec<CandidateSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub confidence: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
     /// The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
     /// 0.5 when not given (docs/adr/2140).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub overlap: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CandidateDecision>>", optional))]
     pub decisions: Vec<CandidateDecision>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reviewer: Option<String>,
     /// When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reviewed_at: Option<String>,
     /// Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved
     /// review note of this command, its source's) still in the drawing and near it as two candidates are one group;
     /// the nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's
     /// corrections.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reapply: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -227,25 +189,19 @@ pub struct FeaturesReconcile {
 /// (a point class on a polyline, an area class on a point …); `rejected`; `reviewed`: reconciled before, not read
 /// again).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReconciledCandidate {
     pub uid: String,
     pub source: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub read: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub confidence: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub group: Option<u32>,
     pub status: String,
@@ -259,13 +215,10 @@ pub struct ReconciledCandidate {
 /// one there, or the one written), the required fields still missing, the values its class layer's field rules refuse
 /// (docs/adr/2540), and whether execute writes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReconciledGroup {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     pub classes: Vec<String>,
     pub status: String,
@@ -276,35 +229,28 @@ pub struct ReconciledGroup {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spread: f64,
     /// An area group's smallest overlap ratio between two of its representatives (docs/adr/2140).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub overlap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub missing: Vec<String>,
     /// The asset's values its class layer's field rules refuse (docs/adr/2540), in the layer's field order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<FieldTrouble>>"))]
     pub invalid: Vec<FieldTrouble>,
     pub writes: bool,
 }
 
 /// A value a field's rules refuse (docs/adr/2540): the field and why, as the field rules say it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldTrouble {
     pub field: String,
     pub message: String,
@@ -314,25 +260,20 @@ pub struct FieldTrouble {
 /// candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, the
 /// numbers of the review notes the decisions were recorded as (docs/adr/4140), and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeaturesReconciled {
     pub groups: Vec<ReconciledGroup>,
     pub candidates: Vec<ReconciledCandidate>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub written: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub marked: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub notes: Vec<u32>,
     /// Docs/adr/4540: the recorded decisions taken again, each the candidate it went to and the note it came from.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReappliedDecision>>", optional))]
     pub reapplied: Vec<ReappliedDecision>,
     pub revision: String,
 }
@@ -340,10 +281,8 @@ pub struct FeaturesReconciled {
 /// A recorded decision taken again (docs/adr/4540): the candidate it went to and the number of the review note it came
 /// from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReappliedDecision {
     pub candidate: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]

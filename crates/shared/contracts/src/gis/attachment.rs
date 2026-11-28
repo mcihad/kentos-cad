@@ -35,7 +35,6 @@ pub enum AttachmentKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Attachment {
     /// The name shown (the file's name by default).
     pub name: String,
@@ -176,44 +175,34 @@ fn is_false(b: &bool) -> bool {
 /// why it has no place, when it has none (`problem`). Read by
 /// `kentos_formats::exif` from a JPEG's APP1 or a TIFF's header.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PhotoExif {
     /// Latitude, degrees, north positive (the rationals' exact value rounded once).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub latitude: Option<f64>,
     /// Longitude, degrees, east positive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub longitude: Option<f64>,
     /// Height above sea level, metres (below it negative); its datum unsaid.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub altitude: Option<f64>,
     /// The direction the camera looked, degrees clockwise from north.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub direction: Option<f64>,
     /// Whether that north is the magnetic one (EXIF `M`); the true one otherwise.
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub magnetic: bool,
     /// When it was taken, ISO 8601: the camera's local time with its offset
     /// when it says one (`2024-05-17T10:32:05+03:00`), without one when not;
     /// else the GPS's UTC (`…Z`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub taken: Option<String>,
     /// The camera: its model, after its maker when the model does not name it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub camera: Option<String>,
     /// Why it has no place, as the window says it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
 }
 

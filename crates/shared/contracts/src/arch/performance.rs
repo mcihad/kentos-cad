@@ -26,7 +26,6 @@ pub const MAX_BASIS_NAME: usize = 128;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DeclaredBasis {
     /// Müellif beyanı: the author's own statement.
     Author,
@@ -152,7 +151,6 @@ fn is_day(s: &str) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Declared {
     pub value: String,
     pub basis: DeclaredBasis,
@@ -206,7 +204,6 @@ fn capital(s: &str) -> String {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredExit {
     /// Evet: it serves as an exit in a fire; hayır: it does not.
     pub exit: bool,
@@ -223,7 +220,6 @@ pub const MAX_SHAFT_VENT: f64 = 100.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredShaftVent {
     /// The vent's free area, m²; absent when the shaft is pressurised instead.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -269,7 +265,6 @@ impl DeclaredShaftVent {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredBearing {
     /// Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).
     pub bearing: bool,
@@ -282,7 +277,6 @@ pub struct DeclaredBearing {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredExternal {
     /// Evet: it faces the outside (an outer wall, a slab over open air); hayır: it does not.
     pub external: bool,
@@ -296,7 +290,6 @@ pub struct DeclaredExternal {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredProtected {
     /// Evet: the shaft is protected; hayır: it is not.
     pub protected: bool,
@@ -309,7 +302,6 @@ pub struct DeclaredProtected {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredFireStop {
     /// Evet: it is a fire stop; hayır: it is not.
     pub fire_stop: bool,
@@ -320,13 +312,10 @@ pub struct DeclaredFireStop {
 /// construction action (`ConstructionMethod`: new construction, addition, renovation) is the künye's building kind,
 /// worked out where it is written.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingPerformance {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fire_protection_class: Option<Declared>,
 }
 

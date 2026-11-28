@@ -14,8 +14,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -37,10 +35,8 @@ pub const CAD_POINT_CREATE_VERSION: u32 = 1;
 /// desktop also `slots_exhausted`. Warning: `layer_hidden` (it is written
 /// all the same).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -49,34 +45,28 @@ pub struct PointCreate {
     pub p: Vec2,
     /// Its elevation (kot), in metres. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     /// The text shown beside it (`EntityBase.label`): a point's name, a spot
     /// elevation. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
     /// Its name (`label`) written as a text object too, in the same step (docs/adr/9314): up and right of the point,
@@ -84,16 +74,13 @@ pub struct PointCreate {
     /// the point (`labelOf` without a scale): it moves as the point moves and writes its name. Without a label
     /// nothing more is written. Absent: false.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub name_text: bool,
 }
 
 /// Output of `cad.point.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -107,28 +94,23 @@ pub struct PointCreated {
     pub revision: String,
     /// The name's text (`nameText`), its persistent id; absent when none was written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_uid: Option<String>,
     /// The name's text's slot in the open document; absent when none was written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub text_id: Option<u32>,
 }
 
 /// What `cad.point.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointPlan {
     /// The point as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
     /// Its name's text (`nameText`) as it would be stored, its link given when it is written; absent when none would
     /// be written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<Entity>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.
@@ -154,10 +136,8 @@ pub const CAD_CIRCLE_CREATE_VERSION: u32 = 1;
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
 /// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CircleCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -169,51 +149,42 @@ pub struct CircleCreate {
     pub r: f64,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.circle.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CircleCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -229,10 +200,8 @@ pub struct CircleCreated {
 
 /// What `cad.circle.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CirclePlan {
     /// The circle as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,
@@ -263,10 +232,8 @@ pub const CAD_ARC_CREATE_VERSION: u32 = 1;
 /// The angles are stored as given: equal angles are a full turn, as the
 /// document reads them; no angle is refused for its size.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArcCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -285,51 +252,42 @@ pub struct ArcCreate {
     pub a1: f64,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100; docs/adr/0139): what the tools give a new
     /// object from the current weight. Absent: the layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of its layer's style: an object template's (docs/adr/0176).
     /// The id is not looked up: the libraries are the host's. Absent: the
     /// layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.arc.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArcCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
@@ -345,10 +303,8 @@ pub struct ArcCreated {
 
 /// What `cad.arc.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArcPlan {
     /// The arc as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,

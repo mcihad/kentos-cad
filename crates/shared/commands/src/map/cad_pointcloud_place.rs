@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/cad.pointclouds.place.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -19,10 +17,8 @@ pub const CAD_POINTCLOUDS_PLACE_VERSION: u32 = 1;
 /// How the map is given (docs/adr/5100). A centre left out is the middle of the cloud's box in the drawing; a
 /// translation left out is none.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CloudPlaceBy {
     /// Matris: 16 numbers row by row (Tarama kaydı's and Tarama ağı's matrix), a rotation and a translation only.
     Matrix {
@@ -38,11 +34,9 @@ pub enum CloudPlaceBy {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         center: Option<[f64; 3]>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         translation: Option<[f64; 3]>,
     },
@@ -57,11 +51,9 @@ pub enum CloudPlaceBy {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         roll: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         center: Option<[f64; 3]>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         translation: Option<[f64; 3]>,
     },
@@ -75,15 +67,12 @@ pub enum CloudPlaceBy {
 /// `not_finite`, `invalid_input` (`place`: 16 numbers, an affine map, rigid; an axis of no length); `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsPlace {
     pub uid: String,
     pub place: CloudPlaceBy,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -93,10 +82,8 @@ pub struct PointCloudsPlace {
 /// drawing after it, how far the box's middle went (m) and the map's rotation angle (degrees); `changed` false when
 /// nothing was written (taking away the place of a cloud with none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsPlaced {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]

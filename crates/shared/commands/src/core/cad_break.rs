@@ -11,8 +11,6 @@
 //! metres on the wire (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -52,10 +50,8 @@ pub const JOIN_TOLERANCE: f64 = 0.001;
 /// core's words: the points off the object, a closed object split at one
 /// point); on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesBreak {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -65,14 +61,12 @@ pub struct EntitiesBreak {
     pub first: Vec2,
     /// The second; absent: the object splits at `first`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub second: Option<Vec2>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -108,28 +102,23 @@ pub struct EntitiesBreak {
 /// `layer_locked` (the seed), `nothing_to_join` (no chain of two),
 /// `join_failed` (the core's words); on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesJoin {
     /// The objects to join; with `chain`, the seed alone.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     /// How far apart two ends may be and still meet, metres; absent: 0.001.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     /// Zincir: the objects the seed's chain walks over; absent: the objects of `uids`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub chain: Option<TrimBoundaries>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -151,10 +140,8 @@ pub struct EntitiesJoin {
 /// (status `conflict`), `entity_not_found`, `layer_locked` (every object on
 /// a locked layer), `not_reversible` (none has a direction).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesReverse {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -163,7 +150,6 @@ pub struct EntitiesReverse {
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

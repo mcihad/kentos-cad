@@ -15,8 +15,8 @@ libm = { workspace = true }
 # canonical text, UUIDv5 over SHA-1. Pure Rust, every target.
 sha1 = { workspace = true }
 sha2 = { workspace = true }
-# Only for generating the TypeScript types (the web app); the desktop app and the
-# server build without it.
+# Only for generating the cloud portal's TypeScript types (apps/portal/src/api/generated,
+# docs/adr/9402); the desktop app and the server build without it.
 ts-rs = { workspace = true, optional = true }
 # JSON Schema of the contract types (the product command catalog, docs/adr/0013); like
 # `ts`, on by default and left out by libraries that only need the Rust types.

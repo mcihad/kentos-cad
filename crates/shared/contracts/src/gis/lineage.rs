@@ -4,8 +4,6 @@
 //! (`kentos_lineage`). A project setting (`.kcad` schema 101, `lineage`), in the order the steps made them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::EntityId;
 
@@ -18,10 +16,8 @@ pub const MOST_LINEAGE_STEP: usize = 200;
 
 /// How the object came from its parents.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LineageOperation {
     /// A piece of one object split (Böl, Kır, Parçalara ayır).
     Split,
@@ -41,10 +37,8 @@ impl LineageOperation {
 
 /// One object's parents in one step.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LineageRecord {
     /// The object made or kept by the step.
     pub child: EntityId,

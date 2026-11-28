@@ -25,10 +25,8 @@ pub const LABEL_PINS_MAX: usize = 64;
 
 /// Where a point's label goes (docs/adr/0212 §3.3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PointLabelMode {
     /// Around it, the cartographic order (top right first).
     Around,
@@ -38,10 +36,8 @@ pub enum PointLabelMode {
 
 /// Where a line's label goes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LineLabelMode {
     /// Straight, along the line.
     Parallel,
@@ -55,10 +51,8 @@ pub enum LineLabelMode {
 
 /// Where an area's label goes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AreaLabelMode {
     /// Level, inside, away from the edges.
     Horizontal,
@@ -77,10 +71,8 @@ pub enum AreaLabelMode {
 /// A line label's side of its line; on an area's outline `above` is inside
 /// and `below` outside.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelPosition {
     On,
     Above,
@@ -91,10 +83,8 @@ pub enum LabelPosition {
 
 /// How a label's lines line up.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelAlign {
     Left,
     Center,
@@ -103,10 +93,8 @@ pub enum LabelAlign {
 
 /// Whether a label may cover another.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelOverlap {
     /// Never: a label with no free place is not drawn.
     Never,
@@ -118,10 +106,8 @@ pub enum LabelOverlap {
 
 /// When a label is cut into lines.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StackMode {
     /// Only when it does not fit on one line.
     IfNeeded,
@@ -130,10 +116,8 @@ pub enum StackMode {
 
 /// A label's background's shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelShape {
     Rect,
     /// A rectangle with round corners.
@@ -143,10 +127,8 @@ pub enum LabelShape {
 
 /// A callout's line.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CalloutKind {
     Straight,
     /// Level, then upright.
@@ -155,10 +137,8 @@ pub enum CalloutKind {
 
 /// What of an obstacle area a label avoids.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ObstacleKind {
     /// Its inside: a label covering any of it.
     Interior,
@@ -168,10 +148,8 @@ pub enum ObstacleKind {
 
 /// How a layer is labelled.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelsMode {
     /// One label: the style's `label`, else its kind's default.
     Single,
@@ -183,49 +161,39 @@ pub enum LabelsMode {
 
 /// The halo round a label's letters.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelHalo {
     /// CSS px; 0 none.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub width: f64,
     /// Hex or a theme name; absent, the drawing area's colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
 }
 
 /// A shape behind a label.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelBackground {
     pub shape: LabelShape,
     /// Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     /// Its outline's colour; absent, none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<String>,
     /// CSS px round the letters; absent, 2.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub padding: Option<f64>,
 }
 
 /// A label's shadow: the label again under it, moved.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelShadow {
     /// CSS px right.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
@@ -235,45 +203,36 @@ pub struct LabelShadow {
     pub dy: f64,
     /// Absent, black.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// 0 to 1; absent, 0.5.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
 }
 
 /// The line from a label placed away from its object to the object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelCallout {
     pub kind: CalloutKind,
     /// Absent, the label's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// CSS px; absent, 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub width: Option<f64>,
     /// A shorter one is not drawn, CSS px; absent, 6.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub min_length: Option<f64>,
 }
 
 /// Cutting a label into lines (yığma).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelStack {
     pub mode: StackMode,
     /// The most letters a line holds (a longer word stays whole).
@@ -281,16 +240,13 @@ pub struct LabelStack {
     pub chars: u32,
     /// The letters a line may end at; absent, the space.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
 }
 
 /// One word of an abbreviation dictionary.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelWord {
     pub word: String,
     pub short: String,
@@ -298,14 +254,11 @@ pub struct LabelWord {
 
 /// Shortening a label's words (kısaltma).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelAbbreviate {
     /// Always; absent, only when the label does not fit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub always: Option<bool>,
     pub words: Vec<LabelWord>,
 }
@@ -313,50 +266,40 @@ pub struct LabelAbbreviate {
 /// One class of a rule-based labelling: its name, the condition its objects
 /// meet and its labels' style.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelClass {
     /// One of its kind on the layer; a pin names it.
     pub name: String,
     /// İfadeyle seç's language; absent, every object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub when: Option<String>,
     pub style: LabelStyle,
 }
 
 /// A layer's objects as obstacles to every label.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelObstacle {
     /// 1 to 10: a label of a lower priority cannot cover them; another may, at a cost.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weight: u8,
     /// An area's inside (absent) or its outline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<ObstacleKind>,
 }
 
 /// How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerLabels {
     pub mode: LabelsMode,
     /// The rules' classes, in order; only with `rules`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LabelClass>>", optional))]
     pub classes: Vec<LabelClass>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub obstacle: Option<LabelObstacle>,
 }
 
@@ -366,7 +309,6 @@ pub struct LayerLabels {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelPin {
     /// The class's name; absent, the object's first label.
     #[serde(default, skip_serializing_if = "Option::is_none")]

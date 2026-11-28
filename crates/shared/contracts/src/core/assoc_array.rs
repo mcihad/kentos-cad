@@ -13,8 +13,6 @@
 //! [`arrays_problem`], held by the file format, the documents and the server.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::cad_array::ArrayLayout;
 use crate::entity::Vec2;
@@ -25,27 +23,21 @@ pub const ARRAY_PLACES_MAX: u32 = 10_000;
 
 /// One place of an associative array.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArrayItem {
     /// The insert at this place; none: removed by hand (it stays removed until the array is reset).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<EntityId>,
     /// Changed by hand (moved, turned, scaled, its block replaced): a layout change leaves it as it is.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub kept: bool,
 }
 
 /// An associative array (docs/adr/0300).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AssocArray {
     pub id: ArrayId,
     /// The source: the block definition every item inserts.
@@ -61,7 +53,6 @@ pub struct AssocArray {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
     /// How the places are laid out; the first is `p` itself. A path array names its path by its persistent id
     /// and follows it.

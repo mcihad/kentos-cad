@@ -9,8 +9,6 @@
 //! expression in the drawing's unit and the project's angle unit (`constraint_expr`).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -27,10 +25,8 @@ pub const CAD_CONSTRAINTS_QUERY_VERSION: u32 = 1;
 
 /// Where a new constraint's sense comes from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConstraintSense {
     /// From the drawing as it is: a tangent's side, a distance's side of its segment, the angle's quadrant under
     /// 180°, a horizontal or vertical distance taken from the lower to the higher (its parts swapped when needed).
@@ -46,35 +42,28 @@ fn drawing(s: &ConstraintSense) -> bool {
 
 /// A constraint to add.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewConstraint {
     /// The rule and its parts. A dimension's `parameter` names its parameter: empty for the next free name
     /// (`d1`, `ang1`, `rad1`, `dia1`); a name not in use makes a new parameter.
     pub rule: ConstraintRule,
     /// Where its sense comes from.
     #[serde(default, skip_serializing_if = "drawing")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<ConstraintSense>"))]
     pub sense: ConstraintSense,
     /// A dimension's value: an expression in the drawing's unit and the project's angle unit (`3.5`, `120cm`,
     /// `genislik / 2`); none keeps the value the drawing measures now. Not for a reference dimension.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
     /// A dimension that only measures: it drives nothing.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reference: bool,
 }
 
 /// What changes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ConstraintEdit {
     /// These constraints are added, in order, and the drawing solved with them. One that repeats the ones before
     /// (redundant) is refused: a dimension can be added as a reference instead.
@@ -107,36 +96,29 @@ pub enum ConstraintEdit {
 /// `constraint_singular`, `not_converged`, `constraint_redundant` (`uids`: the constraints added that repeat),
 /// `shape_flipped` (`uids`: the objects that would turn inside out).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintsEdit {
     /// What changes.
     pub edit: ConstraintEdit,
     /// Objects (persistent ids) this solve does not move (the object picked first stays, the
     /// second moves); they are not held afterwards.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub hold: Vec<String>,
     /// Writes even when a shape would turn inside out (the user chose that solution).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_flip: bool,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// The answer of `cad.constraints.edit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintsEdited {
     /// The constraints added, their new ids in the input's order.
     pub added: Vec<String>,
@@ -153,10 +135,8 @@ pub struct ConstraintsEdited {
 
 /// What `cad.constraints.edit` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintsEditPlan {
     /// The constraints as they would be, the new ones last with their ids.
     pub constraints: Vec<Constraint>,
@@ -176,45 +156,36 @@ pub struct ConstraintsEditPlan {
 /// Refusals: `invalid_uid` (`uids[i]` or `ids[i]` not a persistent id), `constraint_not_found` (`ids[i]` no
 /// constraint of the drawing).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintsQuery {
     /// Only the constraints naming one of these objects (persistent ids); none: all of them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     /// Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub ids: Vec<String>,
     /// Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770
     /// §4, 8049 §2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub architectural: bool,
 }
 
 /// A constraint as the query lists it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ListedConstraint {
     pub constraint: Constraint,
     /// Its Turkish name (`Paralel`).
     pub label: String,
     /// A dimension's value now: metres or radians, as the drawing measures it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "constraint")))]
     pub measured: Option<f64>,
     /// A driving dimension's value: what its parameter keeps, metres or radians (docs/adr/0780 §2); none for a
     /// reference dimension and the geometric rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "constraint")))]
     pub kept: Option<f64>,
     /// Whether it holds now.
@@ -223,10 +194,8 @@ pub struct ListedConstraint {
 
 /// The answer of `cad.constraints.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstraintsListed {
     pub constraints: Vec<ListedConstraint>,
     pub parameters: Vec<CadParameter>,

@@ -5,18 +5,14 @@
 //! password or token is kept: a GeoPackage needs none.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// At most this many bound layers in a project.
 pub const MAX_SOURCES: usize = 1000;
 
 /// What a source is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SourceKind {
     Geopackage,
     /// A PostGIS table (docs/adr/0505): `path` is the database's address without a password.
@@ -25,10 +21,8 @@ pub enum SourceKind {
 
 /// A layer bound to a table of a file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceLink {
     /// Its own id, `kaynak-N`.
     pub id: String,
@@ -39,7 +33,6 @@ pub struct SourceLink {
     /// the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
     /// only when `path` is not there and the file it names has the same content. A database has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub relative: Option<String>,
     /// The table in it.
     pub table: String,
@@ -53,14 +46,12 @@ pub struct SourceLink {
     pub digest: String,
     /// The EPSG code the table declares, none for an undefined system.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
     /// only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
     /// whole table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub extent: Option<[f64; 4]>,
     /// The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique
@@ -68,25 +59,21 @@ pub struct SourceLink {
     /// written again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule
     /// of every bound layer before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// The label pins of objects that left the part (docs/adr/0578 §3): the object's row is in the table but outside
     /// `extent` (it was moved out, or the part was narrowed), so the layer holds no object for its pins. They are kept
     /// here with the row's lasting id and its key's value, not drawn, and go back to the object when the row comes
     /// into the part again; a row gone from the table takes its parked pins with it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ParkedPin>>", optional))]
     pub parked: Vec<ParkedPin>,
     /// The table's CHECK constraints as the link last read them (docs/adr/0755 §1): every write of a record is asked them
     /// with SQL's own meaning, and one that ties a column to a list of values makes the field's value list. Binding and
     /// every reading of the table write them anew.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableCheck>>", optional))]
     pub checks: Vec<TableCheck>,
     /// The table's unique constraints and plain unique indexes as the link last read them (docs/adr/0755 §1): no two
     /// records of the layer hold the same values in their columns.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableUnique>>", optional))]
     pub uniques: Vec<TableUnique>,
     /// Whether the table can be written: a feature or attribute table of a file KentOS may write.
     pub writable: bool,
@@ -101,14 +88,11 @@ pub const MAX_CONSTRAINT_NAME: usize = 256;
 
 /// A CHECK constraint of a bound table (docs/adr/0755 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableCheck {
     /// Its name; none for SQLite's constraint without one, which the database names by its text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Its condition as the table gives it: the inside of PostgreSQL's `CHECK (…)` (`pg_get_constraintdef`), SQLite's
     /// as its `CREATE TABLE` text writes it.
@@ -119,26 +103,21 @@ pub struct TableCheck {
     /// collation other than byte order, SQLite's affinity other than the field kind's, PostgreSQL's blank-padded
     /// `character(n)`); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub table_only: bool,
 }
 
 /// A unique constraint or a plain unique index of a bound table (docs/adr/0755 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableUnique {
     /// Its name; none for SQLite's constraint without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Its columns, in its order.
     pub columns: Vec<String>,
     /// Two empty (NULL) values count as the same (PostgreSQL's `NULLS NOT DISTINCT`); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub nulls_equal: bool,
 }
 
@@ -221,16 +200,13 @@ pub const MAX_PARKED: usize = 100_000;
 
 /// The pins of a row outside the part (docs/adr/0578 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParkedPin {
     /// The object's lasting id (the row's).
     pub uid: String,
     /// The key's value of the row when the link has a key and the row had a value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// The pins, as the object held them.
     pub pins: Vec<crate::LabelPin>,
@@ -454,10 +430,8 @@ pub const BASE_ROW: usize = 32;
 /// does not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the
 /// link's `revision` and `digest` it was taken at: with others it is stale and not used.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceBase {
     /// The link's id (`kaynak-N`).
     pub source: String,
@@ -471,7 +445,6 @@ pub struct SourceBase {
     /// vertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a
     /// whole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<String>,
 }
 

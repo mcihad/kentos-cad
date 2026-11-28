@@ -5,8 +5,6 @@
 //! Each page is what `RenderInputs.atlas` takes to draw it.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::display::{AtlasFeature, AtlasMapView, AtlasPageInput, map};
 use crate::error::{Result, SheetError};
@@ -17,9 +15,7 @@ use crate::paper;
 use crate::units::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct AtlasPlan {
     pub pages: Vec<AtlasPageInput>,
     /// Turkish: objects left out, scales that did not fit.

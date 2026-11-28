@@ -2,15 +2,11 @@
 //! setbacks, ±0.00's absolute elevation, the setback line, and the natural and the graded ground.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// A parcel edge's kind (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SiteEdgeKind {
     /// Yan bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-b, ç).
     #[default]
@@ -72,16 +68,12 @@ impl SiteEdgeKind {
 
 /// A parcel edge (docs/adr/8032): its kind and the plan's own setback where the plan gives one, m.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SiteEdge {
     #[serde(default, skip_serializing_if = "is_side")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SiteEdgeKind>", optional))]
     pub kind: SiteEdgeKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub setback: Option<f64>,
 }
@@ -100,10 +92,8 @@ pub const MAX_GROUND_LAYERS: usize = 16;
 /// made when it is read; its heights absolute, as the site's `datum` is. The site's own: an architecture project keeps
 /// no road settings, where a road's and a map's surfaces are.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SiteGround {
     /// The layers' ids, each once.
     pub layers: Vec<String>,
@@ -154,33 +144,25 @@ impl SiteGround {
 /// past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
 /// the parcel and the storeys.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SitePlan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parcel: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SiteEdge>>", optional))]
     pub edges: Vec<SiteEdge>,
     /// ±0.00's absolute elevation, m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub datum: Option<f64>,
     /// Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub envelope: Option<String>,
     /// Tabii zemin (docs/adr/8174; PAİY 4: "arazinin hafredilmemiş veya doldurulmamış hali", 57/2-a). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub natural_ground: Option<SiteGround>,
     /// Tesviye edilmiş zemin (docs/adr/8174; PAİY 4, 15–18): what the parcel is graded to. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub graded_ground: Option<SiteGround>,
 }
 

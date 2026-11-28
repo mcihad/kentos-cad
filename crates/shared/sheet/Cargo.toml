@@ -26,9 +26,6 @@ pdf-writer = { workspace = true }
 subsetter = { workspace = true }
 ttf-parser = { workspace = true }
 miniz_oxide = { workspace = true }
-# Only for generating the TypeScript types (`cargo test` writes them to
-# apps/web/src/contracts/generated/sheet); the WASM binding and the desktop build without it.
-ts-rs = { workspace = true, optional = true }
 # Only for the JSON Schemas of the template commands (docs/adr/0013): the server's catalog
 # check builds with it; nothing that ships to the browser does.
 schemars = { workspace = true, optional = true }
@@ -40,6 +37,5 @@ png = { workspace = true }
 kentos-formats = { path = "../formats" }
 
 [features]
-default = ["ts"]
-ts = ["dep:ts-rs", "kentos-contracts/ts"]
+default = []
 schema = ["dep:schemars", "kentos-contracts/schema"]

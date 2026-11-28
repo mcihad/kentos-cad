@@ -5,14 +5,10 @@ use crate::{
     model::SheetBook,
 };
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub use kentos_contracts::DrawingInfo;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSetDrawingInfo"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetDrawingInfo {
@@ -22,18 +18,14 @@ pub struct SetDrawingInfo {
 }
 /// One atomic metadata batch also supports exchanging two sheet numbers.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSetDrawingSet"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetDrawingSet {
     pub entries: Vec<SetDrawingInfo>,
 }
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperDrawingIndex"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DrawingIndex {

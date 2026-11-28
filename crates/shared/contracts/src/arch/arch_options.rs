@@ -8,9 +8,6 @@
 //!
 //! The project keeps its sets in `settings.arch.options` (KCAD 149; docs/adr/0788 §6).
 
-#[cfg(feature = "ts")]
-use ts_rs::TS;
-
 use serde::{Deserialize, Serialize};
 
 /// The most option sets a project keeps, the most options in one set and the most objects all options hold.
@@ -22,24 +19,19 @@ pub const MAX_OPTION_COMBOS: usize = 50;
 
 /// One alternative of a set: its id, its name and its objects by their persistent ids.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DesignOption {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub members: Vec<String>,
 }
 
 /// A set of alternatives for one part of the plan, one of them primary (the one the drawing shows).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionSet {
     pub id: String,
     pub name: String,
@@ -50,10 +42,8 @@ pub struct OptionSet {
 
 /// A view's choice of one set's option (docs/adr/0788 §3): the set's id and the option's.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionChoice {
     pub set: String,
     pub option: String,
@@ -63,15 +53,12 @@ pub struct OptionChoice {
 /// project's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one
 /// combination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionCombo {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionChoice>>", optional))]
     pub choices: Vec<OptionChoice>,
 }
 

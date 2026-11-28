@@ -13,8 +13,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 #[cfg(feature = "schema")]
@@ -33,10 +31,8 @@ pub const PROFILE_MOST_LISTED: u64 = 100_000;
 /// Input of `cad.pointclouds.region` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
 /// `invalid_cloud_area`, `too_many_cloud_points`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsRegion {
     /// The area's outer ring in plan, at least three vertices; implicitly closed (a repeated last vertex is dropped).
     /// A point on the boundary is inside.
@@ -44,25 +40,20 @@ pub struct PointCloudsRegion {
     pub ring: Vec<Vec2>,
     /// Holes of the area: a point strictly inside one is outside the area (its boundary is inside).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<Vec2>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Vec<Vec<Vec2>>,
     /// The point clouds looked in; none: every visible one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     /// The open drawing's file, a relative source's folder (the host gives it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// A value's smallest, largest and mean.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CloudRange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub min: f64,
@@ -74,42 +65,32 @@ pub struct CloudRange {
 
 /// What the points inside an area are.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CloudStats {
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     /// `[x₁, y₁, z₁, x₂, y₂, z₂]` of the points inside; none when there are none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bounds: Option<[f64; 6]>,
     /// The heights (the mean summed exactly).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<CloudRange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub intensity: Option<CloudRange>,
     /// Each classification code (as text) and its points.
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, number>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub classes: BTreeMap<String, u64>,
 }
 
 /// One point cloud's share of an area.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CloudRegionPart {
     pub uid: String,
     /// The points of this cloud's sources looked at.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub read: u64,
     pub stats: CloudStats,
@@ -117,21 +98,17 @@ pub struct CloudRegionPart {
 
 /// Output of `cad.pointclouds.region` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsRegioned {
     /// The area: the ring's, less the holes' (the polygon is taken as simple).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
     /// The points per unit of area, all the clouds together; none when there are none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub density: Option<f64>,
     /// The points looked at, all the clouds together.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub read: u64,
     /// All the clouds together.
@@ -145,10 +122,8 @@ pub struct PointCloudsRegioned {
 /// Input of `cad.pointclouds.profile` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
 /// `invalid_corridor`, `too_many_stations`, `too_many_cloud_points`, `too_many_listed_points`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsProfile {
     /// The path in plan, at least two vertices, no two in a row the same.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -161,48 +136,38 @@ pub struct PointCloudsProfile {
     pub step: f64,
     /// Also list the points (station, offset, place, class), by station.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub points: bool,
     /// The point clouds looked in; none: every visible one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileBin {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub to: f64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     /// The heights; none when no point falls in the station.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<CloudRange>,
 }
 
 /// A point of the corridor: its lasting id, its place along the path and its facts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilePoint {
     pub cloud: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub source: u32,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u64,
     /// The distance along the path of the point's foot on the path.
@@ -223,27 +188,22 @@ pub struct ProfilePoint {
 
 /// Output of `cad.pointclouds.profile` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsProfiled {
     /// The path's length.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
     /// The points in the corridor, all the clouds together.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     /// The points looked at.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub read: u64,
     /// Every station, empty ones too, from the path's start.
     pub bins: Vec<ProfileBin>,
     /// With `points`: the corridor's points by station, then by cloud, source and place.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfilePoint>>", optional))]
     pub points: Vec<ProfilePoint>,
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
     pub revision: String,

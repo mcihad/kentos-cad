@@ -8,14 +8,10 @@
 //! (docs/specs/kcad-v2.md §6.4.1).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// One of the registry's datums.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RegistryDatum {
     #[serde(rename = "TUREF")]
     Turef,
@@ -28,10 +24,8 @@ pub enum RegistryDatum {
 /// Which way a Helmert transformation's rotations turn: EPSG's position
 /// vector convention (9606) or its coordinate frame convention (9607).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Convention {
     PositionVector,
     CoordinateFrame,
@@ -40,10 +34,8 @@ pub enum Convention {
 /// Seven parameters: translations (m), rotations (″) in their convention,
 /// the scale difference (ppm), and the accuracy (m) when it is given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Helmert {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub translation: [f64; 3],
@@ -53,17 +45,14 @@ pub struct Helmert {
     pub scale: f64,
     pub convention: Convention,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
 }
 
 /// An ellipsoid: its name, semi-major axis (m) and inverse flattening.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Ellipsoid {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -75,15 +64,12 @@ pub struct Ellipsoid {
 /// A datum the project defines: its ellipsoid and, when it has one, its
 /// seven parameters to WGS 84 (without them it stands alone).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CustomDatum {
     pub name: String,
     pub ellipsoid: Ellipsoid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to_wgs84: Option<Helmert>,
 }
 
@@ -110,21 +96,16 @@ fn datum_ref<'a>(
 /// A transverse Mercator grid: its origin's latitude (0 when left out),
 /// central meridian, scale and false origin.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TmDefinition {
     /// The registry's datum by name; or
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub datum: Option<RegistryDatum>,
     /// the project's own (exactly one of the two).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub custom_datum: Option<Box<CustomDatum>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub latitude_of_origin: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
@@ -139,18 +120,14 @@ pub struct TmDefinition {
 
 /// Latitude and longitude on a datum.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeographicDefinition {
     /// The registry's datum by name; or
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub datum: Option<RegistryDatum>,
     /// the project's own (exactly one of the two).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub custom_datum: Option<Box<CustomDatum>>,
 }
 
@@ -172,10 +149,8 @@ impl GeographicDefinition {
 /// base y = d·x + e·y + f; a similarity turns counter-clockwise (degrees),
 /// scales, then shifts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CrsPlane {
     Similarity {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -207,24 +182,18 @@ pub enum CrsPlane {
 /// code (`srid`), or a transverse Mercator the project defines
 /// (`definition`); exactly one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CrsBase {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub definition: Option<Box<CrsDefinition>>,
 }
 
 /// A local system: its base and the plane transform from it to the base.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LocalDefinition {
     pub base: CrsBase,
     pub plane: CrsPlane,
@@ -232,10 +201,8 @@ pub struct LocalDefinition {
 
 /// The kind of system a definition is.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CrsSystem {
     Tm(TmDefinition),
     Geographic(GeographicDefinition),
@@ -245,9 +212,7 @@ pub enum CrsSystem {
 /// A coordinate system the project defines (docs/adr/0168 §1): its name
 /// and what it is.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CrsDefinition {
     pub name: String,
     pub system: CrsSystem,
@@ -257,20 +222,16 @@ pub struct CrsDefinition {
 /// device's grid library keeps it by that), the file's name and size, the
 /// accuracy the project gives it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GridChoice {
     pub id: String,
     pub file: String,
     /// The file's size in bytes (at most the core's 256 MiB).
     // A number in TypeScript, as JSON gives it: exact up to 2^53.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
 }
@@ -280,19 +241,15 @@ pub struct GridChoice {
 /// shifts by seven parameters (`helmert`) or an NTv2 grid (`grid`); exactly
 /// one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DatumTransform {
     pub from: RegistryDatum,
     pub to: RegistryDatum,
     /// What the values rest on: “ED50 → TUREF: Bölge 7”.
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub helmert: Option<Helmert>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grid: Option<GridChoice>,
 }
 

@@ -3,15 +3,11 @@
 //! The command layer validates the full standard rules before associating one.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// An exact versioned standard document retained in the drawing file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectStandardDocument {
     /// UTF-8 JSON document, with its format, document version, identity and
     /// office revision. Keeping the complete text allows exact re-export.
@@ -83,10 +79,8 @@ pub fn project_standards_problem(documents: &[ProjectStandardDocument]) -> Optio
 /// `cad.standards.install` (docs/adr/1100 §3): the project's own note of which template new sheets
 /// are made from. Recording it changes no sheet; a sheet keeps the origin it was made from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ApprovedSheetTemplate {
     /// The template's id (`sys:cad-mimari`, a user's or an office's).
     pub template_id: String,

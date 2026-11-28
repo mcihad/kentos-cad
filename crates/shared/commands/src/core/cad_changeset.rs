@@ -4,8 +4,6 @@
 //! every step back, the parts outside the undo history too.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -20,9 +18,7 @@ pub const CHANGESET_LABEL: &str = "Değişiklik kümesi";
 
 /// Explicit viewport context for model commands; all command coordinates remain canonical metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SheetModelScope {
     pub sheet: String,
@@ -51,76 +47,60 @@ pub struct SheetModelScope {
 /// `unknown_command`, `unknown_version`; `invalid_revision`,
 /// `revision_conflict`; then the steps' own, and `unknown_reference`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ChangesetApply {
     /// Optional explicit paper viewport context. Restricts the set to model commands.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model_scope: Option<SheetModelScope>,
     /// At least one.
     pub steps: Vec<ChangesetStep>,
     /// The undo step's name; “Değişiklik kümesi” when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A step of a change set.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ChangesetStep {
     /// The command's id (`cad.polygon.create`).
     pub command: String,
     /// Its version; the host's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// Its input, its catalog's schema, with references to earlier steps.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: serde_json::Value,
     /// The name later steps refer to its output by: a letter or `_`, then
     /// letters, digits and `_`; each once.
     #[serde(default, rename = "as", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, rename = "as"))]
     pub name: Option<String>,
 }
 
 /// A step written: its command and its output, as the command answers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ChangesetStepDone {
     pub command: String,
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub output: serde_json::Value,
     /// The step's warnings (the set's answer has them too, at `steps[i]…`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandWarning>>", optional))]
     pub warnings: Vec<CommandWarning>,
 }
 
 /// Output of `cad.changeset.apply` v1, and what its plan says it would be.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ChangesetApplied {
     /// The undo step's name.
     pub label: String,

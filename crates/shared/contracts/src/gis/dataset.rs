@@ -9,8 +9,6 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The longest title, party name, license and keyword, in characters.
 pub const MAX_DATASET_LINE: usize = 200;
@@ -26,77 +24,58 @@ pub const MAX_DERIVATION_INPUTS: usize = 200;
 
 /// Who answers for the data (ISO 19115's responsible party, OGC API Records' contact).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DatasetParty {
     /// A person's or a unit's name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub organisation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub email: Option<String>,
 }
 
 /// A layer's description as a dataset; every part may be left out, an empty one is not written.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DatasetInfo {
     /// Its title; the layer's name stands for it when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub responsible: Option<DatasetParty>,
     /// A license's name or address (`CC-BY-4.0`, `https://…`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub license: Option<String>,
     /// What its use is bound by (Kullanım kısıtı).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub keywords: Vec<String>,
     /// The day its data was last brought up to date (`YYYY-AA-GG`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub updated: Option<String>,
     /// The scale it was made for: the denominator (1000 for 1:1000).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: Option<u32>,
     /// Its resolution: a raster's cell or the smallest detail it keeps, in metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub resolution: Option<f64>,
     /// Its positional accuracy (one standard deviation), in metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
     /// How complete it is, in words (“ilçenin bütün parselleri”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub completeness: Option<String>,
     /// How it was made (Üretim açıklaması): survey, digitising, import.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub statement: Option<String>,
 }
 
@@ -110,10 +89,8 @@ impl DatasetInfo {
 /// A layer a derivation read: the layer then (its id and name), its content digest when read
 /// (`sources::layer_digest`, docs/adr/0511), and for a bound layer its source.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationInput {
     pub layer: String,
     pub name: String,
@@ -121,16 +98,13 @@ pub struct DerivationInput {
     pub digest: String,
     /// The file or database address (without a password) a bound layer's table is in, and its table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
 }
 
 /// What a layer a processing tool made was derived from (docs/adr/0633 §2): written by the run, in its undo step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerDerivation {
     /// The tool's id and its name.
     pub tool: String,
@@ -141,16 +115,11 @@ pub struct LayerDerivation {
     /// The values it took, but its features inputs (they are `inputs`).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[cfg_attr(
-        feature = "ts",
-        ts(type = "Record<string, unknown> | undefined", optional)
-    )]
-    #[cfg_attr(
         feature = "schema",
         schemars(with = "BTreeMap<String, serde_json::Value>")
     )]
     pub parameters: BTreeMap<String, Value>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DerivationInput>>", optional))]
     pub inputs: Vec<DerivationInput>,
     /// The drawing's revision when it ran.
     pub document_revision: String,
@@ -161,11 +130,9 @@ pub struct LayerDerivation {
     /// An extension's tool's extension as it ran (docs/adr/8057 §15, PY-TOOL-22): its id, version and package
     /// digest, which name the code that made the layer. The KCAD file's GIS data version 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub extension: Option<crate::ExtensionPin>,
     /// Where an extension's tool's code ran (`Python 3.12.13 · linux-x86_64`): its packages' binaries depend on it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub environment: Option<String>,
 }
 

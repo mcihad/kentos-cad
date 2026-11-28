@@ -13,8 +13,6 @@
 //! sheet that shows it says so on the other side).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::error::{Result, SheetError};
 use crate::model::SheetBook;
@@ -26,9 +24,7 @@ pub const VERSION: u32 = 1;
 
 /// A `.kpafta` file as read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct KpaftaFile {
     /// `kentos.sheet.file`.
     pub format: String,

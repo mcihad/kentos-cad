@@ -8,8 +8,6 @@
 //! `fixtures/commands/v1/road.junctions.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -31,30 +29,22 @@ pub const ROAD_JUNCTIONS_DRAW_VERSION: u32 = 1;
 /// `road_problem`: two legs on two alignments, edges and radii in bounds; legs that do not cross, a crossing not there,
 /// legs parallel at it), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub junction: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<JunctionKind>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub legs: Option<Vec<JunctionLegDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub at: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
     /// Each quadrant's radius; null takes them off.
@@ -63,22 +53,18 @@ pub struct JunctionsEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<f64>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<f64>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radii: Option<Option<Vec<f64>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A place: plan and, on a leg, its station.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionPlace {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -91,10 +77,8 @@ pub struct JunctionPlace {
 /// A leg at the crossing: its alignment, station and km there, its direction (degrees from east, counter-clockwise)
 /// and whether its alignment changed since.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionLeg {
     pub alignment: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -109,10 +93,8 @@ pub struct JunctionLeg {
 /// on the first and the second leg's edge (with their stations along the legs), its sweep (degrees, counter-clockwise
 /// positive from the first tangent point) and its length.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionReturn {
     pub a: String,
     pub b: String,
@@ -134,10 +116,8 @@ pub struct JunctionReturn {
 /// whether an alignment changed since, the crossing's place, its legs and the angle between them (degrees, 0–180),
 /// and at grade its four curb returns.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionReport {
     pub id: String,
     pub name: String,
@@ -158,10 +138,8 @@ pub struct JunctionReport {
 
 /// A junction in the project's list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionListed {
     pub id: String,
     pub name: String,
@@ -172,14 +150,11 @@ pub struct JunctionListed {
 
 /// Output of `road.junctions.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsWritten {
     /// The junction written, read; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub junction: Option<JunctionReport>,
     pub junctions: Vec<JunctionListed>,
     pub revision: String,
@@ -190,22 +165,17 @@ pub struct JunctionsWritten {
 /// Refusals: `not_a_road_project`, `unknown_junction`, `invalid_junction` (the one asked does not read). Warnings:
 /// `junction_stale`, `junction_on_curve`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub junction: Option<String>,
 }
 
 /// Output of `road.junctions.query` v1: the junctions read (one that does not read with no legs).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsQueried {
     pub junctions: Vec<JunctionReport>,
 }
@@ -217,28 +187,22 @@ pub struct JunctionsQueried {
 /// `invalid_junction` (a separated one has no returns), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
 /// `layer_hidden`, and the read's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsDraw {
     pub junction: String,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `road.junctions.draw` v1, and its plan: the junction and the objects written (in the plan, none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsDrawn {
     pub junction: String,
     pub uids: Vec<String>,
@@ -262,21 +226,17 @@ pub const MOST_CLEARANCE_SAMPLES: usize = 1_000_000;
 /// positive, minimum negative, more than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing,
 /// the roads not overlapping, a profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsClearance {
     pub junction: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profiles: Option<Vec<String>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub depth: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub minimum: Option<f64>,
 }
@@ -284,10 +244,8 @@ pub struct JunctionsClearance {
 /// A clearance at a place: the place, its station and offset (right positive) on the upper and the lower road, the
 /// two profiles' elevations there and the clearance (upper elevation less the depth, less the lower elevation).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionClearanceAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -313,10 +271,8 @@ pub struct JunctionClearanceAt {
 /// depth and step, how many places were sampled, the least and largest clearance and the one where the alignments
 /// cross, the minimum asked and whether the least falls short of it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsCleared {
     pub junction: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -333,7 +289,6 @@ pub struct JunctionsCleared {
     pub largest: JunctionClearanceAt,
     pub crossing: JunctionClearanceAt,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub minimum: Option<f64>,
     pub short: bool,
@@ -356,31 +311,24 @@ pub const ROAD_JUNCTIONS_TIE_VERSION: u32 = 1;
 /// build, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,
 /// `revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsTie {
     pub junction: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub primary: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profiles: Option<Vec<String>>,
     /// The primary road's cross slopes, left and right (grades, outward, falling negative).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub crossfall: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub max_grade_change: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -389,10 +337,8 @@ pub struct JunctionsTie {
 /// positive, 0 at the crossing), the cross slope used (a grade; 0 at the crossing), the elevation tied, the secondary
 /// profile's elevation there before and the difference (tied less before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionTie {
     pub pvi: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -415,10 +361,8 @@ pub struct JunctionTie {
 /// three ties in station order, the PVIs taken off, the grades of the four segments around and between the
 /// ties, the grade change at each tie (absolute), and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsTied {
     pub junction: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -448,14 +392,11 @@ pub const MOST_OVERLAP_CELLS: usize = 1_000_000;
 /// no corridor or more than one, primary not 0 or 1, cell not positive, more than `MOST_OVERLAP_CELLS` cells, the
 /// secondary corridor's surface not built). Warnings: `junction_stale`, `corridor_stale`, `junction_corridors_overlap`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsOverlap {
     pub junction: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corridors: Option<Vec<String>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub primary: u32,
@@ -465,10 +406,8 @@ pub struct JunctionsOverlap {
 
 /// A place in the overlap: its centre and the primary and secondary corridors' elevations (and primary less secondary).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionOverlapAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -488,10 +427,8 @@ pub struct JunctionOverlapAt {
 /// of the two design surfaces, and the overlap's station range on the primary and the secondary alignment (absent
 /// without overlap).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionsOverlapped {
     pub junction: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -511,18 +448,14 @@ pub struct JunctionsOverlapped {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub uncovered: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub mean_difference: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub largest: Option<JunctionOverlapAt>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub primary_range: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub secondary_range: Option<[f64; 2]>,
 }

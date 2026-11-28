@@ -9,39 +9,30 @@
 //! snapshot's JSON writes the bytes as base64, the `.kcad` as a byte string.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::encoding::sha256_hex;
 
 /// The sheet book of a project and its pictures' bytes.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectSheets {
     /// The sheet core's book (`kentos.sheet/1`): an object, opaque here.
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     pub book: serde_json::Value,
     /// The bytes of the book's pictures; none when it has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SheetPicture>>"))]
     pub pictures: Vec<SheetPicture>,
 }
 
 /// A picture's bytes under the SHA-256 the book names it by.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetPicture {
     /// SHA-256 of `bytes`, 64 lowercase hexadecimal digits.
     pub sha256: String,
     /// The file's bytes; base64 (RFC 4648, with padding) in JSON.
     #[serde(with = "crate::encoding::base64_text")]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
     #[cfg_attr(feature = "schema", schemars(with = "String"))]
     pub bytes: Vec<u8>,
 }

@@ -28,7 +28,6 @@ pub const MAX_GEOREF_CRS: usize = 16 * 1024;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GeorefMethod {
     Helmert,
     #[default]
@@ -108,7 +107,6 @@ fn is_bilinear(r: &RasterResampling) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeorefPoint {
     /// What the user calls it (a mark on the sheet, a survey point's name).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -165,7 +163,6 @@ impl GeorefPoint {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeorefSource {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub width: u32,
@@ -194,7 +191,6 @@ pub struct GeorefSource {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeorefOutput {
     /// `[x₀, s, 0, y₀, 0, −s]`.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -220,7 +216,6 @@ pub struct GeorefOutput {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterGeoref {
     pub method: GeorefMethod,
     /// The control, check and left-out points, as given.
@@ -407,16 +402,12 @@ impl RasterGeoref {
 /// The resampled raster the host wrote itself (the desktop, on a thread of its own, by the plan's grid): a file, or
 /// an embedded raster of the project's library. The command reads it and refuses one that is not the plan's grid.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeorefMade {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,
 }
 
@@ -426,10 +417,8 @@ pub struct GeorefMade {
 /// `invalid_file_path`, `file_not_found`, `import_unreadable`, `unknown_asset`, `georef_output_mismatch`,
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGeoref {
     /// The raster.
     pub uid: String,
@@ -438,38 +427,30 @@ pub struct RastersGeoref {
     pub points: Vec<GeorefPoint>,
     /// The targets' system (EPSG) when not the project's: they are carried to the project's system first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
     /// file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
     /// recorded as its EPSG code.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
     /// A resampled output's pixel side; none: the transform's mean scale at the control points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pixel: Option<f64>,
     #[serde(default, skip_serializing_if = "is_bilinear")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<RasterResampling>", optional))]
     pub resampling: RasterResampling,
     /// Where a resampled linked raster is written (absolute, or relative to the drawing's folder); none: beside its
     /// source as `<ad>-oturtulmus.tif`. An embedded source's output is embedded.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub output: Option<String>,
     /// The output the host resampled itself by the plan's grid; none: the command resamples.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub made: Option<GeorefMade>,
     /// The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -477,21 +458,16 @@ pub struct RastersGeoref {
 /// A point's residual (control, left out) or error (check): the transformed pixel less its target, in the project's
 /// system; none beyond a projective's horizon.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeorefResidual {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub dx: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub dy: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub d: Option<f64>,
     /// Its target in the project's system (carried from `srid`).
@@ -501,10 +477,8 @@ pub struct GeorefResidual {
 
 /// Output of `cad.rasters.georef` v1 (its plan's too: what it would write, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGeoreffed {
     pub uid: String,
     /// Every point's, in the input's order.
@@ -517,7 +491,6 @@ pub struct RastersGeoreffed {
     pub raster: RasterFields,
     /// The file a resampling wrote (or, planned, will write).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub written: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

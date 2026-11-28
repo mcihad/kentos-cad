@@ -2,8 +2,6 @@
 //! properties chosen of one object given to others, the values read from the source by the command rather than given.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -14,10 +12,8 @@ pub const CAD_ENTITIES_MATCH_VERSION: u32 = 1;
 
 /// A property Özellik kopyala gives.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MatchProperty {
     /// The layer the objects move to.
     Layer,
@@ -71,10 +67,8 @@ impl MatchProperty {
 /// (the source, then the targets), `no_entities` (the source alone), `layer_locked` (every target locked, then the
 /// source's layer when the layer is given). Warning: `layer_hidden` (objects moved to a hidden layer).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesMatch {
     /// The object whose properties are given: its persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -84,12 +78,10 @@ pub struct EntitiesMatch {
     pub uids: Vec<String>,
     /// The properties given, each once; absent: every one (`MatchProperty::ALL`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub properties: Option<Vec<MatchProperty>>,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

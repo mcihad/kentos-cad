@@ -8,8 +8,6 @@
 //! The shared cases are `fixtures/commands/v1/cad.pointclouds.network.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{RegisterReject, RegisterRobust};
 
@@ -28,52 +26,40 @@ pub const CAD_POINTCLOUDS_NETWORK_VERSION: u32 = 1;
 /// network that does not fix every scan's position, as flat ground leaves a horizontal shift free); the registration's
 /// own refusals at its option (`spacing` …); the files' (`file_not_found`, `import_unreadable`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsNetwork {
     pub uids: Vec<String>,
     pub fixed: Vec<String>,
     /// The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan
     /// boxes overlap.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub links: Option<Vec<[String; 2]>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub spacing: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub reach: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub iterations: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub neighbours: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub robust: Option<RegisterRobust>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reject: Option<RegisterReject>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
     /// is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
     /// as far as `tolerance` (the registration's own stop).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rounds: Option<u32>,
 }
@@ -84,10 +70,8 @@ pub struct PointCloudsNetwork {
 /// the network: √(σz² / σh²) of its translation's covariance (σh² the larger plan eigenvalue), Tarama kaydı's
 /// `horizontal` for the network — under 0.1 the network barely fixes it in plan (flat ground).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkScan {
     pub uid: String,
     pub fixed: bool,
@@ -98,7 +82,6 @@ pub struct NetworkScan {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub matrix: [f64; 16],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub horizontal: Option<f64>,
 }
@@ -108,10 +91,8 @@ pub struct NetworkScan {
 /// translation about the network's centre), the network's residual of it (adjusted − observed, the same order), and the
 /// shift that residual makes along the pairs' normals (the square root of rᵀ·N·r over the pairs, metres).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkLink {
     pub scans: [String; 2],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -134,10 +115,8 @@ pub struct NetworkLink {
 /// do not move against each other), and how far its observations fail to close: the rotation's length (radians) and
 /// the translation's (metres) of the sum round it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkLoop {
     pub scans: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
@@ -150,10 +129,8 @@ pub struct NetworkLoop {
 /// mean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's
 /// pairs, metres), and notes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudsNetworked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub centre: [f64; 3],
@@ -167,7 +144,6 @@ pub struct PointCloudsNetworked {
     /// scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
     /// centre, and the links, residuals and loops the last round's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub rounds: Option<Vec<f64>>,
 }

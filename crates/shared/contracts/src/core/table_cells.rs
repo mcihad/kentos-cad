@@ -24,7 +24,6 @@ pub const MAX_FORMULA_LETTERS: usize = 1000;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CellStyle {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -56,7 +55,6 @@ pub struct CellStyle {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CellFormula {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub row: u32,
@@ -70,7 +68,6 @@ pub struct CellFormula {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CellField {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub row: u32,
@@ -90,7 +87,6 @@ pub struct CellField {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SourceOverrides {
     /// Kept while the file's cell there stays as it was.
     #[default]

@@ -11,8 +11,6 @@
 //! the end vertex's own. Extra fields: the command's version stays.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -33,10 +31,8 @@ pub const CAD_ENTITIES_GRADE_VERSION: u32 = 1;
 /// and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
 /// two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesGrade {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -45,38 +41,30 @@ pub struct EntitiesGrade {
     pub to: u32,
     /// Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     /// Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub ring: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub start: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub end: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: Option<f64>,
     /// The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub ahead: Option<f64>,
     /// The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub back: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -86,10 +74,8 @@ pub struct EntitiesGrade {
 /// elevation from `from` to `to` (an added vertex among them), the high or low point (`point`, docs/adr/3380) and the
 /// drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesGraded {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
@@ -102,11 +88,9 @@ pub struct EntitiesGraded {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zs: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub back: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub point: Option<GradedPoint>,
     pub revision: String,
 }
@@ -115,10 +99,8 @@ pub struct EntitiesGraded {
 /// vertex was added (else an existing one lay there), its horizontal distance from the start along the path, its place
 /// and elevation, and which it is.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GradedPoint {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u32,
@@ -137,10 +119,8 @@ pub struct GradedPoint {
 /// Which the point is: `high` (both grades rise towards it), `low` (both fall towards it) or `break` (neither: one
 /// grade gives way to another).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GradePointKind {
     High,
     Low,
@@ -155,10 +135,8 @@ pub const CAD_ENTITIES_RAISE_VERSION: u32 = 1;
 
 /// The reference of `cad.entities.raise`: a place and its elevation (a point's, a vertex's or a typed one).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RaiseReference {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -179,35 +157,28 @@ pub struct RaiseReference {
 /// and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
 /// from), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesRaise {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub at: u32,
     /// Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     /// Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub ring: u32,
     pub reference: RaiseReference,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub difference: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -217,10 +188,8 @@ pub struct EntitiesRaise {
 /// from the reference to the vertex after (none when the vertex stands on the reference), how many elevations moved
 /// and how many vertices have none (they stay without, as Kot ver's Artır leaves them), and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesRaised {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
@@ -231,7 +200,6 @@ pub struct EntitiesRaised {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub by: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -268,27 +236,21 @@ pub const MAX_DRAPED: usize = 10_000;
 /// range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
 /// vertex of them, or of the range, on the surface), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDrape {
     pub uids: Vec<String>,
     pub surface: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub breaks: bool,
     /// Docs/adr/4580: the height above (positive) or below (negative) the surface, m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: Option<f64>,
     /// Docs/adr/4580: only these vertices of the one object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub range: Option<DrapeRange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -297,10 +259,8 @@ pub struct EntitiesDrape {
 /// the ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own
 /// vertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrapeRange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub from: u32,
@@ -308,12 +268,10 @@ pub struct DrapeRange {
     pub to: u32,
     /// Docs/adr/4980: the part, 0-based; absent: the first.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     /// Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub ring: u32,
 }
@@ -326,10 +284,8 @@ fn is_zero(n: &u32) -> bool {
 /// as they were), the break points put in, and whether breaks were asked of an object that takes none (a point, a
 /// line, a polyline with measures or widths).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrapedObject {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -339,17 +295,14 @@ pub struct DrapedObject {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub inserted: u32,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unsplit: bool,
 }
 
 /// Output of `cad.entities.drape` v1 (and its plan): the surface's id, each object as given, the totals and the
 /// drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDraped {
     pub surface: String,
     pub objects: Vec<DrapedObject>,

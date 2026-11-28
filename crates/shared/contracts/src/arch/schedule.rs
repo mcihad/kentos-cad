@@ -22,7 +22,6 @@ pub const MAX_SCHEDULE_COLUMNS: usize = 30;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ScheduleOf {
     #[default]
     Openings,
@@ -118,7 +117,6 @@ impl ScheduleOf {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ScheduleField {
     #[default]
     Number,
@@ -677,7 +675,6 @@ impl ScheduleField {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScheduleColumn {
     pub field: ScheduleField,
     /// Its heading; absent: the field's.
@@ -706,7 +703,6 @@ impl ScheduleColumn {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScheduleFilter {
     /// Their levels' ids (an opening's its wall's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -758,7 +754,6 @@ impl ScheduleFilter {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScheduleSort {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub column: u32,

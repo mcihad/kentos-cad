@@ -26,8 +26,6 @@ pub use maps::includes_text_anchor;
 mod write;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub use geo::{TmCrs, tm_wkt};
 
@@ -77,9 +75,7 @@ pub(crate) mod b64_opt {
 
 /// One of the drawing's faces: the table's id (`TextPrim.font`, `DRAWING_FONTS`), weight and slant.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfFace {
     pub font: String,
     pub weight: u16,
@@ -90,44 +86,35 @@ pub struct PdfFace {
 /// A face's TrueType file (the desktop's `paket/fonts/cizim/*.ttf`; the web loads
 /// the same files): `data` is base64 in JSON.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfFont {
     pub font: String,
     pub weight: u16,
     #[serde(default)]
     pub italic: bool,
     #[serde(with = "b64")]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub data: Vec<u8>,
 }
 
 /// A picture's bytes (the book keeps only its metadata): base64 in JSON.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfAsset {
     pub sha256: String,
     #[serde(with = "b64")]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub data: Vec<u8>,
     /// For an SVG picture: a PNG the host drew of it (the core draws no SVG), at the size
     /// [`svg_sizes`] gives for the PDF's resolution; the PDF embeds it in the picture's place,
     /// as it embeds a PNG. Base64 in JSON. Without it an SVG picture is the missing picture's
     /// box, and [`findings`] warns of it.
     #[serde(default, skip_serializing_if = "Option::is_none", with = "b64_opt")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "string"))]
     pub raster: Option<Vec<u8>>,
 }
 
 /// The pixels an SVG picture is drawn at for a PDF (`PdfAsset.raster`): its largest frame on the
 /// sheets going, at the resolution asked for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfSvgSize {
     pub sha256: String,
     pub width: u32,
@@ -136,9 +123,7 @@ pub struct PdfSvgSize {
 
 /// A line of the drawing on a map: its colour, its width and dashes on the paper (millimetres).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapStroke {
     /// `#rrggbb` or `#rrggbbaa`.
     pub color: String,
@@ -149,7 +134,6 @@ pub struct MapStroke {
     pub dash: Vec<f64>,
     /// Distance already consumed in the pattern, paper millimetres; absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dash_offset: Option<f64>,
     #[serde(default = "round_cap")]
     pub cap: LineCap,
@@ -167,9 +151,7 @@ fn round_join() -> LineJoin {
 
 /// A path of the drawing: ground points `[east (Y), north (X)]` in metres, the map's own system.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapPath {
     pub points: Vec<[f64; 2]>,
     /// A ring (the last point joins the first).
@@ -179,19 +161,15 @@ pub struct MapPath {
     #[serde(default)]
     pub holes: Vec<Vec<[f64; 2]>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<MapStroke>,
     /// A closed path's fill, `#rrggbb` or `#rrggbbaa`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
 }
 
 /// Where a map text's point is on its line.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum TextAnchor {
     #[default]
     LeftBaseline,
@@ -205,14 +183,11 @@ pub enum TextAnchor {
 /// A text of the drawing on a map (a parcel number, an ada's name, a label): its point on the
 /// ground, its size on the paper.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapText {
     /// Frozen Unicode glyphs in paper millimetres, relative to `at`, y up.
     /// No further font lookup, shaping or anchor adjustment is permitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub glyphs: Option<GlyphText>,
     /// `[east (Y), north (X)]`, metres.
     pub at: [f64; 2],
@@ -236,23 +211,18 @@ pub struct MapText {
     pub anchor: TextAnchor,
     /// A light outline under the letters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub halo: Option<String>,
     /// The letters' width times this (a text's width factor, docs/adr/0324 §6); absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub width_factor: Option<f64>,
     /// The letters leaning forward by this tangent (a text's slant); absent: upright.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub lean: Option<f64>,
 }
 
 /// Exact placements from the shared CAD text engine; never an alternate text source.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct GlyphText {
     pub profile: String,
     pub glyphs: Vec<PdfGlyph>,
@@ -260,9 +230,7 @@ pub struct GlyphText {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfGlyph {
     /// Index in the frozen unicode-v1 face manifest, not a system font index.
     pub font: u16,
@@ -275,9 +243,7 @@ pub struct PdfGlyph {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfGlyphRule {
     pub corners: [[f64; 2]; 4],
     pub color: String,
@@ -298,9 +264,7 @@ fn regular() -> u16 {
 /// A layer of the drawing on a map: one optional content group of the PDF (its name in the
 /// viewer's layer list), shared by every map and page that shows it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapLayerContent {
     pub id: String,
     pub name: String,
@@ -312,9 +276,7 @@ pub struct MapLayerContent {
 
 /// A map frame's content, drawn in its frame, cut to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum MapContent {
     /// The drawing as vectors: the core turns the ground into the paper by the map's view.
     Vector(VectorMap),
@@ -324,33 +286,25 @@ pub enum MapContent {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct VectorMap {
     /// Bottom first: the drawing order.
     pub layers: Vec<MapLayerContent>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RasterMap {
     #[serde(with = "b64")]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub png: Vec<u8>,
 }
 
 /// A map frame's content and, for GeoPDF in a system the core cannot invert, its corners.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfMap {
     /// A page-specific rendering of a master map; absent is the legacy shared fallback.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheet: Option<SheetId>,
     pub item: ItemId,
     pub content: MapContent,
@@ -358,21 +312,17 @@ pub struct PdfMap {
     /// bottom right, bottom left. Only where `RenderInputs.crs.tm` is none (the core works them
     /// out for a transverse Mercator system itself).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corners: Option<[[f64; 2]; 4]>,
 }
 
 /// The maps' coordinate system for GeoPDF: the measure's `GCS`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfCrs {
     /// WKT 1 of the system (`PROJCS[…]`, or `GEOGCS[…]` for a geographic one); `tmWkt` builds
     /// it for a transverse Mercator system from the registry's values.
     pub wkt: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub epsg: Option<u32>,
 }
 
@@ -380,9 +330,7 @@ pub struct PdfCrs {
 /// Every atlas map shows the page's ground, so each page has its maps' content, and the tables, coordinate
 /// lists and legends that read “inside the map” or “of the atlas object” are the page's too.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfAtlasPage {
     /// The page `atlas::atlas_plan` gave: the object, its name, its maps' views.
     pub atlas: AtlasPageInput,
@@ -402,9 +350,7 @@ pub struct PdfAtlasPage {
 
 /// A sheet that is written as one page for each of the atlas's objects (docs/adr/0534).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfAtlas {
     pub sheet: SheetId,
     pub pages: Vec<PdfAtlasPage>,
@@ -412,9 +358,7 @@ pub struct PdfAtlas {
 
 /// What a PDF is made of besides the book.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfInputs {
     /// What the display lists are built with (variables, tables, legends, the project, its
     /// system with its TM values …): the same as for the screen.
@@ -431,23 +375,18 @@ pub struct PdfInputs {
     pub maps: Vec<PdfMap>,
     /// For GeoPDF; none: no geographic viewport is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<PdfCrs>,
     /// A sheet written as one page for each atlas object; the sheet takes its place among the chosen sheets.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub atlas: Option<PdfAtlas>,
     /// The file's keywords (its information dictionary): where an output says what it was made from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub keywords: Option<String>,
 }
 
 /// How the PDF is written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfOptions {
     /// The sheets, in this order, a page each; empty: every sheet in the book's order.
     #[serde(default)]
@@ -461,7 +400,6 @@ pub struct PdfOptions {
     /// PDF/A-2b (ISO 19005-2; docs/adr/8037): XMP metadata, an sRGB output intent and no device CMYK, the file the
     /// 2026 digital project regulation asks a drawing as ([`archive`]).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub pdfa: bool,
 }
 
@@ -519,11 +457,9 @@ pub const THIN_LINE_MM: f64 = 0.05;
 
 /// What one written page paints (docs/adr/1090 §4), counted while it is written, and its content digest.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPageAudit"))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PageAudit {
     pub sheet: SheetId,
     /// SHA-256 of the page's uncompressed content stream, its size and the names of the faces, pictures and graphics
@@ -540,7 +476,6 @@ pub struct PageAudit {
     pub thin_lines: u32,
     /// The thinnest stroke over zero, paper mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub min_stroke_mm: Option<f64>,
     /// Text runs written as real, searchable text (embedded subsets with a ToUnicode map).

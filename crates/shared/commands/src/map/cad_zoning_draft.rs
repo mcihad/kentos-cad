@@ -8,8 +8,6 @@
 //! are `fixtures/commands/v1/cad.zoning.draft.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ZONING_DRAFT: &str = "cad.zoning.draft";
 pub const CAD_ZONING_DRAFT_VERSION: u32 = 1;
@@ -24,10 +22,8 @@ pub const INFRASTRUCTURE_USES: [&str; 12] = [
 
 /// A change the draft makes: a decision area, its field and the value it takes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningDraftChange {
     pub uid: String,
     pub field: String,
@@ -45,38 +41,28 @@ pub struct ZoningDraftChange {
 /// (an area of another plan, a field a draft does not change, a value empty, not in the list or not a number of 0 or
 /// more, the area's value already).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningDraft {
     pub id: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub plan: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub reason: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningDraftChange>>"))]
     pub changes: Vec<ZoningDraftChange>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub remove: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// A use's area in the plan before and after the draft (square metres); the use empty for areas without one.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningDraftUse {
     #[serde(rename = "use")]
-    #[cfg_attr(feature = "ts", ts(rename = "use"))]
     pub usage: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub before: f64,
@@ -90,22 +76,16 @@ pub struct ZoningDraftUse {
 /// infrastructure use's area gets smaller: m. 26(3); `area` how much), `densityUp` (an area's KAKS or KatAdedi rises:
 /// m. 26(5)(a)), `heightUp` (an area's KatAdedi or Hmax rises: m. 26(4), (5)(b)); the area's id where it is one area's.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningDraftFinding {
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[serde(rename = "use")]
-    #[cfg_attr(feature = "ts", ts(rename = "use"))]
     pub usage: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     pub message: String,
@@ -114,13 +94,10 @@ pub struct ZoningDraftFinding {
 /// Output of `cad.zoning.draft` v1: the draft as kept (none when removed), its plan's level, the plan's areas by use
 /// (in the list's order, then areas without a use), what m. 26 asks, the project's drafts after it and the revision.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningDrafted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub draft: Option<crate::PlanDraft>,
     pub level: String,
     pub uses: Vec<ZoningDraftUse>,

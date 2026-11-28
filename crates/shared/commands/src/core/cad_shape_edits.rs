@@ -5,8 +5,6 @@
 //! after the tool. The tools write through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -18,10 +16,8 @@ pub const CAD_SHAPES_EDIT_VERSION: u32 = 1;
 
 /// Kot ver's elevation: one value for every vertex, a change to the ones there, or none.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "mode", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ShapeElevation {
     /// Sabit: every vertex at `z`.
     Set {
@@ -39,10 +35,8 @@ pub enum ShapeElevation {
 
 /// How Parçala cuts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SplitMethod {
     /// Kesişimlerden: where the given objects cross one another.
     Crossings,
@@ -59,25 +53,20 @@ pub enum SplitMethod {
 /// distance written as a lasting bond in the same step, a distance constraint from the reference to the edge with its
 /// parameter, so that the edge follows when the reference moves; without `distance` the bond keeps the distance now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShiftReference {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep: bool,
 }
 
 /// The edit, with what it works on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ShapeWork {
     /// Biçim değiştir: an area cut or grown, or a path's stretch redrawn, by the straight line through `line`'s
     /// points; a line becomes a polyline in its place.
@@ -92,12 +81,10 @@ pub enum ShapeWork {
     Continue {
         id: String,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         from_start: bool,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
     },
@@ -115,18 +102,14 @@ pub enum ShapeWork {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         area: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         topology: Option<crate::StretchTopology>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         reference: Option<ShiftReference>,
     },
     /// Sadeleştir: the paths' vertices within `tolerance` of their outline dropped.
@@ -150,15 +133,12 @@ pub enum ShapeWork {
         ids: Vec<String>,
         method: SplitMethod,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         parts: Option<u32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         length: Option<f64>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         from_end: bool,
     },
 }
@@ -168,24 +148,19 @@ pub enum ShapeWork {
 /// Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the edit's own (`wrong_kind`,
 /// `no_crossing`, `invalid_distance`, `nothing_to_do` …), then `cad.entities.edit`'s (`layer_locked` …).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShapesEdit {
     pub work: ShapeWork,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `cad.shapes.edit` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShapesEdited {
     /// The objects updated or replaced in place.
     pub changed: Vec<String>,
@@ -209,21 +184,17 @@ pub struct ShapesEdited {
     pub distance: f64,
     /// Parçala: the new objects, the pieces after each object's first, in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub created: Vec<String>,
     /// Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
     /// each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ShapeNeighbour>>"))]
     pub neighbours: Vec<ShapeNeighbour>,
     /// Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub bonds: Vec<String>,
     /// Paralel kaydır with `topology` (docs/adr/2600): the places inside the shared edge where a neighbour had a vertex
     /// (a third object's corner on it, a neighbour's own vertex along it), carried with the edge.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub carried: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -236,10 +207,8 @@ fn is_zero(n: &u32) -> bool {
 
 /// A neighbour that moved with Paralel kaydır's edge (docs/adr/1960): its id and its size before and after.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShapeNeighbour {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]

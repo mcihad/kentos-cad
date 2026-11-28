@@ -27,7 +27,6 @@ pub const MAX_ANNOTATIVE_SCALE: f64 = 1.0e6;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Annotative {
     /// The scale (1:at) its own geometry is drawn at.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
@@ -45,7 +44,6 @@ pub struct Annotative {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotativeScale {
     /// 1:scale.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]

@@ -6,8 +6,6 @@
 //! cases in `fixtures/commands/v1/road.drainage.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -23,10 +21,8 @@ pub const MOST_CATCHMENT_CELLS: u64 = 1_000_000;
 
 /// The ponds asked for: at least `minDepth` deep.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainagePondsAsk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub min_depth: f64,
@@ -36,29 +32,23 @@ pub struct DrainagePondsAsk {
 /// must pass within (m); with `runoff` (C, 0–1) and `intensity` (mm/h) the Rational peak flow, and with `culvert` its
 /// full-flow capacity against it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageCatchmentAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<[f64; 2]>,
     /// A culvert by its id or name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub culvert: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cell: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub radius: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub runoff: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rainfall")))]
     pub intensity: Option<f64>,
 }
@@ -72,31 +62,24 @@ pub struct DrainageCatchmentAsk {
 /// read from its corridor), `invalid_drainage` (a grid of more than [`MOST_CATCHMENT_CELLS`] cells). Warnings:
 /// `drainage_catchment_empty`, `culvert_no_roughness`, `culvert_over_capacity`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageQuery {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ponds: Option<DrainagePondsAsk>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub drops: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub catchment: Option<DrainageCatchmentAsk>,
 }
 
 /// A pond: its bottom, the level it spills at and the corner it spills over, its depth, its water's area and volume and
 /// how many corners are under it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainagePond {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bottom: [f64; 3],
@@ -116,10 +99,8 @@ pub struct DrainagePond {
 
 /// Why a water drop ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DrainageDropEnd {
     LowPoint,
     Flat,
@@ -130,17 +111,14 @@ pub enum DrainageDropEnd {
 
 /// A water drop: where it started, its path with heights, its last place, its plan length and why it ended.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageDrop {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: [f64; 2],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub path: Vec<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub to: Option<[f64; 3]>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -151,10 +129,8 @@ pub struct DrainageDrop {
 /// A culvert's full-flow capacity by Manning: every barrel full at the culvert's slope and roughness; its discharge
 /// (m³/s), its velocity (m/s), and the peak flow over it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageCapacity {
     pub culvert: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
@@ -163,7 +139,6 @@ pub struct DrainageCapacity {
     pub velocity: f64,
     /// The peak flow over the capacity; absent without a peak flow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub ratio: Option<f64>,
 }
@@ -172,10 +147,8 @@ pub struct DrainageCapacity {
 /// its most distant cell with its length, fall and mean slope (m/m), its Rational peak flow (m³/s) and a culvert's
 /// capacity.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageCatchment {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
@@ -196,30 +169,23 @@ pub struct DrainageCatchment {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
     pub peak: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub capacity: Option<DrainageCapacity>,
 }
 
 /// Output of `road.drainage.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageQueried {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DrainagePond>>", optional))]
     pub ponds: Vec<DrainagePond>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DrainageDrop>>", optional))]
     pub drops: Vec<DrainageDrop>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub catchment: Option<DrainageCatchment>,
 }
 
@@ -230,27 +196,22 @@ pub struct DrainageQueried {
 /// Refusals: the query's, `drainage_nothing` (no catchment and no pond to draw), the layer's, `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageDraw {
     pub query: DrainageQuery,
     pub layer_id: String,
     #[serde(default)]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `road.drainage.draw` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrainageDrawn {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

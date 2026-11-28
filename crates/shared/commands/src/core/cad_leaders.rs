@@ -3,8 +3,6 @@
 //! blocks, its look and style, and what its tips follow.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -15,10 +13,8 @@ pub const CAD_LEADERS_EDIT_VERSION: u32 = 1;
 
 /// One edit of `cad.leaders.edit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LeaderEdit {
     /// Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     /// follows.
@@ -29,7 +25,6 @@ pub enum LeaderEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         tip: Option<crate::SubRef>,
     },
     /// Kol sil: arm `arm` (0 the first) taken away; without its first arm the next is first. The last arm stays.
@@ -48,7 +43,6 @@ pub enum LeaderEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         spacing: Option<f64>,
     },
@@ -78,18 +72,14 @@ pub enum LeaderEdit {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         arrow: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         arrow_size: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         mask: Option<bool>,
     },
     /// The leaders follow the leader style `style` (its values written into them; null: they keep their look and
@@ -113,30 +103,24 @@ pub enum LeaderEdit {
 /// `no_entities`, `too_few_objects`, `arm_not_found`, `invalid_leader`, `not_an_insert`, `style_not_found`,
 /// `no_such_place`, `not_finite`, `empty_text`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeadersEdit {
     pub edit: LeaderEdit,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.leaders.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeadersEdited {
     /// The leaders that changed, by their persistent ids.
     pub changed: Vec<String>,
     /// The leaders Topla took away.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -144,15 +128,12 @@ pub struct LeadersEdited {
 
 /// What `cad.leaders.edit` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeadersPlan {
     /// The leaders as execute would write them.
     pub leaders: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

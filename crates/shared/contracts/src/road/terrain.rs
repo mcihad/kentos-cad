@@ -1,8 +1,6 @@
 //! The terrain surfaces' definitions: their sources, edits, exclusions and point clouds. A part of the road project's settings (docs/adr/8054 §9).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[allow(unused_imports)]
 use super::*;
@@ -15,10 +13,8 @@ impl SurfaceSources {
 
 /// A terrain surface's definition.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainSurfaceDef {
     /// Its id, unique in the project; what a profile or a section names.
     pub id: String,
@@ -32,40 +28,32 @@ pub struct TerrainSurfaceDef {
     pub breaklines: SurfaceSources,
     /// The outer boundary: a closed polyline's or an area's id; its vertices take the surface's heights.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     /// The voids: closed polylines' or areas' ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub voids: Vec<String>,
     /// Two records at one place are one vertex when their heights are this close, m; absent: 0.001.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
     /// The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub max_edge: Option<f64>,
     /// The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub built: Option<String>,
     /// The ground points taken from point clouds into its point layers (docs/adr/0928 §2), each layer's record.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceCloudDef>>", optional))]
     pub clouds: Vec<SurfaceCloudDef>,
     /// The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the
     /// record's; the drawing's points stay as they are.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceExclusion>>", optional))]
     pub excluded: Vec<SurfaceExclusion>,
     /// The edits made on it, in their order (docs/adr/1560; `.kcad` schema 196): a point added, a point's height set,
     /// an edge put in between two corners, a triangle taken out. Made again with the surface from its sources: an
     /// edit that no longer fits is said back, not dropped.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceEdit>>", optional))]
     pub edits: Vec<SurfaceEdit>,
 }
 
@@ -74,10 +62,8 @@ pub struct TerrainSurfaceDef {
 /// between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
 /// triangle at the place goes).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "op", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SurfaceEdit {
     #[serde(rename_all = "camelCase")]
     AddPoint {
@@ -151,10 +137,8 @@ impl SurfaceEdit {
 
 /// A point record left out of a surface: its place (docs/adr/0916 §6).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurfaceExclusion {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -168,10 +152,8 @@ pub const MOST_SURFACE_EXCLUSIONS: usize = 100_000;
 /// Which of a pulse's returns a cloud's points are taken from (docs/adr/0928): all, the first, the last (nearest the
 /// ground), or a pulse's only return.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CloudReturns {
     #[default]
     All,
@@ -185,10 +167,8 @@ pub enum CloudReturns {
 /// their coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the
 /// surface made then (absent when none was measured), and how many were outside it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurfaceCloudDef {
     pub layer: String,
     pub clouds: Vec<String>,
@@ -197,22 +177,17 @@ pub struct SurfaceCloudDef {
     #[serde(default)]
     pub returns: CloudReturns,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub z_tolerance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub near: Option<f64>,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub read: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub kept: u64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -220,27 +195,22 @@ pub struct SurfaceCloudDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub density: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub error_max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub error_rms: Option<f64>,
     #[serde(default, skip_serializing_if = "is_zero_u64")]
-    #[cfg_attr(feature = "ts", ts(type = "number", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub outside: u64,
     /// The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
     /// name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
     /// record made before the rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub vertical: Option<String>,
     /// The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);
     /// absent: the call said none, the points' heights are the files'.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub heights: Option<CloudHeights>,
 }
 
@@ -248,10 +218,8 @@ pub struct SurfaceCloudDef {
 /// clouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to
 /// the other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CloudHeights {
     pub from: crate::HeightReference,
     pub to: crate::HeightReference,
@@ -356,10 +324,8 @@ pub(super) fn is_zero_u32(v: &u32) -> bool {
 /// A PI of an alignment (docs/adr/0901 §2): its persistent id, its place, and the curve on it. The first and the last
 /// are the alignment's start and end and carry no curve.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentPi {
     /// Unique in the alignment; the elements' ids come from it (`p3/kurp`).
     pub id: String,
@@ -369,28 +335,23 @@ pub struct AlignmentPi {
     pub y: f64,
     /// The curve's radius; absent or 0: no curve (a kink).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
     /// The entry clothoid's length; absent or 0: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_in: f64,
     /// The exit clothoid's length; absent or 0: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_out: f64,
     /// The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
     /// schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub ove: bool,
     /// The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
     /// KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
 }

@@ -2,8 +2,6 @@
 //! the recipe owns their source selection and the user's annotation placement.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{DimensionLook, DimensionSetId, EntityId, SubRef, TextShift, Vec2};
 
@@ -14,10 +12,8 @@ pub const DIMENSION_SET_EDGES_MAX: usize = 100_000;
 
 /// A real wall face, relative to the direction of its source path.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetFace {
     #[default]
     Left,
@@ -27,10 +23,8 @@ pub enum DimensionSetFace {
 /// The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids
 /// (docs/adr/0729).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetRow {
     Openings,
     Overall,
@@ -52,10 +46,8 @@ impl DimensionSetRow {
 
 /// Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetReference {
     /// Its two faces.
     #[default]
@@ -72,10 +64,8 @@ impl DimensionSetReference {
 
 /// What a recipe does with a value that does not fit between its extension lines (docs/adr/0730 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetTight {
     /// In its place, drawn in the danger tone (docs/adr/0729 §6).
     #[default]
@@ -92,28 +82,22 @@ impl DimensionSetTight {
 
 /// A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSetSpan {
     /// A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub walls: Vec<EntityId>,
     /// The recipe's `wall` is a space: its outline is measured.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub space: bool,
     /// The unit direction measured along, in the world plane.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub direction: Vec2,
     #[serde(default, skip_serializing_if = "DimensionSetReference::is_faces")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<DimensionSetReference>", optional))]
     pub reference: DimensionSetReference,
     /// The sources' architectural level; none when they have none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
 }
 
@@ -130,10 +114,8 @@ impl DimensionSet {
 
 /// Opening references are rough jamb corners, or their actual centre.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetOpenings {
     #[default]
     Ends,
@@ -142,10 +124,8 @@ pub enum DimensionSetOpenings {
 
 /// Why a recipe cannot currently generate a trustworthy complete chain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionSetBreak {
     HostGone,
     UnsupportedWall,
@@ -167,10 +147,8 @@ impl DimensionSetBreak {
 
 /// A row manually placed in world coordinates; source edits keep this override.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSetRowPlace {
     pub row: DimensionSetRow,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -179,10 +157,8 @@ pub struct DimensionSetRowPlace {
 
 /// A semantic segment, independent of its current order and coordinates.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSetSegment {
     pub row: DimensionSetRow,
     pub a: SubRef,
@@ -191,10 +167,8 @@ pub struct DimensionSetSegment {
 
 /// An active segment's ordinary dimension. Unchanged active pairs keep this id.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSetMember {
     pub uid: EntityId,
     pub row: DimensionSetRow,
@@ -203,7 +177,6 @@ pub struct DimensionSetMember {
     /// Where the recipe last placed the value at the drawing's own scale (docs/adr/0730 §2); none: in its place. A value
     /// whose place differs from it was moved by the user and keeps its place.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub shift: Option<TextShift>,
 }
 
@@ -219,17 +192,14 @@ impl DimensionSetMember {
 
 /// A live recipe with stable member identities and separate layout overrides.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSet {
     pub id: DimensionSetId,
     pub wall: EntityId,
     /// The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to
     /// its first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub edge: Option<u32>,
     pub face: DimensionSetFace,
@@ -247,31 +217,24 @@ pub struct DimensionSet {
     /// The new members' starting template; existing members retain manual looks.
     pub look: DimensionLook,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetRowPlace>>", optional))]
     pub row_places: Vec<DimensionSetRowPlace>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetMember>>", optional))]
     pub members: Vec<DimensionSetMember>,
     /// Explicitly removed segments stay removed until the user restores them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetSegment>>", optional))]
     pub suppressed: Vec<DimensionSetSegment>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<DimensionSetBreak>,
     /// A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub span: Option<DimensionSetSpan>,
     /// The sheets' scales (1:n) the members are drawn at too, as large on paper as at the drawing's own, ascending
     /// (docs/adr/0730 §1); none: the recipe leaves the members' annotative representations alone.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scales: Vec<f64>,
     /// A value that does not fit between its extension lines: kept in its place or shifted (docs/adr/0730 §2).
     #[serde(default, skip_serializing_if = "DimensionSetTight::is_keep")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<DimensionSetTight>", optional))]
     pub tight: DimensionSetTight,
 }
 

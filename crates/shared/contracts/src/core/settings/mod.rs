@@ -24,8 +24,6 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 mod keymap;
 mod rules;
@@ -49,10 +47,8 @@ pub type SettingsLayer = BTreeMap<String, Value>;
 
 /// Where a setting lives and who may change it: the scope table of TODOS.md §7.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SettingScope {
     /// Fixed by this version of the app: only the schema's default.
     Default,
@@ -73,10 +69,8 @@ pub enum SettingScope {
 /// `map` is texts by text, each a text or a list of texts, at most `max` of them
 /// (the user's keys and typed names, docs/adr/9308).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SettingType {
     Boolean,
     Integer,
@@ -96,10 +90,8 @@ pub const MAP_LIST_MAX: usize = 8;
 
 /// How a change takes effect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SettingApply {
     /// At once, nothing is rebuilt.
     Live,
@@ -111,10 +103,8 @@ pub enum SettingApply {
 
 /// An app that uses a setting. A file keeps the values other hosts use.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SettingHost {
     Web,
     Desktop,
@@ -122,38 +112,27 @@ pub enum SettingHost {
 
 /// One value a setting may take, with its Turkish label.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingChoice {
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string"))]
     pub value: Value,
     pub label: String,
 }
 
 /// One setting (TODOS.md SET-01).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingDescriptor {
     /// Stable dotted name, `group.name` in camelCase (`graphics.msaa`); never reused.
     pub key: String,
     #[serde(rename = "type")]
     pub kind: SettingType,
-    #[cfg_attr(
-        feature = "ts",
-        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
-    )]
     pub default: Value,
     /// Smallest value of a number, inclusive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<f64>,
     /// Largest value of a number, inclusive; the most characters of a text; the most entries of a map.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<f64>,
     /// The only values allowed, in the order they are offered: every enum
     /// has them; a number has them when only some steps make sense.
@@ -162,16 +141,13 @@ pub struct SettingDescriptor {
     /// A text that may also be a colour, `#rrggbb`, besides its choices
     /// (the accent, docs/adr/0126); kept in lower case.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub color: bool,
     /// A typeface that may also be a fonts folder's family by its name (`Roboto`), besides KentOS's own faces
     /// (docs/adr/9313).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub font: bool,
     /// Unit of a number: `px`, `deg`, `sample`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     pub scope: SettingScope,
     pub hosts: Vec<SettingHost>,
@@ -191,9 +167,7 @@ pub struct SettingDescriptor {
 
 /// A titled group of settings.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingGroup {
     pub id: String,
     pub title: String,
@@ -203,28 +177,21 @@ pub struct SettingGroup {
 /// A named set of values (TODOS.md SET-05): choosing it only fills these
 /// values, each stays changeable on its own; no setting stores the preset.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsPreset {
     pub id: String,
     /// The group whose values it fills.
     pub group: String,
     pub title: String,
     pub description: String,
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, boolean | number | string>"))]
     pub values: BTreeMap<String, Value>,
 }
 
 /// Every setting, as [`settings_schema`] builds it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsSchema {
-    #[cfg_attr(feature = "ts", ts(type = "\"kentos.settings-schema\""))]
     pub format: String,
-    #[cfg_attr(feature = "ts", ts(type = "1"))]
     pub version: u32,
     pub groups: Vec<SettingGroup>,
     pub settings: Vec<SettingDescriptor>,
@@ -236,18 +203,14 @@ pub struct SettingsSchema {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingErrorText {
     pub code: SettingErrorCode,
     pub message: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ResolveReasonText {
     pub reason: ResolveReason,
     pub message: String,
@@ -265,10 +228,8 @@ impl SettingsSchema {
 
 /// Why a value was not taken, or why the effective value differs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SettingErrorCode {
     /// No setting has this key.
     UnknownKey,
@@ -334,9 +295,7 @@ impl SettingErrorCode {
 
 /// A value a layer holds but resolution did not use, or a problem in a file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingDiagnostic {
     /// The layer it was found in.
     pub layer: SettingScope,
@@ -346,9 +305,7 @@ pub struct SettingDiagnostic {
 
 /// One migration from an older store into the typed one (TODOS.md SET-04).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsMigration {
     /// The older store: `localStorage kentos.prefs.v1`, `~/.config/kentos-cad/ayarlar`.
     pub from: String,
@@ -364,21 +321,15 @@ pub struct SettingsMigration {
 /// migrations that filled them. Session values are never stored; project
 /// values live in the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsFile {
-    #[cfg_attr(feature = "ts", ts(type = "\"kentos.settings\""))]
     pub format: String,
-    #[cfg_attr(feature = "ts", ts(type = "1"))]
     pub version: u32,
     /// Preferences: user-scope settings.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     pub user: SettingsLayer,
     /// This device: device-scope settings, and user ones overridden here.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     pub device: SettingsLayer,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub migrations: Vec<SettingsMigration>,
@@ -399,37 +350,23 @@ impl Default for SettingsFile {
 /// A rule of the organisation's policy for one setting. No server sends
 /// policies yet: hosts take one as an explicit input (docs/adr/0023).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PolicyRule {
     /// The value everyone gets; the control is shown locked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(
-            optional,
-            type = "boolean | number | string | Record<string, string | Array<string>>"
-        )
-    )]
     pub value: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<f64>,
     /// The values that may be used (a subset of the setting's own).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Array<boolean | number | string>"))]
     pub allowed: Vec<Value>,
 }
 
 /// The organisation's policy: locks and upper bounds over every other layer.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsPolicy {
     /// Who set it, as the interface names it ("Kurum politikası").
     pub source: String,
@@ -438,10 +375,8 @@ pub struct SettingsPolicy {
 
 /// Why the effective value is not the requested one (TODOS.md SET-03).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ResolveReason {
     /// The policy fixes the value.
     OrganizationLocked,
@@ -478,11 +413,8 @@ impl ResolveReason {
 /// What a host can use for one setting (TODOS.md AA-01): values outside
 /// `allowed` fall to the nearest allowed one below (numbers) or the first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingConstraint {
-    #[cfg_attr(feature = "ts", ts(type = "Array<boolean | number | string>"))]
     pub allowed: Vec<Value>,
     pub reason: ResolveReason,
     /// The reason in Turkish, for the interface ("Bu aygıt en çok 4× destekliyor.").
@@ -491,32 +423,20 @@ pub struct SettingConstraint {
 
 /// A setting as resolved (TODOS.md SET-02, SET-03).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ResolvedSetting {
     pub key: String,
     /// What was asked for: the value of the most specific layer that holds a
     /// valid one. The preference is never lost when it cannot be used.
-    #[cfg_attr(
-        feature = "ts",
-        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
-    )]
     pub requested: Value,
     /// The layer `requested` came from (`default` when none holds one).
     pub source: SettingScope,
     /// What is used.
-    #[cfg_attr(
-        feature = "ts",
-        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
-    )]
     pub effective: Value,
     /// Why `effective` differs from `requested`; none when they are equal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<ResolveReason>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<String>,
     /// The policy fixes it: the control is shown locked.
     pub locked: bool,

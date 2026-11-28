@@ -6,8 +6,6 @@
 //! `fixtures/commands/v1/cad.scenarios.record.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::ScenariosImpact;
 
@@ -26,29 +24,23 @@ pub const RECORD_SCENARIO_STAMP: &str = "SenaryoDamgasi";
 /// Refusals, in this order: the comparison's own (their paths under `impact.`), `invalid_input` (`layerId`: no such
 /// layer, a group, or a compared layer; `at`: not finite), `stale_revision`, and the write's (a locked layer).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScenariosRecord {
     pub impact: ScenariosImpact,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.scenarios.record` v1: the table's persistent id, the stamps it keeps, its cells (the heading, a row
 /// a measure, the stamps' row) and the drawing's revision after the write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScenariosRecorded {
     pub table: String,
     pub stamp: String,

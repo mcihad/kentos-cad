@@ -19,7 +19,6 @@ pub const MAX_SPACE_FLOOR_OFFSET: f64 = 10.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpaceMethod {
     #[default]
     Net,
@@ -60,7 +59,6 @@ fn is_net(m: &SpaceMethod) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpaceScope {
     #[default]
     Project,
@@ -77,7 +75,6 @@ impl SpaceScope {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpaceColumns {
     #[default]
     Ignore,
@@ -124,7 +121,6 @@ impl SpaceColumns {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpaceBreak {
     /// The walls no longer close round its seed.
     LostEnclosure,
@@ -160,7 +156,6 @@ impl SpaceBreak {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceRing {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
@@ -175,7 +170,6 @@ pub struct SpaceRing {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacePart {
     pub outer: SpaceRing,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -190,7 +184,6 @@ pub struct SpacePart {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceFinishes {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -235,7 +228,6 @@ impl SpaceFinishes {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceFields {
     /// Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -317,7 +309,6 @@ pub struct SpaceFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

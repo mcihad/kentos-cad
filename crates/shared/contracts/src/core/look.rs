@@ -21,7 +21,6 @@ pub const MAX_LINE_TYPE_SCALE: f64 = 1000.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LookPart {
     Color,
     LineType,
@@ -60,7 +59,6 @@ impl LookPart {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ObjectLook {
     /// Its own line type; absent: its source's (the layer's, or the insert's in a block).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -106,7 +104,6 @@ pub struct ObjectLook {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Wipeout {
     /// Whether its boundary is drawn.
     pub frame: bool,

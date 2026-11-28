@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/road.superelevations.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -30,38 +28,28 @@ pub const ROAD_SUPERELEVATIONS_QUERY_VERSION: u32 = 1;
 /// transition off the alignment, a PI twice, rows not in increasing station or off the alignment),
 /// `superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignment: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_left: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_right: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SuperelevationMethod>,
     /// The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pivot: Option<SuperelevationPivot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -69,10 +57,8 @@ pub struct SuperelevationsEdit {
 /// A critical station of a curve's transition: `normalCrown`, `levelCrown`, `reverseCrown` or `full`, on the way in or
 /// out (`exit`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperCritical {
     pub pi: String,
     pub mark: String,
@@ -87,10 +73,8 @@ pub struct SuperCritical {
 /// A superelevation schedule as it is now: each side's break points (station, grade) and widening (station,
 /// metres), the critical stations; why it no longer builds when it does not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationReport {
     pub id: String,
     pub name: String,
@@ -115,20 +99,16 @@ pub struct SuperelevationReport {
     pub right_widening: Vec<[f64; 2]>,
     pub critical: Vec<SuperCritical>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
 }
 
 /// Output of `road.superelevations.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsWritten {
     /// The schedule written; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<SuperelevationReport>,
     pub superelevations: Vec<SuperelevationReport>,
     pub revision: String,
@@ -140,26 +120,20 @@ pub struct SuperelevationsWritten {
 /// Refusals: `not_a_road_project`, `unknown_superelevation`, `invalid_places` (stations without a schedule),
 /// `station_outside`, `invalid_superelevation` (the schedule no longer builds). Warnings: `superelevation_stale`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
 }
 
 /// The cross slopes (grades) and widening (metres) of both sides at a station.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -178,10 +152,8 @@ pub struct SuperAt {
 
 /// Output of `road.superelevations.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsQueried {
     pub superelevations: Vec<SuperelevationReport>,
     pub at: Vec<SuperAt>,
@@ -200,38 +172,30 @@ pub const ROAD_SUPERELEVATIONS_CHECK_VERSION: u32 = 1;
 /// (a speed, a friction or a gradient not above 0, the friction without a speed, a step not in (0, 100] m, a template
 /// without a lane on a side).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsCheck {
     pub superelevation: String,
     pub template: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub most_friction: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_relative: Option<f64>,
     /// How often a clothoid's friction is read (m); absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
 }
 
 /// A stretch's relative gradients (per one): each side's traveled way edge over the axis of rotation, the largest on it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RelativeGradient {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -246,10 +210,8 @@ pub struct RelativeGradient {
 /// A curve's side friction at the speed: where it asks for the most, the radius and the superelevation toward the
 /// centre there (per one).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CurveFrictionRow {
     pub pi: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -268,10 +230,8 @@ pub struct CurveFrictionRow {
 
 /// A limit broken: `relative` (a side's edge) or `friction` (a curve), where, the value, the limit and the words.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationFinding {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -289,10 +249,8 @@ pub struct SuperelevationFinding {
 /// Output of `road.superelevations.check` v1: the schedule, its axis of rotation, the relative gradients by stretch,
 /// each curve's friction (with a speed), the limits broken in station order and the clothoid reading's step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsChecked {
     pub superelevation: String,
     pub pivot: SuperelevationPivot,
@@ -311,10 +269,8 @@ pub const ROAD_SUPERELEVATIONS_TRANSITIONS_VERSION: u32 = 1;
 /// AASHTO's two forms of the width on a curve (docs/adr/0932 §1): `standard` `N(U + C) + (N − 1)·F_A + Z`, `simple`
 /// `N(U + C)`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WideningMethod {
     #[default]
     Standard,
@@ -333,37 +289,29 @@ pub enum WideningMethod {
 /// Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_widening` (a vehicle
 /// size, the track, clearance, speed, step or least not right, a template without a lane).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsWiden {
     pub superelevation: String,
     pub template: String,
     pub vehicle: crate::SweptVehicleDef,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub track: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub clearance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<WideningMethod>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub least: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub drive: bool,
 }
 
@@ -372,10 +320,8 @@ pub struct SuperelevationsWiden {
 /// width is enough), the suggestion (rounded; 0 below `least`), the schedule's widening on the curve now and, with
 /// `drive`, the largest off-tracking of the drive.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WideningRow {
     pub pi: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -401,7 +347,6 @@ pub struct WideningRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub current: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub driven: Option<f64>,
 }
@@ -409,10 +354,8 @@ pub struct WideningRow {
 /// Output of `road.superelevations.widen` v1: the schedule, the template's lanes and width on the tangent, the method,
 /// the curves' widenings in station order and the PIs whose radius the vehicle cannot turn steadily on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsWidened {
     pub superelevation: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -435,39 +378,30 @@ pub struct SuperelevationsWidened {
 /// `invalid_superelevation_transition` (a limit not above 0 or not under its bound, the comfort without a speed, a share
 /// not in [0, 1], a schedule written by station, a template without a lane on a side).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsTransitions {
     pub superelevation: String,
     pub template: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_relative: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/s3")))]
     pub comfort: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub shift: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub most_shift: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub on_tangent: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: Option<f64>,
 }
@@ -478,10 +412,8 @@ pub struct SuperelevationsTransitions {
 /// runoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held
 /// at full superelevation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperTransitionRow {
     pub pi: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -501,43 +433,33 @@ pub struct SuperTransitionRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub on_tangent_now: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub gradient_now: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub runoff_gradient: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_comfort: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_shift: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_most: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub runoff: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub on_tangent: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub runout: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub full: Option<f64>,
 }
@@ -547,10 +469,8 @@ pub struct SuperTransitionRow {
 /// (`full`), two curves whose transitions do not fit the tangent between them (`tangent`, its PI the pair); the value
 /// and the limit (m) and in words.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperTransitionFinding {
     pub kind: String,
     pub pi: String,
@@ -563,10 +483,8 @@ pub struct SuperTransitionFinding {
 
 /// Output of `road.superelevations.transitions` v1: each curve's transition in station order and what is found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationsTransitioned {
     pub superelevation: String,
     pub rows: Vec<SuperTransitionRow>,

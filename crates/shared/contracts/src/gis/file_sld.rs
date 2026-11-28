@@ -3,8 +3,6 @@
 //! `import_losses`), never dropped silently.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// A layer's look written as an SLD file.
 pub const FILE_EXPORT_SLD: &str = "file.export.sld";
@@ -18,10 +16,8 @@ pub const FILE_IMPORT_SLD_VERSION: u32 = 1;
 /// `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no rule SE can say),
 /// `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportSld {
     /// An absolute path ending `.sld`.
     pub path: String,
@@ -34,10 +30,8 @@ pub struct ExportSld {
 
 /// What `file.export.sld` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SldExported {
     pub path: String,
     pub layer: String,
@@ -46,7 +40,6 @@ pub struct SldExported {
     pub rules: u32,
     /// Label classes written (docs/adr/0635 §1); absent for none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub labels: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -54,7 +47,6 @@ pub struct SldExported {
     pub sha256: String,
     /// What SE could not say, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
@@ -64,34 +56,27 @@ pub struct SldExported {
 /// `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_sld`, `layer_not_found`,
 /// `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportSld {
     /// The layer's id.
     pub layer: String,
     /// An absolute path to an `.sld`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// The SLD itself, instead of a path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `file.import.sld` made the layer's look.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SldImported {
     pub layer: String,
     /// The renderer's type: `single`, `categorized`, `graduated` or `rules`.
@@ -100,22 +85,18 @@ pub struct SldImported {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
     /// The renderer as the layer now has it; null when the file gave only labels.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub renderer: serde_json::Value,
     /// The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
     /// absent when the file had no label KentOS could take.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub labels: Option<crate::labels::LayerLabels>,
     /// The single label the file gave, with `labels`' `single`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<crate::layer::LabelStyle>,
     /// Whether the layer's look changed (an undo step was written).
     pub changed: bool,
     /// What KentOS could not take, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]

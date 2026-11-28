@@ -23,7 +23,6 @@ pub const MAX_CLIPPING_CORNERS: usize = 10_000;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ClipFrame {
     /// Not drawn.
     #[default]
@@ -43,7 +42,6 @@ fn is_hide(f: &ClipFrame) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertClip {
     /// Its corners in the definition's coordinates (relative to nothing: the definition's own), at least three, the
     /// ring closing by itself; no edge crosses another.
@@ -94,14 +92,12 @@ impl InsertClip {
 
 /// A boundary as given to `cad.inserts.clip`, in the drawing's coordinates.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ClipBoundary {
     /// A rectangle along the drawing's axes, by two opposite corners.
     Rectangle {
@@ -119,23 +115,19 @@ pub enum ClipBoundary {
 
 /// What `cad.inserts.clip` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum InsertsClipOperation {
     /// The inserts clipped by `boundary` (an earlier boundary replaced); `inverted` keeps the outside.
     Set {
         boundary: ClipBoundary,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         inverted: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<ClipFrame>"))]
         frame: ClipFrame,
     },
     /// Their boundaries removed: the whole content drawn again.
@@ -154,41 +146,33 @@ pub enum InsertsClipOperation {
 /// (Remove, Frame or Invert on inserts none of which is clipped), `invalid_revision`, `revision_conflict`. Warnings:
 /// `layer_locked`, `clip_empty` (the boundary leaves an insert nothing to draw).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertsClip {
     /// The inserts' persistent ids.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     pub operation: InsertsClipOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// An insert's clipping after the command.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertClipped {
     pub uid: String,
     /// Its clipping now, absent once removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clipping: Option<InsertClip>,
 }
 
 /// Output of `cad.inserts.clip` v1 (its plan's too).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertsClipped {
     /// The inserts changed, in the drawing's order.
     pub inserts: Vec<InsertClipped>,

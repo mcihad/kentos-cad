@@ -6,8 +6,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drawing's layers as one GeoParquet.
 pub const FILE_EXPORT_PARQUET: &str = "file.export.parquet";
@@ -18,10 +16,8 @@ pub const FILE_IMPORT_PARQUET_VERSION: u32 = 1;
 
 /// How the pages are compressed.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ParquetCompression {
     #[default]
     Snappy,
@@ -43,16 +39,13 @@ fn is_true(v: &bool) -> bool {
 /// system as PROJJSON (a local project's none). Written whole or not at all. Refusals, in order: `invalid_file_path`,
 /// `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportParquet {
     /// An absolute path ending `.parquet`.
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Write over the file when it is there.
     #[serde(default)]
@@ -61,21 +54,17 @@ pub struct ExportParquet {
     pub compression: ParquetCompression,
     /// Whether the `bbox` covering column is written (GeoParquet 1.1).
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub covering: bool,
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// What `file.export.parquet` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParquetExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -89,12 +78,10 @@ pub struct ParquetExported {
     pub geometry_types: Vec<String>,
     /// The system's EPSG code, none for a local project.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The rows' box: west, south, east, north; none without a position.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub bbox: Option<[f64; 4]>,
     #[serde(default)]
@@ -104,12 +91,10 @@ pub struct ParquetExported {
     pub sha256: String,
     /// Objects not written, by kind.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// What the file could not hold, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
@@ -122,20 +107,16 @@ pub struct ParquetExported {
 /// `file.import.gpkg`'s and `duplicate_key`, `merge_key_required`, `merge_key_not_found`, `file_unwritable` (the
 /// rejects file). Warnings: `crs_undeclared`, `import_losses`, `rows_rejected`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportParquet {
     /// An absolute path to a `.parquet`.
     pub path: String,
     /// The layer the rows go onto, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The system the coordinates are in when the file names none (EPSG).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move coordinates in another system into the project's.
@@ -143,10 +124,8 @@ pub struct ImportParquet {
     pub reproject: bool,
     /// Rows meeting the objects already on the layer they go onto (docs/adr/0628 §5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }

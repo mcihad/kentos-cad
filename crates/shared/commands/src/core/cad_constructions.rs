@@ -7,8 +7,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -21,10 +19,8 @@ pub const CAD_CONSTRUCTIONS_CREATE_VERSION: u32 = 1;
 /// What a perpendicular is dropped onto (Dik in): a straight edge from `a` (its start) to `b`, taken as its whole
 /// line, or a circle, the perpendicular then running through its centre.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PerpendicularReference {
     Line {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -42,10 +38,8 @@ pub enum PerpendicularReference {
 
 /// Dik çık's foot along the line (dik ayak, from its start) and the length square to it (dik boy, right plus).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PerpendicularStation {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub along: f64,
@@ -55,31 +49,25 @@ pub struct PerpendicularStation {
 
 /// A circle, or an arc of it (`a0` to `a1`, radians counter-clockwise from east).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstructionRound {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub r: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a0: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a1: Option<f64>,
 }
 
 /// How Kesişim noktası finds its point.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "method", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Meeting {
     /// İki uzaklık: `da` from `a` and `db` from `b`; of two points the one nearest `near`, else the one right of a→b.
     Distances {
@@ -92,7 +80,6 @@ pub enum Meeting {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         db: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         near: Option<Vec2>,
     },
@@ -123,10 +110,8 @@ pub enum Meeting {
 
 /// The construction.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Construction {
     /// Paralel çizgi: the sides of an axis at `left` and `right` (miter joins), as lines or (`area`) as the corridor
     /// between them; with `withAxis` the axis too. A closed axis makes closed sides.
@@ -141,10 +126,8 @@ pub enum Construction {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         right: f64,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         with_axis: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         area: bool,
     },
     /// Dik in: from each point a line to its foot on the reference.
@@ -180,7 +163,6 @@ pub enum Construction {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Vec2,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         area: bool,
     },
     /// Menzil halkaları: `count` rings at `spacing` round `centre`, and `rays` from it to the outer one, the first due
@@ -193,7 +175,6 @@ pub enum Construction {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         rays: u32,
     },
@@ -205,15 +186,12 @@ pub enum Construction {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         b: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         parts: Option<u32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distances: Option<Vec<f64>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         ratios: Option<Vec<f64>>,
     },
@@ -239,7 +217,6 @@ pub enum Construction {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         side: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: Option<f64>,
     },
@@ -252,37 +229,28 @@ pub enum Construction {
 /// that fall together or lie on a line where they must not, a reference of no length, a centre given as the point),
 /// `no_intersection` (no tangent, no meeting), then `cad.entities.create`'s.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstructionsCreate {
     pub layer_id: String,
     pub construction: Construction,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// Each object's label (an object template's, docs/adr/0176 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Each object's symbol from the style library (an object template's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

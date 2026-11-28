@@ -5,8 +5,6 @@
 //! record a decision a command took on a reviewer's word (Detay eşleştirme's), as a record rather than an attribute.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 
@@ -27,10 +25,8 @@ pub const MAX_REVIEW_LABEL: usize = 64;
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
 )]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ReviewStatus {
     /// Açık.
     #[default]
@@ -43,10 +39,8 @@ pub enum ReviewStatus {
 
 /// Who or what wrote a note. A PDF's or an AI's note is a note only: it changes no design.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ReviewOrigin {
     #[default]
     User,
@@ -62,10 +56,8 @@ impl ReviewOrigin {
 
 /// An object a note is bound to, with the stamps of the state it was written for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReviewAnchor {
     /// The object's persistent id.
     pub uid: String,
@@ -73,7 +65,6 @@ pub struct ReviewAnchor {
     pub stamp: String,
     /// For a block insert: the stamp of its definition and every definition nested in it, then.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block_stamp: Option<String>,
 }
 
@@ -84,56 +75,40 @@ pub struct ReviewAnchor {
 /// rejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the
 /// reviewer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReviewDecision {
     pub command: String,
     pub candidate: String,
     pub source: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub accept: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
-    )]
     pub fields: std::collections::BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reject: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,
 }
 
 /// A reply to a note.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReviewReply {
     pub text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub author: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub created_at: Option<String>,
 }
 
 /// A review note.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReviewNote {
     /// Lowercase, hyphenated UUID; unique in the drawing.
     pub id: String,
@@ -144,40 +119,30 @@ pub struct ReviewNote {
     #[serde(default)]
     pub status: ReviewStatus,
     #[serde(default, skip_serializing_if = "ReviewOrigin::is_user")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<ReviewOrigin>"))]
     pub origin: ReviewOrigin,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub author: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub created_at: Option<String>,
     /// The source revision the note was written against (“B”, “2026-11-05”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// A point in the model, world coordinates.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<Vec2>,
     /// A sheet's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheet: Option<String>,
     /// A named view's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReviewAnchor>>", optional))]
     pub anchors: Vec<ReviewAnchor>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReviewReply>>", optional))]
     pub replies: Vec<ReviewReply>,
     /// Schema 215 (docs/adr/4140): the decision the note records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub decision: Option<ReviewDecision>,
 }
 

@@ -5,8 +5,6 @@
 //! strokes instead (ADR 1125). It also lists the fonts folders' files and the typefaces a person can pick.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::DrawingFont;
 #[cfg(feature = "schema")]
@@ -20,23 +18,18 @@ pub const MAX_FONT_NAME: usize = 80;
 
 /// Input of `cad.fonts.report` v1. Refusals: `empty_name`, `invalid_name`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FontsReport {
     /// Typefaces by a file or a family (`romans.shx`, `Arial`) to resolve by the same rule, as a DXF's would be.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub names: Vec<String>,
 }
 
 /// How a named typeface is drawn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FontMatch {
     /// One of KentOS's own faces (a style naming no file is its own face).
     Own,
@@ -52,16 +45,13 @@ pub enum FontMatch {
 
 /// A text style's typeface.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StyleFont {
     pub style: String,
     pub name: String,
     /// The file it named (a DXF's STYLE), when it named one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
     /// The face it is drawn in.
     pub face: DrawingFont,
@@ -69,7 +59,6 @@ pub struct StyleFont {
     /// Its SHX font, and its Big Font when it names one, are embedded in the project and read (ADR 1125): its
     /// texts are drawn in the font's own strokes, not in `face`, and it is no `font_substituted`. Absent: false.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub embedded: bool,
     /// How many texts of the drawing take the style.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -78,25 +67,20 @@ pub struct StyleFont {
 
 /// A name given, resolved.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NamedFont {
     pub name: String,
     /// KentOS's face for it; absent: the project's face takes it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub face: Option<DrawingFont>,
     pub how: FontMatch,
 }
 
 /// Output of `cad.fonts.report` v1. A style drawn in a substitute is also a `font_substituted` warning.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FontsReported {
     /// The project's face: texts without a style or a face of their own.
     pub project: DrawingFont,
@@ -117,10 +101,8 @@ pub struct FontsReported {
 
 /// Where a font file was found (docs/adr/9313, CLAUDE.md §26).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FontFolder {
     /// The install's `fonts` folder (`<kaynak>/fonts`; the checkout's `paket/fonts`).
     Program,
@@ -132,10 +114,8 @@ pub enum FontFolder {
 
 /// What KentOS does with a face of a fonts folder (docs/adr/9313).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FontRole {
     /// One of KentOS's own drawing faces: the program draws its own copy, the same bytes.
     Own,
@@ -156,10 +136,8 @@ pub enum FontRole {
 
 /// A face of a font file in a fonts folder (docs/adr/9313).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FontFile {
     /// The file within its folder (`cizim/Barlow-400.ttf`).
     pub file: String,
@@ -175,12 +153,10 @@ pub struct FontFile {
     pub role: FontRole,
     /// The typeface texts take it as; absent for a fallback face and a file not used.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub face: Option<DrawingFont>,
     /// Whether it has every letter of the Turkish alphabet (ÇçĞğİıÖöŞşÜü).
     pub turkish: bool,
     /// Why it is not used, or how it is (`değişken yazı tipi: varsayılan kalınlığıyla çizilir`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }

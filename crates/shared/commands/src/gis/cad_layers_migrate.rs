@@ -7,8 +7,6 @@
 //! (docs/adr/9114 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::CreateTarget;
 
@@ -38,42 +36,33 @@ pub const CAD_LAYERS_MIGRATE_VERSION: u32 = 1;
 /// or anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their
 /// count and the first's kind are said).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersMigrate {
     /// The drawing layer (its id).
     pub layer: String,
     pub target: CreateTarget,
     /// `gpkg`: the GeoPackage file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub address: Option<String>,
     /// `postgis`: the schema; none: `public`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub schema: Option<String>,
     /// The table's name; none: the layer's name made a table name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// A table there already: `refuse` (absent), `replaceLayer` or `append`; `overwriteFile` is refused.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub existing: Option<crate::ExportExisting>,
 }
 
 /// What `cad.layers.migrate` did: the layer, reading its table now, the table, where, how many rows.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersMigrated {
     /// The layer, reading its table now: the id it had (docs/adr/9321); empty in a plan.
     pub layer: String,
@@ -86,22 +75,18 @@ pub struct LayersMigrated {
     pub written: u64,
     /// OGC's name of the geometry type written; none for a table of records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     /// The layer's texts' table beside it (docs/adr/9114 §2); none when it had no texts, or only texts (then the
     /// table above is theirs).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub texts: Option<MigratedTexts>,
     pub revision: String,
 }
 
 /// A migrated layer's texts: the data layer drawing them, their table, how many rows.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MigratedTexts {
     /// The data layer (its id); empty in a plan.
     pub layer: String,

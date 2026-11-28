@@ -6,8 +6,6 @@
 //! host's: the command sees the project's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -17,10 +15,8 @@ pub const CAD_LIBRARY_EDIT_VERSION: u32 = 1;
 
 /// What `cad.library.edit` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LibraryOperation {
     /// `item` added: its id one the library does not have.
     Create,
@@ -44,10 +40,8 @@ pub enum LibraryOperation {
 
 /// What an import does with an id the library has.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LibraryConflict {
     /// The library's kept.
     #[default]
@@ -66,67 +60,52 @@ pub enum LibraryConflict {
 /// `library_item_in_use` (remove), `not_a_symbol` (assign of a drawing or a template), then assign's
 /// `cad.entities.set` and `cad.layers.renderer` refusals.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LibraryEdit {
     pub operation: LibraryOperation,
     /// `create`: the item as the library keeps it (`id`, `kind`, `name`, `path`, the kind's fields).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub item: Option<serde_json::Value>,
     /// The item named.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     /// `update`: the fields to set; null takes one away.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub patch: Option<serde_json::Value>,
     /// `duplicate`: the copy's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub new_id: Option<String>,
     /// `rename`, `duplicate`: the name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// `move`, `duplicate`: the category path from its top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<Vec<String>>,
     /// `import`: a `.kstil` file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kstil: Option<String>,
     #[serde(default)]
     pub conflict: LibraryConflict,
     /// `export`: the items (absent: every one of the project's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ids: Option<Vec<String>>,
     /// `assign`: the objects, by persistent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     /// `assign`: the layer whose single symbol it becomes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.library.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LibraryEdited {
     /// Whether anything was written.
     pub changed: bool,
@@ -139,12 +118,10 @@ pub struct LibraryEdited {
     pub removed: Vec<String>,
     /// `export`: the `.kstil` file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kstil: Option<String>,
     /// `assign`: the objects given the symbol, by persistent id, and the layer.
     pub objects: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The document's revision afterwards (plan: the one it was made against), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

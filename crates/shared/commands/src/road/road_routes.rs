@@ -6,8 +6,6 @@
 //! Python SDK pass the shared cases in `fixtures/commands/v1/road.routes.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 #[cfg(feature = "schema")]
@@ -22,10 +20,8 @@ pub const ROAD_ROUTES_DRAW_VERSION: u32 = 1;
 /// around the places, the steepest step (a grade, 0.08 is 8 %), the cost of a metre risen or fallen (in metres of length), the
 /// layers whose areas are avoided and the plan tolerance the line is simplified within (none: every node).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RouteAsk {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -41,10 +37,8 @@ pub struct RouteAsk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub climb: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub avoid: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
 }
@@ -56,10 +50,8 @@ pub struct RouteAsk {
 /// building), `route_blocked` (the start or the end off the terrain or in an area to avoid), `route_unreached` (no path
 /// within the grade).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoutesFind {
     #[serde(flatten)]
     pub ask: RouteAsk,
@@ -67,10 +59,8 @@ pub struct RoutesFind {
 
 /// A place of a route: plan and the terrain's height there (rounded to the micrometre).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoutePoint {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub x: f64,
@@ -84,10 +74,8 @@ pub struct RoutePoint {
 /// between, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest
 /// stretch (a grade, between the points kept), its cost, the grid's nodes and those settled.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RouteFound {
     pub points: Vec<RoutePoint>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -110,26 +98,21 @@ pub struct RouteFound {
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `road.routes.find`'s, `layer_not_found`,
 /// `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoutesDraw {
     #[serde(flatten)]
     pub ask: RouteAsk,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `road.routes.draw` v1, and its plan: the route and the object written (in the plan, none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoutesDrawn {
     pub route: RouteFound,
     pub uids: Vec<String>,

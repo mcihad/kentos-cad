@@ -136,9 +136,7 @@ impl Viewport {
 
 /// A paper-space pan and anchor-preserving zoom; model geometry is never scaled.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NavigateViewport {
     pub id: String,
@@ -150,7 +148,6 @@ pub struct NavigateViewport {
     pub factor: f64,
     /// Absolute paper µm; absent: the content centre.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
     pub anchor: Option<[f64; 2]>,
 }

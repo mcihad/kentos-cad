@@ -6,8 +6,6 @@
 //! points, the UCS only says how the user types and sees them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -31,10 +29,8 @@ pub const UCS_SAME: f64 = 1.0e-6;
 /// [0, 2π). Its y axis is square to x, counter-clockwise; it neither scales
 /// nor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Ucs {
     /// Its origin in the world.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -80,10 +76,8 @@ pub fn normal_angle(a: f64) -> f64 {
 
 /// A named UCS of the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NamedUcs {
     /// Trimmed, 1–64 characters, no control characters; unique.
     pub name: String,
@@ -173,14 +167,12 @@ pub fn sanitized_named_ucs(named: Vec<NamedUcs>) -> Vec<NamedUcs> {
 
 /// What the UCS becomes (docs/adr/0261 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UcsTo {
     /// Dünya: the world's axes.
     World,
@@ -231,15 +223,12 @@ pub enum UcsTo {
 /// `entity_not_found`, `object_without_axis`, `unknown_ucs`,
 /// `too_many_ucs`. Warning: `ucs_replaced`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UcsSet {
     pub to: UcsTo,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -247,26 +236,21 @@ pub struct UcsSet {
 /// The current UCS as the command says it: its frame and, when a named one
 /// is the same frame, that name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UcsNow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
 }
 
 /// Output of `cad.ucs.set` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UcsChanged {
     /// The current UCS afterwards.
     pub ucs: UcsNow,

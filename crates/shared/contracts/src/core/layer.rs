@@ -8,7 +8,6 @@ use ts_rs::TS;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LineType {
     Continuous,
     Dashed,
@@ -52,10 +51,8 @@ impl LineType {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PointSymbol {
     Ring,
     Cross,
@@ -63,9 +60,7 @@ pub enum PointSymbol {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointStyle {
     pub symbol: PointSymbol,
     /// Diameter in CSS px.
@@ -74,10 +69,8 @@ pub struct PointStyle {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelPlacement {
     Center,
     Corner,
@@ -86,9 +79,7 @@ pub enum LabelPlacement {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LabelInk {
     #[serde(rename = "fg")]
     Fg,
@@ -100,149 +91,114 @@ pub enum LabelInk {
 
 /// How entity labels on a layer are drawn; sizes in CSS px.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelStyle {
     pub placement: LabelPlacement,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub size: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub grow: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub max_size: Option<f64>,
     /// 400, 500 or 600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weight: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub min_feature_px: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
     pub min_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
     pub max_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ink: Option<LabelInk>,
     /// The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     /// The letters' colour (hex or a theme name): instead of `ink`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Leaning letters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub italic: Option<bool>,
     /// How a label's lines line up; absent, centred.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub align: Option<crate::labels::LabelAlign>,
     /// Where a point's label goes; absent, by `placement`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub point: Option<crate::labels::PointLabelMode>,
     /// Where a line's label goes; absent, by `placement`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line: Option<crate::labels::LineLabelMode>,
     /// Where an area's label goes; absent, by `placement`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<crate::labels::AreaLabelMode>,
     /// A line label's side of its line (on an outline, `above` inside).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub position: Option<crate::labels::LabelPosition>,
     /// CSS px between a label and its object; absent, 2.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub distance: Option<f64>,
     /// CSS px between a line's repeated labels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub repeat: Option<f64>,
     /// Degrees two neighbouring letters of a curved label may turn; absent, 25.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub max_angle: Option<f64>,
     /// An outline's label (perimeter, boundary) letter by letter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub curved: Option<bool>,
     /// Lines meeting end to end with the same text labelled once.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge_lines: Option<bool>,
     /// An area's label only where it fits inside.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub inside: Option<bool>,
     /// An area's label that fits nowhere inside, outside with a callout.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub outside: Option<bool>,
     /// The halo round the letters; absent, 1.5 px of the drawing area's colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub halo: Option<crate::labels::LabelHalo>,
     /// A shape behind the label.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub background: Option<crate::labels::LabelBackground>,
     /// The label's shadow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub shadow: Option<crate::labels::LabelShadow>,
     /// The line to the object from a label placed away from it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub callout: Option<crate::labels::LabelCallout>,
     /// Cutting the label into lines.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stack: Option<crate::labels::LabelStack>,
     /// Shortening its words.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub abbreviate: Option<crate::labels::LabelAbbreviate>,
     /// The smallest size a label is made when it does not fit, a factor 0.5–1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub shrink: Option<f64>,
     /// 0 to 10; absent, 5: higher first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub priority: Option<u8>,
     /// Whether it may cover another label; absent, never.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overlap: Option<crate::labels::LabelOverlap>,
     /// CSS px within which the same text is labelled once.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub duplicates: Option<f64>,
 }
@@ -326,10 +282,8 @@ pub fn default_label(kind: &str) -> Option<LabelStyle> {
 
 /// A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerStyle {
     /// Hex colour or a theme token (fg, fg-dim, ink, paper).
     pub color: String,
@@ -337,30 +291,23 @@ pub struct LayerStyle {
     pub line_type: LineType,
     /// A project line type by its name (docs/adr/0313 §1; `pattern` is a hatch's); absent: `line_type`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
     /// Plot line weight in mm.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub point: Option<PointStyle>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<LabelStyle>,
     /// How the layer is labelled (docs/adr/0212 §2): rule-based classes,
     /// none, its objects as obstacles; absent, by `label` (one label).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub labels: Option<crate::labels::LayerLabels>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pick_interior: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub renderer: Option<serde_json::Value>,
 }
 
@@ -388,10 +335,8 @@ impl LayerStyle {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerNodeType {
     Group,
     Layer,
@@ -401,10 +346,8 @@ pub enum LayerNodeType {
 /// `edit`, its rows written by the mobile app (only a CBS project's data layer takes it); `hide`, not on the phone. A
 /// group's covers what it holds. Only `edit` and `hide` are written.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerMobile {
     Show,
     Edit,
@@ -434,10 +377,8 @@ pub fn layer_on_mobile(nodes: &[LayerNode], id: &str) -> Option<LayerMobile> {
 /// any kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another
 /// kind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerGeometry {
     Point,
     Line,
@@ -531,9 +472,7 @@ pub fn kind_words(kind: &str) -> &'static str {
 
 /// A node of the layer tree: a group or a layer.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerNode {
     pub id: String,
     pub name: String,
@@ -547,90 +486,68 @@ pub struct LayerNode {
     /// A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
     /// absent, the general kinds. Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub snap: Option<LayerSnap>,
     /// A layer's fields (docs/adr/0199 §1): the schema of its objects'
     /// attributes, in the order the table and the form show them; empty, no
     /// schema (and nothing written). Only a layer has them, never a group.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
-    )]
     pub fields: Vec<crate::fields::LayerField>,
     /// A layer drawn from a map service (docs/adr/0208 §2): it holds no
     /// objects. Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub service: Option<crate::service::ServiceLayer>,
     /// A data layer (docs/adr/9101 §2): drawn from a table of a GeoPackage or a database as it is now, its rows asked
     /// of the source, never copied into the drawing; it holds no objects. Only a layer has it, never a group, and
     /// never with a service or a feed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub data: Option<crate::data_layer::DataLayer>,
     /// Where the layer's objects were taken from, to take them again
     /// (docs/adr/0208 §10). Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub feed: Option<crate::service::FeatureFeed>,
     /// A temporal layer's time setting (docs/adr/0210 §2): which attributes
     /// hold its objects' start and end. Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::LayerTime>,
     /// A group made a scenario (docs/adr/0210 §9). Only a group has it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scenario: Option<crate::temporal::ScenarioInfo>,
     /// A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replaces: Option<String>,
     /// The layer's filter (docs/adr/0211 §2): only the objects that pass it
     /// are shown, picked and given to its tools. Only a layer has it, never a
     /// group or a layer drawn from a service.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<crate::layer_filter::LayerFilter>,
     /// The addresses and files its objects open (docs/adr/0225 §4). Only a
     /// layer holding objects has them, never a group or a layer drawn from a
     /// service.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::layer_info::LayerAction>>", optional)
-    )]
     pub actions: Vec<crate::layer_info::LayerAction>,
     /// What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
     /// the default card. Only on a layer holding objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub card: Option<crate::layer_info::InfoCard>,
     /// How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
     /// §4): opacity, blending mode, the mask it cuts into other layers;
     /// absent, opaque and normal. Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub compose: Option<crate::layer_compose::LayerCompose>,
     /// The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
     #[serde(rename = "sourceCrs", default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, rename = "sourceCrs"))]
     pub source_crs: Option<crate::layer_crs::LayerSourceCrs>,
     /// What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer
     /// has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<LayerGeometry>,
     /// Yazdır: absent, it is printed; `false`, it is drawn on screen but not
     /// on a sheet, its PDF or a print (DXF's 290;
     /// docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
     /// On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mobile: Option<LayerMobile>,
     /// Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,
     /// thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
@@ -638,57 +555,33 @@ pub struct LayerNode {
     /// active layer is never frozen. A group's covers what it holds. Only
     /// `true` is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub frozen: Option<bool>,
     /// Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
     /// conditions; empty, plainly. Only a layer holding objects has them.
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "tableStyles")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(
-            as = "Option<Vec<crate::table_styles::TableStyle>>",
-            optional,
-            rename = "tableStyles"
-        )
-    )]
     pub table_styles: Vec<crate::table_styles::TableStyle>,
     /// Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
     /// Only a layer holding objects has them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub subtypes: Option<crate::subtypes::LayerSubtypes>,
     /// Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
     /// layer holding objects has them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::contingents::FieldGroup>>", optional)
-    )]
     pub contingents: Vec<crate::contingents::FieldGroup>,
     /// Kayıt kuralları (docs/adr/0438 §1): the constraints every write of the layer's records keeps.
     /// Only a layer holding objects has them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::layer_rules::LayerRule>>", optional)
-    )]
     pub rules: Vec<crate::layer_rules::LayerRule>,
     /// Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
     /// holding objects has them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::layer_indexes::LayerIndex>>", optional)
-    )]
     pub indexes: Vec<crate::layer_indexes::LayerIndex>,
     /// The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
     /// has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dataset: Option<crate::dataset::DatasetInfo>,
     /// What a processing tool made the layer from (docs/adr/0633 §2). Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub derivation: Option<crate::dataset::LayerDerivation>,
     /// Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
     /// classes hold. Only a layer has it, never a group; only `true` is written.
@@ -697,22 +590,18 @@ pub struct LayerNode {
         skip_serializing_if = "Option::is_none",
         rename = "classCounts"
     )]
-    #[cfg_attr(feature = "ts", ts(optional, rename = "classCounts"))]
     pub class_counts: Option<bool>,
     /// Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
     /// objects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,
     /// never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub origin: Option<LayerOrigin>,
 }
 
 /// Where a layer's objects were copied from (docs/adr/9192): what the import read, and when.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerOrigin {
     /// The format read, as the data drivers name it: `gpkg`, `shp`, `geojson`, `csv`, `kml`, `fgb`, `gml`, `parquet`,
     /// `postgis`.
@@ -721,11 +610,9 @@ pub struct LayerOrigin {
     pub address: String,
     /// The table or layer read; none for a file of one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// The file's SHA-256 when it was read, 64 lowercase hexadecimal digits; none for a database.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sha256: Option<String>,
     /// When it was read, UTC (`2026-11-23T09:30:00Z`).
     pub at: String,
@@ -818,17 +705,13 @@ pub const LAYER_SNAP_KINDS: [&str; 12] = [
 /// far as the general kinds take them). Exactly one of the two, and a list
 /// that is not empty: the readers refuse anything else ([`LayerSnap::problem`]).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerSnap {
     /// No snapping to the layer's objects; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub off: bool,
     /// Only these kinds ([`LAYER_SNAP_KINDS`]' names).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kinds: Option<Vec<String>>,
 }
 
@@ -869,10 +752,8 @@ impl LayerSnap {
 /// their locks and the layers' styles. The project keeps them
 /// (`ProjectSettings::layer_states`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerState {
     /// One of its kind among the project's states.
     pub id: String,
@@ -885,36 +766,29 @@ pub struct LayerState {
 
 /// A node of a layer state: a layer's or a group's id and what was kept of it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerStateNode {
     /// The node's id; a node the tree no longer has is passed over.
     pub node: String,
     pub visible: bool,
     /// Its own lock, when the state keeps locks.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locked: Option<bool>,
     /// A layer's style, when the state keeps styles; a group has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<LayerStyle>,
     /// Its own freeze and printing (docs/adr/0311 §3): every state saved
     /// since schema 55 keeps both; absent in an older state, applying it
     /// leaves them as they are.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub frozen: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
     /// The node's names from the top of the tree (“Kadastro / Parsel”), only
     /// in a file of exported states (docs/adr/0311 §3): importing finds the
     /// node by it in another drawing. A project's own states never keep it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
 }
 

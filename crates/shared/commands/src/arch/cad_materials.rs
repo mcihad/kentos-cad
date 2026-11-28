@@ -5,8 +5,6 @@
 //! and the project's written out to one (docs/adr/0791).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -19,20 +17,15 @@ pub const CAD_MATERIALS_EDIT_VERSION: u32 = 1;
 
 /// A material's fields to change; absent ones stay. A nullable field's null takes it away.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialChange {
     /// Its new name (Yeniden adlandır); its id stays.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<MaterialCategory>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub quantity: Option<MaterialQuantity>,
     /// Its cut's hatch; null: none.
     #[serde(
@@ -40,7 +33,6 @@ pub struct MaterialChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<ComponentHatch>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<ComponentHatch>"))]
     pub hatch: Option<Option<ComponentHatch>>,
     /// Its cut pen; null: the wall's.
@@ -49,7 +41,6 @@ pub struct MaterialChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<ComponentEdge>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<ComponentEdge>"))]
     pub cut: Option<Option<ComponentEdge>>,
 }
@@ -62,14 +53,12 @@ impl MaterialChange {
 
 /// What a material is bound to: a wall style's component, a wall's component, a slab.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialTarget {
     /// A project wall style's component (from its left face, 0 first); the walls of the style follow it.
     WallStyle {
@@ -93,10 +82,8 @@ pub enum MaterialTarget {
 
 /// What a library's material does when the project has one of its id, or another of its name (docs/adr/0791).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialConflict {
     /// Refused (`material_exists`): nothing is taken.
     #[default]
@@ -110,21 +97,18 @@ pub enum MaterialConflict {
 
 /// What `cad.materials.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialsOperation {
     /// Yeni malzeme: a material `name` (its id `id`, else from its name), its other fields from `change` (`name`
     /// there is refused: the name is `name`); category Diğer and volume when not given.
     Define {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         #[serde(default)]
         change: MaterialChange,
@@ -139,7 +123,6 @@ pub enum MaterialsOperation {
     /// Bağla: the targets bound to the material (its id or name; absent or null: left, each keeping its text and look).
     Assign {
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional))]
         material: Option<String>,
         targets: Vec<MaterialTarget>,
     },
@@ -152,13 +135,10 @@ pub enum MaterialsOperation {
     /// project; `onConflict` for one the project has.
     Import {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         library: Option<MaterialsFile>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         materials: Vec<String>,
         #[serde(default)]
         on_conflict: MaterialConflict,
@@ -168,7 +148,6 @@ pub enum MaterialsOperation {
     Export {
         library: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         materials: Vec<String>,
     },
 }
@@ -181,14 +160,11 @@ pub enum MaterialsOperation {
 /// `layer_locked`, `invalid_library`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`,
 /// `material_adopt_left`, `material_kept`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialsEdit {
     pub operation: MaterialsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -196,10 +172,8 @@ pub struct MaterialsEdit {
 /// What a material's write takes with it: the wall styles (ids) and the walls and slabs (ids) rewritten, those left on
 /// locked layers, the texts not taken in.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialReport {
     pub styles: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -212,35 +186,28 @@ pub struct MaterialReport {
     pub left: Vec<String>,
     /// Import: the library's materials taken in as new (their ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub taken: Vec<String>,
     /// Import: the project's materials that became the library's (`replace`; their ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub replaced: Vec<String>,
     /// Import: the library's materials not taken, the project's kept (`keep`; the library's ids).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub kept: Vec<String>,
 }
 
 /// Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialsEdited {
     /// The project's materials after it.
     pub materials: Vec<ArchMaterial>,
     /// The material made, changed, removed or bound (its id); absent for Adopt and for leaving.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     pub report: MaterialReport,
     /// The office library (Export): the file's content.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<MaterialsFile>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

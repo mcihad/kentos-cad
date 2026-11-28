@@ -109,7 +109,7 @@ Kullanıcının sorunu, profesyonel araçların karşılığı, KentOS'ta bugün
 - **Modül kaydı:** crate'in `src/lib.rs`'ine `pub mod …; pub use …::*;` ekle.
 - **Proje ayarına yeni alan:** `ProjectSettings` struct'ı açıkça yazan her yere alanı ekle:
   `grep -rn --include='*.rs' "connections: Vec::new()," crates apps`.
-- **TypeScript türleri:** `cargo test -p kentos-contracts` ve komut türleri için `-p kentos-commands` çalıştır; ts-rs çıktıyı `apps/web/src/contracts/generated/`'a yazar. Bu
+- **TypeScript türleri:** yalnız bulut portalı için üretilir (ADR 9402). Portalın kullanacağı tür `derive(TS)` alır; portalın adını andığı tür ayrıca `ts(export)` alır (`apps/portal/src/api/types.ts`). `cargo test -p kentos-contracts` çıktıyı `apps/portal/src/api/generated/`'a yazar. Bu
   klasör elle düzenlenmez.
 - **Komut kataloğu:** `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-commands catalog`. Yeni komut için `catalog.rs`'e bir
   `CommandDescriptor` ve örnekler ekle; katalog testindeki girdi ve çıktı tür eşlemesine de ekle.

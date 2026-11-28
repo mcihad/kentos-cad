@@ -19,10 +19,8 @@ pub const MAX_ELEMENT_TYPE_NAME: usize = 100;
 
 /// What an element type is for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ElementTypeKind {
     Column,
     Beam,
@@ -246,10 +244,8 @@ impl ElementTypeKind {
 
 /// A project's element type (docs/adr/8106 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ElementType {
     /// Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-`.
     pub id: String,
@@ -263,7 +259,6 @@ pub struct ElementType {
     /// Its values: its kind's type fields by their names on the wire (`width`, `material` …), each as the element
     /// writes it; a field it does not give is that field's absence (a column's rectangle, a slab's lone structure).
     #[serde(default, skip_serializing_if = "Map::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     pub values: Map<String, Value>,
 }
 
@@ -273,7 +268,6 @@ pub struct ElementType {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TypeLink {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "count")))]

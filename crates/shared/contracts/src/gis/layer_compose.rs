@@ -8,8 +8,6 @@
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::layer::{LayerNode, LayerNodeType};
 
@@ -21,10 +19,8 @@ pub const MAX_MASK_TARGETS: usize = 64;
 /// How a layer's picture meets what is under it (docs/adr/0226 §4: the W3C's
 /// separable blending modes, and addition).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlendMode {
     Normal,
     Multiply,
@@ -113,18 +109,14 @@ fn is_false(b: &bool) -> bool {
 
 /// The mask a layer's labels and markers cut into other layers (docs/adr/0226 §3).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerMask {
     /// Its placed labels' boxes.
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub labels: bool,
     /// Its markers' boxes.
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub markers: bool,
     /// How far the shapes grow, paper mm (0–10); their corners round as far.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
@@ -166,22 +158,17 @@ impl LayerMask {
 /// How a layer is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
 /// §4); absent, as it always was: opaque, normal, no mask.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerCompose {
     /// 0–1; absent, 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// Absent, normal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub blend: Option<BlendMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mask: Option<LayerMask>,
 }
 

@@ -12,8 +12,6 @@
 //! kind of object with them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const CAD_ENTITIES_ARRAY_VERSION: u32 = 1;
 /// where they are. Coordinates are x east (Y), y north (X), in the
 /// project's units (m), float64.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArrayLayout {
     /// Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`
     /// columns and `i` rows from the originals moves `j·dx` east and `i·dy`
@@ -97,7 +93,6 @@ pub enum ArrayLayout {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         dy: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         fit: bool,
     },
     /// Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
@@ -116,7 +111,6 @@ pub enum ArrayLayout {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         spacing: Option<f64>,
         align: bool,
@@ -165,10 +159,8 @@ pub enum ArrayLayout {
 /// changes every item. A path array then follows its path. Refused with
 /// `block_refused` when the objects cannot be a block.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesArray {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -177,23 +169,19 @@ pub struct EntitiesArray {
     pub layout: ArrayLayout,
     /// One associative array of a block's inserts instead of independent copies.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub associative: bool,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.array` v1: what was made and what stayed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesArrayed {
     /// The copies' persistent ids, place after place, each place in the order
     /// of their originals in the input.
@@ -202,7 +190,6 @@ pub struct EntitiesArrayed {
     pub locked: Vec<String>,
     /// An associative array's id; `created` are then its items' inserts, its source's first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub array: Option<crate::identity::ArrayId>,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -213,10 +200,8 @@ pub struct EntitiesArrayed {
 
 /// What `cad.entities.array` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesArrayPlan {
     /// The ids of the objects execute would copy, in the input's order.
     pub sources: Vec<String>,

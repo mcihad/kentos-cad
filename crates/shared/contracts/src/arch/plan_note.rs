@@ -2,8 +2,6 @@
 //! regulations' own where PAİY lets a plan say more, and the plan's own limits PAİY points to.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
 /// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
@@ -12,10 +10,8 @@ use ts_rs::TS;
 /// own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
 /// docs/adr/8098).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PlanNoteKey {
     /// Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.
     GroundStoreyHeight,
@@ -150,10 +146,8 @@ pub const PLAN_STOREYS_MAX: f64 = 200.0;
 /// it stands (“UİP 12.3.2019, plan notu 7”), as the architect reads it from the plan: KentOS does not read a note's
 /// words into a number.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanNote {
     pub key: PlanNoteKey,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

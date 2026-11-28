@@ -8,8 +8,6 @@
 //! cases in `fixtures/commands/v1/road.profiles.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::ProfilePvi;
 #[cfg(feature = "schema")]
@@ -33,32 +31,25 @@ pub const ROAD_PROFILES_QUERY_VERSION: u32 = 1;
 /// the alignment), `profile_curves_overlap` (two curves, or a curve and an end, pass each other; the message names both
 /// PVIs and by how much), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesCreate {
     pub name: String,
     pub alignment: String,
     pub pvis: Vec<ProfilePvi>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `road.profiles.edit` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfilesEditOperation {
     /// The given fields (`name`, `pvis`, `surface`; an empty `surface` clears it) replace the profile's.
     Set,
@@ -74,29 +65,22 @@ pub enum ProfilesEditOperation {
 /// (set with nothing to set, or the definition and the PVIs as `road.profiles.create`), `profile_curves_overlap`,
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesEdit {
     pub profile: String,
     pub operation: ProfilesEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pvis: Option<Vec<ProfilePvi>>,
     /// The surface's id or name; empty: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// What the road crosses (docs/adr/0946); an empty list takes them off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crossings: Option<Vec<crate::ProfileCrossingDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -111,33 +95,25 @@ pub struct ProfilesEdit {
 /// builds. Warnings: `profile_stale` (its alignment changed since), `profile_surface_gone` (its surface is not in the
 /// project or makes no surface: no black elevation).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub every: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub terrain: bool,
 }
 
 /// A grade between two PVIs.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileGradeRow {
     /// The PVIs it runs between.
     pub between: [String; 2],
@@ -151,10 +127,8 @@ pub struct ProfileGradeRow {
 
 /// A vertical curve on a PVI.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileCurveRow {
     pub pvi: String,
     /// `parabola`, `asymmetric` or `circle`.
@@ -173,7 +147,6 @@ pub struct ProfileCurveRow {
     pub length: f64,
     /// A circle's radius.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
     /// A = 100·(gOut − gIn), percent.
@@ -185,24 +158,20 @@ pub struct ProfileCurveRow {
     /// Its least radius H as the standards that write a radius take it (docs/adr/0961): a parabola's 1/|z''|
     /// (100·K when symmetric; an asymmetric one's sharper half), a circle's own; absent where the grade does not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub curve_radius: Option<f64>,
     /// A crest (the grade falls) or a sag.
     pub crest: bool,
     /// Its highest (crest) or lowest (sag) point when it falls inside: station and elevation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub extreme: Option<[f64; 2]>,
 }
 
 /// A profile as it builds now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileReport {
     pub id: String,
     pub name: String,
@@ -218,7 +187,6 @@ pub struct ProfileReport {
     /// The alignment changed since.
     pub stale: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// Its first and last PVI's stations and kms.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -237,10 +205,8 @@ pub struct ProfileReport {
 
 /// A profile in the project's list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProfileListed {
     pub id: String,
     pub name: String,
@@ -252,14 +218,11 @@ pub struct RoadProfileListed {
 
 /// Output of `road.profiles.create` and `.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesWritten {
     /// The profile written; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<ProfileReport>,
     pub profiles: Vec<RoadProfileListed>,
     pub revision: String,
@@ -267,10 +230,8 @@ pub struct ProfilesWritten {
 
 /// The elevations at a station of the alignment.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -280,39 +241,32 @@ pub struct ProfileAt {
     pub km_text: String,
     /// The design (red) elevation and grade; absent outside the profile's first and last PVI.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub red: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: Option<f64>,
     /// The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
     /// 0 on a straight grade; absent outside the profile.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
     pub rate: Option<f64>,
     /// The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its
     /// vertex; absent on a straight grade and outside the profile.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
     /// The red line's length in space from the first PVI to here (docs/adr/0968); absent outside the profile. Two
     /// rows' difference is the length in space between their kms.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub along3d: Option<f64>,
     /// The terrain (black) elevation; absent off the surface or without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub black: Option<f64>,
     /// Red − black: fill positive, cut negative; absent without both.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub difference: Option<f64>,
 }
@@ -320,16 +274,13 @@ pub struct ProfileAt {
 /// A point of the terrain profile: where the alignment crosses a triangle's edge, an element's end, the alignment's
 /// ends.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileGroundRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     /// Absent off the surface.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     /// The stretch from the point before to this one is off the surface.
@@ -340,10 +291,8 @@ pub struct ProfileGroundRow {
 
 /// Output of `road.profiles.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesQueried {
     /// Every profile's report, or the one asked's.
     pub profiles: Vec<ProfileReport>,
@@ -372,55 +321,44 @@ pub const ROAD_PROFILES_DRAW_VERSION: u32 = 1;
 /// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
 /// the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesDraw {
     pub profile: String,
     pub layer_id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub every: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub datum: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub exaggeration: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     /// The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
     /// Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
     /// Geometri, Düşey Geometri and Dever.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bands: Option<ProfileBands>,
     /// The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
     /// absent: the band says none was given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     /// The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
     /// profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
     /// SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corridor: Option<String>,
     /// The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
     /// sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
@@ -428,7 +366,6 @@ pub struct ProfilesDraw {
     /// its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
     /// datum, the frame as high as the lines.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub span: Option<f64>,
     /// The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
@@ -436,20 +373,16 @@ pub struct ProfilesDraw {
     /// 2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
     /// waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub haul: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileSplit {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -463,10 +396,8 @@ pub struct ProfileSplit {
 
 /// Which bands a profile drawing has under its frame (docs/adr/0980).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileBands {
     /// Km, Siyah kot, Kırmızı kot, Fark, Eğim.
     Kentos,
@@ -478,10 +409,8 @@ pub enum ProfileBands {
 /// elevations, the exaggeration and the elevation grid's step, the bands' columns in station order, the objects written
 /// (none in a plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesDrawn {
     pub profile: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -497,7 +426,6 @@ pub struct ProfilesDrawn {
     pub columns: Vec<ProfileAt>,
     /// With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileSplit>>", optional))]
     pub splits: Vec<ProfileSplit>,
     pub uids: Vec<String>,
     pub revision: String,
@@ -508,10 +436,8 @@ pub const ROAD_PROFILES_SIGHT_VERSION: u32 = 1;
 
 /// Which way a sight distance is read.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SightSide {
     Forward,
     Backward,
@@ -531,10 +457,8 @@ pub enum SightSide {
 /// (a point on the profile grazes every line over a crest), reach, step or required not above 0, a range off the profile or backwards, more than 100 000 stations), and
 /// the geometry's when the profile no longer builds. Warnings: `sight_short`, `profile_stale`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesSight {
     pub profile: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -546,18 +470,14 @@ pub struct ProfilesSight {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     #[serde(default, skip_serializing_if = "is_both")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SightSide>", optional))]
     pub side: SightSide,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub required: Option<f64>,
 }
@@ -568,10 +488,8 @@ fn is_both(s: &SightSide) -> bool {
 
 /// Why a sight stops: the profile hides the object, the reach asked was seen, or the profile ends.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SightUntil {
     Hidden,
     Reach,
@@ -581,16 +499,13 @@ pub enum SightUntil {
 /// One direction's sight from a station: the distance seen, why it stops and, when hidden, the station where the
 /// profile blocks the line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SightReach {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub distance: f64,
     pub until: SightUntil,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub blocked: Option<f64>,
 }
@@ -598,30 +513,24 @@ pub struct SightReach {
 /// A station's sight: the profile's elevation there, ahead and behind (none at the profile's end that way, or not
 /// asked).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SightRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub elevation: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub forward: Option<SightReach>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub backward: Option<SightReach>,
 }
 
 /// A stretch of stations, one after another, where the profile hides the object nearer than required one way: its first and last station and the
 /// shortest distance in it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SightShort {
     pub side: SightSide,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -634,10 +543,8 @@ pub struct SightShort {
 
 /// The shortest sight one way where the profile hides the object: where and how far.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SightLeast {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -649,10 +556,8 @@ pub struct SightLeast {
 /// resolution (m), each station's sight, the shortest each way where the profile hides the object (none where it hides it
 /// nowhere), and with `required` the stretches seen shorter.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesSightRead {
     pub profile: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -667,10 +572,8 @@ pub struct ProfilesSightRead {
     pub resolution: f64,
     pub rows: Vec<SightRow>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub least_forward: Option<SightLeast>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub least_backward: Option<SightLeast>,
     pub short: Vec<SightShort>,
 }
@@ -688,31 +591,24 @@ pub const ROAD_PROFILES_PROPOSE_VERSION: u32 = 1;
 /// unknown held PVI, a most grade not above 0, a circular curve, no stretch on the surface, an elevation the ground
 /// does not fix, rules that contradict; a surface that is not or does not build). Warnings: `profile_stale`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesPropose {
     pub profile: String,
     /// The PVIs (ids) that keep their elevations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub hold: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_grade: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub balanced: bool,
 }
 
 /// A proposed PVI: its id, station, the elevation proposed and the one it had, whether it was held.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProposedPvi {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -726,10 +622,8 @@ pub struct ProposedPvi {
 
 /// Whether a proposed grade is at the most rise or fall.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GradeLimit {
     Rise,
     Fall,
@@ -737,26 +631,21 @@ pub enum GradeLimit {
 
 /// A proposed grade between two PVIs.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProposedGrade {
     pub between: [String; 2],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub limit: Option<GradeLimit>,
 }
 
 /// Output of `road.profiles.propose` v1: the profile's id, the PVIs and grades proposed, ∫(red − black)² (m²·m) over
 /// the length on the surface (m) and its root mean square (m), the areas cut and filled (m²) along the profile.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileProposed {
     pub profile: String,
     pub pvis: Vec<ProposedPvi>,
@@ -773,7 +662,6 @@ pub struct ProfileProposed {
     pub fill: f64,
     /// Each crossing against the proposed grade line (docs/adr/0946); none where the profile has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CrossingMargin>>", optional))]
     pub crossings: Vec<CrossingMargin>,
 }
 
@@ -781,10 +669,8 @@ pub struct ProfileProposed {
 /// structure its underside less the clearance, over one its top plus the cover), the line's elevation there (none off
 /// the profile), the margin (positive clear, negative short) and, in a proposal, whether it holds the line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CrossingMargin {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -793,15 +679,12 @@ pub struct CrossingMargin {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub limit: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub elevation: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub margin: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub holds: bool,
 }
 
@@ -816,27 +699,22 @@ pub const ROAD_PROFILES_IMPACT_VERSION: u32 = 1;
 /// Refusals: `not_a_road_project`, `unknown_road_profile`, `invalid_road_profile` (PVIs that make no line),
 /// `profile_curves_overlap`, `invalid_profile_impact` (a tolerance not above 0 or above 1 m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesImpact {
     /// The profile's id or name.
     pub profile: String,
     /// The PVIs it would have.
     pub pvis: Vec<ProfilePvi>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
 }
 
 /// How a stretch of the grade line differs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileChangeKind {
     /// Both lines there, apart by more than the tolerance.
     Changed,
@@ -848,10 +726,8 @@ pub enum ProfileChangeKind {
 
 /// A stretch of stations where the grade line changes; for a changed one the greatest elevation difference and where.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileChange {
     pub kind: ProfileChangeKind,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -861,21 +737,17 @@ pub struct ProfileChange {
     pub from_text: String,
     pub to_text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub most: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub at: Option<f64>,
 }
 
 /// A corridor region over a change: the region's index and the stations of it that change.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactRegion {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub region: u32,
@@ -889,10 +761,8 @@ pub struct ImpactRegion {
 
 /// A corridor on the profile and its regions that change.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactCorridor {
     pub corridor: String,
     pub name: String,
@@ -901,10 +771,8 @@ pub struct ImpactCorridor {
 
 /// A section set on the profile: how many of its stations fall in a change, of how many.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactSections {
     pub set: String,
     pub name: String,
@@ -916,10 +784,8 @@ pub struct ImpactSections {
 
 /// A volume or a haul plan on a corridor that changes, and whether it is approved (its approval would go stale).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactDerived {
     pub id: String,
     pub name: String,
@@ -928,10 +794,8 @@ pub struct ImpactDerived {
 
 /// What a profile's new PVIs would make stale.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileImpact {
     pub profile: String,
     pub changes: Vec<ProfileChange>,

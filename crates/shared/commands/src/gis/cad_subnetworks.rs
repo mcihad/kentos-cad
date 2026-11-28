@@ -7,8 +7,6 @@
 //! object of the network, in one undo step.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::SubnetworkReach;
 #[cfg(feature = "schema")]
@@ -27,16 +25,13 @@ pub const SUBNETWORK_UIDS_LISTED: usize = 1000;
 /// Refusals (`CommandError.code`): `unknown_network` (the project has no network of that id), `no_subnetworks` (the
 /// network defines no subnetworks), `no_controllers` (it has no source in the drawing).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworksFind {
     /// The network's id.
     pub network: String,
     /// Also name each subnetwork's objects (their persistent ids, at most 1000 each).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub members: bool,
 }
 
@@ -48,26 +43,21 @@ pub struct SubnetworksFind {
 /// are and said (`subnetwork_layer_skipped`); a value the attribute's field refuses is left and said
 /// (`values_skipped`). With `plan`, nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworksUpdate {
     /// The network's id.
     pub network: String,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Subnetwork {
     pub name: String,
     /// The controllers' persistent ids, in the drawing's order.
@@ -86,31 +76,25 @@ pub struct Subnetwork {
     pub unverified: u32,
     /// With `members`: the objects' persistent ids (edges, then junctions), at most 1000.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub members: Vec<String>,
 }
 
 /// A group of the network's objects: how many, and the first persistent ids (at most 1000).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworkObjects {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 
 /// What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's
 /// subnetworks give it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworkStale {
     /// The object has a value that is not its subnetworks' names (another name, or one of several).
     pub changed: SubnetworkObjects,
@@ -122,10 +106,8 @@ pub struct SubnetworkStale {
 
 /// Input's answer: the network's subnetworks and what the attribute says of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworksFound {
     /// The network's id.
     pub network: String,
@@ -147,10 +129,8 @@ pub struct SubnetworksFound {
 
 /// What `cad.subnetworks.update` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubnetworksUpdated {
     /// What `cad.subnetworks.find` says before the write (its `stale` says what the write changes); its `revision` is
     /// the output's.

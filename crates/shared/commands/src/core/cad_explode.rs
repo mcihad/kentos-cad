@@ -9,8 +9,6 @@
 //! on it, as dense as `density` asks (docs/adr/0308).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -28,10 +26,8 @@ pub const MAX_EXPLODE_VERTICES: u32 = 100_000;
 /// How dense an exploded curve's vertices are (docs/adr/0308): its pieces equal in length along it, as many as
 /// asked, none longer than a length, or as few as keep every chord within a distance of the curve.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExplodeDensity {
     /// This many equal pieces: an open curve `segments + 1` vertices, a closed one (a circle, an ellipse, a closed
     /// curve) `segments`, at least 3.
@@ -63,10 +59,8 @@ pub enum ExplodeDensity {
 /// `revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked` (every object locked),
 /// `not_explodable` (none explodes), `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesExplode {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -74,12 +68,10 @@ pub struct EntitiesExplode {
     /// How dense an exploded curve's vertices are; absent: a circle's, an arc's and an ellipse's chords within
     /// [`EXPLODE_DEVIATION`], a spline's and a NURBS curve's within 0.1 mm (docs/adr/0308).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub density: Option<ExplodeDensity>,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

@@ -21,8 +21,6 @@
 //! are `fixtures/commands/v1/cad.parcels.boundaries.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_PARCELS_BOUNDARIES: &str = "cad.parcels.boundaries";
 pub const CAD_PARCELS_BOUNDARIES_VERSION: u32 = 1;
@@ -34,26 +32,20 @@ pub const CAD_PARCELS_BOUNDARIES_VERSION: u32 = 1;
 /// Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area), `invalid_input`
 /// (`arcTolerance` negative or not finite).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsBoundaries {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub arc_tolerance: Option<f64>,
 }
 
 /// A corner: its id, place and the parcels with a vertex there (in the drawing's order).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelCorner {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -64,10 +56,8 @@ pub struct ParcelCorner {
 /// A boundary: its id, its corners (from the lower id to the higher), its bulge that way (0: straight), its length,
 /// and the parcel on its left and on its right going from `from` to `to` (none: no parcel on that side).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelBoundary {
     pub id: String,
     pub from: String,
@@ -77,20 +67,16 @@ pub struct ParcelBoundary {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub left: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<String>,
 }
 
 /// A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its
 /// geometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelInGraph {
     pub uid: String,
     pub name: String,
@@ -103,10 +89,8 @@ pub struct ParcelInGraph {
 /// What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;
 /// where; the parcels.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BoundaryProblem {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -115,18 +99,15 @@ pub struct BoundaryProblem {
     /// `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order. `approxArc` (docs/adr/3420):
     /// the arc, then the chain's boundaries from the arc's lower corner to its higher.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub boundaries: Vec<String>,
     /// `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim. `approxArc`: the area
     /// between the arc and the chain.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m2")))]
     pub area: Option<f64>,
     /// `arcChord`: how far apart the two curves are at their middles. `approxArc`: the most, over the chain's
     /// boundaries, of how far each one's middle is from the arc's point at the middle of its angle (`at` between them).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gap: Option<f64>,
 }
@@ -134,10 +115,8 @@ pub struct BoundaryProblem {
 /// Output of `cad.parcels.boundaries` v1: the corners, the boundaries, the parcels, the problems; how many boundaries
 /// two parcels share and how many have a parcel on one side only.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsBounded {
     pub corners: Vec<ParcelCorner>,
     pub boundaries: Vec<ParcelBoundary>,

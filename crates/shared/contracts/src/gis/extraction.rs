@@ -85,7 +85,6 @@ fn is_true(b: &bool) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractionRecipe {
     /// Its name (Tarif adı); not empty, one line, at most 100 letters.
     pub name: String,
@@ -140,7 +139,6 @@ pub struct ExtractionRecipe {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CountScope {
     /// İç içe bloklar: a block's objects are looked into, its nested inserts counted (each by its path), its pieces'
     /// lengths and areas measured as placed. Off: the drawing's own objects alone.
@@ -175,7 +173,6 @@ impl CountScope {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArrayCount {
     /// Each item an insert of its own (an item removed by hand is not there).
     #[default]
@@ -195,7 +192,6 @@ impl ArrayCount {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractColumn {
     /// Its heading; a quantity's unit is written after it in brackets (`Uzunluk (m)`). Not empty, one line.
     pub label: String,
@@ -214,7 +210,6 @@ pub struct ExtractColumn {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "of", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExtractValue {
     /// The drawing it is in: its file's name, Bu çizim for the open one.
     Drawing,
@@ -285,7 +280,6 @@ impl ExtractValue {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExtractLengthUnit {
     #[default]
     M,
@@ -325,7 +319,6 @@ impl ExtractLengthUnit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExtractAreaUnit {
     #[default]
     M2,
@@ -361,7 +354,6 @@ impl ExtractAreaUnit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractSort {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub column: u32,
@@ -376,7 +368,6 @@ pub struct ExtractSort {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractJoin {
     /// Its path, absolute or from the drawing's folder.
     pub path: String,
@@ -396,7 +387,6 @@ pub struct ExtractJoin {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractRead {
     pub path: String,
     pub digest: String,
@@ -407,7 +397,6 @@ pub struct ExtractRead {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractionSource {
     pub recipe: ExtractionRecipe,
     /// The other drawings and the joined file as last read.

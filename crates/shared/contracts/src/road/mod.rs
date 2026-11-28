@@ -7,8 +7,6 @@
 //! schema 158, the road project's schema).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 mod alignment;
 mod corridor;
@@ -63,87 +61,66 @@ pub const MAX_SWATH: f64 = 1000.0;
 
 /// A road project's settings; absent while it has none.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadSettings {
     /// The terrain surfaces, in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSurfaceDef>>", optional))]
     pub surfaces: Vec<TerrainSurfaceDef>,
     /// The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentDef>>", optional))]
     pub alignments: Vec<AlignmentDef>,
     /// The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileDef>>", optional))]
     pub profiles: Vec<ProfileDef>,
     /// The templates (docs/adr/0903 §3), in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TemplateDef>>", optional))]
     pub templates: Vec<TemplateDef>,
     /// The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SectionSetDef>>", optional))]
     pub sections: Vec<SectionSetDef>,
     /// The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SuperelevationDef>>", optional))]
     pub superelevations: Vec<SuperelevationDef>,
     /// The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CorridorDef>>", optional))]
     pub corridors: Vec<CorridorDef>,
     /// The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeDef>>", optional))]
     pub volumes: Vec<VolumeDef>,
     /// The mass haul diagrams (docs/adr/0907).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulDef>>", optional))]
     pub hauls: Vec<HaulDef>,
     /// The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadSheetSetDef>>", optional))]
     pub sheet_sets: Vec<RoadSheetSetDef>,
     /// The guardrails (docs/adr/0909 §1), each along a corridor.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GuardrailDef>>", optional))]
     pub guardrails: Vec<GuardrailDef>,
     /// The culverts (docs/adr/0909 §2), each across a corridor.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CulvertDef>>", optional))]
     pub culverts: Vec<CulvertDef>,
     /// The retaining walls (docs/adr/0909 §3), each along a corridor's side.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
     pub walls: Vec<RetainingWallDef>,
     /// The graded pads (docs/adr/0927), each on a terrain surface.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlatformDef>>", optional))]
     pub platforms: Vec<PlatformDef>,
     /// The junctions (docs/adr/0910 §2), each of two alignments.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JunctionDef>>", optional))]
     pub junctions: Vec<JunctionDef>,
     /// The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pay: Option<PayBookDef>,
     /// What the road commands drew (docs/adr/0911 §1): each drawing's command, input, sources and objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadDrawingDef>>", optional))]
     pub drawings: Vec<RoadDrawingDef>,
     /// A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub auto_rebuild: bool,
     /// Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless
     /// chosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub rebuild_whole: bool,
 }
 
@@ -177,10 +154,8 @@ pub const MAX_DRAWING_OBJECTS: usize = 1_000_000;
 
 /// What kind of road source a drawing depends on (docs/adr/0911 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RoadSourceKind {
     Surface,
     Alignment,
@@ -203,10 +178,8 @@ pub enum RoadSourceKind {
 
 /// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadDrawingSource {
     pub kind: RoadSourceKind,
     pub id: String,
@@ -218,14 +191,11 @@ pub struct RoadDrawingSource {
 /// made from (its main source first), the objects it wrote in order and the stamp of those objects as written; since
 /// schema 209 (docs/adr/2840) the command's version that drew it and the drawing's revision its write made.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadDrawingDef {
     pub id: String,
     pub command: String,
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "std::collections::BTreeMap<String, serde_json::Value>")
@@ -233,19 +203,16 @@ pub struct RoadDrawingDef {
     pub input: std::collections::BTreeMap<String, serde_json::Value>,
     pub sources: Vec<RoadDrawingSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     /// 16 lower-case hex digits: the objects' JSON in order, stamped.
     pub digest: String,
     /// The version of the command that drew it (docs/adr/2840); none: a record written before schema 209.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The drawing's revision once its objects were written, as the commands say it (decimal digits; docs/adr/2840);
     /// none: a record written before schema 209.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
 }
 
@@ -362,18 +329,14 @@ impl RoadSettings {
 /// Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the
 /// objects named by their persistent ids.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurfaceSources {
     /// Layer or group ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Objects' persistent ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 

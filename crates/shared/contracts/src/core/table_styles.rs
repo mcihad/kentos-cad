@@ -7,8 +7,6 @@
 //! command's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::hatch::is_hex_colour;
 
@@ -23,28 +21,22 @@ fn is_false(b: &bool) -> bool {
 
 /// One rule of a layer's table (docs/adr/0413 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableStyle {
     /// The field whose cell it paints, by name; absent: the whole row.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     /// When it holds: an expression over the record (`Kat > 3 ve Durum = 'kotu'`).
     pub condition: String,
     /// The cell's background, `#RRGGBB`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub background: Option<String>,
     /// The text's colour, `#RRGGBB`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Bold text. Only `true` is written.
     #[serde(default, skip_serializing_if = "is_false")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub bold: bool,
 }
 

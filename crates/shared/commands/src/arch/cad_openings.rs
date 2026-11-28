@@ -8,8 +8,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const MAX_OPENINGS: usize = 10_000;
 
 /// Where along its wall a new opening goes, measured from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningFrom {
     /// The wall's end nearer the point given.
     #[default]
@@ -42,10 +38,8 @@ pub enum OpeningFrom {
 /// Which part of an opening is the requested distance from the chosen wall end.
 /// Omitted on v1 requests: the nearer jamb, as before.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningDistanceReference {
     #[default]
     Jamb,
@@ -56,117 +50,92 @@ pub enum OpeningDistanceReference {
 
 /// One opening to put in a wall.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewOpening {
     /// The wall's persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub host: String,
     /// Its centre's distance along the wall's base line from its start. Absent: from `point`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<f64>,
     /// A point by the wall (the click): its centre goes where the base line passes nearest it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub point: Option<Vec2>,
     /// With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<OpeningFrom>,
     /// With `distance`: near jamb (default), centre, or the hinge jamb.
     /// This chooses placement only; the stored opening keeps its centre anchor.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub distance_reference: Option<OpeningDistanceReference>,
     /// Two jamb points projected onto the named wall's base line. Their arc-length
     /// separation is the width, their midpoint along the path is the centre.
     /// Both must fit on one edge. Cannot be combined with at/distance/middle/width.
     /// `point` may still choose the opening side. Lengths are metres on the wire.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub span: Option<[Vec2; 2]>,
     /// With `point`: centred on the edge of the base line the point is by (duvar ortası).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub middle: bool,
     /// An opening type by its id or name: the project's (docs/adr/0772), which the opening then follows, else KentOS's
     /// own, whose values it copies. Absent: the form's first KentOS type.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[serde(rename = "type")]
     pub kind: Option<String>,
     /// Over the type's: a door, a window, a bare opening, a niche or a flue (docs/adr/0719).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub form: Option<OpeningForm>,
     /// Over the type's: the rough opening, metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub leaves: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<OpeningOperation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hand: Option<OpeningHand>,
     /// The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub side: Option<OpeningSide>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub swing: Option<f64>,
     /// Over the type's: its sill above the floor, metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub sill: Option<f64>,
     /// Over the type's: its head above the floor, metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub head: Option<f64>,
     /// Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
     /// A flue's distance from its face to its cavity, metres; absent: centred in its wall.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub inset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// Over the type's: its construction's fields given (docs/adr/0772 §3). On a project type's opening, each value
     /// given over the type's is its own (örnek istisnası).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<crate::OpeningBuild>,
     /// Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
     /// Absent: its wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phase: Option<crate::ArchPhase>,
 }
 
@@ -187,34 +156,27 @@ pub struct NewOpening {
 /// `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsCreate {
     /// The layer they go on: a layer's id, not a group's.
     pub layer_id: String,
     pub openings: Vec<NewOpening>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.openings.create` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsCreated {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -225,17 +187,11 @@ pub struct OpeningsCreated {
 
 /// What `cad.openings.create` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsPlan {
     /// Derived source-following preview changes; absent when none. New identities are provisional.
     #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
-    )]
     pub followers: crate::DerivedEntitiesPlan,
 
     /// The openings as they would be stored, their `id` 0.
@@ -246,31 +202,23 @@ pub struct OpeningsPlan {
 
 /// An opening's own fields to change; absent ones stay. A nullable field's null takes it away.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningChange {
     /// The rough opening, metres; it grows about its anchor.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub form: Option<OpeningForm>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub leaves: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<OpeningOperation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hand: Option<OpeningHand>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub side: Option<OpeningSide>,
     /// Degrees; null: 90.
     #[serde(
@@ -278,12 +226,10 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub swing: Option<Option<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub show_swing: Option<bool>,
     /// Metres; null: no frame.
     #[serde(
@@ -291,7 +237,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub frame: Option<Option<f64>>,
@@ -300,7 +245,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub sill: Option<Option<f64>>,
@@ -309,7 +253,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub head: Option<Option<f64>>,
@@ -319,7 +262,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<Option<f64>>,
@@ -329,7 +271,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub inset: Option<Option<f64>>,
@@ -339,7 +280,6 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
     /// Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:
@@ -349,29 +289,21 @@ pub struct OpeningChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::ArchPhase>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchPhase>"))]
     pub phase: Option<Option<crate::ArchPhase>>,
     /// Its construction's fields given (docs/adr/0772 §3); each set, the others stay. Boxed: the operations' enum
     /// stays small.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::OpeningBuild>", optional))]
     pub build: Option<Box<crate::OpeningBuild>>,
     /// Its construction's fields taken away.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
-    )]
     pub unset: Vec<crate::OpeningTypeField>,
 }
 
 /// What `cad.openings.flip` turns.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningFlip {
     /// The side it opens to.
     #[default]
@@ -383,10 +315,8 @@ pub enum OpeningFlip {
 
 /// Along the analytic host path: the clear jamb gap or the centre pitch.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningArraySpacing {
     #[default]
     Clear,
@@ -397,10 +327,8 @@ pub enum OpeningArraySpacing {
 /// All distances are metres along the whole host's analytic path. Every copy
 /// must still fit on one edge; crossing a corner refuses the whole operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningArrayLayout {
     /// Copies successively from the source; start goes backwards, end forwards.
     Spacing {
@@ -430,10 +358,8 @@ pub enum OpeningArrayLayout {
 /// Marks only the NEW copies. Positive step; exact marks must be unique among
 /// existing openings of the same form (door/window/bare opening) in the drawing.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningArrayNumbering {
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(max = 128)))]
@@ -448,21 +374,17 @@ pub struct OpeningArrayNumbering {
 
 /// What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningsOperation {
     /// Değiştir: the fields given, on every opening named.
     Set(OpeningChange),
     /// Taşı: along its wall by `by` (toward its end positive), or its anchor to `at`.
     Move {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         by: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<f64>,
     },
@@ -477,7 +399,6 @@ pub enum OpeningsOperation {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         to: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         point: Option<Vec2>,
     },
@@ -486,7 +407,6 @@ pub enum OpeningsOperation {
     /// openings follow it (docs/adr/0772): they take all its values, their exceptions gone.
     ReplaceType {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         from: Option<String>,
         to: String,
         #[serde(
@@ -494,7 +414,6 @@ pub enum OpeningsOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         level: Option<Option<String>>,
     },
@@ -504,10 +423,6 @@ pub enum OpeningsOperation {
     /// type's version goes up and every other opening following it takes them, as `cad.openingtypes.edit`'s Update.
     Push {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(
-            feature = "ts",
-            ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
-        )]
         fields: Vec<crate::OpeningTypeField>,
     },
     /// Tipi yeniden uygula: the openings take their type's latest version again, their exceptions kept (one left at an
@@ -517,10 +432,6 @@ pub enum OpeningsOperation {
     /// latest version.
     Reset {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(
-            feature = "ts",
-            ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
-        )]
         fields: Vec<crate::OpeningTypeField>,
     },
     /// Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
@@ -532,13 +443,11 @@ pub enum OpeningsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         start: u32,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<OpeningForm>,
         /// Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens
         /// into, else its other side's; another's the room on either side), and when that room has more than one of
         /// them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
         #[serde(default, rename = "byRoom", skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(rename = "byRoom", as = "Option<bool>", optional))]
         by_room: bool,
     },
     /// Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
@@ -546,7 +455,6 @@ pub enum OpeningsOperation {
     Array {
         layout: OpeningArrayLayout,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         numbering: Option<OpeningArrayNumbering>,
     },
     /// Kopyala: a copy of each opening along its wall at each offset (toward its end positive).
@@ -565,7 +473,6 @@ pub enum OpeningsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
         #[serde(default, skip_serializing_if = "crate::DistanceTo::is_face")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<crate::DistanceTo>", optional))]
         to: crate::DistanceTo,
     },
 }
@@ -585,46 +492,34 @@ fn first_number() -> u32 {
 /// following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
 /// one changed to a form that goes through drops its depth and inset (docs/adr/0719).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsEdit {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     pub operation: OpeningsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.openings.edit` v1 (its plan's too: the openings as they would be, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsEdited {
     /// Derived source-following preview changes; absent when none. New identities are provisional.
     #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
-    )]
     pub followers: crate::DerivedEntitiesPlan,
 
     /// The openings as written, in their order.
     pub openings: Vec<Entity>,
     /// The new openings (Kopyala).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
     /// Tipe uygula's type change: every other opening's fate (docs/adr/0772 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub report: Option<crate::OpeningTypeReport>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -656,10 +551,8 @@ pub fn wall_end_of(from: OpeningFrom, s: f64, l: f64) -> WallEnd {
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_host_gone`,
 /// `invalid_opening` (an arc edge, a bevelled face).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsDistancesInput {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
@@ -669,14 +562,12 @@ pub struct OpeningsDistancesInput {
 
 /// What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningReference {
     End,
     Opening {
@@ -693,10 +584,8 @@ pub enum OpeningReference {
 
 /// One side's distance: net along the face, from the opening's jamb to the reference's point on the face.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningDistance {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
@@ -709,36 +598,28 @@ pub struct OpeningDistance {
 
 /// An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningDistances {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub edge: u32,
     pub face: crate::DimensionSetFace,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub start: Option<OpeningDistance>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end: Option<OpeningDistance>,
     /// The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub start_grid: Option<OpeningDistance>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end_grid: Option<OpeningDistance>,
 }
 
 /// Output of `cad.openings.distances` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsDistances {
     pub openings: Vec<OpeningDistances>,
     pub revision: String,

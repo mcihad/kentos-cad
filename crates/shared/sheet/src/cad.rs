@@ -4,16 +4,12 @@ use crate::{
     units::{RectUm, SizeUm},
 };
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub type Point = [f64; 2];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCadPolyline"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Polyline {
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
@@ -30,10 +26,8 @@ pub struct Polyline {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCadGeometry"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Geometry {
     Polyline {
@@ -93,11 +87,9 @@ pub enum Geometry {
         #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
         fit: Vec<Point>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature="schema",schemars(extend("x-unit"="1")))]
         tangents: Option<[Option<Point>; 2]>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
         #[serde(rename = "fitTolerance")]
         fit_tolerance: Option<f64>,
@@ -105,10 +97,8 @@ pub enum Geometry {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCadShape"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CadShape {
     /// Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation.
@@ -118,10 +108,8 @@ pub struct CadShape {
 
 /// Provenance of a copy, never a second live owner of model geometry.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCadOrigin"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Origin {
     pub layout: String,
@@ -129,16 +117,12 @@ pub struct Origin {
     pub record: u32,
     pub entity_kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sha256: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub handle: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
 }
 

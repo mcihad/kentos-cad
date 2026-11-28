@@ -4,8 +4,6 @@
 //! `cad.navigator.read` reads; it writes nothing.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -17,24 +15,19 @@ pub const CAD_NAVIGATOR_READ_VERSION: u32 = 1;
 ///
 /// Refusals, in this order: `entity_not_found` (at `uid`), `book_unreadable`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavigatorRead {
     /// An object's persistent id; absent: no `object`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
 }
 
 /// A sheet's map, by the sheet's and the item's ids.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavMap {
     pub sheet: String,
     pub item: String,
@@ -42,10 +35,8 @@ pub struct NavMap {
 
 /// A level of the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavLevel {
     pub id: String,
     pub name: String,
@@ -62,26 +53,21 @@ pub struct NavLevel {
 
 /// A named view of the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavView {
     /// Its stable id (docs/adr/0345 §2).
     pub id: String,
     pub name: String,
     /// Its recipe's level, by id; none: every level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// Its recipe's version; none without a recipe.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub recipe: Option<u32>,
     /// Its recipe's scale (1:N); none: the view's box fitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     /// The maps linked to it, in the book's order.
@@ -90,38 +76,30 @@ pub struct NavView {
 
 /// A map of a sheet.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavSheetMap {
     pub item: String,
     pub name: String,
     /// Its linked view, by stable id; none: its own camera.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<String>,
     /// Its linked view is gone.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub missing: bool,
     /// The level it draws, by id; none: every level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// Its scale (1:N); none for a map without a fixed view.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<f64>,
 }
 
 /// A sheet of the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavSheet {
     pub id: String,
     pub name: String,
@@ -132,10 +110,8 @@ pub struct NavSheet {
 
 /// A schedule (a table reading the model) of the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavSchedule {
     /// The table's persistent id.
     pub uid: String,
@@ -148,17 +124,14 @@ pub struct NavSchedule {
 
 /// Where one object shows.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavObject {
     pub uid: String,
     /// Its kind (`wall`, `opening` …).
     pub kind: String,
     /// Its level, by id; none: on no level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// The named views that draw it (inside their box, on their recipe's level or every level, its category and phase
     /// not left out), in the views' order.
@@ -173,10 +146,8 @@ pub struct NavObject {
 
 /// Output of `cad.navigator.read` v1 (its plan's too).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NavigatorReadResult {
     /// The project's levels, in their order.
     pub levels: Vec<NavLevel>,
@@ -191,7 +162,6 @@ pub struct NavigatorReadResult {
     pub schedules: Vec<NavSchedule>,
     /// With `uid`: where it shows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub object: Option<NavObject>,
     /// The drawing's revision it was read at.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -12,29 +12,23 @@ use crate::cloud::Me;
 
 /// `POST /v1/auth/token`: a program signs in with a local account.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TokenRequest {
     pub login: String,
     pub password: String,
     /// What the program is: `desktop`, `mobile`, `agent`, `python`, … (lower-case letters, digits and `-`).
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub client: Option<String>,
     /// The device or the program's name as its person knows it ("Ofis bilgisayarı").
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub label: Option<String>,
 }
 
 /// The session a program got: its token (once), when it ends at the latest, and who signed in.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TokenIssued {
     /// `kentos_s_` and 64 hexadecimal digits; sent as `Authorization: Bearer …`.
     pub token: String,
@@ -79,10 +73,8 @@ pub enum TokenScope {
 
 /// `POST /v1/me/tokens`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ApiTokenCreate {
     pub name: String,
     pub scope: TokenScope,

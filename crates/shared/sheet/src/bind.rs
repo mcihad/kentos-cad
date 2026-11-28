@@ -3,8 +3,6 @@
 //! bound value is applied to an item.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::kinds::{ItemKind, MapView};
 use crate::model::{Item, VarValue};
@@ -12,9 +10,7 @@ use crate::units::{Um, norm_mdeg, round_i64, round_um};
 
 /// What a bound value must be.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum BindType {
     Number,
     Text,
@@ -23,9 +19,7 @@ pub enum BindType {
 
 /// A property an expression can give.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Bindable {
     pub property: String,
     /// The item kinds that have it (`type` names); empty: every kind.

@@ -7,8 +7,6 @@
 use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{
     GroundPoint, Item, ItemKind, MapView, Result, SheetError, create,
@@ -46,10 +44,8 @@ fn yes() -> bool {
 
 /// One detail: the model extent it shows, at an exact ratio, with its layer and annotation representation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheetDetail"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SheetDetail {
     /// Its title (“Ankraj detayı”); the sheet writes “<name> — Ölçek 1/N” under it, N read from the viewport.
@@ -62,15 +58,12 @@ pub struct SheetDetail {
     /// Which layers it draws; absent: the drawing's (a layer state keeps the print from following anyone's
     /// layer switching, docs/adr/1090 §5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<MapLayers>,
     /// Layers drawn otherwise in this viewport only.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<LayerOverride>>"))]
     pub layer_overrides: Vec<LayerOverride>,
     /// The annotation representation; absent: the viewport's own scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotation: Option<AnnotationScale>,
     /// The camera locked (zooming on the screen never changes the print scale); default true.
     #[serde(default = "yes")]
@@ -88,10 +81,8 @@ pub struct DetailSheetsOptions {
 
 /// Where one detail went.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperDetailPlaced"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase")]
 pub struct DetailPlaced {
     pub name: String,
@@ -108,10 +99,8 @@ pub struct DetailPlaced {
 
 /// A sheet made.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperDetailSheet"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase")]
 pub struct DetailSheet {
     pub sheet: String,

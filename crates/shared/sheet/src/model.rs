@@ -4,8 +4,6 @@
 //! JSON is camelCase; an unknown field is an error, never dropped.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::kinds::ItemKind;
 use crate::style::Stroke;
@@ -28,23 +26,13 @@ fn full() -> u8 {
 
 /// Every sheet of a project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheetBook"))]
 pub struct SheetBook {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::plot_profile::PlotProfile>>")
-    )]
     pub plot_profiles: Vec<crate::plot_profile::PlotProfile>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::print_setup::NamedPageSetup>>")
-    )]
     pub page_setups: Vec<crate::print_setup::NamedPageSetup>,
     /// `kentos.sheet/1`.
     pub schema: String,
@@ -77,10 +65,8 @@ impl Default for SheetBook {
 
 /// Whose items: a sheet's or a master page's.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOwner"))]
 pub struct Owner {
     pub kind: OwnerKind,
@@ -88,10 +74,8 @@ pub struct Owner {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOwnerKind"))]
 pub enum OwnerKind {
     Sheet,
@@ -218,25 +202,20 @@ impl SheetBook {
 
 /// One sheet (pafta): its paper, items, guides and how it is exported.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheet"))]
 pub struct Sheet {
     /// Standard drawing-set identity; absent in older books.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_info: Option<crate::drawing_set::DrawingInfo>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<crate::print_setup::AppliedPageSetup>,
     pub id: SheetId,
     pub name: String,
     pub page: Page,
     /// The master page drawn under this sheet's items.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub master: Option<MasterId>,
     /// Drawing order: the first is at the bottom.
     #[serde(default)]
@@ -246,13 +225,11 @@ pub struct Sheet {
     #[serde(default)]
     pub snap_grid: SnapGrid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub atlas: Option<Atlas>,
     #[serde(default)]
     pub export: ExportDefaults,
     /// The template and revision it was made from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub origin: Option<TemplateOrigin>,
     /// The sheet's own variables (ada, parsel, mahalle …): before the project's in the lookup order (design §7).
     #[serde(default)]
@@ -262,20 +239,16 @@ pub struct Sheet {
     pub variants: Vec<LayoutVariant>,
     /// The layout in force on this paper; none: the base layout.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub active_variant: Option<String>,
     /// The base layout, kept while a variant is in force.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base_layout: Option<BaseLayout>,
 }
 
 /// A paper size in the table (`data/papers.json`) or a size of one's own.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPaper"))]
 pub enum Paper {
     A0,
@@ -341,10 +314,8 @@ impl Paper {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOrientation"))]
 pub enum Orientation {
     #[default]
@@ -354,10 +325,8 @@ pub enum Orientation {
 
 /// The paper: its kind, orientation, size (as it lies, width across) and margins.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPage"))]
 pub struct Page {
     pub paper: Paper,
@@ -366,7 +335,6 @@ pub struct Page {
     pub margins: Margins,
     /// The paper's colour; none: white.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub background: Option<String>,
 }
 
@@ -389,10 +357,8 @@ impl Page {
 /// A master page: items drawn under every sheet that uses it, laid out from
 /// its own page to the sheet's by their constraints (design §3.3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMaster"))]
 pub struct Master {
     pub id: MasterId,
@@ -407,36 +373,28 @@ pub struct Master {
     #[serde(default)]
     pub variants: Vec<LayoutVariant>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub active_variant: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base_layout: Option<BaseLayout>,
 }
 
 /// When a layout variant applies (design §3.2a): the paper's orientation and, if given, a size range (µm, inclusive).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVariantCondition"))]
 pub struct VariantCondition {
     pub orientation: Orientation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub min_width: Option<Um>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub max_width: Option<Um>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub min_height: Option<Um>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub max_height: Option<Um>,
 }
@@ -455,10 +413,8 @@ impl VariantCondition {
 
 /// An item's place in a layout, on the layout's reference paper.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVariantFrame"))]
 pub struct VariantFrame {
     pub item: ItemId,
@@ -476,10 +432,8 @@ pub struct VariantFrame {
 /// mentions are placed from `reference` to the paper by their constraints;
 /// the others come from the base layout.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLayoutVariant"))]
 pub struct LayoutVariant {
     /// Unique within its sheet or master page (“dikey”).
@@ -495,10 +449,8 @@ pub struct LayoutVariant {
 
 /// The base layout set aside while a variant is in force: every item's place on the paper it had.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperBaseLayout"))]
 pub struct BaseLayout {
     pub reference: SizeUm,
@@ -508,10 +460,8 @@ pub struct BaseLayout {
 
 /// One thing on the paper: the frame and behaviour every kind shares, and the kind's own content.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperItem"))]
 pub struct Item {
     pub id: ItemId,
@@ -538,11 +488,9 @@ pub struct Item {
     pub opacity: u8,
     /// A line around the frame.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub border: Option<Stroke>,
     /// The frame's background.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     /// Space between the frame and the content.
     #[serde(default)]
@@ -550,14 +498,12 @@ pub struct Item {
     pub padding: Um,
     /// The group item this one belongs to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<ItemId>,
     /// Data-defined properties (design §7).
     #[serde(default)]
     pub bindings: Vec<Binding>,
     /// Source of an imported paper entity (a copy, not a live model alias).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cad_origin: Option<crate::cad::Origin>,
     pub kind: ItemKind,
 }
@@ -597,10 +543,8 @@ impl Item {
 
 /// How an item follows its box when the paper changes (design §3.2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperConstraints"))]
 pub struct Constraints {
     #[serde(default)]
@@ -625,10 +569,8 @@ impl Constraints {
 /// edge; leftRight: both (it stretches); center: its centre's offset from the
 /// box's centre; scale: position and size in proportion.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperHConstraint"))]
 pub enum HConstraint {
     #[default]
@@ -640,10 +582,8 @@ pub enum HConstraint {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVConstraint"))]
 pub enum VConstraint {
     #[default]
@@ -656,10 +596,8 @@ pub enum VConstraint {
 
 /// The box an item's constraints are measured against.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperConstraintBox"))]
 pub enum ConstraintBox {
     Page,
@@ -671,10 +609,8 @@ pub enum ConstraintBox {
 
 /// A property whose value an expression gives (design §7): `frame.left`, `text.content`, `map.scale` …
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperBinding"))]
 pub struct Binding {
     pub property: String,
@@ -683,10 +619,8 @@ pub struct Binding {
 
 /// Which coordinate a guide fixes: `x` is an upright line at `left = at`, `y` a level line at `top = at`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAxis"))]
 pub enum Axis {
     X,
@@ -695,10 +629,8 @@ pub enum Axis {
 
 /// A ruler guide.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGuide"))]
 pub struct Guide {
     pub id: String,
@@ -715,10 +647,8 @@ fn five_mm() -> Um {
 
 /// The sheet's snapping grid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSnapGrid"))]
 pub struct SnapGrid {
     #[serde(default = "five_mm")]
@@ -742,10 +672,8 @@ impl Default for SnapGrid {
 
 /// A sort key: an expression and its direction.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSortKey"))]
 pub struct SortKey {
     pub expression: String,
@@ -759,10 +687,8 @@ fn atlas_page_name() -> String {
 
 /// One page per object of a coverage layer (design §7a).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAtlas"))]
 pub struct Atlas {
     /// The coverage layer; empty: none chosen yet (the preflight says so).
@@ -778,10 +704,8 @@ pub struct Atlas {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperExportFormat"))]
 pub enum ExportFormat {
     #[default]
@@ -799,10 +723,8 @@ fn export_name() -> String {
 
 /// What an export starts from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperExportDefaults"))]
 pub struct ExportDefaults {
     #[serde(default = "dpi300")]
@@ -827,10 +749,8 @@ impl Default for ExportDefaults {
 
 /// The template a sheet was made from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTemplateOrigin"))]
 pub struct TemplateOrigin {
     pub template_id: String,
@@ -840,10 +760,8 @@ pub struct TemplateOrigin {
 
 /// What a variable holds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVarKind"))]
 pub enum VarKind {
     #[default]
@@ -856,10 +774,8 @@ pub enum VarKind {
 
 /// A value: none, true/false, a number or text.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVarValue"))]
 pub enum VarValue {
     #[default]
@@ -878,10 +794,8 @@ impl VarValue {
 
 /// A named value written `@name` in expressions and `[% … %]` text.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVariable"))]
 pub struct Variable {
     /// Without the `@`: letters, digits and `_` (`ada`, `proje_no`).
@@ -898,10 +812,8 @@ pub struct Variable {
 
 /// A picture's file type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAssetKind"))]
 pub enum AssetKind {
     Png,
@@ -911,10 +823,8 @@ pub enum AssetKind {
 
 /// A picture's metadata (design §3.4); its bytes are the asset store's, under the same digest.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAssetMeta"))]
 pub struct AssetMeta {
     /// SHA-256 of the bytes, 64 lowercase hex digits.
@@ -930,7 +840,6 @@ pub struct AssetMeta {
     pub bytes: u32,
     /// The resolution the file states; none: 96 dpi when shown at its own size.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "dpi")))]
     pub dpi: Option<u16>,
 }

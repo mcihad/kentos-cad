@@ -8,8 +8,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{DeclaredCrs, ImportedLayer};
 
@@ -36,57 +34,45 @@ pub const FILE_IMPORT_KML_VERSION: u32 = 1;
 /// `reproject`: the file is in another system and the move was not asked, or cannot be made), `nothing_to_import`.
 /// Warnings: `crs_undeclared`, `crs_overridden`, `crs_unofficial`, `import_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportShp {
     /// The `.shp` or `.zip` to read, an absolute path.
     pub path: String,
     /// A zip archive's layer: its path in the archive (`katmanlar/parseller.shp`) or its name (`parseller`); absent:
     /// every layer in the archive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub entry: Option<String>,
     /// The system the coordinates are in (EPSG), whatever the file says: a file without a `.prj`, or one KentOS
     /// cannot read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move the coordinates of a file in another system into the project's (docs/adr/0222 §2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
     /// The file's layers (by their names in the file) whose objects are left out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub skip_layers: Vec<String>,
     /// A file's layer (its name in the file) → the drawing's layer (its id) its objects go onto.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     /// The drawing's layer (its id) every layer `layers` does not name goes onto.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The group the new layers go into, found by its name or made. Absent: one named after the file; empty: the
     /// top of the tree.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     /// The drawing's revision the input was prepared against.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }
 
@@ -96,43 +82,32 @@ pub struct ImportShp {
 /// member's, else WGS 84 longitude, latitude (RFC 7946). Refusals, warnings and the rest as `file.import.shp`'s
 /// (`entry_not_found` does not apply; a GeoJSON file always declares a system, so `crs_undeclared` does not either).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportGeojson {
     /// The file to read, an absolute path.
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub skip_layers: Vec<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }
 
@@ -142,43 +117,32 @@ pub struct ImportGeojson {
 /// Refusals, warnings and the rest as `file.import.shp`'s (`entry_not_found` does not apply; a KML file is always in
 /// WGS 84, so `crs_unknown` and `crs_undeclared` do not either).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportKml {
     /// The file to read, an absolute path (`.kml` or `.kmz`).
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub skip_layers: Vec<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }
 
@@ -187,10 +151,8 @@ pub struct ImportKml {
 /// only the projection changed), its accuracy in metres (none when a step's is not written), whether an operation
 /// that is not the official transformation was used, the same as a sentence, and what the move left out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CrsMove {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub from: u32,
@@ -199,7 +161,6 @@ pub struct CrsMove {
     /// The datum shift's operations joined by “ + ”; empty when only the projection changed.
     pub via: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
     pub unofficial: bool,
@@ -214,10 +175,8 @@ pub struct CrsMove {
 
 /// What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisImported {
     /// The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).
     pub file: String,
@@ -226,16 +185,13 @@ pub struct GisImported {
     pub sha256: String,
     /// What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub declared: Option<DeclaredCrs>,
     /// The system the coordinates were taken to be in: `srid`, else the file's, else the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// How the coordinates were moved; absent when they were taken as they are.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moved: Option<CrsMove>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
@@ -247,19 +203,15 @@ pub struct GisImported {
     /// The layers made, in the tree's order, and the group they went into.
     pub layers: Vec<ImportedLayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     /// What the reader counted and could not take (`ImportReport`).
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub report: serde_json::Value,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
     /// What the merge did on each layer (docs/adr/0628 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::MergeReport>>", optional))]
     pub merged: Vec<crate::MergeReport>,
     /// The CSV of the rows refused (docs/adr/0628 §6).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<crate::RejectsWritten>,
 }

@@ -8,8 +8,6 @@
 //! `fixtures/commands/v1`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -36,10 +34,8 @@ pub const CAD_LAYERS_LABELS_VERSION: u32 = 1;
 /// `conflict`), `layer_not_found`, `not_a_layer` (a group), `service_layer`
 /// (a layer drawn from a service: it has no objects to label).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersLabels {
     /// The layer's id.
     pub layer: String,
@@ -49,7 +45,6 @@ pub struct LayersLabels {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<LabelStyle>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<LabelStyle>"))]
     pub label: Option<Option<LabelStyle>>,
     /// How it is labelled; null: a single label. Absent: unchanged.
@@ -58,22 +53,18 @@ pub struct LayersLabels {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<LayerLabels>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<LayerLabels>"))]
     pub labels: Option<Option<LayerLabels>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.labels` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersLabelled {
     pub layer: String,
     /// Whether anything differed (an undo step was written).
@@ -85,10 +76,8 @@ pub struct LayersLabelled {
 
 /// What `cad.layers.labels` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersLabelsPlan {
     /// The layer as execute would leave it.
     pub node: LayerNode,
@@ -104,10 +93,8 @@ pub const CAD_LABELS_PIN_VERSION: u32 = 1;
 
 /// One label pinned by hand, or freed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelPinChange {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -115,7 +102,6 @@ pub struct LabelPinChange {
     /// Which of its labels: a rule-based layer's class (`LabelClass.name`);
     /// absent, its first label (a single label's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     /// Where the label stays (its middle from the object's anchor, metres),
     /// turned (degrees, counter-clockwise), or hidden; its own `class` is the
@@ -137,26 +123,21 @@ pub struct LabelPinChange {
 /// layer does not label with: a rule-based layer's names it, a single
 /// label's names none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsPin {
     /// The changes, at least one.
     pub pins: Vec<LabelPinChange>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.labels.pin` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsPinned {
     /// The objects whose pins changed (an undo step was written when any did).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -168,10 +149,8 @@ pub struct LabelsPinned {
 
 /// An object's pins as `cad.labels.pin` would leave them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PinnedObject {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -180,10 +159,8 @@ pub struct PinnedObject {
 
 /// What `cad.labels.pin` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsPinPlan {
     /// The objects whose pins would change, in the input's order.
     pub objects: Vec<PinnedObject>,
@@ -212,38 +189,30 @@ pub const CAD_LABELS_REPORT_VERSION: u32 = 1;
 /// and with the label pins parked in its binding (`parked`, §3); a band that cannot be read (the file is gone, or
 /// is not the version the layer matches) is the warning `band_unread`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsReport {
     /// Screen pixels per metre of ground.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
     pub px_per_metre: Option<f64>,
     /// The denominator of a sheet map's scale, 1:N.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub paper_scale: Option<u32>,
     /// The ground's window; absent: the drawing's extent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub window: Option<[f64; 4]>,
     /// Only these layers' labels are counted (their objects and the others' still hold the room); absent: all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
 }
 
 /// What a placing came to, in labels.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelCounts {
     /// Labels with a place.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -272,55 +241,44 @@ pub struct LabelCounts {
 
 /// One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerLabelReport {
     pub layer: String,
     pub counts: LabelCounts,
     /// The source the layer is bound to; absent for any other layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     /// The area of a part's working copy: only its rows are the layer's labels and obstacles, the table's other
     /// rows hold no room and have no label here. Absent: the whole table (or no source).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub part: Option<[f64; 4]>,
     /// Of the window, how much a part's area leaves out: true when the window reaches past the part.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub partial: bool,
     /// The band round a part where the table's rows hold room for the labels near its edge without being the layer's
     /// objects (docs/adr/0578 §1): the part's area grown by 15 % of its shorter side. Absent without a part.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub band: Option<[f64; 4]>,
     /// How many rows of the band held room. Absent when the band could not be read (the file changed or is gone:
     /// the warning `band_unread`) or without a part.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub neighbours: Option<u32>,
     /// The label pins parked in the layer's binding: their object's row is outside the part (docs/adr/0578 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ParkedInfo>>", optional))]
     pub parked: Vec<ParkedInfo>,
 }
 
 /// Pins parked for one object: its lasting id, the key's value, how many pins.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParkedInfo {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub pins: u32,
@@ -328,10 +286,8 @@ pub struct ParkedInfo {
 
 /// Output of `cad.labels.report` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsReported {
     /// The window as used.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

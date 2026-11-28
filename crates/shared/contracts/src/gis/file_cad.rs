@@ -1,8 +1,6 @@
 //! DWG exchange contracts (ADR 0586). These contain no external codec types.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const FILE_IMPORT_DWG: &str = "file.import.dwg";
 pub const FILE_IMPORT_DWG_VERSION: u32 = 1;
@@ -11,9 +9,7 @@ pub const FILE_EXPORT_DWG_VERSION: u32 = 1;
 
 /// The binary format signature, not the release year of the application saving it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DwgVersion {
     AC1014,
     AC1015,
@@ -67,33 +63,26 @@ pub type DwgImported = crate::DxfImported;
 
 /// Export a drawing in a deliberately selected DWG binary format.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportDwg {
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_polyline_loss: bool,
     pub path: String,
     /// Only the named persistent objects; intersected with layers when both are given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
     #[serde(default)]
     pub overwrite: bool,
     /// Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
     /// (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub replace_source: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotations: Option<crate::DxfAnnotations>,
     /// A DWG file signature; one signature (AC1032) stands for several release years of the format.
     #[serde(default)]
@@ -105,8 +94,6 @@ pub type DwgExported = crate::DxfExported;
 
 /// A machine-readable CAD format profile exposed by the shared command catalog.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadFormatCapabilities {
     pub format: String,
@@ -121,8 +108,6 @@ pub struct CadFormatCapabilities {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadFeatureSupport {
     pub feature: String,
@@ -134,9 +119,7 @@ pub struct CadFeatureSupport {
 
 /// Portable paper-space exchange model; entity coordinates are metres on paper.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadLayout {
     pub name: String,
@@ -154,24 +137,19 @@ pub struct CadLayout {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadViewport {
     /// Paper-space clipping boundary in mm, x right/y up. Empty is the rectangular viewport.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::Vec2>>", optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-mm")))]
     pub paper_clip_mm: Vec<crate::Vec2>,
     #[serde(
         default = "viewport_frame_yes",
         skip_serializing_if = "viewport_frame_is_yes"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub frame_plot: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub locked: bool,
     /// Paper-space centre in millimetres, x right, y up.
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-mm")))]

@@ -46,15 +46,12 @@ impl ScanState {
 
 /// `POST /v1/uploads`: what is about to be sent.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UploadBegin {
     /// The file's name with its extension (`pafta-3.pdf`): its kind is read from it and checked against its bytes.
     pub name: String,
     /// Bytes, at least 1.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub size: u64,
     /// The whole file's SHA-256, 64 lower-case hexadecimal digits.
     pub sha256: String,
@@ -91,35 +88,28 @@ pub struct UploadView {
 
 /// `POST /v1/dossiers/{id}/files/from-upload`: a received upload becomes a dossier's file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DossierFileFromUpload {
     pub upload_id: String,
     /// `package` (the application's or the delivery's documents) or `attachment` (with the next message).
     pub purpose: String,
     /// A document type of the portal's catalogue (`GET /v1/portal/catalog`); absent: found from the name.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub doc_type: Option<String>,
 }
 
 /// `POST /v1/tenants/{tenant}/projects/{project}/attachments`: a received upload becomes the project's attachment.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AttachmentCreate {
     pub upload_id: String,
     /// A word on what it is (“Zemin etüdü, 2. sondaj”), at most 2000 characters.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub note: Option<String>,
     /// The drawing's revision it goes with (a file project's), if any.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub revision: Option<i64>,
 }
 

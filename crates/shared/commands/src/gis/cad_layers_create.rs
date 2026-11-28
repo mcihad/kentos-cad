@@ -5,8 +5,6 @@
 //! the layer goes and the table stays in the source, as any table a layer reads).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::LayerField;
 
@@ -15,10 +13,8 @@ pub const CAD_LAYERS_CREATE_VERSION: u32 = 1;
 
 /// Where the table is made.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CreateTarget {
     /// A table of a GeoPackage file (`path`), the file made when it is not there.
     #[default]
@@ -29,10 +25,8 @@ pub enum CreateTarget {
 
 /// What the table's rows are.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CreateGeometry {
     #[default]
     Point,
@@ -56,73 +50,57 @@ pub enum CreateGeometry {
 /// take them: a repeated name, a kind's choices), `unknown_srid` (a system this project cannot write), `target_exists`
 /// (the table is there), `source_unreachable` (the source could not be read or written; the message says why).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersCreate {
     /// The layer's name in Katmanlar.
     pub name: String,
     pub target: CreateTarget,
     /// `gpkg`: the GeoPackage file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub address: Option<String>,
     /// `postgis`: the schema; none: `public`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub schema: Option<String>,
     /// The table's name; none: the layer's name made a table name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     pub geometry: CreateGeometry,
     /// Every geometry a multi-part one (`MULTIPOINT` …).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub multi: Option<bool>,
     /// With Z.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<bool>,
     /// The table's system, an EPSG code; none: the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub srid: Option<u32>,
     /// The columns, in order: each one's name, kind and (a text's) length; none: no column but the key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
     /// The key column's name; none: `fid`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// The geometry column's name; none: `geom`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry_column: Option<String>,
     /// The group the layer goes in; none: the top of the tree.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     /// Its place among its siblings; none: the first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub index: Option<u32>,
 }
 
 /// What `cad.layers.create` made: the layer added, the table, where it is, its geometry type, its system.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersCreated {
     /// The data layer added (its id); empty in a plan.
     pub layer: String,
@@ -132,11 +110,9 @@ pub struct LayersCreated {
     pub address: String,
     /// OGC's name of the geometry type made (`MULTIPOLYGON Z`); none for a table of records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     /// The table's system; none for a table of records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub srid: Option<u32>,
     pub revision: String,

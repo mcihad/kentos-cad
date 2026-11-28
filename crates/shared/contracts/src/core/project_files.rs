@@ -55,10 +55,8 @@ pub const PROJECT_IMPORTED: &str = "project.import";
 
 /// Opening an upload: what the client will send.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileUploadBegin {
     /// Bytes, at most [`FILE_UPLOAD_MAX`].
     pub size: u32,
@@ -68,10 +66,8 @@ pub struct FileUploadBegin {
 
 /// An upload as the server keeps it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileUpload {
     pub id: String,
     pub size: u32,
@@ -86,12 +82,10 @@ pub struct FileUpload {
     /// parts goes on from here (`PUT …?offset=`, docs/adr/0045). Absent from
     /// servers before parts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub received_bytes: Option<String>,
     /// How many objects the file holds (decimal text), counted when it was
     /// verified; absent before that (and for revisions saved before it was counted).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objects: Option<String>,
 }
 
@@ -99,20 +93,16 @@ pub struct FileUpload {
 /// next revision. `expectedVersions["@file"]` is the revision the client's
 /// file was based on ("0" for the first).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileCommit {
     pub upload_id: String,
 }
 
 /// Output of `project.file.commit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileCommitted {
     /// The new revision (decimal text).
     pub revision: String,
@@ -122,7 +112,6 @@ pub struct FileCommitted {
     /// How many objects the file holds (decimal text), counted when it was
     /// verified; absent before that (and for revisions saved before it was counted).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objects: Option<String>,
     /// The stored answer of an earlier identical command (its key was seen).
     pub replayed: bool,
@@ -166,20 +155,16 @@ pub struct FileRevisions {
 /// Input of `project.import` v1: the caller's own verified upload of a
 /// `.kcad` file, into a database project that has nothing in it yet.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImport {
     pub upload_id: String,
 }
 
 /// Output of `project.import` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImported {
     /// How many objects came in (decimal text).
     pub objects: String,

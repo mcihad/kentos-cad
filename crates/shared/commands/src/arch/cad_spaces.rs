@@ -6,8 +6,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -31,40 +29,30 @@ pub const MAX_SPACES: usize = 10_000;
 /// Find bounded free rooms of the whole wall network or one semantic level.
 /// Bounds filter each room's interior representative point, never cut walls.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesDiscover {
     /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sources: Option<Vec<String>>,
 
     pub layer_id: String,
     /// Source scope: project follows level (absent: all); unassigned requires absent level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<SpaceScope>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
     /// Physical column deduction; absent keeps legacy wall-only areas.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<SpaceColumns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bounds: Option<[Vec2; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -72,10 +60,8 @@ pub struct SpacesDiscover {
 /// Existing rooms are preserved. A partial manual overlap blocks the whole
 /// write; the plan still shows the conflicting proposals and their sources.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceProposal {
     pub space: SpaceFields,
     pub existing: Vec<String>,
@@ -83,10 +69,8 @@ pub struct SpaceProposal {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesDiscovered {
     pub proposals: Vec<SpaceProposal>,
     pub revision: String,
@@ -94,79 +78,60 @@ pub struct SpacesDiscovered {
 
 /// One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewSpace {
     /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sources: Option<Vec<String>>,
 
     /// Persistent source scope for a seeded room; drawn rooms use project only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<SpaceScope>,
     /// A point inside it: its boundary is found from the walls round it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Option<Vec2>,
     /// Its boundary drawn, when no seed is given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<SpacePart>>,
     /// What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
     /// Physical column deduction; absent keeps legacy wall-only areas.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<SpaceColumns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub usage: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
     /// Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/8040
     /// §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     /// Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/8040 §3); absent: the top of the floor
     /// slab under it, else its storey's floor.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub floor_offset: Option<f64>,
     /// Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/8040 §3); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub finishes: Option<SpaceFinishes>,
     /// A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub void: Option<bool>,
     /// The building program's group it joins, by its id (docs/adr/0773); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
 }
 
@@ -176,33 +141,26 @@ pub struct NewSpace {
 /// `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
 /// `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesCreate {
     pub layer_id: String,
     pub spaces: Vec<NewSpace>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.spaces.create` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesCreated {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -213,10 +171,8 @@ pub struct SpacesCreated {
 
 /// What `cad.spaces.create` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesPlan {
     pub spaces: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -225,10 +181,8 @@ pub struct SpacesPlan {
 
 /// A space's own fields to change; absent ones stay, a nullable one's null takes it away.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceChange {
     /// Explicit UUIDs; null clears the list and restores scope/level search.
     #[serde(
@@ -236,19 +190,16 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<String>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<String>>"))]
     pub sources: Option<Option<Vec<String>>>,
     /// Source scope to keep for later wall/column updates; unassigned requires clearing level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<SpaceScope>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
     #[serde(
@@ -256,7 +207,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub name: Option<Option<String>>,
     #[serde(
@@ -264,23 +214,19 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub usage: Option<Option<String>>,
     /// The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
     /// Physical column deduction; absent keeps legacy wall-only areas.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<SpaceColumns>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub level: Option<Option<String>>,
     #[serde(
@@ -288,7 +234,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<ArchPhase>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<ArchPhase>"))]
     pub phase: Option<Option<ArchPhase>>,
     #[serde(
@@ -296,7 +241,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<Option<f64>>,
@@ -306,7 +250,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub floor_offset: Option<Option<f64>>,
@@ -316,7 +259,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub suspended_ceiling: Option<Option<f64>>,
@@ -325,7 +267,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub floor: Option<Option<String>>,
     #[serde(
@@ -333,7 +274,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub wall: Option<Option<String>>,
     #[serde(
@@ -341,7 +281,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub ceiling: Option<Option<String>>,
     /// The skirting's finish (Süpürgelik, docs/adr/0733 §3).
@@ -350,7 +289,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub base: Option<Option<String>>,
     /// The room list's finishes (docs/adr/8038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
@@ -359,7 +297,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub sill: Option<Option<String>>,
     #[serde(
@@ -367,7 +304,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub stair: Option<Option<String>>,
     #[serde(
@@ -375,12 +311,10 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub railing: Option<Option<String>>,
     /// A void or a room again (docs/adr/0708).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub void: Option<bool>,
     /// The building program's group, by its id (docs/adr/0773); null: out of any.
     #[serde(
@@ -388,7 +322,6 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub unit: Option<Option<String>>,
     /// Its own emsal state and basis (docs/adr/8125); null: its brief's and its words' again.
@@ -397,17 +330,14 @@ pub struct SpaceChange {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::SpaceEmsal>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::SpaceEmsal>"))]
     pub emsal: Option<Option<crate::SpaceEmsal>>,
 }
 
 /// What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 // An operation is read once per call: boxing its largest variant would save nothing worth the indirection.
 #[allow(clippy::large_enum_variant)]
 pub enum SpacesOperation {
@@ -418,7 +348,6 @@ pub enum SpacesOperation {
     /// tags go with them: the answer's `decision` says so before anything is written (docs/adr/0773 §4).
     Merge {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         keep: Option<String>,
         #[serde(
@@ -426,7 +355,6 @@ pub enum SpacesOperation {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         number: Option<Option<String>>,
     },
@@ -438,21 +366,17 @@ pub enum SpacesOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         line: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         keep: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         numbers: Option<Vec<String>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         finishes: Option<bool>,
     },
     /// Duvarlardan bul: each space's boundary found again from the walls round `seed` (absent: its own seed, else
     /// its pole of inaccessibility).
     Rebound {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         seed: Option<Vec2>,
     },
@@ -465,16 +389,13 @@ pub enum SpacesOperation {
 /// `invalid_space`, `level_not_found`, `too_few_objects`, `spaces_not_touching`, `split_missed`, `space_not_enclosed`,
 /// `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesEdit {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     pub operation: SpacesOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -482,23 +403,18 @@ pub struct SpacesEdit {
 /// Output of `cad.spaces.edit` v1 (its plan's too: the spaces as they would be, nothing written): the spaces kept
 /// (their ids kept), the new ones, the ids gone.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesEdited {
     pub spaces: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
     /// The ids kept, in their order.
     pub kept: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     /// A merge's or a split's decision, one per space named (docs/adr/0773 §4).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpaceDecision>>", optional))]
     pub decisions: Vec<SpaceDecision>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -506,10 +422,8 @@ pub struct SpacesEdited {
 
 /// How the space whose id goes on was chosen.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpaceKeptBy {
     /// Named (a merge's `keep`, a split's `keep` point).
     Given,
@@ -521,60 +435,47 @@ pub enum SpaceKeptBy {
 
 /// A part a split makes, or a space a merge takes in.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacePieceDecision {
     /// A merged space's id; a split's new part has none until written (the answer's `added`, in order).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
     /// The finishes it takes (a split's part) or that go with it (a merged space's).
     #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceFinishes>", optional))]
     pub finishes: SpaceFinishes,
     /// Its tags: a merged space's lose their space; none for a split's part.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub tags: Vec<String>,
     /// The fixtures (block inserts) standing in it, by their ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fixtures: Vec<String>,
 }
 
 /// What a merge or a split does with a space's identity and its work (docs/adr/0773 §4), said before it is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceDecision {
     /// The id that goes on.
     pub kept: String,
     pub by: SpaceKeptBy,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
     /// Its group, kept.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     /// The fixtures standing in it after.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fixtures: Vec<String>,
     /// A split's new parts, in the answer's `added` order; a merge's spaces taken in, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpacePieceDecision>>", optional))]
     pub pieces: Vec<SpacePieceDecision>,
 }
 
@@ -586,70 +487,52 @@ pub struct SpaceDecision {
 ///
 /// Refusals: `level_not_found`, `layer_not_found`, `building_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesQuantities {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub levels: Option<Vec<String>>,
     /// One of the program's buildings by its id: the storeys it counts (docs/adr/8072 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phases: Option<Vec<ArchPhase>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub usages: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
 }
 
 /// A space measured.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceRow {
     /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sources: Option<Vec<String>>,
 
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub usage: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     pub method: SpaceMethod,
     /// Persistent column policy; omitted for legacy/ignore rows.
     #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
     pub columns: SpaceColumns,
     #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
     pub scope: SpaceScope,
     /// A stale boundary's reason; area/perimeter/volume then describe the last
     /// valid geometry, included in totals. Absent for every valid boundary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary_break: Option<crate::SpaceBreak>,
     /// A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub void: bool,
     /// Its rings' area, m².
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -659,27 +542,22 @@ pub struct SpaceRow {
     /// Its inside height (PAİY 4(1)(ıı), docs/adr/8040 §3): its finished floor to its ceiling (its asma tavan, its
     /// height typed, the slab over it); without one, its storey's top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
     /// Its asma tavan's area, m² (docs/adr/8040 §3): its net area; none without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub suspended_ceiling_area: Option<f64>,
     /// A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
     /// gaps to the floor) its sides run along, metres; none for a void.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub baseboard: Option<f64>,
     /// A space from the walls: its area by each method, m².
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub by_method: Option<BTreeMap<String, f64>>,
     /// The rule its numbers come from.
@@ -688,17 +566,13 @@ pub struct SpaceRow {
 
 /// A wall measured.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallRow {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// Along its base line, metres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -706,71 +580,57 @@ pub struct WallRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     /// length × height, m²; none without a height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub gross_area: Option<f64>,
     /// Its openings' areas, m² (those with a height).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub openings_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub net_area: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
     /// Its pocket doors' cavities, m³ (docs/adr/0787 §3): each pocket's length × width along the wall's middle × its
     /// door's height (head − sill), taken off its volume; its faces keep them. None without a pocket door with a head.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub pockets_volume: Option<f64>,
     /// Its openings' ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub openings: Vec<String>,
     pub rule: String,
 }
 
 /// An opening measured.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningRow {
     pub uid: String,
     pub form: crate::OpeningForm,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     /// Head less sill (sill absent: 0); none without a head.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     /// A niche's or flue's depth across its wall (docs/adr/0719 §4); none for one that goes through, which alone is
     /// taken off its wall's net face.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
 }
@@ -784,18 +644,14 @@ fn is_zero(v: &f64) -> bool {
 /// that area times the component's thickness; a slab's its net area and its volume. Walls without a height count, but add
 /// no area; slabs left out of the quantities (`excluded`) are not summed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialRow {
     /// The project material's id; absent: a text material (not bound).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<crate::MaterialCategory>,
     /// How it is counted (a text material: by volume).
     pub quantity: crate::MaterialQuantity,
@@ -815,29 +671,23 @@ pub struct MaterialRow {
 
 /// A slab measured (docs/adr/0722 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabRow {
     pub uid: String,
     pub role: crate::SlabRole,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub thickness: f64,
     /// Its top above its level's elevation.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: f64,
     /// Its top's elevation: its level's elevation and its offset; none when its level has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub top: Option<f64>,
     /// Its rings' area, its holes taken off, m².
@@ -845,7 +695,6 @@ pub struct SlabRow {
     pub area: f64,
     /// The area the voids of its level (shafts, docs/adr/0708) take out of it, m².
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub void_area: f64,
     /// `area` less `voidArea`, m².
@@ -857,35 +706,28 @@ pub struct SlabRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub edge: Option<crate::SlabEdgeKind>,
     /// Its edge's runs' length, metres.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub edge_length: f64,
     /// Listed, not summed.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub excluded: bool,
     pub rule: String,
     /// Its layers besides its structure (docs/adr/8040 §2), over it then under it, each measured on its net area;
     /// `volume` is the structure's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayerRow>>", optional))]
     pub layers: Vec<SlabLayerRow>,
 }
 
 /// A slab's layer measured (docs/adr/8040 §2): its kind, its thickness, its net area (the slab's) and its volume.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabLayerRow {
     pub kind: crate::SlabLayerKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub thickness: f64,
@@ -899,14 +741,11 @@ pub struct SlabLayerRow {
 
 /// A ramp measured (docs/adr/0723 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RampRow {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
@@ -915,7 +754,6 @@ pub struct RampRow {
     pub rise: f64,
     /// Its slope as drawn, per cent: its rise's size over its sloped length; none when no sloped run is left.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub slope: Option<f64>,
     /// Its sloped runs' length: its centre line less its landings, metres.
@@ -925,7 +763,6 @@ pub struct RampRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
     #[serde(default, skip_serializing_if = "is_zero_count")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub landings: u32,
     /// Its band's plan area, m².
@@ -938,12 +775,10 @@ pub struct RampRow {
     pub top: f64,
     /// Its start over its level's when bound to it (docs/adr/0723 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base_offset: Option<f64>,
     /// Its railings' lines' length, metres.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub railing_length: f64,
     pub rule: String,
@@ -955,14 +790,11 @@ fn is_zero_count(n: &u32) -> bool {
 
 /// A stair measured (docs/adr/0724 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StairRow {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
@@ -979,7 +811,6 @@ pub struct StairRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
     #[serde(default, skip_serializing_if = "is_zero_count")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub landings: u32,
     /// Its band's plan area, m².
@@ -987,36 +818,29 @@ pub struct StairRow {
     pub area: f64,
     /// Its railings' lines' length, metres.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub railing_length: f64,
     /// A curved stair's walking line's radius and its tread at its inner side.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub inner_tread: Option<f64>,
     /// Its height follows its level's (docs/adr/0724 §1).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub height_from_level: bool,
     pub rule: String,
 }
 
 /// A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TransitionRow {
     /// The passage's id.
     pub opening: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
     /// The strip's length: the passage's width, metres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1029,17 +853,14 @@ pub struct TransitionRow {
 
 /// The rows' sums.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QuantityTotals {
     /// The rooms' area, voids left out (docs/adr/0708).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub space_area: f64,
     /// The voids' area: shafts, lift shafts, openings in the floor.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub void_area: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1052,52 +873,41 @@ pub struct QuantityTotals {
     pub opening_area: f64,
     /// The rooms' baseboards, metres (docs/adr/0722 §5).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub baseboard_length: f64,
     /// The slabs' net area and volume, those left out not summed.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub slab_area: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub slab_volume: f64,
     /// The railings' and parapets' length along the slabs' free sides, metres.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub railing_length: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub parapet_length: f64,
     /// The ramps' plan area and their railings' length (docs/adr/0723 §3).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub ramp_area: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ramp_railing_length: f64,
     /// The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub stair_area: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub stair_railing_length: f64,
     #[serde(default, skip_serializing_if = "is_zero_count")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stair_risers: u32,
     /// The beams', lintels' and bond beams' concrete (docs/adr/8041 §3).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub beam_volume: f64,
 }
@@ -1107,18 +917,14 @@ pub struct QuantityTotals {
 /// slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
 /// in their wall, is the whole.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BeamRow {
     pub uid: String,
     pub role: crate::BeamRole,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tag: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
@@ -1129,7 +935,6 @@ pub struct BeamRow {
     pub length: f64,
     /// The slab's structure it hangs from, within its height; none: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub slab: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -1139,38 +944,30 @@ pub struct BeamRow {
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesQuantified {
     pub spaces: Vec<SpaceRow>,
     pub walls: Vec<WallRow>,
     pub openings: Vec<OpeningRow>,
     /// The slabs (docs/adr/0722 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabRow>>", optional))]
     pub slabs: Vec<SlabRow>,
     /// The floor finishes' changes at the passages.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TransitionRow>>", optional))]
     pub transitions: Vec<TransitionRow>,
     /// The ramps (docs/adr/0723 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RampRow>>", optional))]
     pub ramps: Vec<RampRow>,
     /// The stairs (docs/adr/0724 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StairRow>>", optional))]
     pub stairs: Vec<StairRow>,
     /// The beams, lintels and bond beams (docs/adr/8041 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BeamRow>>", optional))]
     pub beams: Vec<BeamRow>,
     /// The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
     /// order, then the text ones in the drawing's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MaterialRow>>", optional))]
     pub materials: Vec<MaterialRow>,
     pub totals: QuantityTotals,
 }

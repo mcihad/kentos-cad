@@ -10,7 +10,6 @@ use ts_rs::TS;
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Vec2 {
     pub x: f64,
     pub y: f64,
@@ -24,7 +23,6 @@ pub struct Vec2 {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntityBase {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
@@ -81,7 +79,6 @@ pub const MAX_LINE_WEIGHT: f64 = 100.0;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -104,7 +101,6 @@ pub struct PointEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointPart {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
@@ -117,7 +113,6 @@ pub struct PointPart {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LineEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -153,7 +148,6 @@ pub struct LineEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RingGeometry {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
@@ -176,7 +170,6 @@ pub struct RingGeometry {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AreaPart {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
@@ -204,7 +197,6 @@ pub struct AreaPart {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PathEntity {
     /// Explicit virtual room boundary; absent keeps an ordinary path. Only a
     /// single planar, widthless polyline may carry the architectural role.
@@ -267,7 +259,6 @@ pub struct PathEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CircleEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -282,7 +273,6 @@ pub struct CircleEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArcEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -301,7 +291,6 @@ pub struct ArcEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EllipseEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -322,7 +311,6 @@ pub struct EllipseEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstructionEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -336,7 +324,6 @@ pub struct ConstructionEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SplineEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -350,7 +337,6 @@ pub struct SplineEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -420,7 +406,6 @@ pub struct TextEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextPath {
     /// The vertices after `p`, at least one.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -614,7 +599,6 @@ impl PathEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Paragraph {
     /// Metres, finite and over 0: the lines wrap word by word to this width.
     /// Absent: they end only at line breaks.
@@ -655,7 +639,6 @@ crate::lean_default!(Paragraph);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TextLayoutEngine {
     #[serde(rename = "unicode-v1")]
     UnicodeV1,
@@ -669,7 +652,6 @@ pub enum TextLayoutEngine {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParagraphLayout {
     /// Explicit metric/glyph profile; absent: the existing legacy layout.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -702,7 +684,6 @@ pub struct ParagraphLayout {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextColumns {
     #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 16)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -946,7 +927,6 @@ pub const MAX_LINE_SPACING: f64 = 4.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextRun {
     /// Its first letter and the one past its last, counting Unicode scalar values.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -977,7 +957,6 @@ pub struct TextRun {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TextScript {
     Super,
     Sub,
@@ -1009,7 +988,6 @@ pub fn width_factor_ok(f: f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TextAlign {
     BaselineCenter,
     BaselineRight,
@@ -1099,7 +1077,6 @@ impl TextAlign {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct InsertEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -1176,10 +1153,8 @@ pub struct InsertEntity {
 /// its layer's (its insert's layer on the block's layer), any other part its
 /// insert's (BYBLOCK).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockDefinition {
     pub id: crate::identity::BlockId,
     /// Unique in the drawing, Turkish case folded.
@@ -1190,28 +1165,22 @@ pub struct BlockDefinition {
     pub entities: Vec<Entity>,
     /// The texts an insert shows from its attributes (ATTDEF).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AttributeDefinition>>", optional))]
     pub attributes: Vec<AttributeDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
     /// keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
     /// unit). Absent: a real-size block of an unknown unit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<BlockUnits>,
     /// Its library card (docs/adr/0317 §4): category, tags and version.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub card: Option<BlockCard>,
     /// Its parameters and actions (docs/adr/0318): one definition at many sizes and looks.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dynamic: Option<crate::block_dynamic::DynamicBlock>,
     /// An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub xref: Option<crate::xref::XrefSource>,
 }
 
@@ -1242,22 +1211,17 @@ impl BlockDefinition {
 /// A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its
 /// description, its size and its attributes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockCard {
     /// Stable library identity, independent of the drawing's local edit counter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub publication: Option<BlockPublication>,
     /// A path of categories by `/` (`Mimari/Kapılar`); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
     /// Words it is found by, each once, Turkish case folded.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub tags: Vec<String>,
     /// How many times its definition has changed since it was made: 1 when made; each change of its objects, base,
     /// attributes or unit adds one.
@@ -1267,42 +1231,34 @@ pub struct BlockCard {
     /// What it is as a building element (docs/adr/8070 §5): its class, its type and its body. Absent: no building
     /// element (a mark, a title block, a symbol), which the building's model does not hold.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub element: Option<BlockElement>,
 }
 
 /// A block as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its class and type,
 /// and its body: the block's drawn outline in plan from its underside, `elevation` over its floor, `height` up.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockElement {
     pub class: BlockElementClass,
     /// Its type as IFC 4.3 spells it (`TABLE`, `WASHHANDBASIN`, `ELEVATOR`; [`BlockElementClass::types`]);
     /// `USERDEFINED` takes the block's name as its object type. Absent: none, which EK-6 counts as missing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub predefined: Option<String>,
     /// Its body's height, metres; absent: no body, its outline in plan only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     /// Its underside over its floor, metres (a wall unit's, a wall-hung basin's); absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub elevation: Option<f64>,
 }
 
 /// A block's building element class (EK-5 Tablo 5.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockElementClass {
     /// Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.
     Furniture,
@@ -1441,10 +1397,8 @@ impl BlockElement {
 /// The publisher-assigned identity of a 2D component type and its release.
 /// This is metadata, not a signature or permission to update a drawing.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockPublication {
     pub family_id: crate::BlockId,
     /// Stable across release and display-name changes, independent of the drawing's block id.
@@ -1458,10 +1412,8 @@ pub struct BlockPublication {
 
 /// The unit a block was drawn in (docs/adr/0315 §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockUnits {
     Mm,
     Cm,
@@ -1508,19 +1460,15 @@ impl BlockUnits {
 /// attribute `tag`, else `value`, written at `p` in the definition's
 /// coordinates, moved with the insert.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AttributeDefinition {
     pub tag: String,
     /// What Blok ekle asks for it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub prompt: Option<String>,
     /// The default value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
@@ -1532,60 +1480,47 @@ pub struct AttributeDefinition {
     pub rotation: f64,
     /// Where `p` is on the text, as a text's (docs/adr/0145).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub align: Option<TextAlign>,
     /// The letters' width times this, as a text's (docs/adr/0145).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     /// Its options (docs/adr/0317 §1), each absent when off.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub options: AttributeOptions,
 }
 
 /// An attribute definition's options (docs/adr/0317 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AttributeOptions {
     /// Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub invisible: bool,
     /// Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub constant: bool,
     /// Blok ekle asks for it twice, the two the same (bit 4).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub verify: bool,
     /// Blok ekle takes its default without asking (bit 8).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub preset: bool,
     /// An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub movable: bool,
     /// Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub multiline: bool,
     /// A multiline attribute's box width, metres in the definition's size.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub box_width: Option<f64>,
     /// A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its
     /// place, the project's `@` values); the commands that place, sync and update fields write it as the value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
 }
 
@@ -1600,7 +1535,6 @@ pub const MAX_BLOCK_DEPTH: usize = 16;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionStyle {
     Aligned,
     Linear,
@@ -1701,7 +1635,6 @@ impl DimensionStyle {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -1779,7 +1712,6 @@ pub struct DimensionEntity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -1816,7 +1748,6 @@ pub struct HatchEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeaderEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -1884,7 +1815,6 @@ pub struct LeaderEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LeaderArm {
     /// At least one: its tip first, then its bends; it ends at the leader's last vertex.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1910,7 +1840,6 @@ pub use leader_rules::{
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LeaderArrow {
     /// Açık ok: the filled triangle's two sides (Open).
     Open,
@@ -2017,7 +1946,6 @@ impl LeaderArrow {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Entity {
     Point(PointEntity),
     Line(LineEntity),
@@ -2085,7 +2013,6 @@ pub enum Entity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

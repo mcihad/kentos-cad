@@ -5,15 +5,11 @@
 //! schema does not follow the profile's (`.kcad` schema 132 says only that the list is there and holds these rules).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// What a project's profile file is: a data profile or a mapping of one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileFileKind {
     Profile,
     Mapping,
@@ -21,10 +17,8 @@ pub enum ProfileFileKind {
 
 /// A profile or a mapping the project carries inside its file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectProfileFile {
     pub kind: ProfileFileKind,
     /// The profile's or the mapping's name, the name of its folder file too: small letters, digits and `-`, at most 64.

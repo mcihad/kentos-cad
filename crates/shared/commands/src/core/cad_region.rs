@@ -14,8 +14,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -34,32 +32,25 @@ pub const CAD_ENTITIES_HATCH_VERSION: u32 = 1;
 /// and an object template's attributes, label and symbol. Absent: the
 /// layer's look, nothing carried.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NewLook {
     /// Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (0 the thinnest, at most 100), for what
     /// is drawn with lines. Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id. Absent: the layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
 }
 
@@ -78,10 +69,8 @@ pub struct NewLook {
 /// `not_a_layer`, `layer_locked`, `invalid_line_weight`); a hidden layer
 /// gives a `layer_hidden` warning; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesBoundary {
     /// A point inside the region.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -90,35 +79,28 @@ pub struct EntitiesBoundary {
     pub layer_id: String,
     /// Whose line work closes the region; absent: every shown object (`all`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundaries: Option<TrimBoundaries>,
     /// Sınır katmanı: only this layer's line work counts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary_layer: Option<String>,
     /// Adalar: closed groups inside the region are holes; absent: true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub islands: Option<bool>,
     /// How the area looks and what it carries.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// How Tarama finds the region around a point.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchWay {
     /// Kapalı nesne: the smallest closed object around the point,
     /// the smaller closed objects inside or across its edge its islands; the
@@ -133,10 +115,8 @@ pub enum HatchWay {
 
 /// How a region's islands are taken (docs/adr/0329 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum IslandStyle {
     /// Dış: the islands are left open, whatever lies inside them too.
     #[default]
@@ -154,10 +134,8 @@ pub const MAX_HATCH_GAP: f64 = 1000.0;
 
 /// Where Tarama hatches.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchRegion {
     /// The region around `at`.
     Point {
@@ -165,11 +143,9 @@ pub enum HatchRegion {
         at: Vec2,
         /// How the region is found; absent: `object`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         way: Option<HatchWay>,
         /// `lines`: whose line work closes the region; absent: every shown object.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         boundaries: Option<TrimBoundaries>,
         /// `lines`: only this layer's line work counts (Sınır katmanı).
         #[serde(
@@ -177,26 +153,21 @@ pub enum HatchRegion {
             skip_serializing_if = "Option::is_none",
             rename = "boundaryLayer"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         boundary_layer: Option<String>,
         /// Adalar: the islands are left unhatched; absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         islands: Option<bool>,
         /// Yazılar: the texts and inserts in the region are left open, each
         /// its box a little wider; absent: false.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         texts: Option<bool>,
         /// İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
         /// docs/adr/0328 §3); absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
         /// Further points, each a region of its own found as `at`'s; a region two points find is hatched once
         /// (docs/adr/0329 §2).
         #[serde(default, rename = "alsoAt", skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec2>>", optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         also_at: Vec<Vec2>,
         /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
@@ -205,12 +176,10 @@ pub enum HatchRegion {
             rename = "islandStyle",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         island_style: Option<IslandStyle>,
         /// `lines`: gaps in the line work up to this many metres are closed, each dangling end bridged to the
         /// nearest line work (docs/adr/0329 §3); absent: 0.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         gap: Option<f64>,
     },
@@ -221,15 +190,12 @@ pub enum HatchRegion {
         uids: Vec<String>,
         /// Adalar; absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         islands: Option<bool>,
         /// Yazılar; absent: false.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         texts: Option<bool>,
         /// İlişkili; absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
         /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
         #[serde(
@@ -237,7 +203,6 @@ pub enum HatchRegion {
             rename = "islandStyle",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(optional))]
         island_style: Option<IslandStyle>,
     },
 }
@@ -267,10 +232,8 @@ impl HatchRegion {
 
 /// The pattern by its name, as Tarama's Desen lists it, and its options.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchPatternSpec {
     /// The pattern's name: Çizgili, Çapraz, Dolu, a library pattern (ANSI31,
     /// ISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its
@@ -278,43 +241,34 @@ pub struct HatchPatternSpec {
     pub name: String,
     /// Ölçek: on paper, times the project's plot scale; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: Option<f64>,
     /// Açı, degrees; absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: Option<f64>,
     /// İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub second_color: Option<String>,
     /// Ters: a gradient's colours swapped; absent: false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub inverted: Option<bool>,
     /// What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in
     /// the drawing; absent: paper.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub basis: Option<ScaleBasis>,
     /// Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub origin: Option<HatchOrigin>,
     /// Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotative: Option<bool>,
 }
 
 /// What a pattern's Ölçek is of (docs/adr/0331 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ScaleBasis {
     /// Kâğıtta: the definition's units on paper, at the project's plot scale.
     #[default]
@@ -325,10 +279,8 @@ pub enum ScaleBasis {
 
 /// A region's corner, or its middle (docs/adr/0331 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BoxCorner {
     BottomLeft,
     BottomRight,
@@ -339,10 +291,8 @@ pub enum BoxCorner {
 
 /// Where a pattern's lines are anchored (docs/adr/0331 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchOrigin {
     /// The world's origin: neighbouring hatches line up.
     World,
@@ -356,7 +306,6 @@ pub enum HatchOrigin {
     Corner {
         corner: BoxCorner,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         across: bool,
     },
 }
@@ -380,10 +329,8 @@ pub enum HatchOrigin {
 /// layer's and the look's as `cad.entities.create` checks them; on the
 /// desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesHatch {
     /// Where to hatch.
     pub region: HatchRegion,
@@ -393,24 +340,20 @@ pub struct EntitiesHatch {
     pub layer_id: String,
     /// How the hatches look and what they carry.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
     /// The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub transparency: Option<f64>,
     /// Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:
     /// `none`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub draw_order: Option<HatchDrawOrder>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -418,10 +361,8 @@ pub struct EntitiesHatch {
 /// Where a new hatch is drawn among the objects of its layer (docs/adr/0332 §1): the draw order is the layer's own
 /// (docs/adr/0260 §4); across layers the layers' order decides.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchDrawOrder {
     /// Atama: as a new object, over what its layer had.
     #[default]

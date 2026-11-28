@@ -5,15 +5,11 @@
 //! the application's test runs each row's command and holds the table to what the document does.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// Whether undo takes a change back.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EffectUndo {
     /// An undo step of the drawing.
     Step,
@@ -25,10 +21,8 @@ pub enum EffectUndo {
 
 /// A part of the project a change writes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EffectPart {
     /// The drawing's objects.
     Objects,
@@ -228,14 +222,11 @@ pub const CHANGE_EFFECTS: [ChangeEffect; 18] = [
 
 /// A row as the catalog lists it (`effects`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogEffect {
     pub id: String,
     pub change: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub command: Option<String>,
     pub undo: EffectUndo,
     pub dirty: bool,

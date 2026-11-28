@@ -1,18 +1,14 @@
 //! The horizontal alignments: their intersection points, offsets and stationing. A part of the road project's settings (docs/adr/8054 §9).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[allow(unused_imports)]
 use super::*;
 
 /// A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentOffset {
     pub alignment: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -22,10 +18,8 @@ pub struct AlignmentOffset {
 /// A station equation (docs/adr/0901 §6): the km where it is (read before it), the km after it, and whether the km
 /// grows after it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StationEquationDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub back: f64,
@@ -33,24 +27,19 @@ pub struct StationEquationDef {
     pub ahead: f64,
     /// Absent: true.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub increasing: bool,
 }
 
 /// An alignment's km: the km at its start and its equations in order.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentStationing {
     /// Absent: 0.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub start: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StationEquationDef>>", optional))]
     pub equations: Vec<StationEquationDef>,
 }
 
@@ -62,10 +51,8 @@ impl AlignmentStationing {
 
 /// A horizontal alignment's definition (docs/adr/0901): its PIs, or the alignment it is parallel to; its km.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentDef {
     /// Unique in the project; what a profile, a corridor or a parallel axis names.
     pub id: String,
@@ -73,37 +60,30 @@ pub struct AlignmentDef {
     pub name: String,
     /// Grows by one with every change of its geometry or km; absent: 0.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     /// Its start, PIs and end; empty for a parallel axis.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentPi>>", optional))]
     pub pis: Vec<AlignmentPi>,
     /// A parallel axis's source; absent for an alignment of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset_of: Option<AlignmentOffset>,
     /// Its km; absent: from 0 with no equation. A parallel axis has its source's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
     /// The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
     /// and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
     /// seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
     /// has its source's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub design_speed: Option<f64>,
     /// Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
     /// on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub start_place: Option<String>,
     /// Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end_place: Option<String>,
 }
 
@@ -124,10 +104,8 @@ pub fn place_ok(name: &str) -> bool {
 /// an asymmetric one (`lengthIn` and `lengthOut` together) or a circle (`radius`); none of them: no curve. The first
 /// and the last carry none.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilePvi {
     /// Unique in the profile.
     pub id: String,
@@ -137,22 +115,18 @@ pub struct ProfilePvi {
     pub elevation: f64,
     /// A symmetric parabola's horizontal length; absent or 0: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: f64,
     /// An asymmetric parabola's horizontal length before the PVI; absent or 0: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length_in: f64,
     /// … and after it.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length_out: f64,
     /// A circular curve's radius in the station–elevation plane; absent or 0: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
 }

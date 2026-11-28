@@ -5,8 +5,6 @@
 //! same (PostgreSQL's NULLS NOT DISTINCT). A GeoPackage the layer is written to gets its indexes, one read brings them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::{LayerField, LayerFieldKind, fold, js_trim};
 
@@ -17,10 +15,8 @@ pub const MOST_INDEX_FIELDS: usize = 32;
 
 /// An index of a layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerIndex {
     /// Its name, once in the layer (the Turkish way, case aside): what a refusal and a file call it (1–64
     /// characters).
@@ -29,12 +25,10 @@ pub struct LayerIndex {
     pub fields: Vec<String>,
     /// The layer's key: no two records hold the same values in its fields; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unique: bool,
     /// Empty values are the same value: a set with one is compared as the others (PostgreSQL's NULLS NOT DISTINCT);
     /// only with `unique`; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub nulls_equal: bool,
 }
 

@@ -7,8 +7,6 @@
 //! file formats and the sheet core, which the document's commands do not.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drawing as a DXF file of the 2007 format (AC1021).
 pub const FILE_EXPORT_DXF: &str = "file.export.dxf";
@@ -83,24 +81,19 @@ pub const FILE_COMMANDS: &[(&str, u32)] = &[
 /// `invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,
 /// `entity_not_found`, `nothing_to_export` (a block without objects), `not_finite` (`base`), `file_unwritable`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportBlock {
     /// The file to write, an absolute path (`.kcad`).
     pub path: String,
     /// The block, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<crate::identity::BlockId>,
     /// Or the objects, by persistent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     /// The point that goes to the drawing's origin; a block's base point by default, none for objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Option<crate::entity::Vec2>,
     /// Write over a file that is there.
@@ -110,10 +103,8 @@ pub struct ExportBlock {
 
 /// What `file.export.block` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockFileExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -136,21 +127,17 @@ pub struct BlockFileExported {
 /// `layers[i]`), `source_overwrite` (the file there is a CAD drawing KentOS did not write and `replaceSource` is not
 /// set, docs/adr/1061 §5), `nothing_to_export` (no object to write), `file_unwritable`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportDxf {
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_polyline_loss: bool,
     /// The file to write, an absolute path.
     pub path: String,
     /// The layers whose objects to write (ids); every object when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
     /// Write over a file that is there.
     #[serde(default)]
@@ -159,20 +146,16 @@ pub struct ExportDxf {
     /// (a DXF or a DWG without KentOS's APPID) is refused, `source_overwrite`: an export never replaces the drawing
     /// it was opened from unasked.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub replace_source: bool,
     /// How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotations: Option<crate::DxfAnnotations>,
 }
 
 /// What `file.export.dxf` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfExported {
     pub path: String,
     /// The file's bytes: written, or the size the plan would write.
@@ -188,7 +171,6 @@ pub struct DxfExported {
     /// Whether a file was there (and is written over).
     pub replaced: bool,
     /// The writer's report: what each kind became, what changed on the way.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub report: serde_json::Value,
 }
 
@@ -196,20 +178,16 @@ pub struct DxfExported {
 /// `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
 /// (at `sheets[i]`), `book_unreadable`, `pdf_unwritable`, `file_unwritable`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportPdf {
     /// The file to write, an absolute path.
     pub path: String,
     /// The source drawing's absolute path for resolving linked image files. Hosts supply the open file when omitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     /// The sheets to print, by id, a page each; every sheet in the book's order when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<Vec<String>>,
     /// Write over a file that is there.
     #[serde(default)]
@@ -218,10 +196,8 @@ pub struct ExportPdf {
 
 /// What `file.export.pdf` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PdfExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -231,7 +207,6 @@ pub struct PdfExported {
     pub sheets: Vec<String>,
     pub replaced: bool,
     /// The sheet core's findings (preflight).
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub findings: serde_json::Value,
     /// Rasterization choices and resolution limits, said in words.
     pub notes: Vec<String>,
@@ -259,10 +234,8 @@ mod tests {
 
 /// How `file.export.table` writes a schedule's worked-out numbers (docs/adr/0733 §7).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableNumbers {
     /// As the table shows them, with the project's decimals.
     #[default]
@@ -275,10 +248,8 @@ pub enum TableNumbers {
 /// one written by hand) as CSV, XLSX or ODS. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_uid`,
 /// `entity_not_found`, `not_a_table`, `file_unwritable`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportTable {
     /// An absolute path ending `.csv`, `.xlsx` or `.ods`; its ending gives the format.
     pub path: String,
@@ -286,7 +257,6 @@ pub struct ExportTable {
     pub uid: String,
     /// A schedule's headings, subtotals and total too (its data rows always); absent: true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub groups: Option<bool>,
     #[serde(default)]
     pub numbers: TableNumbers,
@@ -297,10 +267,8 @@ pub struct ExportTable {
 
 /// What `file.export.table` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableExported {
     pub path: String,
     /// Rows written after the first (the columns' names).

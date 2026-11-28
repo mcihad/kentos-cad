@@ -11,8 +11,6 @@
 //! answer carries the operations that take the change back.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -37,40 +35,32 @@ pub const CAD_SHEETS_EDIT_VERSION: u32 = 1;
 /// (`unknown_sheet`, `duplicate_id`, `unknown_item` …), at `ops[i]` and the
 /// core's path.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetsEdit {
     /// The operations, at least one, each an object tagged by `op`
     /// (`kentos.sheet/1`).
-    #[cfg_attr(feature = "ts", ts(type = "Array<Record<string, unknown>>"))]
     #[cfg_attr(feature = "schema", schemars(with = "Vec<kentos_sheet::ops::Op>"))]
     pub ops: Vec<serde_json::Value>,
     /// Embedded picture bytes, keyed by SHA-256. Metadata is supplied by addAssets or applyTemplate.
     /// Each picture must match the book's metadata (digest and byte length). Existing bytes are retained.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SheetPicture>>"))]
     pub pictures: Vec<crate::SheetPicture>,
     /// Replace the entire picture byte set instead of merging it; use with the answer's inversePictures for undo.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub replace_pictures: bool,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A map frame of a sheet as the answer lists it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetMapInfo {
     /// The item's id.
     pub item: String,
@@ -78,28 +68,22 @@ pub struct SheetMapInfo {
     pub name: String,
     /// The map's scale denominator (1:N); none for a map that follows something else (an atlas).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<f64>,
     /// The level the map draws (docs/adr/0716), by its id; none: every level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// With a level: the level under it drawn faint too.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub below: Option<bool>,
 }
 
 /// A sheet of the book as the answer lists it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_info: Option<kentos_contracts::DrawingInfo>,
     pub id: String,
     pub name: String,
@@ -117,21 +101,17 @@ pub struct SheetInfo {
 
 /// Output of `cad.sheets.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetsEdited {
     /// What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).
     pub label: String,
     /// The operations that take the change back, in the order to apply them
     /// (an input of this command again).
-    #[cfg_attr(feature = "ts", ts(type = "Array<Record<string, unknown>>"))]
     pub inverse: Vec<serde_json::Value>,
     /// Previous embedded bytes when the operation changed them. Restore together with inverse operations,
     /// passing these as pictures and replacePictures=true. Omitted when bytes did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub inverse_pictures: Option<Vec<crate::SheetPicture>>,
     /// The book's sheets after the change, in its order.
     pub sheets: Vec<SheetInfo>,

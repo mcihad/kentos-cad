@@ -32,7 +32,6 @@ pub const MAX_SCHEDULE_DATA: usize = 10;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -115,7 +114,6 @@ pub struct TableEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableBreaks {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
@@ -151,7 +149,6 @@ impl TableBreaks {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CellRange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub row: u32,
@@ -176,7 +173,6 @@ impl CellRange {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableAlign {
     #[default]
     Left,
@@ -205,7 +201,6 @@ impl TableAlign {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableGrid {
     /// Its outline alone.
     Outer,
@@ -236,7 +231,6 @@ impl TableGrid {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableSource {
     /// Koordinat çizelgesi: the points and vertices of these objects.
     Coordinates { objects: Vec<EntityId> },
@@ -790,41 +784,31 @@ impl TableEntity {
 /// rows of words, the text encoding a CSV or text file was read in, or why
 /// it was not read.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableFileRead {
     pub sheets: Vec<TableSheet>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub encoding: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
 }
 
 /// One sheet of a table file: a workbook's by its name, a text file's without one.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableSheet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     pub rows: Vec<Vec<String>>,
     /// Rows past the most a table holds were not read (`MAX_TABLE_ROWS`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cut: bool,
 }
 
 /// A workbook to write (docs/adr/0223 §2): Öznitelik tablosu's, İşlemler's
 /// tables, as an Excel workbook, an OpenDocument spreadsheet or a CSV file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkbookWriteInput {
     pub format: WorkbookFormat,
     pub sheets: Vec<WorkbookSheet>,
@@ -832,9 +816,7 @@ pub struct WorkbookWriteInput {
 
 /// A written table's file format.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WorkbookFormat {
     Xlsx,
     Ods,
@@ -844,9 +826,7 @@ pub enum WorkbookFormat {
 /// One sheet to write: its name, its columns (the first row names them) and
 /// its rows of words (a CSV file takes the first sheet).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkbookSheet {
     pub name: String,
     pub columns: Vec<WorkbookColumn>,
@@ -855,15 +835,12 @@ pub struct WorkbookSheet {
 
 /// A column to write: its name and what its words are written as.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkbookColumn {
     pub name: String,
     pub kind: CellKind,
     /// A number's fraction digits shown (a decimal field's scale); none: as written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub decimals: Option<u32>,
 }
 
@@ -872,9 +849,7 @@ pub struct WorkbookColumn {
 /// (YYYY-MM-DD); yes or no (true, false); or, for a column of no kind, a
 /// number when the word is a plain one, else text.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CellKind {
     Text,
     Number,

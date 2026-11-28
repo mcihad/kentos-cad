@@ -16,8 +16,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -31,10 +29,8 @@ pub const MAX_CLOSED_FIT_POINTS: usize = 1000;
 
 /// How the curve is given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NurbsBy {
     /// Denetim noktalı: the control points, the curve pulled towards them,
     /// passing through the first and the last of an open one.
@@ -50,7 +46,6 @@ pub enum NurbsBy {
         ctrl: Vec<Vec2>,
         /// Each control point's weight, above 0. Absent: all 1.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         weights: Option<Vec<f64>>,
         /// The knot vector of an open curve, `ctrl.len() + degree + 1`
@@ -58,7 +53,6 @@ pub enum NurbsBy {
         /// curve starts at the first control point and ends at the last). A
         /// closed curve's knots are the command's: give none.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         knots: Option<Vec<f64>>,
     },
@@ -72,7 +66,6 @@ pub enum NurbsBy {
         /// The degree, 1 to 11. Absent: 3. Lowered to one less than the
         /// points when they are fewer.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 11)))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         degree: Option<u32>,
@@ -102,10 +95,8 @@ pub enum NurbsBy {
 /// `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on the
 /// desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NurbsCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -113,50 +104,40 @@ pub struct NurbsCreate {
     pub by: NurbsBy,
     /// Kapalı: the curve closes on itself, smoothly. Absent: open.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub closed: bool,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// Its own line weight, paper mm (0 to 100; docs/adr/0139). Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its own line type (docs/adr/0260 §2): what the tools give a new object
     /// from the current line type. Absent: its layer's (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// The text shown beside it (`EntityBase.label`). Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// Its own symbol, a library item's id (`EntityBase.symbol`; docs/adr/0176). Absent: the layer's style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     /// When given and the document is no longer at it, nothing is written and
     /// the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.nurbs.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NurbsCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014).
     pub uid: String,
@@ -170,10 +151,8 @@ pub struct NurbsCreated {
 
 /// What `cad.nurbs.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NurbsPlan {
     /// The curve as it would be stored. Its `id` is 0: the slot is given when it is written.
     pub entity: Entity,

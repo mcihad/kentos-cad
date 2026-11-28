@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/road.pay.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -27,17 +25,13 @@ pub const ROAD_PAY_QUERY_VERSION: u32 = 1;
 /// rule's item not in the book, a factor out of bounds, a material on a measure without one), `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// The book's currency; null takes it off.
     #[serde(
@@ -45,30 +39,23 @@ pub struct PayEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub currency: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub items: Option<Vec<PayItemDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<Vec<PayRuleDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `road.pay.edit` v1: the book written (absent when removed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayWritten {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub book: Option<PayBookDef>,
     pub revision: String,
 }
@@ -78,23 +65,18 @@ pub struct PayWritten {
 /// Refusals: `not_a_road_project`, `no_pay_book`, `invalid_pay_book` (an item not in the book). Warnings:
 /// `pay_source_stale`, `pay_source_unread`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<String>,
 }
 
 /// A quantity's source: the structure or volume (`kind`: `guardrail`, `culvert`, `wall` or `volume`), the measure read,
 /// its value, the rule's factor, the quantity (value × factor) and whether its corridor changed since.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayLine {
     pub kind: String,
     pub id: String,
@@ -111,10 +93,8 @@ pub struct PayLine {
 
 /// An item's quantity now: its code, name and unit, the sum of its lines, its unit price and amount when priced.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayRow {
     pub code: String,
     pub name: String,
@@ -122,11 +102,9 @@ pub struct PayRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub quantity: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub price: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub amount: Option<f64>,
     pub lines: Vec<PayLine>,
@@ -135,17 +113,14 @@ pub struct PayRow {
 /// Output of `road.pay.query` v1: the book's source, version, revision and currency, its items' rows (book order),
 /// the priced items' total and how many items with a quantity have no price.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayQueried {
     pub source: String,
     pub version: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub currency: Option<String>,
     pub rows: Vec<PayRow>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]

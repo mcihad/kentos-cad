@@ -7,8 +7,6 @@
 //! cases in `fixtures/commands/v1/road.hauls.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -28,23 +26,17 @@ pub const ROAD_HAULS_QUERY_VERSION: u32 = 1;
 /// 0, a cost without a currency, a price below 0, a payload not in (0, 1000] m³; a volume that does not compute or a
 /// site off its stations), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsEdit {
     pub operation: RoadEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub haul: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub volume: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub balance: Option<f64>,
     /// The free haul distance; null takes it off.
@@ -53,12 +45,10 @@ pub struct HaulsEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub free: Option<Option<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sites: Option<Vec<HaulSiteDef>>,
     /// The prices and the truck's payload; null takes them off.
     #[serde(
@@ -66,16 +56,13 @@ pub struct HaulsEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<HaulCostDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<HaulCostDef>"))]
     pub cost: Option<Option<HaulCostDef>>,
     /// The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unsuitable: Option<Vec<HaulUnsuitableDef>>,
     /// What the haul road crosses (docs/adr/0944); an empty list takes them off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub barriers: Option<Vec<HaulBarrierDef>>,
     /// The haul road network its sites off the road are reached by (docs/adr/0955); null takes it off.
     #[serde(
@@ -83,14 +70,9 @@ pub struct HaulsEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::HaulNetworkDef>>", optional)
-    )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::HaulNetworkDef>"))]
     pub network: Option<Option<crate::HaulNetworkDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -99,10 +81,8 @@ pub struct HaulsEdit {
 /// volume balanced in it, the haul moment, the average haul (none where nothing is balanced), the overhaul's volume and
 /// moment beyond the free haul distance, and the volume with no destination (waste forward, borrow backward).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulLoop {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -116,7 +96,6 @@ pub struct HaulLoop {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub moment: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub average: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -131,28 +110,22 @@ pub struct HaulLoop {
 /// waste and the borrow (their volume times their price), each where priced, the total of those priced, and the truck
 /// trips (everything moved, hauled, wasted and borrowed, over the payload, rounded up) where a payload is given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulCostReport {
     pub currency: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub overhaul: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub waste: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub borrow: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub total: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub trips: Option<f64>,
 }
@@ -160,10 +133,8 @@ pub struct HaulCostReport {
 /// A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points
 /// (station, m³; with `points`), the balance points, the loops, the totals; why it does not read when it does not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulReport {
     pub id: String,
     pub name: String,
@@ -173,12 +144,10 @@ pub struct HaulReport {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub balance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub free: Option<f64>,
     pub stale: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub points: Vec<[f64; 2]>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -189,7 +158,6 @@ pub struct HaulReport {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub moment: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub average: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -205,19 +173,15 @@ pub struct HaulReport {
     pub method: String,
     /// Its cost, where priced.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulCostReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
 }
 
 /// A mass haul diagram in a list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulListed {
     pub id: String,
     pub name: String,
@@ -228,14 +192,11 @@ pub struct HaulListed {
 
 /// Output of `road.hauls.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsWritten {
     /// The diagram written, read; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub haul: Option<HaulReport>,
     pub hauls: Vec<HaulListed>,
     pub revision: String,
@@ -246,25 +207,19 @@ pub struct HaulsWritten {
 /// Refusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (`points` without a diagram; the one asked does not
 /// read). Warnings: `corridor_stale`, `volume_gap`, `haul_unbalanced`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub haul: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub points: bool,
 }
 
 /// Output of `road.hauls.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsQueried {
     pub hauls: Vec<HaulReport>,
 }
@@ -281,25 +236,20 @@ pub const ROAD_HAULS_PLAN_VERSION: u32 = 1;
 /// compute or has no stretch, a site off its stations). Warnings: `haul_plan_infeasible`, `corridor_stale`,
 /// `volume_gap`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsPlan {
     pub haul: String,
     /// What the plan makes least (docs/adr/0925): the haul moment (absent), or the cost with the diagram's free haul
     /// and prices, and among plans of that cost the moment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objective: Option<HaulObjective>,
 }
 
 /// What a haul plan makes least (docs/adr/0925).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HaulObjective {
     /// The haul moment (m³·m).
     Moment,
@@ -310,10 +260,8 @@ pub enum HaulObjective {
 /// An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,
 /// the waste and the borrow priced, and their total.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulPlanCost {
     pub currency: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
@@ -330,17 +278,14 @@ pub struct HaulPlanCost {
     /// per metre; beyond it wasting the cut and borrowing the fill costs less than hauling. None where neither price
     /// is given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub economic: Option<f64>,
 }
 
 /// A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulPlanSite {
     pub name: String,
     pub kind: crate::HaulSiteKind,
@@ -352,27 +297,22 @@ pub struct HaulPlanSite {
     pub used: f64,
     /// Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub used_unsuitable: Option<f64>,
     /// Of a site off the road (docs/adr/0955): its access road's length from the alignment (m); `station` is then
     /// where the access meets the alignment. None: on the road.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub access: Option<f64>,
     /// A site off the road the network does not reach: it is left out of the plan (used 0).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unconnected: bool,
 }
 
 /// A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulSegment {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -382,7 +322,6 @@ pub struct HaulSegment {
     pub flow: f64,
     /// The unsuitable cut's part of the flow (docs/adr/0944); none where the plan does not sort its material.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub unsuitable_flow: Option<f64>,
 }
@@ -390,16 +329,13 @@ pub struct HaulSegment {
 /// A barrier in a haul plan (docs/adr/0944): its name, station, detour (none: closed) and what crosses it (m³, both
 /// ways).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulPlanBarrier {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub detour: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -411,10 +347,8 @@ pub struct HaulPlanBarrier {
 /// moves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets
 /// and the cut no waste takes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulPlanned {
     pub haul: String,
     pub feasible: bool,
@@ -427,7 +361,6 @@ pub struct HaulPlanned {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub moment: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub average: Option<f64>,
     pub sites: Vec<HaulPlanSite>,
@@ -439,39 +372,31 @@ pub struct HaulPlanned {
     pub objective: HaulObjective,
     /// The free haul the cost read (m); none for the moment, or where the diagram has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub free: Option<f64>,
     /// The cost, for the cost objective.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulPlanCost>,
     /// Where the diagram has unsuitable cut or barriers (docs/adr/0944): the unsuitable cut in all, the part of it no
     /// waste site takes, and its part of the moment (m³·m); none otherwise.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub unsuitable: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub stranded: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub unsuitable_moment: Option<f64>,
     /// The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approval: Option<HaulPlanApproval>,
     /// The barriers and what crosses each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulPlanBarrier>>", optional))]
     pub barriers: Vec<HaulPlanBarrier>,
     /// The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the
     /// road.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub access_moment: Option<f64>,
 }
@@ -482,10 +407,8 @@ pub const ROAD_HAULS_TRUCKS_VERSION: u32 = 1;
 /// Where the trucks of a haul fleet drive (docs/adr/0936 §2): on the corridor's profile (the road as designed), or on
 /// the ground along its alignment (the corridor's surface, as it is before the earthwork).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HaulTrack {
     Profile,
     Ground,
@@ -496,10 +419,8 @@ pub enum HaulTrack {
 /// the top speed), the grip of its driven wheels (the friction coefficient and the share of the weight on them) and the
 /// deceleration it stops with (m/s²).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulTruckDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
     pub empty: f64,
@@ -512,7 +433,6 @@ pub struct HaulTruckDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub top: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub downhill: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -536,15 +456,12 @@ pub struct HaulTruckDef {
 /// truck cannot climb a grade: its grip less than the grade's resistance). Warnings: `haul_plan_infeasible`,
 /// `corridor_stale`, `volume_gap`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsTrucks {
     pub haul: String,
     /// The plan's objective, as `road.hauls.plan`'s.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objective: Option<HaulObjective>,
     pub track: HaulTrack,
     pub truck: HaulTruckDef,
@@ -560,32 +477,25 @@ pub struct HaulsTrucks {
     pub dumping: f64,
     /// Manoeuvring and waiting at both ends, beyond the loader's queue.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
     pub spotting: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub trucks: Option<u32>,
     /// The minutes worked in an hour (none: 60).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
     pub hour: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L/kWh")))]
     pub fuel: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L/h")))]
     pub idle: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kg/L")))]
     pub co2: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub trace: Option<u32>,
 }
@@ -594,10 +504,8 @@ pub struct HaulsTrucks {
 /// less at its start), the run loaded and back empty, the cycle (with the fixed times), the trips, the balance number
 /// (the cycle over the loading: the trucks that keep the loader busy) and the fuel of a trip (with `fuel`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TruckHaul {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -622,7 +530,6 @@ pub struct TruckHaul {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub balance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L")))]
     pub fuel: Option<f64>,
 }
@@ -631,10 +538,8 @@ pub struct TruckHaul {
 /// working hour deterministically and as the finite-source queue (the volume over the hours), the loader busy in the
 /// queue, a truck's mean wait at the loader per cycle, and the working hours both ways.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TruckFleet {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub trucks: u32,
@@ -656,10 +561,8 @@ pub struct TruckFleet {
 
 /// A haul's speeds along the way, loaded and back empty: `[station, km/h]`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TruckTrace {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub haul: u32,
@@ -674,10 +577,8 @@ pub struct TruckTrace {
 /// balance number (by trips; none where nothing moves), the energy at the engines (kWh), the fleet (with `trucks`), the
 /// fuel (with `fuel`; the queue's waits with `trucks` too), the carbon (with `co2`), the speeds of `trace`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulTrucked {
     pub haul: String,
     pub track: HaulTrack,
@@ -685,54 +586,42 @@ pub struct HaulTrucked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub trips: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
     pub cycle: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub balance: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kWh")))]
     pub energy: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fleet: Option<TruckFleet>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L")))]
     pub fuel: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kg")))]
     pub co2: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub trace: Option<TruckTrace>,
 }
 
 /// A borrow or waste site whose capacity or use differs from the approved plan's (docs/adr/0954): its name, the
 /// approved capacity and use (none: a new site), today's (none: a site gone).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulSiteChange {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub approved_capacity: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub capacity: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub approved_used: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub used: Option<f64>,
 }
@@ -741,20 +630,16 @@ pub struct HaulSiteChange {
 /// went stale, why (in words: the diagram's, the volume's or its approval's revision; a site's capacity; the plan's own
 /// figures), the moment's change and the sites that changed. None of today's plan where it does not compute.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulPlanApproval {
     pub approved: crate::HaulApprovalDef,
     pub stale: bool,
     pub reasons: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub moment_change: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulSiteChange>>", optional))]
     pub sites: Vec<HaulSiteChange>,
 }
 
@@ -770,26 +655,19 @@ pub const ROAD_HAULS_APPROVE_VERSION: u32 = 1;
 /// day, a plan that cannot place everything, one that does not compute, a day or note the rule refuses),
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsApprove {
     pub haul: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub revoke: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objective: Option<HaulObjective>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -804,25 +682,20 @@ pub const ROAD_HAULS_NETWORK_VERSION: u32 = 1;
 /// Refusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (no network, a layer not in the drawing, a volume
 /// or alignment that does not compute).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsNetwork {
     pub haul: String,
 }
 
 /// A haul road: its object, part, layer and length in plan (m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulRoadRead {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub entity: u64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     pub layer: String,
@@ -837,10 +710,8 @@ fn is_zero(v: &u32) -> bool {
 /// Where a road meets the alignment: the road (its index in `roads`), which end (true: its end), the station, km and
 /// offset.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulJunction {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub road: u32,
@@ -855,10 +726,8 @@ pub struct HaulJunction {
 /// What does not join: two roads crossing along their lengths, a road crossing the alignment along its length, an end
 /// that joins nothing.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HaulNetworkIssue {
     Crossing,
     CrossesAlignment,
@@ -867,10 +736,8 @@ pub enum HaulNetworkIssue {
 
 /// A thing in the network that does not join, in words, where, and the roads it is about (indices in `roads`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulNetworkProblem {
     pub kind: HaulNetworkIssue,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -881,7 +748,6 @@ pub struct HaulNetworkProblem {
     pub y: f64,
     /// Of a loose end: how far the nearest road or the alignment lies (m).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub gap: Option<f64>,
     pub message: String,
@@ -890,10 +756,8 @@ pub struct HaulNetworkProblem {
 /// How a site off the road is reached: joined with its access length, the station, km and offset where it meets the
 /// alignment and the roads on the way (indices in `roads`, from the site); or why not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulSiteAccess {
     pub name: String,
     pub kind: crate::HaulSiteKind,
@@ -903,36 +767,28 @@ pub struct HaulSiteAccess {
     pub y: f64,
     pub joined: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub km: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub roads: Vec<u32>,
     /// Why it is not joined, in words.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub why: Option<String>,
 }
 
 /// Output of `road.hauls.network` v1: the diagram, its tolerances, roads, junctions, joins, problems and sites.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulNetworkRead {
     pub haul: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

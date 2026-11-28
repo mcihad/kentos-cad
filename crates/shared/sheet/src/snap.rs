@@ -13,8 +13,6 @@
 use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::error::{Result, SheetError};
 use crate::model::{Axis, Item, ItemId, SheetBook, yes};
@@ -24,9 +22,7 @@ use crate::units::{Mdeg, PointUm, RectUm, Um, mm1_text, norm_mdeg, rotated_bound
 
 /// What a snap line or mark came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum SnapKind {
     Guide,
     Item,
@@ -53,9 +49,7 @@ impl SnapKind {
 
 /// A line to paint: `x` is upright at `left = at` from `top = from` to `to`; `y` is level at `top = at`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SnapLine {
     pub axis: Axis,
     pub at: Um,
@@ -66,9 +60,7 @@ pub struct SnapLine {
 
 /// A distance to the nearest neighbour, with its text (“12.5 mm”).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct GapBadge {
     /// `x`: measured across, `y`: down.
     pub axis: Axis,
@@ -82,9 +74,7 @@ pub struct GapBadge {
 
 /// Gaps that are equal: each segment is one gap, painted with the same mark.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SpacingMark {
     pub axis: Axis,
     pub gap: Um,
@@ -92,9 +82,7 @@ pub struct SpacingMark {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SnapResult {
     /// The offset to use: the asked one, snapped.
     pub delta: PointUm,
@@ -105,9 +93,7 @@ pub struct SnapResult {
 
 /// Where a dragged resize handle ends up, and what it snapped to.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ResizeSnap {
     pub to: PointUm,
     pub lines: Vec<SnapLine>,
@@ -116,9 +102,7 @@ pub struct ResizeSnap {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SizeMatch {
     pub axis: Axis,
     pub item: ItemId,
@@ -127,9 +111,7 @@ pub struct SizeMatch {
 
 /// What snaps; `grid` none: the sheet's own setting.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SnapOptions {
     #[serde(default = "yes")]
     pub guides: bool,
@@ -139,7 +121,6 @@ pub struct SnapOptions {
     #[serde(default = "yes")]
     pub page: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grid: Option<bool>,
     #[serde(default = "yes")]
     pub spacing: bool,

@@ -1,8 +1,6 @@
 //! Templates, pavements, sample lines, superelevation, corridors, earthwork volumes and mass haul. A part of the road project's settings (docs/adr/8054 §9).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[allow(unused_imports)]
 use super::*;
@@ -10,10 +8,8 @@ use super::*;
 /// A component of a template's side, outward from the axis: its width and cross slope (a grade: rise over run, −0.025
 /// is −2.5 %; falling outward negative; docs/adr/0977).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateComponentDef {
     pub kind: TemplateComponentKind,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -24,10 +20,8 @@ pub struct TemplateComponentDef {
 
 /// A ditch in a cut: its fore slope (horizontal per one vertical), its depth under the hinge and its bottom's width.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateDitchDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fore: f64,
@@ -35,7 +29,6 @@ pub struct TemplateDitchDef {
     pub depth: f64,
     /// Absent: 0 (a V ditch).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub bottom: f64,
 }
@@ -43,94 +36,75 @@ pub struct TemplateDitchDef {
 /// A template's side: its components outward from the axis and its end condition: the cut and fill slopes (horizontal
 /// per one vertical, 1.5 is 3/2) and an optional ditch in the cut.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateSideDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TemplateComponentDef>>", optional))]
     pub components: Vec<TemplateComponentDef>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ditch: Option<TemplateDitchDef>,
     /// The cut slope's benches (berme, docs/adr/0958; KCAD schema 177).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bench: Option<TemplateBenchDef>,
     /// The fill slope's benches (docs/adr/0958; KCAD schema 177).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill_bench: Option<TemplateBenchDef>,
 }
 
 /// A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its
 /// surface falling `fall` outward (a grade, 0.04 is 4 %; absent: level; docs/adr/0977). From the project's geotechnical report: KentOS gives none.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateBenchDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub fall: f64,
 }
 
 /// A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateDef {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub left: TemplateSideDef,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<TemplateSideDef>,
     /// The pavement under the finish grade, both sides alike (docs/adr/0975 §2); absent: none (an older template).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<PavementDef>,
 }
 
 /// A pavement layer: its name (aşınma, binder, temel …), its thickness and an optional material code (a pay item's,
 /// docs/adr/0909).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PavementLayerDef {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub thickness: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
 }
 
 /// How a pavement's layers end at a side's hinge (docs/adr/0975 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PavementEdge {
     /// A vertical line at the hinge.
     Vertical,
@@ -143,10 +117,8 @@ pub enum PavementEdge {
 
 /// A template's pavement: its layers from the top down and how they end.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PavementDef {
     pub layers: Vec<PavementLayerDef>,
     pub edge: PavementEdge,
@@ -154,10 +126,8 @@ pub struct PavementDef {
 
 /// How a sample line set's stations are had (docs/adr/0903 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "method", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SectionStations {
     /// Every round `every` metres of km from `from` to `to` (the alignment's own stations) and both of them, with the
     /// curves' points and the profile's PVIs when `geometry`.
@@ -170,11 +140,9 @@ pub enum SectionStations {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         every: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         geometry: bool,
         /// On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 168).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         curve: Option<f64>,
     },
@@ -191,11 +159,9 @@ pub enum SectionStations {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         tolerance: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         most: Option<f64>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         geometry: bool,
     },
     /// The stations written.
@@ -210,34 +176,26 @@ pub enum SectionStations {
 /// A sample line set (docs/adr/0903 §1–§2): on an alignment of its own PIs (its revision held), with an optional profile
 /// on it, template and surface; its swath widths and how its stations are had.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionSetDef {
     pub id: String,
     pub name: String,
     pub alignment: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
     /// The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left: f64,
@@ -247,17 +205,14 @@ pub struct SectionSetDef {
     /// Lines that meet on a curve's inside are shortened to their meeting, nearest first (docs/adr/0933 §1; schema
     /// 166); otherwise they are left and said.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub clip: bool,
 }
 
 /// A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (a grade, 0.07 is 7 %), the runoff length (level crown to full
 /// rate), the share of the runoff before the curve (0–1) and the extra width on its inside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperCurveDef {
     pub pi: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
@@ -268,17 +223,14 @@ pub struct SuperCurveDef {
     pub on_tangent: f64,
     /// Absent: none.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub widening: f64,
 }
 
 /// A row of a superelevation schedule written by station: the alignment's own station and each side's slope.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperRowDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -290,10 +242,8 @@ pub struct SuperRowDef {
 
 /// How a superelevation schedule is had (docs/adr/0904 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "method", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SuperelevationMethod {
     /// From the curves, rotating about the centreline.
     Curves { curves: Vec<SuperCurveDef> },
@@ -304,20 +254,16 @@ pub enum SuperelevationMethod {
 /// A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
 /// slopes of the left and the right side (grades, outward; falling outward negative; docs/adr/0977) and how it is had.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperelevationDef {
     pub id: String,
     pub name: String,
     pub alignment: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
@@ -327,17 +273,14 @@ pub struct SuperelevationDef {
     pub method: SuperelevationMethod,
     /// The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pivot: Option<SuperelevationPivot>,
 }
 
 /// The axis of rotation of a superelevation (docs/adr/0931 §1): the centreline, an edge of the traveled way by side,
 /// or the curve's inside or outside edge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SuperelevationPivot {
     Centerline,
     LeftEdge,
@@ -362,10 +305,8 @@ impl SuperelevationPivot {
 /// slope transition (docs/adr/0960, KCAD schema 178): over its first `transition` m the sides' cut and fill slopes go
 /// linearly from the region before's template's to its own. The region before ends where it starts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CorridorRegionDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -373,7 +314,6 @@ pub struct CorridorRegionDef {
     pub to: f64,
     pub template: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub transition: Option<f64>,
 }
@@ -383,26 +323,21 @@ pub struct CorridorRegionDef {
 /// is sampled (the tangent and curve intervals, an optional chord tolerance; the profile's points, the critical
 /// stations and the stations written) and its regions in order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CorridorDef {
     pub id: String,
     pub name: String,
     pub alignment: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub profile: String,
     pub surface: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left: f64,
@@ -413,31 +348,25 @@ pub struct CorridorDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub curve: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sag: Option<f64>,
     /// The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub profile_points: bool,
     /// The superelevation schedule's critical stations are sampled too.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub critical: bool,
     /// Stations the user wrote (the alignment's own, m).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     pub regions: Vec<CorridorRegionDef>,
     /// The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 170).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub vertical_sag: Option<f64>,
     /// The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 170).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub refine: Option<CorridorRefineDef>,
 }
 
@@ -445,17 +374,13 @@ pub struct CorridorDef {
 /// stations may stray from their straight join (m; absent: not checked), and the least step an interval is halved to
 /// (m). A section whose kind changes (cut to fill, a slope that meets nothing, none) halves it in any case.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CorridorRefineDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub plan: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -464,10 +389,8 @@ pub struct CorridorRefineDef {
 
 /// How an earthwork volume is computed (docs/adr/0906 §2–§3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum VolumeMethod {
     /// The average end area between consecutive sections.
     EndArea,
@@ -484,32 +407,26 @@ pub enum VolumeMethod {
 /// The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the
 /// fill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeFactorDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill: Option<f64>,
     /// The soil's densities from the soil report (docs/adr/0957; KCAD schema 176): the factors follow from them, the
     /// cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
     /// row with densities writes no factor of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub densities: Option<VolumeDensities>,
     /// Where its factors or densities come from (the soil report, its borehole or test), in words (docs/adr/0957).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
 }
 
@@ -526,10 +443,8 @@ impl VolumeFactorDef {
 
 /// A soil's densities (t/m³): in place (bank, yerinde), loosened (loose, gevşek) and compacted in the fill (sıkışık).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeDensities {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t/m3")))]
     pub bank: f64,
@@ -541,10 +456,8 @@ pub struct VolumeDensities {
 
 /// The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeStripDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -557,10 +470,8 @@ pub struct VolumeStripDef {
 /// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
 /// (a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeBenchDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
@@ -571,10 +482,8 @@ pub struct VolumeBenchDef {
 /// A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where
 /// the project has no such source).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadSource {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
@@ -586,17 +495,13 @@ pub struct RoadSource {
 /// has no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the
 /// drawing changed after the surface was accepted: the answer is the drawing's of now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadSurfaceSource {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub digest: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub built: Option<String>,
 }
 
@@ -604,17 +509,14 @@ pub struct RoadSurfaceSource {
 /// corridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and
 /// its terrain surface (the original ground; the design is the corridor's).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeSources {
     pub corridor: RoadSource,
     pub alignment: RoadSource,
     pub profile: RoadSource,
     pub templates: Vec<RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<RoadSource>,
     pub surface: RoadSurfaceSource,
 }
@@ -622,17 +524,14 @@ pub struct VolumeSources {
 /// An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,
 /// the totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeApprovalDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     /// The day it was approved, YYYY-MM-DD.
     pub at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub cut: f64,
@@ -643,11 +542,9 @@ pub struct VolumeApprovalDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub factored_fill: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub strip: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -655,92 +552,72 @@ pub struct VolumeApprovalDef {
     /// Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
     /// numbered.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub number: u32,
     /// How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ended: Option<VolumeApprovalEnd>,
     /// What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an
     /// approval made before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sources: Option<VolumeSources>,
     /// The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an
     /// approval made before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub algorithm: Option<String>,
 }
 
 /// How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked
 /// (else a later approval took its place) and why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeApprovalEnd {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub revoked: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }
 
 /// An earthwork volume (docs/adr/0906, Kübaj): a corridor's, by a method, with the factors by stations.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeDef {
     pub id: String,
     pub name: String,
     pub corridor: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub method: VolumeMethod,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeFactorDef>>", optional))]
     pub factors: Vec<VolumeFactorDef>,
     /// The topsoil stripped by stations (a section method's).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeStripDef>>", optional))]
     pub strip: Vec<VolumeStripDef>,
     /// The fill's foundation benched (a section method's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bench: Option<VolumeBenchDef>,
     /// Its figures as approved; an approved volume's definition does not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<VolumeApprovalDef>,
     /// Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 173):
     /// never changed nor removed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeApprovalDef>>", optional))]
     pub history: Vec<VolumeApprovalDef>,
     /// Which two lines it measures between (docs/adr/0975 §2); absent: the road's top against the
     /// ground, stripped when it strips (as before the rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
     /// The volume on a curve by the sections' moments (docs/adr/0934; schema 169): each section's effective area
     /// `A + κ·Q`; the average end area method only.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub curve: bool,
     /// The grid method's cell (m, docs/adr/0974; schema 179): 0.01 to 1000; the grid method only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: Option<f64>,
 }
@@ -749,10 +626,8 @@ pub struct VolumeDef {
 /// (Zemin) or the ground with its topsoil stripped (Bitkisel Toprak). The topsoil stripped is its own item (Sıyırma
 /// Kazısı) whichever rule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum VolumeRule {
     /// Yol–Zemin.
     RoadGround,
@@ -790,10 +665,8 @@ impl VolumeRule {
 /// A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume
 /// (m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulSiteDef {
     pub name: String,
     pub kind: HaulSiteKind,
@@ -805,7 +678,6 @@ pub struct HaulSiteDef {
     /// road network, which says where it meets the alignment and how far; `station` is then that station as last
     /// written. None: on the road at `station`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<crate::Vec2>,
 }
@@ -814,26 +686,21 @@ pub struct HaulSiteDef {
 /// layers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the
 /// alignment where an end lies within `reach` (m) of its centre line (none: `connect`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulNetworkDef {
     pub layers: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub connect: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub reach: Option<f64>,
 }
 
 /// A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HaulSiteKind {
     Borrow,
     Waste,
@@ -843,26 +710,20 @@ pub enum HaulSiteKind {
 /// the waste's and the borrow's per m³ (absent: not priced), and a truck's payload (m³, in the volume sheet's state) for
 /// the trips; all the project's (its contract and price list).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulCostDef {
     pub currency: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume-km")))]
     pub overhaul: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume")))]
     pub waste: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume")))]
     pub borrow: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub payload: Option<f64>,
 }
@@ -870,52 +731,40 @@ pub struct HaulCostDef {
 /// A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
 /// haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulDef {
     pub id: String,
     pub name: String,
     pub volume: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub balance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub free: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulSiteDef>>", optional))]
     pub sites: Vec<HaulSiteDef>,
     /// Its prices and the truck's payload.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulCostDef>,
     /// The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 171).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulUnsuitableDef>>", optional))]
     pub unsuitable: Vec<HaulUnsuitableDef>,
     /// What the haul road crosses (docs/adr/0944; KCAD schema 171).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulBarrierDef>>", optional))]
     pub barriers: Vec<HaulBarrierDef>,
     /// Its plan as approved (docs/adr/0954; KCAD schema 174): a plan read later against it says what changed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<HaulApprovalDef>,
     /// Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovalDef>>", optional))]
     pub history: Vec<HaulApprovalDef>,
     /// Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 175).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub network: Option<HaulNetworkDef>,
 }
 
@@ -924,50 +773,40 @@ pub struct HaulDef {
 /// moment); what it was — the moment (m³·m), the volume moved (m³), the cost in all where priced, each site's capacity
 /// and use; how it ended, in the history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulApprovalDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub number: u32,
     pub at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub volume_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub volume_approval: u32,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cost: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub moment: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub moved: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub total: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovedSite>>", optional))]
     pub sites: Vec<HaulApprovedSite>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ended: Option<VolumeApprovalEnd>,
 }
 
 /// A borrow or waste site as a haul plan was approved: its name, capacity and use (m³).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulApprovedSite {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -979,10 +818,8 @@ pub struct HaulApprovedSite {
 /// The share of the cut unsuitable for fill between two stations (docs/adr/0944): percent, from the soil report;
 /// KentOS gives none. It goes to waste sites only.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulUnsuitableDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -995,16 +832,13 @@ pub struct HaulUnsuitableDef {
 /// Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it
 /// (m); absent: closed, nothing crosses.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulBarrierDef {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub detour: Option<f64>,
 }

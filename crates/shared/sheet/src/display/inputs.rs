@@ -4,8 +4,6 @@
 //! and the atlas page. The core lays it out; the host only paints.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::geodesy::TmParams;
 use crate::kinds::GroundPoint;
@@ -16,9 +14,7 @@ use crate::units::{Mdeg, Um};
 
 /// While designing (every item) or for export (printable items only).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum RenderMode {
     #[default]
     Design,
@@ -26,9 +22,7 @@ pub enum RenderMode {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ProjectInfo {
     /// `@proje_adi`.
     #[serde(default)]
@@ -45,71 +39,53 @@ pub struct ProjectInfo {
     /// The project's coordinate facts (docs/adr/1680), each `@` value none when empty: `@datum`, `@elipsoit`,
     /// `@projeksiyon`, `@kot_sistemi`, `@ikinci_sistem`, `@epsg_kodu` and `@epok`.
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub datum: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub ellipsoid: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub projection: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub heights: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub second_crs: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub epsg: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub epoch: Option<f64>,
     /// The project's survey quality (docs/adr/2400), each `@` value none when empty: `@konum_dogrulugu`,
     /// `@yukseklik_dogrulugu`, `@ag_dengelemesi` and `@olcme_kalitesi`.
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub position_accuracy: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub height_accuracy: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub network_adjustment: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub survey_quality: String,
     /// The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
     /// §2.3): `@name` answered after the book's variables of the same name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<Variable>>"))]
     pub variables: Vec<Variable>,
 }
 
 /// The project's coordinate system.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct CrsInfo {
     /// “TUREF / TM36”.
     pub name: String,
     /// A transverse Mercator's parameters: the core works the meridian convergence out from them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tm: Option<TmParams>,
 }
 
 /// A map's convergence from the host, when the core cannot work it out (no TM parameters).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapInput {
     pub item: ItemId,
     /// Degrees; positive where grid north is east of true north.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub convergence: Option<f64>,
 }
 
@@ -118,9 +94,7 @@ pub struct MapInput {
 /// the project's (`@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi`). An empty value
 /// prints nothing, as the project's does.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapSurveyInput {
     pub item: ItemId,
     #[serde(default)]
@@ -134,9 +108,7 @@ pub struct MapSurveyInput {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum MarkerShape {
     #[default]
     Circle,
@@ -146,84 +118,63 @@ pub enum MarkerShape {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PatchSymbol {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
     /// Diagonal hatching in this colour over the fill.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hatch: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct LineSymbol {
     pub stroke: Stroke,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MarkerSymbol {
     #[serde(default)]
     pub shape: MarkerShape,
     pub size: Um,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
 }
 
 /// A path of a symbol in its box, in thousandths of the box (0–1000 across and down).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SymbolPath {
     pub points: Vec<[u16; 2]>,
     #[serde(default)]
     pub closed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PathsSymbol {
     pub paths: Vec<SymbolPath>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ImageSymbol {
     pub asset: String,
 }
 
 /// A legend row's symbol, as the host's legend engine (ADR 0093) draws it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum LegendSymbol {
     Patch(PatchSymbol),
     Line(LineSymbol),
@@ -233,15 +184,12 @@ pub enum LegendSymbol {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct LegendEntryInput {
     pub layer: String,
     pub label: String,
     /// The heading it stands under (a layer group).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     pub symbol: LegendSymbol,
     /// Something of it is inside the map's frame.
@@ -253,18 +201,14 @@ pub struct LegendEntryInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct LegendInput {
     pub item: ItemId,
     pub entries: Vec<LegendEntryInput>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Attribute {
     pub name: String,
     pub value: VarValue,
@@ -272,20 +216,16 @@ pub struct Attribute {
 
 /// An object of a layer, for an attribute table: its fields and measures; the core filters, sorts and writes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct FeatureInput {
     pub id: String,
     #[serde(default)]
     pub attributes: Vec<Attribute>,
     /// `$alan`, m².
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<f64>,
     /// `$uzunluk`, m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub length: Option<f64>,
     #[serde(default = "yes")]
     pub in_map: bool,
@@ -294,35 +234,27 @@ pub struct FeatureInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct TableInput {
     pub item: ItemId,
     pub features: Vec<FeatureInput>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct CoordPoint {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// East (Y), m.
     pub x: f64,
     /// North (X), m.
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct CoordinateInput {
     pub item: ItemId,
     pub points: Vec<CoordPoint>,
@@ -331,23 +263,18 @@ pub struct CoordinateInput {
     pub closed: bool,
     /// The figure's area as the drawing measures it (arcs included); none: from the points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<f64>,
     /// How many objects the source gave, and how many of the list's own
     /// objects the drawing no longer has (docs/adr/0206 §2); none: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objects: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub missing: Option<u32>,
 }
 
 /// An atlas object: its id, box and fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct AtlasFeature {
     pub id: String,
     /// min east, min north, max east, max north.
@@ -357,15 +284,12 @@ pub struct AtlasFeature {
     /// The object's outer ring on the ground, east and north: what a map that cuts its content to the atlas object
     /// cuts it to (docs/adr/0638 §2); none: the object has no area, or no map cuts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub outline: Option<Vec<[f64; 2]>>,
 }
 
 /// A map's view on an atlas page.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct AtlasMapView {
     pub item: ItemId,
     pub center: GroundPoint,
@@ -375,9 +299,7 @@ pub struct AtlasMapView {
 
 /// The atlas page being drawn: a page of `atlas::plan`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct AtlasPageInput {
     pub feature: AtlasFeature,
     /// 1-based.
@@ -388,25 +310,17 @@ pub struct AtlasPageInput {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PageNumber {
     pub index: u32,
     pub count: u32,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RenderInputs {
     /// Current model view registry; live links resolve by stable id, never by the capture's name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::viewport::NamedModelView>>")
-    )]
     pub named_views: Vec<crate::viewport::NamedModelView>,
     #[serde(default)]
     pub mode: RenderMode,
@@ -415,7 +329,6 @@ pub struct RenderInputs {
     #[serde(default)]
     pub capabilities: Capabilities,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<CrsInfo>,
     #[serde(default)]
     pub maps: Vec<MapInput>,
@@ -428,39 +341,30 @@ pub struct RenderInputs {
     /// Each map's own survey quality (docs/adr/2800), from the ground its frame covers; a map without one reads the
     /// project's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<MapSurveyInput>>"))]
     pub map_surveys: Vec<MapSurveyInput>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub atlas: Option<AtlasPageInput>,
     /// `@sayfa` and `@sayfa_sayisi`; none: the sheet's place in the book.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub page: Option<PageNumber>,
     /// The typefaces the host can draw; none: all of the table's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fonts: Option<Vec<String>>,
     /// The assets whose bytes the host has; none: all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub assets: Option<Vec<String>>,
     /// The export's resolution (the preflight's pictures); none: the sheet's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dpi: Option<u16>,
     /// The layers the drawing's maps would draw that the host cannot reach now (docs/adr/9187): a map service
     /// offline, a data layer's source gone. The preflight says each; the sheet prints without them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<UnreachableLayer>>"))]
     pub unreachable: Vec<UnreachableLayer>,
 }
 
 /// A layer a map would draw that cannot be reached now (docs/adr/9187).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct UnreachableLayer {
     /// The layer's name as the layer tree says it.
     pub name: String,

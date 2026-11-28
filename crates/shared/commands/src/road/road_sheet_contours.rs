@@ -13,8 +13,6 @@
 //! `fixtures/commands/v1/road.terrains.sheetcontours.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -24,10 +22,8 @@ pub const ROAD_TERRAINS_SHEET_CONTOURS_VERSION: u32 = 1;
 
 /// A scale's contour interval (metres).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ContourInterval {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: u32,
@@ -44,10 +40,8 @@ pub struct ContourInterval {
 /// roads (paper mm, m. 63(2)'s about 2 cm; none: such heights are refused) and the section check's limit (m. 91(2),
 /// m. 93(1)(c); none: no comparison).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ContourRules {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -73,19 +67,15 @@ pub struct ContourRules {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub label_height: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub spot_height: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub auxiliary_pattern: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height_every: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub section_check: Option<SectionCheck>,
 }
 
@@ -94,10 +84,8 @@ pub struct ContourRules {
 /// between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
 /// the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SectionCheck {
     /// The formula's coefficients of S², S and 1, giving centimetres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -107,7 +95,6 @@ pub struct SectionCheck {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub factor: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub spacing: Option<f64>,
 }
@@ -140,57 +127,42 @@ pub fn contour_rules_default() -> Option<ContourRules> {
 /// `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
 /// `section_check_exceeded`: the chosen points' RMS is not under the package's limit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsSheetContours {
     pub surface: String,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub interval: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub details: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub steep: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub auxiliary: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub labels: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub spots: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slopes: Option<SheetSlopes>,
     /// The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
     /// takes a spot height, its own measured height when it has one, else the surface's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub points: Vec<String>,
     /// The heights of built-up areas and roads (BÖHHBÜY m. 63(2), docs/adr/4740).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub built_up: Option<SheetBuiltUp>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<ContourRules>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
@@ -198,16 +170,12 @@ pub struct TerrainsSheetContours {
 /// slopes' top lines and of their bottom lines. Every corner of a line or polyline there is such a point, its height
 /// the surface's at it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetSlopes {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub top: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub bottom: Vec<String>,
 }
 
@@ -221,27 +189,20 @@ pub struct SheetSlopes {
 /// places are the origin plus whole multiples of the spacing along the turned east and north. The regulation gives
 /// neither: they are the surveyor's.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetBuiltUp {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub areas: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub roads: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub every: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: Option<f64>,
 }
@@ -251,10 +212,8 @@ pub struct SheetBuiltUp {
 /// corners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by
 /// m. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetHeightCheck {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub compared: u32,
@@ -275,10 +234,8 @@ pub struct SheetHeightCheck {
 
 /// A line as drawn: its level, its kind (`major`, `minor`, `auxiliary`), whether it closes, its places.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetContourLine {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: f64,
@@ -291,10 +248,8 @@ pub struct SheetContourLine {
 /// A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise
 /// from east, its top uphill).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetContourLabel {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: f64,
@@ -312,10 +267,8 @@ pub struct SheetContourLabel {
 /// `road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the
 /// height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetSpot {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -326,7 +279,6 @@ pub struct SheetSpot {
     pub z: f64,
     pub text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub surface: Option<f64>,
 }
@@ -339,10 +291,8 @@ pub struct SheetSpot {
 /// leaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:
 /// none), the revision after it and notes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsSheetContoured {
     pub rules: String,
     pub source: String,
@@ -359,16 +309,12 @@ pub struct TerrainsSheetContoured {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cut: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SheetSpot>>", optional))]
     pub spots: Vec<SheetSpot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pattern: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub check: Option<SheetHeightCheck>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

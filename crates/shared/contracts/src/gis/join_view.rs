@@ -7,8 +7,6 @@
 //! columns of its own (`.kcad` schema 105, docs/adr/0632).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The key that is the object's persistent id (a relation's parent; docs/adr/0405).
 pub const UID_KEY: &str = "$uid";
@@ -23,10 +21,8 @@ pub const MOST_JOIN_AGGREGATES: usize = 20;
 /// a PostgreSQL database's (its address, without a password) table, view or read-only query, read whole through its
 /// provider whenever the view is read; never a copy.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JoinSource {
     pub path: String,
     pub table: String,
@@ -34,10 +30,8 @@ pub struct JoinSource {
 
 /// What a summing column does with a record's joined records.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JoinHow {
     /// The joined records (with a field: those with a value in it).
     Count,
@@ -50,10 +44,8 @@ pub enum JoinHow {
 
 /// A column summing each record's joined records (docs/adr/0632 §2): the owners' count, their shares' sum.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JoinAggregate {
     /// The heading; trimmed, 1–64 characters, unique among the view's.
     pub name: String,
@@ -61,16 +53,13 @@ pub struct JoinAggregate {
     /// The joined records' field (a field's key; a source's column): none only for `count`, which then counts the
     /// matches.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
 }
 
 /// Which records of the layer a view shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JoinKeep {
     /// Every record, the ones without a match with empty cells (a left join).
     #[default]
@@ -87,10 +76,8 @@ impl JoinKeep {
 
 /// A join view: the layer's records by `key` with the `with` layer's by `withKey`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JoinView {
     /// Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
     pub id: String,
@@ -106,19 +93,15 @@ pub struct JoinView {
     pub with_key: String,
     /// Written only when not `all`.
     #[serde(default, skip_serializing_if = "JoinKeep::is_default")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<JoinKeep>", optional))]
     pub keep: JoinKeep,
     /// The joined layer's fields the view shows, in order (keys); none: all of them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fields: Vec<String>,
     /// The joined records' table, read through its provider (docs/adr/0632 §1); `with` is then empty.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<JoinSource>,
     /// Columns summing each record's joined records, after the joined fields (docs/adr/0632 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JoinAggregate>>", optional))]
     pub aggregates: Vec<JoinAggregate>,
 }
 

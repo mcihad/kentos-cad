@@ -4,8 +4,6 @@
 //! “Farkları al”; with a common base, an object both sides changed apart is a conflict.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::CompareAgainst;
 #[cfg(feature = "schema")]
@@ -22,10 +20,8 @@ pub const MAX_TAKE_UIDS: usize = 10_000;
 /// `no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `entity_not_found`, `layer_not_found`,
 /// `unknown_block`, `layer_locked`, `take_conflict`. Warnings: `block_definition_differs`, `layer_style_differs`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrawingTake {
     /// The state taken from, as `cad.drawing.compare` names it.
     pub against: CompareAgainst,
@@ -33,24 +29,19 @@ pub struct DrawingTake {
     pub uids: Vec<String>,
     /// The common state both sides came from: an object both changed apart from it is a conflict.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base: Option<CompareAgainst>,
     /// Take a conflicting object anyway.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub overwrite: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.drawing.take` v1: the ids by what happened, each in the input's order.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrawingTaken {
     /// Brought back with their ids.
     pub added: Vec<String>,

@@ -5,8 +5,6 @@
 //! it reads is empty) holds, as an SQL CHECK does; a warning rule is said and the write goes in.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::{LayerField, js_trim};
 
@@ -18,10 +16,8 @@ pub const MOST_RULE_MESSAGE: usize = 500;
 
 /// A record rule of a layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerRule {
     /// Its id, once in the layer: what a form or a refusal names it by (1–64 characters).
     pub id: String,
@@ -34,12 +30,10 @@ pub struct LayerRule {
     pub message: String,
     /// A soft rule: broken, it warns and the write goes in; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub warning: bool,
     /// The fields' keys a form shows it on and a refusal points at, in order; none: the first field it
     /// reads.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fields: Vec<String>,
 }
 

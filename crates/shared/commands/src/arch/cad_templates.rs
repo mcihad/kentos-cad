@@ -3,8 +3,6 @@
 //! `cad.templates.apply`, which applies one to a drawing, keeping what the drawing already has.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -72,10 +70,8 @@ pub fn builtin_template(name: &str) -> Option<WorkTemplate> {
 /// undo and preservation (ADR 0659); absent retains legacy automation behaviour (ADR 0346).
 /// Name, policy/unit conflict and expected revision are checked before package preflight.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplatesApply {
     /// The template's name: `mimari`.
     pub name: String,
@@ -83,34 +79,28 @@ pub struct TemplatesApply {
     /// mode: any supported local display unit; absent: the package's (m); a coordinate system
     /// requires metres. Rejected with keep. Geometry coordinates never rescale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
     /// Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;
     /// `template` applies the shown package settings without rescaling geometry.
     /// Both preserve existing definitions and make the whole package one undo step.
     /// Absent: the original ADR 0346 v1 behaviour, for existing automation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub settings_mode: Option<TemplateSettingsMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplatesApplied {
     /// The drawing's unit afterwards.
     pub unit: DrawingUnit,
     /// Explicit policy's before/after settings and the existing definitions kept.
     /// Absent for legacy calls, preserving their output contract.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub review: Option<TemplateReview>,
     /// The layers added, by name.
     pub layers: Vec<String>,
@@ -130,10 +120,8 @@ pub struct TemplatesApplied {
 
 /// A deliberate template settings policy, separate from the legacy absent field.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TemplateSettingsMode {
     Keep,
     Template,
@@ -141,10 +129,8 @@ pub enum TemplateSettingsMode {
 
 /// What the explicit safe template plan will preserve and change.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplateReview {
     pub mode: TemplateSettingsMode,
     pub previous_unit: DrawingUnit,
@@ -155,7 +141,6 @@ pub struct TemplateReview {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub plot_scale: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub previous_space_method: Option<SpaceMethod>,
     pub space_method: SpaceMethod,
     pub preserved: Vec<TemplatePreserved>,
@@ -163,10 +148,8 @@ pub struct TemplateReview {
 
 /// A package part kept because the drawing already defines its identity or name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TemplatePreserved {
     /// layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.
     pub kind: String,

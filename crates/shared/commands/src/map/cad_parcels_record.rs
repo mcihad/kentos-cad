@@ -25,8 +25,6 @@
 //! `cad.parcels.approve.json` and `cad.parcels.withdraw.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{ParcelApproval, StatedLength};
 
@@ -42,20 +40,15 @@ pub const CAD_PARCELS_WITHDRAW_VERSION: u32 = 1;
 /// The document `cad.parcels.record` writes: its name (unique in the drawing, at most 120 characters), its kind (120)
 /// and date (64) as the user writes them, a note (4000).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDocumentInput {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }
 
@@ -64,17 +57,13 @@ pub struct ParcelDocumentInput {
 /// states for the area's edges (none: the area's `Kenar ölçüleri (m)`, the outline's edges' lengths in order, separated
 /// by `;`, an empty or `-` one unstated; empty: none).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelToRecord {
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stated_area: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub lengths: Option<Vec<StatedLength>>,
 }
 
@@ -94,34 +83,26 @@ pub struct ParcelToRecord {
 /// drafts' names too. With `draft` the same checks run and the answer is what approving would write today; only the
 /// draft is written, numbered among the drafts.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsRecord {
     pub document: ParcelDocumentInput,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ParcelToRecord>>"))]
     pub create: Vec<ParcelToRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub close: Vec<u32>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub draft: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries
 /// it made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsRecorded {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub document: u32,
@@ -138,22 +119,18 @@ pub struct ParcelsRecorded {
     /// Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
     /// took the pieces (not closed: their identity, document and stated area stay).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub boundaries_split: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub neighbours: Vec<u32>,
     /// Docs/adr/5020: the boundaries' lengths the document states.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub lengths: u32,
     /// Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would
     /// write today.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub draft: bool,
     pub revision: String,
 }
@@ -165,17 +142,13 @@ fn is_zero(n: &u32) -> bool {
 /// An approval as given (docs/adr/5020): its number (at most 64 characters), date (64) and who approved (120), as
 /// written outside KentOS.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelApprovalInput {
     pub reference: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub by: Option<String>,
 }
 
@@ -189,37 +162,29 @@ pub struct ParcelApprovalInput {
 /// `parcel_closed` (a parcel it closes was closed since), `parcel_recorded`, `parcel_identity_taken`, `invalid_input`
 /// (the register's limits).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsApprove {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub draft: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub document: Option<u32>,
     pub approval: ParcelApprovalInput,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.parcels.approve` v1: the approved document's number and, for a draft, what writing it did (as
 /// `cad.parcels.record` answers; none for a document already recorded); the revision after.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsApproved {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub document: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recorded: Option<ParcelsRecorded>,
     pub revision: String,
 }
@@ -227,24 +192,19 @@ pub struct ParcelsApproved {
 /// Input of `cad.parcels.withdraw` v1: the draft to remove. Refusals: `invalid_revision`, `revision_conflict`,
 /// `unknown_parcel_draft` (`draft`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsWithdraw {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub draft: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.parcels.withdraw` v1: the removed draft's name; the revision after.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsWithdrawn {
     pub name: String,
     pub revision: String,
@@ -253,37 +213,28 @@ pub struct ParcelsWithdrawn {
 /// Input of `cad.parcels.records` v1: with `history` the closed parcels and boundaries too (none: the current ones).
 /// Every document is listed. No refusal: a drawing without a register answers empty lists.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsRecords {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub history: bool,
 }
 
 /// A document as listed: its fields, its approval as written (docs/adr/5020) and the parcels it made and closed.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDocumentRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub kind: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub date: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub note: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approval: Option<ParcelApproval>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub created: Vec<u32>,
@@ -294,19 +245,15 @@ pub struct ParcelDocumentRow {
 /// A draft as listed (docs/adr/5020): its number among the drafts, its fields, the identities (`Ada/Parsel`) of the
 /// parcels it would make, the recorded parcels it would close, how many lengths it states.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDraftRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub kind: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub date: String,
     pub create: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -319,10 +266,8 @@ pub struct ParcelDraftRow {
 /// length as written, the boundary's length less it, and the frontage check's limit d = 0,05 + 0,001·S m (S the stated
 /// length in metres); `within` when the difference's size is no more than the limit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BoundaryLengthRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub document: u32,
@@ -340,10 +285,8 @@ pub struct BoundaryLengthRow {
 /// current parcels it shares a boundary with (a current parcel's); the parcels its document closed (`before`) and
 /// those the document that closed it made (`after`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedParcelRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
@@ -355,19 +298,15 @@ pub struct RecordedParcelRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub created_by: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub closed_by: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stated_area: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub recorded_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     pub state: String,
@@ -385,10 +324,8 @@ pub struct RecordedParcelRow {
 /// documents, the parcels that use it (a current boundary's current ones) and whether every current one still draws
 /// it as recorded (its area has an edge between the two corners with the bulge; a closed boundary: false).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedBoundaryRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
@@ -397,7 +334,6 @@ pub struct RecordedBoundaryRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub to: [f64; 2],
     #[serde(default, skip_serializing_if = "is_straight")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulge: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -405,14 +341,12 @@ pub struct RecordedBoundaryRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub created_by: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub closed_by: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub parcels: Vec<u32>,
     pub drawn: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<BoundaryLengthRow>>"))]
     pub lengths: Vec<BoundaryLengthRow>,
 }
 
@@ -424,10 +358,8 @@ fn is_straight(bulge: &f64) -> bool {
 /// `history`), the drafts, and the counts: current and closed parcels, current parcels drawn otherwise and without their
 /// area, current boundaries no longer drawn as recorded, current boundaries with a stated length past its limit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelsRecordsListed {
     pub documents: Vec<ParcelDocumentRow>,
     pub parcels: Vec<RecordedParcelRow>,
@@ -443,10 +375,8 @@ pub struct ParcelsRecordsListed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub moved: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ParcelDraftRow>>"))]
     pub drafts: Vec<ParcelDraftRow>,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub over_limit: u32,
 }

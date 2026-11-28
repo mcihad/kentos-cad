@@ -11,8 +11,6 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The kinds of server jobs.
 pub const SERVER_JOB_KINDS: &[&str] = &[
@@ -64,10 +62,8 @@ pub const SERVER_JOB_TIMEOUT_MAX: u32 = 86_400;
 pub const SERVER_JOB_TIMEOUT_DEFAULT: u32 = 600;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ServerJobState {
     Queued,
     Running,
@@ -97,47 +93,37 @@ impl ServerJobState {
 /// What a user asks for (`POST …/projects/{project}/jobs`). A request with a request id the same user sent before for
 /// the project gets that job, whatever this one says.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobCreate {
     pub kind: String,
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: Value,
     /// 1–200 characters: the client's own id of this request.
     pub request_id: String,
     /// Seconds, 1–86 400; absent: 600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub timeout_seconds: Option<u32>,
     /// Built again whatever was built before (docs/adr/0739 §2): an export, an atlas or a file-writing tool otherwise
     /// takes the artifact of an earlier job built from the same project state, input, reach and software.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub fresh: bool,
 }
 
 /// `project.export`'s input: the export refused (`revision_conflict`) when the project is no longer at this data
 /// revision when it runs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectExportInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// What a `project.processing` job does with the tool's result (docs/adr/0559 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProcessingJobMode {
     /// The objects and layers the tool made, changed or removed are committed to the project, one command, when the
     /// project is still at the revision the tool read.
@@ -152,56 +138,44 @@ pub enum ProcessingJobMode {
 /// stages the file). The tool reads the project as it is at the revision the job was asked at, or at
 /// `expectedRevision`: a job refused (`revision_conflict`) when the project is not at it when the job runs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobInput {
     /// The tool's id (`cad.processing.tools`).
     pub tool: String,
     /// The tool's name as the window shows it, for lists; only said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The tool's values by parameter name; one left out takes the project's default.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     pub parameters: BTreeMap<String, Value>,
     /// The objects taken as chosen (persistent ids): a features input's `selection` scope.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub selection: Vec<String>,
     /// The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<[f64; 4]>,
     #[serde(default)]
     pub mode: ProcessingJobMode,
     /// The data revision the tool must read; absent: the one the job was asked at.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     /// A smaller CPU budget than the server's, in seconds; never a bigger one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cpu_seconds: Option<u32>,
     /// A smaller memory budget than the server's, in megabytes; never a bigger one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub memory_mb: Option<u32>,
 }
 
 /// What a user says of a file to stage for a job (`POST …/projects/{project}/job-inputs`, docs/adr/0561 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JobInputBegin {
     /// The file's name as the user has it (1–200 characters, no folder): `parcels.gpkg`.
     pub name: String,
     /// Its size in bytes, as the bytes will come.
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub size: u64,
     /// Its SHA-256: 64 lowercase hexadecimal digits.
     pub sha256: String,
@@ -210,14 +184,11 @@ pub struct JobInputBegin {
 /// A file staged for a job: asked for, then sent in one streamed body (`PUT …/job-inputs/{id}`), then named by a
 /// `project.import` job's `upload`. It is kept as long as finished jobs are (`KENTOS_JOB_RETENTION_DAYS`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JobInput {
     pub id: String,
     pub name: String,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub size: u64,
     pub sha256: String,
     pub created_at: String,
@@ -227,10 +198,8 @@ pub struct JobInput {
 
 /// The formats a `project.import` job takes (docs/adr/0561 §1): the ones `file.import.*` commands read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ImportFormat {
     Gpkg,
     Fgb,
@@ -312,35 +281,27 @@ impl ImportFormat {
 /// when it is still at the revision the worker read. A file's local path is never an option: the server gives the file
 /// it staged.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImportInput {
     /// The staged file's id (`JobInput.id`).
     pub upload: String,
     /// The format; absent: the staged file's name tells (`ImportFormat::of_name`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub format: Option<ImportFormat>,
     /// The import command's input without `path`: `tables`, `layers`, `reproject`, `srid`, `layer`, `geometry`,
     /// `fileUnit`, `explodeBlocks`, `group` … as the command takes them.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
     pub options: BTreeMap<String, Value>,
     /// For lists; only said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The data revision the worker must read; absent: the one the job was asked at.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cpu_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub memory_mb: Option<u32>,
 }
 
@@ -348,60 +309,45 @@ pub struct ProjectImportInput {
 /// revision the worker read (or `expectedRevision`), the pages made from the state `pin` names: a pin that is not the
 /// project's state refuses the job (`pin_mismatch`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAtlasInput {
     /// The sheet that has the atlas, by id.
     pub sheet: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub theme: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pin: Option<crate::AtlasPin>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cpu_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub memory_mb: Option<u32>,
 }
 
 /// A succeeded `project.import` job's result (docs/adr/0561 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImportResult {
     /// The import command that read the file.
     pub command: String,
     /// The file's name, bytes and SHA-256 (as the command read them).
     pub file: String,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub bytes: u64,
     pub sha256: String,
     /// The data revision the worker read, and the one the commit made, as text.
     pub base_revision: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// The command's own words: what came in.
     pub summary: String,
@@ -417,20 +363,16 @@ pub struct ProjectImportResult {
     /// What the file could not give or the import left out: the command's warnings (`import_losses`, `crs_undeclared`,
     /// `unit_assumed` …) and the notes of the run, in words, with the warning's code in front of its words.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingJobNote>>", optional))]
     pub notes: Vec<ProcessingJobNote>,
     /// What the import command answered (the tables or layers read, the counts, the coordinate system).
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub details: Value,
     pub usage: ProcessingUsage,
 }
 
 /// A succeeded `project.atlas` job's result (docs/adr/0561 §2): the artifact is the PDF.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAtlasResult {
     pub sheet: String,
     /// The data revision the worker read, as text.
@@ -439,31 +381,25 @@ pub struct ProjectAtlasResult {
     pub pages: u64,
     /// The first page's name and the last's, for lists.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub first: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub last: Option<String>,
     /// The state the pages were made from (`AtlasPin`'s digest) and what the run was bound to.
     pub pin_digest: String,
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub bindings: Value,
     /// The attributes the pages carry and the ones they do not (a form's `redact`, or not asked for).
     pub fields: Vec<String>,
     pub withheld: Vec<String>,
     /// The sheet core's findings and the notes of a host without a window, in words.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingJobNote>>", optional))]
     pub notes: Vec<ProcessingJobNote>,
     pub usage: ProcessingUsage,
 }
 
 /// What a `project.processing` job took (docs/adr/0559 §4).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingUsage {
     /// CPU seconds of the process the tool ran in, as last measured.
     pub cpu_seconds: f64,
@@ -473,10 +409,8 @@ pub struct ProcessingUsage {
 
 /// A note the tool made while it ran.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobNote {
     /// `info` or `warn`.
     pub level: String,
@@ -485,10 +419,8 @@ pub struct ProcessingJobNote {
 
 /// A succeeded `project.processing` job's result (docs/adr/0559 §2).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobResult {
     pub tool: String,
     pub mode: ProcessingJobMode,
@@ -496,7 +428,6 @@ pub struct ProcessingJobResult {
     pub base_revision: String,
     /// `commit`: the data revision the commit made, as text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// The tool's own summary line.
     pub summary: String,
@@ -508,7 +439,6 @@ pub struct ProcessingJobResult {
     #[serde(default)]
     pub metadata: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingJobNote>>", optional))]
     pub notes: Vec<ProcessingJobNote>,
     pub usage: ProcessingUsage,
 }
@@ -538,10 +468,8 @@ pub fn import_memory_estimate(snapshot_bytes: u64, file_bytes: u64) -> u64 {
 
 /// A succeeded job's artifact in the object store.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobArtifact {
     /// Bytes, as text.
     pub size: String,
@@ -552,10 +480,8 @@ pub struct ServerJobArtifact {
 
 /// Why a job failed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobError {
     /// `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
     /// not be written: no folder, no right), `storage_full` (the object store had no room left for it; nothing of it
@@ -570,15 +496,12 @@ pub struct ServerJobError {
 
 /// A job as its project's users see it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJob {
     pub id: String,
     pub project: String,
     pub kind: String,
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: Value,
     pub input_sha256: String,
     /// The project's data revision when the job was asked for, as text.
@@ -588,7 +511,6 @@ pub struct ServerJob {
     pub progress: f32,
     /// What the worker says it is doing, a few Turkish words, while the job runs (docs/adr/0559 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub progress_text: Option<String>,
     pub attempts: u32,
     pub max_attempts: u32,
@@ -597,33 +519,25 @@ pub struct ServerJob {
     pub created_by: String,
     pub created_at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub started_at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub finished_at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub result: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub artifact: Option<ServerJobArtifact>,
     /// The earlier job whose artifact this one took: the project's state, the input, the reach and the server's software
     /// were the same (docs/adr/0739 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cached_from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<ServerJobError>,
 }
 
 /// A project's jobs, newest first, at most [`SERVER_JOB_LIST_MAX`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobList {
     pub jobs: Vec<ServerJob>,
 }

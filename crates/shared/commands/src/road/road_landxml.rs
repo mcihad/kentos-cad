@@ -6,8 +6,6 @@
 //! `fixtures/commands/v1/file.export.landxml.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -26,40 +24,30 @@ pub const FILE_EXPORT_LANDXML_VERSION: u32 = 1;
 /// alignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with
 /// `machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportLandxml {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surfaces: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignments: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub without_profiles: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
     /// For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
     /// surface's cloud ground in it (`unproven_heights`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub machine_control: bool,
 }
 
 /// A written surface: its name and its points and triangles.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LandxmlSurfaceWritten {
     pub id: String,
     pub name: String,
@@ -71,10 +59,8 @@ pub struct LandxmlSurfaceWritten {
 
 /// A written alignment: its name, its elements by kind, its km equations and the profiles written on it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LandxmlAlignmentWritten {
     pub id: String,
     pub name: String,
@@ -93,10 +79,8 @@ pub struct LandxmlAlignmentWritten {
 
 /// Output of `file.export.landxml` v1, and its plan: what is (or would be) in the file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LandxmlExported {
     pub path: String,
     pub surfaces: Vec<LandxmlSurfaceWritten>,
@@ -118,20 +102,15 @@ pub const ROAD_ALIGNMENTS_IMPORT_VERSION: u32 = 1;
 /// definition the rules refuse), `invalid_revision`, `revision_conflict`. Warnings: `landxml_left` (an alignment
 /// KentOS's PIs cannot hold, elements it does not take, a profile that does not build).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsImport {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignments: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub without_profiles: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -139,10 +118,8 @@ pub struct AlignmentsImport {
 /// An alignment taken in: its id and name, its PIs, the file's elements and how far KentOS's alignment from its PIs
 /// lies from them at their ends (m), and its profiles' names.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentImported {
     pub id: String,
     pub name: String,
@@ -156,10 +133,8 @@ pub struct AlignmentImported {
 
 /// Output of `road.alignments.import` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsImported {
     pub alignments: Vec<AlignmentImported>,
     pub revision: String,
@@ -178,33 +153,25 @@ pub const FILE_EXPORT_IFC_VERSION: u32 = 1;
 /// `export_losses` (a parallel axis, an alignment or a profile that does not build, a decreasing km equation, a project
 /// without a coordinate system).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportIfc {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignments: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub without_profiles: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
 }
 
 /// An alignment in the IFC file: its horizontal segments by kind, its vertical segments and the profiles (the first
 /// on the alignment, the others on child alignments).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcAlignmentWritten {
     pub id: String,
     pub name: String,
@@ -223,16 +190,13 @@ pub struct IfcAlignmentWritten {
 
 /// Output of `file.export.ifc` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcExported {
     pub path: String,
     pub schema: String,
     pub alignments: Vec<IfcAlignmentWritten>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,

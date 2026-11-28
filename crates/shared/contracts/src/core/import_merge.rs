@@ -5,15 +5,11 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// What a matched object takes from its row.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MergeMatched {
     /// The row's attributes; a cell empty in the row empties the object's.
     #[default]
@@ -26,10 +22,8 @@ pub enum MergeMatched {
 
 /// What a row no object matches does.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MergeUnmatched {
     #[default]
     Add,
@@ -38,10 +32,8 @@ pub enum MergeUnmatched {
 
 /// What a key the source gives more than one row does (docs/adr/0439 §4's words).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MergeDuplicates {
     /// Nothing is taken: `duplicate_key`.
     #[default]
@@ -63,24 +55,19 @@ fn is_true(v: &bool) -> bool {
 /// How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import
 /// routes it; on a layer the import makes every row is added.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportMerge {
     /// The source's column naming a row; none: the row's lasting id (taking the same file again updates).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// The layer's field (or attribute) the key meets; none: the one named as `key`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub target_key: Option<String>,
     #[serde(default)]
     pub matched: MergeMatched,
     /// Whether a matched object takes its row's geometry.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub geometry: bool,
     #[serde(default)]
     pub unmatched: MergeUnmatched,
@@ -103,10 +90,8 @@ impl Default for ImportMerge {
 
 /// What the merge did on one layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MergeReport {
     /// The file's table (or layer) and the drawing's layer its rows went onto.
     pub table: String,
@@ -125,17 +110,14 @@ pub struct MergeReport {
     pub rejected: u32,
     /// Why rows were refused (the reason codes below), with how many.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub reasons: BTreeMap<String, u32>,
 }
 
 /// The CSV of the rows refused.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RejectsWritten {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

@@ -10,8 +10,6 @@
 //! writes nothing.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -23,61 +21,47 @@ pub const CAD_TIME_QUERY_VERSION: u32 = 1;
 /// (the state asked), `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`, `invalid_period`,
 /// `not_recorded`; the conflict `state_changed` (docs/adr/0646 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TimeQuery {
     /// The temporal layer's id.
     pub layer: String,
     /// The valid time's instant; with `from` and `to` refused.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     /// The valid time's period [from, to): both or neither.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<String>,
     /// The day known: only the versions recorded by then and not yet superseded (a layer that records them).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub known_at: Option<String>,
     /// The state asked (docs/adr/0646 §1): the drawing some undo steps back or a drawing file; none, the drawing as
     /// it is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<crate::CompareAgainst>,
     /// The layer's digest a former answer gave (`stamp`): the state must hold the layer as it did, else
     /// `state_changed`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_stamp: Option<String>,
 }
 
 /// Output of `cad.time.query` v1: the objects shown (persistent ids, in the drawing's order) and why the others are
 /// not; the moments read, in UTC.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TimeQueried {
     pub layer: String,
     /// The instant read (`YYYY-MM-DDTHH:MM:SSZ`, a midnight `YYYY-MM-DD`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub to: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub known_at: Option<String>,
     pub shown: Vec<String>,
     /// Objects with a valid time the window does not show.

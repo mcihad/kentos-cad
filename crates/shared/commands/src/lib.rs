@@ -4,9 +4,9 @@
 //! command, or a change to one, rebuilds the hosts that run commands and not the formats, the codec, the domain
 //! and the other crates below them (docs/adr/0540).
 //!
-//! `kentos-contracts` is re-exported whole, so a host names everything through `kentos_commands`. Like it, the
-//! `ts` feature writes the TypeScript types (`cargo test -p kentos-commands`) and `schema` derives the JSON Schema
-//! the catalog is built from.
+//! `kentos-contracts` is re-exported whole, so a host names everything through `kentos_commands`. The `schema`
+//! feature derives the JSON Schema the catalog is built from. The commands' types have no TypeScript form: it is
+//! generated for the cloud portal alone, from `kentos-contracts` (docs/adr/9402).
 
 pub use kentos_contracts::*;
 

@@ -9,8 +9,6 @@ use std::sync::OnceLock;
 
 use kentos_contracts::{ProjectType, Workspace};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::error::{Result, SheetError};
 use crate::kinds::*;
@@ -27,10 +25,8 @@ pub const TEMPLATE_VERSION: u32 = 1;
 
 /// A paper a template suits.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPaperChoice"))]
 pub struct PaperChoice {
     pub paper: Paper,
@@ -38,10 +34,8 @@ pub struct PaperChoice {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTemplateMeta"))]
 pub struct TemplateMeta {
     /// `sys:…` for the program's own (read-only); anything else for a user's.
@@ -76,10 +70,8 @@ pub struct TemplateMeta {
 
 /// A picture with its bytes (base64), so a template never prints an empty box on another machine.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAssetWithBytes"))]
 pub struct AssetWithBytes {
     pub meta: AssetMeta,
@@ -88,10 +80,8 @@ pub struct AssetWithBytes {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTemplate"))]
 pub struct Template {
     /// `kentos.sheet.template/1`.
@@ -100,7 +90,6 @@ pub struct Template {
     /// Its maps have a scale and no centre; its own `variables` are empty (the questions are below).
     pub sheet: Sheet,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub master: Option<Master>,
     #[serde(default)]
     pub assets: Vec<AssetWithBytes>,
@@ -111,16 +100,13 @@ pub struct Template {
 
 /// The ids a new sheet from a template gets: the host makes them (the core never does).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperInstanceIds"))]
 pub struct InstanceIds {
     pub sheet: SheetId,
     /// For the template's master page, when it has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub master: Option<MasterId>,
     /// One per item of the template's sheet, in order.
     #[serde(default)]
@@ -132,10 +118,8 @@ pub struct InstanceIds {
 
 /// An answer to one of the template's questions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperVariableValue"))]
 pub struct VariableValue {
     pub name: String,
@@ -144,27 +128,21 @@ pub struct VariableValue {
 
 /// How a template is used.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperInstanceOptions"))]
 pub struct InstanceOptions {
     /// Another paper: the items follow their constraints there.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub paper: Option<PaperChoice>,
     /// The sheet's name; none: the template's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Where the maps look (the drawing area's centre, say).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
     /// The maps' scale (the project's plot scale); none: the template's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     #[serde(default)]
@@ -173,15 +151,12 @@ pub struct InstanceOptions {
 
 /// A sheet made from a template, and what the book gets with it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperInstance"))]
 pub struct Instance {
     pub sheet: Sheet,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub master: Option<Master>,
     /// The pictures' metadata, for the book.
     pub assets: Vec<AssetMeta>,

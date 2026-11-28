@@ -341,20 +341,26 @@ Karar ve ölçüm: [ADR 9402](../docs/adr/9402-web-and-wasm-removed.md). Sıra b
 alan her yer kendi kopyasına ya da yeni yerine bağlanır, klasör en son silinir. Her madde bir commit; her birinin
 sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
 
-- [ ] **BK-80 — Portal kendi ayakları üstünde.** Portal web'den üç TypeScript dosyası (`ui/dom.ts`,
-  `core/signal.ts`, `core/disposable.ts`), üç stil dosyası (`fonts.css`, `tokens.css`, `accents.css`) ve yazı
-  tiplerini (13 aile, 1,3 MB) alıyor. Hepsi portala taşınır. Yazı tipi üreteçleri (`scripts/fonts/ui_fonts.py`,
-  `drawing_fonts.py`, `sheet_metrics.py`) kaynağı portaldan okur.
-- [ ] **BK-81 — Masaüstünün web'den aldıkları.** Yeni proje sihirbazının iki resmi (`include_str!`) masaüstüne;
-  sınamaların okuduğu dosyalar yerlerine: `tokens.css` (2 sınama) portalınkine, `labelDefaults.ts` ve işlem
-  araçlarının iki alanı (üreteç `processing_command_cases.py`) dondurulmuş başvuru dosyasına, `favicon.svg`
-  portalınkine.
-- [ ] **BK-82 — Komut kataloğu `catalog/v1/commands.json`.** Yazan: komutların sınaması. Okuyanlar: SDK üreteci,
-  CAD manifesti, CBS kapsam betiği, geçmiş çağrıları betiği, iki Python sınaması, masaüstünün başlık sınaması. SDK
-  yeniden üretilir (yalnız başlık satırı değişir).
-- [ ] **BK-83 — TypeScript yalnız Bulut için.** `ts-rs` çıktısı `apps/portal/src/api/generated`'a yazılır ve yalnız
-  portalın adını andığı 110 türle onların içe aldıkları üretilir (342 dosya; bugün 3 899). Kalan: kullanılmayan
-  `ts` özniteliklerinin silinmesi (üç crate'te 16 157 satır) ayrı bir dilimdir.
+- [x] **BK-80 — Portal kendi ayakları üstünde** (`5db25349f`). Üç TypeScript dosyası, üç stil dosyası ve yazı
+  tipleri (13 aile) portalın kendi dosyaları oldu (`src/lib`, `src/styles`, `src/assets/fonts`). Yazı tipi
+  üreteçleri kaynağı portaldan okuyor. Kanıt: portalın paketi taşımadan önceki ve sonraki derlemede aynı (özet adlı
+  dosyalar değişmedi); `ui_fonts`, `drawing_fonts` `--check` yeşil; `sheet_metrics` yalnız kaynak notunda değişti.
+- [x] **BK-81 — Masaüstünün web'den aldıkları** (`726f832d9`). Sihirbazın iki resmi modülünün yanında
+  (`wizard/art/`). `tokens.css`'i okuyan iki sınama ve `favicon.svg` portalınkini okuyor. Etiket öntanımlıları
+  `fixtures/labels/v1/defaults.json`'da, işlem araçlarının iki alanı `fixtures/processing/v1/tool-words.json`'da
+  donduruldu: üretecin bir koşuda sorduğu 20 kapsam ve 4 etiket koşunun kendisinden kaydedildi; `--check` aynı
+  90 + 25 durumu veriyor.
+- [x] **BK-82 — Komut kataloğu `catalog/v1/commands.json`** (`095040391`). Ayar şemasının iki dosyası da orada
+  (`settings-schema.json`, `settings-file.schema.json`). İçerikleri değişmedi. Yazan sınamalar ve yedi okuyan yeni
+  yere bağlandı; SDK'nın 166 dosyası yalnız başlık satırında, manifest yalnız katalog alanında değişti.
+  `docs/gis/coverage.*` bu işten önce de eskiydi (yeni komutlar); dokunulmadı.
+- [x] **BK-83 — TypeScript yalnız Bulut için.** `ts-rs` çıktısı `apps/portal/src/api/generated`'a yazılır: portalın
+  adını andığı 110 tür ve onların içe aldıkları, 343 dosya (önce 3 903). Kullanılmayan `ts` öznitelikleri aynı
+  dilimde silindi: 15 668 satır, 420 dosya. `kentos-commands` ve `kentos-sheet`'in `ts` özelliği ve `ts-rs`
+  bağımlılığı kalktı; `kentos-contracts`'ta `derive(TS)` 365 türde kaldı (343'ü dosya üretir, 22'si başka türün
+  içine açılır), `ts(export)` yalnız 110 kökte. Kanıt: sıyırmadan önce ve sonra üretilen 343 dosya bayt bayt aynı;
+  üretilen küme tam olarak kapanış; portalın tür denetimi, sınamaları ve paketi değişmedi. Portalın kullandığı altı
+  tür web'in klasöründe eskimişti (`Entity`, `BeamEntity`…); şimdi günceller.
 - [ ] **BK-84 — WASM.** Dokuz bağlayıcı crate (`crates/wasm`), `wasm-bindgen`, `wasm` ve `wasm-dev` profilleri,
   ortak crate'lerdeki 13 `cfg(target_arch = "wasm32")` satırı (5 dosya), `scripts/wasm`.
 - [ ] **BK-85 — `apps/web` silinir.** 5 535 izlenen dosya. pnpm çalışma alanı ve kilit dosyası, `.gitignore`,

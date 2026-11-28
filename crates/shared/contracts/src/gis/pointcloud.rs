@@ -27,7 +27,6 @@ pub const DEFAULT_POINT_SIZE: f64 = 2.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CloudFormat {
     Las,
     Laz,
@@ -40,7 +39,6 @@ pub enum CloudFormat {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CloudRender {
     /// The file's colours.
     Rgb,
@@ -61,7 +59,6 @@ pub enum CloudRender {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PointSizeUnit {
     /// Pixels on the screen (independent of the device's pixels).
     #[default]
@@ -75,7 +72,6 @@ pub enum PointSizeUnit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PointShape {
     #[default]
     Round,
@@ -123,7 +119,6 @@ impl CloudRender {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudStyle {
     pub render: CloudRender,
     /// One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.
@@ -220,7 +215,6 @@ impl PointCloudStyle {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CloudSource {
     /// The project library's asset its bytes are (embedded); exactly one of
     /// `asset`, `file` and `url` is given.
@@ -331,7 +325,6 @@ impl CloudSource {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -347,7 +340,6 @@ pub struct PointCloudEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointCloudFields {
     pub sources: Vec<CloudSource>,
     /// The members' bounds together.

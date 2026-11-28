@@ -5,8 +5,6 @@
 //! same way is named in the report (lost, approximate or a note), never cut silently (docs/adr/0609 §3). Nothing is
 //! written back: a `.ctb`/`.stb` writer is not part of this reader.
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use super::{PlotColor, PlotProfile, PlotStyle, StyleEntry, StyleKey, TableKind};
 use crate::{LineCap, LineJoin, Result, SheetError};
@@ -60,12 +58,7 @@ pub const LINETYPES: [&str; 31] = [
 
 /// Which plot style table a file is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(
-    feature = "ts",
-    ts(export, export_to = "sheet/", rename = "PlotStyleFormat")
-)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleFormat"))]
 #[serde(rename_all = "lowercase")]
 pub enum StyleFormat {
@@ -75,12 +68,7 @@ pub enum StyleFormat {
 
 /// Where an imported profile came from: the file's format, the SHA-256 of its bytes and its name (docs/adr/0609 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(
-    feature = "ts",
-    ts(export, export_to = "sheet/", rename = "PlotSource")
-)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotSource"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotSource {
@@ -93,12 +81,7 @@ pub struct PlotSource {
 
 /// How much a reported field differs from what the table's own program plots.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(
-    feature = "ts",
-    ts(export, export_to = "sheet/", rename = "PlotLossSeverity")
-)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotLossSeverity"))]
 #[serde(rename_all = "camelCase")]
 pub enum Severity {
@@ -112,12 +95,7 @@ pub enum Severity {
 
 /// What a report line is about, in the order the report lists them (docs/adr/1130 §3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(
-    feature = "ts",
-    ts(export, export_to = "sheet/", rename = "PlotLossKind")
-)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotLossKind"))]
 #[serde(rename_all = "camelCase")]
 pub enum LossKind {
@@ -208,9 +186,7 @@ impl LossKind {
 /// One line of the report: a kind, the styles it touches (an ACI as its number, a named style by its name) and the
 /// file's values that made it, each once in first-seen order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotLoss"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotLoss"))]
 #[serde(rename_all = "camelCase")]
 pub struct Loss {
@@ -223,12 +199,7 @@ pub struct Loss {
 
 /// A table read: its profile (with its source) and what the reading said.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(
-    feature = "ts",
-    ts(export, export_to = "sheet/", rename = "PlotStyleRead")
-)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleRead"))]
 #[serde(rename_all = "camelCase")]
 pub struct Read {

@@ -19,7 +19,6 @@ pub const MAX_NURBS_POINTS: usize = 100_000;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NurbsEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

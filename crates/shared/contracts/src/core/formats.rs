@@ -8,8 +8,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::annotation::{DimensionStyleDef, TextStyleDef};
 use crate::document::{Bounds, DrawingFont, DrawingUnit};
@@ -237,10 +235,8 @@ pub const FORMATS_VERSION: u32 = 107;
 
 /// A layer as the source file defines it. Objects name it in `layerId`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportLayer {
     pub name: String,
     /// Hex colour or a theme token (DXF colour 7 → "ink").
@@ -251,19 +247,15 @@ pub struct ImportLayer {
     /// The file's line type with a pattern the layer draws with, by its name (docs/adr/0313 §6), one of the result's
     /// `line_types`; `line_type` its nearest built-in.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
     /// Plot line weight in mm, when the file gives one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_weight: Option<f64>,
     /// Yazdır (docs/adr/0260 §4): `false` when the file's layer is not printed (DXF's 290).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
     /// Dondur (docs/adr/0311 §1): `true` when the file's layer is frozen (DXF's 70 bit 1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub frozen: Option<bool>,
     /// Objects read onto this layer.
     pub count: u32,
@@ -274,25 +266,18 @@ pub struct ImportLayer {
     /// The box those objects' defining points span (a text's is its
     /// insertion point): where a choice of layers is, without walking them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
     /// The fields the file gives the layer's attributes (docs/adr/0199 §6): a
     /// Shapefile's DBF fields, the kinds of a GeoJSON's properties; a new
     /// layer takes them. Empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
-    )]
     pub fields: Vec<crate::fields::LayerField>,
 }
 
 /// CAD diagnostic severity; independent of whether a supported entity was kept.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ReportSeverity {
     Info,
     Warning,
@@ -301,35 +286,27 @@ pub enum ReportSeverity {
 
 /// A bounded source sample for an aggregated CAD loss report.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReportDetail {
     pub entity_type: String,
     pub property: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub source_line: Option<u32>,
 }
 
 /// One line of an import or export report: what, how many, and what happened to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReportItem {
     /// Absent for legacy reports. CAD reports distinguish information, changed content and rejected content.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub severity: Option<ReportSeverity>,
     /// Source samples, bounded like `lines`; count may be greater than this sample list.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportDetail>>", optional))]
     pub details: Vec<ReportDetail>,
     /// The source's name for it ("IMAGE", "Genişlikli çoklu çizgi").
     pub what: String,
@@ -344,18 +321,14 @@ pub struct ReportItem {
 
 /// A fact about the source file, shown before the import ("Sürüm": "DXF R2000").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceFact {
     pub label: String,
     pub value: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportReport {
     /// Objects read, by kind (`point`, `line`, …).
     pub counts: BTreeMap<String, u32>,
@@ -367,16 +340,13 @@ pub struct ImportReport {
     /// The reader's decisions on the drawing as a whole (docs/adr/1010): its unit, tilted planes, blocks, layers
     /// and paper, each with a stable code. The same words are in `notes` too, for a reader that lists only those.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ImportDecision>>", optional))]
     pub decisions: Vec<ImportDecision>,
 }
 
 /// What a decision of the reader is about (docs/adr/1010).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ImportDecisionTopic {
     /// The length unit the values were read in, and why.
     Unit,
@@ -394,9 +364,7 @@ pub enum ImportDecisionTopic {
 
 /// One decision the reader took, counted where it took it (docs/adr/1010).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportDecision {
     pub topic: ImportDecisionTopic,
     /// Stable: `unit_converted`, `layer_unused_left_out` …
@@ -409,17 +377,14 @@ pub struct ImportDecision {
     pub count: u32,
     /// The first source lines where it was taken; none for the file as a whole.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub lines: Vec<u32>,
 }
 
 /// Where a file's statement of its coordinate system comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CrsSource {
     /// A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.
     Rfc7946,
@@ -438,14 +403,11 @@ pub enum CrsSource {
 /// guess (CLAUDE.md §5). The import window shows it as the answer to its
 /// question, and the user confirms or changes it; nothing is transformed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredCrs {
     /// The EPSG code the statement names, when it names one the reader recognises.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
@@ -453,19 +415,15 @@ pub struct DeclaredCrs {
     pub source: CrsSource,
     /// The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub vertical: Option<DeclaredVertical>,
 }
 
 /// A vertical system a file names: its EPSG code when the statement gives one, its name.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeclaredVertical {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     pub name: String,
@@ -474,42 +432,34 @@ pub struct DeclaredVertical {
 /// What a reader produced. Objects have id 0 (the app numbers them when it
 /// adds them) and `layerId` holds the name of their layer in `layers`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportResult {
     /// Source handles aligned with model entities; meaningful only inside this CAD source.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<String>>>", optional))]
     pub source_handles: Vec<Option<String>>,
     /// Real paper-space layouts, separate from model-space entities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CadLayout>>", optional))]
     pub layouts: Vec<crate::CadLayout>,
     pub entities: Vec<Entity>,
     pub layers: Vec<ImportLayer>,
     pub report: ImportReport,
     /// Extent of the objects' defining points (shown before the import).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
     /// The coordinate system the file declares (GeoJSON, Shapefile; docs/adr/0046).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub declared_crs: Option<DeclaredCrs>,
     /// Where the view shows the objects once they are in: their extent without
     /// the far strays a file can hold (a slip drawn at 0, 0 beside a city,
     /// `kentos_formats::import::view_bounds`; docs/adr/0138).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<Bounds>,
     /// The block definitions the objects' inserts place (a DXF's BLOCKs,
     /// docs/adr/0144 §5), in the file's order: ids the reader numbered (the
     /// app gives them new ones and a name the drawing does not have yet),
     /// their objects on layer "0". None when blocks were exploded.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
     /// The text and dimension styles the objects follow (a DXF's STYLE and
     /// DIMSTYLE records, docs/adr/0183 §7), in the file's order: ids the
@@ -517,29 +467,23 @@ pub struct ImportResult {
     /// gave. The app takes a style of a name the project has as that one,
     /// and gives the others new ids and names the project does not have yet.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextStyleDef>>", optional))]
     pub text_styles: Vec<TextStyleDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
     /// The table styles (a DXF's TABLESTYLE objects, docs/adr/1128 §4): KentOS's own exactly from its data, another
     /// program's that a table follows from their groups, sizes in paper mm at the scale the options gave. The app
     /// takes a style of a name the project has as that one; another keeps its id when the project has none such.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
     pub table_styles: Vec<crate::TableStyleDef>,
     /// The unit the file's lengths were read in and why (a DXF's,
     /// docs/adr/0257 §1); none for a format without units.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<UnitDecision>,
     /// The file's line types with patterns (a DXF's LTYPE table, docs/adr/0313 §6), lengths in the file's unit as read.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineTypeDef>>", optional))]
     pub line_types: Vec<crate::LineTypeDef>,
     /// The file's line type scale ($LTSCALE), when other than 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_scale: Option<f64>,
 }
 
@@ -547,10 +491,8 @@ pub struct ImportResult {
 
 /// What a column of a coordinate list holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CoordColumn {
     /// Point name (becomes the label and the `Ad` attribute).
     Name,
@@ -567,10 +509,8 @@ pub enum CoordColumn {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CoordDelimiter {
     #[default]
     Auto,
@@ -582,10 +522,8 @@ pub enum CoordDelimiter {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DecimalMark {
     #[default]
     Auto,
@@ -595,10 +533,8 @@ pub enum DecimalMark {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HeaderMode {
     #[default]
     Auto,
@@ -607,10 +543,8 @@ pub enum HeaderMode {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordReadOptions {
     pub delimiter: CoordDelimiter,
     pub decimal: DecimalMark,
@@ -625,21 +559,16 @@ pub struct CoordReadOptions {
 
 /// A row of the preview: the fields as written and, if the row is not a point, why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordRow {
     pub line: u32,
     pub fields: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LineError {
     pub line: u32,
     pub message: String,
@@ -649,30 +578,22 @@ pub struct LineError {
 /// station, its instrument height and the optional values may be left out)
 /// and whether its first line names them (docs/adr/0169 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldCsvOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub station: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub instrument_height: Option<u32>,
     pub target: u32,
     pub hz: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zenith: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slope: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub target_height: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<u32>,
     pub header: bool,
 }
@@ -681,24 +602,18 @@ pub struct FieldCsvOptions {
 /// target, the horizontal reading, the zenith angle (none: a direction
 /// only), the slope distance, the target height, a code, the file's line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldObservation {
     pub target: String,
     pub hz: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zenith: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slope: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub target_height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
     pub line: u32,
 }
@@ -707,23 +622,17 @@ pub struct FieldObservation {
 /// the instrument's height above it, its coordinates when the file gives
 /// them (east, north, height; Leica GSI's WI 84–86), its observations in order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldStation {
     pub station: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub instrument_height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub east: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub north: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub height: Option<f64>,
     pub observations: Vec<FieldObservation>,
 }
@@ -733,15 +642,12 @@ pub struct FieldStation {
 /// it (`grad`, `deg`; a CSV book's is the user's), the first line's cells
 /// (the columns' names to map), its stations, and the lines not read with why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldBookRead {
     pub format: String,
     pub encoding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     pub first_line: Vec<String>,
     pub stations: Vec<FieldStation>,
@@ -756,43 +662,33 @@ pub struct FieldBookRead {
 /// given), its time as the file gives it, its fix (named: `3B`, `RTK
 /// sabit` …), satellites in use, HDOP, and the file's line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GnssPoint {
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub lat: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub lon: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub geoid: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ellipsoidal: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fix: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub satellites: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub hdop: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -803,10 +699,8 @@ pub struct GnssPoint {
 /// the text's encoding, its positions in order, the points or sentences
 /// not read with why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GnssRead {
     pub format: String,
     pub encoding: String,
@@ -814,7 +708,6 @@ pub struct GnssRead {
     pub problems: Vec<LineError>,
     /// The file's routes and tracks (docs/adr/0222 §6): their points' places in `points`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GnssLine>>", optional))]
     pub lines: Vec<GnssLine>,
 }
 
@@ -824,14 +717,11 @@ pub struct GnssRead {
 /// as their places in `GnssRead.points` (a point not read is not there); the
 /// file's line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GnssLine {
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     pub parts: Vec<Vec<u32>>,
     pub line: u32,
@@ -840,29 +730,23 @@ pub struct GnssLine {
 /// A point sent to an instrument (docs/adr/0169 §4): its name, east, north
 /// (metres), elevation and code when it has them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldPoint {
     pub name: String,
     pub east: f64,
     pub north: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub elevation: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
 }
 
 /// An instrument's coordinate file (docs/adr/0169 §4): Leica GSI-16 and
 /// GSI-8, Topcon GTS-7 points, Trimble JobXML, Nikon RAW, CSV.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FieldWriteFormat {
     Gsi16,
     Gsi8,
@@ -876,10 +760,8 @@ pub enum FieldWriteFormat {
 /// jobName, Nikon RAW's comment) and the time stamp JobXML carries
 /// (`2026-10-04T10:15:00`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldWriteOptions {
     pub format: FieldWriteFormat,
     pub job: String,
@@ -889,10 +771,8 @@ pub struct FieldWriteOptions {
 /// A point the format cannot carry: its place among the points (from 1),
 /// its name and why it is not written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldSkip {
     pub index: u32,
     pub name: String,
@@ -903,25 +783,20 @@ pub struct FieldSkip {
 /// in, and those that did not with why; or why nothing was written (the
 /// job's name).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldWrite {
     pub text: String,
     pub written: u32,
     pub skipped: Vec<FieldSkip>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<String>,
 }
 
 /// A coordinate list read with the given options, and what the reader found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordRead {
     /// Text encoding of the file ("UTF-8", "Windows-1254 (Türkçe)").
     pub encoding: String,
@@ -946,34 +821,26 @@ pub struct CoordRead {
     pub hints: Vec<String>,
     /// Extent of the points (Y as x, X as y), to show where the data lies before the import.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub result: Option<ImportResult>,
 }
 
 /// A point to write into a coordinate list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordPoint {
     pub name: String,
     pub p: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TextEncoding {
     #[default]
     Utf8,
@@ -982,9 +849,7 @@ pub enum TextEncoding {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordWriteInput {
     pub points: Vec<CoordPoint>,
     /// Not `auto`.
@@ -999,19 +864,15 @@ pub struct CoordWriteInput {
 // ── DXF ─────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfReadOptions {
     /// A known source distance and its real length; overrides the source unit, never the project's display unit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scale_reference: Option<CadImportScale>,
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_polyline_loss: bool,
     /// Stop after this many objects (0: one million); the rest is counted and reported.
     pub max_entities: u32,
@@ -1019,46 +880,38 @@ pub struct DxfReadOptions {
     /// kept (docs/adr/0144 §5). Off, a block is a definition and an insert
     /// places it; the inserts a block cannot hold are opened all the same.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub explode_blocks: bool,
     /// A local project's drawing unit (docs/adr/0165 §2): the file's values
     /// are taken in the unit its $INSUNITS names and turned into metres, a
     /// file that names none is in this unit. Native imports supply this for
     /// every project. None explicitly requests raw metre coordinates.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
     /// The unit the file's values are in, chosen by the user or the caller
     /// (docs/adr/0257 §1): whatever the file declares, its values are taken
     /// in it and turned into metres. None: the rule of `unit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file_unit: Option<FileUnit>,
     /// The project's plot scale denominator (docs/adr/0183 §7): a style's
     /// heights and sizes, in drawing units in the file, are paper mm at it;
     /// none: 1000.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scale: Option<f64>,
     /// The project's typeface: a style whose typeface KentOS does not have
     /// takes it (said); none: Barlow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
     /// What a closed LWPOLYLINE or POLYLINE becomes unless KentOS marked it a
     /// closed line (docs/adr/0258 §1): an area (the default) or a closed
     /// line. One with too few vertices for an area is a closed line either way.
     #[serde(default, skip_serializing_if = "ClosedPolylines::is_area")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<ClosedPolylines>", optional))]
     pub closed_polylines: ClosedPolylines,
 }
 
 /// What a file's closed polyline becomes (docs/adr/0258 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ClosedPolylines {
     /// An area: what a GIS project wants of a parcel's boundary.
     #[default]
@@ -1075,10 +928,8 @@ impl ClosedPolylines {
 
 /// An explicit physical calibration; source_length is the raw CAD number, real_length is metres.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CadImportScale {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub source_length: f64,
@@ -1101,10 +952,8 @@ impl CadImportScale {
 /// A unit a file's lengths may be read in, whatever the file says
 /// (docs/adr/0257 §1): DXF's `$INSUNITS` most used.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FileUnit {
     Mm,
     Cm,
@@ -1186,10 +1035,8 @@ impl FileUnit {
 
 /// Why a file's lengths were read in the unit they were (docs/adr/0257 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UnitSource {
     /// The user or the caller chose it (`fileUnit`).
     Chosen,
@@ -1216,9 +1063,7 @@ pub enum UnitSource {
 /// BLOCK_RECORD's group 70): its inserts' scale holds the ratio
 /// (docs/adr/0257 §2).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockUnit {
     pub name: String,
     /// Its `$INSUNITS` code.
@@ -1230,17 +1075,13 @@ pub struct BlockUnit {
 /// declares, the unit the values were taken in and why, and the blocks
 /// whose unit is another.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnitDecision {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scale_reference: Option<CadImportScale>,
     /// The `$INSUNITS` code the file declares; none for 0 or no header.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "insunits")))]
     pub declared: Option<i64>,
     /// The `$INSUNITS` code of the unit the values were read in.
@@ -1257,7 +1098,6 @@ pub struct UnitDecision {
     pub assumed: bool,
     /// The blocks whose unit is another than the file's, in the file's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockUnit>>", optional))]
     pub blocks: Vec<BlockUnit>,
 }
 
@@ -1325,10 +1165,8 @@ impl UnitDecision {
 /// names ignore case: the writer makes each name valid and unique (the
 /// group path tells layers of the same name apart) and reports what it changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfWriteLayer {
     /// What the objects' `layerId` holds.
     pub id: String,
@@ -1343,37 +1181,30 @@ pub struct DxfWriteLayer {
     pub line_type: LineType,
     /// The project line type it draws with (docs/adr/0313 §6), one of the input's `line_types`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
     /// Plot line weight in mm (written as the nearest DXF weight).
     pub line_weight: f64,
     /// Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
     /// DXF's plot switch off (290).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
     /// Dondur (docs/adr/0311 §1): `true`, written frozen (DXF's 70 bit 1);
     /// `visible` is then its eye alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub frozen: Option<bool>,
 }
 
 /// What `file.export.dxf` writes (a DXF of the 2007 version).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfWriteInput {
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_polyline_loss: bool,
     /// Real paper-space layouts, separate from model-space entities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CadLayout>>", optional))]
     pub layouts: Vec<crate::CadLayout>,
     pub entities: Vec<Entity>,
     pub layers: Vec<DxfWriteLayer>,
@@ -1393,67 +1224,53 @@ pub struct DxfWriteInput {
     /// objects' inserts place, and those nested in them, are written as
     /// BLOCKs, inner ones first; the others are left out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
     /// A local project's drawing unit (docs/adr/0165 §2): coordinates and
     /// lengths are written in it and $INSUNITS names it. None: metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
     /// The project's text and dimension styles (docs/adr/0183 §7): each is a
     /// STYLE or DIMSTYLE record, the objects that follow one name it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextStyleDef>>", optional))]
     pub text_styles: Vec<TextStyleDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
     /// The project's table styles (docs/adr/1128 §3): each a TABLESTYLE object in the ACAD_TABLESTYLE dictionary,
     /// carrying itself in its KENTOS data; a table's INSERT names its style's object.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
     pub table_styles: Vec<crate::TableStyleDef>,
     /// The project's line types (docs/adr/0313 §6): each an LTYPE record, the layers and objects that draw with one
     /// name it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineTypeDef>>", optional))]
     pub line_types: Vec<crate::LineTypeDef>,
     /// The project's line type scale ($LTSCALE); absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_scale: Option<f64>,
     /// How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
     #[serde(default, skip_serializing_if = "DxfAnnotations::is_default")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<DxfAnnotations>", optional))]
     pub annotations: DxfAnnotations,
     /// What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
     /// block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportItem>>", optional))]
     pub notes: Vec<ReportItem>,
     /// The objects' persistent ids by object id (docs/adr/0333 §3): an associative hatch is written with its boundary
     /// objects' handles (71 1, 97 and 330s) and they with its reactor, when they are written too. Absent: hatches
     /// are written follows nothing (71 0).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<u32, EntityId>>", optional))]
     pub uids: BTreeMap<u32, EntityId>,
     /// The detail walls are drawn at (docs/adr/0339 §4): the project's own; absent: by the scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall_detail: Option<crate::WallDetail>,
     /// The plan's cut height, metres (docs/adr/8012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
     /// cuts takes its hole out of its wall; a window over it is written dashed, its wall whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cut_height: Option<f64>,
 }
 
 /// What a dimension or a leader becomes in DXF (docs/adr/0327 §6).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DxfForm {
     /// Its own DXF entity (DIMENSION; LEADER and MTEXT): another program edits it as one.
     #[default]
@@ -1466,10 +1283,8 @@ pub enum DxfForm {
 /// How tables, dimensions and leaders are written in DXF (docs/adr/0327 §6). A table is always its look as a block
 /// (DXF's ACAD_TABLE is not written); KentOS's data, when written, gives each back to KentOS whole.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfAnnotations {
     #[serde(default)]
     pub dimensions: DxfForm,
@@ -1502,9 +1317,7 @@ impl DxfAnnotations {
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportReport {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub counts: BTreeMap<String, u32>,
@@ -1515,10 +1328,8 @@ pub struct ExportReport {
 // ── NCZ (docs/adr/0138) ──────────────────────────────────────────
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NczReadOptions {
     /// Stop after this many objects (0: one million); the rest is counted and reported.
     pub max_entities: u32,
@@ -1532,10 +1343,8 @@ pub struct NczReadOptions {
 // ── GeoJSON (RFC 7946) and Shapefile (docs/adr/0046) ───────────────────
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeoJsonReadOptions {
     /// The layer of the objects the file does not place: the document's
     /// `name` member when it has one, else this (the file's name).
@@ -1545,10 +1354,8 @@ pub struct GeoJsonReadOptions {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShapefileReadOptions {
     /// The layer of the objects (the .shp file's name).
     pub layer: String,
@@ -1558,9 +1365,7 @@ pub struct ShapefileReadOptions {
 
 /// A layer the GeoJSON writer names in each feature's `kentos.layer`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeoJsonLayer {
     /// What the objects' `layerId` holds.
     pub id: String,
@@ -1568,10 +1373,6 @@ pub struct GeoJsonLayer {
     /// The layer's fields (docs/adr/0199 §6): a number's and a yes or no
     /// value's attribute is written as a JSON number or boolean.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
-    )]
     pub fields: Vec<crate::fields::LayerField>,
 }
 
@@ -1580,10 +1381,8 @@ pub struct GeoJsonLayer {
 /// coordinate system with the legacy `crs` member naming it, which RFC
 /// 7946 does not allow (the export window says so). Nothing is transformed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GeoJsonWriteInput {
     pub entities: Vec<Entity>,
     pub layers: Vec<GeoJsonLayer>,
@@ -1594,7 +1393,6 @@ pub struct GeoJsonWriteInput {
     /// The drawing's block definitions (docs/adr/0144 §5): an insert is
     /// written as its block's objects placed, one GeometryCollection.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
 }
 
@@ -1604,19 +1402,15 @@ pub struct GeoJsonWriteInput {
 /// holds, its name, the groups it sits in (outermost first; a Folder each),
 /// its colour (hex) and plot line weight (mm).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KmlLayer {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub path: Vec<String>,
     pub color: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_weight: Option<f64>,
 }
 
@@ -1625,17 +1419,14 @@ pub struct KmlLayer {
 /// per layer, a Placemark per object; a KMZ archive (`doc.kml` in it) when
 /// `kmz`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KmlWriteInput {
     pub entities: Vec<Entity>,
     pub layers: Vec<KmlLayer>,
     /// The Document's name (the drawing's).
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
     #[serde(default)]
     pub kmz: bool,
@@ -1645,16 +1436,13 @@ pub struct KmlWriteInput {
 /// lines as tracks or (`routes`) routes, areas' outlines as closed tracks, in
 /// WGS 84 (the writer is given the project's system and datum choices).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpxWriteInput {
     pub entities: Vec<Entity>,
     /// The metadata's name (the drawing's).
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
     #[serde(default)]
     pub routes: bool,

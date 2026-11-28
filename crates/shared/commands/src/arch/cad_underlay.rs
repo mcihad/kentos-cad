@@ -5,8 +5,6 @@
 //! the drawing's objects never change and the model is never copied into the drawing.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -19,30 +17,23 @@ pub const CAD_UNDERLAY_EDIT_VERSION: u32 = 1;
 
 /// One change of the underlays.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UnderlayChange {
     /// An IFC file shown under the drawing: its absolute path; the name the list shows (its file's name when none);
     /// the discipline and revision the user gives it; how it is placed (by its map conversion when none).
     #[serde(rename_all = "camelCase")]
     Add {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         file: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         discipline: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         revision: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         placement: Option<UnderlayPlacement>,
     },
     /// Its name, discipline, revision (an empty text takes it away), placement (the file is read again to place it)
@@ -51,19 +42,14 @@ pub enum UnderlayChange {
     Set {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         discipline: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         revision: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         placement: Option<UnderlayPlacement>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         shown: Option<bool>,
     },
     /// Its file read again (a new revision on disk, or the file moved to `file`): the digest, size and schema
@@ -72,7 +58,6 @@ pub enum UnderlayChange {
     Reload {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         file: Option<String>,
     },
     /// Taken away; the file stays where it is.
@@ -88,14 +73,11 @@ pub enum UnderlayChange {
 /// scale the file's unit does not explain), `nothing_to_set`, `invalid_model_underlay` (its field's path),
 /// `too_many_model_underlays`, `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayEdit {
     pub change: UnderlayChange,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -103,10 +85,8 @@ pub struct UnderlayEdit {
 /// Output of `cad.underlay.edit` v1, and its plan: the underlay changed (its id), the drawing's underlays then, the
 /// revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayEdited {
     pub id: String,
     pub underlays: Vec<ModelUnderlay>,
@@ -134,14 +114,11 @@ pub const MAX_UNDERLAY_TOLERANCE: f64 = 0.5;
 /// `model_underlay_unreadable`, `model_underlay_not_placed` (another system or height datum stops it before any geometry
 /// is looked at).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayCheck {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -150,27 +127,20 @@ pub struct UnderlayCheck {
 /// missing; the difference is the storey's less the level's. A storey whose file says no elevation is listed alone,
 /// without one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayLevelCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub storey: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub project: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub file: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub difference: Option<f64>,
 }
@@ -178,20 +148,16 @@ pub struct UnderlayLevelCheck {
 /// A grid axis by its label: how far the file's stands from the project's (metres) and the turn between them
 /// (degrees), when both have it; else which has it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayAxisCheck {
     pub label: String,
     pub in_project: bool,
     pub in_file: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub turn: Option<f64>,
 }
@@ -199,10 +165,8 @@ pub struct UnderlayAxisCheck {
 /// A clash: the drawing's object (its persistent id, IFC class and name) and the file's (its GlobalId, class and name),
 /// their boxes' overlap in the drawing (x, y, z from, x, y, z to) and whether one holds the other whole.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayClash {
     pub uid: String,
     pub class: String,
@@ -210,7 +174,6 @@ pub struct UnderlayClash {
     pub object: String,
     pub object_class: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub object_name: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub overlap: Vec<f64>,
@@ -220,16 +183,12 @@ pub struct UnderlayClash {
 /// An element of a class both models have that only one of them has where it stands: the drawing's (its persistent
 /// id) or the file's (its GlobalId), its class and name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayUnmatched {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub object: Option<String>,
     pub class: String,
     pub name: String,
@@ -242,10 +201,8 @@ pub struct UnderlayUnmatched {
 /// storeys (in the file's order); the axes by label; the clashes in the file's order, each file object's by the
 /// drawing's persistent id; the unmatched the drawing's first (by persistent id), then the file's (in its order).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UnderlayChecked {
     pub id: String,
     pub levels: Vec<UnderlayLevelCheck>,

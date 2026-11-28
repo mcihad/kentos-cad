@@ -8,8 +8,6 @@
 //! `fixtures/commands/v1/road.alignments.*.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -35,48 +33,36 @@ pub const MAX_ALIGNMENT_PLACES: usize = 100_000;
 /// equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
 /// a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsCreate {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentPi>>", optional))]
     pub pis: Vec<AlignmentPi>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset_of: Option<AlignmentOffset>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
     /// The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub design_speed: Option<f64>,
     /// Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub start_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `road.alignments.edit` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AlignmentsEditOperation {
     /// The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.
     Set,
@@ -95,58 +81,45 @@ pub enum AlignmentsEditOperation {
 /// (the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis
 /// follows it), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsEdit {
     pub alignment: String,
     pub operation: AlignmentsEditOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pis: Option<Vec<AlignmentPi>>,
     /// The km; an empty one (no start, no equation) clears it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
     /// A parallel axis's offset, m, right positive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: Option<f64>,
     /// The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub design_speed: Option<f64>,
     /// Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
     /// revision stays.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub start_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub end_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KmAsk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub km: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub region: Option<u32>,
 }
@@ -160,37 +133,28 @@ pub struct KmAsk {
 /// place), `station_ambiguous` (a km on more than one place without `region`), and the geometry's when the alignment
 /// no longer builds.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignment: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<KmAsk>>", optional))]
     pub kms: Vec<KmAsk>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub every: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub points: Vec<[f64; 2]>,
 }
 
 /// An element of an alignment.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentElementRow {
     /// From its PI: `p3/aliyman`, `p3/giris`, `p3/kurp`, `p3/cikis`.
     pub id: String,
@@ -215,22 +179,18 @@ pub struct AlignmentElementRow {
     pub k1: f64,
     /// A curve's radius.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
     /// A clothoid's parameter A.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub a: Option<f64>,
 }
 
 /// A curve on a PI.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentCurveRow {
     pub pi: String,
     /// The deflection, left positive.
@@ -259,27 +219,22 @@ pub struct AlignmentCurveRow {
 
 /// Two curves with no tangent between them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentJoinRow {
     pub between: [String; 2],
     /// A reverse curve (S) when true, a compound curve when false.
     pub reverse: bool,
     /// The ove clothoid between them when the first PI asks for one (docs/adr/0979).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ove: Option<AlignmentOveRow>,
 }
 
 /// An ove clothoid (docs/adr/0979): its parameter A solved on the PIs, its length A²·|1/R2 − 1/R1|, the station it
 /// starts at and the least gap between the two circles (an ove exists only while it is above 0).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentOveRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub a: f64,
@@ -293,10 +248,8 @@ pub struct AlignmentOveRow {
 
 /// An alignment as it builds now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentReport {
     pub id: String,
     pub name: String,
@@ -304,7 +257,6 @@ pub struct AlignmentReport {
     pub revision: u32,
     /// A parallel axis's source and offset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset_of: Option<AlignmentOffset>,
     /// The horizontal length on the project's plane (grid), m; a parallel axis's own.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -312,7 +264,6 @@ pub struct AlignmentReport {
     /// The length on the ground (the grid length over each piece's scale and height factor), m; absent without a
     /// system that has one scale at a point or without the project's mean ellipsoidal height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ground_length: Option<f64>,
     /// How the ground length was had, or why it was not.
@@ -333,7 +284,6 @@ pub struct AlignmentReport {
     pub residual_direction: f64,
     /// Every join of two elements and how far they part there in place, direction and curvature (docs/adr/0967).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentSeam>>", optional))]
     pub seams: Vec<AlignmentSeam>,
     /// `kentos.alignment/1`.
     pub algorithm: String,
@@ -342,10 +292,8 @@ pub struct AlignmentReport {
 /// Where two elements meet (docs/adr/0967): the later one's start and the gaps, G0 place (m), G1 direction (rad) and
 /// G2 curvature (1/m). A circular curve without a clothoid meets its tangent with a curvature jump of 1/R.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentSeam {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -361,10 +309,8 @@ pub struct AlignmentSeam {
 
 /// A place on an alignment.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentPlace {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -389,29 +335,23 @@ pub struct AlignmentPlace {
 
 /// A point's station and offset: the nearest foot, every foot by distance, or the end it lies beyond.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PointStation {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub point: [f64; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub nearest: Option<AlignmentFoot>,
     pub feet: Vec<AlignmentFoot>,
     /// `start` or `end` when no foot falls on the alignment: the point lies beyond that end.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub beyond: Option<String>,
 }
 
 /// A foot of a point.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentFoot {
     pub at: AlignmentPlace,
     /// Right positive.
@@ -423,10 +363,8 @@ pub struct AlignmentFoot {
 
 /// The places of a km.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KmPlaces {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub km: f64,
@@ -435,51 +373,41 @@ pub struct KmPlaces {
 
 /// A row of what an edit did to the stations (docs/adr/0901 §9).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StationMapRow {
     pub element: String,
     /// `kept`, `moved`, `changed`, `added`, `removed`, or `reversed` (the alignment turned round: `before` is where the
     /// stretch was, read from the old start).
     pub change: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub before: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub after: Option<[f64; 2]>,
 }
 
 /// An alignment in the project's list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentListed {
     pub id: String,
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset_of: Option<String>,
 }
 
 /// Output of `road.alignments.create` and `.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsWritten {
     /// The alignment written; absent when removed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alignment: Option<AlignmentReport>,
     /// What the edit did to the stations, by element.
     pub mapping: Vec<StationMapRow>,
@@ -488,12 +416,10 @@ pub struct AlignmentsWritten {
     /// The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
     /// pivot read from the new start.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub superelevations: Vec<String>,
     /// The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new
     /// start.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub profiles: Vec<String>,
     pub alignments: Vec<AlignmentListed>,
     pub revision: String,
@@ -501,10 +427,8 @@ pub struct AlignmentsWritten {
 
 /// Output of `road.alignments.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsQueried {
     /// Every alignment's report, or the one asked's.
     pub alignments: Vec<AlignmentReport>,
@@ -528,30 +452,23 @@ pub const ROAD_ALIGNMENTS_LABEL_VERSION: u32 = 1;
 /// `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and the geometry's when
 /// the alignment no longer builds. A hidden layer is the warning `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsLabel {
     pub alignment: String,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub every: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub major: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub curves: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -559,10 +476,8 @@ pub struct AlignmentsLabel {
 /// A written label: where it is, its km, what it says (none for a minor tick), and its kind (`tick`, `major`, `start`,
 /// `end`, or a curve point's name).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentLabelRow {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -570,17 +485,14 @@ pub struct AlignmentLabelRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub km: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
 }
 
 /// Output of `road.alignments.label` v1, and its plan: the labels in their order along the alignment, the objects
 /// written (none in a plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsLabelled {
     pub alignment: String,
     pub labels: Vec<AlignmentLabelRow>,
@@ -601,24 +513,19 @@ pub const ROAD_ALIGNMENTS_IMPACT_VERSION: u32 = 1;
 /// Refusals: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (PIs that make no line or a parallel
 /// axis), `invalid_alignment_impact` (a tolerance not above 0 or above 1 m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentsImpact {
     /// The alignment's id or name.
     pub alignment: String,
     /// The PIs it would have; none with `reverse`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentPi>>", optional))]
     pub pis: Vec<AlignmentPi>,
     /// The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to
     /// L − s; the profiles and superelevation schedules turn with it, the rest is told.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reverse: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
 }
@@ -626,10 +533,8 @@ pub struct AlignmentsImpact {
 /// A stretch of one line off the other: its stations on that line and their km, the greatest offset where every place
 /// of it has a foot on the other line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentStretch {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -638,17 +543,14 @@ pub struct AlignmentStretch {
     pub from_text: String,
     pub to_text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub most: Option<f64>,
 }
 
 /// A stretch of old stations still on the line, and how far their stations move at its ends (new − old).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentRun {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -664,10 +566,8 @@ pub struct AlignmentRun {
 
 /// What names a station of the alignment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StationOwner {
     Profile,
     SectionSet,
@@ -685,10 +585,8 @@ pub enum StationOwner {
 
 /// A station something names, where it lands: `to` on the new line, none where its place left the line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StationRef {
     pub owner: StationOwner,
     /// The owner's id and name.
@@ -699,22 +597,18 @@ pub struct StationRef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     /// The edit writes it there itself (a reversal turns the profiles and schedules round, docs/adr/0965); otherwise
     /// it stays where it is named and goes stale.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub carried: bool,
 }
 
 /// An alignment that follows this one (a parallel axis).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentFollower {
     pub id: String,
     pub name: String,
@@ -722,10 +616,8 @@ pub struct AlignmentFollower {
 
 /// What an alignment's new PIs would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlignmentImpact {
     pub alignment: String,
     /// The elements matched by id (as `road.alignments.edit` writes it).

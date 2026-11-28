@@ -230,7 +230,6 @@ pub struct DossierList {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileSource {
     pub tenant_id: String,
     pub project_id: String,
@@ -322,7 +321,6 @@ pub struct DossierEventView {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DocCheckItem {
     pub doc_type: String,
     pub label: String,
@@ -346,7 +344,6 @@ pub struct DocChecklist {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DossierOrganization {
     pub tenant_id: String,
     pub slug: String,
@@ -449,10 +446,8 @@ pub struct ApplicationCreate {
 /// `PUT /v1/dossiers/{id}/office`: the responsible professional shares the dossier with an office, or takes it back
 /// (`null`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DossierOfficeSet {
     pub office_id: Option<String>,
 }
@@ -507,10 +502,8 @@ pub struct DossierActionRequest {
 
 /// `POST /v1/dossiers/{id}/messages`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MessagePost {
     pub body: String,
     #[serde(default)]
@@ -519,10 +512,8 @@ pub struct MessagePost {
 
 /// `POST /v1/dossiers/{id}/files/from-project`: a cloud project's present state as a file of the package.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FromProject {
     pub tenant_id: String,
     pub project_id: String,
@@ -531,10 +522,8 @@ pub struct FromProject {
 
 /// `POST /v1/dossiers/{id}/files/{file}/import`: a KCAD file of the dossier as a new cloud project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DossierFileImport {
     /// Where it goes: the caller's personal space when absent.
     pub tenant_id: Option<String>,
@@ -556,7 +545,6 @@ pub struct DossierFileImported {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StatusCount {
     pub direction: DossierDirection,
     pub status: DossierStatus,
@@ -610,10 +598,8 @@ pub struct Notifications {
 
 /// `POST /v1/me/notifications/read`: these, or all of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NotificationsRead {
     #[serde(default)]
     pub ids: Vec<String>,

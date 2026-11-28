@@ -8,8 +8,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The layers as a derived GIS dataset (GeoPackage).
 pub const FILE_EXPORT_GIS: &str = "file.export.gis";
@@ -41,10 +39,8 @@ pub const DERIVATION_LIMIT_MAX: u32 = 1000;
 
 /// What to do with texts and blocks, which a GIS has no geometry of the same meaning for.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GisAnnotations {
     /// Written to their own tables, never into the layers' feature tables: each block definition's insertions as
     /// points with the block's attributes as columns, texts as points with their words.
@@ -56,10 +52,8 @@ pub enum GisAnnotations {
 
 /// Where a derived dataset is written (docs/adr/0634 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GisFormat {
     /// A GeoPackage (`.gpkg`): each table with its lasting ids and its record in the metadata.
     #[default]
@@ -75,10 +69,8 @@ pub enum GisFormat {
 
 /// What a derived table holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GisTableRole {
     /// A drawing layer's objects.
     Layer,
@@ -101,20 +93,16 @@ pub enum GisTableRole {
 /// `invalid_address`, `source_unreachable`, `table_exists`. Warnings: `export_losses` (objects left out and the reason
 /// each kind is).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportGis {
     /// The file to write, an absolute path (`.gpkg`, `.zip`, `.geojson`), or a PostGIS database's address.
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
     /// Texts and blocks: their own tables (the default) or left out.
@@ -125,11 +113,9 @@ pub struct ExportGis {
     pub overwrite: bool,
     /// Where it goes: a GeoPackage (the default), a zip of Shapefiles, GeoJSON or a PostGIS database.
     #[serde(default, skip_serializing_if = "is_geopackage")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<GisFormat>", optional))]
     pub format: GisFormat,
     /// PostGIS: the schema of the new tables (made when not there); `public` when not given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub schema: Option<String>,
 }
 
@@ -139,22 +125,18 @@ fn is_geopackage(f: &GisFormat) -> bool {
 
 /// A table of the derived dataset.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisTableExported {
     pub table: String,
     pub role: GisTableRole,
     /// The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
     /// The geometry column's type; none for an attribute table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     /// Rows whose geometry is chords of a curve rather than the source's own points.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -166,10 +148,8 @@ pub struct GisTableExported {
 
 /// Objects of one kind left out of the dataset, and why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisLeft {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -179,10 +159,8 @@ pub struct GisLeft {
 
 /// What `file.export.gis` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -195,7 +173,6 @@ pub struct GisExported {
     pub tables: Vec<GisTableExported>,
     /// Objects not written, by kind, each with its reason.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GisLeft>>", optional))]
     pub left: Vec<GisLeft>,
     /// Rows written as chords of a curve, in all.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -209,14 +186,11 @@ pub struct GisExported {
 
 /// Where a derived dataset came from, as its tables record.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationSource {
     /// The project's lasting id, when it has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project: Option<String>,
     pub name: String,
     /// The drawing's revision when the dataset was made.
@@ -228,10 +202,8 @@ pub struct DerivationSource {
 
 /// The layer a derived table came from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationLayer {
     pub id: String,
     pub name: String,
@@ -240,10 +212,8 @@ pub struct DerivationLayer {
 /// A table's derivation document (`kentos.derivation` 1, in `gpkg_metadata` as `DERIVATION_STANDARD`): how its rows
 /// were made and from what, so a later reader can tell the geometry is a derivative.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationRecord {
     pub format: String,
     pub version: u32,
@@ -251,15 +221,12 @@ pub struct DerivationRecord {
     pub role: GisTableRole,
     /// The layer of a `layer` table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<DerivationLayer>,
     /// The block of a `blocks` table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<String>,
     /// The objects' kind of an `arch` table (`wall`, `space` …; docs/adr/0634 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<String>,
     /// The layers the export took, by id (a group's leaves): what a `blocks` or `annotations` table's objects were
     /// looked for on, and what a later check counts a missing row against.
@@ -280,7 +247,6 @@ pub struct DerivationRecord {
     /// A column written under another name than the attribute or field it holds (a name the table had already, in
     /// another case): the column's name → the source's. Absent when none was.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub renamed: BTreeMap<String, String>,
     /// The rule `kentos_digest` is made by (`DERIVATION_DIGEST`).
     pub digest: String,
@@ -293,16 +259,13 @@ pub struct DerivationRecord {
 /// compared with the object it came from in the open drawing. Refusals, in order: `invalid_file_path`,
 /// `file_not_found`, `import_unreadable`, `not_a_derivation`. Warnings: `derivation_stale`, `derivation_edited`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisDerivation {
     /// The file, an absolute path.
     pub path: String,
     /// How many rows to list (the ones that do not match come first); 100, at most 1000.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0, max = 1000)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
@@ -310,10 +273,8 @@ pub struct GisDerivation {
 
 /// How a derived row stands against its source.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DerivationStatus {
     /// The source is as it was and the row is what the derivation gives.
     Current,
@@ -329,42 +290,34 @@ pub enum DerivationStatus {
 
 /// One row (or missing row) that is listed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationEntry {
     pub table: String,
     /// The row's fid; none for an object the dataset has no row for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub fid: Option<i64>,
     pub uid: String,
     pub status: DerivationStatus,
     /// The source object's kind as the row records it, or as the drawing has it now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<String>,
     /// What differs in an edited row: `geometry` and the attributes' names.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fields: Vec<String>,
     pub reason: String,
 }
 
 /// A table's counts against the drawing.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DerivationTable {
     pub table: String,
     pub role: GisTableRole,
     /// The layer of a `layer` table, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
@@ -389,10 +342,8 @@ pub struct DerivationTable {
 
 /// What `cad.gis.derivation` found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisDerived {
     pub file: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -452,10 +403,8 @@ pub fn derivation_tolerance_ok(tolerance: f64) -> bool {
 
 /// What `cad.gis.takeback` takes from a derived row (docs/adr/0634 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TakebackPart {
     /// The columns changed in the GIS, written to the source's attributes (a text's words, a block's attributes);
     /// the source's geometry stays as it is.
@@ -475,15 +424,12 @@ impl TakebackPart {
 
 /// A row of a derived dataset to take back: its table, its source's lasting id and what to take.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TakebackRow {
     pub table: String,
     pub uid: String,
     #[serde(default, skip_serializing_if = "TakebackPart::is_default")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<TakebackPart>", optional))]
     pub take: TakebackPart,
 }
 
@@ -499,48 +445,38 @@ pub const MOST_TAKEBACK_ROWS: usize = 10_000;
 /// `link_broken` (sources a curve stood for now chords), `geometry_left` (a row whose geometry changed, its
 /// attributes taken only).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisTakeback {
     /// The derived file, an absolute path.
     pub path: String,
     pub rows: Vec<TakebackRow>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// A row taken back.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TakenRow {
     pub table: String,
     pub uid: String,
     /// The source's attributes (or a text's, a block's parts) written, by name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub fields: Vec<String>,
     /// Whether its geometry was taken.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub geometry: bool,
     /// The source's kind before, when its link to an analytic source was broken (`circle` became a `polygon`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<String>,
 }
 
 /// Output of `cad.gis.takeback` v1 (and its plan: nothing written).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisTaken {
     pub file: String,
     pub rows: Vec<TakenRow>,
@@ -558,28 +494,22 @@ pub struct GisTaken {
 /// `derivation_row_not_found` (a table named that is not a derived table of the file), `invalid_count` (a table
 /// twice).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisDetach {
     /// The derived file, an absolute path.
     pub path: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub tables: Vec<String>,
     /// Why the link is broken, kept in the note.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
 }
 
 /// A table whose link was broken.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DetachedTable {
     pub table: String,
     /// The source drawing's name the table came from.
@@ -591,10 +521,8 @@ pub struct DetachedTable {
 
 /// Output of `cad.gis.detach` v1 (and its plan: nothing written).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GisDetached {
     pub file: String,
     pub tables: Vec<DetachedTable>,

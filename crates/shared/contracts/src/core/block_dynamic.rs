@@ -17,31 +17,22 @@ use crate::{BlockDefinition, Vec2};
 
 /// A definition's parameters and actions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DynamicBlock {
     pub parameters: Vec<BlockParameter>,
     /// Ordered presentation groups. Unassigned parameters retain their automatic headings;
     /// membership never changes the evaluator's parameter/action order or instance values.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockParameterGroup>>", optional))]
     pub parameter_groups: Vec<BlockParameterGroup>,
     /// Shared scalar parameter names. Scope belongs to this drawing definition, not a publication ID.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub type_parameters: Vec<String>,
     /// Common inputs and calculated caches; geometric defaults remain action reference coordinates.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<BTreeMap<String, ParamValue>>", optional)
-    )]
     pub type_values: BTreeMap<String, ParamValue>,
     /// Applied in this order to the definition's objects, each on what the ones before left.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockAction>>", optional))]
     pub actions: Vec<BlockAction>,
 }
 
@@ -122,10 +113,8 @@ pub fn type_parameters_problem(d: &DynamicBlock) -> Option<(String, String)> {
 
 /// A property-panel heading and the exact parameter names it contains, in display order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockParameterGroup {
     pub name: String,
     pub parameters: Vec<String>,
@@ -134,29 +123,22 @@ pub struct BlockParameterGroup {
 /// The values a number parameter may take: within `min` and `max`, on `step`s from `min` (from 0 without one), one
 /// of `list`; or computed by `expression` from the other number parameters (it is not set then).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NumberRule {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub list: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expression: Option<String>,
 }
 
@@ -168,24 +150,19 @@ impl NumberRule {
 
 /// One of a visibility parameter's states: its name and the objects (local ids) it hides.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct VisibilityState {
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub hidden: Vec<u32>,
 }
 
 /// One row of a lookup: its label and the values it sets.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LookupRow {
     pub label: String,
     pub values: BTreeMap<String, ParamValue>,
@@ -197,7 +174,6 @@ pub struct LookupRow {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
-#[cfg_attr(feature = "ts", ts(export))]
 #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
 pub enum ParamValue {
     Flag(bool),
@@ -208,10 +184,8 @@ pub enum ParamValue {
 
 /// A parameter (docs/adr/0318 §1). Its points are the definition's coordinates.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockParameter {
     /// A length along `from`→`to`: its default the distance between them; a change moves `to` along the line.
     Linear {
@@ -221,7 +195,6 @@ pub enum BlockParameter {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         to: Vec2,
         #[serde(default, skip_serializing_if = "NumberRule::is_free")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<NumberRule>", optional))]
         rule: NumberRule,
     },
     /// `to` moved anywhere: its value a point, its rule on the distance from `from`.
@@ -232,7 +205,6 @@ pub enum BlockParameter {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         to: Vec2,
         #[serde(default, skip_serializing_if = "NumberRule::is_free")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<NumberRule>", optional))]
         rule: NumberRule,
     },
     /// An angle about `center`, radians counter-clockwise from east; its default `base`.
@@ -243,7 +215,6 @@ pub enum BlockParameter {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         base: f64,
         #[serde(default, skip_serializing_if = "NumberRule::is_free")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<NumberRule>", optional))]
         rule: NumberRule,
     },
     /// A point: its default `at`.
@@ -323,10 +294,8 @@ impl BlockParameter {
 
 /// An action (docs/adr/0318 §2): the objects (local ids) a parameter's change moves.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BlockAction {
     /// The objects move by the parameter's change (a linear's along its line, a polar's and a point's by the moved
     /// point).

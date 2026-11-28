@@ -19,8 +19,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::command::{CommandError, CommandResult, CommandWarning};
 use crate::document::Bounds;
@@ -50,10 +48,8 @@ pub const JOURNAL_IDS: usize = 10_000;
 /// What a call does (docs/adr/0013): `validate` and `plan` write nothing,
 /// `execute` writes one change.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CallOp {
     Validate,
     Plan,
@@ -74,37 +70,30 @@ impl CallOp {
 /// A call of a command (docs/adr/0253 §4): the same for Python, MCP, an
 /// agent and the headless host; the command's input is unchanged by it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CallEnvelope {
     /// The command's id (`cad.entities.offset`).
     pub command: String,
     /// Its version; the host's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<u32>,
     #[serde(default)]
     pub op: CallOp,
     /// The command's input, as its catalog schema says.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: serde_json::Value,
     /// Names this write (1–128 of `A–Z a–z 0–9 . _ : -`): sent again with
     /// the same call it is answered as before and applied once; with
     /// another call it is refused (`request_reused`). Only `execute` takes one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub request_id: Option<String>,
     /// The state the input was prepared against.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected: Option<CallExpectations>,
     /// The write relaxes the constraints instead of keeping them (docs/adr/0337 §1): no solve follows it; the
     /// constraints it leaves unmet go with it (`constraints_relaxed`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub relax_constraints: bool,
 }
 
@@ -114,50 +103,38 @@ pub struct CallEnvelope {
 /// hold, nothing is written: the answer is `conflict` (`revision_conflict`,
 /// `stale_state`, `plan_changed`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CallExpectations {
     /// The document's revision, decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// Objects by persistent id and the stamp each must still have.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub objects: BTreeMap<String, String>,
     /// Block definitions by id and the stamp each must still have.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub blocks: BTreeMap<String, String>,
     /// The layer tree's stamp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<String>,
     /// The drawing's name and settings' stamp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub settings: Option<String>,
     /// The project's style library's stamp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<String>,
     /// The sheet book's stamp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<String>,
     /// The constraints' and parameters' stamp (docs/adr/0336 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<String>,
     /// The persistent automatic architectural dimension recipes' stamp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension_sets: Option<String>,
     /// The id of the plan the write must equal (a `plan` call's `planId`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plan: Option<String>,
 }
 
@@ -171,34 +148,26 @@ impl CallExpectations {
 /// The answer of a call (docs/adr/0253 §5): the command's own result, its
 /// status and output as the catalog says, and beside it the summary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CallAnswer {
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub result: CommandResult<serde_json::Value>,
     /// What the plan or the write touched; absent for `validate` and for
     /// what did not complete.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub summary: Option<CommandSummary>,
     /// A plan's id: given back in `expected.plan`, the write must equal it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plan_id: Option<String>,
     /// The request was executed before: this is its answer then, nothing was applied now.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub replayed: bool,
     /// The request's write was undone since (only with `replayed`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub undone: bool,
     /// The journal's row of the write (its `seq`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub call: Option<u64>,
 }
 
@@ -220,10 +189,8 @@ impl CallAnswer {
 /// blocks: project metadata touched by a command. `undo.outside` identifies
 /// which parts are outside its undo step (ADR 0590).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectPart {
     /// The drawing's name.
     Name,
@@ -242,10 +209,8 @@ pub enum ProjectPart {
 
 /// What a plan or a write touched (docs/adr/0253 §5), from the write itself.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandSummary {
     /// Objects added, by persistent id.
     pub added: Vec<String>,
@@ -260,7 +225,6 @@ pub struct CommandSummary {
     /// The box of what was touched, before and after, metres; none when no
     /// object was.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
     /// Layers and groups added, changed (their style, fields, service,
     /// time, filter, card, composition, place) and removed, by id.
@@ -269,11 +233,9 @@ pub struct CommandSummary {
     pub blocks: NodeChanges,
     /// Persistent automatic dimension recipe identities. Absent for legacy commands that touch none.
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub dimension_sets: NodeChanges,
     /// Associative array identities added, changed and removed (docs/adr/1003 §1). Absent when none.
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub arrays: NodeChanges,
     /// The project's parts that changed; `undo.outside` identifies those not restored by undo.
     pub project: Vec<ProjectPart>,
@@ -290,10 +252,8 @@ pub struct CommandSummary {
 
 /// How many, of each.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SummaryCounts {
     pub added: u32,
     pub changed: u32,
@@ -303,10 +263,8 @@ pub struct SummaryCounts {
 
 /// Ids added, changed and removed.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NodeChanges {
     pub added: Vec<String>,
     pub changed: Vec<String>,
@@ -321,15 +279,12 @@ impl NodeChanges {
 
 /// What undo takes back of a write.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct UndoInfo {
     /// The undo step's name; none when the write made no step (only parts
     /// outside it), or none yet (inside a group: the group's step).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The parts that changed and that undo does not take back.
     pub outside: Vec<ProjectPart>,
@@ -337,48 +292,35 @@ pub struct UndoInfo {
 
 /// State stamps (docs/adr/0253 §2): 16 hex digits each.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StateStamps {
     /// The document's revision, decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub objects: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub blocks: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub settings: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension_sets: Option<String>,
 }
 
 /// What computed a result: the command, its version, the numeric policy and
 /// the shared core's build.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AlgorithmInfo {
     pub command: String,
     pub version: u32,
@@ -390,10 +332,8 @@ pub struct AlgorithmInfo {
 
 /// A row's kind: a command's write, or another edit of the document.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CallKind {
     Command,
     /// A tool's or a window's edit made without a command, an import, a
@@ -403,10 +343,8 @@ pub enum CallKind {
 
 /// Whether a row's write is in the document.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CallStatus {
     Done,
     /// Undone since; redo makes it done again while it can.
@@ -416,10 +354,8 @@ pub enum CallStatus {
 /// Where a command computed (docs/adr/0253 §3): the drawing's unit, its
 /// system, its type and the coordinate plane.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CallContext {
     /// `m`, `cm` or `mm` (docs/adr/0165 §2).
     pub unit: String,
@@ -433,10 +369,8 @@ pub struct CallContext {
 
 /// A file a command wrote (docs/adr/0253 §10).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FileEffect {
     pub path: String,
     pub bytes: u64,
@@ -446,51 +380,39 @@ pub struct FileEffect {
 
 /// A row of the journal (`kentos.calls/1`, docs/adr/0253 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CallRecord {
     /// Its place in the document's order, from 1.
     pub seq: u64,
     pub kind: CallKind,
     /// The undo step's name, or the edit's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub command: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<u32>,
     /// The command's input as its type writes it back (its defaults filled
     /// in); absent past [`JOURNAL_INPUT_LIMIT`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub input: Option<serde_json::Value>,
     /// 32 hex digits of the SHA-256 of the input's canonical JSON.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub input_digest: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub request_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fingerprint: Option<String>,
     /// The document's revision before and after, decimal text.
     pub base: String,
     pub revision: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub context: Option<CallContext>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub algorithm: Option<AlgorithmInfo>,
     /// The seed of a command that draws random numbers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub seed: Option<u64>,
     /// Persistent ids made, changed and removed, in the write's order.
     pub created: Vec<String>,
@@ -498,44 +420,34 @@ pub struct CallRecord {
     pub removed: Vec<String>,
     /// Metadata identities are separate from object ids so replay can map create → edit.
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub dimension_sets: NodeChanges,
     /// Associative array identities, mapped by a replay as objects are (docs/adr/1003 §1).
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub arrays: NodeChanges,
     /// Whether an object list was cut at [`JOURNAL_IDS`].
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub truncated: bool,
     /// The write relaxed the constraints (docs/adr/0337 §1); a replay relaxes them too.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub relax_constraints: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandWarning>>", optional))]
     pub warnings: Vec<CommandWarning>,
     /// The project's metadata parts it changed, including a grouped paper book (ADR 0590).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProjectPart>>", optional))]
     pub parts: Vec<ProjectPart>,
     /// The files it wrote.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FileEffect>>", optional))]
     pub effects: Vec<FileEffect>,
     /// The undo step's number in this session; none for a write without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<u64>,
     pub status: CallStatus,
 }
 
 /// The journal written out to be replayed elsewhere (`kentos.replay/1`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReplayJournal {
     /// [`REPLAY_FORMAT`].
     pub format: String,
@@ -547,10 +459,8 @@ pub struct ReplayJournal {
 
 /// What became of a row replayed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ReplayOutcome {
     /// The same counts, the same warnings' codes, as many made.
     Same,
@@ -564,35 +474,27 @@ pub enum ReplayOutcome {
 
 /// A row replayed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReplayStep {
     /// The row's `seq` in the journal replayed.
     pub seq: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub command: Option<String>,
     pub outcome: ReplayOutcome,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<CommandError>,
     /// The ids it made here, in the order of the row's `created`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub created: Vec<String>,
 }
 
 /// A journal replayed (docs/adr/0253 §3).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReplayReport {
     pub steps: Vec<ReplayStep>,
     pub same: u32,
@@ -605,10 +507,8 @@ pub struct ReplayReport {
 
 /// A request a document executed (docs/adr/0253 §6), as its file keeps it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RequestRecord {
     pub request_id: String,
     /// 32 hex digits: the call's fingerprint.
@@ -620,7 +520,6 @@ pub struct RequestRecord {
     pub status: CallStatus,
     /// The answer then, its JSON; none past [`REQUEST_ANSWER_LIMIT`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub answer: Option<String>,
 }
 
@@ -702,10 +601,8 @@ pub fn request_id_valid(id: &str) -> bool {
 
 /// A job's phase (docs/adr/0253 §9).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JobPhase {
     Queued,
     /// On a reading copy of the document, on another thread.
@@ -732,21 +629,17 @@ impl JobPhase {
 
 /// A job as its host reports it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JobStatus {
     pub id: String,
     pub command: String,
     pub phase: JobPhase,
     /// How far, 0 to 1, when the command says.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub progress: Option<f64>,
     /// The answer once it is over.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub answer: Option<CallAnswer>,
 }
 

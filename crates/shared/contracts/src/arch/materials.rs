@@ -9,8 +9,6 @@
 //! material's too: the model writes its name `Ad_Dayanım`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{ComponentEdge, ComponentHatch, WallComponent};
 
@@ -23,10 +21,8 @@ pub const MAX_MATERIAL_NAME: usize = 128;
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize,
 )]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialCategory {
     /// Taşıyıcı: concrete, masonry, timber that carries.
     Structure,
@@ -67,10 +63,8 @@ impl MaterialCategory {
 
 /// How Metraj counts a material: by its face area (m²: plaster, membrane, paint) or its volume (m³: concrete, masonry).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialQuantity {
     Area,
     #[default]
@@ -95,42 +89,33 @@ impl MaterialQuantity {
 /// A project material (Malzeme): its stable id, the name it is shown and written with, its category, how it is counted,
 /// its cut's hatch and its cut pen (the lines along a bound component's sides).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchMaterial {
     /// Lower-case letters, digits and “-”, at most 64; it never changes.
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "MaterialCategory::is_other")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<MaterialCategory>", optional))]
     pub category: MaterialCategory,
     #[serde(default, skip_serializing_if = "MaterialQuantity::is_volume")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<MaterialQuantity>", optional))]
     pub quantity: MaterialQuantity,
     /// Its cut's hatch; absent: drawn without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub hatch: Option<ComponentHatch>,
     /// Its cut pen; absent: the wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cut: Option<ComponentEdge>,
     /// Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
     /// C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub strength: Option<String>,
     /// Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor
     /// covering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reaction: Option<crate::Declared>,
     /// Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):
     /// `BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub roof_class: Option<crate::Declared>,
 }
 
@@ -142,10 +127,8 @@ pub const MATERIALS_FORMAT_VERSION: u32 = 1;
 /// An office material library (Malzeme kitaplığı, docs/adr/0791): its name and its materials, each as a project keeps
 /// it. KentOS gives one (`kentos-temel`); an office keeps its own in its folders and writes the project's out to one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MaterialsFile {
     /// `kentos.materials`.
     pub format: String,

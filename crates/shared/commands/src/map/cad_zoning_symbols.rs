@@ -13,8 +13,6 @@
 use serde::{Deserialize, Serialize};
 
 use kentos_contracts::ZoningSymbolPick;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ZONING_SYMBOLIZE: &str = "cad.zoning.symbolize";
 pub const CAD_ZONING_SYMBOLIZE_VERSION: u32 = 1;
@@ -24,9 +22,7 @@ pub const ZONING_SYMBOLS_FORMAT: &str = "kentos.zoning-symbols";
 /// KentOS's zoning symbol table (`catalog/v1/profiles/imar-plani-semboller.json`): for each plan level its MPYY branch,
 /// the uses whose symbol KentOS knows by name, and the area symbols a user may choose from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbols {
     pub format: String,
     pub version: u32,
@@ -36,9 +32,7 @@ pub struct ZoningSymbols {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolLevel {
     pub level: String,
     pub library: String,
@@ -48,9 +42,7 @@ pub struct ZoningSymbolLevel {
 
 /// A use and its symbol at a level.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningUseSymbol {
     pub code: String,
     pub symbol: String,
@@ -58,9 +50,7 @@ pub struct ZoningUseSymbol {
 
 /// An area symbol of a level's MPYY branch: its library id and name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolChoice {
     pub id: String,
     pub name: String,
@@ -90,22 +80,16 @@ impl ZoningSymbols {
 /// `invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision
 /// layer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolize {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningSymbolPick>>"))]
     pub symbols: Vec<ZoningSymbolPick>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub keep: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
@@ -114,25 +98,19 @@ pub struct ZoningSymbolize {
 /// `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
 /// drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolRow {
     pub uid: String,
     pub plan: String,
     pub level: String,
     #[serde(rename = "use")]
-    #[cfg_attr(feature = "ts", ts(rename = "use"))]
     pub usage: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub was: Option<String>,
     pub state: String,
 }
@@ -140,10 +118,8 @@ pub struct ZoningSymbolRow {
 /// Output of `cad.zoning.symbolize` v1: every decision area in the drawing's order and the counts: symbols set, already
 /// so, uses without a symbol, areas left (no plan, no level, no use or one not in the list); the revision after.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningSymbolized {
     pub areas: Vec<ZoningSymbolRow>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -156,7 +132,6 @@ pub struct ZoningSymbolized {
     pub skipped: u32,
     /// With `keep` (docs/adr/5040): the project's kept choices after it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kept: Option<Vec<ZoningSymbolPick>>,
     pub revision: String,
 }

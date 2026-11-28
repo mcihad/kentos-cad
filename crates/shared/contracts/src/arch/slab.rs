@@ -39,7 +39,6 @@ pub const MAX_SLAB_GRADE: f64 = 1.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabSlope {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Vec2,
@@ -123,7 +122,6 @@ impl SlabSlope {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabLayerKind {
     /// Kaplama.
     Finish,
@@ -162,7 +160,6 @@ impl SlabLayerKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabLayer {
     pub kind: SlabLayerKind,
     /// Metres, above 0 and at most 1.
@@ -181,7 +178,6 @@ pub struct SlabLayer {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabLayers {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayer>>", optional))]
@@ -291,7 +287,6 @@ impl SlabLayers {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabRole {
     /// Döşeme: a storey's floor.
     #[default]
@@ -359,7 +354,6 @@ impl SlabRole {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabEdgeKind {
     /// Korkuluk: two thin lines `width` apart.
     #[default]
@@ -407,7 +401,6 @@ impl SlabEdgeKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabRun {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
@@ -423,7 +416,6 @@ pub struct SlabRun {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabEdge {
     pub kind: SlabEdgeKind,
     /// Metres, above 0 and at most 2.
@@ -444,7 +436,6 @@ fn is_zero(v: &f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabSourceKind {
     /// Duvarlar: the walls round the seed.
     #[default]
@@ -470,7 +461,6 @@ impl SlabSourceKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabFace {
     /// Dış yüzler.
     #[default]
@@ -484,7 +474,6 @@ pub enum SlabFace {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SlabBreak {
     /// The walls no longer close round its seed (or the outline moved by its offset turns over).
     LostEnclosure,
@@ -518,7 +507,6 @@ impl SlabBreak {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabBound {
     pub source: SlabSourceKind,
     /// The point the walls are read round (walls).
@@ -554,7 +542,6 @@ pub struct SlabBound {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabEdgeBindings {
     pub reference: SpacePart,
     pub links: Vec<SlabEdgeLink>,
@@ -564,7 +551,6 @@ pub struct SlabEdgeBindings {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabEdgeLink {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub edge: u32,
@@ -678,7 +664,6 @@ impl SlabBound {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabFields {
     /// Its outline: one part or more, each an outer ring and its holes (a courtyard, a hole for a lowered wet room).
     pub parts: Vec<SpacePart>,
@@ -738,7 +723,6 @@ pub struct SlabFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SlabEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

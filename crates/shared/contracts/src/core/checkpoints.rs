@@ -17,8 +17,6 @@
 //! downloads one's file (`project.history` and `project.download`).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// Names the project's present state (or a file project's revision).
 pub const PROJECT_CHECKPOINT_CREATE: &str = "project.checkpoint.create";
@@ -43,10 +41,8 @@ pub const CHECKPOINT_NOTE_MAX: usize = 2000;
 
 /// What a checkpoint keeps.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CheckpointKind {
     /// A database project's snapshot, kept in the object store.
     Snapshot,
@@ -56,30 +52,24 @@ pub enum CheckpointKind {
 
 /// Input of `project.checkpoint.create` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CheckpointCreate {
     /// 1 to [`CHECKPOINT_NAME_MAX`] characters, e.g. "Belediyeye teslim".
     pub name: String,
     /// At most [`CHECKPOINT_NOTE_MAX`] characters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     /// A file project's revision to name (decimal text); its newest when
     /// absent. A database project takes none: its checkpoint is its present state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file_revision: Option<String>,
 }
 
 /// Input of `project.checkpoint.delete` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CheckpointDelete {
     pub checkpoint_id: String,
 }
@@ -88,39 +78,30 @@ pub struct CheckpointDelete {
 /// and `fileRevision` (a file project's revision). The answer is the new
 /// project, as `project.duplicate` gives it (`ProjectDuplicated`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CheckpointRestore {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub checkpoint_id: Option<String>,
     /// A file project's revision (decimal text).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file_revision: Option<String>,
     /// The new project's name; the source's with the point's name after it when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The workspace of the new project; the source's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tenant_id: Option<String>,
 }
 
 /// One checkpoint of a project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Checkpoint {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
     pub kind: CheckpointKind,
     /// The data revision a snapshot shows, or the file revision a file
@@ -132,7 +113,6 @@ pub struct Checkpoint {
     pub sha256: String,
     /// How many objects the file holds (decimal text), when it is known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub objects: Option<String>,
     pub created_by: String,
     pub created_by_name: String,
@@ -142,10 +122,8 @@ pub struct Checkpoint {
 
 /// Output of `project.checkpoint.create` and `project.checkpoint.delete` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CheckpointChange {
     pub checkpoint: Checkpoint,
     /// It was removed (`project.checkpoint.delete`).
@@ -157,10 +135,8 @@ pub struct CheckpointChange {
 
 /// `GET …/checkpoints`: a project's checkpoints, newest first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectCheckpoints {
     pub checkpoints: Vec<Checkpoint>,
 }

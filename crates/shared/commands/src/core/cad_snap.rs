@@ -8,8 +8,6 @@
 //! (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -23,10 +21,8 @@ pub const CAD_SNAP_FIND_VERSION: u32 = 1;
 /// A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running
 /// command's session and are not asked here).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SnapKindName {
     Endpoint,
     Midpoint,
@@ -46,14 +42,11 @@ pub enum SnapKindName {
 /// Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the aperture, `from`), `invalid_aperture`
 /// (the aperture not above zero), `no_snap_kinds` (an empty `kinds`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SnapFind {
     /// Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model_scope: Option<crate::SheetModelScope>,
     /// Where the click is.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -63,46 +56,37 @@ pub struct SnapFind {
     pub aperture: f64,
     /// The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kinds: Option<Vec<SnapKindName>>,
     /// The running command's last point: Dik's foot and Teğet's point are measured from it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Option<Vec2>,
     /// Every candidate best first (Tab's order, docs/adr/0271), not only the snap.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub all: bool,
     /// With `all`, retain coincident points owned by different objects for persistent reference binding.
     /// Absent/false keeps the ordinary Tab cycle's one candidate per geometric point.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub sources: bool,
 }
 
 /// A snap point as a command reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FoundSnap {
     pub kind: SnapKindName,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub point: Vec2,
     /// The object's persistent id (a crossing's: the first of its two objects in the drawing's order).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
     /// Its place on the object (docs/adr/0249, 0263): absent for a crossing (on two objects) and a centroid.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub place: Option<SubPlace>,
     /// When the object is an insert, the piece inside it the place is on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
 }
@@ -110,10 +94,8 @@ pub struct FoundSnap {
 /// Output of `cad.snap.find` v1, and its plan: the snap (or with `all` every candidate, best first), none when
 /// nothing is within the aperture; and the revision it was read at.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SnapFound {
     pub snaps: Vec<FoundSnap>,
     /// The document's revision the snaps were read at, as decimal text.

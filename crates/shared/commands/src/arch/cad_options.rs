@@ -6,8 +6,6 @@
 //! an option is accepted whole or not at all.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -20,14 +18,12 @@ pub const CAD_OPTIONS_QUERY_VERSION: u32 = 1;
 
 /// What `cad.options.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OptionsOperation {
     /// Seçenek kümesi tanımla: the objects `uids` (in no option) become the set `name`'s first option (`option`,
     /// absent: “A”), its primary; they stay where they are. A main-model object leaning on one of them (an opening on
@@ -35,10 +31,8 @@ pub enum OptionsOperation {
     Define {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         option: Option<String>,
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
@@ -49,10 +43,8 @@ pub enum OptionsOperation {
         set: String,
         option: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         primary: bool,
     },
     /// Seçeneğe ekle: the main model's objects `uids` join the option.
@@ -75,7 +67,6 @@ pub enum OptionsOperation {
     Accept {
         set: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         option: Option<String>,
     },
     /// Seçeneği sil: a non-primary option goes with its objects.
@@ -85,10 +76,8 @@ pub enum OptionsOperation {
     SaveCombo {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         choices: Option<Vec<OptionChoice>>,
     },
     /// Bileşimi uygula: each set the combination names shows its option (made the primary).
@@ -99,7 +88,6 @@ pub enum OptionsOperation {
     Rename {
         set: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         option: Option<String>,
         name: String,
     },
@@ -113,14 +101,11 @@ pub enum OptionsOperation {
 /// `option_combo_in_use`, `invalid_revision`, `revision_conflict`. Warning: `option_combo_dropped` (an accepted or deleted
 /// option a combination named).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsEdit {
     pub operation: OptionsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -128,32 +113,24 @@ pub struct OptionsEdit {
 /// Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted
 /// and given back to the main model.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsEdited {
     /// The set after; none once accepted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<OptionSet>,
     /// The option made (Tanımla, Kopyala) or the one the operation named.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub option: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub created: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub deleted: Vec<String>,
     /// The objects that are the main model's now (Kabul et, Seçenekten çıkar).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub released: Vec<String>,
     /// The combination after Bileşimi kaydet or Bileşimi uygula (docs/adr/0808).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub combo: Option<OptionCombo>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -163,20 +140,16 @@ pub struct OptionsEdited {
 /// by place as Veri karşılaştır pairs them (docs/adr/0179), within `search` (absent: 0.5 m in the drawing's unit) and
 /// the same within `tolerance` (absent: 1 mm).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsCompare {
     pub set: String,
     pub a: String,
     pub b: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub search: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -184,19 +157,15 @@ pub struct OptionsCompare {
 /// Two combinations to compare (docs/adr/0809): `a` the one compared against, `b` the other (id or name); every set
 /// whose shown option differs between them compared as two options are, with `search` and `tolerance` as there.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsCompareCombos {
     pub a: String,
     pub b: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub search: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -207,32 +176,24 @@ pub struct OptionsCompareCombos {
 /// Refusals: `option_set_not_found`, `option_not_found`, `option_combo_not_found`, `invalid_uid`, `entity_not_found`,
 /// `not_in_option`, `invalid_input`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub compare: Option<OptionsCompare>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub compare_combos: Option<OptionsCompareCombos>,
 }
 
 /// How many objects of a kind an option holds.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionKindCount {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -241,10 +202,8 @@ pub struct OptionKindCount {
 
 /// An option as `cad.options.query` reads it: its objects counted by kind, its spaces' area and its walls' length.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionRow {
     pub id: String,
     pub name: String,
@@ -265,10 +224,8 @@ pub struct OptionRow {
 
 /// A set as `cad.options.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionSetRow {
     pub id: String,
     pub name: String,
@@ -278,10 +235,8 @@ pub struct OptionSetRow {
 
 /// A pair of objects found in both options, changed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionChange {
     pub a: String,
     pub b: String,
@@ -292,10 +247,8 @@ pub struct OptionChange {
 /// Two options compared: the objects paired as the same, those only in `b` (added) and only in `a` (removed), the
 /// pairs changed, and the differences in counts and areas (b − a).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsCompared {
     pub set: String,
     pub a: String,
@@ -303,13 +256,10 @@ pub struct OptionsCompared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub same: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub added: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionChange>>", optional))]
     pub changed: Vec<OptionChange>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub space_area: f64,
@@ -317,16 +267,13 @@ pub struct OptionsCompared {
     pub wall_length: f64,
     /// Each kind's count in `a` and in `b`, where they differ.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionKindDifference>>", optional))]
     pub kinds: Vec<OptionKindDifference>,
 }
 
 /// A kind counted in both options of a comparison.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionKindDifference {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -339,10 +286,8 @@ pub struct OptionKindDifference {
 /// drawing shows now, and the objects, spaces' area and walls' length of the plan it shows (the main model and its
 /// options).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionComboRow {
     pub id: String,
     pub name: String,
@@ -360,19 +305,15 @@ pub struct OptionComboRow {
 /// (`a`'s option against `b`'s), and the two plans' objects, and the differences of their spaces' area and walls'
 /// length (b − a).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CombosCompared {
     pub a: String,
     pub b: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionsCompared>>", optional))]
     pub sets: Vec<OptionsCompared>,
     /// The sets both show the same option of.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub alike: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects_a: u32,
@@ -386,28 +327,21 @@ pub struct CombosCompared {
 
 /// Output of `cad.options.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OptionsQueried {
     pub sets: Vec<OptionSetRow>,
     /// With `uid`: its set and option.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub set: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub option: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub compared: Option<OptionsCompared>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub combos_compared: Option<CombosCompared>,
     /// The project's combinations (docs/adr/0808).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionComboRow>>", optional))]
     pub combos: Vec<OptionComboRow>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

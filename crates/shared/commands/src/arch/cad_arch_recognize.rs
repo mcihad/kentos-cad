@@ -6,8 +6,6 @@
 //! `fixtures/commands/v1/cad.arch.recognize.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::ArchInfo;
 #[cfg(feature = "schema")]
@@ -27,10 +25,8 @@ pub const DEFAULT_RECOGNIZE_ANGLE: f64 = 1.0;
 
 /// What a layer's line work is read as.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PlanRole {
     /// Duvar: its lines are walls' faces, jambs and components' lines.
     Wall,
@@ -46,10 +42,8 @@ pub enum PlanRole {
 
 /// A layer and what its line work is read as.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlanLayerRole {
     pub layer_id: String,
     pub role: PlanRole,
@@ -75,54 +69,42 @@ pub struct PlanLayerRole {
 /// `not_a_layer`, `layer_locked`, then `invalid_revision`, `revision_conflict`. Warnings: `layer_locked` (sources
 /// skipped), `layer_hidden` (a layer written to), `plan_unrecognized` (objects not read, by why).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchRecognize {
     /// The plan's objects' persistent ids, at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     /// Layers' roles over those their names give.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlanLayerRole>>", optional))]
     pub roles: Vec<PlanLayerRole>,
     /// Every new wall's architectural information: its storey, its tadilat durumu.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall_layer_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub opening_layer_id: Option<String>,
     /// The thinnest wall, metres. Absent: 0.05 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_width: Option<f64>,
     /// The thickest wall, metres. Absent: 0.6 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_width: Option<f64>,
     /// The widest opening, metres; a wider gap ends the wall. Absent: 3 m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_opening: Option<f64>,
     /// Degrees two lines may be apart and be parallel. Absent: 1°.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: Option<f64>,
     /// Kaynağı koru: the sources stay. Absent: those read whole go.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep_sources: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -131,18 +113,14 @@ pub struct ArchRecognize {
 /// by their first line, openings by wall and along it, columns in their sources' order), how many doors, windows and
 /// bare openings, the sources taken away and those left.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchRecognized {
     pub walls: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub openings: Vec<String>,
     /// The columns made of the column layers' rectangles and circles.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub columns: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub doors: u32,
@@ -151,10 +129,8 @@ pub struct ArchRecognized {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub bare: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub left: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -163,23 +139,17 @@ pub struct ArchRecognized {
 /// What `cad.arch.recognize` would write (plan mode): the walls and openings as they would be stored (their `id` 0,
 /// an opening's host its wall's provisional id), the sources that would go and those left.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchRecognizePlan {
     pub walls: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub openings: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub columns: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub left: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

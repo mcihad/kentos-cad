@@ -12,8 +12,6 @@
 //! types (`kentos_commands::catalog()`), so a new command does not rebuild the crates below them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CATALOG_FORMAT: &str = "kentos.commands";
 /// Each schema carries the definitions it names in its own `$defs`: the catalog as `catalog()` builds it, every
@@ -26,14 +24,10 @@ pub const CATALOG_SHARED_VERSION: u32 = 2;
 
 /// Every product command, as `catalog()` builds it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandCatalog {
-    #[cfg_attr(feature = "ts", ts(type = "\"kentos.commands\""))]
     pub format: String,
     /// 1: every schema with its own `$defs`; 2: the schemas' definitions in the catalog's `$defs` (docs/adr/0731).
-    #[cfg_attr(feature = "ts", ts(type = "1 | 2"))]
     pub version: u32,
     pub commands: Vec<CommandDescriptor>,
     /// What every code of the commands' answers means (docs/adr/0253 §7).
@@ -56,7 +50,6 @@ pub struct CommandCatalog {
         rename = "$defs",
         skip_serializing_if = "std::collections::BTreeMap::is_empty"
     )]
-    #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
     pub defs: std::collections::BTreeMap<String, serde_json::Value>,
 }
 
@@ -176,8 +169,6 @@ impl CommandCatalog {
 
 /// A unit the schemas' `x-unit` names and what it means.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogUnit {
     pub unit: String,
     /// Turkish, for people and for an agent reading a number.
@@ -186,9 +177,7 @@ pub struct CatalogUnit {
 
 /// A code of the commands' answers and what it means (`codes::CODES`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogCode {
     pub code: String,
     /// `failed`, `conflict`, `needsInput`, `warning`, `failedOrWarning`, or
@@ -202,9 +191,7 @@ pub struct CatalogCode {
 
 /// One product command (TODOS.md CMD-01).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandDescriptor {
     /// Stable name `alan.nesne.eylem`, lowercase ASCII (`cad.polygon.create`); never reused.
     pub id: String,
@@ -227,30 +214,24 @@ pub struct CommandDescriptor {
     pub undo: CommandUndo,
     pub cost: CommandCost,
     /// JSON Schema of the input.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: serde_json::Value,
     /// JSON Schema of the result.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub output: serde_json::Value,
     /// JSON Schema of what `plan` answers: the change it would make, with
     /// nothing written (TODOS.md CMD-04). Absent for a command only the
     /// server runs: the server executes, it does not plan.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub plan: Option<serde_json::Value>,
     /// The object kinds it takes, the codes it refuses with and warns with
     /// (docs/adr/0253 §7); absent for a command only the server runs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub capabilities: Option<CommandCapabilities>,
     pub examples: Vec<CommandExample>,
 }
 
 /// What a command changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandEffect {
     /// Nothing.
     Query,
@@ -265,9 +246,7 @@ pub enum CommandEffect {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandHost {
     Web,
     Desktop,
@@ -275,9 +254,7 @@ pub enum CommandHost {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandRequirement {
     /// An open document.
     Document,
@@ -288,9 +265,7 @@ pub enum CommandRequirement {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandUndo {
     None,
     /// One local undo step.
@@ -300,9 +275,7 @@ pub enum CommandUndo {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandCost {
     Instant,
     /// The user waits for it.
@@ -312,67 +285,52 @@ pub enum CommandCost {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandExample {
     pub title: String,
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: serde_json::Value,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub output: Option<serde_json::Value>,
 }
 
 // What a command takes and how it answers (docs/adr/0253 §7); `kentos_commands::capabilities_of` fills them.
 /// What a command takes and how it answers.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandCapabilities {
     /// CAD exchange's explicit format/version/feature profile, shared by UI, Python and AI.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub exchange: Option<crate::CadFormatCapabilities>,
     /// The object kinds its operations apply to; none when it takes no objects
     /// by kind (it names layers, styles, settings) or takes every kind.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandTarget>>", optional))]
     pub targets: Vec<CommandTarget>,
     /// The codes it refuses with (`failed`, `conflict`), beside the
     /// protocol's own (`CommandCatalog.protocol`); `codes` says what each means.
     pub refusals: Vec<String>,
     /// The codes of its warnings.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub warnings: Vec<String>,
 }
 
 /// The object kinds an operation of a command applies to.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandTarget {
     /// The operation or method (a transform's `type`, a corner's `kind`);
     /// none for the command as a whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<String>,
     /// The kinds (`Entity`'s `kind`: `line`, `polyline`, `polygon` …);
     /// `*` every kind but the ones `except` names.
     pub kinds: Vec<String>,
     /// With `*`: the kinds it does not take.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub except: Vec<String>,
     /// The code an object of a kind it does not take is refused with.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub refused_with: Option<String>,
     /// Turkish: what else decides.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }

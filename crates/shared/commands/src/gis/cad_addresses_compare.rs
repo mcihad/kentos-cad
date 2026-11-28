@@ -4,8 +4,6 @@
 //! or stand away from, and what the register has that no door has, each list cut at `limit`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ADDRESSES_COMPARE: &str = "cad.addresses.compare";
 pub const CAD_ADDRESSES_COMPARE_VERSION: u32 = 1;
@@ -24,42 +22,31 @@ pub const ADDRESS_COMPARE_MAX_TOLERANCE: f64 = 10_000.0;
 /// compared where they are named (a neighbourhood or district only when the address data's doors have that field too).
 /// `x` and `y` are the position in the project's coordinates; a layer's point is its position when they are not named.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressRegister {
     /// A CSV or text table, an XLSX or an ODS file: absolute, or from the drawing's folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// A workbook's sheet by its name; none: its first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheet: Option<String>,
     /// A layer of the drawing by its id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The column of the address code.
     pub code: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub street: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub door: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub neighbourhood: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub district: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub x: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub y: Option<String>,
 }
 
@@ -74,34 +61,26 @@ pub struct AddressRegister {
 /// has no rows, or no sheet of that name), `layer_not_found`, `register_column_missing`. Warning: `register_cut` (the
 /// register had more rows than are read: 250 000).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesCompare {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locator: Option<String>,
     pub register: AddressRegister,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub tolerance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// A part of an address the register writes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AddressPart {
     Street,
     Door,
@@ -111,10 +90,8 @@ pub enum AddressPart {
 
 /// A door whose code no row of the register has.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressUnregistered {
     pub uid: String,
     pub code: String,
@@ -124,10 +101,8 @@ pub struct AddressUnregistered {
 
 /// A part a door writes otherwise than its row: both texts as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressPartDifference {
     pub part: AddressPart,
     pub drawing: String,
@@ -136,10 +111,8 @@ pub struct AddressPartDifference {
 
 /// A door that writes its address otherwise than its row (`row`: from 1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressDifference {
     pub uid: String,
     pub code: String,
@@ -150,10 +123,8 @@ pub struct AddressDifference {
 
 /// A door farther from its row's position than the tolerance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressDistance {
     pub uid: String,
     pub code: String,
@@ -166,10 +137,8 @@ pub struct AddressDistance {
 /// An address of the register no door has: its first row's texts, its codes and rows (and, for a layer, the rows'
 /// objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressUndrawn {
     pub street: String,
     pub door: String,
@@ -178,31 +147,25 @@ pub struct AddressUndrawn {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub rows: Vec<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 
 /// A code on more than one row of the register (and, for a layer, the rows' objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressRegisterRepeat {
     pub code: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub rows: Vec<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 
 /// Output (and plan) of `cad.addresses.compare` v1: the counts, then each list's count and its first `limit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddressesCompared {
     pub locator: String,
     /// The address data's doors, those with a code, and those whose code the register has.

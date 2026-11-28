@@ -5,8 +5,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::ExportReport;
 
@@ -16,10 +14,8 @@ pub const FILE_EXPORT_SHP_VERSION: u32 = 1;
 
 /// The .dbf's text code page.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ShpEncoding {
     /// UTF-8, named in the .cpg.
     #[default]
@@ -37,16 +33,13 @@ pub enum ShpEncoding {
 /// is not empty), `layer_not_found`, `nothing_to_export`, `several_shapefiles` (a `.shp` path for an export of more than
 /// one Shapefile), `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportShp {
     /// An absolute path: `.zip`, `.shp`, or a folder.
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// The .dbf's code page; UTF-8 when not given.
     #[serde(default)]
@@ -57,16 +50,13 @@ pub struct ExportShp {
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// A file written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShpFileWritten {
     /// Its name (in the archive, or in the folder).
     pub name: String,
@@ -77,10 +67,8 @@ pub struct ShpFileWritten {
 
 /// A Shapefile written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShpSetExported {
     /// Its name without extension: the layer's, with `_nokta`, `_cizgi` or `_alan` when the layer has several
     /// geometry families.
@@ -91,16 +79,13 @@ pub struct ShpSetExported {
     pub rows: u32,
     /// Its shape type (`POLYGONZ` …); none for a table alone (a layer of records without a geometry).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub shape: Option<String>,
 }
 
 /// A column whose name is not its attribute's (dBASE: ten bytes, one whatever the case).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShpColumnRenamed {
     pub set: String,
     pub attribute: String,
@@ -109,10 +94,8 @@ pub struct ShpColumnRenamed {
 
 /// A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShpColumnAsText {
     pub set: String,
     pub column: String,
@@ -121,10 +104,8 @@ pub struct ShpColumnAsText {
 
 /// What `file.export.shp` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShpExported {
     pub path: String,
     /// `zip`, `shp` or `folder`.
@@ -136,17 +117,14 @@ pub struct ShpExported {
     pub prj: bool,
     /// Objects not written, by kind.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// Objects with curves written as chords within 0.1 mm.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub approximated: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ShpColumnRenamed>>", optional))]
     pub renamed: Vec<ShpColumnRenamed>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ShpColumnAsText>>", optional))]
     pub as_text: Vec<ShpColumnAsText>,
     /// Text values cut to the column's 254 bytes; characters the code page lacks, written `?`; empty texts (read
     /// back as no value).

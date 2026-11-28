@@ -9,8 +9,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_FIELDS_WRITE: &str = "cad.fields.write";
 pub const CAD_FIELDS_WRITE_VERSION: u32 = 1;
@@ -20,10 +18,8 @@ pub const FIELDS_WRITE_LISTED: usize = 200;
 
 /// What to do when a value does not fit.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WritePolicy {
     /// Every value or none (`invalid_values`).
     #[default]
@@ -34,10 +30,8 @@ pub enum WritePolicy {
 
 /// What an empty result of the expression does.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EmptyResult {
     /// The old value stays.
     #[default]
@@ -48,10 +42,8 @@ pub enum EmptyResult {
 
 /// One object's pasted values: field → value (null takes the value away).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldRow {
     /// The object's persistent id.
     pub uid: String,
@@ -60,10 +52,8 @@ pub struct FieldRow {
 
 /// What is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FieldsWriteOp {
     /// Alan hesapla: the expression's value (İfadeyle seç's language, the layer's fields typed, geometry values in
     /// the project's drawing unit) into `field` of each object, as text in the field's canonical form.
@@ -73,10 +63,8 @@ pub enum FieldsWriteOp {
         expression: String,
         /// The objects (persistent ids); empty: every object of the layer.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         uids: Vec<String>,
         #[serde(default, skip_serializing_if = "is_keep")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<EmptyResult>", optional))]
         empty: EmptyResult,
     },
     /// Yapıştır: the values of each row into its object.
@@ -99,47 +87,37 @@ fn is_all(p: &WritePolicy) -> bool {
 /// that does not fit: the answer's first problem, every one in the plan). Warning: `values_skipped` (with
 /// `policy: valid`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldsWrite {
     /// The layer (its id).
     pub layer: String,
     pub write: FieldsWriteOp,
     #[serde(default, skip_serializing_if = "is_all")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<WritePolicy>", optional))]
     pub policy: WritePolicy,
 }
 
 /// A value changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldChange {
     pub uid: String,
     pub field: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub before: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub after: Option<String>,
 }
 
 /// A value that does not fit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ValueProblem {
     pub uid: String,
     pub field: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
     /// The code `cad.entities.set` would refuse it with (`invalid_attribute`, `attribute_required`, `rule_broken`,
     /// `not_unique`, `subtype_misfit`, `invalid_combination`).
@@ -149,10 +127,8 @@ pub struct ValueProblem {
 
 /// What `cad.fields.write` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldsWritten {
     /// Objects whose values change, objects already as asked, empty results kept, objects with a problem.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -165,10 +141,8 @@ pub struct FieldsWritten {
     pub invalid: u32,
     /// The first changes and problems, in the objects' order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FieldChange>>", optional))]
     pub changes: Vec<FieldChange>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ValueProblem>>", optional))]
     pub problems: Vec<ValueProblem>,
     pub revision: String,
 }

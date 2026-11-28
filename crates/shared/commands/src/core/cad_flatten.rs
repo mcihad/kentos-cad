@@ -4,8 +4,6 @@
 //! never does this by itself: a file's Z and M are kept until this command is run.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -24,10 +22,8 @@ pub const FLATTEN_STEP: &str = "2B düzleme indir";
 /// `revision_conflict`, `entity_not_found`, `layer_locked` (every object on a locked layer; some: left out with the
 /// warning `layer_locked`), `nothing_to_flatten`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesFlatten {
     /// The objects' persistent ids, at least one; a repeated one counts once.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -35,25 +31,20 @@ pub struct EntitiesFlatten {
     /// The level every elevation becomes, m; absent: the elevations are removed (a vertex without one is not 0).
     /// A vertex without an elevation stays without one either way.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub plane: Option<f64>,
     /// Remove the measures (M) too; absent: they stay (a route's measure is not geometry).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub measures: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.flatten` v1 (its plan's too: what it would do, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesFlattened {
     /// The objects changed, by persistent id, in the input's order.
     pub changed: Vec<String>,
@@ -68,11 +59,9 @@ pub struct EntitiesFlattened {
     pub measures: u32,
     /// The lowest and highest elevation those vertices had, m.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z_min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z_max: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -15,8 +15,6 @@
 //! integers, or 32-bit float TIFFs.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::RasterSample;
 #[cfg(feature = "schema")]
@@ -45,51 +43,40 @@ pub const GPKG_TILE_SIDE: u32 = 256;
 /// with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and `invalid_revision`,
 /// `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGpkgRead {
     /// The GeoPackage, absolute or from the drawing's folder.
     pub path: String,
     /// The tile table; none: the file's only tile table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// The zoom level; none: the highest (the finest).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub zoom: Option<u32>,
     /// The part to read, `[min x, min y, max x, max y]` in the table's system; none: the table's data extent (its
     /// tile matrix set's, when `gpkg_contents` gives none) cut to the level's grid.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub area: Option<[f64; 4]>,
     /// The GeoTIFF written (`.tif`), absolute or from the drawing's folder; none: nothing is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub output: Option<String>,
     /// The layer the raster is added to (linked to `output`); none: only the file is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// An existing `output` is written over.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overwrite: Option<bool>,
     /// The raster added to `layer` shows the table itself, its tiles read from the file as the view needs them (no
     /// GeoTIFF): its window's first pixel moved up and left to the coarsest zoom it draws from (docs/adr/0627 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub link: Option<bool>,
     /// The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -98,10 +85,8 @@ pub struct RastersGpkgRead {
 /// are 16-bit PNG integers or 32-bit float TIFFs; a value is (stored × the tile's scale + its offset) × `scale` +
 /// `offset`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgCoverage {
     /// `integer` or `float`.
     pub datatype: String,
@@ -111,21 +96,17 @@ pub struct GpkgCoverage {
     pub offset: f64,
     /// The null: a stored value of an integer coverage, a value of a float one; none when it has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub data_null: Option<f64>,
     /// The values' unit of measure, when the file says one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uom: Option<String>,
 }
 
 /// The tiles' format `cad.rasters.gpkgwrite` writes pictures with.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GpkgTileFormat {
     #[default]
     Png,
@@ -135,10 +116,8 @@ pub enum GpkgTileFormat {
 
 /// A zoom level of a tile table.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgTileZoom {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub zoom: u32,
@@ -159,27 +138,22 @@ pub struct GpkgTileZoom {
     pub tiles: u64,
     /// The formats of its tiles (`png`, `jpeg`, `webp`, `tiff`, `other`), looked at in up to 64 of them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub formats: Vec<String>,
 }
 
 /// A tile table of the file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgTileSet {
     pub table: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub identifier: Option<String>,
     /// The file's own id of the system (`gpkg_spatial_ref_sys`).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub srs_id: i32,
     /// Its EPSG code; none for an undefined system or another authority's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The tile matrix set's box: its top-left corner is the grid's origin.
@@ -187,27 +161,22 @@ pub struct GpkgTileSet {
     pub bounds: [f64; 4],
     /// `gpkg_contents`'s box, the data's extent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub data_bounds: Option<[f64; 4]>,
     /// The zoom levels, coarsest first.
     pub zooms: Vec<GpkgTileZoom>,
     /// A gridded coverage's description; none for a table of pictures.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub coverage: Option<GpkgCoverage>,
     /// The file's extensions that name this table (`gpkg_webp`, …).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub extensions: Vec<String>,
 }
 
 /// Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGpkgReadDone {
     /// Every tile table of the file.
     pub tables: Vec<GpkgTileSet>,
@@ -229,12 +198,10 @@ pub struct RastersGpkgReadDone {
     pub sample: RasterSample,
     /// A coverage's nodata as the raster holds it; none for pictures.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub nodata: Option<f64>,
     /// The raster added shows the table from its file (`link`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub linked: bool,
     /// `[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -249,15 +216,12 @@ pub struct RastersGpkgReadDone {
     pub tiles_missing: u64,
     /// The GeoTIFF, as written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: Option<u64>,
     /// The raster added, when `layer` was given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -265,10 +229,8 @@ pub struct RastersGpkgReadDone {
 
 /// Where `cad.rasters.gpkgwrite` puts the table.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GpkgTilesMode {
     /// A new GeoPackage; a file that is there is written over only with `overwrite`.
     #[default]
@@ -285,10 +247,8 @@ pub enum GpkgTilesMode {
 /// in mode `add` `file_not_found` and `import_unreadable` (no GeoPackage there) and `table_exists`. Warnings:
 /// `nodata_lost` (pictures carry no nodata), `precision_lost` (a coverage's value a 32-bit float rounds).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGpkgWrite {
     /// The raster, by persistent id.
     pub uid: String,
@@ -296,34 +256,27 @@ pub struct RastersGpkgWrite {
     pub path: String,
     /// The tile table's name; none: `tiles`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     #[serde(default)]
     pub mode: GpkgTilesMode,
     /// The table's identifier (`gpkg_contents`); none: its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub identifier: Option<String>,
     /// Pictures' tiles: PNG (the default) or lossless WebP; a coverage's are PNG or TIFF by its values.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub format: Option<GpkgTileFormat>,
     /// An existing `path` (mode `new`) is written over.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overwrite: Option<bool>,
     /// The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// Output of `cad.rasters.gpkgwrite` v1 (its plan's too: what it would write, nothing written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RastersGpkgWritten {
     pub path: String,
     pub table: String,
@@ -336,7 +289,6 @@ pub struct RastersGpkgWritten {
     pub bands: u32,
     /// The gridded coverage written; none for pictures.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub coverage: Option<GpkgCoverage>,
     /// The tile matrix set's box and the data's extent, `[min x, min y, max x, max y]`.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]

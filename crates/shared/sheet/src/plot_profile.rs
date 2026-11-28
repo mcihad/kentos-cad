@@ -6,13 +6,9 @@ use crate::{
     style::{LineCap, LineJoin},
 };
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 pub const SCHEMA: &str = "kentos.plot/1";
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotColor"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PlotColor {
@@ -25,9 +21,7 @@ pub enum PlotColor {
     },
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyle"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotStyle {
@@ -37,22 +31,17 @@ pub struct PlotStyle {
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="percent")))]
     pub screening: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
     pub line_weight: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-um")))]
     pub dash: Option<Vec<i32>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="percent")))]
     pub opacity: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cap: Option<LineCap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub join: Option<LineJoin>,
 }
 fn full() -> u8 {
@@ -77,9 +66,7 @@ impl Default for PlotStyle {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleKey"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum StyleKey {
@@ -92,9 +79,7 @@ pub enum StyleKey {
     },
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleEntry"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StyleEntry {
@@ -102,9 +87,7 @@ pub struct StyleEntry {
     pub style: PlotStyle,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotTableKind"))]
 #[serde(rename_all = "camelCase")]
 pub enum TableKind {
@@ -112,9 +95,7 @@ pub enum TableKind {
     Named,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotTarget"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Target {
@@ -122,9 +103,7 @@ pub enum Target {
     PaperItem { id: String },
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotAssignment"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Assignment {
@@ -132,9 +111,7 @@ pub struct Assignment {
     pub key: StyleKey,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotProfile"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotProfile {
@@ -145,18 +122,14 @@ pub struct PlotProfile {
     #[serde(default)]
     pub assignments: Vec<Assignment>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub default_style: Option<String>,
     /// The `.ctb` or `.stb` table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
     /// profile made in KentOS.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<acad::PlotSource>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSavePlotProfiles"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SavePlotProfiles {

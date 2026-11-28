@@ -21,7 +21,6 @@ pub const DOCUMENT_VERSION_2: u32 = 2;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AreaUnit {
     M2,
     Donum,
@@ -29,10 +28,8 @@ pub enum AreaUnit {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AngleUnit {
     Grad,
     Deg,
@@ -43,10 +40,8 @@ pub enum AngleUnit {
 /// `plan3d` and `disaster` are announced ("Yakında") and cannot be chosen yet;
 /// a file naming them shows as CBS. There is no hybrid type any more.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Workspace {
     Cad,
     Gis,
@@ -58,7 +53,6 @@ pub enum Workspace {
     /// project's type is not asked yet; nothing chooses it, and the apps hold
     /// it as none (`ProjectSettings::project_type`).
     #[serde(rename = "hybrid")]
-    #[cfg_attr(feature = "ts", ts(skip))]
     #[cfg_attr(feature = "schema", schemars(skip))]
     LegacyHybrid,
 }
@@ -85,10 +79,8 @@ impl Workspace {
 /// what the data means, and every command still runs. Only a CAD project has one; one written before works has none and the
 /// desktop asks it once. Like its type, a project keeps the work it has.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CadWork {
     /// Mimari proje: buildings, floor plans, sections and elevations.
     Architecture,
@@ -137,7 +129,6 @@ pub use crate::drawing_font::{DrawingFont, FontFamily, MAX_FONT_FAMILIES, MAX_FO
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DrawingUnit {
     Mm,
     Cm,
@@ -192,7 +183,6 @@ impl DrawingUnit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LengthStyle {
     /// Decimal in the drawing's unit: no setting, here for a command to say so.
     Decimal,
@@ -206,10 +196,8 @@ pub enum LengthStyle {
 
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectSettings {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
@@ -226,308 +214,212 @@ pub struct ProjectSettings {
     /// types). The former Hibrit mode reads as written and means the same
     /// (see [`ProjectSettings::project_type`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub workspace: Option<Workspace>,
     /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon. Only a CAD project has
     /// one; none while it is not asked (CAD projects written before works).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cad_work: Option<CadWork>,
     /// Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
     /// the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
     /// CBS project, on otherwise ([`ProjectSettings::auto_select`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub auto_select: Option<bool>,
     /// How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub edit_grouping: Option<crate::EditGrouping>,
     /// Absent in files written before drawing typefaces (read as Barlow).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
     /// The project's line types with patterns (docs/adr/0313 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
     pub line_types: Vec<crate::LineTypeDef>,
     /// The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
-    )]
     pub hatch_patterns: Vec<crate::HatchPatternDef>,
     /// The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceLink>>"))]
     pub sources: Vec<crate::SourceLink>,
     /// The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a
     /// reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
     /// objects has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceBase>>"))]
     pub source_bases: Vec<crate::SourceBase>,
     /// The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
     /// absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub line_type_scale: Option<f64>,
     /// A local project's unit (docs/adr/0165 §2); absent: metres. Only a
     /// project without a coordinate system (SRID 0) has another.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,
     /// The project's second coordinate system (docs/adr/0167 §1): its
     /// coordinates are shown beside the project's own; absent: none. Never
     /// the project's own system, never a local project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
     /// The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
     /// the project's own. Changing it changes no coordinate.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub map_srid: Option<u32>,
     /// The project's own coordinate system when it is a definition
     /// (docs/adr/0168 §1); `srid` is then 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub custom_crs: Option<CrsDefinition>,
     /// The second system when it is a definition (instead of `second_srid`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub second_custom_crs: Option<CrsDefinition>,
     /// The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DatumTransform>>", optional))]
     pub datum_transforms: Vec<DatumTransform>,
     /// The project's survey constants and tolerances (docs/adr/0169 §3);
     /// absent: k = [`REFRACTION`] and no tolerance.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub survey: Option<SurveySettings>,
     /// The project's named layer states (docs/adr/0177 §4), in the menu's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LayerState>>", optional))]
     pub layer_states: Vec<LayerState>,
     /// The project's named text styles (docs/adr/0183 §2), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextStyleDef>>", optional))]
     pub text_styles: Vec<crate::TextStyleDef>,
     /// The project's named dimension styles (docs/adr/0183 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::DimensionStyleDef>>", optional)
-    )]
     pub dimension_styles: Vec<crate::DimensionStyleDef>,
     /// The project's named leader styles (docs/adr/0326 §4).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional)
-    )]
     pub leader_styles: Vec<crate::LeaderStyleDef>,
     /// The project's named wall styles (docs/adr/0339 §2), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::WallStyleDef>>", optional))]
     pub wall_styles: Vec<crate::WallStyleDef>,
     /// The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<crate::ArchSettings>,
     /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<crate::TopologySettings>,
     /// The project's annotation heights on paper (docs/adr/0205 §1); absent:
     /// every kind's default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotation: Option<crate::AnnotationHeights>,
     /// The project's service connections without their secrets (docs/adr/0208 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ServiceConnection>>", optional)
-    )]
     pub connections: Vec<crate::ServiceConnection>,
     /// The project's networks (docs/adr/0209 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NetworkDef>>", optional))]
     pub networks: Vec<crate::NetworkDef>,
     /// The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ProjectVariable>>", optional)
-    )]
     pub variables: Vec<crate::ProjectVariable>,
     /// The project's address data (docs/adr/0229 §2), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::AddressLocator>>", optional)
-    )]
     pub address_locators: Vec<crate::AddressLocator>,
     /// The drawing's user coordinate system (docs/adr/0261 §1); none: the
     /// world. How points are typed and shown, never where they are.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ucs: Option<crate::Ucs>,
     /// The project's named UCSs, in the order they were kept.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedUcs>>", optional))]
     pub named_ucs: Vec<crate::NamedUcs>,
     /// The project's named views, in the order they were kept (docs/adr/0285 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedView>>", optional))]
     pub named_views: Vec<crate::NamedView>,
     /// The project's view templates, in the order they were kept (docs/adr/0783 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ViewTemplate>>", optional))]
     pub view_templates: Vec<crate::ViewTemplate>,
     /// The project's forms, in the order they were made (docs/adr/0401).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectForm>>", optional))]
     pub forms: Vec<crate::ProjectForm>,
     /// The project's value lists, in the order they were made (docs/adr/0430).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::FieldDomain>>", optional))]
     pub domains: Vec<crate::FieldDomain>,
     /// The project's relations (docs/adr/0405 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ProjectRelation>>", optional)
-    )]
     pub relations: Vec<crate::ProjectRelation>,
     /// The project's join views (docs/adr/0527), in the table's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::JoinView>>", optional))]
     pub join_views: Vec<crate::JoinView>,
     /// The project's links of event layers to their routes (docs/adr/0569), in the list's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::EventLink>>", optional))]
     pub linear_events: Vec<crate::EventLink>,
     /// What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
     /// history (`Op::Lineage`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineageRecord>>", optional))]
     pub lineage: Vec<crate::LineageRecord>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub length_style: Option<LengthStyle>,
     /// The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
     /// to the project file's folder with `/` between their parts.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub xref_paths: Vec<String>,
     /// The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a
     /// mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
     /// others; of a name both have, the drawing's is the one read.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ProjectProfileFile>>", optional)
-    )]
     pub profile_files: Vec<crate::ProjectProfileFile>,
     /// Ordered portable drawing standards retained with the project. Earlier
     /// entries take precedence; choosing a standard does not apply it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional)
-    )]
     pub standard_docs: Vec<crate::ProjectStandardDocument>,
     /// The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them
     /// (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::ApprovedSheetTemplate>>", optional)
-    )]
     pub approved_sheet_templates: Vec<crate::ApprovedSheetTemplate>,
     /// The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
     pub table_styles: Vec<crate::TableStyleDef>,
     /// The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
     /// the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::StandardException>>", optional)
-    )]
     pub standard_exceptions: Vec<crate::StandardException>,
     /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
     /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ReviewNote>>", optional))]
     pub review_notes: Vec<crate::ReviewNote>,
     /// What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
     /// and the geoid model; absent: not said, and no command takes them for either.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub heights: Option<crate::HeightReference>,
     /// The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
     /// said. Only a project with a coordinate system has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub coordinate_epoch: Option<f64>,
     /// A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
     /// project drawn for a road has them (`.kcad` schema 158); a map project's terrain surfaces are kept here too,
     /// nothing else of a road (`.kcad` schema 195, docs/adr/1520).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub road: Option<crate::RoadSettings>,
     /// A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
     /// derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map_work: Option<crate::MapWork>,
     /// A map project's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340): campaigns, sessions, solutions,
     /// accepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`
     /// schema 194).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map_survey: Option<crate::MapSurvey>,
     /// The parcel register (plan/map-cad.md MAP-08, docs/adr/4220): the documents that made and closed parcels, each
     /// parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
     /// absent: none (`.kcad` schema 216).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parcel_register: Option<crate::ParcelRegister>,
     /// The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::KeptAdjustment>>")
-    )]
     pub survey_adjustments: Vec<crate::KeptAdjustment>,
     /// The layer each annotation tool draws on (usage review UR-003); absent: the active layer (`.kcad` schema 255).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::ToolLayer>>"))]
     pub tool_layers: Vec<crate::ToolLayer>,
     /// The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
     /// (`.kcad` schema 253).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::MonitoringReview>>")
-    )]
     pub monitoring_reviews: Vec<crate::MonitoringReview>,
     /// A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
     /// (`.kcad` schema 250).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zoning_plan: Option<crate::ZoningPlanData>,
 }
 
@@ -544,45 +436,36 @@ pub const REFRACTION: f64 = 0.13;
 /// radians, lengths in metres. An absent tolerance is not checked; the
 /// differences are still shown.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SurveySettings {
     /// k, within [−1, 1]; absent: [`REFRACTION`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refraction: Option<f64>,
     /// The two faces' horizontal reading difference.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub face_hz: Option<f64>,
     /// The vertical index error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub index: Option<f64>,
     /// The two faces' slope distance difference.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub face_slope: Option<f64>,
     /// A traverse leg's horizontal distance measured from its two ends
     /// (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub two_way: Option<f64>,
     /// A traverse's angular misclosure (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub traverse_angle: Option<f64>,
     /// A traverse's linear (coordinate) misclosure (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub traverse_coord: Option<f64>,
     /// The project's mean ellipsoidal height (m), within [−500, 9000]: the
@@ -590,44 +473,36 @@ pub struct SurveySettings {
     /// schema 16). Points' elevations are not used: whether orthometric or
     /// ellipsoidal is not known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub ground_height: Option<f64>,
     /// Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
     /// grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
     /// schema 16): only with a ground height; absent, off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reduce_to_grid: Option<bool>,
     /// A direction's a priori standard deviation, radians (docs/adr/0203 §1;
     /// schema 28); absent: [`SIGMA_DEFAULTS`]'s.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub sigma_direction: Option<f64>,
     /// A distance's constant part, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_distance: Option<f64>,
     /// A distance's part per million of its length (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
     pub sigma_ppm: Option<f64>,
     /// Each end's centering, the instrument's and the target's, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_centering: Option<f64>,
     /// A zenith angle's, radians (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub sigma_zenith: Option<f64>,
     /// Geometric levelling's per √km, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_levelling: Option<f64>,
 }
@@ -1064,7 +939,6 @@ impl ProjectSettings {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Bounds {
     pub min_x: f64,
     pub min_y: f64,
@@ -1074,32 +948,23 @@ pub struct Bounds {
 
 /// The project's own style library (opaque items in v1, see `style`).
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectStyles {
-    #[cfg_attr(feature = "ts", ts(type = "unknown[]"))]
     pub items: Vec<serde_json::Value>,
-    #[cfg_attr(feature = "ts", ts(type = "unknown[]"))]
     pub categories: Vec<serde_json::Value>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DocumentSnapshotV1 {
-    #[cfg_attr(feature = "ts", ts(type = "\"kentos.document\""))]
     pub format: String,
-    #[cfg_attr(feature = "ts", ts(type = "1"))]
     pub version: u32,
     pub name: String,
     pub settings: ProjectSettings,
     /// Local anchor near the data (the GPU works relative to it).
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
@@ -1107,10 +972,6 @@ pub struct DocumentSnapshotV1 {
     pub styles: ProjectStyles,
     /// Block definitions (docs/adr/0144); none in a drawing without blocks.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::entity::BlockDefinition>>", optional)
-    )]
     pub blocks: Vec<crate::entity::BlockDefinition>,
 }
 
@@ -1118,10 +979,8 @@ pub struct DocumentSnapshotV1 {
 /// from (docs/adr/0014, TODOS.md FILE-05, FILE-21). A v2 file keeps it in
 /// every later save; it says where the objects' derived ids came from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MigrationSource {
     /// `kentos.document`.
     pub format: String,
@@ -1152,21 +1011,16 @@ impl MigrationSource {
 /// The objects' `id`s are the open document's slots: a v2 file does not write
 /// them, and a reader numbers the objects 1, 2, 3 … in file order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DocumentSnapshotV2 {
-    #[cfg_attr(feature = "ts", ts(type = "\"kentos.document\""))]
     pub format: String,
-    #[cfg_attr(feature = "ts", ts(type = "2"))]
     pub version: u32,
     pub name: String,
     pub settings: ProjectSettings,
     /// Local anchor near the data (the GPU works relative to it).
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
@@ -1177,45 +1031,26 @@ pub struct DocumentSnapshotV2 {
     pub styles: ProjectStyles,
     /// Block definitions (docs/adr/0144); none in a drawing without blocks.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::entity::BlockDefinition>>", optional)
-    )]
     pub blocks: Vec<crate::entity::BlockDefinition>,
     /// The project's persistent id, when it has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project_id: Option<ProjectId>,
     /// The v1 file a migrated drawing came from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub migrated_from: Option<MigrationSource>,
     /// The project's sheet book and its pictures (docs/adr/0251); none in a
     /// project without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
     /// The associative arrays (docs/adr/0300), in the order they were made; none when the drawing has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
-    )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// Persistent architectural dimension recipes and their ordinary member identities.
     /// Absent/empty keeps the previous document encoding unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
-    )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// The kitchen runs (docs/adr/0727 §5), in the order they were made; none when the drawing has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
-    )]
     pub casework: Vec<crate::casework::CaseworkRecord>,
     /// The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
     /// has none.
@@ -1223,18 +1058,10 @@ pub struct DocumentSnapshotV2 {
         default,
         skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
     )]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
-    )]
     pub constraints: crate::constraints::ConstraintSet,
     /// The requests the drawing executed (docs/adr/0253 §6), oldest first,
     /// the last `REQUEST_LEDGER`; none when it executed none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::command_call::RequestRecord>>")
-    )]
     pub requests: Vec<crate::command_call::RequestRecord>,
 }
 

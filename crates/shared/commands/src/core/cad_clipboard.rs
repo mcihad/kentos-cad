@@ -6,8 +6,6 @@
 //! clipboard keeps; Python and an agent pass it on as it came.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -25,10 +23,8 @@ pub const CAD_ENTITIES_PASTE_VERSION: u32 = 1;
 
 /// A copy of objects with all they use (docs/adr/0309 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Clip {
     /// The objects, numbered 1, 2 … in the drawing's order (so their drawing order is kept), whatever order they
     /// were given in.
@@ -40,25 +36,20 @@ pub struct Clip {
     pub layers: Vec<LayerNode>,
     /// The block definitions the objects place, and those these place.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
     /// The text styles the objects name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextStyleDef>>", optional))]
     pub text_styles: Vec<TextStyleDef>,
     /// The dimension styles the objects name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
     /// The library items (symbols, their images) the objects and their layers draw with; absent when they draw
     /// with none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<ProjectStyles>,
     /// The source drawing's unit (absent: metres). Lengths are metres in every drawing, so a paste keeps the
     /// objects' sizes in another unit (docs/adr/0309 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
     /// Where the objects are placed from: the copy's base point.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -66,7 +57,6 @@ pub struct Clip {
     /// The dimension recipes copied whole, every source and member among the objects (docs/adr/0730 §4): a paste makes
     /// them again over the pasted objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSet>>", optional))]
     pub dimension_sets: Vec<DimensionSet>,
 }
 
@@ -77,17 +67,14 @@ pub struct Clip {
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `not_finite` (the base),
 /// `entity_not_found`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesCopy {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     /// The base point; absent: the lower left corner of the objects' box.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Option<Vec2>,
 }
@@ -110,41 +97,33 @@ pub struct EntitiesCopy {
 /// blank), `invalid_revision`, `revision_conflict` (status `conflict`), `layer_locked` (a layer an object would go
 /// to). Warnings: `units_differ` (the source's unit is not this drawing's: sizes kept), `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPaste {
     /// The copy, as `cad.entities.copy` gave it.
     pub clip: Clip,
     /// Where the copy's base point goes; absent: where it was copied (Özgün koordinatlara yapıştır).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<Vec2>,
     /// Paste as one block of this name (Blok olarak yapıştır).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub as_block: Option<String>,
     /// A copy's block or style of a name this drawing has (docs/adr/0351 §4): `keep` uses this drawing's, `rename`
     /// brings the copy's under a free name (“Ad (2)” …) and the pasted objects take it; absent: `keep`.
     #[serde(default, skip_serializing_if = "is_keep")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<PasteConflicts>"))]
     pub conflicts: PasteConflicts,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What a paste does with a copy's block or style of a name the drawing has (docs/adr/0351 §4).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PasteConflicts {
     /// This drawing's is used.
     #[default]
@@ -159,10 +138,8 @@ fn is_keep(c: &PasteConflicts) -> bool {
 
 /// A copy's block or style brought under a new name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PasteRenamed {
     /// `block`, `textStyle` or `dimensionStyle`.
     pub kind: String,
@@ -172,10 +149,8 @@ pub struct PasteRenamed {
 
 /// What a paste brought in besides its objects (docs/adr/0309 §3).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PasteReport {
     /// The layers and groups made, by their paths (“Kadastro / Bina”).
     pub layers: Vec<String>,
@@ -187,20 +162,16 @@ pub struct PasteReport {
     pub styles: Vec<String>,
     /// The block the copy became (Blok olarak yapıştır): its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<String>,
     /// The copy's blocks and styles brought under new names (`conflicts: rename`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<PasteRenamed>>"))]
     pub renamed: Vec<PasteRenamed>,
 }
 
 /// Output of `cad.entities.paste` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPasted {
     /// The new objects' persistent ids, in the copy's order (one insert with `asBlock`).
     pub created: Vec<String>,
@@ -211,10 +182,8 @@ pub struct EntitiesPasted {
 
 /// Plan of `cad.entities.paste` v1: what it would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPastePlan {
     /// The new objects as they would be written (their `id` 0).
     pub created: Vec<Entity>,

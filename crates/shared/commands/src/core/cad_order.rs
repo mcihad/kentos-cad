@@ -6,8 +6,6 @@
 //! own order among themselves. The drawing order never crosses a layer.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -18,10 +16,8 @@ pub const CAD_ENTITIES_ORDER_VERSION: u32 = 1;
 
 /// Where the objects go.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OrderTo {
     /// Öne getir: drawn after every other object of their layer. “Öne getir”.
     Front,
@@ -59,10 +55,8 @@ pub enum OrderTo {
 /// another layer than the reference's), `order_limit` (a layer's orders at the
 /// 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOrder {
     /// The objects' persistent ids, at least one; a repeated one counts once.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -71,22 +65,18 @@ pub struct EntitiesOrder {
     pub to: OrderTo,
     /// The object the others go right above or under (its persistent id); only with `above` and `under`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub reference: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.order` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOrdered {
     /// The objects whose order changed, in the input's order; then the layer's others moved to make room
     /// (above and under), in their drawing order.
@@ -101,10 +91,8 @@ pub struct EntitiesOrdered {
 
 /// What `cad.entities.order` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOrderPlan {
     /// The objects that would change, each as execute would write it, with
     /// its own slot (`id`), in the input's order; then the others moved to make room.

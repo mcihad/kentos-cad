@@ -2,8 +2,6 @@
 //! sistemi ▸ Tanımla: nothing moves) and a layer's objects moved from a system into the project's (▸ Dönüştür).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -18,36 +16,29 @@ pub const CAD_LAYERS_REPROJECT_VERSION: u32 = 1;
 
 /// Input of `cad.layers.crs` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersCrs {
     /// The layer's id.
     pub layer: String,
     /// The system its objects came from (an EPSG code the registry knows); absent or null clears the record.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.crs` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersCrsSet {
     pub layer: String,
     /// The record now; absent when cleared.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<LayerSourceCrs>,
     /// Whether it differed (an undo step was written).
     pub changed: bool,
@@ -57,21 +48,17 @@ pub struct LayersCrsSet {
 
 /// Input of `cad.layers.reproject` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersReproject {
     /// The layer's id.
     pub layer: String,
     /// The system the objects are in now (an EPSG code the registry knows); absent: the layer's recorded one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub from: Option<u32>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -93,10 +80,8 @@ pub const REPROJECT_NOTES: [&str; 3] = [
 /// and as it moves, that point's shift (moved − now) and its length, the smallest and largest shift of all its points,
 /// in the project's units, and what its points fall outside of (codes of [`REPROJECT_NOTES`], in that order).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ReprojectShift {
     pub uid: String,
     pub kind: String,
@@ -117,7 +102,6 @@ pub struct ReprojectShift {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub most: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub notes: Vec<String>,
 }
 
@@ -126,10 +110,8 @@ pub struct ReprojectShift {
 /// none when nothing moves), the objects with a note, the chain's verdict for the way as `cad.crs.transform` gives it
 /// (docs/adr/1230 §3; none when nothing moves) and the objects' shifts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersReprojected {
     pub layer: String,
     /// The system the objects came from.
@@ -151,26 +133,21 @@ pub struct LayersReprojected {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub points: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub mean_dx: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub mean_dy: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub least: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub most: Option<f64>,
     /// The objects with a note.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub flagged: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub status: Option<ChainStatus>,
     /// Why the chain is limited, in `cad.crs.transform`'s order.
     pub reasons: Vec<String>,

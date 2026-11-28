@@ -5,8 +5,6 @@
 //! drawing's geometry never changes.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -19,16 +17,13 @@ pub const CAD_DELIVERY_EDIT_VERSION: u32 = 1;
 
 /// One change of the record.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DeliveryChange {
     /// A package went: its record, numbered one more than the largest; `id` given or made.
     #[serde(rename_all = "camelCase")]
     Add {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         revision: String,
         package: DeliveryPackage,
@@ -37,10 +32,8 @@ pub enum DeliveryChange {
         channel: DeliveryChannel,
         at: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         by: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         receipt: Option<String>,
     },
     /// The authority's answer, in place of the one it has: accepted, or returned with its reason; the review notes
@@ -51,13 +44,10 @@ pub enum DeliveryChange {
         outcome: DeliveryOutcome,
         at: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         reason: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         notes: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         receipt: Option<String>,
     },
     /// A mistaken record taken away (its review notes stay).
@@ -73,14 +63,11 @@ pub enum DeliveryChange {
 /// reason, an answer before the delivery, the texts' lengths; its field's path), `too_many_deliveries`,
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeliveryEdit {
     pub change: DeliveryChange,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -88,10 +75,8 @@ pub struct DeliveryEdit {
 /// Output of `cad.delivery.edit` v1, and its plan: the record changed (its id and number), the drawing's record then,
 /// the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DeliveryEdited {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]

@@ -41,7 +41,6 @@ pub const OPENING_TYPES_FORMAT_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningSizeBy {
     /// Kaba boşluk: the hole in the wall, jamb to jamb (an opening's `width`).
     #[default]
@@ -81,7 +80,6 @@ impl OpeningSizeBy {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningBuild {
     /// Which width its nominal size names; absent: the rough opening.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -279,7 +277,6 @@ impl OpeningBuild {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningTypeField {
     Width,
     Leaves,
@@ -437,10 +434,8 @@ impl OpeningTypeField {
 
 /// An office's or a project's door or window type (docs/adr/0772 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningType {
     /// Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-` (KentOS's own).
     pub id: String,
@@ -450,68 +445,54 @@ pub struct OpeningType {
     /// door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
     /// unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
     /// Each change gives it the next; an opening that took an older one is behind (eski sürüm).
     #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "count")))]
     pub version: u32,
     /// Where it came from: the office library's name it was taken from; absent: made in this project.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
     pub form: OpeningForm,
     /// The rough opening, metres (an opening's `width`).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[serde(default = "one", skip_serializing_if = "is_one")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u8>", optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 6), extend("x-unit" = "count")))]
     pub leaves: u8,
     #[serde(default, skip_serializing_if = "is_swing")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<OpeningOperation>", optional))]
     pub operation: OpeningOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub swing: Option<f64>,
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub show_swing: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub frame: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub sill: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub head: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<OpeningBuild>,
     /// Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
     /// odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
     /// (KCAD schema 229).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     /// Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
     /// 825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "W/m2K")))]
     pub u_value: Option<f64>,
     /// Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.25 `FireRating`): every opening of the type carries it
     /// unless it has its own. Absent: none (missing on a door).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fire_rating: Option<crate::Declared>,
 }
 
@@ -871,10 +852,8 @@ impl OpeningFields {
 
 /// An opening's widths (docs/adr/0772 §2), metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningSizes {
     /// Kaba boşluk: the hole in the wall (its `width`).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -891,32 +870,26 @@ pub struct OpeningSizes {
     /// Net geçiş: what a door leaves free with all its leaves open, from the open leaf's face to the opposite stop; a
     /// bare opening its light; none for a window, a niche or a flue.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub clear: Option<f64>,
     /// A two-leaf door's net clear width with only its first leaf open.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub clear_first: Option<f64>,
     /// A revolving door's drum, its inside diameter (docs/adr/0777 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub drum: Option<f64>,
     /// A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its
     /// start first.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningPocket>>", optional))]
     pub pockets: Vec<OpeningPocket>,
     /// A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub tracks: Option<u8>,
     /// Its leaves from its start, `O` one that stays, `X` one that slides (docs/adr/0792 §1): “OXXO”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub panels: Option<String>,
     /// Which width its nominal size names.
     pub size_by: OpeningSizeBy,
@@ -927,10 +900,8 @@ pub struct OpeningSizes {
 
 /// A pocket door's pocket (docs/adr/0777 §2): at which jamb, how far past it into the wall, how wide across it.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningPocket {
     /// At its end jamb; else its start's.
     pub at_end: bool,
@@ -1401,10 +1372,8 @@ pub fn opening_types_problem(types: &[OpeningType]) -> Option<(String, String)> 
 
 /// An office's types as a file carries them (`kentos.opening-types` 1): their library's name and the types.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningTypesFile {
     pub format: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

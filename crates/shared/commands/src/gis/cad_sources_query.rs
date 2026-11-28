@@ -9,8 +9,6 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use kentos_contracts::QueryTime;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_SOURCES_QUERY: &str = "cad.sources.query";
 pub const CAD_SOURCES_QUERY_VERSION: u32 = 1;
@@ -21,10 +19,8 @@ pub const QUERIED: u32 = 100;
 
 /// What a layer's question is asked of.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum QueryScope {
     /// The drawing's objects of the layer: a bound layer's working copy (of a part, a part only).
     #[default]
@@ -35,10 +31,8 @@ pub enum QueryScope {
 
 /// Records near a place (what a click identifies).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueryNear {
     /// The place, in the project's system: east, north.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -51,14 +45,11 @@ pub struct QueryNear {
 /// The order of a question's records other than the key's (docs/adr/0591): a field and which way. Records without a
 /// value come after every one with; equal ones by key (the drawing's: by lasting id).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueryOrder {
     pub field: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub descending: bool,
 }
 
@@ -76,87 +67,67 @@ pub const MOST_ORDERED_HERE: u64 = 200_000;
 /// `expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job
 /// stopped answers `cancelled`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesQuery {
     /// A layer of the drawing (its id).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// With `layer`: its working copy (the default) or its source's whole table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<QueryScope>", optional))]
     pub scope: Option<QueryScope>,
     /// A GeoPackage file's path, or a database's address (`postgresql://…`, no password).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// With `path`: the table (`schema.table` in a database).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// Records whose box meets this one, in the project's system: west, south, east, north.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bbox: Option<[f64; 4]>,
     /// Records near a place.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<QueryNear>", optional))]
     pub near: Option<QueryNear>,
     /// A condition in İfadeyle seç's language: the records it holds for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     /// The fields returned, by name; none: all of them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<String>>,
     /// Return each record's geometry in the project's system (ISO WKT).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<bool>,
     /// How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     /// The page after the one whose `next` this is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cursor: Option<String>,
     /// Count every record the question keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub count: Option<bool>,
     /// Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub statistics: Option<Vec<String>>,
     /// Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the
     /// source; a text field here, in the attribute table's natural order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub order: Option<QueryOrder>,
     /// The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_stamp: Option<String>,
     /// The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
     /// a condition that keeps at least them, each record is checked here by the layer time's rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<QueryTime>,
 }
 
 /// What a question was asked of.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum QueriedKind {
     /// The drawing's objects.
     Drawing,
@@ -168,57 +139,45 @@ pub enum QueriedKind {
 
 /// The source a question read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueriedSource {
     pub kind: QueriedKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The file's path or the database's address.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// The source's system (EPSG), when it is known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
 }
 
 /// A record a question returned.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueriedRow {
     /// Its lasting id: the same in every window and in a bound layer's working copy.
     pub uid: String,
     /// Its key in the source (fid, primary key); none for a drawing's object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub key: Option<i64>,
     /// The fields asked for, as the drawing's attributes read them (an empty value left out).
     pub attrs: BTreeMap<String, String>,
     /// Its geometry in the project's system, ISO WKT (with `geometry`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wkt: Option<String>,
 }
 
 /// A field's statistics over every record a question keeps: exact decimals as text.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueriedStatistic {
     pub field: String,
     /// Values read as numbers.
@@ -228,33 +187,25 @@ pub struct QueriedStatistic {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sum: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mean: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<String>,
     /// The sample standard deviation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub std: Option<String>,
     /// Why the sums are not given (too large to sum exactly).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
 }
 
 /// How the box was applied.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PlanBox {
     /// By the source's spatial index.
     Index,
@@ -266,13 +217,10 @@ pub enum PlanBox {
 
 /// What the source did and what was done here (docs/adr/0581 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct QueryPlan {
     #[serde(rename = "box", default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub bbox: Option<PlanBox>,
     /// The columns the source read.
     pub columns: Vec<String>,
@@ -280,7 +228,6 @@ pub struct QueryPlan {
     pub geometry: bool,
     /// The condition the source checked, its values written in.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pushed: Option<String>,
     /// Whether that condition is the whole filter and keeps exactly what it keeps.
     pub exact: bool,
@@ -294,24 +241,19 @@ pub struct QueryPlan {
 
 /// Output of `cad.sources.query` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesQueried {
     pub source: QueriedSource,
     pub rows: Vec<QueriedRow>,
     /// The cursor of the page after this one; none on the last.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub next: Option<String>,
     /// How many records the question keeps (with `count` or `statistics`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: Option<u64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<QueriedStatistic>>", optional))]
     pub statistics: Vec<QueriedStatistic>,
     pub plan: QueryPlan,
     /// The answer is of a bound layer's part, not of the whole data set.
@@ -321,7 +263,6 @@ pub struct SourcesQueried {
     pub read: u64,
     /// A cheap mark of a file's state (its size and modification time); none for a database or the drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
     pub revision: String,
 }

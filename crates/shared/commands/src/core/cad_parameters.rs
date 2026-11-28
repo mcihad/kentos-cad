@@ -6,8 +6,6 @@
 //! the parameter's own unit: a length in the drawing's unit, an angle in the project's angle unit (`constraint_expr`).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -20,10 +18,8 @@ pub const CAD_PARAMETERS_EDIT_VERSION: u32 = 1;
 
 /// A bound's change: kept when absent, cleared when null.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BoundChange {
     /// No bound.
     Clear,
@@ -36,10 +32,8 @@ pub enum BoundChange {
 
 /// What changes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ParameterEdit {
     /// A user parameter: its name, kind, expression and optional range and description.
     Add { parameter: CadParameter },
@@ -48,16 +42,12 @@ pub enum ParameterEdit {
     Set {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         expression: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         min: Option<BoundChange>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         max: Option<BoundChange>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         description: Option<String>,
     },
     /// A parameter's new name: the expressions that read it and its dimension follow.
@@ -76,29 +66,23 @@ pub enum ParameterEdit {
 /// `parameter_cycle`, `parameter_range`) and the solve's (`layer_locked`, `constraint_conflict`,
 /// `constraint_singular`, `not_converged`, `shape_flipped`), as `cad.constraints.edit` answers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParametersEdit {
     /// The changes, in order.
     pub edits: Vec<ParameterEdit>,
     /// Writes even when a shape would turn inside out.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_flip: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A parameter with its value now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParameterValue {
     pub name: String,
     pub kind: ParameterKind,
@@ -109,10 +93,8 @@ pub struct ParameterValue {
 
 /// The answer of `cad.parameters.edit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParametersEdited {
     /// Every parameter's value after the write, in the table's order.
     pub values: Vec<ParameterValue>,
@@ -125,10 +107,8 @@ pub struct ParametersEdited {
 
 /// What `cad.parameters.edit` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParametersEditPlan {
     pub parameters: Vec<CadParameter>,
     pub values: Vec<ParameterValue>,

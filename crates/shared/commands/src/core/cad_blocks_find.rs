@@ -2,8 +2,6 @@
 use crate::{Bounds, Vec2};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_BLOCKS_FIND: &str = "cad.blocks.find";
 pub const CAD_BLOCKS_FIND_VERSION: u32 = 1;
@@ -19,63 +17,49 @@ pub const RECOGNITION_TOLERANCE: f64 = 0.000_001;
 /// Value variations are separate opt-ins; block definitions and non-tag object data remain strict.
 /// Nested expansion is bounded to 200000 work units; unsupported members refuse the whole source.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksFind {
     /// Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
     pub source: Vec<String>,
     /// Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
     /// Also recognize rotated collections; absent: true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rotations: Option<bool>,
     /// Also recognize reflected collections; absent: false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mirrors: Option<bool>,
     /// Also recognize uniformly scaled collections; absent: false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scales: Option<bool>,
     /// Explicitly ignore layer, appearance and object data in comparisons; absent: false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry_only: Option<bool>,
     /// Explicitly compare single-line text poses/styles while allowing different words; absent: false.
     /// A match never discards values. Conversion requires explicit text_to_attributes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_variants: Option<bool>,
     /// Ignore only values of declared block attribute tags; other object data stay strict.
     /// Absent: false. Conversion revalidates representability independently.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attribute_variants: Option<bool>,
     /// Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     /// Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockMatch {
     /// Target UUID for each source UUID, in `BlocksFound.source` order: the source-to-target identity map.
     pub members: Vec<String>,
@@ -95,10 +79,8 @@ pub struct BlockMatch {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksFound {
     pub source: Vec<String>,
     pub matches: Vec<BlockMatch>,

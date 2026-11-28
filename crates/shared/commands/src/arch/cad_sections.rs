@@ -9,8 +9,6 @@
 //! faces ("Kuzey görünüşü", the north arrow's north).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{Entity, Vec2};
 
@@ -28,14 +26,12 @@ pub const FACADES_DERIVE_STEP: &str = "Görünüşleri çıkar";
 
 /// What `cad.sections.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BuildingSectionsOperation {
     /// Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into
     /// its block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at
@@ -45,7 +41,6 @@ pub enum BuildingSectionsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-format" = "uuid")))]
         mark: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<Vec2>,
     },
@@ -63,23 +58,18 @@ pub enum BuildingSectionsOperation {
 /// `section_jogged`, `section_exists`, `section_not_found`, `layer_refused`, `nothing_to_set`, `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionsEdit {
     pub operation: BuildingSectionsOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// Why something of the model is not in the section, or only in part.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BuildingSectionLeft {
     /// The roof: the model has none yet (ADV-20).
     Roof,
@@ -103,14 +93,11 @@ pub enum BuildingSectionLeft {
 
 /// Something of the model the section leaves out or draws in part, and its object when one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionLeftOut {
     pub why: BuildingSectionLeft,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
 }
 
@@ -118,26 +105,18 @@ pub struct BuildingSectionLeftOut {
 /// görünüşü"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
 /// what was left out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionsEdited {
     pub mark: String,
     pub name: String,
     pub block: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub inserts: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub drawn: Vec<Entity>,
     pub changed: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<BuildingSectionLeftOut>>", optional)
-    )]
     pub left_out: Vec<BuildingSectionLeftOut>,
     pub revision: String,
 }
@@ -147,25 +126,19 @@ pub struct BuildingSectionsEdited {
 ///
 /// Refusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mark: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
 }
 
 /// Whether a section is what the model would draw now: out of date, or never made.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BuildingSectionState {
     /// Güncel: drawn again it would be the same.
     Current,
@@ -179,19 +152,15 @@ pub enum BuildingSectionState {
 
 /// A section as `cad.sections.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionRow {
     /// Its mark's persistent id; none when the mark is gone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mark: Option<String>,
     /// "A-A kesiti", "Kuzey görünüşü".
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<String>,
     pub state: BuildingSectionState,
     /// Its placements in the drawing.
@@ -201,10 +170,8 @@ pub struct BuildingSectionRow {
 
 /// Output of `cad.sections.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingSectionsQueried {
     pub sections: Vec<BuildingSectionRow>,
     pub revision: String,

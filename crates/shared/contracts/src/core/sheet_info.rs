@@ -1,13 +1,9 @@
 //! Portable drawing-set identity, shared by the book and command query results.
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// An issued sheet's identity is separate from its mutable tab name and document revision.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperDrawingInfo"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DrawingInfo {

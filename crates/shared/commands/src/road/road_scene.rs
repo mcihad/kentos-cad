@@ -5,8 +5,6 @@
 //! `fixtures/commands/v1/file.export.gltf.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const FILE_EXPORT_GLTF: &str = "file.export.gltf";
 pub const FILE_EXPORT_GLTF_VERSION: u32 = 1;
@@ -19,29 +17,22 @@ pub const FILE_EXPORT_GLTF_VERSION: u32 = 1;
 /// write). Warnings: `export_losses` (one not chosen by name that does not build, a project without a coordinate
 /// system).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportGltf {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub surfaces: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corridors: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
 }
 
 /// What a mesh of the scene is made from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SceneMeshKind {
     /// A terrain surface's triangles.
     Terrain,
@@ -52,10 +43,8 @@ pub enum SceneMeshKind {
 /// A mesh in the file: what it is made from, its source's id and name, its vertices and triangles, and its bounds
 /// (the source's coordinates, x east, y north, z up).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SceneMeshWritten {
     pub kind: SceneMeshKind,
     pub id: String,
@@ -74,17 +63,14 @@ pub struct SceneMeshWritten {
 /// middle to the whole metre), the project's coordinate system, the largest gap between a vertex and its float32
 /// position plus the origin along any axis, the file's size and digest.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GltfExported {
     pub path: String,
     pub meshes: Vec<SceneMeshWritten>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub error: f64,

@@ -5,8 +5,6 @@
 //! constants in code. Being within a limit is a measure, not a ruling that a change is no technical error.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The largest own limit, in metres.
 pub const MOST_SHIFT_LIMIT: f64 = 1000.0;
@@ -15,10 +13,8 @@ pub const MOST_LIMIT_SCALE: u32 = 1_000_000;
 
 /// What a shift limit rests on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LimitBasis {
     /// The user's own value (`metres`).
     Own,
@@ -33,32 +29,25 @@ pub enum LimitBasis {
 /// Input of a shift limit: its basis, and what the basis takes: `metres` (own), `scale` (drawing, method), `method`
 /// (method: a table's method id).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShiftLimit {
     pub basis: LimitBasis,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub metres: Option<f64>,
     /// The scale's denominator (1000 for 1/1000).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<String>,
 }
 
 /// The limit a query used: its value and what it rests on, in words.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ShiftLimitUsed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub metres: f64,

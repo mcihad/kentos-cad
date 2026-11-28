@@ -18,7 +18,6 @@ pub const SUBREF_PATH_DEPTH: usize = 16;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SubPlace {
     /// A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Node {
@@ -81,7 +80,6 @@ pub const SUBREF_BROKEN: [&str; 6] = [
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubRef {
     pub uid: EntityId,
     pub place: SubPlace,
@@ -103,7 +101,6 @@ pub struct SubRef {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionRule {
     /// A radius's, a diameter's, a jogged radius's, an arc length's or an arc's angle: the bound points are on one
     /// curve (a circle, an arc, a path's arc segment); its centre (a radius's `a`, the others' `c`) is the curve's.
@@ -137,7 +134,6 @@ impl DimensionRule {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionRefs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -194,14 +190,11 @@ pub fn path_problem(path: &[u32]) -> Option<String> {
 /// object's direction; around a closed ring, a circle or a whole ellipse when `to` comes first. No object keeps one
 /// yet; the rule and its length are the core's (`ops::subref::range_length`, `follow_range`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SubRange {
     pub uid: EntityId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
     pub from: SubPlace,

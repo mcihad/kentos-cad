@@ -2,18 +2,14 @@
 //! the content here. Kinds are a tagged union on `type`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::model::{ItemId, SortKey, yes};
 use crate::style::{HAlign, Stroke, TextStyle, VAlign, black, white};
 use crate::units::{Mdeg, SizeUm, Um};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperItemKind"))]
 pub enum ItemKind {
     /// A map frame: in CAD the “Görünüm penceresi” (profiles name it).
@@ -36,19 +32,15 @@ pub enum ItemKind {
 
 /// Nothing of its own: the content of a tagged variant that has none, so a stray field beside its `type` is refused.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperEmpty"))]
 pub struct Empty {}
 
 /// A group holds nothing of its own: its children name it.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGroupItem"))]
 pub struct GroupItem {}
 
@@ -107,10 +99,8 @@ impl ItemKind {
 
 /// A point on the ground in the project's coordinate system, metres: `x` east (Y in the surveyor's words), `y` north (X).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGroundPoint"))]
 pub struct GroundPoint {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -121,21 +111,17 @@ pub struct GroundPoint {
 
 /// A map at a fixed place and scale. A template's map has no centre: it keeps its scale, not a place.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperFixedView"))]
 pub struct FixedView {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
     /// Denominator: 1000 is 1/1000.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: u32,
     /// Exact paper:model ratio; overrides the legacy 1:scale denominator.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ratio: Option<crate::viewport::ScaleRatio>,
     /// The map's content turned clockwise on the paper.
     #[serde(default)]
@@ -152,10 +138,8 @@ impl FixedView {
 
 /// A map that follows the atlas: each page's object, at the scale the policy chooses.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAtlasView"))]
 pub struct AtlasView {
     pub policy: AtlasScale,
@@ -165,10 +149,8 @@ pub struct AtlasView {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapView"))]
 pub enum MapView {
     Fixed(FixedView),
@@ -177,10 +159,8 @@ pub enum MapView {
 
 /// The object with a margin around it, at the largest standard scale it fits (or the exact scale).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperFitScale"))]
 pub struct FitScale {
     /// Margin around the object, percent of its size on each side.
@@ -192,10 +172,8 @@ pub struct FitScale {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperFixedScale"))]
 pub struct FixedScale {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
@@ -203,10 +181,8 @@ pub struct FixedScale {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPredefinedScales"))]
 pub struct PredefinedScales {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
@@ -215,10 +191,8 @@ pub struct PredefinedScales {
 
 /// How an atlas map chooses its scale (design §7a).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAtlasScale"))]
 pub enum AtlasScale {
     Fit(FitScale),
@@ -227,20 +201,16 @@ pub enum AtlasScale {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperThemeRef"))]
 pub struct ThemeRef {
     pub name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLayerList"))]
 pub struct LayerList {
     pub layers: Vec<String>,
@@ -248,10 +218,8 @@ pub struct LayerList {
 
 /// Which layers a map shows.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapLayers"))]
 pub enum MapLayers {
     /// The layers visible in the drawing.
@@ -265,10 +233,8 @@ pub enum MapLayers {
 /// One layer drawn otherwise in one map (docs/adr/0314 §1; the map's own layer overrides and freezes): the model's
 /// layer stays as it is. Absent fields keep the layer's own.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLayerOverride"))]
 pub struct LayerOverride {
     /// The layer's id.
@@ -278,23 +244,18 @@ pub struct LayerOverride {
     pub frozen: bool,
     /// Printed in this map or not, whatever the layer's own Yazdır.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
     /// A colour (`#RRGGBB` or a theme's name) for the layer's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     /// A built-in line type (`continuous`, `dashed`, `dashdot`, `dotted`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<String>,
     /// A project line type by its name (docs/adr/0313).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
     /// A line weight on the paper, micrometres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub line_weight: Option<Um>,
 }
@@ -310,15 +271,12 @@ fn overview_frame() -> Stroke {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapItem"))]
 pub struct MapItem {
     /// None: the physical viewport scale; Some: explicitly choose this annotation representation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
     pub annotation_scale: Option<f64>,
     pub view: MapView,
@@ -328,7 +286,6 @@ pub struct MapItem {
         skip_serializing_if = "crate::viewport::Source::is_drawing"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::viewport::Source>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::viewport::Source>", optional))]
     pub source: crate::viewport::Source,
     #[serde(
         default,
@@ -336,7 +293,6 @@ pub struct MapItem {
         skip_serializing_if = "std::ops::Not::not"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub view_locked: bool,
     /// Boundary in content-frame coordinates, independent of camera scale.
     #[serde(
@@ -345,7 +301,6 @@ pub struct MapItem {
         skip_serializing_if = "crate::viewport::Clip::is_frame"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::viewport::Clip>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::viewport::Clip>", optional))]
     pub clip: crate::viewport::Clip,
     #[serde(
         default = "crate::clip::yes",
@@ -353,20 +308,17 @@ pub struct MapItem {
         skip_serializing_if = "crate::clip::is_yes"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub frame_plot: bool,
     #[serde(default)]
     pub layers: MapLayers,
     /// Another coordinate system for the map (EPSG code text); none: the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
     /// Coordinate grids (karelaj).
     #[serde(default)]
     pub grids: Vec<MapGrid>,
     /// An overview: this map shows where that map's frame is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overview_of: Option<ItemId>,
     /// How the overview draws the other map's frame.
     #[serde(default = "overview_frame")]
@@ -387,7 +339,6 @@ pub struct MapItem {
     pub layer_overrides: Vec<LayerOverride>,
     /// The project's level this map draws (docs/adr/0716): a level's plan. None: every level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<MapLevel>,
 }
 
@@ -396,10 +347,8 @@ pub struct MapItem {
 /// `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
 /// chimneys and windows, and the objects on no level; nothing else of any level.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapLevel"))]
 pub struct MapLevel {
     /// The level's id among the project's levels.
@@ -411,7 +360,6 @@ pub struct MapLevel {
         skip_serializing_if = "std::ops::Not::not"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub below: bool,
     /// The roof plan (docs/adr/8044 §7): the roofs whole, the levels' other objects out. Null is false, as `below`.
     #[serde(
@@ -420,15 +368,12 @@ pub struct MapLevel {
         skip_serializing_if = "std::ops::Not::not"
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub roof: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGridKind"))]
 pub enum GridKind {
     /// Crosses at the intersections (karelaj artıları).
@@ -442,10 +387,8 @@ pub enum GridKind {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGridFrame"))]
 pub enum GridFrame {
     None,
@@ -456,10 +399,8 @@ pub enum GridFrame {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLabelPosition"))]
 pub enum LabelPosition {
     /// In the label band, outside the content.
@@ -469,10 +410,8 @@ pub enum LabelPosition {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLabelDirection"))]
 pub enum LabelDirection {
     Horizontal,
@@ -482,10 +421,8 @@ pub enum LabelDirection {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGridSides"))]
 pub struct GridSides {
     #[serde(default = "yes")]
@@ -510,10 +447,8 @@ impl Default for GridSides {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMetresFormat"))]
 pub struct MetresFormat {
     #[serde(default)]
@@ -525,10 +460,8 @@ pub struct MetresFormat {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperDmsFormat"))]
 pub struct DmsFormat {
     #[serde(default)]
@@ -538,20 +471,16 @@ pub struct DmsFormat {
 
 /// An expression over `@deger` (the line's value) and `@eksen` (“Y” or “X”).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperExpressionFormat"))]
 pub struct ExpressionFormat {
     pub expression: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGridLabelFormat"))]
 pub enum GridLabelFormat {
     Metres(MetresFormat),
@@ -576,10 +505,8 @@ fn one_mm() -> Um {
 /// A grid's labels: by default whole metres, Y on the top and bottom edges,
 /// X on the left and right ones along the edge, in the label band.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperGridLabels"))]
 pub struct GridLabels {
     #[serde(default = "yes")]
@@ -632,10 +559,8 @@ fn zebra_width() -> Um {
 
 /// A coordinate grid on a map (karelaj, design §3.1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapGrid"))]
 pub struct MapGrid {
     #[serde(default)]
@@ -666,7 +591,6 @@ pub struct MapGrid {
     pub labels: GridLabels,
     /// A grid in another coordinate system (EPSG code text); none: the map's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,
 }
 
@@ -691,10 +615,8 @@ impl Default for MapGrid {
 // ── Text ─────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTextFit"))]
 pub enum TextFit {
     #[default]
@@ -708,10 +630,8 @@ pub(crate) fn line_height() -> u16 {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTextItem"))]
 pub struct TextItem {
     /// Text with `[% expression %]` parts.
@@ -732,17 +652,14 @@ pub struct TextItem {
     pub fit: TextFit,
     /// The map `@olcek` reads; none: the sheet's first map.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map: Option<ItemId>,
 }
 
 // ── Scale bar ────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperScaleBarStyle"))]
 pub enum ScaleBarStyle {
     /// Alternating filled and empty boxes in a frame: the drawing area's bar (ADR 0110).
@@ -757,10 +674,8 @@ pub enum ScaleBarStyle {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperFixedLength"))]
 pub struct FixedLength {
     /// One segment on the ground, metres.
@@ -769,10 +684,8 @@ pub struct FixedLength {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperScaleBarLength"))]
 pub enum ScaleBarLength {
     /// 1, 2 or 5 times a power of ten: the longest that fits the frame (ADR 0110's rule).
@@ -787,10 +700,8 @@ impl Default for ScaleBarLength {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperScaleUnit"))]
 pub enum ScaleUnit {
     /// Kilometres from 1 000 m.
@@ -817,14 +728,11 @@ fn thin() -> Um {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperScaleBarItem"))]
 pub struct ScaleBarItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map: Option<ItemId>,
     #[serde(default)]
     pub style: ScaleBarStyle,
@@ -865,10 +773,8 @@ pub struct ScaleBarItem {
 // ── North arrow ──────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperNorthKind"))]
 pub enum NorthKind {
     /// The grid's north (the map's up).
@@ -881,10 +787,8 @@ pub enum NorthKind {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperNorthArrowStyle"))]
 pub enum NorthArrowStyle {
     /// Half filled, half outlined, “K” above (ADR 0110).
@@ -903,14 +807,11 @@ fn north_text() -> TextStyle {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperNorthArrowItem"))]
 pub struct NorthArrowItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map: Option<ItemId>,
     #[serde(default)]
     pub north: NorthKind,
@@ -925,11 +826,9 @@ pub struct NorthArrowItem {
     /// (WMM2025) at the map's centre on the sheet's date (design §8a). Absent (a book of before
     /// the model): by hand when a declination was typed, else the model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub declination_hand: Option<bool>,
     /// The year a declination typed by hand is for, written in the note.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub declination_year: Option<u16>,
     /// A note under the arrow: the meridian convergence (and the declination).
@@ -944,10 +843,8 @@ pub struct NorthArrowItem {
 // ── Legend ───────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLegendFilter"))]
 pub enum LegendFilter {
     #[default]
@@ -973,10 +870,8 @@ fn legend_symbol_gap() -> Um {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLegendSpacing"))]
 pub struct LegendSpacing {
     #[serde(default = "legend_title_gap")]
@@ -1012,25 +907,20 @@ impl Default for LegendSpacing {
 
 /// A layer's row as the user set it: its own label, or left out.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLegendEntryOverride"))]
 pub struct LegendEntryOverride {
     pub layer: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     #[serde(default)]
     pub hidden: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCustomEntries"))]
 pub struct CustomEntries {
     /// The rows in this order; a layer not listed is left out.
@@ -1038,10 +928,8 @@ pub struct CustomEntries {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLegendEntries"))]
 pub enum LegendEntries {
     /// Every row the host's legend gives, in its order.
@@ -1079,14 +967,11 @@ fn legend_label() -> TextStyle {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLegendItem"))]
 pub struct LegendItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub map: Option<ItemId>,
     #[serde(default)]
     pub filter: LegendFilter,
@@ -1116,10 +1001,8 @@ pub struct LegendItem {
 // ── Picture, shape, line ─────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPictureFit"))]
 pub enum PictureFit {
     /// Whole, as large as fits.
@@ -1133,15 +1016,12 @@ pub enum PictureFit {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPictureItem"))]
 pub struct PictureItem {
     /// The asset's SHA-256; none: an empty picture frame.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,
     #[serde(default)]
     pub fit: PictureFit,
@@ -1151,10 +1031,8 @@ pub struct PictureItem {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperRectShape"))]
 pub struct RectShape {
     /// Corner radius.
@@ -1164,10 +1042,8 @@ pub struct RectShape {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPolygonShape"))]
 pub struct PolygonShape {
     /// Corners in millionths of the frame (0: left or top edge, 1 000 000: right or bottom), so they follow the frame.
@@ -1176,10 +1052,8 @@ pub struct PolygonShape {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperShapeKind"))]
 pub enum ShapeKind {
     Rect(RectShape),
@@ -1192,26 +1066,20 @@ pub enum ShapeKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperShapeItem"))]
 pub struct ShapeItem {
     pub shape: ShapeKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stroke: Option<Stroke>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLineEnd"))]
 pub enum LineEnd {
     #[default]
@@ -1222,10 +1090,8 @@ pub enum LineEnd {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLineItem"))]
 pub struct LineItem {
     /// At least two, in millionths of the frame (0: left or top edge, 1 000 000: right or bottom), so the line follows its frame.
@@ -1242,10 +1108,8 @@ pub struct LineItem {
 // ── Tables ───────────────────────────────────────────────────────────────
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperFixedRows"))]
 pub struct FixedRows {
     /// Cells by column; `[% … %]` text.
@@ -1253,10 +1117,8 @@ pub struct FixedRows {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperLayerRows"))]
 pub struct LayerRows {
     pub layer: String,
@@ -1267,7 +1129,6 @@ pub struct LayerRows {
     pub sort: Vec<SortKey>,
     /// Only objects inside this map's frame.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub only_in_map: Option<ItemId>,
     /// Only objects of the atlas page's object.
     #[serde(default)]
@@ -1275,10 +1136,8 @@ pub struct LayerRows {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTableSource"))]
 pub enum TableSource {
     /// Live drawing-set or placed-viewport index, rebuilt from the same book on every output.
@@ -1291,10 +1150,8 @@ pub enum TableSource {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTableColumn"))]
 pub struct TableColumn {
     pub heading: String,
@@ -1309,7 +1166,6 @@ pub struct TableColumn {
     pub align: HAlign,
     /// Numbers with this many decimals (the display rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub decimals: Option<u8>,
 }
@@ -1320,16 +1176,13 @@ fn cell_padding() -> Um {
 
 /// A cell's look.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCellStyle"))]
 pub struct CellStyle {
     #[serde(default)]
     pub text: TextStyle,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     #[serde(default = "cell_padding")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
@@ -1356,24 +1209,18 @@ fn inner_rule() -> Option<Stroke> {
 
 /// Which rules a table draws.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTableLines"))]
 pub struct TableLines {
     #[serde(default = "outer_rule", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub outer: Option<Stroke>,
     /// Under the heading row.
     #[serde(default = "outer_rule", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub header: Option<Stroke>,
     #[serde(default = "inner_rule", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rows: Option<Stroke>,
     #[serde(default = "inner_rule", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<Stroke>,
 }
 
@@ -1389,10 +1236,8 @@ impl Default for TableLines {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperEmptyMessage"))]
 pub struct EmptyMessage {
     pub text: String,
@@ -1400,10 +1245,8 @@ pub struct EmptyMessage {
 
 /// What a table with no rows shows.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperEmptyTable"))]
 pub enum EmptyTable {
     ShowHeader(Empty),
@@ -1418,10 +1261,8 @@ impl Default for EmptyTable {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperContinueIn"))]
 pub struct ContinueIn {
     /// Table items with a `continued` source, in order.
@@ -1430,10 +1271,8 @@ pub struct ContinueIn {
 
 /// Rows that do not fit the frame.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOverflow"))]
 pub enum Overflow {
     /// Cut off (the preflight reports it).
@@ -1460,10 +1299,8 @@ fn header_cells() -> CellStyle {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTableItem"))]
 pub struct TableItem {
     pub source: TableSource,
@@ -1485,7 +1322,6 @@ pub struct TableItem {
     pub lines: TableLines,
     /// Every second row's background.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zebra: Option<String>,
     #[serde(default)]
     pub empty: EmptyTable,
@@ -1494,10 +1330,8 @@ pub struct TableItem {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCoordLayer"))]
 pub struct CoordLayer {
     pub layer: String,
@@ -1507,10 +1341,8 @@ pub struct CoordLayer {
 /// docs/adr/0206 §2): the ones chosen in the drawing when “Seçimi al” was
 /// pressed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCoordObjects"))]
 pub struct CoordObjects {
     #[serde(default)]
@@ -1519,10 +1351,8 @@ pub struct CoordObjects {
 
 /// Where a coordinate list's points come from; the host gives them.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCoordSource"))]
 pub enum CoordSource {
     /// The objects chosen in the drawing now (live; the first lists').
@@ -1536,27 +1366,20 @@ pub enum CoordSource {
 /// (docs/adr/0206 §3); each absent: the default (Nokta; Y (m) and X (m), or
 /// a local project's X (m) and Y (m); Z (m); Alan).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCoordColumns"))]
 pub struct CoordColumns {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub point: Option<String>,
     /// The east coordinate's: Y in surveying, a local project's X.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub east: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub north: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<String>,
 }
 
@@ -1570,10 +1393,8 @@ impl Default for CoordSource {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSequenceNaming"))]
 pub struct SequenceNaming {
     #[serde(default)]
@@ -1589,10 +1410,8 @@ fn start_one() -> u32 {
 
 /// How points are named: their own names (the host's), or numbered.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPointNaming"))]
 pub enum PointNaming {
     Given(Empty),
@@ -1610,10 +1429,8 @@ fn two() -> u8 {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperCoordinateListItem"))]
 pub struct CoordinateListItem {
     #[serde(default)]
@@ -1646,7 +1463,6 @@ pub struct CoordinateListItem {
     pub overflow: Overflow,
     /// Its headings and its area row's word (docs/adr/0206 §3); none: the defaults.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub columns: Option<CoordColumns>,
 }
 
@@ -1658,10 +1474,8 @@ fn weight_one() -> u16 {
 
 /// A cell of the title block. With `rows` it is split into rows itself (a cell spanning several rows of its neighbours).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTitleCell"))]
 pub struct TitleCell {
     /// Width weight among the row's cells.
@@ -1676,7 +1490,6 @@ pub struct TitleCell {
     pub value: String,
     /// The value's style; none: the block's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<TextStyle>,
     #[serde(default)]
     pub align: HAlign,
@@ -1686,11 +1499,9 @@ pub struct TitleCell {
     #[serde(default)]
     pub signature: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     /// A picture (a logo) in the cell: an asset's SHA-256.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub picture: Option<String>,
     #[serde(default)]
     pub rows: Vec<TitleRow>,
@@ -1701,10 +1512,8 @@ fn middle() -> VAlign {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTitleRow"))]
 pub struct TitleRow {
     /// Height weight among the rows.
@@ -1738,10 +1547,8 @@ fn tb_padding() -> Um {
 
 /// The title block (antet): rows of cells, moved and resized as one item.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTitleBlockItem"))]
 pub struct TitleBlockItem {
     pub rows: Vec<TitleRow>,
@@ -1761,10 +1568,8 @@ pub struct TitleBlockItem {
 // ── Border ───────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperBorderStyle"))]
 pub enum BorderStyle {
     #[default]
@@ -1782,10 +1587,8 @@ fn zone_text() -> TextStyle {
 
 /// Zone marks in the band between the two lines (ISO 5457): columns 1, 2, 3 … from the left, rows A, B, C … from the top, I and O left out.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperZoneMarks"))]
 pub struct ZoneMarks {
     /// About this long each; an even number of them per side.
@@ -1810,10 +1613,8 @@ fn border_gap() -> Um {
 
 /// The sheet's frame (pafta çerçevesi): one or two lines inside the item's frame; in CAD with zone and centring marks, in GIS a plain neat line.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperBorderItem"))]
 pub struct BorderItem {
     #[serde(default)]
@@ -1832,7 +1633,6 @@ pub struct BorderItem {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub gap: Um,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zones: Option<ZoneMarks>,
     /// A mark at the middle of each side.
     #[serde(default)]

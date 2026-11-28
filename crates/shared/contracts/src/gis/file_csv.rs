@@ -5,8 +5,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drawing's layers as one CSV.
 pub const FILE_EXPORT_CSV: &str = "file.export.csv";
@@ -17,10 +15,8 @@ pub const FILE_IMPORT_CSV_VERSION: u32 = 1;
 
 /// Where a CSV's geometry is.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CsvGeometry {
     /// ISO WKT in a column named `WKT`, first (the `GEOMETRY=AS_WKT` convention).
     #[default]
@@ -34,10 +30,8 @@ pub enum CsvGeometry {
 
 /// The CSV's field separator.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CsvSeparator {
     #[default]
     Comma,
@@ -50,16 +44,13 @@ pub enum CsvSeparator {
 /// layer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,
 /// `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportCsv {
     /// An absolute path ending `.csv`.
     pub path: String,
     /// The layers, by id (a group gives its layers); empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     #[serde(default)]
     pub geometry: CsvGeometry,
@@ -71,16 +62,13 @@ pub struct ExportCsv {
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// A file written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CsvFileWritten {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -90,10 +78,8 @@ pub struct CsvFileWritten {
 
 /// What `file.export.csv` wrote (or with `plan` would write).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CsvExported {
     pub path: String,
     /// Rows written (the header aside).
@@ -106,21 +92,17 @@ pub struct CsvExported {
     pub files: Vec<CsvFileWritten>,
     /// Objects not written, by kind (a text, a dimension …; with X/Y every object that is no point).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// What the CSV could not hold, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub lost: Vec<String>,
 }
 
 /// Where an imported CSV's geometry is.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", tag = "kind")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CsvGeometryIn {
     /// A column named `WKT`, `geom`, `geometry`, `the_geom` or `wkt_geom` (any case) holds WKT; else `X` and `Y`
     /// (`x`/`y`, `lon`/`lat`, `longitude`/`latitude`, `easting`/`northing`) hold a point, `Z` its elevation; else
@@ -134,7 +116,6 @@ pub enum CsvGeometryIn {
         x: String,
         y: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         z: Option<String>,
     },
     /// No geometry: every row a record.
@@ -150,24 +131,19 @@ pub enum CsvGeometryIn {
 /// `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses` (rows whose
 /// geometry is not read, with their line numbers).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportCsv {
     /// An absolute path to a `.csv` (or `.txt`).
     pub path: String,
     /// Where the geometry is; none: `auto`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<CsvGeometryIn>,
     /// The layer the rows go onto, by id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The system the coordinates are in when no `.prj` says (EPSG).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move coordinates in another system into the project's.
@@ -176,10 +152,8 @@ pub struct ImportCsv {
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }

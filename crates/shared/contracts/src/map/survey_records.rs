@@ -7,8 +7,6 @@
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 use crate::review_notes::review_label_ok;
@@ -21,10 +19,8 @@ pub const MAX_KEPT_ADJUSTMENT_NAME: usize = 120;
 
 /// Which network an adjustment was.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum KeptAdjustmentKind {
     Horizontal,
     Height,
@@ -32,18 +28,14 @@ pub enum KeptAdjustmentKind {
 
 /// A new point as adjusted: its name, its place (horizontal) or its height (height), its standard deviation (m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KeptAdjustedPoint {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub h: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -53,10 +45,8 @@ pub struct KeptAdjustedPoint {
 /// An adjustment kept under its name (unique in the project): its kind, the drawing's revision it was made on, its new
 /// points, the degrees of freedom, m0 and the model test (none without redundancy).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct KeptAdjustment {
     pub name: String,
     pub kind: KeptAdjustmentKind,
@@ -65,11 +55,9 @@ pub struct KeptAdjustment {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub f: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub m0: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub passed: Option<bool>,
 }
 

@@ -4,8 +4,6 @@
 //! objects named by their persistent ids, as one undo step.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -17,10 +15,8 @@ pub const CAD_ANNOTATIONS_SCALES_VERSION: u32 = 1;
 
 /// What the command does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AnnotativeOperation {
     /// Ölçekli yap: the objects' own geometry is their representation at the project's plot scale;
     /// `scales` are added. One annotative already only takes the scales. “Ölçekli yap”.
@@ -58,10 +54,8 @@ pub enum AnnotativeOperation {
 /// `invalid_annotative` (a value its kind does not have: a text's offset, a
 /// dimension's point; more than 32 scales).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsScales {
     pub operation: AnnotativeOperation,
     /// The objects' persistent ids, at least one; a repeated one counts once.
@@ -69,46 +63,37 @@ pub struct AnnotationsScales {
     pub uids: Vec<String>,
     /// `make`, `add`, `remove`, `reset`: the scales, 1:N's N.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scales: Vec<f64>,
     /// `set`: the scale whose values are given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<f64>,
     /// `set`: a text's point, a leader's landing start.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub point: Option<Vec2>,
     /// `set`: a text's or a note's direction, degrees counter-clockwise from east.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: Option<f64>,
     /// `set`: a dimension's line offset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     /// `set`: a dimension's value moved from its place.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text_shift: Option<TextShift>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.annotations.scales` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsScaled {
     /// The objects written, in the input's order.
     pub changed: Vec<String>,
@@ -122,10 +107,8 @@ pub struct AnnotationsScaled {
 
 /// What `cad.annotations.scales` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsScalesPlan {
     /// The objects that would change, each as execute would write it, with its own slot (`id`).
     pub changed: Vec<crate::entity::Entity>,

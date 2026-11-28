@@ -4,8 +4,6 @@
 //! after the tool. The tools write through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -16,10 +14,8 @@ pub const CAD_OBJECTS_DERIVE_VERSION: u32 = 1;
 
 /// What is derived, from what.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DeriveWork {
     /// Köşelere nokta (docs/adr/0152 §5): a point at every vertex of the lines, polylines and areas, past the places
     /// two vertices share and those points already hold; named from `name` on (Yazı's Artır), each with the code
@@ -27,10 +23,8 @@ pub enum DeriveWork {
     VertexPoints {
         ids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         code: Option<String>,
     },
     /// Orta hat (docs/adr/0190): the axis between two sides, each one object or a chain of lines, arcs and polylines
@@ -41,7 +35,6 @@ pub enum DeriveWork {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         step: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         tolerance: Option<f64>,
     },
@@ -52,7 +45,6 @@ pub enum DeriveWork {
         #[serde(default)]
         labels: Vec<String>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         islands: bool,
         attribute: String,
     },
@@ -63,33 +55,26 @@ pub enum DeriveWork {
 /// Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`not_a_path`,
 /// `invalid_distance`, `no_route`, `not_joined`, `nothing_derived` …), then `cad.entities.create`'s.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ObjectsDerive {
     pub layer_id: String,
     pub work: DeriveWork,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `cad.objects.derive` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ObjectsDerived {
     /// The new objects' slots and persistent ids, in order.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -106,11 +91,9 @@ pub struct ObjectsDerived {
     pub existing: u32,
     /// Köşelere nokta: the name after the last one written, for the next run.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub next: Option<String>,
     /// Orta hat: `matched` (side by side, exact) or `sampled` (every step).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

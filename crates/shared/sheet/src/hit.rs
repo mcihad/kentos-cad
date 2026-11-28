@@ -3,8 +3,6 @@
 //! page's items are never hit (they are not selectable); hidden ones neither.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::error::Result;
 use crate::kinds::ItemKind;
@@ -14,9 +12,7 @@ use crate::scene::Scene;
 use crate::units::{Mdeg, PointUm, RectUm, Um, corners, rotate};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum RectMode {
     /// Wholly inside the rectangle (a drag to the right).
     Contain,
@@ -25,27 +21,21 @@ pub enum RectMode {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PointQuery {
     pub at: PointUm,
     pub tolerance: Um,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RectQuery {
     pub rect: RectUm,
     pub mode: RectMode,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct HandleQuery {
     /// The selected item whose handles are asked.
     pub item: ItemId,
@@ -57,9 +47,7 @@ pub struct HandleQuery {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum HitQuery {
     Point(PointQuery),
     Rect(RectQuery),
@@ -68,9 +56,7 @@ pub enum HitQuery {
 
 /// An item hit, and the outermost group it is in (what a click selects).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Hit {
     pub item: ItemId,
     pub top: ItemId,
@@ -78,9 +64,7 @@ pub struct Hit {
 
 /// What a handle query found.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum HandleHit {
     N,
     Ne,
@@ -94,14 +78,11 @@ pub enum HandleHit {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Hits {
     /// Topmost first.
     pub hits: Vec<Hit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub handle: Option<HandleHit>,
 }
 

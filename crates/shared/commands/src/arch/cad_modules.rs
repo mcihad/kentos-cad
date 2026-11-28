@@ -13,8 +13,6 @@
 //! too (`loose`), as plain copies whose references follow the copies.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,14 +25,12 @@ pub const CAD_MODULES_QUERY_VERSION: u32 = 1;
 
 /// What `cad.modules.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ModulesOperation {
     /// Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts) become the module
     /// `name`'s definition, `base` its base point; they stay where they are as its first instance. An object they lean
@@ -44,7 +40,6 @@ pub enum ModulesOperation {
     Define {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
@@ -61,28 +56,21 @@ pub enum ModulesOperation {
         at: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
-        #[cfg_attr(feature = "ts", ts(optional))]
         rotation: Option<f64>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mirror: bool,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         level: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         phase: Option<ArchPhase>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         numbering: Option<ModuleNumbering>,
         /// The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         unit: Option<String>,
         /// Tek kat (docs/adr/0811): only the members of this storey of a module of several,
         /// standing on `level`. None: every storey, the base on `level`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         storey: Option<u32>,
     },
@@ -110,16 +98,13 @@ pub enum ModulesOperation {
     Repeat {
         from: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         modules: Vec<String>,
         to: Vec<ModuleLevelTarget>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         loose: bool,
         /// Copy the level's objects in no module even where their like already stands on the target (docs/adr/0810);
         /// without it such an object is not copied again and the report's `matched` names the one already there.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         again: bool,
     },
     /// Kaynağı güncelle: the instance `from`'s objects (its local exceptions aside) become the definition, its version
@@ -129,7 +114,6 @@ pub enum ModulesOperation {
         module: String,
         from: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         instances: Vec<String>,
     },
     /// Yerel istisna yap: these objects of an instance keep their own values; a source update passes them by.
@@ -156,60 +140,46 @@ pub enum ModulesOperation {
 /// One level a repeat places the source level's instances on (docs/adr/0779 §5): its numbering and group for them all,
 /// and lines of their own for some.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleLevelTarget {
     pub level: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub numbering: Option<ModuleNumbering>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleRepeatOne>>", optional))]
     pub instances: Vec<ModuleRepeatOne>,
 }
 
 /// One source instance's numbering and group on a repeat's target level.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleRepeatOne {
     pub module: String,
     pub instance: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub numbering: Option<ModuleNumbering>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
 }
 
 /// An instance a write made: its module and id, its level.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModulePlaced {
     pub module: String,
     pub instance: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
 }
 
 /// An object a repeat copied (docs/adr/0796 §2): the level's object in no module, its copy and the copy's level.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleCopied {
     pub source: String,
     pub uid: String,
@@ -218,10 +188,8 @@ pub struct ModuleCopied {
 
 /// Why a repeat left a level's object (docs/adr/0796 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ModuleLeftWhy {
     /// On a locked layer.
     Locked,
@@ -237,10 +205,8 @@ pub enum ModuleLeftWhy {
 
 /// A level's object a repeat did not copy, and why.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleLeft {
     pub uid: String,
     pub why: ModuleLeftWhy,
@@ -255,24 +221,19 @@ pub struct ModuleLeft {
 /// `invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,
 /// `module_member_gone`, `module_drift_overwritten`, `module_member_released`, `module_repeat_left`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModulesEdit {
     pub operation: ModulesOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Why an instance did not take a source update.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ModuleSkipWhy {
     /// One of its objects is on a locked layer: it stays at its version.
     Locked,
@@ -280,10 +241,8 @@ pub enum ModuleSkipWhy {
 
 /// An instance left at its version.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleSkipped {
     pub instance: String,
     pub why: ModuleSkipWhy,
@@ -291,25 +250,20 @@ pub struct ModuleSkipped {
 
 /// An object a source update passed by: kept as a local exception, or gone from the drawing.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleConflict {
     pub instance: String,
     pub key: String,
     /// Its object; none when it is gone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     pub why: ModuleConflictWhy,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ModuleConflictWhy {
     /// Its object keeps its own values (a local exception).
     Exception,
@@ -327,80 +281,60 @@ pub enum ModuleConflictWhy {
 
 /// What a write did, or would do.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleReport {
     /// The instances at the new version, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub updated: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleSkipped>>", optional))]
     pub skipped: Vec<ModuleSkipped>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleConflict>>", optional))]
     pub conflicts: Vec<ModuleConflict>,
     /// The definition's members whose values change, by key.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub changed_keys: Vec<String>,
     /// The keys joining the definition (Modüle ekle) or taken by an instance that lacked them (a source update).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub added_keys: Vec<String>,
     /// The keys leaving the definition (Modülden çıkar).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed_keys: Vec<String>,
     /// The objects that leave the module and stay as ordinary objects (Modülden çıkar).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub released: Vec<String>,
     /// The objects deleted with their keys (Modülden çıkar).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub deleted: Vec<String>,
     /// The level's objects a repeat with `loose` did not copy, in the drawing's order (docs/adr/0796 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleLeft>>", optional))]
     pub left: Vec<ModuleLeft>,
     /// The level's objects in no module a repeat did not copy because their like already stands on the target: the
     /// source, the object already there and its level (docs/adr/0810).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleCopied>>", optional))]
     pub matched: Vec<ModuleCopied>,
 }
 
 /// Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModulesEdited {
     /// The module after; none once removed whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub module: Option<ArchModule>,
     /// The instance made (Yerleştir, Tanımla) or the one the operation named.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub instance: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub created: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub changed: Vec<String>,
     /// The instances a repeat made, in order (docs/adr/0779 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModulePlaced>>", optional))]
     pub placed: Vec<ModulePlaced>,
     /// The objects in no module a repeat with `loose` copied, target by target (docs/adr/0796 §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleCopied>>", optional))]
     pub copied: Vec<ModuleCopied>,
     #[serde(default)]
     pub report: ModuleReport,
@@ -413,26 +347,20 @@ pub struct ModulesEdited {
 ///
 /// Refusals: `module_not_found`, `invalid_uid`, `entity_not_found`, `not_in_module`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModulesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub module: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
 }
 
 /// An instance as `cad.modules.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleInstanceRow {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -443,34 +371,26 @@ pub struct ModuleInstanceRow {
     pub objects: u32,
     /// The objects kept as local exceptions.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub exceptions: Vec<String>,
     /// The keys whose objects are gone from the drawing.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub missing: Vec<String>,
     /// The objects changed by hand away from the source, not local exceptions (docs/adr/0779 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub drifted: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<crate::ModuleBreak>,
     /// The building program's group of the instance's spaces.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     /// A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
     /// level (a level removed since) is left out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub levels: Vec<String>,
     /// The one storey it holds (docs/adr/0811); none for every storey.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub storey: Option<u32>,
     pub mirror: bool,
@@ -478,10 +398,8 @@ pub struct ModuleInstanceRow {
 
 /// A module as `cad.modules.query` reads it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModuleRow {
     pub id: String,
     pub name: String,
@@ -492,12 +410,10 @@ pub struct ModuleRow {
     /// The storeys a module of several spans (docs/adr/0796 §1); absent: one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub storeys: Option<u32>,
     /// Its kitchen runs (docs/adr/8050 §5); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub runs: Option<u32>,
     pub removed: bool,
     pub instances: Vec<ModuleInstanceRow>,
@@ -505,21 +421,16 @@ pub struct ModuleRow {
 
 /// Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModulesQueried {
     pub modules: Vec<ModuleRow>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub instance: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// With `uid`: its object was changed by hand away from the source (docs/adr/0779 §3).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub drifted: bool,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

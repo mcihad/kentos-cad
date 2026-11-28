@@ -7,8 +7,6 @@
 //! undo step; a column added and a rule written stay in the table, as a row written by `cad.layers.session` stays.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -19,10 +17,8 @@ pub const CAD_LAYERS_COLUMNS_VERSION: u32 = 1;
 
 /// What `cad.layers.columns` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LayerColumnsAction {
     /// Veri kaynağına sütun ekle: each field a nullable column of the table, empty in its rows; then the layer's field.
     Add,
@@ -52,31 +48,25 @@ pub enum LayerColumnsAction {
 /// or the account may not add a column, or write a rule: a PostgreSQL table the account does not own, a file opened
 /// read-only, a query); `no_field_rules` (rules where no field of the layer has a value list or a range).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersColumns {
     pub action: LayerColumnsAction,
     /// The data layer's id.
     pub layer: String,
     /// `add`: the new columns as the layer's fields.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.layers.columns` v1, and its plan: what is (or would be) done.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LayersColumnsDone {
     pub layer: String,
     /// The table the layer reads (a GeoPackage's table name, a database's `schema.table`).
@@ -89,17 +79,14 @@ pub struct LayersColumnsDone {
     pub fields: Vec<LayerField>,
     /// `add`: the table's rows, each empty (NULL) in an added column; an estimate where the source counts so.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u64>,
     /// `rules`: the columns whose rules are written (docs/adr/9324).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub ruled: Vec<String>,
     /// `rules`: the values the table's rows hold outside a rule written, by field (a code no longer on the list, a
     /// number out of the range): kept in their rows, refused for every later write.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RuleOutside>>", optional))]
     pub outside: Vec<RuleOutside>,
     /// The document's revision after (the plan's: as it is), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -108,10 +95,8 @@ pub struct LayersColumnsDone {
 
 /// The values a field's rows hold outside its rule (docs/adr/9324).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RuleOutside {
     pub field: String,
     /// Each value and how many rows hold it, in the values' order.
@@ -120,10 +105,8 @@ pub struct RuleOutside {
 
 /// A value outside a rule and its rows.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OutsideValue {
     pub value: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

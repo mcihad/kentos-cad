@@ -38,7 +38,6 @@ pub const BALUSTER_WIDTH: f64 = 0.02;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RailingInfill {
     /// Dikey çubuk: upright balusters, their clear gap `gap`.
     #[default]
@@ -97,7 +96,6 @@ fn is_zero(v: &f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RailingFields {
     /// Its line, the middle of its top rail: straight stretches from point to point, at least two points (three when
     /// closed).
@@ -231,7 +229,6 @@ impl RailingFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RailingEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

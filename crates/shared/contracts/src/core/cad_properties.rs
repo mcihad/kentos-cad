@@ -14,8 +14,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -28,10 +26,8 @@ pub const CAD_ENTITIES_SET_VERSION: u32 = 1;
 /// What a change of properties is; it names the undo step, and nothing else:
 /// it does not limit which properties the input sets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PropertiesOperation {
     /// Katman ▾: the objects move to another layer. “Katman değiştir”.
     Layer,
@@ -117,10 +113,8 @@ pub enum PropertiesOperation {
 /// required field too (`attribute_required`). Keys no field names are free.
 /// White space is Unicode's `White_Space` (Rust's `char::is_whitespace`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesSetProperties {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at
     /// least one; a repeated one counts once.
@@ -129,19 +123,16 @@ pub struct EntitiesSetProperties {
     /// The layer they move to: a layer's id (`LayerNode.id`), not a group's.
     /// Absent: they stay on theirs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// Their own colour (`EntityBase.color`, as `#E5484D`); null: their
     /// layer's (katmana göre). Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub color: Option<Option<String>>,
     /// Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
     /// thinnest, at most 100); null: their layer's (katmana göre). Absent:
     /// unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<f64>", range(min = 0.0, max = 100.0))
@@ -151,29 +142,22 @@ pub struct EntitiesSetProperties {
     /// Their own line type (`ObjectLook.line_type`, docs/adr/0260 §2); null:
     /// their source's (katmana göre). Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::layer::LineType>>", optional)
-    )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::layer::LineType>"))]
     pub line_type: Option<Option<crate::layer::LineType>>,
     /// Their own project line type by its name (`ObjectLook.line_pattern`, docs/adr/0313 §1), its nearest built-in
     /// written as their line type unless `lineType` is given; null: none (a `lineType` given alone takes it away
     /// too). Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub line_pattern: Option<Option<String>>,
     /// Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub line_type_scale: Option<Option<f64>>,
     /// Their own transparency, 0 to 0.9 (docs/adr/0260 §3); null: their
     /// source's. Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(with = "Option<f64>", range(min = 0.0, max = 0.9))
@@ -182,41 +166,32 @@ pub struct EntitiesSetProperties {
     pub transparency: Option<Option<f64>>,
     /// Their mask (Maske, docs/adr/0310 §1), an area's only; null: an ordinary area again. Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Option<crate::look::Wipeout>>", optional)
-    )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::look::Wipeout>"))]
     pub wipeout: Option<Option<crate::look::Wipeout>>,
     /// Their own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of their layer's style; null: the layer's style. The id is
     /// not looked up: the libraries are the host's. Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub symbol: Option<Option<String>>,
     /// Attributes by name, text in v1: a text sets the attribute (added when
     /// an object lacks it), null removes it. Absent or empty: none change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, Option<String>>>,
     /// The text shown beside them (`EntityBase.label`); null: none. Absent:
     /// unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub label: Option<Option<String>>,
     /// Their photos and documents (`EntityBase.attachments`, docs/adr/0225
     /// §1), the whole list; empty: none. Absent: unchanged.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attachments: Option<Vec<crate::attachment::Attachment>>,
     /// Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
     /// among them that write an object's label (`TextEntity.label_of` and
     /// `label_scale` removed); they stay where and as they are and follow
     /// nothing. Other objects are left alone. Absent or false: unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unlink: bool,
     /// A point given a new name here (its `label`, or a map's `Ad` it mirrors) that no text writes the name of gets
     /// one in the same step (docs/adr/9314, 9316), as `cad.point.create`'s `nameText` writes it: up and right of the
@@ -224,7 +199,6 @@ pub struct EntitiesSetProperties {
     /// it without a scale. A point whose name a text writes already keeps it, and the text takes the new name. Other
     /// objects are left alone. Absent or false: none is written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub name_text: bool,
     /// What the change is; it names the undo step.
     pub operation: PropertiesOperation,
@@ -232,7 +206,6 @@ pub struct EntitiesSetProperties {
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -264,10 +237,8 @@ impl EntitiesSetProperties {
 
 /// Output of `cad.entities.set` v1: the objects that changed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPropertiesSet {
     /// Their persistent ids, in the input's order (a repeated one once); an
     /// object that already was as asked is not among them.
@@ -284,22 +255,18 @@ pub struct EntitiesPropertiesSet {
     /// The texts written for the points' names (`nameText`), their persistent ids, in the input's order; absent when
     /// none was written.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub texts: Vec<String>,
     /// Their slots in the open document, in the same order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub text_ids: Vec<u32>,
 }
 
 /// What `cad.entities.set` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesSetPropertiesPlan {
     /// The objects that would change, each as execute would write it, with
     /// its own slot (`id`), in the input's order.
@@ -307,7 +274,6 @@ pub struct EntitiesSetPropertiesPlan {
     /// The texts execute would write for the points' names (`nameText`), each linked to its point, with no slot
     /// (`id` 0), in the input's order; absent when none would be.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub texts: Vec<Entity>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.

@@ -13,7 +13,6 @@ use ts_rs::TS;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Covering {
     /// Its IFC 4.3 type ([`Covering::TYPES`]): `CEILING` a ceiling (asma tavan), `FLOORING` a floor covering…;
     /// `USERDEFINED` takes `name` as its object type.

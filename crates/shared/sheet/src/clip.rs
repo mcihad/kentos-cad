@@ -1,15 +1,11 @@
 //! A viewport boundary in millionths of its content frame; never a camera rescale.
 use crate::{Result, SheetError, units::RectUm};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const FULL: i32 = 1_000_000;
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperViewportClip"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Clip {
     #[default]

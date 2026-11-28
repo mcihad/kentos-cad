@@ -8,8 +8,6 @@
 //! service wants and the names it goes under.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The longest an address or a URL template may be, in letters.
 pub const MAX_SERVICE_URL: usize = 4096;
@@ -65,10 +63,8 @@ macro_rules! named {
 
 /// What a service layer draws (docs/adr/0208 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ServiceKind {
     /// Tiles by an address template, Web Mercator (TMS with `yFlip`).
     Xyz,
@@ -103,9 +99,7 @@ impl ServiceKind {
 
 /// A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServiceParam {
     pub name: String,
     pub value: String,
@@ -116,10 +110,8 @@ pub struct ServiceParam {
 /// and latitude), whatever order the service wrote them in, its tiles' and
 /// its own size in tiles.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TileMatrix {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
@@ -132,19 +124,15 @@ pub struct TileMatrix {
     pub tile_width: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub tile_height: u32,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub matrix_width: u64,
-    #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub matrix_height: u64,
 }
 
 /// A service's tile grid as read: its system and its matrices, coarsest first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TileGrid {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
@@ -153,10 +141,8 @@ pub struct TileGrid {
 
 /// A layer drawn from a service (docs/adr/0208 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServiceLayer {
     pub kind: ServiceKind,
     /// XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC
@@ -165,99 +151,76 @@ pub struct ServiceLayer {
     pub url: String,
     /// WMS's layer names; WMTS's one layer; ArcGIS's layers shown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// WMS's and WMTS's style; Google's map type.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     /// The image's media type (`image/png`, …).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub format: Option<String>,
     /// The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// WMTS's, OGC's and a cached ArcGIS service's matrices.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grid: Option<TileGrid>,
     /// WMTS's matrix set's identifier (`TILEMATRIXSET`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub matrix_set: Option<String>,
     /// WMTS REST's and OGC's tile template.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     /// XYZ's and the vector tiles' tile side, pixels; absent 256.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub tile_size: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "zoom")))]
     pub min_zoom: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "zoom")))]
     pub max_zoom: Option<u32>,
     /// `{s}`'s values, taken in turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub subdomains: Vec<String>,
     /// TMS: rows counted from the bottom.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub y_flip: bool,
     /// WMS's and `export`'s `TRANSPARENT`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub transparent: bool,
     /// WMS's version.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ServiceParam>>", optional))]
     pub params: Vec<ServiceParam>,
     /// WMS and `export`: one picture of the view instead of tiles.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub dynamic: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attribution: Option<String>,
     /// 0.1 to 1; absent: opaque.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// The project's connection whose proof goes with the requests.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub connection: Option<String>,
     /// The ready basemap it came from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub preset: Option<String>,
     /// The service's extent, WGS 84 degrees (west, south, east, north), as
     /// its capabilities give it: what “Servisin kapsamına yakınlaştır” shows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub bbox: Option<[f64; 4]>,
 }
 
 /// What a layer's objects were taken from (docs/adr/0208 §10).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FeedKind {
     Wfs,
     OgcFeatures,
@@ -283,58 +246,45 @@ impl FeedKind {
 
 /// Where a layer's objects came from, to take them again (docs/adr/0208 §10).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FeatureFeed {
     pub kind: FeedKind,
     pub url: String,
     /// WFS's type, OGC's collection, ArcGIS's layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The system asked of the service.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// CQL, or ArcGIS's `where`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
     /// The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bbox: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u64>,
     /// WFS's version.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// The attribute that matches objects when they are taken again.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub connection: Option<String>,
     /// When they were last taken (RFC 3339).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fetched: Option<String>,
 }
 
 /// The proof a service asks for (docs/adr/0208 §12).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AuthKind {
     None,
     /// `name=value` in the address, one or more.
@@ -374,10 +324,8 @@ impl AuthKind {
 /// A connection of the project (docs/adr/0208 §2): what proof requests to
 /// its origin carry, without the secrets.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ServiceConnection {
     pub id: String,
     pub name: String,
@@ -386,15 +334,12 @@ pub struct ServiceConnection {
     pub auth: AuthKind,
     /// The parameters' (query) or headers' (header) names.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub names: Vec<String>,
     /// ArcGIS's `generateToken` or OAuth 2's token address.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub token_url: Option<String>,
     /// OAuth 2's scope.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<String>,
 }
 
@@ -402,28 +347,20 @@ pub struct ServiceConnection {
 /// the values of its names in order, a user name and a password, a token,
 /// a client's id and secret, Google's key.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ConnectionSecret {
     pub id: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub values: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub password: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub token: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub client_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub client_secret: Option<String>,
 }
 

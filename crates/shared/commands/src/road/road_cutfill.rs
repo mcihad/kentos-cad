@@ -7,8 +7,6 @@
 //! The shared cases are `fixtures/commands/v1/road.terrains.cutfill.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -39,36 +37,27 @@ pub const MOST_CUTFILL_BANDS: u64 = 1000;
 /// `invalid_analysis` (more than 1000 bands, more than 10 000 sections), `no_cut_fill` (the surfaces do not overlap, or
 /// coincide wherever they do). Warnings: `layer_hidden`, `compare_uncovered` (part of a material off the two surfaces).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCutFill {
     pub base: String,
     pub comparison: String,
     /// The layer the zones go on.
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub interval: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub labels: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub depths: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sections: Option<CutFillSections>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CompareZone>>", optional))]
     pub materials: Vec<crate::CompareZone>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -80,10 +69,8 @@ pub struct TerrainsCutFill {
 /// kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
 /// at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CutFillSections {
     pub axis: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -93,21 +80,16 @@ pub struct CutFillSections {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corners: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub formula: Option<crate::SectionFormula>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub start: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut_factor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill_factor: Option<f64>,
 }
@@ -116,10 +98,8 @@ pub struct CutFillSections {
 /// added, as written: `k+mmm.cc`), the axis's place there, its left and right ends, its cut and fill areas (m²) and the
 /// cut and fill volumes between it and the section before (m³; none for the first).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CutFillSection {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -133,17 +113,14 @@ pub struct CutFillSection {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub cut_volume: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub fill_volume: Option<f64>,
     /// Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times
     /// its (m³; none for the first).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub mass: Option<f64>,
 }
@@ -152,10 +129,8 @@ pub struct CutFillSection {
 /// out), its text, its turn (degrees counterclockwise from east, along the section, kept upright) and its alignment
 /// (its end towards the section).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CutFillSectionLabel {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
@@ -168,10 +143,8 @@ pub struct CutFillSectionLabel {
 /// A zone's label (docs/adr/2340): its place inside the zone (the core's interior point, GEOS's rule: the middle of
 /// the widest stretch inside on the scan line through the box's middle away from every corner) and its words.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CutFillLabel {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
@@ -180,10 +153,8 @@ pub struct CutFillLabel {
 
 /// Whether a zone is cut (the comparison below the base) or fill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CutFillKind {
     Cut,
     Fill,
@@ -195,18 +166,14 @@ pub enum CutFillKind {
 /// cut's depth and the fill's height alike above 0; docs/adr/2740): the corner of the overlay's pieces in it where the
 /// difference is largest in size, among those within 1 nm of it the westmost, then the southmost.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCutFillZone {
     pub kind: CutFillKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -216,7 +183,6 @@ pub struct TerrainCutFillZone {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ring: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<[f64; 2]>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Vec<Vec<[f64; 2]>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -232,15 +198,12 @@ pub struct TerrainCutFillZone {
 /// difference; the objects written, each zone's hatch then its closed area (a plan: none), and the revision after it (a
 /// plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCutFilled {
     pub base: String,
     pub comparison: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub interval: Option<f64>,
     pub zones: Vec<TerrainCutFillZone>,
@@ -266,56 +229,40 @@ pub struct TerrainsCutFilled {
     pub largest: f64,
     /// The zones' labels, in the zones' order (asked for, docs/adr/2340).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
     pub labels: Vec<CutFillLabel>,
     /// The quantity table's cells, heading first (asked for, docs/adr/2340).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
     pub table: Vec<Vec<String>>,
     /// The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order
     /// (asked for, docs/adr/2740).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
     pub depths: Vec<CutFillLabel>,
     /// The sections (docs/adr/4760), in station order; their volumes summed; the axis's length; each one's words (its
     /// kilometre, then its areas); the section volume table's cells (asked for with `table`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillSection>>", optional))]
     pub sections: Vec<CutFillSection>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub section_cut: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub section_fill: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillSectionLabel>>", optional))]
     pub section_labels: Vec<CutFillSectionLabel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
     pub section_table: Vec<Vec<String>>,
     /// The materials (docs/adr/4760): `road.terrains.compare`'s zones, each one's words inside it, and the material
     /// table's cells (asked for with `table`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<crate::TerrainZoneVolumes>>", optional)
-    )]
     pub materials: Vec<crate::TerrainZoneVolumes>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
     pub material_labels: Vec<CutFillLabel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
     pub material_table: Vec<Vec<String>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

@@ -4,8 +4,6 @@
 //! in the same step (docs/adr/0160). The grip menu writes through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -19,10 +17,8 @@ pub const CAD_ENTITIES_VERTEX_VERSION: u32 = 1;
 
 /// What is done at the place.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum VertexAction {
     /// Köşeyi sil (a `vertex` place): its two edges become one straight edge. “Köşe sil”.
     Remove,
@@ -57,10 +53,8 @@ pub enum VertexAction {
 /// them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
 /// `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesVertex {
     /// The object's persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -72,20 +66,17 @@ pub struct EntitiesVertex {
     /// Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on
     /// the edge's line nor at its ends; not with `radius`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub through: Option<Vec2>,
     /// Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
     /// the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
     /// chord; not with `through`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub radius: Option<f64>,
     /// Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero
     /// leave the polyline without widths.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub widths: Option<[f64; 2]>,
     /// Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
@@ -93,16 +84,13 @@ pub struct EntitiesVertex {
     /// both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
     /// warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub join_arcs: Option<f64>,
     /// Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<StretchTopology>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -110,10 +98,8 @@ pub struct EntitiesVertex {
 /// Output of `cad.entities.vertex` v1: the objects written (the object, then its neighbours), their slots, the
 /// revision after.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesVertexed {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub changed: Vec<String>,
@@ -125,10 +111,8 @@ pub struct EntitiesVertexed {
 
 /// Plan of `cad.entities.vertex` v1: the objects as execute would write them, and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesVertexPlan {
     pub changed: Vec<crate::entity::Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

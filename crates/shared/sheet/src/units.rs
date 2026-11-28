@@ -6,8 +6,6 @@
 //! for bit.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// A paper length in micrometres (±2 147 m).
 pub type Um = i32;
@@ -23,10 +21,8 @@ pub const UM_PER_PT: f64 = 352.777_777_777_777_8;
 
 /// A rectangle on the paper: its top-left corner and size, before rotation.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperRectUm"))]
 pub struct RectUm {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
@@ -142,10 +138,8 @@ impl RectUm {
 
 /// A paper size.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSizeUm"))]
 pub struct SizeUm {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
@@ -156,10 +150,8 @@ pub struct SizeUm {
 
 /// Empty space on each side of the page; the printable area is inside it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMargins"))]
 pub struct Margins {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]

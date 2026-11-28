@@ -23,7 +23,6 @@ pub const NO_TARGET: &str = "—";
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ViewMarkForm {
     /// Kesit: a cut line with a bubble at each end, looking to one side.
     #[default]
@@ -63,7 +62,6 @@ impl ViewMarkForm {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewTarget {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -114,7 +112,6 @@ impl ViewTarget {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewMarkLabel {
     /// The top half: the mark's number.
     pub top: String,
@@ -133,7 +130,6 @@ impl ViewMarkLabel {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ViewMarkBreak {
     /// Its named view or sheet frame is gone.
     TargetGone,
@@ -150,7 +146,6 @@ impl ViewMarkBreak {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewMarkFields {
     pub form: ViewMarkForm,
     /// A section's cut line (2 or more points); an elevation's bubble, a detail's circle's middle (one point).
@@ -201,7 +196,6 @@ pub struct ViewMarkFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewMarkEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

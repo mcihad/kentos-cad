@@ -17,8 +17,6 @@
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 use crate::review_notes::{review_id_ok, review_label_ok, review_text_ok};
@@ -44,45 +42,35 @@ pub const MAX_APPROVAL_REFERENCE: usize = 64;
 /// The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made; the lengths
 /// the documents state; the drafts, numbered apart (docs/adr/5020).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelRegister {
     pub documents: Vec<ParcelDocument>,
     pub boundaries: Vec<RecordedBoundary>,
     pub parcels: Vec<RecordedParcel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RecordedLength>>"))]
     pub lengths: Vec<RecordedLength>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ParcelDraft>>"))]
     pub drafts: Vec<ParcelDraft>,
 }
 
 /// An approval written outside KentOS, as written (docs/adr/5020): its number (never empty), its date and who approved.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelApproval {
     pub reference: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub date: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub by: String,
 }
 
 /// The length a document states for a boundary (docs/adr/5020): a plain decimal in metres as written, an arc's length
 /// on an arc. One per boundary and document.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedLength {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub boundary: u32,
@@ -95,13 +83,10 @@ pub struct RecordedLength {
 /// then each further part's outline and holes; 0 first), the edge from the ring's vertex `edge` to the next, the length a
 /// plain decimal in metres as written.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StatedLength {
     #[serde(default, skip_serializing_if = "is_first")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub ring: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -112,22 +97,17 @@ pub struct StatedLength {
 /// A draft's ring as its area was when drafted: its part, whether a hole, its vertices and each edge's bulge (none: all
 /// straight).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DraftRing {
     #[serde(default, skip_serializing_if = "is_first")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub hole: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<f64>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Vec<f64>,
 }
@@ -135,57 +115,43 @@ pub struct DraftRing {
 /// A parcel a draft would make: its area, identity and stated area as read when drafted, its rings as drawn then and the
 /// lengths the document states.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DraftParcel {
     pub uid: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub il: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub ilce: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub mahalle: String,
     pub ada: String,
     pub parsel: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub stated_area: String,
     pub rings: Vec<DraftRing>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<StatedLength>>"))]
     pub lengths: Vec<StatedLength>,
 }
 
 /// A document not yet approved (docs/adr/5020): its fields as a document's, the parcels it would make and the recorded
 /// parcels it would close. Approving it writes it as a document with the next number; nothing current changes before.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDraft {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub kind: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub date: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub note: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<DraftParcel>>"))]
     pub create: Vec<DraftParcel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub close: Vec<u32>,
 }
@@ -193,35 +159,27 @@ pub struct ParcelDraft {
 /// A document that made or closed parcels: its name, unique in the drawing; its kind as the user
 /// writes it (a plan, a deed …); the date it gives, as written; a note.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ParcelDocument {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub kind: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub date: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub note: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approval: Option<ParcelApproval>,
 }
 
 /// A boundary: from one corner to another (`from` the lesser by east, then north), its bulge from `from` to `to` (0:
 /// straight), the document that made it and the one that closed it once no current parcel used it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedBoundary {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
@@ -230,13 +188,11 @@ pub struct RecordedBoundary {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub to: Vec2,
     #[serde(default, skip_serializing_if = "is_straight")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulge: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub created_by: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub closed_by: Option<u32>,
 }
@@ -252,17 +208,13 @@ fn is_first(part: &u32) -> bool {
 /// One ring of a parcel: its part (0 for the first), whether it is a hole, and its boundaries in order (negative: run
 /// from `to` to `from`). The ring's vertices are each boundary's start as the ring runs it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedRing {
     #[serde(default, skip_serializing_if = "is_first")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub part: u32,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub hole: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub edges: Vec<i32>,
@@ -272,35 +224,27 @@ pub struct RecordedRing {
 /// never empty), the document that made it and the one that closed it, the area the document states (a plain decimal
 /// in square metres, as written; empty: none), the area that draws it while it is current, and its rings.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordedParcel {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub number: u32,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub il: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub ilce: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub mahalle: String,
     pub ada: String,
     pub parsel: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub created_by: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub closed_by: Option<u32>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub stated_area: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
     pub rings: Vec<RecordedRing>,
 }

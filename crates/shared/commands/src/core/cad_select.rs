@@ -8,8 +8,6 @@
 //! (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -25,10 +23,8 @@ pub const MAX_SELECT_ITEMS: usize = 100_000;
 
 /// How a polygon selects (Çokgenle seç, docs/adr/0187 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PolygonSelectMode {
     /// İçindekiler: wholly inside.
     Inside,
@@ -41,10 +37,8 @@ pub enum PolygonSelectMode {
 /// What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every
 /// criterion that is on; none on: every object.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SimilarCriteria {
     /// Tür: the kind, an insert's block too.
     pub kind: bool,
@@ -69,10 +63,8 @@ impl Default for SimilarCriteria {
 
 /// Where the objects are, or which they are.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SelectRegion {
     /// Refine a geometric/list scope with CAD properties and the existing expression language.
     /// Targets are drawing objects (inserts, not their definition members). Filters cannot be nested.
@@ -115,7 +107,6 @@ pub enum SelectRegion {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         radius: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         crossing: bool,
     },
     /// İçeren alanı seç: the closed shapes around the point, the smallest first.
@@ -149,7 +140,6 @@ pub enum SelectRegion {
         uids: Vec<String>,
         /// Absent: every criterion on.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         criteria: Option<SimilarCriteria>,
     },
 }
@@ -157,45 +147,35 @@ pub enum SelectRegion {
 /// All present criteria must match. Heights are real model metres; expression readings
 /// use the project's drawing unit, just as layer filters do. No drawing or selection is written.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SelectProperties {
     /// Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).
     /// Colour criteria inspect that piece through each placement; the result is the owning insert UID.
     /// Never edits a definition. Height/expression criteria cannot be combined with this path.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub block_path: Vec<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub text_height_min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub text_height_max: Option<f64>,
     /// Own CAD colour (hex or palette token), or "byLayer" for no explicit colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub assigned_color: Option<String>,
     /// CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub displayed_color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expression: Option<String>,
 }
 
 /// A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SelectKind {
     Point,
     Line,
@@ -323,32 +303,25 @@ impl SelectKind {
 /// zero), `invalid_uid`, `entity_not_found` (an object given), `no_objects` (Benzerini seç without an example),
 /// `layer_not_found`, `not_a_layer` (a group in `layers`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesSelect {
     /// Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model_scope: Option<crate::SheetModelScope>,
     pub region: SelectRegion,
     /// Seçim süzgeci: only these kinds; absent: every kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kinds: Option<Vec<SelectKind>>,
     /// Only on these layers (their ids); absent: every layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
 }
 
 /// What the kinds and the layers left out of the region's objects, and the objects given that are not shown.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SelectLeftOut {
     /// By the kinds (the selection filter).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -364,10 +337,8 @@ pub struct SelectLeftOut {
 /// Output of `cad.entities.select` v1, and its plan: the objects' persistent ids in the region's order, what was
 /// left out, and the revision they were read at.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesSelected {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
@@ -388,14 +359,11 @@ pub const CAD_ENTITIES_PICK_VERSION: u32 = 1;
 /// Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the tolerance), `invalid_distance` (a
 /// tolerance below zero).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPick {
     /// Explicit paper viewport; results keep original model identities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model_scope: Option<crate::SheetModelScope>,
     /// Where the click is.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -405,16 +373,13 @@ pub struct EntitiesPick {
     pub tolerance: f64,
     /// Seçim süzgeci: only these kinds; absent: every kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kinds: Option<Vec<SelectKind>>,
 }
 
 /// An object a click falls on and its sub-object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PickedEntity {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -422,11 +387,9 @@ pub struct PickedEntity {
     /// point, an insertion point), else the nearest point of an edge or a curve (`along`); absent when the click is
     /// in the object's area or on a text's body.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub place: Option<SubPlace>,
     /// When the object is an insert, the piece inside it the place is on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
 }
@@ -434,10 +397,8 @@ pub struct PickedEntity {
 /// Output of `cad.entities.pick` v1, and its plan: the objects the most specific first, what the kinds left out, the
 /// revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPicked {
     pub picks: Vec<PickedEntity>,
     pub left_out: SelectLeftOut,
@@ -456,10 +417,8 @@ pub const MAX_RELATE_PAIRS: usize = 1_000_000;
 /// A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's
 /// relations, which allow 1 mm.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelatePredicate {
     Intersects,
     Disjoint,
@@ -483,10 +442,8 @@ pub enum RelatePredicate {
 /// and `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more
 /// than 1 000 000 pairs).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesRelate {
     /// The objects related, by their lasting ids.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -495,19 +452,15 @@ pub struct EntitiesRelate {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub b: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub predicate: Option<RelatePredicate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pattern: Option<String>,
 }
 
 /// A pair and its matrix.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RelatedPair {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub a: String,
@@ -520,14 +473,11 @@ pub struct RelatedPair {
 /// Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile
 /// does not read (a construction line, a ray), the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesRelated {
     pub pairs: Vec<RelatedPair>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub unread: Vec<String>,
     /// The document's revision the objects were read at, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -539,19 +489,15 @@ pub const CAD_ENTITIES_ISOLATE: &str = "cad.entities.isolate";
 pub const CAD_ENTITIES_ISOLATE_VERSION: u32 = 1;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesIsolate {
     pub action: IsolationAction,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum IsolationAction {
     /// Replace isolation with these drawing object UIDs. New objects remain visible.
     Isolate { uids: Vec<String> },
@@ -562,10 +508,8 @@ pub enum IsolationAction {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesIsolated {
     pub active: bool,
     /// Live objects hidden by isolation alone.

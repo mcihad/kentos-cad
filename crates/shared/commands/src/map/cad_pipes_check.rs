@@ -18,8 +18,6 @@
 //! `fixtures/commands/v1/cad.pipes.check.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_PIPES_CHECK: &str = "cad.pipes.check";
 pub const CAD_PIPES_CHECK_VERSION: u32 = 1;
@@ -64,10 +62,8 @@ pub const PIPE_FINDINGS: [&str; 28] = [
 
 /// Where a pipe's inverts (the inside bottom's heights, metres) are read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "from", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PipeInverts {
     /// Two attributes: the invert at the pipe's drawn start and at its drawn end; between them it is linear along the
     /// pipe.
@@ -78,10 +74,8 @@ pub enum PipeInverts {
 
 /// A length's unit as an attribute is written.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PipeUnit {
     Mm,
     Cm,
@@ -113,10 +107,8 @@ impl PipeUnit {
 /// optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
 /// pipe's top outside (invert + diameter + wall) and the clearances outside to outside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeDiameter {
     /// The attribute holding each pipe's inner diameter.
     pub field: String,
@@ -124,28 +116,23 @@ pub struct PipeDiameter {
     pub unit: PipeUnit,
     /// The sizes a pipe may have, in that unit (none: any).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub catalog: Vec<f64>,
     /// The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<String>,
     /// The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the
     /// outer less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the
     /// outer): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not
     /// taken from either.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub outer: Option<String>,
 }
 
 /// Where the ground over a pipe is read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "from", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PipeGround {
     /// A terrain surface of a Harita or Yol project (its id or name): the cover all along the pipe.
     Surface { surface: String },
@@ -167,46 +154,36 @@ pub enum PipeGround {
 /// its network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is
 /// the network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipesCheck {
     /// The network's id or name.
     pub network: String,
     pub inverts: PipeInverts,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub diameter: Option<PipeDiameter>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ground: Option<PipeGround>,
     /// The least and the greatest cover over the crown (metres).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_cover: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_cover: Option<f64>,
     /// The least and the greatest slope, metres a metre (0.003 is 3 ‰).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub min_slope: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub max_slope: Option<f64>,
     /// Another network's pipes and the clearances to them (docs/adr/2360).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clearance: Option<PipeClearanceAsk>,
     /// The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and
     /// greatest slope by its diameter's class, the least cover, the greatest span between two structures.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<crate::PipeRulesAsk>,
 }
 
@@ -215,35 +192,27 @@ pub struct PipesCheck {
 /// pipes that do not cross (metres, outside to outside by the diameters; none: clashes only), and which of the two must
 /// be above where they cross (none: either).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeClearanceAsk {
     pub network: String,
     pub inverts: PipeInverts,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub diameter: Option<PipeDiameter>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub vertical: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub horizontal: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub above: Option<PipeAbove>,
 }
 
 /// Which pipe of a crossing: the checked network's or the other's.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PipeAbove {
     Pipe,
     Other,
@@ -255,29 +224,23 @@ pub enum PipeAbove {
 /// above (by the middle of their bores; level: the checked one); none where an invert or an asked diameter is not
 /// known.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeCrossing {
     pub pipe: String,
     pub other: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub at: [f64; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub invert: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub other_invert: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub clearance: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub above: Option<PipeAbove>,
 }
 
@@ -286,10 +249,8 @@ pub struct PipeCrossing {
 /// (the distance less the two radii, and the walls when asked (docs/adr/3960); none where an asked diameter is not
 /// known: then listed only when the axes themselves are closer than the least).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeNear {
     pub pipe: String,
     pub other: String,
@@ -300,7 +261,6 @@ pub struct PipeNear {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub clearance: Option<f64>,
 }
@@ -308,21 +268,17 @@ pub struct PipeNear {
 /// A finding: its kind (one of [`PIPE_FINDINGS`]), the pipe, where, its measure (a gap in height, a cover, a slope, a
 /// part's length) and, for a unit mistake, the unit the value would fit in.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeFinding {
     pub kind: String,
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub at: [f64; 2],
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub value: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
 }
 
@@ -332,63 +288,49 @@ pub struct PipeFinding {
 /// the least cover and where, the greatest cover, the rule package's slope class it is in (rules asked), and its
 /// findings' kinds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeCheck {
     pub uid: String,
     pub layer: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reversed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub upstream: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub downstream: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub diameter: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub wall: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_cover: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub min_cover_at: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_cover: Option<f64>,
     /// The rule package's slope class its diameter is in (docs/adr/4780); none: no rules asked, or none holds it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     pub findings: Vec<String>,
 }
 
 /// A kind's count.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeCount {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -399,10 +341,8 @@ pub struct PipeCount {
 /// asked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
 /// [`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PipesChecked {
     pub network: String,
     pub cover_to: String,
@@ -416,11 +356,9 @@ pub struct PipesChecked {
     /// Where the pipes cross the other network's, pipe by pipe and along each (asked for, docs/adr/2360; at most
     /// [`PIPE_FINDING_LIMIT`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PipeCrossing>>", optional))]
     pub crossings: Vec<PipeCrossing>,
     /// The pipes closer than the least horizontal clearance to the other network's (asked for; at most
     /// [`PIPE_FINDING_LIMIT`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PipeNear>>", optional))]
     pub near: Vec<PipeNear>,
 }

@@ -1,8 +1,6 @@
 //! Sheet sets, guardrails, culverts, retaining walls, platforms, junctions and the pay book. A part of the road project's settings (docs/adr/8054 §9).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[allow(unused_imports)]
 use super::*;
@@ -12,10 +10,8 @@ pub const MAX_ROAD_SHEETS: usize = 500;
 /// A sheet of a plan–profile set: the book's sheet, the stations it shows (internal, m) and the profile view drawn for
 /// it (its frame's lower left and upper right), when the set has a profile.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadSheetDef {
     pub sheet: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -23,7 +19,6 @@ pub struct RoadSheetDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[[f64; 2]; 2]>,
 }
@@ -32,31 +27,24 @@ pub struct RoadSheetDef {
 /// its stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'
 /// revisions it was made from, so the sheets say when the alignment or the profile changed since.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadSheetSetDef {
     pub id: String,
     pub name: String,
     pub alignment: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub profile_revision: u32,
     /// A section sheet set's sample line set (docs/adr/0908 §11) and its revision.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub sections: Option<String>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub sections_revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -66,7 +54,6 @@ pub struct RoadSheetSetDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: u32,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub overlap: f64,
     pub sheets: Vec<RoadSheetDef>,
@@ -178,15 +165,12 @@ pub const MAX_GUARDRAIL_WARRANTS: usize = 32;
 /// A row of a guardrail rule (docs/adr/0909 §1): a barrier where the fill is at least `height` high and, with `slope`,
 /// steeper than 1:`slope` (its run per rise at most that).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailWarrantDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub height: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub slope: Option<f64>,
 }
@@ -195,10 +179,8 @@ pub struct GuardrailWarrantDef {
 /// its own), its rows, the lengths added before (the approach end) and after a warranted stretch, the least gap left
 /// between two runs.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailRuleDef {
     pub source: String,
     pub warrants: Vec<GuardrailWarrantDef>,
@@ -213,27 +195,22 @@ pub struct GuardrailRuleDef {
 /// A guardrail (docs/adr/0909 §1): its corridor and the corridor's revision it was made from, its rule, the step its
 /// crosses are read at, and how far outward from the hinge the rail stands.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GuardrailDef {
     pub id: String,
     pub name: String,
     pub corridor: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub corridor_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub rule: GuardrailRuleDef,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: f64,
 }
@@ -244,10 +221,8 @@ pub const MAX_CULVERT_BARRELS: u32 = 20;
 
 /// A culvert's barrel cross (docs/adr/0909 §2): pipes side by side (`spacing` their clear gap) or a box of cells.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CulvertShapeDef {
     Pipe {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -257,7 +232,6 @@ pub enum CulvertShapeDef {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
         #[serde(default, skip_serializing_if = "is_zero_f64")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         spacing: f64,
     },
@@ -277,10 +251,8 @@ pub enum CulvertShapeDef {
 
 /// The side a culvert's water runs to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CulvertFlow {
     Right,
     Left,
@@ -291,26 +263,21 @@ pub enum CulvertFlow {
 /// its fall (a grade, 0.02 is 2 %; docs/adr/0977) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
 /// roughness (typed, kept).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CulvertDef {
     pub id: String,
     pub name: String,
     pub corridor: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub corridor_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub skew: f64,
     pub shape: CulvertShapeDef,
@@ -320,18 +287,14 @@ pub struct CulvertDef {
     pub slope: f64,
     pub flow: CulvertFlow,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub extend: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cover: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub roughness: Option<f64>,
 }
@@ -469,10 +432,8 @@ pub const MAX_RETAINING_WALL_STATIONS: usize = 5000;
 
 /// A corridor's side a wall stands on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallSide {
     Left,
     Right,
@@ -481,15 +442,12 @@ pub enum WallSide {
 /// A retaining wall's cross (docs/adr/0909 §3): the stem's top thickness and its batter (m/m), the footing's width,
 /// thickness and toe, the ground over the footing and what stands above the higher of the road's edge and the ground.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallShapeDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub top: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub batter: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -497,15 +455,12 @@ pub struct WallShapeDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub base: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub toe: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cover: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub above: f64,
 }
@@ -514,20 +469,16 @@ pub struct WallShapeDef {
 /// from, its side and stations, the step it is read at, its cross, the highest stem asked (a warning, not a refusal) and
 /// its material (typed, kept).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RetainingWallDef {
     pub id: String,
     pub name: String,
     pub corridor: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub corridor_revision: u32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub side: WallSide,
@@ -539,11 +490,9 @@ pub struct RetainingWallDef {
     pub step: f64,
     pub shape: WallShapeDef,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub highest: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
 }
 
@@ -654,15 +603,12 @@ pub const MAX_PLATFORM_CORNERS: usize = 1000;
 /// its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
 /// graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformDef {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -670,11 +616,9 @@ pub struct PlatformDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub base: [f64; 3],
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub direction: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -777,10 +721,8 @@ pub const MAX_JUNCTIONS: usize = 1000;
 
 /// How a junction's legs meet: at grade (joined, the curb returns built) or separated (one over the other, not joined).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum JunctionKind {
     AtGrade,
     Separated,
@@ -789,14 +731,11 @@ pub enum JunctionKind {
 /// A junction's leg: its alignment and that alignment's revision it was made from, and its edges' offsets from the
 /// alignment (left and right, metres, positive).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionLegDef {
     pub alignment: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub alignment_revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -810,29 +749,23 @@ pub struct JunctionLegDef {
 /// quadrant's own (`radii`, four: first leg's right with the second's right, right with left, left with left, left with
 /// right).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct JunctionDef {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub kind: JunctionKind,
     pub legs: Vec<JunctionLegDef>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub at: u32,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radii: Option<Vec<f64>>,
 }
@@ -936,10 +869,8 @@ pub const MAX_PAY_RULES: usize = 2000;
 
 /// A quantity KentOS reads from a road project's structures and earthwork (docs/adr/0909 §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PayMeasure {
     /// A guardrail's runs, both sides (m).
     GuardrailLength,
@@ -982,16 +913,13 @@ impl PayMeasure {
 
 /// An agency's pay item: its code (as the agency writes it), name, unit (as written) and optional unit price.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayItemDef {
     pub code: String,
     pub name: String,
     pub unit: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
     pub price: Option<f64>,
 }
@@ -999,40 +927,32 @@ pub struct PayItemDef {
 /// A rule giving an item a quantity: KentOS's `measure` (of the culverts or walls of `material` only, when given)
 /// times `factor`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayRuleDef {
     pub measure: PayMeasure,
     pub item: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub factor: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
 }
 
 /// The project's pay item book (docs/adr/0909 §4): its source (the agency's list and year, required: KentOS gives no
 /// item), its version, its currency, its items and its rules.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PayBookDef {
     pub source: String,
     pub version: String,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub currency: Option<String>,
     pub items: Vec<PayItemDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PayRuleDef>>", optional))]
     pub rules: Vec<PayRuleDef>,
 }
 

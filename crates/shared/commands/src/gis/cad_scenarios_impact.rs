@@ -8,8 +8,6 @@
 //! updated). The shared cases are `fixtures/commands/v1/cad.scenarios.impact.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_SCENARIOS_IMPACT: &str = "cad.scenarios.impact";
 pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
@@ -32,33 +30,24 @@ pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
 /// (`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`
 /// (`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScenariosImpact {
     pub scenario: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub field: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub since: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub impervious: Option<std::collections::BTreeMap<String, f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub access: Option<ImpactAccess>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub infrastructure: Option<ImpactInfrastructure>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slope: Option<ImpactSlope>,
 }
 
@@ -67,34 +56,28 @@ pub struct ScenariosImpact {
 /// surface has one slope, from its plane (its normal, the cross product of two edges); an area's part on a triangle
 /// takes that slope. The surface is the same on both sides.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactSlope {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub threshold: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub from: Vec<String>,
     /// Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20):
     /// the classes run from 0 to the first break, between two breaks and from the last one up,
     /// each holding its lower break.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<f64>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub classes: Vec<f64>,
     /// Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in eight
     /// directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
     /// flat (a level triangle, no aspect).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub aspect: bool,
     /// Docs/adr/5060: the slope map: each measured area's parts on the surface's triangles with their slope class and
     /// aspect (`slopeMap`), so a host can colour them; their sizes are the class and aspect measures' own parts.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub map: bool,
 }
 
@@ -106,16 +89,13 @@ pub const MAX_SLOPE_CLASSES: usize = 20;
 /// area). A layer the scenario stands in for is each side's own (the base's on the field state's side, the scenario's
 /// on the alternative's); any other is the same on both. Nearness is not a line's capacity nor a right to connect.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactInfrastructure {
     pub layer: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub distance: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub from: Vec<String>,
 }
 
@@ -127,30 +107,24 @@ pub struct ImpactInfrastructure {
 /// user's; farther, the area is off the network), and the distance is the `from` area's leg, the way along the network
 /// as its definition travels it, and the `to` area's leg. A network layer the scenario stands in for is each side's own.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactAccess {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub distance: f64,
     pub from: Vec<String>,
     pub to: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub network: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub connect: Option<f64>,
 }
 
 /// A base layer and the scenario's layer standing for it, by id and name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactLayer {
     pub base: String,
     pub layer: String,
@@ -161,10 +135,8 @@ pub struct ImpactLayer {
 /// value on the field state's side and on the alternative's, the difference (alternative − base), and how it is
 /// computed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactMeasure {
     pub id: String,
     pub label: String,
@@ -180,10 +152,8 @@ pub struct ImpactMeasure {
 
 /// The areas of one use (the field's value; empty for none) on both sides, square metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactUse {
     pub code: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -197,33 +167,25 @@ pub struct ImpactUse {
 /// A decision that differs: its key, what changed (`added`, `removed`, `geometry`, `decision`, `both`), its use, area
 /// and capacity on each side that has it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactChange {
     pub key: String,
     pub change: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base_use: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub alternative_use: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub base_area: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub alternative_area: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub base_capacity: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub alternative_capacity: Option<f64>,
 }
@@ -231,10 +193,8 @@ pub struct ImpactChange {
 /// Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in
 /// the drawing's order, the `from` areas reached, those not reached, and the `to` areas.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactReach {
     pub base_reached: Vec<String>,
     pub base_unreached: Vec<String>,
@@ -245,17 +205,13 @@ pub struct ImpactReach {
     /// Along a network (docs/adr/5060): each side's `from` areas on the network, in the drawing's order, with the
     /// nearest `to` area they reach along it, however far; none off the network or with no way to a `to` area.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactRoute>>"))]
     pub base_routes: Vec<ImpactRoute>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactRoute>>"))]
     pub alternative_routes: Vec<ImpactRoute>,
     /// The `from` areas off the network (their centroid farther from it than `connect`), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub base_off: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub alternative_off: Vec<String>,
 }
 
@@ -264,10 +220,8 @@ pub struct ImpactReach {
 /// as points: the `from` centroid, its place on the network, the network's way, the `to` area's place on it, its
 /// centroid.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactRoute {
     pub area: String,
     pub target: String,
@@ -282,10 +236,8 @@ pub struct ImpactRoute {
 /// The slope map (docs/adr/5060): each side's measured areas cut by the surface's triangles, the areas in the drawing's
 /// order, an area's parts by their first vertex (south first, then west).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactSlopeMap {
     pub base: Vec<ImpactSlopePiece>,
     pub alternative: Vec<ImpactSlopePiece>,
@@ -296,10 +248,8 @@ pub struct ImpactSlopeMap {
 /// triangle's slope (percent), the part's size (m²) and its outer ring (counter-clockwise, from its lowest vertex, the
 /// westmost of equals) and holes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactSlopePiece {
     pub area: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
@@ -313,7 +263,6 @@ pub struct ImpactSlopePiece {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ring: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<Vec<[f64; 2]>>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Vec<Vec<[f64; 2]>>,
 }
@@ -322,10 +271,8 @@ pub struct ImpactSlopePiece {
 /// and the scenario's stamps it was written with, and whether each has changed since (the table is then stale: its
 /// numbers are not the drawing's now and are not updated by themselves).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactRecord {
     pub table: String,
     pub stamp: String,
@@ -338,10 +285,8 @@ pub struct ImpactRecord {
 /// persistent id in the drawing's order, the measured areas whose centroid lies within the distance, those beyond it,
 /// and the side's infrastructure layer's objects. Nearness only: not a line's capacity or a right to connect.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactNear {
     pub base_near: Vec<String>,
     pub base_far: Vec<String>,
@@ -352,10 +297,8 @@ pub struct ImpactNear {
     /// Each side's measured areas joined to their nearest object of the layer (docs/adr/3460), in the drawing's order;
     /// none when the side's layer has no object.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactLink>>"))]
     pub base_links: Vec<ImpactLink>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactLink>>"))]
     pub alternative_links: Vec<ImpactLink>,
 }
 
@@ -363,10 +306,8 @@ pub struct ImpactNear {
 /// object's persistent ids, the area's centroid, the object's nearest place to it (the centroid itself when the
 /// object reaches it) and the distance between them. Nearness only: not the line's capacity or a right to connect.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactLink {
     pub area: String,
     pub line: String,
@@ -383,10 +324,8 @@ pub struct ImpactLink {
 /// changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
 /// asked, docs/adr/2260), and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ScenariosImpacted {
     pub scenario: String,
     pub name: String,
@@ -400,18 +339,14 @@ pub struct ScenariosImpacted {
     pub assumptions: Vec<String>,
     pub stamp: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stale: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reach: Option<ImpactReach>,
     /// Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub near: Option<ImpactNear>,
     /// The slope map (only when `slope.map` is asked, docs/adr/5060).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slope_map: Option<ImpactSlopeMap>,
     /// The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is
     /// checked against besides the base's.
@@ -419,7 +354,6 @@ pub struct ScenariosImpacted {
     /// The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's
     /// order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactRecord>>"))]
     pub records: Vec<ImpactRecord>,
     pub revision: String,
 }

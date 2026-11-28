@@ -15,8 +15,6 @@
 //! check reads the same files with an independent reader).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const FILE_EXCHANGE_CHECK: &str = "file.exchange.check";
 pub const FILE_EXCHANGE_CHECK_VERSION: u32 = 1;
@@ -47,10 +45,8 @@ pub const EXCHANGE_LOSSES: [&str; 15] = [
 
 /// The format of the trip.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExchangeFormat {
     Gpkg,
     Parquet,
@@ -113,27 +109,21 @@ impl ExchangeFormat {
 /// Refusals: `invalid_tolerance`, `layer_not_found` (`layers[i]`), the writer's own refusal (its code, the path
 /// `export.<its path>`), `exchange_unreadable` (KentOS's reader refused the file KentOS wrote: its words).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeCheck {
     pub format: ExchangeFormat,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
 
 /// A kind's count (objects not written by kind: `text`, `dimension` …).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeKindCount {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -144,14 +134,11 @@ pub struct ExchangeKindCount {
 /// (`circle → polygon`, an attribute's name, a block's name, what of a table, a relation's name), and the original
 /// objects' persistent ids (at most 100; none for a relation).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeLoss {
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,
@@ -164,61 +151,46 @@ pub struct ExchangeLoss {
 /// vertices against the original within the tolerance; the length within 2·n·tolerance (n vertices); the area within
 /// the perimeter × tolerance. How many objects break each, and the worst one's id; absent when none.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeNumeric {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub offset_uid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub measure: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub above: u32,
     /// The greatest distance of a read-back curve's points between its vertices from the original's geometry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub shape: Option<f64>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub shape_above: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub shape_uid: Option<String>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub length_above: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub length_uid: Option<String>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub area_above: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area_uid: Option<String>,
 }
 
@@ -230,10 +202,8 @@ fn is_zero_u32(v: &u32) -> bool {
 /// matched with one read back, those not written by kind, the numeric differences, the semantic losses (in
 /// [`EXCHANGE_LOSSES`]' order, then by detail) and the writer's and the reader's warnings as they said them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeChecked {
     pub format: ExchangeFormat,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -283,19 +253,14 @@ pub const EXCHANGE_ASPECTS: [&str; 16] = [
 /// Refusals: `file.exchange.check`'s (`invalid_tolerance`, `layer_not_found`, the writer's own, `exchange_unreadable`,
 /// `file_unwritable`), the format's path `formats[i]` beside the check's.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeMatrix {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ExchangeFormat>>", optional))]
     pub formats: Vec<ExchangeFormat>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -303,10 +268,8 @@ pub struct ExchangeMatrix {
 /// What a trip did to an aspect: kept it, approximated it (curves to chords, vertices beyond the tolerance), converted it
 /// (a kind into another, an attribute's value), added something, or lost it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ExchangeState {
     Kept,
     Approximated,
@@ -318,26 +281,21 @@ pub enum ExchangeState {
 /// A cell: the format, what it did to the aspect, how many objects it touched and what (the kinds not written, `circle →
 /// polygon`, the attributes' names, the greatest offset in metres).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeCell {
     pub format: ExchangeFormat,
     pub state: ExchangeState,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<String>,
 }
 
 /// A row: its aspect (one of [`EXCHANGE_ASPECTS`]) and a cell for each format tried.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeRow {
     pub aspect: String,
     pub cells: Vec<ExchangeCell>,
@@ -346,10 +304,8 @@ pub struct ExchangeRow {
 /// Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's
 /// `file.exchange.check` answer the rows are read from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExchangeMatrixed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: f64,

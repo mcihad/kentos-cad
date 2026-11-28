@@ -6,8 +6,6 @@
 //! “Ölçü stili”, as the Yazı stilleri and Ölçü stilleri windows write them.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::annotation::{DimensionStyleDef, TextStyleDef};
 #[cfg(feature = "schema")]
@@ -19,10 +17,8 @@ pub const CAD_STYLES_EDIT_VERSION: u32 = 1;
 
 /// Which table `cad.styles.edit` changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AnnotationStyleKind {
     Text,
     Dimension,
@@ -37,10 +33,8 @@ pub enum AnnotationStyleKind {
 
 /// What `cad.styles.edit` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StyleEditOperation {
     Create,
     Update,
@@ -98,68 +92,53 @@ pub const ANNOTATION_STYLES_FORMAT: &str = "kentos.annotation-styles";
 /// A text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as
 /// line types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StylesEdit {
     pub kind: AnnotationStyleKind,
     pub operation: StyleEditOperation,
     /// Rename's and remove's style, by its id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
     /// Rename's new name, trimmed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Create's and update's text style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<TextStyleDef>,
     /// Create's and update's dimension style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension: Option<DimensionStyleDef>,
     /// Create's and update's leader style (docs/adr/0326 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub leader: Option<crate::LeaderStyleDef>,
     /// Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
     /// the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<crate::WallStyleDef>,
     /// Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw
     /// it as they are, none is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<crate::TableStyleDef>,
     /// Export's styles, by id; absent: every style of the kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<Vec<String>>,
     /// Import's `kentos.annotation-styles` file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// Import: true, a style whose name the table has is updated from the file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.styles.edit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StylesEdited {
     /// The style's id; export's and import's first (empty when none).
     pub style: String,
@@ -182,7 +161,6 @@ pub struct StylesEdited {
     pub skipped: Vec<String>,
     /// Export: the file's text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.

@@ -1,11 +1,8 @@
 //! Measured partition: source and limits are explicit persistent wall edges, straight or arc (docs/adr/0734).
 use crate::{Vec2, WallsCreate, WallsPlan};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WallEdgeRef {
@@ -16,7 +13,6 @@ pub struct WallEdgeRef {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum PartitionSide {
@@ -25,7 +21,6 @@ pub enum PartitionSide {
     Right,
 }
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum PartitionMeasure {
@@ -34,7 +29,6 @@ pub enum PartitionMeasure {
     Axis,
 }
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum PartitionDirection {
@@ -45,7 +39,6 @@ pub enum PartitionDirection {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PartitionExtent {
@@ -68,7 +61,6 @@ pub enum PartitionExtent {
 /// Metres throughout. `wall` holds ordinary wall appearance/style/defaults; its path is generated,
 /// so it must contain exactly one wall with an empty `pts`. Sources are read, never edited/deleted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WallsPartition {
@@ -88,12 +80,10 @@ pub struct WallsPartition {
     /// partition's face towards it or its axis, its value a parameter of `distance`. A straight source only: an arc
     /// source is refused (`invalid_constraint`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WallPartitionPlan {
@@ -103,7 +93,6 @@ pub struct WallPartitionPlan {
     /// The source face's arc between its two points on an arc source edge (tan of a quarter of its sweep,
     /// counter-clockwise positive); absent on a straight one (docs/adr/0734).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub source_face_bulge: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

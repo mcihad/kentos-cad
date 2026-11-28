@@ -13,8 +13,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::FormChange;
 #[cfg(feature = "schema")]
@@ -57,26 +55,22 @@ pub const CAD_FORMS_TEST_VERSION: u32 = 1;
 
 /// What `cad.forms.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormsOp {
     /// Yeni form: a form of a layer. No body: one made of the layer's fields; no id: one made of the
     /// name.
     Create {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<String>,
         name: String,
         /// The layer's id.
         layer: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         body: Option<FormBody>,
     },
     /// Kaydet: the draft replaced. `body.revision` is the draft's revision it was made on; the draft
@@ -90,7 +84,6 @@ pub enum FormsOp {
     Publish {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         note: Option<String>,
     },
     /// Kuralları uygula: whether the latest release is the layer's write profile.
@@ -102,14 +95,11 @@ pub enum FormsOp {
     Comment {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         item: Option<String>,
         text: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         author: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         at: Option<String>,
     },
     /// A comment settled or opened again.
@@ -129,25 +119,20 @@ pub enum FormsOp {
 /// `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`, `form_tests_failed`. Warnings:
 /// `form_release_dropped`, `form_breaking`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsEdit {
     pub edit: FormsOp,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A form as the lists show it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormSummary {
     pub id: String,
     pub name: String,
@@ -157,26 +142,21 @@ pub struct FormSummary {
     pub revision: u32,
     /// The latest release's version; none: never published.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub enforce: bool,
 }
 
 /// Output of `cad.forms.edit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsEdited {
     /// The project's forms afterwards, in order.
     pub forms: Vec<FormSummary>,
     /// The form created, saved, renamed, published or enforced, as kept; none for a remove.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub form: Option<ProjectForm>,
     /// The draft's preflight afterwards (none for a remove).
     pub issues: Vec<FormIssue>,
@@ -188,17 +168,14 @@ pub struct FormsEdited {
     /// A publish over an earlier release (docs/adr/0442 §2): the layer's records that held by the
     /// earlier release and do not by this one; none when none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub breaking: Option<FormBreaking>,
 }
 
 /// The records a new release breaks (docs/adr/0442 §2): how many, and how many by each field the new
 /// release finds wrong (by the fields' keys, in their bytes' order).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormBreaking {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub records: u32,
@@ -207,10 +184,8 @@ pub struct FormBreaking {
 
 /// A field and how many records.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldCount {
     pub field: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -222,53 +197,42 @@ pub struct FieldCount {
 /// Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `unknown_form`, `form_unpublished`,
 /// `entity_not_found`, `form_layer_mismatch`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsValidate {
     /// The form's id.
     pub form: String,
     /// Its draft instead of its latest release (the designer's preview).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: Option<String>,
     /// Values by the layer fields' keys, as a submit would write them (empty: no value); asked of
     /// the record afterwards.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// The form's defaults in the record's empty fields first (a new record).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub defaults: bool,
     /// The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
     /// (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
     /// left out (docs/adr/0402 §5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
 }
 
 /// Output of `cad.forms.validate` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsValidated {
     /// The release asked; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The preflight's issues, then the record's.
@@ -279,17 +243,14 @@ pub struct FormsValidated {
     pub items: Vec<FormItemState>,
     /// The record's attributes afterwards; none without a record.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
     /// `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub requires: Vec<String>,
     /// The layer's fields the release binds changed since it was published (docs/adr/0444 §2): review the
     /// form and publish it again. Written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub fields_changed: bool,
 }
 
@@ -308,73 +269,59 @@ pub struct FormsValidated {
 /// `source_changed`, `relation_dangling`, `transaction_split` …) is the submission's: the plan says it, and nothing is
 /// written, neither in the drawing nor in the file. A layer that is not bound is not written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsSubmit {
     /// The form's id.
     pub form: String,
     /// Through its draft instead of its latest release (a form not yet published).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// The object (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
     /// Values by the layer fields' keys (empty: no value).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// The form's defaults in the record's empty fields first (a new record).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub defaults: bool,
     /// The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
     /// (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
     /// left out (docs/adr/0402 §5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
     /// The release the form was opened with (docs/adr/0438 §6): a later release published since is
     /// `form_release_changed` (status `conflict`), so an old screen does not write past a newer form's
     /// rules; none: the latest, whichever it is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub release: Option<u32>,
     /// The record's attributes as the form opened it (docs/adr/0438 §7): the record changed since
     /// (another write, an undo) is `record_changed` (status `conflict`) instead of being written over;
     /// none: whatever it holds now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub opened: Option<BTreeMap<String, String>>,
     /// The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
     /// made, each through its relation; the record and its children go in together or not at all.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormChild>>", optional))]
     pub children: Vec<FormChild>,
     /// Write the layers' sources too, in one transaction (docs/adr/0532 §1); written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub commit: bool,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A child written with its parent's record (docs/adr/0440 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormChild {
     /// The project relation whose parent is the form's layer.
     pub relation: String,
@@ -384,26 +331,21 @@ pub struct FormChild {
     pub uid: String,
     /// Values by the child layer's fields' keys, through the child layer's form when it has one.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// The link to the record taken off (Bağı kopar) instead of made; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub unlink: bool,
 }
 
 /// A child as the submission wrote it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ChildSubmitted {
     pub uid: String,
     pub relation: String,
     /// A new record, made by the submission; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub created: bool,
     pub attrs: BTreeMap<String, String>,
     pub changed: bool,
@@ -412,30 +354,24 @@ pub struct ChildSubmitted {
 /// A record a command wrote (docs/adr/0440 §5): its id, layer, whether it was made, the fields that
 /// changed by their names, in order.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordChange {
     pub uid: String,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub created: bool,
     pub fields: Vec<String>,
 }
 
 /// Output of `cad.forms.submit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsSubmitted {
     pub uid: String,
     /// The release written through; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The record's attributes afterwards.
@@ -444,23 +380,19 @@ pub struct FormsSubmitted {
     pub changed: bool,
     /// The children as written (docs/adr/0440 §2), in the input's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ChildSubmitted>>", optional))]
     pub children: Vec<ChildSubmitted>,
     /// The records written (docs/adr/0440 §5): the record, then its children, in order; none
     /// unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordChange>>", optional))]
     pub changes: Vec<RecordChange>,
     /// The record's snapshot afterwards (docs/adr/0440 §4): its fingerprint with its children and
     /// attachments, what a reviewer approves.
     pub snapshot: String,
     /// The undo step the write is (plan and an unchanged record: none).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub undo: Option<String>,
     /// With `commit`: what the one transaction wrote to the sources (plan: what it would).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub committed: Option<crate::cad_sources::SourcesSynced>,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -474,51 +406,41 @@ pub struct FormsSubmitted {
 /// `form_preflight`, `entity_not_found` and `form_layer_mismatch` (at `uids[i]`), `layer_locked`,
 /// `form_invalid` (the first record's first issue: `path` its field's value, `uids` the record).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsFill {
     /// The form's id.
     pub form: String,
     /// Through its draft instead of its latest release (a form not yet published).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// The objects, each once (lowercase UUID texts with hyphens; a repeated one is written once).
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
     /// Values by the layer fields' keys (empty: no value), the same for every record.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.forms.fill` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsFilled {
     /// The records that changed, in the input's order.
     pub changed: Vec<String>,
     /// The release written through; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The document's revision afterwards (plan: the one it was made against).
@@ -528,14 +450,12 @@ pub struct FormsFilled {
 
 /// What `cad.relations.edit` does (docs/adr/0405 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RelationsOp {
     /// A new relation.
     Create { relation: ProjectRelation },
@@ -551,25 +471,20 @@ pub enum RelationsOp {
 /// `conflict`); `unknown_relation`, `relation_exists`, `too_many_relations`, `layer_not_found`,
 /// `not_a_layer`, `relation_field_unknown`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RelationsEdit {
     pub edit: RelationsOp,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.relations.edit` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RelationsEdited {
     /// The project's relations afterwards, in order.
     pub relations: Vec<ProjectRelation>,
@@ -578,7 +493,6 @@ pub struct RelationsEdited {
     /// The children whose field holds a link of the relation (the edited one's, before the edit;
     /// docs/adr/0440 §3).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub links: u32,
     /// The document's revision afterwards (plan: the one it was made against).
@@ -595,42 +509,33 @@ fn is_zero(n: &u32) -> bool {
 /// Refusals: `invalid_count` (at `limit`), `invalid_moment`, `invalid_user`; `unknown_form`,
 /// `form_unpublished`, `form_preflight`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsAudit {
     /// The form's id.
     pub form: String,
     /// Through its draft instead of its latest release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// The records with only warnings are listed too.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub warnings: bool,
     /// The most records listed (1–10000); none: 500. The counts are of every record.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     /// As `cad.forms.submit`'s.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// As `cad.forms.submit`'s.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
 }
 
 /// A record `cad.forms.audit` lists: its persistent id and its issues.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AuditedRecord {
     pub uid: String,
     pub issues: Vec<FormIssue>,
@@ -638,14 +543,11 @@ pub struct AuditedRecord {
 
 /// Output of `cad.forms.audit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsAudited {
     /// The release asked; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The layer's records checked.
@@ -662,7 +564,6 @@ pub struct FormsAudited {
     pub records: Vec<AuditedRecord>,
     /// More records had issues than `limit` lists.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub more: bool,
 }
 
@@ -671,44 +572,35 @@ pub struct FormsAudited {
 /// Refusals, in this order: `unknown_form`, `form_unpublished` (without `draft`, a form never
 /// published), `form_preflight` (the body has an error), `unknown_test` (a name the body has not).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsTest {
     /// The form's id.
     pub form: String,
     /// Its draft's scenarios on its draft, instead of its latest release's on that release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// Only these scenarios, by name, in this order; empty: all, in the body's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub names: Vec<String>,
 }
 
 /// One scenario's result.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormTestResult {
     pub name: String,
     pub passed: bool,
     /// What differs from what it expects, one sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub differences: Vec<String>,
 }
 
 /// Output of `cad.forms.test` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsTested {
     pub results: Vec<FormTestResult>,
     /// How many passed and how many there were.
@@ -725,38 +617,30 @@ pub struct FormsTested {
 /// Refusals, in this order: `invalid_moment`, `invalid_user`, `invalid_revision`, `revision_conflict`
 /// (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`, `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsRecompute {
     /// The form's id.
     pub form: String,
     /// Through its draft instead of its latest release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.forms.recompute` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsRecomputed {
     /// How many records the layer holds.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -766,11 +650,9 @@ pub struct FormsRecomputed {
     /// The records left as they were because a calculation's value does not fit its field (or the
     /// form does not settle on them), in the layer's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub failed: Vec<String>,
     /// The release used; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -783,48 +665,39 @@ pub struct FormsRecomputed {
 /// Refusals, in this order: `unknown_form`, `form_unpublished` (no release to compare from),
 /// `unknown_release` (a version the form has not, at `from` or `to`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsCompare {
     /// The form's id.
     pub form: String,
     /// The release compared from; none: the latest.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub from: Option<u32>,
     /// The release compared to; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub to: Option<u32>,
 }
 
 /// Output of `cad.forms.compare` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsCompared {
     /// The release compared from.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub from: u32,
     /// The release compared to; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub to: Option<u32>,
     pub changes: Vec<FormChange>,
     /// What the newer version needs of its host that the older did not, and the other way
     /// (`kentos_forms::requirements`, docs/adr/0442 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub requires_added: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub requires_removed: Vec<String>,
 }
 
@@ -836,20 +709,16 @@ pub struct FormsCompared {
 ///
 /// Refusals, in this order: `invalid_input` (`waitMs` out of bounds), `unknown_form`, `form_unpublished`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsSources {
     /// The form's id.
     pub form: String,
     /// Its draft instead of its latest release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// How long a database is waited for, in milliseconds (100 to 30 000); none: 5 000.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 100, max = 30000)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
     pub wait_ms: Option<u32>,
@@ -857,10 +726,8 @@ pub struct FormsSources {
 
 /// How a list's source stands (docs/adr/0763 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormSourceState {
     /// The layer is the drawing's own: nothing outside to ask.
     Local,
@@ -883,10 +750,8 @@ pub enum FormSourceState {
 
 /// The way out of a source's state (docs/adr/0763 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum FormSourceRetry {
     /// Ask again (Yeniden dene).
     Retry,
@@ -900,10 +765,8 @@ pub enum FormSourceRetry {
 
 /// One layer a form lists from, and its source.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormSource {
     /// The layer's id.
     pub layer: String,
@@ -913,34 +776,27 @@ pub struct FormSource {
     pub items: Vec<String>,
     /// The source's kind; none: the drawing's own layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<crate::sources::SourceKind>,
     /// The bound table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     pub state: FormSourceState,
     /// The state's code (`form_source_offline`, `form_source_timeout`, `form_source_denied`,
     /// `form_source_missing`, `form_source_changed`, `form_source_failed`); none when ready or local.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
     /// What happened and what the list does meanwhile, for people.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub message: Option<String>,
     /// The way out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub retry: Option<FormSourceRetry>,
 }
 
 /// Output of `cad.forms.sources` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsSourced {
     /// Each layer the form lists from, in the order its items first name them.
     pub sources: Vec<FormSource>,
@@ -959,16 +815,13 @@ pub struct FormsSourced {
 /// `no_workflow`, `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `unknown_step`,
 /// `step_not_allowed`, `record_locked`, `form_invalid`, `reason_required`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsTransition {
     /// The form's id.
     pub form: String,
     /// Through its draft instead of its latest release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
     /// The record (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -977,34 +830,27 @@ pub struct FormsTransition {
     pub step: String,
     /// Values by the layer fields' keys written with the step (the reason among them).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
     /// Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes
     /// field, shown under those fields; a step without them empties it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub notes: BTreeMap<String, String>,
     /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub moment: Option<String>,
     /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.forms.transition` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsTransitioned {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -1015,7 +861,6 @@ pub struct FormsTransitioned {
     pub attrs: BTreeMap<String, String>,
     /// The release used; none: the draft.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.
@@ -1038,10 +883,8 @@ pub const FORM_PACKAGE_VERSION: u32 = 1;
 /// A form package (docs/adr/0435): a form's body with the fields it reads and the value lists those
 /// fields link, to take to another layer or project. No records, no connections, no rights.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormPackage {
     /// `kentos.form-package`.
     pub format: String,
@@ -1054,7 +897,6 @@ pub struct FormPackage {
     pub fields: Vec<crate::LayerField>,
     /// The project's value lists those fields link (docs/adr/0430).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::FieldDomain>>", optional))]
     pub domains: Vec<crate::FieldDomain>,
 }
 
@@ -1117,24 +959,19 @@ impl FormPackage {
 /// Input of `cad.forms.export` v1: the form's latest release (or its draft) as a package; writes
 /// nothing. Refusals: `unknown_form`, `form_unpublished`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsExport {
     pub form: String,
     /// The draft instead of the latest release.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub draft: bool,
 }
 
 /// A package field bound to a project's field.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldBinding {
     /// The package field's key.
     pub from: String,
@@ -1150,43 +987,34 @@ pub struct FieldBinding {
 /// `form_exists`, `too_many_forms`; `invalid_map`, `field_not_found`, `field_kind_mismatch`,
 /// `form_fields_missing`. Warnings: `domain_kept`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsImport {
     pub package: FormPackage,
     /// The layer's id.
     pub layer: String,
     /// The new form's id; none: one made of its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     /// The new form's name; none: the package's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// A package field's key → the layer field's key it binds to.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub map: BTreeMap<String, String>,
     /// A package field the layer lacks is added to it (with its value list); else refused.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub add_fields: bool,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output (and plan) of `cad.forms.import` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FormsImported {
     /// The new form's id.
     pub id: String,

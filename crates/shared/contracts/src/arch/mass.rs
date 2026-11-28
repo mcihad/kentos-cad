@@ -27,7 +27,6 @@ fn is_zero(v: &f64) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MassFields {
     /// Its footprint: one part or more, each an outer ring and its holes (a courtyard).
     pub parts: Vec<SpacePart>,
@@ -53,7 +52,6 @@ pub struct MassFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct MassEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

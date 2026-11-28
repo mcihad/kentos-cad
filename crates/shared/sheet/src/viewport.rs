@@ -5,8 +5,6 @@ use crate::{
 };
 pub use kentos_contracts::{NamedView as NamedModelView, view_key};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub use kentos_contracts::PaperScaleRatio as ScaleRatio;
 /// CAD presets are independent of the GIS atlas fitting table. Custom ratios remain valid.
@@ -89,10 +87,8 @@ pub fn standard_ratios() -> &'static [ScaleRatio] {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperViewportSource"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Source {
     #[default]
@@ -121,10 +117,8 @@ pub use crate::clip::Clip;
 
 /// Annotation representation selection is independent of the physical camera and its lock.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperAnnotationScale"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum AnnotationScale {
     #[default]
@@ -141,10 +135,8 @@ pub fn valid_annotation_scale(scale: f64) -> bool {
 /// A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`; the
 /// roof plan with `roof` (docs/adr/8044 §7).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapLevelChoice"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum MapLevelChoice {
     #[default]
@@ -152,66 +144,49 @@ pub enum MapLevelChoice {
     Level {
         id: String,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         below: bool,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         roof: bool,
     },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSetViewport"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetViewport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annotation: Option<AnnotationScale>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<crate::MapLayers>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_overrides: Option<Vec<crate::kinds::LayerOverride>>,
     /// The level the map draws (docs/adr/0716).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<MapLevelChoice>,
 
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<Source>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
     /// Canonical metres; an unrotated model-space rectangle to fit exactly.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="length")))]
     pub bounds: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub ratio: Option<ScaleRatio>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
     pub scale: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="mdeg")))]
     pub rotation: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub locked: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub clip: Option<Clip>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub frame_plot: Option<bool>,
 }
 

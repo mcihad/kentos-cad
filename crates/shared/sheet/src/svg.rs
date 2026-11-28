@@ -11,8 +11,6 @@
 use std::fmt::Write as _;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::display::{ArcSeg, DisplayList, Prim, Seg, TextPrim};
 use crate::model::{ItemId, yes};
@@ -22,27 +20,21 @@ use crate::units::{Mdeg, PointUm, RectUm, sin_cos, thousandths_text};
 
 /// A picture for a map frame's content, or for an asset: a data URL or a path the SVG's reader can open.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapImage {
     pub item: ItemId,
     pub href: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct AssetHref {
     pub sha256: String,
     pub href: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct SvgOptions {
     #[serde(default)]
     pub maps: Vec<MapImage>,
@@ -53,7 +45,6 @@ pub struct SvgOptions {
     pub placeholders: bool,
     /// The document's `<title>`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub title: Option<String>,
 }
 

@@ -6,8 +6,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::file_import::ImportedLayer;
 
@@ -24,44 +22,35 @@ pub const FILE_EXPORT_GPKG_VERSION: u32 = 1;
 /// `reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),
 /// `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportGpkg {
     /// The file to read, an absolute path.
     pub path: String,
     /// The tables to take; empty: every feature and attribute table.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub tables: Vec<String>,
     /// A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer
     /// of the same name (case and Turkish marks aside), else onto a new layer with the table's fields.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     /// Move the coordinates from the file's system into the project's (the project's datum choices taken); without
     /// it a file in another system is refused.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
     /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
     /// §5); none: every row is added.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<crate::ImportMerge>,
     /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<String>,
 }
 
 /// A table taken.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgTableImported {
     pub table: String,
     /// The drawing's layer its rows went onto.
@@ -79,10 +68,8 @@ pub struct GpkgTableImported {
 
 /// What `file.import.gpkg` took in, or with `plan` would take.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgImported {
     /// The file's name, its bytes and their SHA-256.
     pub file: String,
@@ -91,12 +78,10 @@ pub struct GpkgImported {
     pub sha256: String,
     /// The EPSG code the tables declare, none for an undefined system.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Whether the coordinates were moved into the project's system.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub moved: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
@@ -104,37 +89,30 @@ pub struct GpkgImported {
     /// The layers made, in the tree's order, and the group they went into.
     pub layers: Vec<ImportedLayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     /// The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
     /// writer's many-to-many relations as multi-valued reference fields; their ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub relations: Vec<String>,
     /// Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
     /// Layers the import made with their table's description as a dataset (docs/adr/0633 §5).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub datasets: u32,
     /// The tables' indexes the layers the import made took (docs/adr/0758 §5).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub indexes: u32,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
     /// What the merge did on each layer (docs/adr/0628 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::MergeReport>>", optional))]
     pub merged: Vec<crate::MergeReport>,
     /// The CSV of the rows refused (docs/adr/0628 §6).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rejects: Option<crate::RejectsWritten>,
 }
 
@@ -150,27 +128,22 @@ fn is_zero(n: &u32) -> bool {
 /// `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves written as chords,
 /// fields an appended table has no column for, objects it has already).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportGpkg {
     /// The file to write, an absolute path (`.gpkg`).
     pub path: String,
     /// The layers, by id; empty: every layer with objects.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
     /// Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
     /// objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
     /// Refused `entity_not_found` for an id the drawing does not have.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     /// With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
     /// a table, written empty with its columns (a field team's template, docs/adr/1076).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub empty_layers: bool,
     /// Write over a file that is there.
     #[serde(default)]
@@ -179,21 +152,17 @@ pub struct ExportGpkg {
     /// place, `tables` only the tables written again, `append` the rows added to its tables. A file not there is made
     /// new whatever it says.
     #[serde(default, skip_serializing_if = "GpkgWrite::is_file")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<GpkgWrite>", optional))]
     pub write: GpkgWrite,
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// How `file.export.gpkg` writes a file that is there (docs/adr/9191).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GpkgWrite {
     /// A new file in its place: the file's other tables go.
     #[default]
@@ -216,10 +185,8 @@ impl GpkgWrite {
 
 /// A table written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgTableExported {
     pub table: String,
     pub layer: String,
@@ -227,35 +194,28 @@ pub struct GpkgTableExported {
     pub rows: u32,
     /// Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     /// The layer's indexes written over it (docs/adr/0758 §5).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub indexes: u32,
     /// The file's table of this name, written again (`write: tables`, docs/adr/9191).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub replaced: bool,
     /// The file's table of this name, its `rows` added to it (`write: append`); its columns, style and relations are
     /// the file's.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub appended: bool,
     /// Objects not added because the table has their lasting id already (`write: append`).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub already: u32,
 }
 
 /// A project relation written as an OGC 18-000 related table (docs/adr/0627 §6).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgRelationExported {
     /// The mapping table, its rows the child's and the parent's fids.
     pub mapping: String,
@@ -268,10 +228,8 @@ pub struct GpkgRelationExported {
 
 /// What `file.export.gpkg` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GpkgExported {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
@@ -280,7 +238,6 @@ pub struct GpkgExported {
     pub tables: Vec<GpkgTableExported>,
     /// Objects not written, by kind.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: BTreeMap<String, u32>,
     /// Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.
@@ -288,15 +245,12 @@ pub struct GpkgExported {
     pub approximated: u32,
     /// The project's relations between the tables written (docs/adr/0627 §6).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GpkgRelationExported>>", optional))]
     pub relations: Vec<GpkgRelationExported>,
     /// Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
     /// The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub kept: Vec<String>,
 }

@@ -11,8 +11,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{RoadDrawingLeft, RoadSourceKind};
 
@@ -34,35 +32,27 @@ pub const ROAD_PROJECT_PRODUCE_VERSION: u32 = 1;
 /// source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
 /// written.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProjectProduce {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawings: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     /// Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
     /// lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub add_fields: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// How a recipe layer was found here (docs/adr/3640): `given` in `layers`, by its `name`, by its `id` (a recipe from
 /// before, keeping no definition), or `created` with the recipe's look.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum RoadLayerMatch {
     Given,
     Name,
@@ -73,10 +63,8 @@ pub enum RoadLayerMatch {
 /// A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
 /// it was found; in the order the drawings first use them.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProducedLayer {
     pub from: String,
     pub name: String,
@@ -86,37 +74,29 @@ pub struct RoadProducedLayer {
     /// A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
     /// name, its name here); empty: at the top.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub group: Vec<String>,
     /// A layer added: those of its groups added with it (none of their names was here), from the top.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub groups_added: Vec<String>,
     /// A layer added: the project line type its style names, added with it from the recipe's definition.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_added: Option<String>,
     /// A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
     /// here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub domains_added: Vec<String>,
     /// A layer added (docs/adr/5240): the forms added with it, by their names; empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub forms_added: Vec<String>,
     /// A layer found here with `addFields` (docs/adr/5240): the recipe's fields it took, by their names.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub fields_added: Vec<String>,
 }
 
 /// The main source a produced drawing was drawn from in this project: its kind, id and name.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProducedSource {
     pub kind: RoadSourceKind,
     pub id: String,
@@ -126,10 +106,8 @@ pub struct RoadProducedSource {
 /// A recipe's drawing drawn here: its id in the recipe (`from`), the drawing kept here, its command, its main source
 /// here and the objects written (a plan: none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadDrawingProduced {
     pub from: String,
     pub drawing: String,
@@ -141,18 +119,14 @@ pub struct RoadDrawingProduced {
 /// Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:
 /// this project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProjectProduced {
     pub produced: Vec<RoadDrawingProduced>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadDrawingLeft>>", optional))]
     pub left: Vec<RoadDrawingLeft>,
     /// The layers the produced drawings went on (docs/adr/3640).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadProducedLayer>>", optional))]
     pub layers: Vec<RoadProducedLayer>,
     pub revision: String,
 }

@@ -7,8 +7,6 @@
 //! are IfcOpenShell's BCF library's; what is written is read back and checked by the same rules).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::IfcComparedObject;
 
@@ -28,14 +26,11 @@ pub const MAX_BCF_TEXT: usize = 4000;
 /// A comment written with a topic: its author, date (`YYYY-MM-DDThh:mm:ss`, with a zone or UTC; absent: the topic's)
 /// and text.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfCommentInput {
     pub author: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     pub text: String,
 }
@@ -44,42 +39,30 @@ pub struct BcfCommentInput {
 /// description, type (absent: `Issue`), status (absent: `Open`), priority, labels, author, date (absent: now, UTC),
 /// whom it is assigned to, the objects it is about (IFC GlobalIds of the `model` file) and its comments.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfTopicInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub guid: Option<String>,
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub topic_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub labels: Vec<String>,
     pub author: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub assigned_to: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub objects: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BcfCommentInput>>", optional))]
     pub comments: Vec<BcfCommentInput>,
 }
 
@@ -94,17 +77,13 @@ pub struct BcfTopicInput {
 /// `ifc_object_not_found` (a GlobalId the model does not hold, at the topic's `objects`), `ifc_no_body` (no object of a
 /// topic has a body to look at).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfWrite {
     pub path: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model: Option<String>,
     pub topics: Vec<BcfTopicInput>,
 }
@@ -112,10 +91,8 @@ pub struct BcfWrite {
 /// Output of `cad.bcf.write` v1, and its plan: the file, how many topics and viewpoints it holds, the topics' GUIDs in
 /// order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfWritten {
     pub path: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -132,24 +109,19 @@ pub struct BcfWritten {
 /// a version other than 3.0, 2.1 or 2.0, an XML that does not read, a viewpoint the topic names and the file lacks;
 /// the message says which), `ifc_unreadable` (at `model`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfRead {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model: Option<String>,
 }
 
 /// A viewpoint's camera: `perspective` (its vertical field of view, degrees) or `orthogonal` (the height it shows,
 /// metres); its eye, the way it looks and its up, in the IFC file's world, metres.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfCamera {
     pub kind: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -159,11 +131,9 @@ pub struct BcfCamera {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub up: Vec<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub field_of_view: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub scale: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -173,66 +143,52 @@ pub struct BcfCamera {
 /// A viewpoint read: its GUID, the objects it selects, whether the rest shows and the objects excepted, its camera
 /// (absent only in a 2.1 file), its snapshot's name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfViewpoint {
     pub guid: String,
     pub selection: Vec<String>,
     pub visible: bool,
     pub exceptions: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub camera: Option<BcfCamera>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub snapshot: Option<String>,
 }
 
 /// A comment read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfComment {
     pub guid: String,
     pub date: String,
     pub author: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub viewpoint: Option<String>,
 }
 
 /// A topic read, as the file writes it; its files are the header's IFC file names.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfTopic {
     pub guid: String,
     pub topic_type: String,
     pub status: String,
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub priority: Option<String>,
     pub labels: Vec<String>,
     pub created: String,
     pub author: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub modified: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub assigned_to: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     pub files: Vec<String>,
     pub comments: Vec<BcfComment>,
@@ -242,27 +198,21 @@ pub struct BcfTopic {
 /// An object some viewpoint selects, by its GlobalId: the `model` file's object it is, and the drawing's object (its
 /// persistent id) when the GlobalId is one KentOS wrote for it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfObject {
     pub global_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub model: Option<IfcComparedObject>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
 }
 
 /// Output of `cad.bcf.read` v1, and its plan: the file, its BCF version, its topics (by their folders' names), and the
 /// objects their viewpoints select, once each, by GlobalId.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BcfReadOutput {
     pub path: String,
     pub version: String,

@@ -28,8 +28,6 @@ use std::sync::OnceLock;
 
 use kentos_contracts::{ProjectType, Workspace};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::error::{Result, SheetError};
 use crate::kinds::{ItemKind, MapView, TableSource, default_kind};
@@ -39,9 +37,7 @@ use crate::units::RectUm;
 
 /// What the project offers the sheet's tools.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Capabilities {
     /// The project has a coordinate system.
     #[serde(default)]
@@ -51,7 +47,6 @@ pub struct Capabilities {
     pub attribute_layers: bool,
     /// The project's plot scale: a new map's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot_scale: Option<u32>,
 }
 
@@ -139,9 +134,7 @@ fn data() -> &'static Profiles {
 
 /// Whether a tool is shown, shown but unusable (with the reason), or not shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum ToolState {
     Enabled,
     Disabled,
@@ -149,41 +142,32 @@ pub enum ToolState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PresetInfo {
     pub id: String,
     pub label: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ToolInfo {
     pub id: String,
     /// The name in this mode.
     pub label: String,
     /// The item kind it adds (`type`), if it adds one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub shortcut: Option<String>,
     pub state: ToolState,
     /// Why it is disabled or hidden.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     pub presets: Vec<PresetInfo>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct ToolGroup {
     pub id: String,
     pub label: String,
@@ -192,9 +176,7 @@ pub struct ToolGroup {
 
 /// A mode's profile with the project's capabilities applied.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Profile {
     pub id: String,
     pub label: String,
@@ -505,21 +487,17 @@ pub fn item_note(workspace: Option<Workspace>, item: &Item) -> Option<String> {
 
 /// What a new item is made from: a tool, one of its presets, the host's id and name, its frame, the map it reads.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct NewItem {
     pub tool: String,
     /// None: the tool's first preset in this mode, or the kind's defaults.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub preset: Option<String>,
     pub id: String,
     pub name: String,
     pub frame: RectUm,
     /// The map a scale bar, north arrow, legend or text reads, or an overview shows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub link: Option<String>,
 }
 
@@ -597,9 +575,7 @@ pub fn new_item(workspace: Option<Workspace>, caps: &Capabilities, req: &NewItem
 
 /// Where a template stands in the gallery of a project.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum TemplateFit {
     /// Made for the project's type.
     ProjectType,
@@ -612,9 +588,7 @@ pub enum TemplateFit {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RankedTemplate {
     pub id: String,
     pub fit: TemplateFit,
@@ -622,7 +596,6 @@ pub struct RankedTemplate {
     pub matches: bool,
     /// “GIS şablonu”, “CAD şablonu” for another mode's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub badge: Option<String>,
 }
 

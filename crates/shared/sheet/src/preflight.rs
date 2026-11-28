@@ -9,8 +9,6 @@
 //! still a finding, marked so the interface can list them together.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::display::{self, Note, RenderInputs};
 use crate::error::Result;
@@ -24,9 +22,7 @@ use crate::text;
 use crate::units::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum Severity {
     Error,
     Warning,
@@ -35,28 +31,22 @@ pub enum Severity {
 
 /// A way to put a finding right: operations the core can apply, or an action of the host (`project.crs`, `map.placeFromView`, `sheet.variables`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Fix {
     pub label: String,
     #[serde(default)]
     pub ops: Vec<Op>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub action: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct Finding {
     pub severity: Severity,
     /// Stable, `snake_case`.
     pub code: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub item: Option<ItemId>,
     pub message: String,
     /// How to put it right, in a sentence.

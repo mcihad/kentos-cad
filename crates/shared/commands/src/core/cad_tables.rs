@@ -3,8 +3,6 @@
 //! to a file or let go of it.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -18,10 +16,8 @@ pub const CAD_TABLES_EDIT_VERSION: u32 = 1;
 
 /// One edit of a table's cells, rows and columns, applied in order (Tabloyu düzenle).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableEdit {
     /// The cell's words (at most 20 lines, `\n` between them; docs/adr/1030 §7); words beginning with `=` are its
     /// formula, its words then its result. A cell inside a merged range is its top left's.
@@ -88,19 +84,14 @@ pub enum TableEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         cols: u32,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<TableAlign>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         bold: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         fill: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         decimals: Option<u32>,
     },
@@ -123,7 +114,6 @@ pub enum TableEdit {
         col: u32,
         source: FieldSource,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         format: Option<FieldFormat>,
     },
     /// The cell's field let go of: its words stay.
@@ -160,10 +150,8 @@ pub enum TableEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         grow: bool,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         rows: bool,
     },
     /// `count` columns from `from` aligned so (the column's, under the cells' styles).
@@ -203,10 +191,8 @@ pub enum TableEdit {
 
 /// What `cad.tables.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TablesOperation {
     /// Tabloyu düzenle: the edits in order, as one step.
     Edit {
@@ -220,7 +206,6 @@ pub enum TablesOperation {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         base: Option<String>,
     },
     /// Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table
@@ -231,17 +216,13 @@ pub enum TablesOperation {
         uid: String,
         path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         sheet: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         base: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         overrides: Option<SourceOverrides>,
         /// Zero-based file column with unique, nonempty row keys. Requires a header row.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         key_column: Option<u32>,
     },
@@ -256,24 +237,19 @@ pub enum TablesOperation {
 /// `no_entities`, `cell_out_of_range`, `invalid_table`, `not_finite`, `no_source`, `source_missing`,
 /// `source_unreadable`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TablesEdit {
     pub operation: TablesOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What Tabloyu güncelle did with a table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TableRefresh {
     /// Written again.
     Updated,
@@ -291,10 +267,8 @@ pub enum TableRefresh {
 
 /// A table Tabloyu güncelle looked at.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TableReport {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
@@ -309,16 +283,13 @@ pub struct TableReport {
 
 /// Output of `cad.tables.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TablesEdited {
     /// The tables that changed, by their persistent ids.
     pub changed: Vec<String>,
     /// What Tabloyu güncelle and Dosyaya bağla did with each table.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableReport>>", optional))]
     pub report: Vec<TableReport>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -326,15 +297,12 @@ pub struct TablesEdited {
 
 /// What `cad.tables.edit` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TablesPlan {
     /// The tables as execute would write them.
     pub tables: Vec<Entity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableReport>>", optional))]
     pub report: Vec<TableReport>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

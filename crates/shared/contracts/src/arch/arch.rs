@@ -41,7 +41,6 @@ pub const STANDARD_UP_TO: f64 = 75.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallJustify {
     Left,
     #[default]
@@ -76,7 +75,6 @@ impl WallJustify {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallCaps {
     #[default]
     Closed,
@@ -100,7 +98,6 @@ impl WallCaps {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallDetail {
     Schematic,
     #[default]
@@ -140,7 +137,6 @@ impl WallDetail {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ComponentEdge {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -161,7 +157,6 @@ pub struct ComponentEdge {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ComponentHatch {
     pub pattern: String,
     /// Times the pattern's paper size, above 0.
@@ -179,7 +174,6 @@ pub struct ComponentHatch {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallComponent {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -228,7 +222,6 @@ pub const DEFAULT_COMPONENT_PRIORITY: u8 = 3;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallJoin {
     #[default]
     Auto,
@@ -263,7 +256,6 @@ impl WallJoin {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallJoins {
     #[serde(default, skip_serializing_if = "is_auto")]
     #[cfg_attr(feature = "ts", ts(as = "Option<WallJoin>", optional))]
@@ -307,10 +299,8 @@ impl WallJoins {
 /// before), its body's centre, a finished face, or a core face (the boundary of its strongest component on that side;
 /// a wall without components its face).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum WallReference {
     #[default]
     Path,
@@ -407,7 +397,6 @@ fn is_auto(j: &WallJoin) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchPhase {
     Existing,
     Demolish,
@@ -436,10 +425,8 @@ impl ArchPhase {
 /// Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
 /// Tadilat projesi (docs/adr/8039 §5) every state with Mimarlar Odası's three techniques.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PhaseView {
     #[default]
     All,
@@ -541,7 +528,6 @@ impl PhaseView {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchStatus {
     Proposed,
     Approved,
@@ -572,7 +558,6 @@ impl ArchStatus {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ArchDiscipline {
     Architecture,
     Structure,
@@ -613,7 +598,6 @@ impl ArchDiscipline {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -686,7 +670,6 @@ impl ArchInfo {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -701,7 +684,6 @@ pub struct WallEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallFields {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
@@ -769,7 +751,6 @@ pub struct WallFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CurtainGrid {
     /// The largest distance between two mullions, metres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1241,35 +1222,28 @@ impl WallFields {
 /// A named wall style (`CAD-ARCH-04`): the components a wall is built of, its ends, its schematic fill and the width a
 /// new wall takes when one component takes the rest.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct WallStyleDef {
     /// One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.
     pub id: String,
     pub name: String,
     pub components: Vec<WallComponent>,
     #[serde(default, skip_serializing_if = "is_closed_caps")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<WallCaps>", optional))]
     pub caps: WallCaps,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<String>,
     /// A new wall's width, metres, when one component takes the rest; the components' sum when none does.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
     /// Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.66 `FireRating`): every wall of the style carries it
     /// unless the wall has its own. Absent: none (missing).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub fire_rating: Option<crate::Declared>,
     /// Its load-bearing role (docs/adr/8137; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2): every wall
     /// of the style carries it unless the wall has its own. Absent: none (unknown).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub load_bearing: Option<crate::DeclaredBearing>,
 }
 
@@ -1363,10 +1337,8 @@ pub fn wall_styles_problem(styles: &[WallStyleDef]) -> Option<String> {
 /// Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;
 /// Yalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LevelView {
     /// Bütün katlar.
     #[default]
@@ -1401,10 +1373,8 @@ impl LevelView {
 
 /// A level (kat) of the project: its id, name, floor's elevation and storey height.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchLevel {
     pub id: String,
     pub name: String,
@@ -1413,7 +1383,6 @@ pub struct ArchLevel {
     pub elevation: f64,
     /// Floor to floor, metres; absent: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
 }
@@ -1437,17 +1406,14 @@ pub const AUDIT_EXCEPTIONS_MAX: usize = 10_000;
 /// ids, in the finding's order), the digest of the finding as it was marked (of its code, objects, words and place:
 /// sixteen lowercase hexadecimal digits) and the user's note. A finding whose digest no longer matches is open again.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchAuditException {
     pub key: String,
     pub code: String,
     pub uids: Vec<String>,
     pub digest: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }
 
@@ -1510,22 +1476,17 @@ pub fn audit_exceptions_problem(list: &[ArchAuditException]) -> Option<(String, 
 /// The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
 /// by the drawing's scale, `WallDetail::at_scale`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchLevel>>", optional))]
     pub levels: Vec<ArchLevel>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<WallDetail>,
     /// The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
     /// window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
     /// writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cut_height: Option<f64>,
     /// How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
@@ -1533,30 +1494,21 @@ pub struct ArchSettings {
     /// line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
     /// own pen whatever the scale. A new Mimari project writes `byScale`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub line_groups: Option<LineGroups>,
     /// The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub space_method: Option<crate::SpaceMethod>,
     /// The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub phase_view: Option<PhaseView>,
     /// Suggested room names in project order. Free text and existing rooms remain unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub space_names: Vec<String>,
     /// Suggested room usages in project order, never a mandatory classification.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub space_usages: Vec<String>,
     /// Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
-    )]
     pub space_number_prefixes: std::collections::BTreeMap<String, String>,
     /// Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
     /// level). Absent: its ground level (the one at elevation 0, else its first).
@@ -1565,114 +1517,91 @@ pub struct ArchSettings {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub active_level: Option<Option<String>>,
     /// Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub level_view: Option<LevelView>,
     /// Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditException>>", optional))]
     pub audit_exceptions: Vec<ArchAuditException>,
     /// The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningType>>", optional))]
     pub opening_types: Vec<crate::OpeningType>,
     /// The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
     #[serde(default, skip_serializing_if = "crate::BuildingProgram::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<crate::BuildingProgram>", optional))]
     pub program: crate::BuildingProgram,
     /// The project's room modules and their instances (docs/adr/0775, KCAD 142).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchModule>>", optional))]
     pub modules: Vec<crate::ArchModule>,
     /// The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchMaterial>>", optional))]
     pub materials: Vec<crate::ArchMaterial>,
     /// The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionSet>>", optional))]
     pub options: Vec<crate::OptionSet>,
     /// The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionCombo>>", optional))]
     pub option_combos: Vec<crate::OptionCombo>,
     /// İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
     /// ratio and the coverage are read against. Absent: none given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zoning: Option<Zoning>,
     /// Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
     /// absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub site: Option<SitePlan>,
     /// Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's
     /// Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub local_rules: Option<LocalRules>,
     /// Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
     /// 6.7 `FireProtectionClass`). Absent: none declared.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub performance: Option<crate::BuildingPerformance>,
     /// Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
     /// questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
     /// with its note, by question; the printed form and the BIM package read them. Empty: none given.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::FormAnswer>>"))]
     pub form_answers: Vec<crate::FormAnswer>,
     /// Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
     /// fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub sprinklers: bool,
     /// Plan notları (docs/adr/8084; `.kcad` Mimari data 11): the parcel's plan notes that give a value the regulation's
     /// rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
     /// plan, each with where it stands. Empty: none given.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlanNote>>", optional))]
     pub plan_notes: Vec<PlanNote>,
     /// Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
     /// storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zone: Option<Zone>,
     /// Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as
     /// PAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,
     /// ayrık applies, PAİY 8/5: the architect says so).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layout: Option<BuildingLayout>,
     /// Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
     /// declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
     /// 28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub structure: Option<BuildingStructure>,
     /// Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
     /// in the order they went. Empty: none recorded.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::Delivery>>", optional))]
     pub deliveries: Vec<crate::Delivery>,
     /// Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the
     /// drawing, by their files. Empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ModelUnderlay>>", optional))]
     pub underlays: Vec<crate::ModelUnderlay>,
     /// Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and
     /// stair types, in the order they were made. Empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ElementType>>", optional))]
     pub element_types: Vec<crate::ElementType>,
     /// Mahal renk planı (docs/adr/8176; `.kcad` Mimari data 44): the plan's rooms filled by a scheme's colours. Absent:
     /// none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub color_plan: Option<ColorPlan>,
 }
 
@@ -1680,10 +1609,8 @@ pub struct ArchSettings {
 /// 2.5's static sub-disciplines (Betonarme, Çelik, Yığma, Ahşap, Kompozit), cut stone masonry apart from the other
 /// masonry as Planlı Alanlar İmar Yönetmeliği 20/8-j, 22/1-m and 28/1-d name it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StructuralSystem {
     /// Betonarme.
     ReinforcedConcrete,
@@ -1738,14 +1665,11 @@ impl StructuralSystem {
 /// architectural elements (“geleneksel mimari öğeler barındıran”), which only a cut stone masonry building's reading
 /// takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingStructure {
     pub system: StructuralSystem,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub traditional: bool,
 }
 
@@ -1774,10 +1698,8 @@ impl BuildingStructure {
 /// The parcel's area's use in the plan, as Planlı Alanlar İmar Yönetmeliği 28/1 reads the storeys' heights by it
 /// (docs/adr/8085): its a, b, c and ç, and a use 28/1 says nothing of (a school's, a hospital's …).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Zone {
     /// Konut alanı (28/1-c).
     Residential,
@@ -1877,10 +1799,8 @@ impl Zone {
 /// Yapı nizamı (docs/adr/8141; Planlı Alanlar İmar Yönetmeliği 4/1-pppp): ayrık, bitişik or blok, as the plan sets it;
 /// ikiz (attached on one side, detached on the other) as the plan writes it, which the regulation reads as blok.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BuildingLayout {
     /// Ayrık nizam (4/1-pppp-1): attached to no building on a neighbouring parcel.
     Detached,
@@ -1963,10 +1883,8 @@ impl BuildingLayout {
 /// 69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the
 /// national value is said as a conflict the administration decides; both are named where they differ.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LocalRules {
     /// Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022, 32009).
     Sivas,
@@ -1992,31 +1910,25 @@ impl LocalRules {
 /// emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
 /// gives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct Zoning {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub parcel_area: f64,
     /// Emsal (KAKS).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub far: Option<f64>,
     /// TAKS.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub coverage: Option<f64>,
     /// Where the emsal is read from (docs/adr/8140): the zoning certificate, or the zoning plan's decision it was taken
     /// from (the plan, its approval, the decision); one line, at most [`MAX_ZONING_SOURCE`] characters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub far_source: Option<String>,
     /// Where the TAKS is read from, as [`Zoning::far_source`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub coverage_source: Option<String>,
 }
 
@@ -2095,7 +2007,6 @@ impl Zoning {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EmsalCount {
     /// Emsale dahil: the floors' area (katlar alanı).
     #[default]
@@ -2154,7 +2065,6 @@ pub const MAX_EMSAL_BASIS: usize = 200;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceEmsal {
     pub count: EmsalCount,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2273,10 +2183,8 @@ pub const NEW_PROJECT_SPACE_NAMES: [&str; 20] = [
 
 /// How the plan's lines are weighted (docs/adr/8013).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LineGroups {
     /// Every object at its own pen, whatever the scale (absent: the same).
     #[default]

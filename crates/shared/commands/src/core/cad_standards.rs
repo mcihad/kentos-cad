@@ -9,8 +9,6 @@
 //! `catalog/v1/standards/` (the architectural office's `mimari-ofis.json`).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -27,19 +25,15 @@ pub const CAD_STANDARDS_RESOLVE_VERSION: u32 = 1;
 
 /// Builds a prospective standard from the project's ordered bindings.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsResolve {}
 
 /// Read-only effective standard. Global rules and duplicate named definitions
 /// come from the first document; other named definitions are added in order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsResolved {
     pub standard: DrawingStandard,
     /// First definition of each named resource, in binding order. Read-only;
@@ -52,10 +46,8 @@ pub struct StandardsResolved {
 
 /// Source identity and office revision of an effective definition.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardOrigin {
     pub id: String,
     pub revision: String,
@@ -63,10 +55,8 @@ pub struct StandardOrigin {
 
 /// Provenance of the global rules and each effective named definition.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardProvenance {
     pub rules: StandardOrigin,
     pub layers: std::collections::BTreeMap<String, StandardOrigin>,
@@ -81,40 +71,22 @@ pub struct StandardProvenance {
     pub dimension_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
     /// Office tool palettes by id (docs/adr/1014).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(
-            optional,
-            as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"
-        )
-    )]
     pub tool_palettes: std::collections::BTreeMap<String, StandardOrigin>,
     /// Table styles by name (docs/adr/1126 §6).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(
-            optional,
-            as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"
-        )
-    )]
     pub table_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsConflicts {}
 
 /// A later document differs from the first on named definitions or global rules.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardConflict {
     pub kind: String,
     pub name: String,
@@ -129,10 +101,8 @@ pub struct StandardConflict {
 /// Compares global rules and named layer, text and dimension style definitions;
 /// it does not combine standards or decide which rules should be applied.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsConflictsReport {
     pub conflicts: Vec<StandardConflict>,
     pub revision: String,
@@ -152,16 +122,13 @@ fn is_zero(n: &u32) -> bool {
 
 /// A layer the standard defines.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardLayer {
     /// Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.
     pub name: String,
     /// What it holds, for people.
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub description: String,
     /// `#rrggbb`, or a theme colour (`fg`, `fg-dim`, `ink`, `paper`).
     pub color: String,
@@ -170,38 +137,31 @@ pub struct StandardLayer {
     pub line_weight: f64,
     /// Yazdır: whether it is printed.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub plot: bool,
     /// The names of the layers that belong to it (`cad.layers.find`'s
     /// pattern, comma separated alternatives): Standardı uygula merges them
     /// into it as Katmanları çevir does.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
 }
 
 /// A text style the standard asks for.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardTextStyle {
     pub name: String,
     pub font: DrawingFont,
     /// The texts' height on paper; absent: the tool's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
 }
 
 /// A dimension style the standard asks for.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardDimensionStyle {
     pub name: String,
     /// The value's height on paper.
@@ -211,114 +171,73 @@ pub struct StandardDimensionStyle {
 
 /// A drawing standard.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DrawingStandard {
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub description: String,
     /// Its layers, in the order they are added.
     #[serde(default)]
     pub layers: Vec<StandardLayer>,
     /// The names other layers may take (patterns, `A-*`); none: only its layers'.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub naming: Vec<String>,
     /// The fonts texts may be written in; none: any. The first is the one a fix gives.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<DrawingFont>>"))]
     pub fonts: Vec<DrawingFont>,
     /// The text styles the project has; when there are some, it has no others.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<StandardTextStyle>>"))]
     pub text_styles: Vec<StandardTextStyle>,
     /// As the text styles.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<StandardDimensionStyle>>")
-    )]
     pub dimension_styles: Vec<StandardDimensionStyle>,
     /// The line types layers and objects may take; none: any.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<LineType>>"))]
     pub line_types: Vec<LineType>,
     /// Whether objects take colour, line type and line weight from their layers only.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub by_layer: bool,
 }
 
 /// Portable resource definitions carried by a version 2 office standard.
 /// Association alone never overwrites the project's definitions.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardResources {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
     pub line_types: Vec<crate::LineTypeDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
-    )]
     pub hatch_patterns: Vec<crate::HatchPatternDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<StandardBlockReference>>")
-    )]
     pub blocks: Vec<StandardBlockReference>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<StandardSheetTemplateReference>>")
-    )]
     pub sheet_templates: Vec<StandardSheetTemplateReference>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::LeaderStyleDef>>")
-    )]
     pub leader_styles: Vec<crate::LeaderStyleDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::TextStyleDef>>"))]
     pub text_style_definitions: Vec<crate::TextStyleDef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<crate::DimensionStyleDef>>")
-    )]
     pub dimension_style_definitions: Vec<crate::DimensionStyleDef>,
     /// Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
     /// package where it is bound; never installed in the drawing.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ToolPalette>>"))]
     pub tool_palettes: Vec<ToolPalette>,
     /// Named table styles (docs/adr/1126 §6): installed by name as the other styles are.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::TableStyleDef>>"))]
     pub table_style_definitions: Vec<crate::TableStyleDef>,
 }
 
 /// An office tool palette (docs/adr/1014).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ToolPalette {
     /// 1–128 bytes, no surrounding spaces, unique in the package regardless of case.
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// 1 to 200 tools.
     pub tools: Vec<PaletteTool>,
@@ -326,19 +245,15 @@ pub struct ToolPalette {
 
 /// One tool of a palette: a catalog command run with this input (the tool recipe, docs/adr/1014 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PaletteTool {
     /// 1–128 bytes, unique in its palette regardless of case.
     pub id: String,
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
     /// The catalog command and its version.
     pub command: String,
@@ -404,32 +319,25 @@ pub fn tool_palettes_problem(palettes: &[ToolPalette]) -> Option<String> {
 /// Input of `cad.standards.palettes` v1 (docs/adr/1014): the bound standards' office tool palettes, read only.
 /// Refusal: `invalid_standard` (a bound package does not read).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsPalettes {}
 
 /// Why a palette tool does not run here.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PaletteToolProblem {
     pub code: String,
     pub message: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
 }
 
 /// A palette tool as this drawing sees it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PaletteToolState {
     /// `standart:<package id>:<palette id>:<tool id>`: what a personal favourite keeps.
     pub key: String,
@@ -441,21 +349,17 @@ pub struct PaletteToolState {
     /// The command checked its input against this drawing (`validate`) and would run.
     pub ready: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<PaletteToolProblem>,
 }
 
 /// One palette, from the package that gives it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PaletteState {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// The package's id and revision.
     pub standard: String,
@@ -466,10 +370,8 @@ pub struct PaletteState {
 /// Output of `cad.standards.palettes` v1: the palettes in the standards' order, a palette id once (the first
 /// standard's).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsPalettesRead {
     pub palettes: Vec<PaletteState>,
 }
@@ -480,10 +382,8 @@ pub const CAD_STANDARDS_PALETTES_VERSION: u32 = 1;
 /// Approved sheet-template origin. It identifies a template revision, not a
 /// copy of its contents or permission to modify an existing sheet.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardSheetTemplateReference {
     pub template_id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
@@ -513,16 +413,13 @@ pub fn standard_sheet_templates_problem(
 /// A named block library release required by an office standard. The
 /// publication identifies a reusable type; geometry stays in its library.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardBlockReference {
     pub name: String,
     pub publication: crate::BlockPublication,
     /// Optional approved authored unit. Checking it never rescales a local block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<crate::BlockUnits>,
 }
 
@@ -1060,37 +957,29 @@ pub fn standard_problem(s: &DrawingStandard) -> Option<String> {
 
 /// `cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsCheck {
     /// A built-in standard by its id (`mimari-ofis`); or
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// the standard itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub standard: Option<DrawingStandard>,
     /// Optional named definitions from a version 2 standard package. Checking
     /// them never imports or replaces a drawing resource.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub resources: Option<StandardResources>,
     /// The standard's source, which accepted findings are bound to (docs/adr/1129): a bound package's id and revision,
     /// or `cad.standards.resolve`'s `provenance.rules`. Absent: the standard's name, no revision.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub origin: Option<StandardOrigin>,
 }
 
 /// Whether a finding is the project's to look at (docs/adr/1129 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StandardIssueState {
     /// Not accepted (the field is then absent).
     #[default]
@@ -1109,10 +998,8 @@ impl StandardIssueState {
 
 /// What a finding is about.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StandardIssueKind {
     /// A standard layer the drawing lacks.
     MissingLayer,
@@ -1161,32 +1048,26 @@ pub enum StandardIssueKind {
 
 /// A finding.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardIssue {
     pub kind: StandardIssueKind,
     /// What it is about: a layer's, a style's or a line type's name.
     pub subject: String,
     /// The layer's id, when it is about one of the drawing's layers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// What the standard asks for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected: Option<String>,
     /// What the drawing has.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub found: Option<String>,
     /// Direct objects this finding is about (ObjectLineType, OwnLook, named
     /// line type or hatch definition), or direct placements of a mismatched
     /// published block (BlockPublication or BlockUnit). Layer and nested-block
     /// uses are described separately in the finding's message.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     /// Whether `cad.standards.apply` fixes it.
@@ -1195,20 +1076,16 @@ pub struct StandardIssue {
     pub message: String,
     /// Accepted or lapsed (docs/adr/1129 §2); absent: open.
     #[serde(default, skip_serializing_if = "StandardIssueState::is_open")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<StandardIssueState>"))]
     pub state: StandardIssueState,
     /// The accepted finding's reason, when it is accepted or lapsed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
 }
 
 /// `cad.standards.check`'s answer.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsReport {
     /// The standard's name.
     pub standard: String,
@@ -1220,11 +1097,9 @@ pub struct StandardsReport {
     pub fixable: u32,
     /// How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub accepted: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub lapsed: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -1235,40 +1110,30 @@ pub struct StandardsReport {
 /// in one undo step “Standardı uygula”; the styles and the project's font
 /// are settings (docs/adr/0183), written with it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsApply {
     /// As the check's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub standard: Option<DrawingStandard>,
     /// Add the standard layers the drawing lacks.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub layers: bool,
     /// Give the standard layers the drawing has their colour, line type, weight and Yazdır.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub restyle: bool,
     /// Merge the layers that belong to a standard layer into it.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub rename: bool,
     /// The project's font, the text styles' fonts, the missing text and dimension styles.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub styles: bool,
     /// The group new layers go into; absent: the top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -1290,10 +1155,8 @@ impl Default for StandardsApply {
 
 /// What `cad.standards.apply` did.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsApplied {
     pub changed: bool,
     /// The layers added, by id, in the standard's order.
@@ -1643,10 +1506,8 @@ pub const STANDARDS_INSTALL_STEP: &str = "Standart kaynaklarını kur";
 /// A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's
 /// reference and a sheet template an approved template revision (docs/adr/1100 §2–§3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StandardResourceKind {
     LineType,
     HatchPattern,
@@ -1662,10 +1523,8 @@ pub enum StandardResourceKind {
 /// What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
 /// local id kept, so what names it follows), the drawing's kept, or the standard's added under another name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StandardInstallAction {
     Add,
     Replace,
@@ -1676,10 +1535,8 @@ pub enum StandardInstallAction {
 /// The user's choice for one resource; a resource without one takes its default (add a missing one, keep a
 /// differing or equal one).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardInstallChoice {
     pub kind: StandardResourceKind,
     /// The resource's name in the standard.
@@ -1687,7 +1544,6 @@ pub struct StandardInstallChoice {
     pub action: StandardInstallAction,
     /// For `renameIncoming`: the name the standard's resource takes in the drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub new_name: Option<String>,
 }
 
@@ -1698,36 +1554,26 @@ pub struct StandardInstallChoice {
 /// `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
 /// `revision_conflict`, `block_refused`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsInstall {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(optional, as = "Option<Vec<StandardInstallChoice>>")
-    )]
     pub choices: Vec<StandardInstallChoice>,
     /// A project's or office's block libraries (`kentos.blocks`, absolute paths ending `.kblok`, at most 16 MiB
     /// each), searched in this order before KentOS's own; each is named by its file stem in a row's `library`. Read
     /// at each call, never written to the drawing (docs/adr/1019).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     #[cfg_attr(feature = "schema", schemars(length(max = 16)))]
     pub libraries: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One resource of the bound standards and what the install does with it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardInstallRow {
     pub kind: StandardResourceKind,
     pub name: String,
@@ -1736,22 +1582,18 @@ pub struct StandardInstallRow {
     pub status: String,
     pub action: StandardInstallAction,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub new_name: Option<String>,
     /// The differing appearance fields (`differs`); for `unavailable`, what the nearest library entry differs in
     /// (`release`, `units`, `revision`), none when no library has the type or template at all.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub fields: Vec<String>,
     /// Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
     /// templates: the sheets made from that template, which are never changed; table styles: the tables of the drawing
     /// and of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub uses: u32,
     /// The standard the resource comes from and its office revision.
@@ -1760,10 +1602,8 @@ pub struct StandardInstallRow {
 
 /// Output of `cad.standards.install` v1.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsInstalled {
     /// Every resource of the bound standards, by kind then by the standards' order.
     pub rows: Vec<StandardInstallRow>,

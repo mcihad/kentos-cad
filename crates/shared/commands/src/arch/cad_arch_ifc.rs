@@ -7,8 +7,6 @@
 //! `fixtures/commands/v1/cad.arch.ifc.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ARCH_IFC: &str = "cad.arch.ifc";
 pub const CAD_ARCH_IFC_VERSION: u32 = 1;
@@ -17,10 +15,8 @@ pub const CAD_ARCH_IFC_VERSION: u32 = 1;
 /// writes each body whole and its openings' bodies for the reader to take out of their walls; `reference` writes each
 /// body already cut, its openings there as 'Reference' shapes, not taken out again.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum IfcView {
     #[default]
     DesignTransfer,
@@ -36,10 +32,8 @@ impl IfcView {
 /// A fire compartment to write as a group of its rooms (docs/adr/8088; BYKHY 4/tt, 24): its rooms by persistent id, as
 /// the standards package finds them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcCompartment {
     pub rooms: Vec<String>,
 }
@@ -56,32 +50,25 @@ pub struct IfcCompartment {
 /// object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
 /// solid, with the object's name and why).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportIfcBuilding {
     pub path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stamp: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
     #[serde(default, skip_serializing_if = "IfcView::is_design_transfer")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<IfcView>", optional))]
     pub view: IfcView,
     /// One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
     /// counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
     /// The fire compartments (docs/adr/8088), each written as a zone of its rooms the file holds (`IfcZone`, “Yangın
     /// kompartımanı N” in this order; one none of whose rooms the file holds is not written). The command writes what
     /// it is given: the compartments are the standards package's (`tr.kentos.mimari-mevzuat`, BYKHY 24). Absent: a
     /// host that runs Python (the desktop, MCP, the command line) asks the package for them; empty: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub compartments: Option<Vec<IfcCompartment>>,
 }
 
@@ -89,10 +76,8 @@ pub struct ExportIfcBuilding {
 /// class it holds (the openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its
 /// size and its SHA-256.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcBuildingExported {
     pub path: String,
     pub schema: String,

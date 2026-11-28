@@ -6,8 +6,6 @@
 //! (docs/adr/0589 §3, 1260 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -19,10 +17,8 @@ pub const CAD_STANDARDS_EXCEPTIONS_VERSION: u32 = 1;
 
 /// What `cad.standards.exceptions` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum StandardExceptionOperation {
     /// The findings are kept on purpose, with `reason`.
     Accept,
@@ -32,15 +28,12 @@ pub enum StandardExceptionOperation {
 
 /// A finding as `cad.standards.check` names it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardFindingKey {
     pub kind: StandardIssueKind,
     pub subject: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
 }
 
@@ -57,52 +50,40 @@ pub struct StandardFindingKey {
 /// `invalid_revision`, `revision_conflict` (status `conflict`); `finding_not_found` (`findings[i]`: today's check has no
 /// such finding, or `withdraw`: none such is accepted against the source).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsExceptions {
     pub operation: StandardExceptionOperation,
     /// The findings, at least one.
     pub findings: Vec<StandardFindingKey>,
     /// The standard, as `cad.standards.check` takes it: a built-in one by its id, or the standard itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub standard: Option<DrawingStandard>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub resources: Option<StandardResources>,
     /// The standard's source (a bound package's id and revision); absent: the standard's name, no revision.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub origin: Option<StandardOrigin>,
     /// `accept`: why the findings are kept (not empty, at most 500 characters).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     /// `accept`: who accepts them and when (ISO 8601), recorded as given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.standards.exceptions` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsExceptionsEdited {
     /// The findings whose acceptance changed.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

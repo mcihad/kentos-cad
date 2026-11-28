@@ -20,7 +20,6 @@ pub const MAX_RISERS: u32 = 400;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Railings {
     Left,
     Right,
@@ -62,7 +61,6 @@ impl Railings {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GridBubbles {
     #[default]
     Both,
@@ -107,7 +105,6 @@ fn is_both(b: &GridBubbles) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GridFields {
     /// Its start and end.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -144,7 +141,6 @@ pub struct GridFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct GridEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -159,7 +155,6 @@ pub struct GridEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ColumnShape {
     #[default]
     Rect,
@@ -195,7 +190,6 @@ impl ColumnShape {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ColumnAnchor {
     #[default]
     Center,
@@ -287,7 +281,6 @@ fn is_rect(s: &ColumnShape) -> bool {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ColumnBreak {
     /// One of its grids is gone, or they no longer cross.
     GridGone,
@@ -311,7 +304,6 @@ pub const COLUMN_MATERIAL: &str = "Betonarme";
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ColumnFields {
     /// Its reference point (docs/adr/0725 §2): its centre, or the point of its box its `anchor` names; where its grids
     /// cross when it stands on them.
@@ -461,7 +453,6 @@ impl ColumnFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ColumnEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -476,7 +467,6 @@ pub struct ColumnEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StairFields {
     /// Its walking line, up from its first point: two points straight, three an L, four a U.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -541,7 +531,6 @@ pub struct StairFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StairEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
@@ -556,7 +545,6 @@ pub struct StairEntity {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RampFields {
     /// Its centre line, up from its first point.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -601,7 +589,6 @@ pub struct RampFields {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RampEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

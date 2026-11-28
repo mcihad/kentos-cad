@@ -23,7 +23,6 @@ pub const MAX_ASSOC_OBJECTS: usize = 100_000;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchPatternType {
     Solid,
     /// User-defined lines at `angle`, `spacing` apart.
@@ -43,7 +42,6 @@ pub enum HatchPatternType {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PatternLine {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: f64,
@@ -62,7 +60,6 @@ pub struct PatternLine {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum GradientShape {
     /// From one side of the hatch to the other along `angle`.
     Linear,
@@ -77,7 +74,6 @@ pub enum GradientShape {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchGradient {
     pub shape: GradientShape,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -90,7 +86,6 @@ pub struct HatchGradient {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchPattern {
     #[serde(rename = "type")]
     pub kind: HatchPatternType,
@@ -128,10 +123,8 @@ pub struct HatchPattern {
 
 /// What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchPatternUnit {
     /// Millimetres on paper (acadiso.pat's, the library's).
     #[default]
@@ -155,22 +148,18 @@ impl HatchPatternUnit {
 
 /// A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchPatternDef {
     /// One of its kind among the project's, letters' case aside; no comma.
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub description: String,
     #[serde(default)]
     pub unit: HatchPatternUnit,
     pub lines: Vec<PatternLine>,
     /// The file it came from (`kentos.pat`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
 }
 
@@ -242,7 +231,6 @@ pub fn hatch_patterns_problem(defs: &[HatchPatternDef]) -> Option<String> {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchAssoc {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -278,7 +266,6 @@ pub const MAX_CURVE_DEGREE: u32 = 10;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchCurve {
     /// An ellipse's arc: centre `c`, major semi-axis `major` (from `c`), minor to major `ratio`, from parameter `t0`
     /// to `t1` (radians): counter-clockwise when `t1` is past `t0`, clockwise when before it; a whole ellipse
@@ -317,7 +304,6 @@ pub enum HatchCurve {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchLoop {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,

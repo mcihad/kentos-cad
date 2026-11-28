@@ -6,8 +6,6 @@
 //! profile. A profile is a working model; holding to it is not a statement of legal conformity.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -31,10 +29,8 @@ pub const MAX_FINDING_UIDS: usize = 1000;
 
 /// A class's objects' kind of geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileGeometry {
     /// Alan: a polygon (holes and parts allowed).
     Area,
@@ -70,10 +66,8 @@ impl ProfileGeometry {
 /// A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the
 /// other; `cad.profiles.check` says where they differ by more than `tolerance`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RegisteredArea {
     /// The field that holds it, in square metres.
     pub field: String,
@@ -84,10 +78,8 @@ pub struct RegisteredArea {
 
 /// A class of the profile: a layer by its path, its objects' geometry, its fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileClass {
     /// Letters, digits, `-`; unique in the profile.
     pub id: String,
@@ -101,22 +93,18 @@ pub struct ProfileClass {
     pub geometry: ProfileGeometry,
     /// The identifier field: unique among the class's objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     pub fields: Vec<LayerField>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub registered_area: Option<RegisteredArea>,
     /// The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,
     /// description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
     /// point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub codes: Vec<String>,
     /// The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with
     /// these classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::WorkKind>>", optional))]
     pub work: Vec<crate::WorkKind>,
 }
 
@@ -129,10 +117,8 @@ pub fn field_code_holds(code: &str) -> bool {
 
 /// A relation between two classes: the child class's field holds a parent object's persistent id.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileRelation {
     pub id: String,
     pub name: String,
@@ -146,19 +132,14 @@ pub struct ProfileRelation {
 
 /// How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileAddress {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub doors: Option<DoorSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub streets: Option<StreetSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AreaSource>>", optional))]
     pub areas: Vec<AreaSource>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub min_score: u32,
@@ -176,10 +157,8 @@ fn is_first_release(r: &u32) -> bool {
 
 /// A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DataProfile {
     /// `kentos.data-profile`.
     pub format: String,
@@ -193,21 +172,16 @@ pub struct DataProfile {
     /// The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's
     /// `migrations` move the data of the release before it.
     #[serde(default = "first_release", skip_serializing_if = "is_first_release")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub release: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileMigration>>", optional))]
     pub migrations: Vec<ProfileMigration>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FieldDomain>>", optional))]
     pub domains: Vec<FieldDomain>,
     pub classes: Vec<ProfileClass>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileRelation>>", optional))]
     pub relations: Vec<ProfileRelation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub address: Option<ProfileAddress>,
 }
 
@@ -431,43 +405,33 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
 /// a name KentOS has not), `invalid_profile`, `invalid_revision`, `revision_conflict`. Warnings: `profile_field_differs`,
 /// `profile_domain_differs`, `profile_layer_skipped`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesApply {
     /// A built-in profile's name: `tucbs-temel`. `profile`, when given, goes first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// Or the profile itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
     /// An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<ProfileMapping>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping_name: Option<String>,
     /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
     /// is not a built-in's and a `mappingName` are found.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output (and plan) of `cad.profiles.apply` v1.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesApplied {
     /// Whether anything was written.
     pub changed: bool,
@@ -490,37 +454,28 @@ pub struct ProfilesApplied {
 ///
 /// Refusals: `unknown_profile`, `invalid_profile`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
     /// An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<ProfileMapping>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping_name: Option<String>,
     /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
     /// is not a built-in's and a `mappingName` are found.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
 }
 
 /// What a finding is about.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProfileFindingKind {
     /// The class's layer is not in the drawing (`cad.profiles.apply` adds it).
     MissingLayer,
@@ -551,27 +506,21 @@ pub enum ProfileFindingKind {
 
 /// One finding of `cad.profiles.check`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileFinding {
     pub kind: ProfileFindingKind,
     /// The class's id; none for a value list.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     /// The layer's id, when the drawing has it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The field, the value list's or the relation's id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub subject: Option<String>,
     /// The value: the duplicate identifier, the value refused.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
     /// The objects it is about, in the drawing's order, at most 1000.
     pub uids: Vec<String>,
@@ -580,11 +529,9 @@ pub struct ProfileFinding {
     pub count: u32,
     /// For an area difference: the geometric area, the registered area and their difference, square metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub geometric: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub registered: Option<f64>,
     /// Whether `cad.profiles.apply` fixes it.
@@ -594,16 +541,13 @@ pub struct ProfileFinding {
 
 /// A class's line of the report.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfileClassSummary {
     pub class: String,
     pub title: String,
     /// The layer's id; none when the drawing has not the layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
@@ -613,10 +557,8 @@ pub struct ProfileClassSummary {
 
 /// Output (and plan) of `cad.profiles.check` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProfilesReport {
     pub profile: String,
     pub title: String,
@@ -626,7 +568,6 @@ pub struct ProfilesReport {
     pub basis: String,
     /// The mapping the profile was read through, when one was given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub mapping: Option<String>,
     pub classes: Vec<ProfileClassSummary>,
     /// The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'

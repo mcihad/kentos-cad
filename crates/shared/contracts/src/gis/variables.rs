@@ -6,8 +6,6 @@
 //! readers', the settings windows' and the server's.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most variables a project keeps.
 pub const VARIABLES_MAX: usize = 200;
@@ -17,10 +15,8 @@ pub const VARIABLE_TEXT_MAX: usize = 4_000;
 
 /// What a variable holds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum VariableKind {
     #[default]
     Text,
@@ -32,11 +28,9 @@ pub enum VariableKind {
 
 /// A variable's value: none yet, true/false, a number or text.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
 #[serde(untagged)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum VariableValue {
     #[default]
     Null,
@@ -47,22 +41,18 @@ pub enum VariableValue {
 
 /// One of the project's variables.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectVariable {
     /// Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).
     pub name: String,
     /// What the settings window shows beside it (“İş numarası”).
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub label: String,
     #[serde(default)]
     pub kind: VariableKind,
     /// None yet: written as no value (an empty `@ad`), as the file keeps it.
     #[serde(default, skip_serializing_if = "VariableValue::is_null")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<VariableValue>"))]
     pub value: VariableValue,
 }
 

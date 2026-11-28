@@ -70,7 +70,6 @@ pub const PROJECT_TAG_MAX: usize = 32;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectType {
     /// General CAD work; also every project made before types existed.
     #[default]
@@ -123,7 +122,6 @@ impl ProjectType {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectState {
     Active,
     /// Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.
@@ -137,17 +135,13 @@ pub enum ProjectState {
 /// Input of commands that need nothing but the project the envelope names
 /// (`project.archive`, `project.unarchive`, `project.trash`, `project.restore`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EmptyInput {}
 
 /// Input of `project.rename` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectRename {
     /// Not empty, at most 200 bytes; surrounding spaces are dropped.
     pub name: String,
@@ -156,42 +150,32 @@ pub struct ProjectRename {
 /// Input of `project.metadata.update` v1: the fields given replace the
 /// project's; absent ones stay.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectMetadataUpdate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// At most 2 000 characters; surrounding spaces are dropped.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project_type: Option<ProjectType>,
     /// At most 12, each 1–32 characters; spaces inside are collapsed, and a
     /// tag that differs from an earlier one only by case or Turkish letters is dropped.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tags: Option<Vec<String>>,
 }
 
 /// Input of `project.duplicate` v1.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectDuplicate {
     /// The copy's name; absent: the source's with " (kopya)".
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The workspace the copy goes to; absent: the source's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tenant_id: Option<String>,
 }
 
@@ -202,28 +186,22 @@ pub struct ProjectDuplicate {
 /// moment kept as a file project's revision 1. The source does not change;
 /// the answer is the new project, as a copy's (`ProjectDuplicated`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectConvert {
     pub to: crate::ProjectStorage,
     /// The new project's name; the source's with the mode after it when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The workspace of the new project; the source's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tenant_id: Option<String>,
 }
 
 /// Input of `project.purge` v1: the explicit confirmation of removing a project for good.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectPurge {
     /// The project's name now, exactly: the caller names what goes.
     pub confirm_name: String,
@@ -231,10 +209,8 @@ pub struct ProjectPurge {
 
 /// Input of `project.favorite` v1.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectFavorite {
     /// Add to the caller's favourites (true) or take it out (false).
     pub favorite: bool,
@@ -246,10 +222,8 @@ pub struct ProjectFavorite {
 /// unarchive, trash, restore, favourite); a retry with the same
 /// idempotency key gets the same answer (`replayed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectCatalogChange {
     /// The project as the caller sees it after the command.
     pub project: ProjectSummary,
@@ -257,7 +231,6 @@ pub struct ProjectCatalogChange {
     pub changed: bool,
     /// The event open connections hear, when something changed that they hear of.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub event_seq: Option<String>,
     #[serde(default)]
     pub replayed: bool,
@@ -265,10 +238,8 @@ pub struct ProjectCatalogChange {
 
 /// The result of `project.duplicate`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectDuplicated {
     /// The copy, as its owner (the caller) sees it.
     pub project: ProjectSummary,
@@ -282,10 +253,8 @@ pub struct ProjectDuplicated {
 /// The result of `project.purge`. The project is gone: a retry after a lost
 /// answer finds nothing (404).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectPurged {
     pub project_id: String,
     pub name: String,
@@ -297,10 +266,8 @@ pub struct ProjectPurged {
 
 /// A list of the catalog (`GET /v1/me/catalog?view=`), for the signed-in person.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogView {
     /// Active projects they own, in every workspace (“Projelerim”).
     Mine,
@@ -321,10 +288,8 @@ pub enum CatalogView {
 /// The order of a list; ties go by project id. Times newest first, names A to Z
 /// (Turkish letters folded, the same on every server whatever its locale).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CatalogSort {
     /// Last change of content or catalog metadata.
     Updated,

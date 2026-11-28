@@ -21,8 +21,6 @@
 //! `extraction_too_deep`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -38,45 +36,35 @@ pub const CAD_EXTRACT_TABLE_VERSION: u32 = 1;
 /// Input of `cad.extract.run` v1: a recipe, or an extraction table whose recipe is worked out (and said whether it
 /// is current).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractRun {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub recipe: Option<ExtractionRecipe>,
     /// An extraction table by its persistent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub table: Option<String>,
     /// The folder relative paths are read from (the drawing's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base: Option<String>,
     /// The open drawing's own file: a recipe naming it is refused (it would be counted twice).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One row worked out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractRow {
     /// Its key: a grouped row's word cells joined by U+001F, an ungrouped row's occurrence path.
     pub key: String,
     pub cells: Vec<String>,
     /// Each column's unrounded value in its unit (a quantity's); null for words or an empty cell.
-    #[cfg_attr(feature = "ts", ts(type = "Array<number | null>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub values: Vec<Option<f64>>,
     /// Its occurrences' paths: the drawing (its path as the recipe names it, empty for the open one), `#`, the
@@ -87,10 +75,8 @@ pub struct ExtractRow {
 
 /// What an extraction left out or could not match.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractNotes {
     /// Hidden pieces and objects on hidden or frozen layers left out.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -122,10 +108,8 @@ pub struct ExtractNotes {
 
 /// Output of `cad.extract.run` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractRan {
     pub headings: Vec<String>,
     /// Which columns are quantities.
@@ -133,11 +117,9 @@ pub struct ExtractRan {
     pub rows: Vec<ExtractRow>,
     /// The Toplam row's cells, when the recipe totals.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub total: Option<Vec<String>>,
     /// Its quantity columns' unrounded sums.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "Array<number | null>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub totals: Option<Vec<Option<f64>>>,
     /// How many occurrences were counted.
@@ -148,7 +130,6 @@ pub struct ExtractRan {
     pub notes: ExtractNotes,
     /// With `table`: whether Tabloyu güncelle would change its extracted cells (its sources changed since).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub stale: Option<bool>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -156,51 +137,40 @@ pub struct ExtractRan {
 
 /// Input of `cad.extract.table` v1: a recipe written as a table at `at` (its top left corner), keeping the recipe.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractTable {
     pub recipe: ExtractionRecipe,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     /// Its layer; absent: the active one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// Its words' height, metres; absent: the project's table height at its plot scale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     /// Its parts (Tabloyu böl, docs/adr/1030 §7): each at most `breaks.height` deep, the heading row atop each;
     /// absent: one part.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub breaks: Option<crate::table::TableBreaks>,
     /// What Tabloyu güncelle does with a cell changed by hand whose source changed too; absent: keep (refuse the
     /// refresh, saying so).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub overrides: Option<SourceOverrides>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub base: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.extract.table` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractTabled {
     /// The table's persistent id.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -217,10 +187,8 @@ pub struct ExtractTabled {
 
 /// What `cad.extract.table` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ExtractTablePlan {
     pub table: crate::entity::Entity,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

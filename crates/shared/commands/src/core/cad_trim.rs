@@ -11,8 +11,6 @@
 //! north (X), whatever unit the project shows (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const CAD_ENTITIES_EXTEND_VERSION: u32 = 1;
 
 /// Which objects bound the cut or the growth. An object never bounds itself.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TrimBoundaries {
     /// Every shown object of the drawing: on a visible layer, passing its
     /// layer's filter (docs/adr/0211) and, on a host showing a time slice,
@@ -54,10 +50,8 @@ pub enum TrimBoundaries {
 /// Edge mode: whether a boundary bounds only where it is, or along
 /// its natural path past its ends too.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TrimEdgeMode {
     /// A boundary bounds where it is (EDGEMODE 0).
     #[default]
@@ -71,10 +65,8 @@ pub enum TrimEdgeMode {
 
 /// A crossing window (Kesişen): the shown objects meeting the rectangle.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TrimWindow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min: Vec2,
@@ -84,10 +76,8 @@ pub struct TrimWindow {
 
 /// Where an object was picked.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TrimPick {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -140,54 +130,43 @@ pub struct TrimPick {
 /// boundary there; at `fence` or `crossing` when it picked nothing); on the
 /// desktop also `slots_exhausted`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTrim {
     /// The picks; none when a fence or a window picks.
     #[serde(default)]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<TrimPick>>"))]
     pub picks: Vec<TrimPick>,
     /// Çit: a drawn open path, at least two points; every shown object it
     /// crosses is picked where it crosses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub fence: Option<Vec<Vec2>>,
     /// Kesişen: a crossing window.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub crossing: Option<TrimWindow>,
     /// The edge mode; absent: `none`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub edge_mode: Option<TrimEdgeMode>,
     /// Buda: an object no boundary cuts goes whole where it is picked
     /// instead of being left with a `trim_failed`
     /// warning. Uzat ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub erase_uncut: Option<bool>,
     /// The boundaries; absent: every shown object (`all`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundaries: Option<TrimBoundaries>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.entities.trim` v1 and `cad.entities.extend` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTrimmed {
     /// The objects that took new geometry (a trim's first piece, an extended
     /// object), in the picks' order.
@@ -204,10 +183,8 @@ pub struct EntitiesTrimmed {
 /// What `cad.entities.trim` or `.extend` would write (plan mode); nothing is
 /// written. Execute against the plan's revision writes exactly this.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTrimPlan {
     /// The objects that would take new geometry, as written, with their slots.
     pub changed: Vec<Entity>,

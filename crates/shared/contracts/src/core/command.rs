@@ -10,15 +10,11 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// Parse → authenticate → authorize → preview/validate → transaction → outbox → result.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandEnvelope {
     /// `alan.eylem`, e.g. "feature.update".
     pub command_name: String,
@@ -31,7 +27,6 @@ pub struct CommandEnvelope {
     pub idempotency_key: String,
     /// Row version each touched object had when the edit started; bigint as decimal text (§24.1).
     pub expected_versions: BTreeMap<String, String>,
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub input: serde_json::Value,
 }
 
@@ -41,14 +36,12 @@ pub struct CommandEnvelope {
 /// output: nothing (`null`) for validate, the plan for plan, the command's
 /// output for execute.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(
     tag = "status",
     rename_all = "snake_case",
     rename_all_fields = "camelCase"
 )]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CommandResult<T> {
     /// Done. After execute, what the command wrote is in the document as one undo step.
     Completed {
@@ -74,10 +67,8 @@ pub enum CommandResult<T> {
 /// Why a command did not complete (TODOS.md ARCH-07): a stable code for
 /// programs, a message for people, the input field it is about.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandError {
     /// Stable, lowercase with underscores (`layer_locked`): programs branch on it, never on the message.
     pub code: String,
@@ -85,37 +76,30 @@ pub struct CommandError {
     pub message: String,
     /// The input field it is about, as `pts[2].y` or `holes[0].bulges`; absent when none is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// The document's revision now (decimal text), when the error is about it: a conflict.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     /// The persistent ids of the objects it is about (docs/adr/0253 §7): the
     /// protocol's answer names them, from `path` when that leads to an id of
     /// the input, or from the check that failed (`stale_state`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     /// Whether calling again may succeed as it is (a conflict: prepare the
     /// input again or send it again), as opposed to an input that is wrong
     /// in itself. The protocol's answer sets it by the code (`kentos_contracts::codes`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub retryable: bool,
     /// A `constraint_conflict`'s architectural bonds in the way (docs/adr/0780 §1): what each holds and keeps, and
     /// which one taken away lets the write through. Empty for every other refusal.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::BondInTheWay>>", optional))]
     pub bonds: Vec<crate::BondInTheWay>,
 }
 
 /// Something a completed command wants the caller to know.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandWarning {
     /// Stable, lowercase with underscores (`layer_hidden`).
     pub code: String,
@@ -123,7 +107,6 @@ pub struct CommandWarning {
     pub message: String,
     /// The input field it is about; absent when none is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
 }
 

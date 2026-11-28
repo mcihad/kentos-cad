@@ -29,7 +29,6 @@ pub const OPEN_GAP: f64 = 0.001;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UnitKind {
     /// Bağımsız bölüm: a flat, a shop, an office; its own spaces summed for it alone.
     #[default]
@@ -77,68 +76,55 @@ fn is_unit(k: &UnitKind) -> bool {
 
 /// A wing of a building.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramWing {
     pub id: String,
     pub name: String,
     /// The levels it spans (docs/adr/0784 §1), by their ids, each once; within its building's when the building names
     /// any. None: not said.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub levels: Vec<String>,
 }
 
 /// A building and its wings.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramBuilding {
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProgramWing>>", optional))]
     pub wings: Vec<ProgramWing>,
     /// The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub levels: Vec<String>,
     /// Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'
     /// names carry it; "00" only for a project of one building. None: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
     /// What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub usage: Option<String>,
     /// Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;
     /// its storeys' levels are read from it. None: not said (the project's when it is the only building).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub zero: Option<f64>,
     /// Its own Bölge (docs/adr/8144; `.kcad` Mimari data 30): where the parcel's blocks stand on decisions of different
     /// uses, PAİY 28/1 reads its storeys' heights by it. None: the project's (Proje ayarları › Mimari › İmar durumu).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zone: Option<crate::Zone>,
     /// Its own structural system and traditional elements (docs/adr/8145; `.kcad` Mimari data 31): a block built
     /// otherwise than the others, PAİY 22/1-m, 28/1-d, 5/8 and 20/8-j read its storeys by it. None: the project's
     /// (Proje ayarları › Mimari › Taşıyıcı sistem).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub structure: Option<crate::BuildingStructure>,
     /// Its own plan notes (docs/adr/8163; `.kcad` Mimari data 35): the plan's values for the area of the parcel it
     /// stands in, where a kademe hattı (PAİY 4/1-mm) gives the parcel's areas different storeys, heights or other
     /// values. A measure it notes takes the place of the project's note on that measure; the others are the
     /// project's (Proje ayarları › Mimari › Plan notları). Checked as the project's notes are.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::PlanNote>>", optional))]
     pub plan_notes: Vec<crate::PlanNote>,
 }
 
@@ -151,10 +137,8 @@ pub fn is_ground_name(name: &str) -> bool {
 /// A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its
 /// area once.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SharedLevel {
     pub level: String,
     pub building: String,
@@ -165,36 +149,28 @@ pub const MAX_BUILDING_ZERO: f64 = 100.0;
 
 /// A group of spaces: an independent unit, a common area or an outdoor area.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProgramUnit {
     pub id: String,
     /// Its number, as the project writes it (“D1”, “1”, “Ortak”); one per group.
     pub number: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "is_unit")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<UnitKind>", optional))]
     pub kind: UnitKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub wing: Option<String>,
     /// Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,
     /// never written by a measurement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub recorded_area: Option<f64>,
     /// Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal
     /// written as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$"))
@@ -203,16 +179,13 @@ pub struct ProgramUnit {
     /// Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
     /// what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub nature: Option<String>,
     /// An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub annex_of: Option<String>,
     /// An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by
     /// location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(
         feature = "schema",
         schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$"))
@@ -222,47 +195,37 @@ pub struct ProgramUnit {
 
 /// The design brief for the spaces of one usage: what the designer aims at, never a legal limit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceBrief {
     /// The usage it is for, as the spaces write it (`SpaceFields::usage`).
     pub usage: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_max: Option<f64>,
     /// The least net width: the largest circle inside the space, its diameter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_width: Option<f64>,
     /// The least net passage: the widest a body may be and still go between all the space's doors (a corridor's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_passage: Option<f64>,
     /// Usages one of its neighbours (a wall or an opening between) should have, each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub adjacent: Vec<String>,
     /// Usages it should open into, each: by a door, a gap or a room separator.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub reach: Vec<String>,
     /// An outdoor space of a unit (a balcony, a terrace): summed apart from its unit's rooms.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub outdoor: bool,
     /// How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and
     /// use (`emsal_by_use`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub emsal: Option<crate::EmsalCount>,
 }
 
@@ -290,10 +253,8 @@ impl SpaceBrief {
 /// The free room a fixture needs in front of it: a rectangle `width` wide, `depth` deep, centred on the front of the
 /// block's own box (its +y side).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct FixtureClearance {
     /// The block's name.
     pub block: String,
@@ -305,41 +266,31 @@ pub struct FixtureClearance {
 
 /// A building's program (docs/adr/0773, `.kcad` schema 138).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct BuildingProgram {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProgramBuilding>>", optional))]
     pub buildings: Vec<ProgramBuilding>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProgramUnit>>", optional))]
     pub units: Vec<ProgramUnit>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpaceBrief>>", optional))]
     pub briefs: Vec<SpaceBrief>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FixtureClearance>>", optional))]
     pub clearances: Vec<FixtureClearance>,
     /// The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub share_rule: Option<crate::ShareRule>,
     /// Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
     /// parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 100000000)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub land_total: Option<u64>,
     /// The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SharedLevel>>", optional))]
     pub shared: Vec<SharedLevel>,
 }
 

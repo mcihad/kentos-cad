@@ -5,8 +5,6 @@
 //! the device keeps the password.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The drivers a data layer may name (docs/adr/9100): a GeoPackage file, a PostGIS database.
 pub const DATA_DRIVERS: [&str; 2] = ["gpkg", "postgis"];
@@ -17,10 +15,8 @@ pub const MAX_DATA_TEXT: usize = 2048;
 /// How the project's data layers' edit sessions go together (docs/adr/9104 §2): which layers open, save, let go and
 /// close together, and which are written in one transaction.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum EditGrouping {
     /// Each layer alone: its changes in a transaction of their own.
     #[default]
@@ -45,35 +41,28 @@ impl EditGrouping {
 
 /// The geometry column of a data layer's table as last read.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DataGeometry {
     pub column: String,
     /// OGC's name of its type, upper case (`MULTIPOLYGON`, `POINT`, `GEOMETRY` …).
     pub type_name: String,
     /// Its system's EPSG code; absent: undefined.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Its positions have Z; only `true` is written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub z: bool,
     /// Its positions have M; only `true` is written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub m: bool,
 }
 
 /// Where a data layer's rows are.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DataLayer {
     /// The driver's id: `gpkg` or `postgis`.
     pub driver: String,
@@ -82,7 +71,6 @@ pub struct DataLayer {
     /// A GeoPackage's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving
     /// when the file lies on the same disk; read when `address` is not there.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub relative: Option<String>,
     /// The table: its name in a file, `schema.table` in a database.
     pub table: String,
@@ -90,22 +78,18 @@ pub struct DataLayer {
     pub key: String,
     /// The geometry column; absent: a table of records without geometry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<DataGeometry>,
     /// The table's box as its catalogue last said it (minimum east, north, maximum east, north, in the table's system):
     /// what Katmana yakınlaş and Tümünü göster frame without asking the source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub extent: Option<[f64; 4]>,
     /// The layer is not edited even where the source allows it (the user's choice); only `true` is written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub read_only: bool,
     /// Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width
     /// factor. Drawn as the drawing's texts are; absent: its rows are drawn by its style.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<crate::DataText>,
 }
 

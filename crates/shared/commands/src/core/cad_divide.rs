@@ -11,8 +11,6 @@
 //! (docs/adr/0165 §2).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -27,10 +25,8 @@ pub const MAX_DIVISION_POINTS: u32 = 10_000;
 
 /// How the object is divided.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum Division {
     /// Into `count` equal parts (2 to 10 000): a point between each two, and
     /// on a closed object one at its start too.
@@ -47,10 +43,8 @@ pub enum Division {
 
 /// Which of an open object's own ends also get a place (docs/adr/0299 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DivideEnds {
     /// Neither.
     #[default]
@@ -91,26 +85,21 @@ fn is_zero(v: &f64) -> bool {
 
 /// A block's inserts at the places instead of points.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DivideBlock {
     /// The block's name in the drawing.
     pub name: String,
     /// Each insert turned by the object's direction at its place (the way the object runs from its start), on
     /// top of `rotation`; true by default.
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub align: bool,
     /// The inserts' scale (above zero); 1 by default.
     #[serde(default = "one", skip_serializing_if = "is_one")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: f64,
     /// The inserts' own turn, radians counter-clockwise; 0 by default.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
 }
@@ -137,10 +126,8 @@ pub struct DivideBlock {
 /// a hidden layer gives a `layer_hidden` warning; on the desktop also
 /// `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDivide {
     /// The object's persistent id (lowercase UUID text with hyphens).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
@@ -150,32 +137,26 @@ pub struct EntitiesDivide {
     /// The points are measured from the object's end, not its start (the
     /// tool: from the end nearer the click).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub from_end: bool,
     /// A step's first place, metres from the measuring end (0 and above); absent: at the step.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub start: Option<f64>,
     /// The open object's own ends that also get a place.
     #[serde(default, skip_serializing_if = "DivideEnds::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<DivideEnds>"))]
     pub ends: DivideEnds,
     /// A block's inserts instead of points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<DivideBlock>,
     /// The layer the points go to.
     pub layer_id: String,
     /// How the points look and what they carry.
     #[serde(flatten)]
-    #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

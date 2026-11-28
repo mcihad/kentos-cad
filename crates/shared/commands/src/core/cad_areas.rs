@@ -5,8 +5,6 @@
 //! writes, one undo step named after the tool. The tools write through it; Python and an agent ask the same.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -18,17 +16,14 @@ pub const CAD_AREAS_EDIT_VERSION: u32 = 1;
 
 /// The operation, with what it works on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AreaWork {
     /// Alan birleştir: the areas go, their union comes from the first (its layer, colour and data); areas that do not
     /// touch stay apart, or with `single` make one multi-part area. A multi-part area takes part whole.
     Union {
         ids: Vec<String>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         single: bool,
     },
     /// Alan kesiştir: the areas' common part, a new blank area; with `erase` the areas go and it takes the first one's
@@ -36,10 +31,8 @@ pub enum AreaWork {
     Intersect {
         ids: Vec<String>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         erase: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         single: bool,
     },
     /// Alan çıkar: the areas `cut` taken out of the areas `from`, each piece left with its source's data; one wholly
@@ -48,10 +41,8 @@ pub enum AreaWork {
         from: Vec<String>,
         cut: Vec<String>,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         erase: bool,
         #[serde(default)]
-        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
         single: bool,
     },
     /// Alan böl: the areas split along a cut line through `line`'s points, or along the object `cutter` (Çizgiyle
@@ -59,11 +50,9 @@ pub enum AreaWork {
     Split {
         ids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         line: Option<Vec<Vec2>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         cutter: Option<String>,
     },
     /// Alana çevir: closed objects become areas in their places; the regions the line work among them closes become
@@ -81,7 +70,6 @@ pub enum AreaWork {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         ring: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
     },
@@ -106,24 +94,19 @@ pub enum AreaWork {
 /// `degenerate_shape` (a cut line or a ring of too few points), `no_hole` (no hole at the point), `invalid_hole` (the
 /// ring not inside the area), then `cad.entities.edit`'s (`layer_locked` …).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AreasEdit {
     pub work: AreaWork,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// What `cad.areas.edit` wrote.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AreasEdited {
     /// The objects updated or replaced in place.
     pub changed: Vec<String>,

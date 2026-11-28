@@ -22,7 +22,6 @@ pub const MAX_OPTION_LENGTH: f64 = 1.0e6;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionFit {
     /// Beyond the second extension line when the value and the two arrowheads are longer than the line between them.
     Auto,
@@ -35,7 +34,6 @@ pub enum DimensionFit {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionZeros {
     /// The zero before the point: `0.50` → `.50`.
     Leading,
@@ -59,7 +57,6 @@ impl DimensionZeros {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AltUnits {
     pub unit: DrawingUnit,
     /// Its decimals; absent: the project's length decimals.
@@ -74,7 +71,6 @@ pub struct AltUnits {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ToleranceKind {
     /// ` ±upper`.
     Symmetric,
@@ -89,7 +85,6 @@ pub enum ToleranceKind {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionTolerance {
     pub kind: ToleranceKind,
     /// Above the value, 0 or more.
@@ -112,7 +107,6 @@ pub struct DimensionTolerance {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -152,7 +146,6 @@ pub const DEFAULT_BREAK_SIZE: f64 = 1.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TextShift {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub along: f64,
@@ -169,7 +162,6 @@ pub const MAX_LEVEL_OFFSET: f64 = 1000.0;
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionLevel {
     /// The level, by its id among the project's levels.
     pub id: String,
@@ -214,7 +206,6 @@ impl DimensionLevel {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BreakLine {
     /// The dimension line, from its first end (0) to its second (1).
     Dimension,
@@ -230,7 +221,6 @@ pub enum BreakLine {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionBreak {
     pub line: BreakLine,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]

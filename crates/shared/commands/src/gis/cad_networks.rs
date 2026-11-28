@@ -7,8 +7,6 @@
 //! dirty and is no undo step.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -20,10 +18,8 @@ pub const CAD_NETWORK_DEFINE_VERSION: u32 = 1;
 
 /// What `cad.network.define` does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum NetworkDefineOperation {
     /// The network replaces the project's of its id, or goes last.
     Set,
@@ -45,21 +41,16 @@ pub enum NetworkDefineOperation {
 /// network naming a layer the drawing does not have is written, with the
 /// warning `unknown_layer`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkDefine {
     pub operation: NetworkDefineOperation,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub network: Option<NetworkDef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub id: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -67,10 +58,8 @@ pub struct NetworkDefine {
 /// Output of `cad.network.define` v1, and its plan: the project's networks as
 /// the write leaves them and the revision after it (a plan: before it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct NetworkDefined {
     pub networks: Vec<NetworkDef>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -6,8 +6,6 @@
 //! `fixtures/commands/v1/road.terrains.analysis.json`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const ROAD_TERRAINS_ANALYSIS: &str = "road.terrains.analysis";
 pub const ROAD_TERRAINS_ANALYSIS_VERSION: u32 = 1;
@@ -21,28 +19,22 @@ pub const ROAD_TERRAINS_ANALYSIS_VERSION: u32 = 1;
 /// or not increasing, a cell not positive), `unknown_terrain`, `terrain_unbuildable`, `invalid_analysis` (more grid
 /// cells than four million).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsAnalysis {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub elevations: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub slopes: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub aspects: Option<Vec<f64>>,
     #[serde(default)]
     pub roughness: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub grid: Option<f64>,
     #[serde(default)]
@@ -52,10 +44,8 @@ pub struct TerrainsAnalysis {
 /// A range: its bounds (in the measure's unit), its plan and 3D area, its triangles (slope and aspect; 0 for
 /// elevation, whose triangles are cut) and, asked, its parts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainBand {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub from: f64,
@@ -68,17 +58,14 @@ pub struct TerrainBand {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub triangles: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<[f64; 2]>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub parts: Vec<Vec<[f64; 2]>>,
 }
 
 /// A measure's ranges, the area outside them and (aspect) the flat area.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainBands {
     pub bands: Vec<TerrainBand>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -93,10 +80,8 @@ pub struct TerrainBands {
 
 /// The roughness (vector ruggedness measure, 0–1): its mean over the corners, its largest and where.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainRoughness {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub mean: f64,
@@ -109,10 +94,8 @@ pub struct TerrainRoughness {
 /// A raster's slope against the triangles': the cell, the cells compared, the mean (raster − triangle) and mean
 /// absolute difference, the largest absolute one and where; percent.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainGridSlope {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: f64,
@@ -125,17 +108,14 @@ pub struct TerrainGridSlope {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub max_absolute: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<[f64; 2]>,
 }
 
 /// Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsAnalysed {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -143,19 +123,14 @@ pub struct TerrainsAnalysed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub surface_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub elevations: Option<TerrainBands>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub slopes: Option<TerrainBands>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub aspects: Option<TerrainBands>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub roughness: Option<TerrainRoughness>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub grid: Option<TerrainGridSlope>,
 }
 
@@ -195,78 +170,60 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 /// draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
 /// `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCompare {
     pub base: String,
     pub comparison: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ranges: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<CompareMethod>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut_factor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill_factor: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub assume_heights: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CompareZone>>", optional))]
     pub zones: Vec<CompareZone>,
     /// The sections' spacing, m (docs/adr/4340; the section method's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub interval: Option<f64>,
     /// The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub azimuth: Option<f64>,
     /// How the volume between two sections is reckoned; none: the average end area.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub formula: Option<SectionFormula>,
     /// A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub axis: Option<String>,
     /// The sections' widths left and right of the axis, m (docs/adr/4760).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: Option<f64>,
     /// Sections at the axis's inner corners too (docs/adr/4760).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub corners: Option<bool>,
 }
 
 /// The section method's formula (docs/adr/4340): `(A₀ + A₁)/2 · L`, or
 /// `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SectionFormula {
     #[default]
     EndArea,
@@ -281,10 +238,8 @@ pub const MOST_COMPARE_SECTIONS: f64 = 10_000.0;
 /// A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
 /// fill areas (m²); along a drawn axis (docs/adr/4760) the axis's place there and the section's left and right ends.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainSection {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
@@ -293,11 +248,9 @@ pub struct TerrainSection {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ends: Option<[[f64; 2]; 2]>,
 }
@@ -306,19 +259,15 @@ pub struct TerrainSection {
 /// guessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and
 /// its cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CompareZone {
     pub name: String,
     pub boundary: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut_factor: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill_factor: Option<f64>,
 }
@@ -327,10 +276,8 @@ pub struct CompareZone {
 /// both surfaces cover, the cut, fill and net volumes and their plan areas there (the exact TIN–TIN), and the volumes
 /// adjusted by its factors.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainZoneVolumes {
     pub name: String,
     pub boundary: String,
@@ -354,10 +301,8 @@ pub struct TerrainZoneVolumes {
 /// The difference outside every material zone (docs/adr/3540): the area both surfaces cover there, the cut, fill and
 /// net volumes and their plan areas (the exact TIN–TIN less the zones'), adjusted by the comparison's factors (none: 1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainZoneRest {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub covered: f64,
@@ -377,10 +322,8 @@ pub struct TerrainZoneRest {
 /// How two surfaces' volume is measured (docs/adr/1600, 4340): the exact TIN–TIN prisms, a grid's cells, or parallel
 /// sections.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum CompareMethod {
     #[default]
     Tin,
@@ -393,10 +336,8 @@ pub const MOST_COMPARE_CELLS: f64 = 4_000_000.0;
 
 /// Cut, fill and net (fill − cut) volumes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainVolumes {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub cut: f64,
@@ -409,10 +350,8 @@ pub struct TerrainVolumes {
 /// The volumes adjusted by the factors (docs/adr/1600): the cut times `cutFactor` (its swell), the fill times
 /// `fillFactor` (its compaction), net their difference; the geometric volumes stay as they are.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainAdjusted {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub cut_factor: f64,
@@ -428,10 +367,8 @@ pub struct TerrainAdjusted {
 
 /// A difference's extreme: its value (comparison − base) and where.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainDifferenceAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub difference: f64,
@@ -441,10 +378,8 @@ pub struct TerrainDifferenceAt {
 
 /// A range of the difference and its plan area.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainDifferenceBand {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
@@ -464,10 +399,8 @@ pub struct TerrainDifferenceBand {
 /// (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
 /// comparison's).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCompared {
     pub base: String,
     pub comparison: String,
@@ -486,61 +419,42 @@ pub struct TerrainsCompared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub uncovered: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub least: Option<TerrainDifferenceAt>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub largest: Option<TerrainDifferenceAt>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<TerrainDifferenceBand>>", optional)
-    )]
     pub bands: Vec<TerrainDifferenceBand>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub outside_area: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub exact: Option<TerrainVolumes>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub adjusted: Option<TerrainAdjusted>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainZoneVolumes>>", optional))]
     pub zones: Vec<TerrainZoneVolumes>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rest: Option<TerrainZoneRest>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub zoned: Option<TerrainVolumes>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub interval: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub azimuth: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub formula: Option<SectionFormula>,
     /// The drawn axis the sections stood along and its length (docs/adr/4760).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub axis: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSection>>", optional))]
     pub sections: Vec<TerrainSection>,
 }
 
@@ -556,27 +470,22 @@ pub const ROAD_TERRAINS_ZEROLINE_VERSION: u32 = 1;
 /// `invalid_revision`, `revision_conflict`, `unknown_terrain`, `invalid_analysis` (the same surface twice),
 /// `terrain_unbuildable`, `no_zero_line` (the difference changes sign nowhere).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsZeroLine {
     pub base: String,
     pub comparison: String,
     /// The layer the lines go on.
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A zero line as written: whether closed, its plan length, its places (x, y, the base's height).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainZeroLine {
     pub closed: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -589,10 +498,8 @@ pub struct TerrainZeroLine {
 /// place, x then y, ordered by it), their plan length, the area where the two surfaces coincide (no line is drawn
 /// there), the objects written (a plan: none) and the revision after it (a plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsZeroLined {
     pub base: String,
     pub comparison: String,
@@ -602,7 +509,6 @@ pub struct TerrainsZeroLined {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub coincident: f64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
     pub revision: String,
@@ -616,10 +522,8 @@ pub const MOST_QUALITY_ITEMS: usize = 1000;
 
 /// Spikes asked for: corners more than `limit` (m) off the mean height of the other corners within `radius` (m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainSpikesAsk {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
@@ -630,23 +534,17 @@ pub struct TerrainSpikesAsk {
 /// Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one
 /// class).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCheckpointsAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub class_field: Option<String>,
     /// The check points' own RMSE (m; their survey's), combined with each class's (docs/adr/0945).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma: Option<f64>,
 }
@@ -659,34 +557,26 @@ pub struct TerrainCheckpointsAsk {
 /// limit negative, check points with neither a layer nor uids), `unknown_terrain`, `terrain_unbuildable`,
 /// `layer_not_found`, `entity_not_found`, `invalid_analysis` (a check point's object not a point).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsQuality {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub near: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub spikes: Option<TerrainSpikesAsk>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub checkpoints: Option<TerrainCheckpointsAsk>,
 }
 
 /// Two corners closer than the limit: their places and heights, the plan distance and the height difference (b − a).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainNearPair {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub a: [f64; 3],
@@ -700,10 +590,8 @@ pub struct TerrainNearPair {
 
 /// A spike: the corner, the mean height round it, the difference (z − mean) and the corners round it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainSpike {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 3],
@@ -717,10 +605,8 @@ pub struct TerrainSpike {
 
 /// The coverage gaps: triangles with an edge over the limit, their plan area, the surface's longest edge.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainGaps {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub triangles: u32,
@@ -733,10 +619,8 @@ pub struct TerrainGaps {
 /// A check point: its object, place, height, class, the surface's height there and the difference (point − surface);
 /// none off the surface.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCheckpoint {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -745,26 +629,21 @@ pub struct TerrainCheckpoint {
     pub z: f64,
     pub class: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub surface_z: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub difference: Option<f64>,
     /// Over three NMADs from its class's median (docs/adr/0945): flagged, not left out.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub far: bool,
 }
 
 /// A class's statistics over its points on the surface: how many on and off it, the mean, the standard deviation
 /// (n − 1), the RMSE, the least and the largest difference.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCheckClass {
     pub class: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -783,7 +662,6 @@ pub struct TerrainCheckClass {
     pub max: f64,
     /// Beyond one RMSE, for two points or more (docs/adr/0945).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub robust: Option<TerrainCheckRobust>,
 }
 
@@ -792,10 +670,8 @@ pub struct TerrainCheckClass {
 /// absolute differences, the skewness and excess kurtosis (0 when normal), the points over three NMADs from the median,
 /// and with the check points' own RMSE the two combined, √(RMSE² + σ²).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCheckRobust {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub rmse_low: f64,
@@ -816,17 +692,14 @@ pub struct TerrainCheckRobust {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub far: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub combined: Option<f64>,
 }
 
 /// The check points: each one, each class's statistics (by name) and all of them together.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainCheckpoints {
     pub points: Vec<TerrainCheckpoint>,
     pub classes: Vec<TerrainCheckClass>,
@@ -836,10 +709,8 @@ pub struct TerrainCheckpoints {
 /// Output of `road.terrains.quality` v1: the surface's corners and triangles and what was asked; the lists hold at
 /// most [`MOST_QUALITY_ITEMS`], their counts are whole.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsQualityRead {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -847,24 +718,18 @@ pub struct TerrainsQualityRead {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub triangles: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub near_count: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainNearPair>>", optional))]
     pub near: Vec<TerrainNearPair>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub spike_count: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSpike>>", optional))]
     pub spikes: Vec<TerrainSpike>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub gaps: Option<TerrainGaps>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub checkpoints: Option<TerrainCheckpoints>,
 }
 
@@ -880,22 +745,17 @@ pub const ROAD_TERRAINS_REPAIR_VERSION: u32 = 1;
 /// lists or twice), `unknown_terrain`, `invalid_repair` (a place to restore not left out, to exclude already left
 /// out), `repair_breakline`, `repair_not_a_point`, `terrain_unbuildable`, `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsRepair {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub exclude: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub restore: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -904,14 +764,11 @@ pub struct TerrainsRepair {
 /// and after, and the difference (after − before, over the repaired plan): cut and fill volumes, net, the plan area
 /// that changed and the largest change and where.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsRepaired {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub excluded: Vec<[f64; 2]>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -931,7 +788,6 @@ pub struct TerrainsRepaired {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub changed_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub largest: Option<TerrainDifferenceAt>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
     pub revision: String,
@@ -950,17 +806,13 @@ pub const ROAD_TERRAINS_COVERAGE_VERSION: u32 = 1;
 /// one part with straight edges and three corners at least). Warnings: `terrain_no_data` (the boundary is not wholly
 /// covered).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCoverage {
     pub surface: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub longest: Option<f64>,
 }
@@ -969,30 +821,24 @@ pub struct TerrainsCoverage {
 /// the surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of
 /// what is inside (with `longest`), its share of it and its triangles; the longest plan edge of a triangle inside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCovered {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub surface_area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub boundary_area: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub covered: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub no_data: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub outside: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub share: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
@@ -1017,23 +863,18 @@ pub const ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION: u32 = 1;
 /// `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `layer_not_found`, `not_a_layer`, `layer_locked`.
 /// Warnings: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCoverageDraw {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub longest: f64,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub outline: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -1041,10 +882,8 @@ pub struct TerrainsCoverageDraw {
 /// Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)
 /// and holes in them, their area, the objects written (in the plan, none) and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsCoverageDrawn {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -1074,23 +913,18 @@ pub const MOST_DENSITY_CELLS: u32 = 1_000_000;
 /// `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
 /// that is not one), `invalid_point_density` (more than [`MOST_DENSITY_CELLS`] cells). Warnings: `terrain_density_short`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsDensity {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub least: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub share: Option<f64>,
 }
@@ -1100,10 +934,8 @@ pub struct TerrainsDensity {
 /// the sparse cells (with `least`), the points in the cells that count, their area (cells × cell²), the mean density
 /// (points per m²; none without area), the most points in a cell, and whether the share asked is met (with `share`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsDensityRead {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -1121,11 +953,9 @@ pub struct TerrainsDensityRead {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub empty: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub share: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub sparse: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -1133,13 +963,11 @@ pub struct TerrainsDensityRead {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m2")))]
     pub mean: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub most: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub meets: Option<bool>,
 }
 
@@ -1154,10 +982,8 @@ pub const ROAD_TERRAINS_SPARSE_DRAW_VERSION: u32 = 1;
 /// `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage`, `invalid_point_density` (too many cells),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TerrainsSparseDraw {
     pub surface: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -1165,14 +991,11 @@ pub struct TerrainsSparseDraw {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub least: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<String>,
     pub layer_id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub labels: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }

@@ -13,8 +13,6 @@
 //! set into the finished file in place of a placeholder of the same length.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use super::content::PT;
 use super::maps::Frame;
@@ -25,9 +23,7 @@ use crate::units::Um;
 /// A transverse Mercator system as the CRS registry (`fixtures/crs/v1/registry.json`,
 /// `geo/crs.ts`) holds it: what `tmWkt` writes as WKT 1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct TmCrs {
     /// “TUREF / TM36”.
     pub name: String,
@@ -36,7 +32,6 @@ pub struct TmCrs {
     /// The registry's ellipsoid: “GRS80”, “International 1924”, “WGS84”.
     pub ellipsoid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub epsg: Option<u32>,
     pub tm: TmParams,
 }

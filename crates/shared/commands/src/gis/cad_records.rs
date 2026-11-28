@@ -5,8 +5,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -27,10 +25,8 @@ pub const MAX_RECORDS: usize = 10_000;
 /// `attribute_required`, at `rows.<i>.attrs.<name>`); on the desktop also `slots_exhausted`. Warning:
 /// `layer_hidden` (they are written all the same).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsCreate {
     /// The layer they go on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
@@ -38,34 +34,27 @@ pub struct RecordsCreate {
     pub rows: Vec<RecordRow>,
     /// The document revision the caller saw (decimal text, as a result's `revision`). Absent: no check.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One record: its attributes and its label.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordRow {
     /// Its attributes, by the layer's fields: canonical, a field's default where none is given. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
     /// Its label (`EntityBase.label`), shown in the table and the forms. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
 }
 
 /// Output of `cad.records.create` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsCreated {
     /// Their persistent ids (UUIDv7, docs/adr/0014), in the rows' order.
     pub uids: Vec<String>,
@@ -79,10 +68,8 @@ pub struct RecordsCreated {
 
 /// What `cad.records.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsPlan {
     /// The records as they would be stored; their `id`s are 0: the slots are given when they are written.
     pub entities: Vec<Entity>,
@@ -118,31 +105,25 @@ fn is_yes(b: &bool) -> bool {
 /// `layer_locked` (objects and children on locked layers left out), `unique_cleared` (a field a form or the
 /// layer keeps unique, or a unique index of the layer holds, left empty).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsDuplicate {
     /// The objects' persistent ids; an object given twice is copied once.
     pub uids: Vec<String>,
     /// The records the objects' composite relations hold are copied too, their field taking the
     /// copy's id; written only as `false`.
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub children: bool,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// One copy: the object it was made from, its persistent id and its slot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordCopy {
     pub from: String,
     pub uid: String,
@@ -152,10 +133,8 @@ pub struct RecordCopy {
 
 /// Output of `cad.records.duplicate` v1: the copies, each object before the children it holds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsDuplicated {
     pub copies: Vec<RecordCopy>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -164,10 +143,8 @@ pub struct RecordsDuplicated {
 
 /// Plan of `cad.records.duplicate` v1: how many copies and how many of them are children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RecordsDuplicatePlan {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,

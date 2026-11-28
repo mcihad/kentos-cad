@@ -8,8 +8,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::formats::{FileUnit, UnitDecision};
 
@@ -26,19 +24,15 @@ pub const FILE_IMPORT_DXF_VERSION: u32 = 1;
 /// `nothing_to_import` (no object left to take). Warnings: `unit_assumed`,
 /// `block_units_differ`, `import_losses`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportDxf {
     /// Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scale_reference: Option<crate::CadImportScale>,
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub allow_polyline_loss: bool,
     /// The file to read, an absolute path.
     pub path: String,
@@ -46,43 +40,35 @@ pub struct ImportDxf {
     /// §1). Absent: honour the source unit in every project; an undeclared source
     /// uses the project unit (metres with a coordinate system).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file_unit: Option<FileUnit>,
     /// Blokları patlat: every insert opened into its objects, no block
     /// definitions taken (docs/adr/0144 §5).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub explode_blocks: bool,
     /// What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
     /// marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
     /// a CAD project, areas in any other.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub closed_polylines: Option<crate::ClosedPolylines>,
     /// The file's layers (by their names in the file) whose objects are left out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub skip_layers: Vec<String>,
     /// A file's layer (its name in the file) → the drawing's layer (its id)
     /// its objects go onto. A layer not named here goes onto the drawing's
     /// layer of the same name (case and Turkish marks aside), else onto a new
     /// layer with the file's look.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
     /// The group at the top of the tree the new layers go into, found by its
     /// name or made. Absent: one named after the file; empty: the top of the tree.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     /// The drawing's revision the input was prepared against.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
     /// The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
     /// the one the file declares.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
@@ -90,15 +76,12 @@ pub struct ImportDxf {
     /// arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
     /// a system the transforms do not read.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
 }
 
 /// A layer an import made.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportedLayer {
     pub id: String,
     pub name: String,
@@ -106,9 +89,7 @@ pub struct ImportedLayer {
 
 /// A block whose name the drawing had: as the file names it, as it went in.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RenamedBlock {
     pub from: String,
     pub to: String,
@@ -116,10 +97,8 @@ pub struct RenamedBlock {
 
 /// What `file.import.dxf` took in, or with `plan` would take.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfImported {
     /// The file's name, its bytes and their SHA-256 (64 hex digits): what
     /// was read, so a replay can tell the same file.
@@ -140,14 +119,12 @@ pub struct DxfImported {
     /// The layers made, in the tree's order, and the group they went into.
     pub layers: Vec<ImportedLayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
     /// The block definitions taken, and the names changed on the way: as
     /// the file says, as the drawing has it (“Kapı” → “Kapı (2)”).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub blocks: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RenamedBlock>>", optional))]
     pub renamed: Vec<RenamedBlock>,
     /// The text and dimension styles added to the project (docs/adr/0183 §7).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -155,7 +132,6 @@ pub struct DxfImported {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub dimension_styles: u32,
     /// The reader's report: the file's facts, what was skipped and why.
-    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub report: serde_json::Value,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,

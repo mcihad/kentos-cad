@@ -7,8 +7,6 @@
 //! have no key here.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -105,115 +103,88 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
 /// `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsSet {
     /// Replace the project's ordered drawing-standard documents. Missing keeps
     /// the current list; an empty list removes it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub standard_docs: Option<Vec<crate::ProjectStandardDocument>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub project_type: Option<Workspace>,
     /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub cad_work: Option<CadWork>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
     /// The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub map_srid: Option<u32>,
     /// Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
     /// the active layer's. No object changes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub auto_select: Option<bool>,
     /// How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
     /// together, or every editable layer together. No object changes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub edit_grouping: Option<crate::EditGrouping>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,
     /// How lengths are written (docs/adr/0262 §2): decimal, or architectural,
     /// engineering and fractional feet and inches in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub length_style: Option<LengthStyle>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub length_decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub area_decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub area_unit: Option<AreaUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub angle_unit: Option<AngleUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub plot_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     /// Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the
     /// level and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).
     /// Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
     /// These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
     pub arch: Option<crate::ArchSettings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub heights: Option<crate::HeightReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub coordinate_epoch: Option<f64>,
     /// The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one
     /// written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refraction: Option<f64>,
     /// The layer each annotation tool draws on (usage review UR-003), whole; empty: the active layer for all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub tool_layers: Option<Vec<crate::ToolLayer>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.settings.set` v1, and what plan says it would do.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsChanged {
     /// The keys whose value changed, in the input's documented order
     /// (`drawingUnit` too when a system made the unit metres, `lengthStyle`

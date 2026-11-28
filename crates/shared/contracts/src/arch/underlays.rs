@@ -8,8 +8,6 @@
 //! The file reader checks the structure here; the command reads the file (its digest, its schema, its placement).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The most underlays a drawing keeps.
 pub const MAX_UNDERLAYS: usize = 50;
@@ -20,10 +18,8 @@ pub const MAX_UNDERLAY_PATH: usize = 1000;
 
 /// How an underlay is placed.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum UnderlayPlacement {
     /// By its map conversion onto the project's system (Harita dönüşümüyle).
     #[default]
@@ -55,10 +51,8 @@ fn is_true(v: &bool) -> bool {
 
 /// One underlay model.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ModelUnderlay {
     /// Lowercase, hyphenated UUID; unique in the drawing.
     pub id: String,
@@ -73,16 +67,12 @@ pub struct ModelUnderlay {
     /// Its `FILE_SCHEMA` (`IFC4X3_ADD2`, `IFC4`, `IFC2X3`).
     pub schema: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub discipline: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
     #[serde(default, skip_serializing_if = "UnderlayPlacement::is_map")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<UnderlayPlacement>", optional))]
     pub placement: UnderlayPlacement,
     #[serde(default = "yes", skip_serializing_if = "is_true")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub shown: bool,
 }
 

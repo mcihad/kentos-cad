@@ -29,8 +29,6 @@
 //! words into `devir/devir-raporu.csv`. The project file stays the source; the open files are what it becomes.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const FILE_PACKAGE: &str = "file.package";
 pub const FILE_PACKAGE_VERSION: u32 = 1;
@@ -46,53 +44,43 @@ pub const MAX_PACKAGE_NAME: usize = 255;
 /// `file_unwritable`. Warnings: `package_left` (what was not copied, each said), `export_losses` (what the open files
 /// lose, docs/adr/2780).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PackageProject {
     /// The folder to make, an absolute path; it must not be there, or be an empty folder.
     pub path: String,
     /// The project file's name in it (`.kcad` added when missing); none: the drawing's name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The project file's folder, an absolute path: linked files written relative to it are read from there. None:
     /// a relative link is not found (the drawing was never saved).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<String>,
     /// How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
     /// they are, or embedded (the link removed, the layer keeps its objects as the project's own).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geopackages: Option<PackageWay>,
     /// How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
     /// into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub databases: Option<PackageWay>,
     /// What is not to go into the package (docs/adr/0596 §3), each a bound layer's link (`kaynak-N`: the link and the
     /// layer's objects are taken out), an object's lasting id (its files are not copied, its links stay) or an
     /// external reference (`xref:` and its name: its source is not copied). It comes before `geopackages` and
     /// `databases`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub leave_out: Vec<String>,
     /// The open exchange formats the package delivers its project in (docs/adr/2780), as `file.exchange.matrix` asks
     /// them (`formats` empty: all six; `layers`, `tolerance`): each written into `devir/<name>.<extension>`, the
     /// matrix and the checks carried. None: no open file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub exchange: Option<crate::ExchangeMatrix>,
 }
 
 /// How a bound layer's source goes into a package (docs/adr/0596 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PackageWay {
     /// Copied into `veri/`, the link the copy's: a GeoPackage byte for byte, a database table as a GeoPackage.
     Copy,
@@ -104,10 +92,8 @@ pub enum PackageWay {
 
 /// What a packed or left link is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PackagedKind {
     /// A bound layer's source.
     Source,
@@ -140,10 +126,8 @@ pub enum PackagedKind {
 
 /// A file copied into the package.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PackagedFile {
     /// Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).
     pub path: String,
@@ -159,21 +143,17 @@ pub struct PackagedFile {
     /// The database table a copy was read from (`path` a GeoPackage made of its rows, `from` the database's address,
     /// docs/adr/0596 §2); none for a file copied byte for byte.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<String>,
     /// The rows a database table's copy holds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u64>,
 }
 
 /// Why a link was not packed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum LeftWhy {
     /// The file is not there.
     Missing,
@@ -193,10 +173,8 @@ pub enum LeftWhy {
 
 /// A link left as it was.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PackageLeft {
     pub kind: PackagedKind,
     /// The path or address as the project keeps it.
@@ -207,17 +185,14 @@ pub struct PackageLeft {
     pub at: String,
     /// The objects taken out of the package with it: an excluded link's layer's (docs/adr/0596 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: Option<u32>,
 }
 
 /// A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PackageEmbedded {
     /// The link's id (`kaynak-N`).
     pub at: String,
@@ -231,10 +206,8 @@ pub struct PackageEmbedded {
 
 /// What kind of drawing resource a package's resource row is (docs/adr/1111 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PackageResourceKind {
     /// A text style's typeface.
     Font,
@@ -250,10 +223,8 @@ pub enum PackageResourceKind {
 
 /// How the package has a resource (docs/adr/1111 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PackageResourceHow {
     /// It comes with KentOS itself (its own faces, the built-in line types, solid/line/gradient fills): nothing to carry.
     BuiltIn,
@@ -271,10 +242,8 @@ pub enum PackageResourceHow {
 
 /// One resource the drawing and its references draw with, and how the package has it (docs/adr/1111 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PackageResource {
     pub kind: PackageResourceKind,
     /// Its name: the text style's, the shape file's, the line type's (`continuous`, a pattern's name), the hatch
@@ -283,19 +252,16 @@ pub struct PackageResource {
     pub how: PackageResourceHow,
     /// The file it names: a typeface's file or family, an SHX file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
     /// Who needs it, sorted: `stil:Ad`, `katman:Yol / Ad`, `çizgi tipi:Ad`, `pafta:Ad`, `xref:Ad`, `profil:Ad`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub users: Vec<String>,
     /// The objects drawn with it (the drawing's and its blocks' and references' pieces).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     /// Why, for a finding or a resource carried another way.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
 }
 
@@ -305,10 +271,8 @@ fn is_zero(n: &u32) -> bool {
 
 /// What `file.package` made, or with `plan` would make.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectPackaged {
     /// The folder.
     pub path: String,
@@ -319,28 +283,23 @@ pub struct ProjectPackaged {
     pub project_sha256: String,
     pub files: Vec<PackagedFile>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageLeft>>", optional))]
     pub left: Vec<PackageLeft>,
     /// The links embedded (docs/adr/0596 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageEmbedded>>", optional))]
     pub embedded: Vec<PackageEmbedded>,
     /// The manifest, `paket.json` in the folder, and its SHA-256.
     pub manifest: String,
     pub manifest_sha256: String,
     /// The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DrawingFont>>", optional))]
     pub faces: Vec<crate::DrawingFont>,
     /// Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,
     /// and how the package has each (docs/adr/1111): kind, then name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageResource>>", optional))]
     pub resources: Vec<PackageResource>,
     /// The open files' support matrix and checks (docs/adr/2780): what each format delivered keeps, approximates,
     /// converts, adds or loses of the project. None: none asked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub exchange: Option<crate::ExchangeMatrixed>,
     /// Every byte written: the project file, the manifest and the copies.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]

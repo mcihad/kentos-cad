@@ -1,12 +1,13 @@
 //! Versioned KentOS contracts (CLAUDE.md §14): the shapes that cross a
-//! boundary between the browser, WASM, the API and stored files. They are
-//! defined once, here; `cargo test -p kentos-contracts` writes the matching
-//! TypeScript types to `apps/web/src/contracts/generated/` (ts-rs), and the app's
-//! internal types are checked against them at compile time
-//! (`apps/web/src/contracts/contracts.test.ts`).
+//! boundary between the programs, the API, the cloud portal and stored files.
+//! They are defined once, here.
 //!
-//! The TypeScript generation is the `ts` feature (on by default, so
-//! `cargo test` keeps the generated types current). Libraries and programs
+//! TypeScript is generated for the cloud portal alone (docs/adr/9402): a type
+//! derives `TS` when the portal uses it or it is part of one the portal uses,
+//! and carries `ts(export)` when the portal names it
+//! (`apps/portal/src/api/types.ts`). `cargo test -p kentos-contracts` writes
+//! those types to `apps/portal/src/api/generated/` (ts-rs, the `ts` feature, on
+//! by default so that the test run keeps them current). Libraries and programs
 //! that only need the Rust types (formats, the server, the desktop app)
 //! depend on this crate with `default-features = false` and never build ts-rs.
 //!

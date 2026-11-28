@@ -16,8 +16,6 @@
 //! what was typed before it gives it here.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -29,10 +27,8 @@ pub const CAD_ENTITIES_OFFSET_VERSION: u32 = 1;
 
 /// How far the copies go and to which side.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum OffsetBy {
     /// `distance` metres (above zero) from each object, on the side of
     /// `side`: the side of a line or a path is judged at its edge nearest
@@ -86,10 +82,8 @@ pub enum OffsetBy {
 /// `layer_locked` at `layerId`, then `offset_failed`; on the desktop also
 /// `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOffset {
     /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -100,7 +94,6 @@ pub struct EntitiesOffset {
     /// fit spline or NURBS parallel. Without it these curves are refused;
     /// exact line/arc/path offsets need no approximation. Units are metres.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub approximation: Option<OffsetApproximation>,
     /// İki yana: a second copy of each object at the same distance on the other side.
     #[serde(rename = "bothSides", default)]
@@ -111,23 +104,19 @@ pub struct EntitiesOffset {
     /// The layer the copies go on (`LayerNode.id`, a layer, not a group);
     /// without it each copy goes on its source's layer.
     #[serde(rename = "layerId", default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Explicit approximation settings, independent of view and drawing units.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OffsetApproximation {
     /// Maximum accepted distance in metres from the true parallel.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -137,10 +126,8 @@ pub struct OffsetApproximation {
 /// Trace of each approximated copy. This is provenance, not an associative
 /// constraint: subsequent source edits do not silently recompute the copy.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct OffsetApproximationReport {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub source: String,
@@ -161,10 +148,8 @@ pub struct OffsetApproximationReport {
 
 /// Output of `cad.entities.offset` v1: what was made and deleted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOffsetMade {
     /// The copies' persistent ids, in the order they were written.
     pub created: Vec<String>,
@@ -175,10 +160,6 @@ pub struct EntitiesOffsetMade {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distances: Vec<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<OffsetApproximationReport>>", optional)
-    )]
     pub approximations: Vec<OffsetApproximationReport>,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -191,10 +172,8 @@ pub struct EntitiesOffsetMade {
 /// Preview and write are one computation: execute against the plan's
 /// revision writes exactly `entities`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOffsetPlan {
     /// The ids of the objects offset, in the input's order (a repeated id once).
     pub sources: Vec<String>,
@@ -207,10 +186,6 @@ pub struct EntitiesOffsetPlan {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distances: Vec<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(
-        feature = "ts",
-        ts(as = "Option<Vec<OffsetApproximationReport>>", optional)
-    )]
     pub approximations: Vec<OffsetApproximationReport>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.

@@ -48,10 +48,8 @@ pub const KENTOS_V1_IMPORT: [u8; 16] = [
 
 /// The persistent ids of a v1 drawing's objects, and where they come from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct V1Identities {
     /// sha256 of the canonical text, 64 lowercase hexadecimal digits: the
     /// source a v2 file records next to the ids (TODOS.md `FILE-05`, `FILE-21`).
@@ -66,9 +64,7 @@ pub struct V1Identities {
 
 /// One object of a v1 drawing: its local id in the file and its persistent id.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct V1EntityIdentity {
     pub id: u32,
     /// `UUIDv5(namespace, "entity/" + id)`, lowercase with hyphens.
@@ -81,14 +77,12 @@ pub struct V1EntityIdentity {
 /// open document's slot (`EntityBase.id`) never leaves the document.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 pub struct EntityId(pub [u8; 16]);
 
 /// A project's persistent id, when it has one: derived from a v1 file
 /// (`UUIDv5(namespace, "project")`, docs/adr/0014) or read from a v2 file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct ProjectId(pub [u8; 16]);
 
 /// What a UUID of the contracts is: its 16 bytes in memory and in `.kcad` v2
@@ -159,33 +153,25 @@ macro_rules! uuid_impls {
 /// their definition by it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 pub struct BlockId(pub [u8; 16]);
 
 /// An associative array's persistent id (docs/adr/0300): given when the
 /// array is made (UUIDv7), kept while its layout or source changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct ArrayId(pub [u8; 16]);
 
 /// A persistent architectural dimension recipe's id; ordinary member dimensions keep their own ids.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct DimensionSetId(pub [u8; 16]);
 
 /// A kitchen run's persistent id (docs/adr/0727 §5): given when the run is made (UUIDv7), kept while it is edited and
 /// follows its walls.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct CaseworkId(pub [u8; 16]);
 
 /// A constraint's persistent id (docs/adr/0334): given when the constraint is made (UUIDv7), kept while it holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct ConstraintId(pub [u8; 16]);
 
 uuid_impls!(EntityId);

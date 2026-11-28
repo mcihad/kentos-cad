@@ -4,8 +4,6 @@
 //! A layer and its table are compared object by object, by lasting id, on their geometry and attributes.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::fields::LayerFieldKind;
 use crate::file_import::ImportedLayer;
@@ -20,10 +18,8 @@ pub const CAD_SOURCES_SYNC_VERSION: u32 = 1;
 
 /// What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceCapabilities {
     pub read: bool,
     pub insert: bool,
@@ -39,25 +35,20 @@ pub struct SourceCapabilities {
 
 /// A column of a table and the field kind it reads as; none for one that is not read (a blob).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceColumn {
     pub name: String,
     /// As the file declares it (`MEDIUMINT`, `TEXT(40)` …).
     pub declared: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<LayerFieldKind>,
 }
 
 /// A table of a file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceTable {
     pub name: String,
     /// `features` or `attributes`.
@@ -66,17 +57,14 @@ pub struct SourceTable {
     pub rows: u64,
     /// The geometry column's type, none for an attribute table.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599
     /// §2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when
     /// the source declares none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub extent: Option<[f64; 4]>,
     pub columns: Vec<SourceColumn>,
@@ -84,16 +72,13 @@ pub struct SourceTable {
     /// The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with
     /// whether KentOS reads and writes its representation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SourceRelation>>", optional))]
     pub relations: Vec<SourceRelation>,
 }
 
 /// How a relation of a file is held (docs/adr/0532 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SourceRelationKind {
     /// KentOS's representation (`kentos_references`): a mapping table of base and related rows.
     Kentos,
@@ -105,10 +90,8 @@ pub enum SourceRelationKind {
 
 /// A relation of a file's table (a row of `gpkgext_relations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceRelation {
     /// The relation's name as the file writes it (`kentos_references`, `media`, …).
     pub name: String,
@@ -124,16 +107,13 @@ pub struct SourceRelation {
     pub kind: SourceRelationKind,
     /// Why a broken relation is (none otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub why: Option<String>,
 }
 
 /// What a bound layer's state asks for next (docs/adr/0543): the one way out a user and a script take from it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SourceNext {
     /// The layer and the table hold the same.
     None,
@@ -152,10 +132,8 @@ pub enum SourceNext {
 /// how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
 /// and the layer lacks); how much of the table the layer holds and what to do next.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceState {
     pub link: SourceLink,
     pub found: bool,
@@ -175,23 +153,19 @@ pub struct SourceState {
     /// The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the
     /// layer can hold; none when the table is not reached.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u32>,
     /// The whole table's rows; none when the table is not reached.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: Option<u32>,
     /// The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub filtered: Option<u32>,
     /// Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the
     /// database did not answer or refused; none when it was read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<String>,
     pub next: SourceNext,
 }
@@ -199,10 +173,8 @@ pub struct SourceState {
 /// Where an object of a bound layer stands with its table (docs/adr/0651 §1), from the base kept when the two last
 /// matched, without reading the table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ObjectSourceState {
     /// As the table held it when they last matched.
     Matched,
@@ -216,10 +188,8 @@ pub enum ObjectSourceState {
 
 /// An object's source: the binding, its table and the row's key (docs/adr/0651 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ObjectSource {
     pub uid: String,
     /// The binding's id (`kaynak-1`).
@@ -227,10 +197,8 @@ pub struct ObjectSource {
     pub table: String,
     /// The binding's key and the object's value of it, when the binding has a key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
     /// Whether the binding writes (a database view or query is read-only).
     pub writable: bool,
@@ -260,48 +228,37 @@ impl SourceNext {
 /// Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`, `source_unreachable`
 /// (docs/adr/0505), `invalid_input` (both `path` and `uids`), `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesDescribe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
     /// Objects whose source is asked, by persistent id; an object of a layer no table is bound to has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
 }
 
 /// Output of `cad.sources.describe` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesDescribed {
     /// The file's tables (with `path`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SourceTable>>", optional))]
     pub tables: Vec<SourceTable>,
     /// The project's bound layers (without `path`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SourceState>>", optional))]
     pub links: Vec<SourceState>,
     /// The asked objects' sources, in the order asked (with `uids`; objects of unbound layers left out).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ObjectSource>>", optional))]
     pub objects: Vec<ObjectSource>,
     pub revision: String,
 }
 
 /// An edit of the project's bound layers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SourcesEditOp {
     /// Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
     /// `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
@@ -311,21 +268,17 @@ pub enum SourcesEditOp {
         path: String,
         table: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         layer: Option<String>,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         reproject: bool,
         /// Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
         /// north, in the project's system; docs/adr/0510): the working copy of a part of a large table.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         extent: Option<[f64; 4]>,
         /// The attribute that names a row whatever its place in the table (docs/adr/0533 §1): unique and not empty
         /// among the rows taken in.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         key: Option<String>,
     },
     /// Sets or clears (`key` absent) a bound layer's key (docs/adr/0533 §1): the layer's objects must hold the
@@ -333,7 +286,6 @@ pub enum SourcesEditOp {
     Key {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         key: Option<String>,
     },
     /// Changes the area a part's working copy holds (docs/adr/0533 §2), or takes the whole table (`extent`
@@ -344,7 +296,6 @@ pub enum SourcesEditOp {
     Extent {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         extent: Option<[f64; 4]>,
     },
@@ -368,44 +319,35 @@ pub enum SourcesEditOp {
 /// unique constraints could not be read; docs/adr/0755 §1). The link keeps the table's CHECK and unique constraints,
 /// and a one-column CHECK tying its column to a list of values gives the field that list (docs/adr/0755 §1, §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesEdit {
     pub edit: SourcesEditOp,
 }
 
 /// Output of `cad.sources.edit` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesEdited {
     /// The binding as it is now; none after unlinking.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub link: Option<SourceLink>,
     /// The objects taken in, and the layers made (linking onto a new layer).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ImportedLayer>>", optional))]
     pub layers: Vec<ImportedLayer>,
     /// What an area change did to the label pins (docs/adr/0533 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pins: Option<SyncedPins>,
     pub revision: String,
 }
 
 /// Why a label pin went with no object to hold it (docs/adr/0533 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PinLoss {
     /// The table has no such row any more.
     Deleted,
@@ -422,10 +364,8 @@ pub enum PinLoss {
 
 /// What tied a pin's old object to its new row (docs/adr/0578 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum PinMatch {
     /// The key's value.
     #[default]
@@ -444,34 +384,27 @@ impl PinMatch {
 
 /// A label pin followed from one object to the row of the same key (docs/adr/0533 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct PinMove {
     pub from: String,
     pub to: String,
     /// The key's value that tied them; absent when no key did.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
     /// How they were tied: the key (absent, as before docs/adr/0578), the very same geometry, or the nearest row.
     #[serde(default, skip_serializing_if = "PinMatch::is_key")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<PinMatch>", optional))]
     pub by: PinMatch,
     /// The distance between the two features' middles, metres, when `by` is `nearest`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: Option<f64>,
 }
 
 /// The pins of an object a reload took out of the layer, or could not keep.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct LostPin {
     /// The object's lasting id.
     pub uid: String,
@@ -482,35 +415,27 @@ pub struct LostPin {
 /// objects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins
 /// has none of this.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SyncedPins {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub kept: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PinMove>>", optional))]
     pub moved: Vec<PinMove>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LostPin>>", optional))]
     pub lost: Vec<LostPin>,
     /// The objects whose pins were parked in the link now: their row is outside the part (docs/adr/0578 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub parked: Vec<String>,
     /// The objects that got their parked pins back: their row is in the part again.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub restored: Vec<String>,
 }
 
 /// Which way a sync goes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SyncDirection {
     /// The layer's changes into its table.
     Write,
@@ -523,10 +448,8 @@ pub enum SyncDirection {
 /// or the database; a database's row is checked again under the table's lock (`source_changed` when someone changed it
 /// since, `rows_denied` when the account may see but not change it: both profiles write nothing then).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum SyncTopology {
     /// All or nothing: a row that would be left invalid (too few vertices, or newly invalid: a ring crossing itself, of
     /// no area, a hole out of its ring) refuses the whole write (`outside_neighbour_invalid`).
@@ -562,37 +485,30 @@ pub enum SyncTopology {
 /// its layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table
 /// does not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesSync {
     /// The bound layer, by id.
     pub layer: String,
     pub direction: SyncDirection,
     /// Reading: take the table's rows though the layer differs (one undo step brings the layer back).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub discard: bool,
     /// Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
     /// PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub with: Vec<String>,
     /// Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed
     /// corners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it
     /// (`topology_on_read`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<SyncTopology>,
 }
 
 /// What a write did to one layer's table.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SyncedLayer {
     pub layer: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -605,10 +521,8 @@ pub struct SyncedLayer {
 
 /// What a write did to a mapped relation's mapping table: rows added and removed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SyncedRelation {
     /// The project relation's id.
     pub relation: String,
@@ -621,10 +535,8 @@ pub struct SyncedRelation {
 /// Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,
 /// the columns a write added to the table, and the file's revision after.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct SourcesSynced {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub added: u32,
@@ -633,46 +545,37 @@ pub struct SourcesSynced {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub columns: Vec<String>,
     /// The file's SHA-256 after (plan: before).
     pub source: String,
     /// What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pins: Option<SyncedPins>,
     pub revision: String,
     /// A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SyncedLayer>>", optional))]
     pub layers: Vec<SyncedLayer>,
     /// The mapped relations' mapping rows written.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SyncedRelation>>", optional))]
     pub relations: Vec<SyncedRelation>,
     /// The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub followed: u32,
     /// Those that would have been left invalid and kept their shape (`loose`).
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: u32,
     /// A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and
     /// every place that names them (docs/adr/0635 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RenamedColumn>>", optional))]
     pub renamed: Vec<RenamedColumn>,
 }
 
 /// A column renamed in the source: its name before and now.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RenamedColumn {
     pub from: String,
     pub to: String,

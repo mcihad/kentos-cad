@@ -5,8 +5,6 @@
 //! kinds, what each takes, and what a project file may hold.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::{EntityId, Vec2};
 
@@ -18,28 +16,22 @@ pub const TOPOLOGY_TOLERANCES: (f64, f64) = (0.000_001, 1.0);
 
 /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologySettings {
     /// Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     /// The rules, in the order they are checked and listed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologyRule>>", optional))]
     pub rules: Vec<TopologyRule>,
     /// Findings marked as left on purpose (docs/adr/0202 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologyException>>", optional))]
     pub exceptions: Vec<TopologyException>,
     /// The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage
     /// precision of the coordinates and the acceptance threshold, apart from the check's tolerance above.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<TopologyProfile>,
 }
 
@@ -48,16 +40,13 @@ pub struct TopologySettings {
 /// XY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a
 /// vertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyProfile {
     /// The profile's name: the institution's or the job's (“Kadastro güncelleme”), 1–200 characters.
     pub name: String,
     /// The profile's own edition as its owner writes it (“2026/1”), at most 50 characters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub edition: Option<String>,
     /// Metres, within [`TOPOLOGY_PRECISIONS`]; the tolerance is at least twice it.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -79,10 +68,8 @@ pub const TOPOLOGY_RULES_ENGINE: u32 = 1;
 
 /// A rule: its kind on a layer and, between layers, another layer.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyRule {
     /// One of its kind among the project's rules; exceptions name it.
     pub id: String,
@@ -92,22 +79,18 @@ pub struct TopologyRule {
     pub layer: String,
     /// The other layer's id, for a rule between layers only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub other: Option<String>,
     /// The value of a kind that takes one: a length in metres, an angle in
     /// radians; absent: the kind's default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub value: Option<f64>,
 }
 
 /// The thirteen kinds (docs/adr/0202 §1–§2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TopologyRuleKind {
     /// Çakışmamalı: the layer's areas do not overlap.
     MustNotOverlap,
@@ -222,10 +205,8 @@ impl TopologyRuleKind {
 /// A finding marked as left on purpose: its rule, its objects' persistent
 /// ids in the finding's order, and its place.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyException {
     /// The rule's id.
     pub rule: String,
@@ -237,35 +218,28 @@ pub struct TopologyException {
     /// changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
     /// the rule, the objects and the place are the same.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub digest: Option<String>,
     /// What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed
     /// error to be put right. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub decision: Option<TopologyDecision>,
     /// Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     /// The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked
     /// before schema 189): kept whatever the rule. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rule_digest: Option<String>,
     /// What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects
     /// in this order wherever it is. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<TopologyScope>,
 }
 
 /// A review's decision on a finding (docs/adr/1260 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TopologyDecision {
     /// İstisna: left on purpose.
     Exception,
@@ -275,10 +249,8 @@ pub enum TopologyDecision {
 
 /// What an exception covers (docs/adr/1260 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TopologyScope {
     /// The finding at its place (within the tolerance).
     Finding,

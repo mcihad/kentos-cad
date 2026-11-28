@@ -6,8 +6,6 @@
 //! the shared cases are in `fixtures/commands/v1`.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::Vec2;
 #[cfg(feature = "schema")]
@@ -28,10 +26,8 @@ pub const TOPOLOGY_CHECK_LIMIT_MAX: u32 = 100_000;
 
 /// A fix asked to be previewed: the finding's lasting key and the fix's key (`subtractFirst`, `mergeNeighbour` …).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyFixAsk {
     pub key: String,
     pub fix: String,
@@ -51,33 +47,25 @@ pub struct TopologyFixAsk {
 /// not all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception
 /// whose objects' geometry changed: its finding is open again).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub preview: Option<TopologyFixAsk>,
     /// Only the findings naming one of these objects, by their persistent ids (docs/adr/3800); none: every finding.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
 }
 
 /// One finding (docs/adr/0202 §3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyFinding {
     /// Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.
     pub key: String,
@@ -90,18 +78,15 @@ pub struct TopologyFinding {
     pub uids: Vec<String>,
     /// Of those, the rows outside a bound layer's part (read from its source, not in the drawing).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub outside: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     /// Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or
     /// radians.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub measure: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub measure_kind: Option<String>,
     /// The fixes it offers, by key.
     pub fixes: Vec<String>,
@@ -109,22 +94,18 @@ pub struct TopologyFinding {
     pub exception: bool,
     /// An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub lapsed: bool,
     /// Where it is in its life cycle (docs/adr/1260 §1).
     pub state: TopologyFindingState,
     /// The reason its review gave (an exception's, an error mark's, a lapsed one's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
 }
 
 /// A finding's place in its life cycle (docs/adr/1260 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TopologyFindingState {
     /// Değerlendirilmedi: no review names it.
     Open,
@@ -138,10 +119,8 @@ pub enum TopologyFindingState {
 
 /// A bound layer's part whose neighbours could not all be read, and why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyGap {
     pub layer: String,
     pub reason: String,
@@ -150,70 +129,55 @@ pub struct TopologyGap {
 /// A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the
 /// band's rows read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologySourceStamp {
     pub layer: String,
     pub revision: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub band: Option<String>,
 }
 
 /// The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the
 /// exceptions, and each bound layer's source. A later check with the same stamp would find the same.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyStamp {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
     pub rules: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologySourceStamp>>", optional))]
     pub sources: Vec<TopologySourceStamp>,
 }
 
 /// An object a fix would change: its area or length before and after; `removed` when the fix deletes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyFixChange {
     pub uid: String,
     pub layer: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub removed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_before: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area_after: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length_before: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length_after: Option<f64>,
 }
 
 /// A bound layer a fix would leave with changes to write to its source.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyFixSource {
     pub layer: String,
     pub table: String,
@@ -224,25 +188,20 @@ pub struct TopologyFixSource {
 /// What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing
 /// is written; `cad.entities.edit`'s `topologyFix` writes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyFixPreview {
     pub key: String,
     pub fix: String,
     pub changes: Vec<TopologyFixChange>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologyFixSource>>", optional))]
     pub sources: Vec<TopologyFixSource>,
 }
 
 /// Output of `cad.topology.check` v1, and its plan.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyChecked {
     pub findings: Vec<TopologyFinding>,
     /// All the findings, the open ones, the exceptions and the lapsed exceptions.
@@ -253,36 +212,30 @@ pub struct TopologyChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub exceptions: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub lapsed: u32,
     /// The findings confirmed as errors (docs/adr/1260 §1): of the open ones.
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub errors: u32,
     /// The rules checked, and those whose layer (or other layer) the project does not have.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub missing: u32,
     /// The drawing's objects the rules looked at, and the rows read round bound parts.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     #[serde(default, skip_serializing_if = "is_zero")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub neighbours: u32,
     /// Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.
     pub complete: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologyGap>>", optional))]
     pub incomplete: Vec<TopologyGap>,
     pub stamp: TopologyStamp,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub preview: Option<TopologyFixPreview>,
 }
 
@@ -292,10 +245,8 @@ fn is_zero(n: &u32) -> bool {
 
 /// What `cad.topology.exceptions` does to the findings it names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum TopologyExceptionOperation {
     /// İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is
     /// marked again, on the new geometry).
@@ -312,25 +263,20 @@ pub enum TopologyExceptionOperation {
 /// Refusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the
 /// drawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyExceptions {
     pub operation: TopologyExceptionOperation,
     pub keys: Vec<String>,
     /// Why (docs/adr/1260 §1), for `mark` and `error`: kept on each mark; required when the project has a quality
     /// profile. Not blank, at most 500 characters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     /// What an exception covers (`mark` only): absent or `finding`, the finding at its place; `objects`, every finding of
     /// its rule between the same objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<crate::TopologyScope>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
@@ -338,10 +284,8 @@ pub struct TopologyExceptions {
 /// Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so
 /// are not counted), the project's exceptions after it and the revision after it (a plan: before it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct TopologyExceptionsEdited {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub changed: u32,

@@ -6,8 +6,6 @@
 //! independent reader's view of files IfcOpenShell made (`scripts/fixtures/ifc_compare_cases.py`).
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 use crate::IfcValue;
 
@@ -27,25 +25,20 @@ pub const MAX_IFC_COMPARE_TOLERANCE: f64 = 0.5;
 /// `invalid_tolerance` (0.0001 to 0.5 m), `ifc_unreadable` (at the file's field). Warning: `ifc_repeated_global_id` (a
 /// GlobalId a file holds more than once: those objects are left out and listed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcCompare {
     pub older: String,
     pub newer: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
 
 /// A file compared: its path, its schema as the header declares it, how many objects it holds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcComparedFile {
     pub path: String,
     pub schema: String,
@@ -55,15 +48,12 @@ pub struct IfcComparedFile {
 
 /// An object as a list names it: its GlobalId, its class as the schema spells it and its name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcComparedObject {
     pub global_id: String,
     pub class: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
 }
 
@@ -73,10 +63,8 @@ pub struct IfcComparedObject {
 /// far; `resized`: its box's size along x, y, z in each file; `property`: a value of one of its sets (the set's name,
 /// whether the set is its type's, the value's name; absent on the side that has none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum IfcChange {
     Class {
         old: String,
@@ -85,26 +73,20 @@ pub enum IfcChange {
     Attribute {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         old: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         new: Option<String>,
     },
     Container {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         old: Option<IfcComparedObject>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         new: Option<IfcComparedObject>,
     },
     Type {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         old: Option<IfcComparedObject>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         new: Option<IfcComparedObject>,
     },
     Body {
@@ -126,14 +108,11 @@ pub enum IfcChange {
     Property {
         set: String,
         #[serde(rename = "fromType")]
-        #[cfg_attr(feature = "ts", ts(rename = "fromType"))]
         from_type: bool,
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         old: Option<IfcValue>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         new: Option<IfcValue>,
     },
 }
@@ -142,25 +121,20 @@ pub enum IfcChange {
 /// (class, attributes, container, type, body, then its sets' values: the newer file's in its order, then the values only
 /// the older has).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcComparedChange {
     pub global_id: String,
     pub class: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     pub changes: Vec<IfcChange>,
 }
 
 /// A GlobalId a file holds more than once (`older` or `newer`): its objects are left out of the comparison.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcRepeatedId {
     pub file: String,
     pub global_id: String,
@@ -169,10 +143,8 @@ pub struct IfcRepeatedId {
 /// Output of `cad.ifc.compare` v1, and its plan: the two files, what the newer added (in its order), removed (in the
 /// older's order) and changed (in its order), how many objects are the same, the GlobalIds left out, the tolerance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct IfcCompared {
     pub older: IfcComparedFile,
     pub newer: IfcComparedFile,

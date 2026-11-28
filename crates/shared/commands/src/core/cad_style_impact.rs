@@ -6,8 +6,6 @@
 //! ölçü stilleri and Çizgi tipleri windows say it before a change.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
@@ -20,10 +18,8 @@ pub const IMPACT_UIDS: usize = 1000;
 
 /// A look's source.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum ImpactTarget {
     /// A layer by its id: its colour, line type, pattern, weight and transparency.
     Layer,
@@ -38,10 +34,8 @@ pub enum ImpactTarget {
 /// Input of `cad.styles.impact` v1. Refusals: `empty_name` (no `id`), `layer_not_found`,
 /// `style_not_found`, `line_type_not_found`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StylesImpact {
     pub target: ImpactTarget,
     /// The layer's or the style's id, the line type's name.
@@ -50,10 +44,8 @@ pub struct StylesImpact {
 
 /// Objects keeping one property of their own.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ImpactOwn {
     /// The property, as the contract names it (`color`, `lineType`, `font` …).
     pub property: String,
@@ -63,10 +55,8 @@ pub struct ImpactOwn {
 
 /// Output of `cad.styles.impact` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StyleImpact {
     /// The source's name as people see it.
     pub name: String,

@@ -14,8 +14,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CAD_ZONING_CHECK: &str = "cad.zoning.check";
 pub const CAD_ZONING_CHECK_VERSION: u32 = 1;
@@ -26,13 +24,10 @@ pub const ZONING_PROFILE: &str = "imar-plani";
 /// Input of `cad.zoning.check` v1: the tolerance (metres, a piece of an overlap or of a gap narrower than it is not
 /// counted, docs/adr/0202 §2; none: 0.01). Refusal: `invalid_input` (`tolerance` not finite or under 0.000001).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
 }
@@ -43,21 +38,17 @@ pub struct ZoningCheck {
 /// gives its use, judged only with a symbol and a mapped use), its objects' persistent ids in the drawing's order, the
 /// area it measures (square metres) when it measures one, and what it says.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningFinding {
     pub kind: String,
     pub uids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     pub message: String,
     /// `roadWidth`, `roadParcel` (docs/adr/3440): the counted pieces of the overlap; none for the other kinds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningRegion>>"))]
     pub regions: Vec<ZoningRegion>,
 }
 
@@ -65,14 +56,11 @@ pub struct ZoningFinding {
 /// vertex (the westmost of the lowest), the vertices on a straight run between two others left out; the regions in
 /// order of their outer rings' first vertices (north, then east).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningRegion {
     pub outer: crate::RingGeometry,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::RingGeometry>>"))]
     pub holes: Vec<crate::RingGeometry>,
 }
 
@@ -80,10 +68,8 @@ pub struct ZoningRegion {
 /// notes there are, the findings (by kind in the list's order, then by their first object's place in the drawing) and
 /// their count by kind.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoningChecked {
     pub profile: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

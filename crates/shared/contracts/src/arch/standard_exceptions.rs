@@ -5,8 +5,6 @@
 //! lapses and the finding is to be looked at again. Who accepted it and when are kept when the caller says so.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 /// The longest reason, in characters (as a topology exception's, docs/adr/1260 §2).
 pub const MAX_STANDARD_EXCEPTION_REASON: usize = 500;
@@ -17,10 +15,8 @@ pub const MAX_STANDARD_EXCEPTIONS: usize = 10_000;
 
 /// An accepted standards finding.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardException {
     /// The finding's kind, as `cad.standards.check` names it (`layerColor`, `tableStyleDefinition` …).
     pub kind: String,
@@ -28,30 +24,24 @@ pub struct StandardException {
     pub subject: String,
     /// The drawing's layer it is about, by id, when it is one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
     /// The standard it was found against: the source's id (a package's `id`, else the standard's name) …
     pub standard: String,
     /// … and its revision (empty for a standard without one).
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub revision: String,
     /// What the standard asked for and what the drawing had when it was accepted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub found: Option<String>,
     /// Why it is kept (not empty, at most `MAX_STANDARD_EXCEPTION_REASON` characters).
     pub reason: String,
     /// Who accepted it, when the caller says.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub by: Option<String>,
     /// When, as the caller wrote it (ISO 8601).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub at: Option<String>,
 }
 

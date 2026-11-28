@@ -9,8 +9,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 pub const CATALOG_ADDITIONS_FORMAT: &str = "kentos.catalog-additions";
 pub const CATALOG_ADDITIONS_VERSION: u32 = 1;
@@ -23,9 +21,7 @@ pub const CATALOG_SIZES: [&str; 3] = ["large", "lead", "small"];
 
 /// The file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct CatalogAdditions {
     pub format: String,
     pub version: u32,
@@ -37,7 +33,6 @@ pub struct CatalogAdditions {
     /// New tabs of a type's ribbon (docs/adr/0339 §6: CAD's Mimari), each after a tab it has; their panels come in
     /// `ribbon` as any other tab's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AddedTab>>", optional))]
     pub tabs: Vec<AddedTab>,
     #[serde(default)]
     pub ribbon: Vec<RibbonAddition>,
@@ -46,16 +41,13 @@ pub struct CatalogAdditions {
     /// its option as if typed. One without an option names the tool's default
     /// method, the first entry of a split made of a button.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AddedMethod>>", optional))]
     pub methods: Vec<AddedMethod>,
 }
 
 /// A method of a tool (the inventory's split entry, `SplitEntry`): the tool's
 /// command, the entry's name, the option it gives the tool.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddedMethod {
     /// The tool's command (`tool.arc`).
     pub command: String,
@@ -63,34 +55,26 @@ pub struct AddedMethod {
     pub label: String,
     /// What it gives the tool once it runs, as if typed; none: the tool's default method.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub option: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
     /// Typed names that start the tool with this method.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub aliases: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub icon: Option<String>,
 }
 
 /// A command of the interface, as the inventory lists one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddedCommand {
     pub id: String,
     pub title: String,
     /// A ribbon button's name when the title is long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub short: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub icon: Option<String>,
     pub description: String,
     /// Command line spellings: the first is the shown name.
@@ -104,15 +88,12 @@ pub struct AddedCommand {
     pub status: AddedStatus,
     /// Why a pending command does not run yet.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub pending_note: Option<String>,
 }
 
 /// Whether a command runs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum AddedStatus {
     Implemented,
     Pending,
@@ -120,25 +101,20 @@ pub enum AddedStatus {
 
 /// A new tab of a ribbon: its id, its name and the tab it goes after (none: last).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddedTab {
     /// The project types whose ribbons take it (`cad`, `gis`).
     pub modes: Vec<String>,
     pub id: String,
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub after: Option<String>,
 }
 
 /// A place in a ribbon: a new panel of a tab (after a panel, else last), or
 /// commands added to the end of a panel the tab has (`into`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct RibbonAddition {
     /// The project types whose ribbons take it (`cad`, `gis`).
     pub modes: Vec<String>,
@@ -146,32 +122,25 @@ pub struct RibbonAddition {
     pub tab: String,
     /// The new panel's name; none when the items go `into` a panel.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
     /// The new panel's icon (the button it folds into on a narrow window).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub icon: Option<String>,
     /// The panel the new one goes after; none: last.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub after: Option<String>,
     /// The panel the items (or only the overflow's commands) are added to, by its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     pub into: Option<String>,
     pub items: Vec<AddedItem>,
     /// Seldom used commands, under the ▾ beside the panel's title (the inventory's `overflow`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub overflow: Vec<String>,
 }
 
 /// A ribbon button: a command and its size.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct AddedItem {
     pub command: String,
     pub size: String,

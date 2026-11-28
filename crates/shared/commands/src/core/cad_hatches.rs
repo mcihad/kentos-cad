@@ -3,8 +3,6 @@
 //! each as one undo step named after the edit.
 
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
@@ -16,10 +14,8 @@ pub const CAD_HATCHES_EDIT_VERSION: u32 = 1;
 
 /// What a hatch's boundary is made again as.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum BoundaryForm {
     /// One area, its holes the hatch's holes; arcs exact, an ellipse's or a curve's edges its chords within 0.1 mm.
     #[default]
@@ -31,10 +27,8 @@ pub enum BoundaryForm {
 
 /// One edit of `cad.hatches.edit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchEdit {
     /// Sınırı yeniden oluştur: the hatch's boundary written as new objects on `layerId` (absent: the hatch's layer)
     /// in `form`; with `associative` (absent: true) the hatch then follows them.
@@ -43,13 +37,10 @@ pub enum HatchEdit {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<BoundaryForm>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         layer_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
     },
     /// Sınırı yeniden seç: the hatch's region found again as Tarama finds it (`region`, a point; its pattern, layer
@@ -73,11 +64,9 @@ pub enum HatchEdit {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         uids: Vec<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         holes: Vec<u32>,
     },
@@ -115,30 +104,24 @@ pub enum HatchEdit {
 /// `not_finite`, `invalid_gap`, `unknown_pattern`, `invalid_scale`, `not_annotative`, `pattern_too_dense`;
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchesEdit {
     pub edit: HatchEdit,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// Output of `cad.hatches.edit` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchesEdited {
     /// The hatches that changed, by their persistent ids.
     pub changed: Vec<String>,
     /// The objects Sınırı yeniden oluştur wrote.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub created: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -146,16 +129,13 @@ pub struct HatchesEdited {
 
 /// What `cad.hatches.edit` would write (plan mode).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchesPlan {
     /// The hatches as execute would write them.
     pub hatches: Vec<Entity>,
     /// The objects Sınırı yeniden oluştur would write, `id` 0.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub created: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
