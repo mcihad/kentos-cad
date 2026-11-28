@@ -49,7 +49,6 @@
   "crates/shared/commands/src/catalog/mod.rs": 3533,
   "crates/shared/commands/src/catalog/road.rs": 2634,
   "crates/shared/contracts/src/arch/arch.rs": 3538,
-  "crates/shared/contracts/src/core/codes.rs": 3385,
   "crates/shared/contracts/src/core/entity.rs": 2236,
   "crates/shared/contracts/src/gis/fields.rs": 2217,
   "crates/shared/contracts/src/gis/forms.rs": 2628,
