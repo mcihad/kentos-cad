@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "../web/src/ui/dom.ts", "../web/src/core/signal.ts", "../web/src/core/disposable.ts"]
+  "include": ["src"]
 }

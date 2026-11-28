@@ -528,7 +528,7 @@ impl From<Mode> for Canvas {
 }
 
 /// The drawing's colours on a canvas: the web's canvas tokens for slate and
-/// paper (DESIGN.md §3.1–3.2, `apps/web/src/styles/tokens.css`); night dims
+/// paper (DESIGN.md §3.1–3.2, `apps/portal/src/styles/tokens.css`); night dims
 /// them, black brightens them. One token source for web and desktop is UI-08.
 pub fn palette(canvas: impl Into<Canvas>) -> Palette {
     match canvas.into() {

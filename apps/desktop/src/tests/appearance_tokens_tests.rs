@@ -1,12 +1,12 @@
-//! The desktop's two shared themes are the web's (DESIGN.md §3.1–3.2,
+//! The desktop's two shared themes are the cloud portal's too (DESIGN.md §3.1–3.2,
 //! docs/adr/0129): KentOS UI's dark and light tokens are read against the
-//! web's `tokens.css`, the one place the palette is written for both. A
+//! portal's `tokens.css` (apps/portal/src/styles), the one place the palette is written for both. A
 //! colour changed on one side and not on the other fails here.
 
 use iced::Color;
 use kentos_ui::theme::{Mode, Tokens};
 
-const CSS: &str = include_str!("../../../web/src/styles/tokens.css");
+const CSS: &str = include_str!("../../../portal/src/styles/tokens.css");
 
 /// A theme's block in the stylesheet: `:root[data-theme='dark'] { … }`.
 fn block(theme: &str) -> &'static str {

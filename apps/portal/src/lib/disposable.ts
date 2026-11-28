@@ -1,3 +1,4 @@
+// What a subscription or a listener gives back to be released (lib/signal.ts).
 /** A function that releases a resource (listener, subscription, GPU buffer…). */
 export type Disposable = () => void;
 

@@ -1,14 +1,14 @@
-"""The desktop's drawing typefaces, made from the web's own font files (docs/adr/0055).
+"""The desktop's drawing typefaces, made from the bundled WOFF2 files (docs/adr/0055).
 
-The web draws the drawing's text (text objects, dimension values, labels) in
+The drawing's text (text objects, dimension values, labels) is drawn in
 the project's typeface (DrawingFont: Barlow, Arimo, Overpass, Quicksand,
-Architects Daughter, Courier Prime, IBM Plex Mono) from the WOFF2 files in
-apps/web/src/assets/fonts, loaded by apps/web/src/styles/fonts.css in two
-subsets each (latin, latin-ext). The desktop's text system reads TrueType,
+Architects Daughter, Courier Prime, IBM Plex Mono). Their source files are the
+WOFF2 files in apps/portal/src/assets/fonts, listed by
+apps/portal/src/styles/fonts.css in two subsets each (latin, latin-ext). The desktop's text system reads TrueType,
 not WOFF2, so this writes one TrueType file per face the drawing uses:
 the two subsets merged, and variable fonts (Arimo, Overpass, Quicksand)
 instanced at the weights the drawing asks for (400, 500, 600, 700). The
-glyphs and their advances are the web's; nothing is taken from elsewhere.
+glyphs and their advances are the source files'; nothing is taken from elsewhere.
 
     python3 scripts/fonts/drawing_fonts.py           # writes paket/fonts/cizim
     python3 scripts/fonts/drawing_fonts.py --check   # writes nothing; compares what it would write
@@ -30,8 +30,8 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
 ROOT = Path(__file__).resolve().parents[2]
-WEB = ROOT / "apps/web/src/assets/fonts"
-CSS = ROOT / "apps/web/src/styles/fonts.css"
+WEB = ROOT / "apps/portal/src/assets/fonts"
+CSS = ROOT / "apps/portal/src/styles/fonts.css"
 OUT = ROOT / "paket/fonts/cizim"
 
 # DrawingFont → the CSS family and its folder (apps/web/src/model/projectSettings.ts).

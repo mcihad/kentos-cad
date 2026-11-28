@@ -5,12 +5,13 @@
  * One accent marks the active tool, selection and focus; nothing else uses
  * it. The values here are amber (prism reflectors, tripod legs); the user
  * picks the accent (Lacivert by default), whose values are accents.css.
- * The interface typeface is picked too (app/appearance.ts sets --font-ui;
- * Plus Jakarta Sans by default, bundled in fonts.css).
+ * The interface typeface is `--font-ui` (Plus Jakarta Sans by default, bundled
+ * in fonts.css). The desktop's themes are held to these values by its tests
+ * (apps/desktop/src/tests/appearance_tokens_tests.rs).
  */
 :root {
   --font-ui: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  /* The drawing's own text; the project's choice (app/appearance.ts applyDrawingFont). */
+  /* The drawing's own text. */
   --font-drawing: Barlow, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 

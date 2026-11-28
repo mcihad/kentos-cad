@@ -2,7 +2,7 @@
 //! editor::tokens`) as the text editor's highlighter, the error and the
 //! warnings in their tones, the parenthesis at the cursor and its pair
 //! (DESIGN.md §7.16). The colours are the web's `--c-syn-*` tokens, one set
-//! for the dark themes and one for the light (apps/web/src/styles/tokens.css).
+//! for the dark themes and one for the light (apps/portal/src/styles/tokens.css).
 //!
 //! The highlighter reads a table made for the whole text at each change
 //! (the tokens are the whole text's: a quoted text may run over lines), so a

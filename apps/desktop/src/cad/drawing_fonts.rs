@@ -1,9 +1,9 @@
 //! The drawing's typefaces (docs/adr/0055): text objects, dimension values
 //! and labels are drawn in the project's typeface (`DrawingFont`), whatever
-//! the interface's, as on the web (`DRAWING_FONTS`, app/appearance.ts). The
-//! faces are the web's own (apps/web/src/assets/fonts) as TrueType: their two
+//! the interface's. The faces are the bundled WOFF2 files
+//! (apps/portal/src/assets/fonts) as TrueType: their two
 //! subsets merged, variable fonts instanced at the weights the drawing asks
-//! for (scripts/fonts/drawing_fonts.py; `--check` holds them to the web's).
+//! for (scripts/fonts/drawing_fonts.py; `--check` holds them to their sources).
 
 use std::borrow::Cow;
 use std::sync::Once;

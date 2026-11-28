@@ -1,18 +1,17 @@
-"""The desktop's interface typefaces the web offers and KentOS UI did not
-carry, made from the web's own font files (TODOS.md UX-13; the web's
-`appearance.uiFont`: Noto Sans, Roboto).
+"""The desktop's interface typefaces KentOS UI did not carry as static files,
+made from the bundled WOFF2 files (TODOS.md UX-13: Noto Sans, Roboto).
 
 Source Sans 3 is not made here: its licence reserves the name “Source”, so
 a changed font (merged, instanced) may not carry it. KentOS UI carries
 Adobe's own static files unchanged (paket/fonts/arayuz/README.md).
 
-The web loads them from the WOFF2 files in apps/web/src/assets/fonts
-(apps/web/src/styles/fonts.css), variable fonts in two subsets each (latin,
-latin-ext). Iced reads TrueType, not WOFF2, so this writes the two faces
+Their source files are the WOFF2 files in apps/portal/src/assets/fonts
+(listed by apps/portal/src/styles/fonts.css), variable fonts in two subsets
+each (latin, latin-ext). Iced reads TrueType, not WOFF2, so this writes the two faces
 KentOS UI draws with, as its other families have them (Regular 400 and
 SemiBold 600): the two subsets merged, the variable font instanced at the
-weight. The glyphs and their advances are the web's; nothing is taken from
-elsewhere. It works as scripts/fonts/drawing_fonts.py does (docs/adr/0055).
+weight. The glyphs and their advances are the source files'; nothing is taken
+from elsewhere. It works as scripts/fonts/drawing_fonts.py does (docs/adr/0055).
 
     python3 scripts/fonts/ui_fonts.py           # writes paket/fonts/arayuz
     python3 scripts/fonts/ui_fonts.py --check   # writes nothing; compares what it would write
@@ -30,8 +29,8 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
 ROOT = Path(__file__).resolve().parents[2]
-WEB = ROOT / "apps/web/src/assets/fonts"
-CSS = ROOT / "apps/web/src/styles/fonts.css"
+WEB = ROOT / "apps/portal/src/assets/fonts"
+CSS = ROOT / "apps/portal/src/styles/fonts.css"
 OUT = ROOT / "paket/fonts/arayuz"
 
 # The web's families KentOS UI did not carry, and their folders (apps/web/src/app/appearance.ts).

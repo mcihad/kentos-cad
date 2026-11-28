@@ -1,11 +1,10 @@
 """The sheet core's text metrics table, made from the drawing's own typefaces (docs/sheet/design.md §6).
 
 A sheet's text (title blocks, legends, tables, grid labels) is laid out in
-the Rust core, so a line breaks at the same word on the web and on the
-desktop. The core measures with this table: per face of the drawing's
-typefaces (ADR 0055: `DRAWING_FONTS` in apps/web/src/app/appearance.ts,
-the WOFF2 files in apps/web/src/assets/fonts), the em size, the ascent,
-descent and line gap the browser lays a line out with, the cap and x
+the Rust core, so a line breaks at the same word wherever it is drawn. The
+core measures with this table: per face of the drawing's typefaces (ADR 0055;
+the WOFF2 files in apps/portal/src/assets/fonts), the em size, the ascent,
+descent and line gap a line is laid out with, the cap and x
 heights, and the advance of every Latin and Turkish character the sheet
 writes. The faces are the ones scripts/fonts/drawing_fonts.py builds for the
 desktop (both subsets merged, variable fonts at 400, 500, 600 and 700), so
@@ -127,7 +126,7 @@ def build():
     return {
         "schema": "kentos.sheet.font-metrics/1",
         "generator": "scripts/fonts/sheet_metrics.py",
-        "source": "apps/web/src/assets/fonts (the faces of scripts/fonts/drawing_fonts.py)",
+        "source": "apps/portal/src/assets/fonts (the faces of scripts/fonts/drawing_fonts.py)",
         "chars": "".join(chr(c) for c in CHARS),
         "faces": out,
     }

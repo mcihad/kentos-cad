@@ -1,6 +1,5 @@
 /*
- * Accent colours (Uygulama ayarları → Görünüm → Vurgu rengi,
- * app/appearance.ts). The accent marks the running tool, the selection in
+ * Accent colours (the root's `data-accent`). The accent marks the running tool, the selection in
  * the drawing, focus and the chosen item; nothing else uses it. Amber is
  * tokens.css itself; every other accent redefines the same tokens, tuned
  * per theme: on the dark chrome a lighter tone so fills and text stay

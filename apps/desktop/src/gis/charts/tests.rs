@@ -104,8 +104,8 @@ fn the_picture_paints_the_surface_and_its_marks() {
 }
 
 #[test]
-fn the_chart_tokens_are_the_webs() {
-    let css = include_str!("../../../../web/src/styles/tokens.css");
+fn the_chart_tokens_are_the_portals() {
+    let css = include_str!("../../../../portal/src/styles/tokens.css");
     let light = css
         .find("[data-theme='light']")
         .or_else(|| css.find("[data-theme=\"light\"]"))

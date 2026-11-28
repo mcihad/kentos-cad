@@ -1,11 +1,11 @@
 /*
- * KentOS Bulut, the cloud portal (docs/adr/9000 §8). The web app's tokens, accents and bundled typefaces are the
- * portal's too (DESIGN.md §3–4): no colour is written here that the tokens do not give; the light theme ("Pafta") is
+ * KentOS Bulut, the cloud portal (docs/adr/9000 §8). The tokens, the accents and the bundled typefaces are the
+ * portal's own files beside this one (DESIGN.md §3–4): no colour is written here that the tokens do not give; the light theme ("Pafta") is
  * the portal's default, the dark one ("Grafit") a choice. Panels lie flat with a border; only menus and dialogs float.
  */
-@import '../../../web/src/styles/fonts.css';
-@import '../../../web/src/styles/tokens.css';
-@import '../../../web/src/styles/accents.css';
+@import './fonts.css';
+@import './tokens.css';
+@import './accents.css';
 
 :root {
   --fs-2xl: calc(26px * var(--ui-scale));

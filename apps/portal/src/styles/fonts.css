@@ -1,10 +1,9 @@
 /*
- * Interface typefaces, bundled with the app (never from a CDN): the
- * choices of Uygulama ayarları → Görünüm → Yazı tipi (app/appearance.ts),
- * IBM Plex Mono for values, and the drawing's typefaces (Proje ayarları →
- * Çizim yazı tipi: Barlow by default, Arimo, Overpass, Quicksand, Architects
- * Daughter, Courier Prime, IBM Plex Mono) for the text that is part of the
- * drawing (text objects, dimension values, labels: viewport/overlay.ts). Latin and Latin Extended subsets (Turkish
+ * Interface typefaces, bundled with the portal (never from a CDN), IBM Plex
+ * Mono for values, and the drawing's typefaces (Barlow, Arimo, Overpass,
+ * Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono). These WOFF2
+ * files are also what the desktop's TrueType faces are made from
+ * (scripts/fonts/ui_fonts.py, drawing_fonts.py). Latin and Latin Extended subsets (Turkish
  * ğ ş ı İ are in the latter); variable fonts, one file per subset for every
  * weight. A browser downloads a face only when text uses it, so only the
  * chosen typeface is fetched. Licences (SIL OFL 1.1) sit beside the files
