@@ -131,7 +131,7 @@ pub(crate) fn answer(
     };
     let mut notes = vec![
         format!(
-            "Taban: {said}; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın {} köşesi.",
+            "Taban: {said}; tabanın üstü kazı (yığın), altı dolgu. Sınırın {} köşesi.",
             region.outer.len()
         ),
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle.".to_owned(),

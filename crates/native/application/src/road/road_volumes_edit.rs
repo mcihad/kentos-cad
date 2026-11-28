@@ -65,7 +65,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
             return Err(fail(
                 codes::VOLUME_APPROVED,
                 format!(
-                    "“{}” kübajının {} onaylı hâli geçmişte; onay geçmişi silinmez (ADR 0950). Kübajı bırakıp yenisini yazın.",
+                    "“{}” kübajının {} onaylı hâli geçmişte; onay geçmişi silinmez. Kübajı bırakıp yenisini yazın.",
                     old.name,
                     old.history.len()
                 ),

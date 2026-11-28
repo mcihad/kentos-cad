@@ -209,9 +209,7 @@ fn check(
         base: kentos_commands::Vec2 { x: 0.0, y: 0.0 },
         entities: entities(doc, &rows, h)?,
         attributes: Vec::new(),
-        description: Some(
-            "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721).".into(),
-        ),
+        description: Some("Duvarların malzemeleri: her birinin taraması ve adı.".into()),
         units: None,
         card: None,
         dynamic: None,

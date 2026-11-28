@@ -273,6 +273,9 @@ düzenlenir.
   yeniden yazıldı; bekçi dört ad daha arar ve `crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`'yi de tarar.
   - Açık: “Excel (.xlsx)” 27 yerde biçim adı olarak duruyor (sahibin kararı).
   - Sözleşmelerin belge yorumlarındaki kitaplık adı BK-16'da temizlendi.
+  - İkinci tur (§7.1): bekçi artık bütün programların ve crate'lerin metin sabitlerini tarıyor (31 ad; ADR atfı
+    uygulama, etkileşim ve işlem katmanlarında da). Çıkan yedi ad ve beş ADR atfı düzeltildi; dosya imzaları ve
+    servis türleri gerekçeleriyle izinli listede. Yorumlardaki 800 kadar satır dokunulan dosyada temizlenir.
 - [~] **BK-19** (A5; ADR 9401 §10) Ölçüm: uygulama katmanındaki 26 `doc.remove`'un 24'ü bir komutun denetiminden
   sonra. Yapılan (§10.1): dört aracın eski işaretleri (renk planı lejandı, kaçış yolları, gölge, vaziyet ölçüleri)
   kilitli katmandaysa silinmez ve yenisi çizilmez; tek yardımcı `marks::take_away`, silme `cad.entities.delete`'in
@@ -301,7 +304,7 @@ düzenlenir.
   üreteçleri web'in dosyalarına yazdığı için silindi (son hâlleri `8e89a663d`'de); ikonlar tek katalogda tutulur,
   kuraldan yeniden üretmek gerekirse üreteç kataloğa yazacak biçimde geri getirilir.
 - [ ] **BK-24** (B5) Araç listesi tek tablo.
-- [ ] **BK-25** (G1) Aşama 8'e taşındı: BK-82 (komut kataloğu) ve BK-83 (TypeScript yalnız Bulut için).
+- [x] **BK-25** (G1) Aşama 8'de yapıldı: BK-82 (komut kataloğu) ve BK-83 (TypeScript yalnız Bulut için).
 
 ### Aşama 3 — Masaüstü kabuğu
 

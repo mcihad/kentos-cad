@@ -168,7 +168,7 @@ def block(rs, h=2.5):
         push({"kind": "text", "p": P(7.0 * big, top - 1.5 * big), "text": r["name"], "height": big, "rotation": 0.0,
               "align": "middleLeft"})
     return {"name": "Malzeme lejandı", "base": P(0, 0), "entities": ents,
-            "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."}
+            "description": "Duvarların malzemeleri: her birinin taraması ve adı."}
 
 
 def insert(eid, at, layer_id="lejant", block_id="$blockOf:Malzeme lejandı"):

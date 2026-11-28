@@ -3,7 +3,7 @@
  "version": 1,
  "command": "road.terrains.stockpile",
  "commandVersion": 1,
- "title": "Stok hacmi (Pix4D'nin hacim tabanları)",
+ "title": "Stok hacmi",
  "note": "ADR 3140, 3940. Bağımsız başvuru scripts/fixtures/road_terrain_stockpile_cases.py: yüzey ve üçgenlenmiş taban Triangle'ın; köşe kotları, taban düzlemi, kırpma ve tümleme kesin kesirlerle elle; KentOS kodu yok. Okur, yazmaz.",
  "setup": {
   "format": "kentos.document",
@@ -3457,7 +3457,7 @@
        "cutArea": 968.0,
        "fillArea": 0.0,
        "notes": [
-        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -3776,7 +3776,7 @@
        "cutArea": 650.0891178219108,
        "fillArea": 317.91088217808925,
        "notes": [
-        "Taban: köşelerin en yüksek kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelerin en yüksek kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -4095,7 +4095,7 @@
        "cutArea": 847.0627150517878,
        "fillArea": 120.93728494821224,
        "notes": [
-        "Taban: köşelerin ortalama kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelerin ortalama kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -4414,7 +4414,7 @@
        "cutArea": 928.5676294520871,
        "fillArea": 39.43237054791293,
        "notes": [
-        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -4734,7 +4734,7 @@
        "cutArea": 418.59553246892267,
        "fillArea": 549.4044675310773,
        "notes": [
-        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -5054,7 +5054,7 @@
        "cutArea": 968.0,
        "fillArea": 0.0,
        "notes": [
-        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -5374,7 +5374,7 @@
        "cutArea": 0.0,
        "fillArea": 968.0,
        "notes": [
-        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -5693,7 +5693,7 @@
        "cutArea": 928.5676294520871,
        "fillArea": 39.43237054791293,
        "notes": [
-        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -6304,7 +6304,7 @@
        "cutArea": 968.0,
        "fillArea": 0.0,
        "notes": [
-        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -6624,7 +6624,7 @@
        "cutArea": 268.84629354209045,
        "fillArea": 543.1537064579095,
        "notes": [
-        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 6 köşesi.",
+        "Taban: köşelere en küçük kareler düzlemi (düşey farklar); tabanın üstü kazı (yığın), altı dolgu. Sınırın 6 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -6944,7 +6944,7 @@
        "cutArea": 812.0,
        "fillArea": 4.348024788128169e-25,
        "notes": [
-        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 6 köşesi.",
+        "Taban: köşelerin en alçak kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 6 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -7262,7 +7262,7 @@
        "cutArea": 1039.9581937920384,
        "fillArea": 460.0418062079616,
        "notes": [
-        "Taban: köşelerin ortalama kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 4 köşesi.",
+        "Taban: köşelerin ortalama kotunda yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 4 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -7581,7 +7581,7 @@
        "cutArea": 430.693831342222,
        "fillArea": 1069.306168657778,
        "notes": [
-        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 4 köşesi.",
+        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 4 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -7894,7 +7894,7 @@
        "cutArea": 358.486499243814,
        "fillArea": 0.0,
        "notes": [
-        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 4 köşesi.",
+        "Taban: verilen kotta yatay düzlem; tabanın üstü kazı (yığın), altı dolgu. Sınırın 4 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -14598,7 +14598,7 @@
        "cutArea": 926.443241950638,
        "fillArea": 41.55675804936196,
        "notes": [
-        "Taban: köşelerden üçgenlenmiş yüzey (3 üçgen, kısıtlı Delaunay); tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 5 köşesi.",
+        "Taban: köşelerden üçgenlenmiş yüzey (3 üçgen, kısıtlı Delaunay); tabanın üstü kazı (yığın), altı dolgu. Sınırın 5 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },
@@ -14983,7 +14983,7 @@
        "cutArea": 86.44867678092876,
        "fillArea": 725.5513232190713,
        "notes": [
-        "Taban: köşelerden üçgenlenmiş yüzey (4 üçgen, kısıtlı Delaunay); tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın 6 köşesi.",
+        "Taban: köşelerden üçgenlenmiş yüzey (4 üçgen, kısıtlı Delaunay); tabanın üstü kazı (yığın), altı dolgu. Sınırın 6 köşesi.",
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle."
        ]
       },

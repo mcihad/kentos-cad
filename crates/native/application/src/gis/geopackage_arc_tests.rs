@@ -2,8 +2,9 @@
 //! report (a TM33 CURVEPOLYGON with a few-micrometre arc of three nearly straight points), turned copies
 //! and a real arc past 180° both ways. The area and the perimeter are checked against an independent
 //! 60-digit computation (mpmath, `scripts/fixtures/gpkg_arc_area.py`: each arc's circle from its three points as
-//! written, a three points on one line straight); the extent against GDAL 3.13's envelope of the report's GeoPackage.
-//! GDAL's own curve area for this ring (38 956.275 m²) is 0.244 m² off the exact one; its linear copy agrees with it.
+//! written, a three points on one line straight); the extent against an independent reader's envelope of the report's GeoPackage.
+//! That reader's own curve area for this ring (38 956.275 m²) is 0.244 m² off the exact one; its linear copy agrees
+//! with it. Which reader and version: the ADR of the arcs' reading.
 
 use std::collections::BTreeSet;
 
@@ -30,8 +31,9 @@ CIRCULARSTRING (488056.012496449 4422062.47437315,488056.012507266 4422062.47437
 /// `PARK`'s area and perimeter at 60 digits (`scripts/fixtures/gpkg_arc_area.py`).
 const AREA: f64 = 38_956.519_339_831;
 const PERIMETER: f64 = 790.231_084_908_664;
-/// GDAL's envelope of `PARK`: min x, max x, min y, max y (the arcs' bulge past the vertices in).
-const GDAL_EXTENT: [f64; 4] = [
+/// `PARK`'s envelope as an independent reader gives it: min x, max x, min y, max y (the arcs' bulge past the vertices
+/// in).
+const REFERENCE_EXTENT: [f64; 4] = [
     487_822.411_117_886_25,
     488_066.289_881_279_9,
     4_422_062.470_525_288,
@@ -138,8 +140,8 @@ fn the_parks_buffer_keeps_its_few_micrometre_arc_near_straight() {
     let max = |v: &[f64]| v.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     // The vertices lie within the arcs' extent, at most a few millimetres in from it.
     let got = [min(&xs), max(&xs), min(&ys), max(&ys)];
-    for (g, w) in got.iter().zip(GDAL_EXTENT) {
-        assert!((g - w).abs() < 0.01, "{got:?} for {GDAL_EXTENT:?}");
+    for (g, w) in got.iter().zip(REFERENCE_EXTENT) {
+        assert!((g - w).abs() < 0.01, "{got:?} for {REFERENCE_EXTENT:?}");
     }
 }
 

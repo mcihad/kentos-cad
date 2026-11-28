@@ -56098,7 +56098,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object\nas in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or\n`average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them\n(the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside\nthe outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),\n`elevation` level at `elevation`. Above the base is cut (the pile), below it fill (Pix4D's words). Reads only.\n\nRefusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary\nthat is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a\nline for `fit`, the corners not triangulated). Warnings: `terrain_no_data` (the surface does not cover the whole\nboundary).",
+        "description": "Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object\nas in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or\n`average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them\n(the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside\nthe outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),\n`elevation` level at `elevation`. Above the base is cut (the pile), below it fill. Reads only.\n\nRefusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary\nthat is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a\nline for `fit`, the corners not triangulated). Warnings: `terrain_no_data` (the surface does not cover the whole\nboundary).",
         "properties": {
           "base": {
             "type": "string"
@@ -56128,7 +56128,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and\nfill, and notes.",
+        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (cut + fill), the plan areas of cut and\nfill, and notes.",
         "properties": {
           "area": {
             "format": "double",
@@ -56241,7 +56241,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and\nfill, and notes.",
+        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (cut + fill), the plan areas of cut and\nfill, and notes.",
         "properties": {
           "area": {
             "format": "double",

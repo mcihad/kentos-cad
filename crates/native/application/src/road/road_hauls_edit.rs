@@ -52,7 +52,7 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             return Err(fail(
                 codes::INVALID_HAUL,
                 format!(
-                    "“{}” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.",
+                    "“{}” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez. Brükneri bırakıp yenisini yazın.",
                     old.name
                 ),
                 "haul",

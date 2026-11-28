@@ -762,7 +762,7 @@ def edit_cases():
        setup([a1, V2]))
     gone = revoked(a1, "2026-11-06")
     no("Onay geçmişi olan kübaj silinmez", {"operation": "remove", "volume": "v-1"},
-       failed("volume_approved", "“Ana kübaj” kübajının 1 onaylı hâli geçmişte; onay geçmişi silinmez (ADR 0950). Kübajı "
+       failed("volume_approved", "“Ana kübaj” kübajının 1 onaylı hâli geçmişte; onay geçmişi silinmez. Kübajı "
                                  "bırakıp yenisini yazın.", "volume"), setup([gone, V2]))
     used = setup()
     used["settings"]["road"]["hauls"] = [{"id": "h-1", "name": "Ana Brükner", "volume": "v-1", "revision": 1}]

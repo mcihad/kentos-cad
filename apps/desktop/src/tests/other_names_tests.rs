@@ -2,9 +2,11 @@
 //!
 //! Three places show text to the person or to a script author and are scanned here:
 //! - the catalog's texts (`docs/inventory/web.json`, `catalog/v1/additions.json`): titles, descriptions, aliases;
-//! - the string literals of the desktop programs' sources, the catalog's and the contracts' (comments are not
-//!   scanned: the rule cleans them as files are touched). ADR cites are checked only outside test code (inline
-//!   `#[cfg(test)]` modules, `tests/` folders, `tests.rs`, `*_tests.rs` and `*_scenes.rs`); names are checked in all of it;
+//! - the string literals of every program's and every crate's sources (comments are not scanned: the rule cleans
+//!   them as files are touched). A command's refusal, a reader's report and a service's error are written in the
+//!   crates below the desktop and reach the person as the windows' own texts do. Names are checked in all of it.
+//!   ADR cites are checked in the desktop programs, the interface kits, the catalog and the contracts, outside test
+//!   code (inline `#[cfg(test)]` modules, `tests/` folders, `tests.rs`, `*_tests.rs` and `*_scenes.rs`);
 //! - the Python SDK's text (`python/kentos`), which `help()` shows. ADR cites there are the contracts' doc comments
 //!   and are not scanned yet; names are.
 //!
@@ -14,7 +16,7 @@
 use std::path::{Path, PathBuf};
 
 /// Other programs' names, as written.
-const NAMES: [&str; 17] = [
+const NAMES: [&str; 31] = [
     "Netcad",
     "NETCAD",
     "AutoCAD",
@@ -32,10 +34,24 @@ const NAMES: [&str; 17] = [
     "Inkscape",
     "LibreOffice",
     "GDAL",
+    "Pix4D",
+    "Metashape",
+    "Global Mapper",
+    "MapInfo",
+    "ArchiCAD",
+    "Archicad",
+    "BricsCAD",
+    "SketchUp",
+    "Navisworks",
+    "Solibri",
+    "Tekla",
+    "Allplan",
+    "Blender",
+    "Autodesk",
 ];
 
 /// (file ending, name, why): a name kept because it is a protocol, a service type or a file signature.
-const ALLOWED: [(&str, &str, &str); 10] = [
+const ALLOWED: [(&str, &str, &str); 22] = [
     ("contracts/src/core/shape_resource.rs", "AutoCAD-86", "the first bytes of an SHX shape file, read to recognise it"),
     ("contracts/src/gis/service.rs", "ArcGIS", "the ArcGIS REST service kind, its token kind and the parameters it asks for"),
     ("commands/src/catalog/annotation.rs", "ArcGIS REST", "the service kind a layer is added from"),
@@ -46,6 +62,18 @@ const ALLOWED: [(&str, &str, &str); 10] = [
     ("python/kentos/cad/layers.py", "ArcGIS REST", "the service kind a layer is added from"),
     ("python/kentos/cad/types.py", "ArcGIS", "the service kind and its query words, generated from the contracts"),
     ("web.json", "ArcGIS", "the service kind, its token kind and its identify records"),
+    ("geometry-core/src/text/shx.rs", "AutoCAD-86", "the first bytes of an SHX shape file, and the message that lists the signatures read"),
+    ("formats/src/dxf/mod.rs", "AutoCAD Binary DXF", "the first bytes of a binary DXF file"),
+    ("formats/src/dxf/preflight.rs", "AutoCAD Binary DXF", "the first bytes of a binary DXF file"),
+    ("dwg/src/lib.rs", "AutoCAD Binary DXF", "the first bytes of a binary DXF file"),
+    ("formats/src/raster/write.rs", "GDALMetadata", "the element a GeoTIFF's metadata tag (42112) holds, as its registration names it"),
+    ("formats/src/raster/cog.rs", "GDAL_STRUCTURAL_METADATA_SIZE", "the key a cloud optimized GeoTIFF's header block starts with"),
+    ("services/src/caps/arcgis.rs", "ArcGIS", "the service kind whose description is read, in its errors"),
+    ("services/src/caps/mod.rs", "ArcGIS", "the service kind an address may be, said when the answer is JSON"),
+    ("services/src/auth.rs", "ArcGIS", "the service kind whose token is asked for"),
+    ("services/src/feed.rs", "ArcGIS REST", "the service kind a feed's address must be"),
+    ("services/src/geocode/providers.rs", "ArcGIS World", "the geocoding service a setting belongs to"),
+    ("services/src/geocode/read.rs", "ArcGIS", "the geocoding service that did not answer"),
 ];
 
 fn root() -> PathBuf {
@@ -71,7 +99,9 @@ fn files(folder: &Path, extensions: &[&str], out: &mut Vec<PathBuf>) {
 fn offence(file: &str, text: &str, cites: bool) -> Option<String> {
     for name in NAMES {
         let banned = text.match_indices(name).any(|(at, _)| {
-            !ALLOWED
+            // Inside a longer word it is not the name (`SheetMapInfo` is a sheet's map's info).
+            !text[..at].ends_with(|c: char| c.is_ascii_alphabetic())
+                && !ALLOWED
                 .iter()
                 .any(|(end, allowed, _)| file.ends_with(end) && allowed.starts_with(name) && text[at..].starts_with(allowed))
         });
@@ -195,17 +225,35 @@ fn raw_start(c: &[char], i: usize) -> Option<usize> {
 #[test]
 fn rust_string_literals_name_no_other_program_and_cite_no_adr() {
     let root = root();
-    let mut folders = vec![
-        root.join("apps/kentos-cad/src"),
-        root.join("crates/shared/commands/src"),
-        root.join("crates/shared/contracts/src"),
-        // The interface kits: their texts reach the person as the programs' own do.
-        root.join("crates/ui/src"),
-        root.join("crates/sheet-ui/src"),
-        root.join("crates/model-view-ui/src"),
-    ];
+    // Where an ADR cite is checked too: what these write is the person's to read (the windows' texts, a command's
+    // refusal, a tool's prompt and description). A path under the repository.
+    let interface = |under: &str| {
+        [
+            "apps/kentos-cad/",
+            "apps/desktop",
+            "crates/shared/commands/",
+            "crates/shared/contracts/",
+            "crates/ui/",
+            "crates/sheet-ui/",
+            "crates/model-view-ui/",
+            "crates/native/application/",
+            "crates/native/interaction/",
+            "crates/native/processing/",
+        ]
+        .iter()
+        .any(|part| under.starts_with(part))
+    };
+    // Every program and every crate (the vendored one is another project's source).
+    let mut folders = Vec::new();
     for entry in std::fs::read_dir(root.join("apps")).expect("the apps folder").flatten() {
-        if entry.file_name().to_string_lossy().starts_with("desktop") {
+        folders.push(entry.path().join("src"));
+    }
+    for group in std::fs::read_dir(root.join("crates")).expect("the crates folder").flatten() {
+        if group.file_name() == "vendor" {
+            continue;
+        }
+        folders.push(group.path().join("src"));
+        for entry in std::fs::read_dir(group.path()).into_iter().flatten().flatten() {
             folders.push(entry.path().join("src"));
         }
     }
@@ -213,7 +261,7 @@ fn rust_string_literals_name_no_other_program_and_cite_no_adr() {
     for folder in &folders {
         files(folder, &["rs"], &mut sources);
     }
-    assert!(sources.len() > 1_000, "the sources are found: {}", sources.len());
+    assert!(sources.len() > 5_000, "the sources are found: {}", sources.len());
     let mut found = Vec::new();
     for path in &sources {
         let name = path.to_string_lossy().replace('\\', "/");
@@ -225,8 +273,9 @@ fn rust_string_literals_name_no_other_program_and_cite_no_adr() {
         // everywhere.
         let test_file = name.contains("/tests/") || name.ends_with("_tests.rs") || name.ends_with("/tests.rs") || name.ends_with("_scenes.rs");
         let test_from = inline_tests_from(&text);
+        let under = path.strip_prefix(&root).unwrap_or(path).to_string_lossy().replace('\\', "/");
         for (line, literal) in literals(&text) {
-            let cites = !test_file && line < test_from;
+            let cites = interface(&under) && !test_file && line < test_from;
             if let Some(why) = offence(&name, &literal, cites) {
                 let at = path.strip_prefix(&root).unwrap_or(path).display();
                 found.push(format!("{at}:{line} {why}"));

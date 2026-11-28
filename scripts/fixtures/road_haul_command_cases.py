@@ -280,11 +280,11 @@ def edit_cases():
                    "haul": report({**ha, "free": 250.0, "revision": 2})}),
         {**STEPPED, "road": road_of([{**ha, "free": 250.0, "revision": 2}, H2])})], setup([ha, H2])))
     no("Onaylı Brükner silinmez", {"operation": "remove", "haul": "h-1"},
-       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez "
-                              "(ADR 0954). Brükneri bırakıp yenisini yazın.", "haul"), setup([ha, H2]))
+       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez. "
+                              "Brükneri bırakıp yenisini yazın.", "haul"), setup([ha, H2]))
     no("Onay geçmişi olan Brükner silinmez", {"operation": "remove", "haul": "Ana Brükner"},
-       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez "
-                              "(ADR 0954). Brükneri bırakıp yenisini yazın.", "haul"), setup([hh, H2]))
+       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez. "
+                              "Brükneri bırakıp yenisini yazın.", "haul"), setup([hh, H2]))
     # Docs/adr/0955: the haul road network and a site off the road.
     import road_haul_network_cases as net  # noqa: PLC0415
     nbase = net.setup(START, VOLUMES, CORRIDORS)

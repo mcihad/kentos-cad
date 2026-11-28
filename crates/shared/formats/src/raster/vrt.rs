@@ -580,7 +580,7 @@ mod tests {
             )
             .is_err()
         );
-        assert!(parse("<GDAL/>").is_err());
+        assert!(parse("<Baska/>").is_err());
         let two = "<VRTDataset rasterXSize=\"2\" rasterYSize=\"2\"><VRTRasterBand dataType=\"Byte\" band=\"1\"><SimpleSource><SourceFilename>a.tif</SourceFilename><SrcRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/><DstRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/></SimpleSource></VRTRasterBand><VRTRasterBand dataType=\"Byte\" band=\"2\"><SimpleSource><SourceFilename>b.tif</SourceFilename><SrcRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/><DstRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/></SimpleSource></VRTRasterBand></VRTDataset>";
         assert!(members(&parse(two).unwrap()).is_err());
     }

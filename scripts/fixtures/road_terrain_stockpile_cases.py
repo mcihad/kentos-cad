@@ -11,7 +11,7 @@ The surface is Shewchuk's Triangle's (road_terrain_command_cases.py's build) of 
 polyline, concave), a ring with a hole (a polygon), one reaching beyond the surface, an open polyline, an arc and three
 corners on a line.
 
-The rules, by hand (Pix4D's volume base surfaces, docs/adr/3140):
+The rules, by hand (docs/adr/3140):
 - the outer corners' heights on the surface: the triangle's plane (exact fractions, road_surface_cases.py);
 - the base: level at the lowest, highest or average height, the plane z = a·x + b·y + c of least vertical squares
   through them (exact normal equations, centred on the corners' mean), or level at a height given; or (docs/adr/3940)
@@ -329,7 +329,7 @@ def answer(boundary, base, elevation=None, surface="t-1"):
         out["corners"] = heights
     out.update({"area": m["area"], "covered": m["covered"], "uncovered": uncovered, "cut": m["cut"], "fill": m["fill"],
                 "total": m["cut"] + m["fill"], "cutArea": m["cutArea"], "fillArea": m["fillArea"],
-                "notes": [f"Taban: {said}; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). "
+                "notes": [f"Taban: {said}; tabanın üstü kazı (yığın), altı dolgu. "
                           f"Sınırın {len(outer)} köşesi.",
                           "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve "
                           "momentleriyle."]})
@@ -422,7 +422,7 @@ def cases():
                           "da alan olmalı.", "boundary"))
     refused(out, "Köşeleri bir doğru üstünde: eğimli düzlem çizilemez", {"surface": "t-1", "boundary": B["line"], "base": "fit"},
             rt.failed("invalid_stockpile", "Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.", "base"))
-    # Köşelerden üçgenlenmiş taban (docs/adr/3940; Pix4D's Triangulated).
+    # Köşelerden üçgenlenmiş taban (docs/adr/3940).
     tri_ = read(out, "Beşgen, köşelerden üçgenlenmiş taban: üç üçgen, her biri kendi düzlemi", {**pent, "base": "triangulated"},
                 boundary="pentagon", base="triangulated")
     assert len(tri_["triangles"]) == 3 and tri_["cut"] > 0, tri_
@@ -445,7 +445,7 @@ def cases():
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.stockpile", "commandVersion": 1,
-           "title": "Stok hacmi (Pix4D'nin hacim tabanları)",
+           "title": "Stok hacmi",
            "note": "ADR 3140, 3940. Bağımsız başvuru scripts/fixtures/road_terrain_stockpile_cases.py: yüzey ve üçgenlenmiş "
                    "taban Triangle'ın; köşe kotları, taban düzlemi, kırpma ve tümleme kesin kesirlerle elle; KentOS kodu "
                    "yok. Okur, yazmaz.",

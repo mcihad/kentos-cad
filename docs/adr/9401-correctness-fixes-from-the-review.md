@@ -337,6 +337,31 @@ Bekçi genişletilince sekiz metin çıktı:
 **Sınama.** `other_names_tests` (genişletilmiş hâliyle; düzeltmeden önce iki katalog açıklamasını ve GeoPDF ipucunu
 gösterdi), `kentos-sheet-ui` sınamaları, dokunulan pencerelerin sınamaları.
 
+#### 7.1 Bekçi her crate'in metnine bakar (28 Kasım 2026, ikinci tur)
+
+**Bulgu.** Bekçi yalnız masaüstü programlarının, arayüz kitlerinin, kataloğun ve sözleşmelerin metinlerini
+tarıyordu. Kişiye ulaşan metinlerin çoğu onların altında yazılır: komutun reddi ve notu (uygulama katmanı), okuyucunun
+açılış raporu (biçim crate'leri), servisin hatası, işlem aracının açıklaması. NCZ okuyucusunun raporundaki iki ileti
+böyle kaçmıştı (§9.2).
+
+**Karar.** Bekçi bütün programların ve bütün crate'lerin metin sabitlerini tarar (vendored crate dışında). Ad listesi
+17'den 31'e çıktı. Bir sözcüğün içindeki eşleşme ad sayılmaz (`SheetMapInfo`). ADR atfı, kişinin okuduğu metni yazan
+yerlerde aranır: masaüstü, kitler, katalog, sözleşmeler ve artık uygulama, etkileşim ve işlem katmanları.
+
+Çıkanlar düzeltildi:
+
+- Başka program adı: stok hacminin notu ve sözleşmesinin açıklaması, arayüz vitrininin bir açıklaması, iki Python
+  paketinin tanıtımı, iki sınamadaki ad.
+- ADR atfı: Yol'un iki reddi (kübaj, Brükner), malzeme lejandı bloğunun açıklaması, iki işlem aracının açıklaması.
+- İzin verilenler gerekçeleriyle listeye yazıldı: dosya imzaları (SHX, ikili DXF), GeoTIFF etiketinin ve bulut
+  GeoTIFF başlığının kendi adları, servis türü ve coğrafi kodlama servisi olarak ArcGIS.
+
+Dört komutun ortak durumlarındaki iletiler bağımsız üreteçlerinde değiştirildi. Üreteçlerden ikisi (kübaj, Brükner)
+sabit ortamda dosyalarının son basamaklarını da yeniden yazıyor; bu, bu işten önceki bir ortam farkıdır. O dosyalarda
+yalnız ileti satırları değiştirildi.
+
+**Kalan.** Yorumlardaki adlar (kaynakta 800 kadar satır) dokunulan dosyada temizlenir; bekçi yorumları taramaz.
+
 ### 8. Hata kodu tablosu parçalara bölündü; kütlenin kendi kodu (BK-16)
 
 **Bulgu.** `contracts/src/core/codes.rs` 3 387 satırdı ve boy sınırını aştığı için büyüyemiyordu. `cad.masses.create`

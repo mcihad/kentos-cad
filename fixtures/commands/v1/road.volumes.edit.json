@@ -54204,7 +54204,7 @@
       "status": "failed",
       "error": {
        "code": "volume_approved",
-       "message": "“Ana kübaj” kübajının 1 onaylı hâli geçmişte; onay geçmişi silinmez (ADR 0950). Kübajı bırakıp yenisini yazın.",
+       "message": "“Ana kübaj” kübajının 1 onaylı hâli geçmişte; onay geçmişi silinmez. Kübajı bırakıp yenisini yazın.",
        "path": "volume"
       }
      },

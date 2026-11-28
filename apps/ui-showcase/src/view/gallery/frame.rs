@@ -301,8 +301,8 @@ impl Showcase {
             entry(
                 "Dairesel menü",
                 "kentos_ui::widget::RadialMenu",
-                "İmlecin yerinde açılan, komutları çevresinde hep aynı yönlerde dizen menü \
-                 (Blender'daki pasta, Maya'daki işaretleme menüsü gibi). Alana basılı tutup \
+                "İmlecin yerinde açılan, komutları çevresinde hep aynı yönlerde dizen menü. \
+                 Alana basılı tutup \
                  bir yöne çekin ve bırakın; kısa tıklarsanız menü açık kalır, yönü seçip \
                  tıklayın. Ortaya tıklamak, sağ tık ya da Esc kapatır. Model alanında Boşluk \
                  tuşu aynı menüyü açar: basılı tutup çekip bırakmak aracı hemen seçer.",

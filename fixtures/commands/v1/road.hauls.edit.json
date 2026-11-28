@@ -20243,7 +20243,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_haul",
-       "message": "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.",
+       "message": "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez. Brükneri bırakıp yenisini yazın.",
        "path": "haul"
       }
      },
@@ -22838,7 +22838,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_haul",
-       "message": "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.",
+       "message": "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez. Brükneri bırakıp yenisini yazın.",
        "path": "haul"
       }
      },

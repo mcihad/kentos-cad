@@ -117246,7 +117246,7 @@ class TerrainsStockpile(_Model):
     `average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them
     (the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside
     the outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),
-    `elevation` level at `elevation`. Above the base is cut (the pile), below it fill (Pix4D's words). Reads only.
+    `elevation` level at `elevation`. Above the base is cut (the pile), below it fill. Reads only.
 
     Refusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),
     `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
@@ -117285,7 +117285,7 @@ class TerrainsStockpiled(_Model):
     """Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and
     b zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a
     level base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the
-    cut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and
+    cut (above the base) and fill (below it) volumes and their total (cut + fill), the plan areas of cut and
     fill, and notes.
     Attributes:
         area: Unit: area.

@@ -364,7 +364,7 @@ pub fn wetness() -> Tool {
         ("hydrology.wetness", "Topografik nemlilik indisi", "wetness"),
         "Topografik nemlilik indisi TWI = ln(a / tan β): suyun toplandığı düz yerler yüksek, sırtlar düşük.",
         &[
-            "a özgül havza alanıdır (m; Akış birikimi'nin), tan β yüzeyin Horn yöntemiyle eğimi (ADR 0231); tan β en küçük eğimin altındaysa en küçük eğim alınır. Beven ve Kirkby'nin (1979) indisidir.",
+            "a özgül havza alanıdır (m; Akış birikimi'nin), tan β yüzeyin Horn yöntemiyle eğimi; tan β en küçük eğimin altındaysa en küçük eğim alınır. Beven ve Kirkby'nin (1979) indisidir.",
             "Yöntem birikimin yöntemidir; Çoklu yön varsayılandır. Sonuç 32 bit; görünüş kuruda kırmızı, ıslakta mavi.",
             HELP_FILL,
             HELP_EMPTY,
