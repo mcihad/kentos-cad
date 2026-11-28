@@ -4,7 +4,7 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{Emit, Len, Prop, StyleLayer, all_of, css, css_in, field_of, n, prop_of, round4};
+use super::{Emit, Len, Prop, StyleLayer, all_of, css, field_of, n, prop_of, round4};
 use kentos_formats::sld::colour_with;
 
 /// The heat map of `emit`'s layer as a `heatmap` style layer; one written, or none.
@@ -150,10 +150,9 @@ pub(super) fn read(l: &StyleLayer, lost: &mut Vec<String>) -> Value {
             let stops: Vec<(f64, Option<(String, f64)>)> = a[3..]
                 .chunks(2)
                 .map(|p| {
-                    (
-                        p[0].as_f64().unwrap_or(-1.0),
-                        p[1].as_str().and_then(css_in),
-                    )
+                    let key = "heatmap-color";
+                    let colour = crate::colour::said(p.get(1), key, "durak atlandı", lost, &what);
+                    (p[0].as_f64().unwrap_or(-1.0), colour)
                 })
                 .collect();
             let k = (stops.len() - 1) as f64;

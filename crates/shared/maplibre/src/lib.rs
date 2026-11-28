@@ -2520,6 +2520,11 @@ impl Raw<'_> {
         css_in(self.value(key, class)?.as_str()?)
     }
 
+    /// That colour, black when the style says none: the specification's default for every colour drawn here.
+    fn colour_or_black(&self, key: &str, class: &Class) -> (String, f64) {
+        self.colour(key, class).unwrap_or(("#000000".into(), 1.0))
+    }
+
     /// A width: its pixels or its metres.
     fn length(&self, key: &str, class: &Class) -> Option<Len> {
         let v = self.value(key, class)?;
@@ -2607,7 +2612,10 @@ fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
             ignored.push(k);
             continue;
         }
-        if let Some(p) = prop_of(v, k, lost, &what) {
+        // A colour's every value is settled here (colour.rs): one that is no colour is left out like an expression.
+        if let Some(mut p) = prop_of(v, k, lost, &what)
+            && (!k.ends_with("color") || colour::settle(&mut p, k, lost, &what))
+        {
             paint.push((k.clone(), p));
         }
     }
@@ -2701,9 +2709,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
     let mut out = Vec::new();
     match raw.src.kind.as_str() {
         "fill" => {
-            let colour = raw
-                .colour("fill-color", class)
-                .unwrap_or(("#000000".into(), 1.0));
+            let colour = raw.colour_or_black("fill-color", class);
             let opacity = raw
                 .number("fill-opacity", class)
                 .unwrap_or(1.0)
@@ -2725,9 +2731,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
             }
         }
         "line" => {
-            let colour = raw
-                .colour("line-color", class)
-                .unwrap_or(("#000000".into(), 1.0));
+            let colour = raw.colour_or_black("line-color", class);
             let opacity = raw
                 .number("line-opacity", class)
                 .unwrap_or(1.0)
@@ -2801,9 +2805,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                 .and_then(|f| f.first())
                 .and_then(Value::as_str)
                 .unwrap_or("");
-            let colour = raw
-                .colour("text-color", class)
-                .unwrap_or(("#000000".into(), 1.0));
+            let colour = raw.colour_or_black("text-color", class);
             let opacity = raw
                 .number("text-opacity", class)
                 .unwrap_or(1.0)
@@ -2848,12 +2850,8 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                 .number("circle-stroke-opacity", class)
                 .unwrap_or(1.0)
                 .clamp(0.0, 1.0);
-            let fill = raw
-                .colour("circle-color", class)
-                .unwrap_or(("#000000".into(), 1.0));
-            let stroke = raw
-                .colour("circle-stroke-color", class)
-                .unwrap_or(("#000000".into(), 1.0));
+            let fill = raw.colour_or_black("circle-color", class);
+            let stroke = raw.colour_or_black("circle-stroke-color", class);
             let sw = raw.length("circle-stroke-width", class);
             let stroke_on = sw.is_some_and(|s| match s {
                 Len::Px(p) => p > 0.0,

@@ -186,11 +186,8 @@ pub(super) fn read(
             None => {}
         }
         if let Some(w) = number(first, "text-halo-width").filter(|w| *w > 0.0) {
-            let c = first
-                .paint
-                .get("text-halo-color")
-                .and_then(Value::as_str)
-                .and_then(css_in)
+            let key = "text-halo-color";
+            let c = crate::colour::said(first.paint.get(key), key, "siyah alındı", lost, &what)
                 .map_or_else(|| "#000000".into(), |(rgb, a)| colour_with(&rgb, Some(a)));
             more.insert("halo".into(), json!({ "width": round4(w), "color": c }));
         }

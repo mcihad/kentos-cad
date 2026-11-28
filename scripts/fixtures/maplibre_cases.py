@@ -64,10 +64,45 @@ def round3(v):
 
 # ─── Colours ──────────────────────────────────────────────────────────────────────────────────────────
 
-NAMED = {"black": "#000000", "white": "#ffffff", "red": "#ff0000", "green": "#008000", "lime": "#00ff00",
-         "blue": "#0000ff", "yellow": "#ffff00", "cyan": "#00ffff", "aqua": "#00ffff", "magenta": "#ff00ff",
-         "fuchsia": "#ff00ff", "gray": "#808080", "grey": "#808080", "orange": "#ffa500", "purple": "#800080",
-         "pink": "#ffc0cb", "brown": "#a52a2a"}
+# CSS'in adlı renkleri (CSS Color Module Level 4, 148 ad): MapLibre'nin stil belirtimi hepsine izin verir (ADR 9401 §3).
+# `--check` her adı resmî paketin kendi okumasıyla (`Color.parse`) karşılaştırır.
+NAMED = {"aliceblue": "#f0f8ff", "antiquewhite": "#faebd7", "aqua": "#00ffff", "aquamarine": "#7fffd4",
+         "azure": "#f0ffff", "beige": "#f5f5dc", "bisque": "#ffe4c4", "black": "#000000",
+         "blanchedalmond": "#ffebcd", "blue": "#0000ff", "blueviolet": "#8a2be2", "brown": "#a52a2a",
+         "burlywood": "#deb887", "cadetblue": "#5f9ea0", "chartreuse": "#7fff00", "chocolate": "#d2691e",
+         "coral": "#ff7f50", "cornflowerblue": "#6495ed", "cornsilk": "#fff8dc", "crimson": "#dc143c",
+         "cyan": "#00ffff", "darkblue": "#00008b", "darkcyan": "#008b8b", "darkgoldenrod": "#b8860b",
+         "darkgray": "#a9a9a9", "darkgreen": "#006400", "darkgrey": "#a9a9a9", "darkkhaki": "#bdb76b",
+         "darkmagenta": "#8b008b", "darkolivegreen": "#556b2f", "darkorange": "#ff8c00", "darkorchid": "#9932cc",
+         "darkred": "#8b0000", "darksalmon": "#e9967a", "darkseagreen": "#8fbc8f", "darkslateblue": "#483d8b",
+         "darkslategray": "#2f4f4f", "darkslategrey": "#2f4f4f", "darkturquoise": "#00ced1", "darkviolet": "#9400d3",
+         "deeppink": "#ff1493", "deepskyblue": "#00bfff", "dimgray": "#696969", "dimgrey": "#696969",
+         "dodgerblue": "#1e90ff", "firebrick": "#b22222", "floralwhite": "#fffaf0", "forestgreen": "#228b22",
+         "fuchsia": "#ff00ff", "gainsboro": "#dcdcdc", "ghostwhite": "#f8f8ff", "gold": "#ffd700",
+         "goldenrod": "#daa520", "gray": "#808080", "green": "#008000", "greenyellow": "#adff2f", "grey": "#808080",
+         "honeydew": "#f0fff0", "hotpink": "#ff69b4", "indianred": "#cd5c5c", "indigo": "#4b0082",
+         "ivory": "#fffff0", "khaki": "#f0e68c", "lavender": "#e6e6fa", "lavenderblush": "#fff0f5",
+         "lawngreen": "#7cfc00", "lemonchiffon": "#fffacd", "lightblue": "#add8e6", "lightcoral": "#f08080",
+         "lightcyan": "#e0ffff", "lightgoldenrodyellow": "#fafad2", "lightgray": "#d3d3d3", "lightgreen": "#90ee90",
+         "lightgrey": "#d3d3d3", "lightpink": "#ffb6c1", "lightsalmon": "#ffa07a", "lightseagreen": "#20b2aa",
+         "lightskyblue": "#87cefa", "lightslategray": "#778899", "lightslategrey": "#778899",
+         "lightsteelblue": "#b0c4de", "lightyellow": "#ffffe0", "lime": "#00ff00", "limegreen": "#32cd32",
+         "linen": "#faf0e6", "magenta": "#ff00ff", "maroon": "#800000", "mediumaquamarine": "#66cdaa",
+         "mediumblue": "#0000cd", "mediumorchid": "#ba55d3", "mediumpurple": "#9370db", "mediumseagreen": "#3cb371",
+         "mediumslateblue": "#7b68ee", "mediumspringgreen": "#00fa9a", "mediumturquoise": "#48d1cc",
+         "mediumvioletred": "#c71585", "midnightblue": "#191970", "mintcream": "#f5fffa", "mistyrose": "#ffe4e1",
+         "moccasin": "#ffe4b5", "navajowhite": "#ffdead", "navy": "#000080", "oldlace": "#fdf5e6",
+         "olive": "#808000", "olivedrab": "#6b8e23", "orange": "#ffa500", "orangered": "#ff4500",
+         "orchid": "#da70d6", "palegoldenrod": "#eee8aa", "palegreen": "#98fb98", "paleturquoise": "#afeeee",
+         "palevioletred": "#db7093", "papayawhip": "#ffefd5", "peachpuff": "#ffdab9", "peru": "#cd853f",
+         "pink": "#ffc0cb", "plum": "#dda0dd", "powderblue": "#b0e0e6", "purple": "#800080",
+         "rebeccapurple": "#663399", "red": "#ff0000", "rosybrown": "#bc8f8f", "royalblue": "#4169e1",
+         "saddlebrown": "#8b4513", "salmon": "#fa8072", "sandybrown": "#f4a460", "seagreen": "#2e8b57",
+         "seashell": "#fff5ee", "sienna": "#a0522d", "silver": "#c0c0c0", "skyblue": "#87ceeb",
+         "slateblue": "#6a5acd", "slategray": "#708090", "slategrey": "#708090", "snow": "#fffafa",
+         "springgreen": "#00ff7f", "steelblue": "#4682b4", "tan": "#d2b48c", "teal": "#008080", "thistle": "#d8bfd8",
+         "tomato": "#ff6347", "turquoise": "#40e0d0", "violet": "#ee82ee", "wheat": "#f5deb3", "white": "#ffffff",
+         "whitesmoke": "#f5f5f5", "yellow": "#ffff00", "yellowgreen": "#9acd32"}
 
 
 def hex_colour(s: str):
@@ -158,6 +193,77 @@ def css_in(text: str):
             return None
         return "#%02x%02x%02x" % (channel(h + 1.0 / 3.0), channel(h), channel(h - 1.0 / 3.0)), a
     return None
+
+
+def text_of(v, key, then, lost, what):
+    """Bir değer rengin metni olarak (ADR 9401 §3): renk diye okunan bir metin ya da renk veren sabit bir ifade
+    (rgb, to-color). Renk olmayan, yerine ne yapıldığıyla (`then`) söylenir."""
+    if isinstance(v, str):
+        text = v
+    else:
+        p = prop_of(v, key, lost, what)
+        if p is None:
+            return None
+        if p[0] == "const" and isinstance(p[1], str):
+            text = p[1]
+        else:
+            shown = json.dumps(v, ensure_ascii=False, separators=(",", ":"))
+            lost.append(f"{what}: “{key}” değerindeki {shown} bir renk değil; {then}")
+            return None
+    if css_in(text) is None:
+        lost.append(f"{what}: “{key}” değerindeki “{text}” rengi okunamadı; {then}")
+        return None
+    return text
+
+
+def settle(p, key, lost, what):
+    """Bir renk anahtarının değerleri, katman okunurken bir kez (ADR 0560 “Boya değerleri”, ADR 9401 §3): anahtarın
+    alabileceği her değer renk olmalı (sabit, match'in kolları ve yedeği, step'in tabanı ve durakları, alanın yedeği).
+    Kolun kendi sabit ifadesi renginin metni olur. Renk olmayan ilk değer söylenir ve None döner: değer alınmaz
+    (varsayılanı kalır), renk katmanın kendi rengiyse katman alınmaz."""
+    def colour(v):
+        return text_of(v, key, "değer alınmadı", lost, what)
+
+    kind = p[0]
+    if kind == "const":
+        c = colour(p[1])
+        return None if c is None else ("const", c)
+    if kind == "data":
+        if p[2] is None:
+            return p
+        c = colour(p[2])
+        return None if c is None else ("data", p[1], c)
+    if kind == "match":
+        arms = []
+        for labels, out in p[2]:
+            c = colour(out)
+            if c is None:
+                return None
+            arms.append((labels, c))
+        c = colour(p[3])
+        return None if c is None else ("match", p[1], arms, c)
+    if kind == "step":
+        base = colour(p[2])
+        if base is None:
+            return None
+        stops = []
+        for at, out in p[3]:
+            c = colour(out)
+            if c is None:
+                return None
+            stops.append((at, c))
+        return ("step", p[1], base, stops)
+    lost.append(f"{what}: “{key}” bir renk değil; değer alınmadı")
+    return None
+
+
+def said(v, key, then, lost, what):
+    """Bir etiketin halesinin ya da ısı haritasının durağının söylediği renk; söylemiyorsa None. Renk olmayan,
+    yerine ne yapıldığıyla (`then`) söylenir."""
+    if v is None:
+        return None
+    text = text_of(v, key, then, lost, what)
+    return None if text is None else css_in(text)
 
 
 def colour_with(rgb: str, a):
@@ -765,8 +871,7 @@ def read_labels(layers, lost, families):
                 lost.append(f"{what}: ifadeyle rengi KentOS'un etiketinde yok; siyah alındı")
         hw = lnum(first, "text-halo-width")
         if hw is not None and hw > 0:
-            hc = paint.get("text-halo-color")
-            got = css_in(hc) if isinstance(hc, str) else None
+            got = said(paint.get("text-halo-color"), "text-halo-color", "siyah alındı", lost, what)
             more["halo"] = {"width": round4(hw), "color": colour_with(got[0], got[1]) if got else "#000000"}
         for l in group:
             ll = l.get("layout", {})
@@ -858,7 +963,8 @@ def heat_read(l, lost):
     if "heatmap-color" in paint:
         a = paint["heatmap-color"] if isinstance(paint["heatmap-color"], list) else []
         if len(a) >= 7 and a[0] == "interpolate" and a[2] == ["heatmap-density"] and len(a) % 2 == 1:
-            stops = [(p[0] if isinstance(p[0], (int, float)) else -1.0, css_in(p[1]) if isinstance(p[1], str) else None)
+            stops = [(p[0] if isinstance(p[0], (int, float)) else -1.0,
+                      said(p[1], "heatmap-color", "durak atlandı", lost, what))
                      for p in zip(a[3::2], a[4::2])]
             k = len(stops) - 1
             if any(abs(o - i / k) > 0.001 for i, (o, _) in enumerate(stops)):
@@ -918,6 +1024,8 @@ def raw_of(l, lost):
             ignored.append(k)
             continue
         p = prop_of(l["paint"][k], k, lost, what)
+        if p is not None and k.endswith("color"):
+            p = settle(p, k, lost, what)
         if p is not None:
             paint.append((k, p))
     colour_key = {"fill": "fill-color", "line": "line-color", "symbol": "text-color"}.get(kind, "circle-color")
@@ -1746,6 +1854,27 @@ HAND = {
         {"id": "r7", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "transparent"}},
         {"id": "r8", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": ["rgba", 10, 20, 30, 0.5]}},
         {"id": "r9", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "#11223344"}}),
+    # Renk adları (ADR 9401 §3): CSS'in her adı, büyük küçük harf ayrılmadan; bir kolun kendi sabit ifadesi.
+    "renk-adlari.json": style(
+        {"id": "a1", "type": "fill", "source-layer": "parsel",
+         "paint": {"fill-color": "steelblue", "fill-outline-color": "navy"}},
+        {"id": "a2", "type": "fill", "source-layer": "parsel",
+         "paint": {"fill-color": "RebeccaPurple", "fill-opacity": 0.5}},
+        {"id": "a3", "type": "line", "source-layer": "parsel",
+         "paint": {"line-color": "darkslategray", "line-width": 2}}),
+    "renk-adlari-kategorili.json": style(
+        {"id": "k1", "type": "fill", "source-layer": "parsel",
+         "paint": {"fill-color": ["match", ["get", "ada"], "A", "olive", "B", ["rgb", 1, 2, 3],
+                                  "C", ["to-color", "crimson"], "teal"]}}),
+    # Renk olmayan değer (ADR 0560, ADR 9401 §3): katmanın kendi rengiyse katman alınmaz; çerçevenin rengiyse çerçeve
+    # çizilmez. İkisi de söylenir.
+    "okunmayan-renk.json": style(
+        {"id": "o1", "type": "fill", "source-layer": "parsel",
+         "paint": {"fill-color": "olive", "fill-outline-color": "kirmizimsi"}},
+        {"id": "o2", "type": "line", "source-layer": "parsel", "paint": {"line-color": "rgb(1,2", "line-width": 1}},
+        {"id": "o3", "type": "fill", "source-layer": "parsel",
+         "paint": {"fill-color": ["match", ["get", "ada"], "A", "olive", "B", "boyle-bir-renk-yok", "gray"]}},
+        {"id": "o4", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "teal", "fill-outline-color": 5}}),
     "geometri.json": style(
         {"id": "g1", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "#cccccc"}},
         {"id": "g2", "type": "line", "source-layer": "parsel",
@@ -1846,6 +1975,12 @@ def build_cases():
                 "parsel"),
         ok_case("Veriye bağlı renkler: to-color ve get alanın değerini renk yapar, yedek rengi sabit renk olur", "veriye-bagli.json",
                 "parsel"),
+        ok_case("Renk adları: CSS'in her adı okunur, büyük küçük harf ayrılmaz; çerçevenin ve çizginin rengi de",
+                "renk-adlari.json", "parsel"),
+        ok_case("Kategorilerde renk adı ve kolun kendi sabit ifadesi: rgb, to-color", "renk-adlari-kategorili.json",
+                "parsel"),
+        ok_case("Renk olmayan değer söylenir: katmanın kendi rengiyse katman alınmaz, çerçevenin rengiyse çerçeve "
+                "çizilmez", "okunmayan-renk.json", "parsel"),
         ok_case("Yazı işareti: KentOS'un yazdığı, tek karakterli, etiket ve simgeli katman söylenir", "yazi-isareti.json",
                 "durak"),
         ok_case("Geometri süzgeçleri hangi simgenin olduğunu söyler", "geometri.json", "parsel"),
@@ -1956,6 +2091,35 @@ console.log(JSON.stringify(out));
 """
 
 
+NODE_NAMES = r"""
+const spec = require('@maplibre/maplibre-gl-style-spec');
+const out = {};
+for (const n of JSON.parse(process.argv[2])) { const c = spec.Color.parse(n); out[n] = c ? [c.r, c.g, c.b, c.a] : null; }
+console.log(JSON.stringify(out));
+"""
+
+
+def check_names():
+    """Renk adları resmî paketin kendi okumasıyla karşılaştırılır (ADR 9401 §3): her ad aynı renk, ad olmayan renk
+    değil."""
+    SPEC_DIR.joinpath("names.js").write_text(NODE_NAMES)
+    asked = sorted(NAMED) + ["transparent", "boyle-bir-renk-yok"]
+    r = subprocess.run(["node", str(SPEC_DIR / "names.js"), json.dumps(asked)], capture_output=True, text=True,
+                       cwd=str(SPEC_DIR))
+    if r.returncode != 0:
+        return [f"renk adları resmî pakette okunamadı: {r.stderr[-300:]}"]
+    official = json.loads(r.stdout)
+    problems = []
+    for name in asked:
+        ours, theirs = css_in(name), official[name]
+        if theirs is not None:
+            # The package's channels are multiplied by the opacity: an opaque colour's are its own.
+            theirs = ("#%02x%02x%02x" % tuple(round(x * 255) for x in theirs[:3]), theirs[3])
+        if ours != theirs:
+            problems.append(f"renk adı “{name}”: burada {ours}, resmî pakette {theirs}")
+    return problems
+
+
 def ensure_spec():
     marker = SPEC_DIR / "node_modules/@maplibre/maplibre-gl-style-spec/package.json"
     if marker.exists():
@@ -2008,7 +2172,7 @@ def check_out():
     bad.unlink()
     if ok:
         problems.append("doğrulayıcı bozuk bir stili geçirdi; denetim bir şey söylemiyor")
-    return problems + evaluate_out(out_dir)
+    return problems + check_names() + evaluate_out(out_dir)
 
 
 def evaluate(style, zoom):

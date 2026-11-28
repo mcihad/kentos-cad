@@ -1,0 +1,36 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "k1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "match",
+     [
+      "get",
+      "ada"
+     ],
+     "A",
+     "olive",
+     "B",
+     [
+      "rgb",
+      1,
+      2,
+      3
+     ],
+     "C",
+     [
+      "to-color",
+      "crimson"
+     ],
+     "teal"
+    ]
+   }
+  }
+ ]
+}

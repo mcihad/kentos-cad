@@ -12,5 +12,7 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../contracts", default-features = false }
 kentos-formats = { path = "../formats" }
+# CSS's colour names (docs/adr/9401 §3): the SVG core keeps the table; this crate keeps none of its own.
+kentos-svg-core = { path = "../svg-core" }
 libm = { workspace = true }
 serde_json = { workspace = true }

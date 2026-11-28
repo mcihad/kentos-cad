@@ -251,6 +251,10 @@ HAND_ML = {
     "renkler.json": ml(CIRCLE, sym("durak/ad", {"text-field": ["get", "ad"]}, {"text-color": ["get", "renk"]}),
                        sym("durak/kot", {"text-field": ["get", "kot"]},
                            {"text-color": "boya", "text-halo-color": "rgba(255,255,255,0.5)", "text-halo-width": 2})),
+    # Adlı renk okunur; okunamayan hale rengi söylenir, siyah alınır (ADR 9401 §3).
+    "hale-rengi.json": ml(CIRCLE, sym("durak/ad", {"text-field": ["get", "ad"]},
+                                      {"text-color": "darkslategray", "text-halo-color": "boya",
+                                       "text-halo-width": 2})),
     "cizgi-etiket.json": ml(LLINE, sym("yol/ad", {"text-field": ["get", "ad"], "symbol-placement": "line",
                                                   "text-offset": [0, -1.2], "symbol-spacing": 250, "text-size": 10,
                                                   "text-max-angle": 30}, {"text-color": "#1f4e9e"})),
@@ -278,6 +282,10 @@ HAND_ML = {
                                       "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "blue",
                                                         0.2, "lime", 1, "red"]}},
                            {"id": "durak/2", "type": "heatmap", "source": "s", "paint": {}}, CIRCLE),
+    # Okunamayan durak söylenir ve atlanır; adlı renkler okunur (ADR 9401 §3).
+    "isi-durak.json": ml({"id": "durak/1", "type": "heatmap", "source": "s",
+                          "paint": {"heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "transparent",
+                                                      0.5, "boya", 1, "crimson"]}}),
     "kentos-simge.json": ml(sym("durak/1", {"icon-image": "kentos-star-0a1b2c3d", "icon-rotate": 30,
                                             "icon-allow-overlap": True, "icon-ignore-placement": True},
                                 {"icon-opacity": 0.8},
@@ -678,6 +686,7 @@ def maplibre_cases():
         ml_ok("format ifadesi söylenir, etiket alınmaz", "format.json", "durak"),
         ml_ok("Yakınlaştırmaya göre yazı boyu söylenir, 16 piksel alınır", "zoom-boy.json", "durak"),
         ml_ok("İfadeyle ve okunamayan renk söylenir, rgba hale rengi alınır", "renkler.json", "durak"),
+        ml_ok("Etiketin adlı rengi okunur; okunamayan hale rengi söylenir, siyah alınır", "hale-rengi.json", "durak"),
         ml_ok("Çizgi boyunca etiket: üstünde uzaklık, yineleme, en çok açı", "cizgi-etiket.json", "yol"),
         ml_ok("Değişken çapalar ve uzaklık, sıralama anahtarı öncelik olur, çakışabilir", "cevre.json", "durak"),
         ml_ok("Yakınlaştırma aralığı etiketin ölçeği olur", "zoom-etiket.json", "durak"),
@@ -694,6 +703,7 @@ def maplibre_cases():
               "durak"),
         ml_ok("Isı haritası: alan olmayan ağırlık, eşit aralıksız duraklar, ikinci ısı haritası ve öbür katman, "
               "bilinmeyen özellik söylenir", "isi-karisik.json", "durak"),
+        ml_ok("Isı haritasının okunamayan durağı söylenir ve atlanır; adlı renkler okunur", "isi-durak.json", "durak"),
     ]
     M.DIR = DIR
     out, warnings, renderers = M.run_import("kentos-etiket.json", "durak")

@@ -1,0 +1,53 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "o1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "olive",
+    "fill-outline-color": "kirmizimsi"
+   }
+  },
+  {
+   "id": "o2",
+   "type": "line",
+   "source-layer": "parsel",
+   "paint": {
+    "line-color": "rgb(1,2",
+    "line-width": 1
+   }
+  },
+  {
+   "id": "o3",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "match",
+     [
+      "get",
+      "ada"
+     ],
+     "A",
+     "olive",
+     "B",
+     "boyle-bir-renk-yok",
+     "gray"
+    ]
+   }
+  },
+  {
+   "id": "o4",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "teal",
+    "fill-outline-color": 5
+   }
+  }
+ ]
+}

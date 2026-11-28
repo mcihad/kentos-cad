@@ -1,0 +1,34 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "a1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "steelblue",
+    "fill-outline-color": "navy"
+   }
+  },
+  {
+   "id": "a2",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "RebeccaPurple",
+    "fill-opacity": 0.5
+   }
+  },
+  {
+   "id": "a3",
+   "type": "line",
+   "source-layer": "parsel",
+   "paint": {
+    "line-color": "darkslategray",
+    "line-width": 2
+   }
+  }
+ ]
+}

@@ -1599,6 +1599,223 @@
    ]
   },
   {
+   "name": "Etiketin adlı rengi okunur; okunamayan hale rengi söylenir, siyah alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:style-labels/v1/hale-rengi.json",
+      "layer": "durak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "durak",
+         "from": [
+          "durak",
+          "durak/ad"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 8.0,
+              "unit": "px",
+              "fill": "#d62728",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true,
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "durak/ad",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "color": "#2f4f4f",
+             "halo": {
+              "width": 2.0,
+              "color": "#000000"
+             },
+             "point": "center"
+            }
+           }
+          ]
+         }
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“durak/ad” etiketi: “text-halo-color” değerindeki “boya” rengi okunamadı; siyah alındı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “durak/ad” etiketi: “text-halo-color” değerindeki “boya” rengi okunamadı; siyah alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 8.0,
+              "unit": "px",
+              "fill": "#d62728",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         },
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "durak/ad",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "color": "#2f4f4f",
+             "halo": {
+              "width": 2.0,
+              "color": "#000000"
+             },
+             "point": "center"
+            }
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "name": "Çizgi boyunca etiket: üstünde uzaklık, yineleme, en çok açı",
    "steps": [
     {
@@ -4229,6 +4446,166 @@
            "#0000ff",
            "#00ff00",
            "#ff0000"
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Isı haritasının okunamayan durağı söylenir ve atlanır; adlı renkler okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:style-labels/v1/isi-durak.json",
+      "layer": "durak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "durak",
+         "from": [
+          "durak/1"
+         ],
+         "kind": "heatmap",
+         "rules": 1,
+         "renderer": {
+          "type": "heatmap",
+          "radius": 30.0,
+          "unit": "px",
+          "ramp": [
+           "#00000000",
+           "#dc143c"
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“durak/1” ısı haritası: “heatmap-color” değerindeki “boya” rengi okunamadı; durak atlandı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “durak/1” ısı haritası: “heatmap-color” değerindeki “boya” rengi okunamadı; durak atlandı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "heatmap",
+          "radius": 30.0,
+          "unit": "px",
+          "ramp": [
+           "#00000000",
+           "#dc143c"
           ]
          }
         },
