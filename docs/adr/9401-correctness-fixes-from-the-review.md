@@ -5,8 +5,10 @@
   §20.2 (geç kalan sonuç başka belgenin üstüne uygulanmaz), §23 (sayısal doğruluk), §25 kural 6 (veri yalnız komutla
   değişir).
 - **İlgili:** [ADR 9400](9400-maintenance-plan.md) (bakım planı), [ADR 0253](0253-command-protocol.md)
-  (komut adımı ve kayıt).
+  (komut adımı ve kayıt), [ADR 0560](0560-maplibre-style-exchange.md) (MapLibre stilinin okuma kuralı),
+  [ADR 9113](9113-query-layers.md) (sorgu katmanı).
 - **Ürün:** hata düzeltmeleri; her biri aşağıda. **`.kcad`:** değişmedi. **Sözleşme:** madde madde yazılı.
+- **Bağımlılık:** yeni dış bağımlılık yok. `kentos-maplibre` artık `kentos-svg-core`'a bağlı (§3.5).
 
 ## Bağlam
 
@@ -71,12 +73,153 @@ ya da bir proje dosyasındaki ifade programı çökertebilirdi; yığın taşmas
 reddedilir; sınırın iki yanı); `sld::tests::a_filter_nested_past_the_limit_is_not_read`. Düzeltmeden önce aynı girdiler
 süreci düşürüyordu (yukarıdaki ölçüm).
 
+### 3. Sessiz kayıplar ve tek deyimli sorgu (BK-15)
+
+Beş ayrı yerde okuyucu ya da yazıcı bir şeyi söylemeden bırakıyordu. Ortak karar: **okunamayan değer ya reddedilir ya
+da rapora yazılır; yerine başka bir şey sessizce konmaz.**
+
+#### 3.1 DXF: tarama deseni, geçiş ve resim adları çizimin kod sayfasında
+
+**Bulgu.** DXF okuyucusunun düz metin okuması UTF-8 olmayan baytta boş döner (`formats/src/dxf/lexer.rs`). Tarama
+deseninin adı, geçişin adı ve resmin dosyası bu yoldan okunuyordu, kod sayfası çözücüsünden geçmiyordu. Windows-1254
+bir çizimde Türkçe harfli desen adı “_USER” oluyordu, resmin dosya adı kayboluyordu; rapor bir şey söylemiyordu.
+
+**Karar.** Üç metin de katman ve blok adları gibi çizimin çözücüsünden (`Decoder`) geçer.
+
+**Sınama.** `formats/tests/all/dxf_bridge.rs`: `a_hatch_pattern_s_name_is_read_in_the_drawing_s_code_page`,
+`an_image_s_file_is_read_in_the_drawing_s_code_page`.
+
+#### 3.2 WFS: koordinatı okunamayan nesne şekilsiz gelir ve söylenir
+
+**Bulgu.** Servisin GML okuyucusu (`services/src/gml.rs`) sayı olmayan belirteci atlayıp okumayı sürdürüyordu:
+`0 0 x 1 1 2 2` listesi (0,0), (1,1), (2,2) çizgisi oluyordu. Konumun ortasında biten listenin sonu da aynı yolla
+düşüyordu. Sonraki bütün koordinatlar bir yer kayıyordu ve hiçbir şey söylenmiyordu.
+
+**Karar.**
+
+- Bir koordinatı okunamayan geometri verilmez: sayı olmayan ya da sonlu olmayan değer, konumun ortasında biten liste,
+  eksik `X`/`Y`. Nesne şekilsiz gelir ve sayılır.
+- Alımın raporu bunu servisin kendi boş gönderdiği nesnelerden ayrı söyler: “Koordinatı okunamayan nesne”. İkisinin
+  nedeni ve çözümü başkadır (boş gelen nesne için başka koordinat sistemi önerilir).
+- Dosyadan GML okuyucusu (`application/src/gis/gml_read.rs`) aynı durumda dosyayı reddeder. Servis sayfa sayfa gelir ve
+  öbür nesneleri sağlamdır: alım sürer, kayıp söylenir.
+
+**Sınama.** `gml::tests::a_coordinate_that_does_not_read_leaves_no_shape`,
+`feed::tests::features_whose_coordinates_did_not_read_are_told_apart_from_empty_ones`.
+
+#### 3.3 LAS: VLR'ye sığmayan kayıt taşınır ya da yazma reddedilir
+
+**Bulgu.** LAS yazıcısı (`pointcloud/src/write.rs`) 65 535 baytı aşan değişken uzunluklu kaydı (VLR) söylemeden
+atlıyordu.
+
+**Karar.** LAS 1.4'te kayıt genişletilmiş kayıt (EVLR) olarak taşınır. 1.2 ve 1.3'te onun yeri yoktur: yazma
+reddedilir; ileti kaydı, boyunu ve çözümü (LAS 1.4 olarak yazmak) söyler.
+
+**Sınama.** `write::tests::a_record_too_large_for_a_vlr_is_carried_or_refused`.
+
+#### 3.4 GeoPackage: sorgu katmanının metni SQLite'a tek deyim olarak gider
+
+**Bulgu.** Üç katmanlıydı; her biri kodda gösterildi.
+
+1. Sürücü sorgunun sütunlarını bulmak için geçici görünümü `execute_batch` ile kuruyordu
+   (`native/data-gpkg/src/query.rs`). Bu çağrı metindeki bütün deyimleri çalıştırır.
+2. Ortak denetim (`kentos_data::query::check`) yalnız `'…'` ve `"…"` tırnaklarını bilir. SQLite ayrıca `` `…` `` ve
+   `[…]` biçimindeki adları, `$ad(…)` biçimindeki değişkeni de okur. ``SELECT 1 AS `a"`; …; --"`` metni denetimden
+   tek deyim olarak geçiyordu, SQLite için iki deyimdi ve ikincisi çalışıyordu. Okuma bağlantısı salt okunurdur ama
+   geçici tablo ve görünüm alır: bir tablonun adıyla kurulan geçici görünüm, saklanan bağlantıda o tabloyu 600 satır
+   yerine 0 satır okutuyordu.
+3. Çağrıyı tek deyimli olanla değiştirmek yetmiyordu. `rusqlite` ikinci deyimi reddetmek için onu derler; SQLite bazı
+   ayarlarını (`PRAGMA`) deyim derlenirken uygular. Sınamada `PRAGMA case_sensitive_like` bağlantının karşılaştırmasını
+   yalnız derlenerek değiştirdi.
+
+**Karar.**
+
+- Görünüm tek deyim alan çağrıyla kurulur. Birden çok deyim reddedilir, hiçbiri çalışmaz.
+- Metin SQLite'a verilmeden önce onun kendi kurallarıyla okunur (`native/data-gpkg/src/statement.rs`,
+  `one_statement`). Kurallar paketlenen SQLite'ın (3.54.1) ayrıştırıcısından (`sqlite3GetToken`) alındı: üç tırnak,
+  köşeli parantezli ad, iki yorum biçimi; `;`'den sonra yalnız boşluk, yorum ve `;` gelebilir.
+- Değişken (`?`, `:ad`, `@ad`, `$ad`, `#ad`) reddedilir. Katmanın sorgusuna değer verilmez; `$ad(…)` de bu okumanın
+  izleyemeyeceği tek belirteçtir. Çalışan hiçbir sorgu bundan etkilenmez: SQLite görünümde değişkeni zaten reddeder.
+- Ortak denetim lehçeden bağımsız kalır. PostGIS sürücüsü görünümü hazırlanmış deyimle kurar (`sqlx::query`,
+  sqlx-postgres 0.9.1'in kaynağından doğrulandı): PostgreSQL hazırlanmış deyimde birden çok komutu çalıştırmadan
+  reddeder.
+- İleti aynıdır: “Tek bir sorgu yazın: noktalı virgülle ayrılmış birden çok deyim olmaz.”
+  (`kentos_data::query::MANY_STATEMENTS`).
+
+**Seçilmeyen.** SQLite'ın yetkilendiricisi (`sqlite3_set_authorizer`) metne değil yapılan işe bakar ve daha güçlü bir
+korumadır. `rusqlite`'ın `hooks` özelliğini ve kullanıcı sorgusunun her derlemesinin çevresinde bir kapsam ister.
+Bugünkü açık, metnin tek deyim olmasıyla kapanıyor; yetkilendirici ayrı bir iş olarak açık kaldı.
+
+**Sınama.**
+
+- `data-gpkg/tests/conformance.rs` `a_query_s_text_cannot_change_what_the_connection_reads`: düzeltmeden önce
+  `parseller` 600 yerine 0 satır okuyordu.
+- `query::tests::what_follows_the_statement_is_not_compiled`: tek deyimli çağrıdan sonra da kırmızıydı, okumadan
+  sonra yeşil.
+- `statement::tests::one_statement_is_told_as_sqlite_reads_it`: her biçim için örnekler.
+- `statement::tests::the_reading_agrees_with_sqlite_s_own`: her tırnak biçiminden, içinde öbür biçimlerin işaretleri
+  olan 4 000 metin üretilir; SQLite'a deyimleri tek tek sorulur ve okumayla karşılaştırılır. Okuyucu üç ayrı yerinden
+  bilerek bozuldu; sınama üçünde de kırmızıya döndü.
+
+#### 3.5 MapLibre: her CSS renk adı okunur, renk olmayan değer söylenir
+
+**Bulgu.** [ADR 0560](0560-maplibre-style-exchange.md) §7 stilin renklerini CSS renkleri olarak tanımlar (“adlı
+renkler” dahil) ve “renk okunamazsa katman alınmaz” der. Kod ikisini de tutmuyordu:
+
+- Okuyucu 15 renk adı biliyordu. MapLibre'nin belirtimi CSS'in bütün adlarına izin verir.
+- Okunamayan metin sabit değer olarak kalıyor ve söylenmeden siyah çiziliyordu. `"fill-color": "steelblue"` siyah
+  geliyordu. Durakları adla yazılmış bir ısı haritasının rampası tamamen saydam geliyordu. `match`'in bir kolundaki
+  sabit ifade (`["rgb", 1, 2, 3]`) de siyahtı.
+- Etiketin okunamayan hale rengi söylenmeden siyah alınıyordu.
+
+**Karar.**
+
+- **Adlar.** CSS'in 148 renk adının hepsi okunur. Tablo SVG çekirdeğinindir (`kentos_svg_core::values::read_color`);
+  MapLibre crate'i kendi tablosunu tutmaz. Değerler üç kaynakta aynıdır: depodaki tablo, Python'un görüntü kitaplığının
+  (Pillow) tablosu ve MapLibre'nin resmî paketi (`@maplibre/maplibre-gl-style-spec` 26.4.4, `Color.parse`).
+  `maplibre_cases.py --check` üretecin tablosunu her koşuda resmî paketle karşılaştırır.
+- **Renk olmayan değer.** Bir renk anahtarının alabileceği her değer, katman okunurken bir kez denetlenir
+  (`maplibre/src/colour.rs`, `settle`): sabit, `match`'in kolları ve yedeği, `step`'in tabanı ve durakları, alanın
+  yedeği. Renk olmayan değer söylenir (“… rengi okunamadı; değer alınmadı”). Renk katmanın kendi rengiyse katman
+  alınmaz (ADR 0560'ın kuralı); çerçevenin, halenin ya da kenarın rengiyse varsayılanı kalır.
+- **Kolun sabit ifadesi.** `["rgb", …]`, `["rgba", …]`, `["to-color", "ad"]` ve `["literal", …]` bir kolda ya da
+  durakta kendi rengidir.
+- **Etiket ve ısı haritası.** Etiketin okunamayan hale rengi söylenir, siyah alınır (etiket okuyucusunun yazı rengindeki
+  kuralı). Isı haritasının okunamayan durağı söylenir ve atlanır.
+- **Bırakılan ilk yazım.** Düzeltme önce “siyah al ve söyle” diye yazıldı. ADR 0560'ın kuralıyla çeliştiği için
+  bırakıldı: yanlış renk çizmek, katmanı almamaktan kötüdür.
+- **Davranış değişikliği.** Renk adıyla yazılmış stil kendi renkleriyle gelir. Geçersiz renk metni taşıyan katman
+  eskiden siyah geliyordu; artık alınmaz ve söylenir.
+- **Kalan.** CSS rengini okuyan üç ayrı kod var (SVG çekirdeği, servislerin stil okuyucusu, MapLibre okuyucusunun
+  `#…`, `rgb()` ve `hsl()` kolu). Birleştirilmeleri BK-52'dedir.
+
+**Sınama.**
+
+- `maplibre/src/colour.rs`: `every_colour_name_reads` (önceki 15 ad eskisi gibi okunur), `a_named_colour_is_drawn_as_itself`,
+  `a_colour_that_does_not_read_is_told`, `a_halo_and_a_stop_that_do_not_read_are_told`. Düzeltmeden önceki kodda
+  kırmızıydılar.
+- Ortak durumlar: `file.import.maplibre.json` 36 → 39, `file.import.maplibre.labels.json` 25 → 27 durum; beş yeni stil
+  dosyası. Var olan durumlar bayt bayt aynı kaldı. Bağımsız üreteç (`scripts/fixtures/maplibre_cases.py`) aynı kuralı
+  kendi koduyla uygular; Rust ve Python koşucuları 66 durumda onunla aynı sonucu verdi. Bir beklenen renk bilerek
+  bozulunca Rust koşucusu yakaladı.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
 |---|---|---|---|---|---|---|---|---|
 | İmar takımı (BK-10) | var: Mimari › Proje ▾ › Ruhsat takımı (`arch.permitSet`) | yok: Mimari'nin işi | yok | yok | yok: katalog komutu değil (BK-19) | yok (BK-19) | yok (BK-19) | yok (BK-19) |
 | İfade ve süzgeç sınırları (BK-14) | var | var | var | var | var: aynı ayrıştırıcı | var: aynı ayrıştırıcı | var: aynı ayrıştırıcı | var: aynı ayrıştırıcı |
+| DXF içe aktar (BK-15, §3.1) | var | var | var | var | var: `file.import.dxf` | var: `kentos.cad.file.import_.dxf` | yok: dosya işleri eklentiye kapalı | var: aynı komut |
+| Servisten veri al, WFS (BK-15, §3.2) | yok: servis katmanı türü yok | var | var | var | var: `cad.layers.service` | var: `kentos.cad.layers.service` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Nokta bulutu işlem araçlarının yazdığı LAS (BK-15, §3.3) | yok: araçlar profilinde yok | var | var | var | var: `cad.processing.run` | var: `kentos.cad.processing.run` | var: `run`, `document.write` izniyle | var: aynı komut |
+| GeoPackage sorgu katmanı (BK-15, §3.4) | yok: veri katmanı türü yok | var | var | var | var: `cad.layers.data`, `cad.layers.rows` | var: `kentos.cad.layers.data` | var: `run`, okuma ve yazma izinleriyle | var: aynı komut |
+| MapLibre stilinden görünüş al (BK-15, §3.5) | yok: stil içe alma yalnız CBS'de (ADR 9316) | yok | yok | var | var: `file.import.maplibre` | var: `kentos.cad.file.import_.maplibre` | yok: dosya işleri eklentiye kapalı | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
-derlenir; sınır hepsinde aynıdır.
+derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal
+aynı komutu çağırdığı için aynı sonucu alır.
+
+Kaynak: modüller `catalog/v1/modules.json`, Python ve MCP adları `docs/cad/manifest.json`, eklentinin kuralı kılavuz
+§9.2. BK-15 için koşulan kanal sınaması: ortak durumlar Rust koşucusunda (`file.import.maplibre`) ve Python
+koşucusunda (`file.import.maplibre`, `cad.layers.data`, `cad.layers.rows`, `file.import.dxf`) geçti. MCP'nin ve
+eklentinin kendi sınamaları bu dilimde koşulmadı: aynı işleyiciyi çağırırlar, sözleşmeleri değişmedi.

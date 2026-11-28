@@ -222,7 +222,17 @@ düzenlenir.
 - [ ] **BK-13** (A4) BCF okuması kendi iş parçacığında; form taslağı gecikmeli ve hatası görünür yazılır.
 - [x] **BK-14** (A7; ADR 9401 §2) İfade dili: en çok 64 düzey ve 1 000 işlem; stil süzgeci: 64 düzey. Ölçüm: 2 MB'lık
   iş parçacığında sürüm derlemesi 3 000 terimli zincirde, 1 000 parantezde taşıyordu.
-- [ ] **BK-15** (A8, A9) Dört sessiz kayıp hataya ya da rapora döner; `execute_batch` yerine `prepare`.
+- [x] **BK-15** (A8, A9; ADR 9401 §3) Beş düzeltme, her biri kırmızıdan yeşile dönen sınamasıyla:
+  - DXF: tarama deseni, geçiş ve resim adları çizimin kod sayfasında okunur.
+  - WFS: koordinatı okunamayan nesne şekilsiz gelir ve raporda ayrı söylenir.
+  - LAS: VLR'ye sığmayan kayıt 1.4'te EVLR olur, 1.2 ve 1.3'te yazma reddedilir.
+  - GeoPackage sorgusu: `execute_batch` kalktı; metin SQLite'a verilmeden önce onun kurallarıyla okunur. `prepare`
+    tek başına yetmiyordu: ikinci deyimi derliyor, `PRAGMA` derlenirken etki ediyordu. Okuma SQLite'ın kendisiyle
+    4 000 metinde karşılaştırılır.
+  - MapLibre: CSS'in 148 renk adı okunur (tablo SVG çekirdeğinin); renk olmayan değer söylenir, katmanın kendi
+    rengiyse katman alınmaz (ADR 0560'ın kuralı). Beş yeni ortak durum.
+  - Açık kalan: SQLite okuma bağlantılarına yetkilendirici (ADR 9401 §3.4, seçilmeyen); üç CSS renk okuyucusunun
+    birleşmesi (BK-52).
 - [ ] **BK-16** (A6) Hata kodu tablosu disiplin başına dosyalara bölünür, `INVALID_MASS` eklenir.
 - [ ] **BK-17** (A10) Yerel nokta-alan ve alan kopyaları çekirdektekine bağlanır; çizime yazan yerler
   `display::fixed`'e. Beklenen değerler bağımsız başvuruyla denetlenir.
@@ -264,7 +274,9 @@ düzenlenir.
 - [ ] **BK-50** (F1) Sayı yazımı ve okuması tek yerden.
 - [ ] **BK-51** (F2) `Vec2` işlemleri ve adlı tolerans türü çekirdekte.
 - [ ] **BK-52** (F3) XML kaçışı, renk, base64, CRC, bayt okuyucu birer tane; PostGIS'in eski sürücüsü yenisinin
-  arkasına.
+  arkasına. Renk: CSS rengini üç kod okuyor (`svg-core/src/values/color.rs`, `services/src/style/color.rs`,
+  `maplibre/src/colour.rs`); ad tablosu iki yerde (ilk ikisi). MapLibre okuyucusu adları BK-15'te SVG çekirdeğinden
+  almaya başladı.
 - [ ] **BK-53** (F4) Grafik paleti ve yazı boyu tema jetonu; komut sonucu tek yardımcı; kullanılmayan yedi kit
   bileşeni için sahibin kararı. MCP sınamalarının ortak `call` yardımcısı (133 kopya).
 - [ ] **BK-54** (F5) Sınır hatalarına tür, önce dosya biçimleri; eksik üç kod tabloya.

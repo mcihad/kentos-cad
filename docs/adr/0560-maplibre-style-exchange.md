@@ -182,6 +182,9 @@ Eşleşen stil katmanlarının `fill`, `line` ve `circle` olanları okunur. Diğ
 - **Boya değerleri:** sabit, `["literal", …]`, `rgb`, `rgba`; `match` ve `step` (tek alan); metre `interpolate`'i; CSS
   renkleri (`#abc`, `rgb()`, `rgba()`, `hsl()`, `hsla()`, adlı renkler). Renk okunamazsa katman alınmaz. Başka ifade (`case`,
   `coalesce`, …) söylenir ve değer alınmaz (varsayılanı kalır).
+  - Kod bu iki kuralı 28 Kasım 2026'ya kadar tutmuyordu: 15 renk adı biliyor, okunamayan renk metnini söylemeden siyah
+    çiziyordu. Düzeltme ve ayrıntılar: [ADR 9401](9401-correctness-fixes-from-the-review.md) §3.5 (CSS'in bütün
+    adları; kolun sabit ifadesi; katmanın kendi rengi değilse varsayılan kalır).
 - **Görünüşün türü:** boyada tek bir alanın `match`'i varsa kategorili, `step`'i varsa aralıklı, süzgeçli katmanlar kurallı,
   hiçbiri yoksa tek simge.
   - Kategorili: sınıflar `match`'in değerleri (dizi etiketleri her değer için ayrı sınıf), Diğerleri yedek değeri; katmanın

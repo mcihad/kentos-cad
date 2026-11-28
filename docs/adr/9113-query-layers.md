@@ -69,6 +69,10 @@ Her iki sürücü sorguyu `(<sorgu>)` olarak okur. Kutu, koşul, sıra, sayfa ve
 **GeoPackage:**
 
 - Okuma bağlantıları dosyayı salt okunur açar (`SQLITE_OPEN_READ_ONLY`). Sorgu dosyayı değiştiremez.
+- **Tek deyim (28 Kasım 2026, [ADR 9401](9401-correctness-fixes-from-the-review.md) §3.4):** salt okunur bağlantı
+  yine de geçici tablo, eklenen dosya ve `PRAGMA` alır, saklanan bağlantı bunları sonraki okumaya taşır. Sorgunun
+  metni SQLite'a verilmeden önce onun kendi tırnak ve yorum kurallarıyla okunur; ilk deyimden sonra bir şey ya da bir
+  değişken taşıyan metin reddedilir. Geçici view tek deyim alan çağrıyla kurulur.
 - **Sütunlar:** geçici bir view bağlantının kendi geçici şemasına yapılır ve atılır; salt okunur bağlantı orayı
   yazabilir. Bildirilen türler `pragma_table_info`'dan okunur. Bir tablonun sütunu tablonun türünü taşır. Hesaplanan
   sütunun türü yoktur; türünü ilk değeri söyler.
