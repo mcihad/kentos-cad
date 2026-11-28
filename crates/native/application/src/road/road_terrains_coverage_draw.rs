@@ -65,16 +65,7 @@ fn inside(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
 
 /// A ring's area-weighted centre.
 fn centre(ring: &[[f64; 2]]) -> [f64; 2] {
-    let n = ring.len();
-    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        let c = p[0] * q[1] - q[0] * p[1];
-        a += c;
-        cx += (p[0] + q[0]) * c;
-        cy += (p[1] + q[1]) * c;
-    }
-    [cx / (3.0 * a), cy / (3.0 * a)]
+    kentos_geometry_core::geometry::ring_centroid(ring).unwrap_or([f64::NAN, f64::NAN])
 }
 
 /// Outlines as closed polylines and, with `label`, each outer outline's area (less the holes it holds) at its centre:
@@ -251,4 +242,19 @@ pub fn execute(
             Err(stop) => stop.into(),
         },
     )
+}
+
+#[cfg(test)]
+mod centre_tests {
+    /// A ring's centroid at Transverse Mercator coordinates is where the ring is (docs/adr/9401 §9.4): summed from raw
+    /// coordinates it strayed metres (a 10 m square's by 3.6 m, a small column's by more than a kilometre).
+    #[test]
+    fn a_centre_at_large_coordinates_is_in_its_ring() {
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let c = super::centre(&[[e, n], [e + 10.0, n], [e + 10.0, n + 10.0], [e, n + 10.0]]);
+        assert!(
+            (c[0] - (e + 5.0)).abs() < 1e-6 && (c[1] - (n + 5.0)).abs() < 1e-6,
+            "{c:?}"
+        );
+    }
 }

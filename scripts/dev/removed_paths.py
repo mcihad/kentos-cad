@@ -11,7 +11,7 @@ held here:
    touches, and no new one is written. The counts are in removed_paths.baseline.json.
 
     python3 scripts/dev/removed_paths.py           # the check (make guard)
-    python3 scripts/dev/removed_paths.py --write   # lowers the baseline to today's counts
+    python3 scripts/dev/removed_paths.py --write   # lowers the baseline to today's counts; writes nothing when one grew
 """
 
 from __future__ import annotations
@@ -69,11 +69,17 @@ def main() -> int:
     for p in back:
         print(f"{p} geri gelmiş: bu klasör 28 Kasım 2026'da kaldırıldı (ADR 9402). İçindekini silin ya da yeni yerine taşıyın.")
     now = counts()
+    base = json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.exists() else {}
     if "--write" in sys.argv[1:]:
+        # The baseline only goes down: with a count grown nothing is written (the first run writes what it finds).
+        grown = [name for name, n in now.items() if base and n > base.get(name, 0)]
+        if grown:
+            for name in grown:
+                print(f"“{name}” anan kaynak satırı {base.get(name, 0)} → {now[name]} arttı; taban yazılmadı.")
+            return 1
         BASELINE.write_text(json.dumps(now, indent=1) + "\n", encoding="utf-8")
         print(f"Taban yazıldı: {now}")
         return 1 if back else 0
-    base = json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.exists() else {}
     grown = False
     for name, n in now.items():
         allowed = base.get(name, 0)

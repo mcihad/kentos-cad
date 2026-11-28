@@ -207,14 +207,10 @@ fn inside_of(ring: &[P]) -> Option<P> {
     if n < 3 {
         return None;
     }
-    let (mut a2, mut cx, mut cy) = (0.0, 0.0, 0.0);
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        let c = p.x * q.y - q.x * p.y;
-        (a2, cx, cy) = (a2 + c, cx + (p.x + q.x) * c, cy + (p.y + q.y) * c);
-    }
-    if a2.abs() > 1e-12 {
-        let c = P::new(cx / (3.0 * a2), cy / (3.0 * a2));
+    if (2.0 * kentos_geometry_core::geometry::ring_area(ring)).abs() > 1e-12
+        && let Some([x, y]) = kentos_geometry_core::geometry::ring_centroid(ring)
+    {
+        let c = P::new(x, y);
         if point_in_polygon(c, ring) {
             return Some(c);
         }

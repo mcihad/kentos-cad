@@ -440,6 +440,38 @@ atlas, Yol'un korunan alan, tesviye ve yüzey analizi hesapları.
 **Sınama.** Üç kopyanın sınaması düzeltmeden önce kırmızıydı (10 m'lik kare 99,999 756 çıkıyordu); çekirdeğin altın
 dosyaları ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
 
+#### 9.4 Bir halkanın ağırlık merkezi: aynı kayıp, metrelerle
+
+**Bulgu.** Çekirdeğin ağırlık merkezi koordinatları ilk köşeye göre alır; nedeni kendi yorumunda yazılıdır (ham TM
+koordinatlarında 25 × 18 m'lik parselin merkezi 5 m kaymıştı, ADR 0122). Aynı toplamı ham koordinatla yapan sekiz
+yerel kopya duruyordu. Ölçüm (486 512,34; 4 420 187,52 çevresinde, kesirlerle hesaplanan kesin değere göre):
+
+| Halka | Ham koordinatla merkezin kayması | İlk köşeye göre |
+|---|---|---|
+| 10 × 10 m kare | 3,62 m | 0 |
+| ADR 0004'ün parseli | 8,6 cm | 0 |
+| 4 × 3 m oda | 0,3 mm | 0 |
+| 0,5 × 0,3 m kolon | 1 446 m | 0 |
+
+Kopyalar ve ne yaptıkları:
+
+- Yol'un koridor denetimi: örtüşen parçanın merkezinde iki yüzeyin yüksekliğini okur. Kayık merkez parçanın dışına
+  düşer, okunan fark başka bir yerin farkıdır.
+- Yol'un yüzey kapsamı çizimi: alanın yazısını merkeze koyar.
+- Mimari denetimin mahal noktası, gölgenin ve çıkma izdüşümünün iç noktası, mahalin net genişliğinin merkezi.
+- İşlem araçlarının denetim olguları: birkaç alanın ortak merkezi.
+- Etiket motorunun merkezi (erişilmezlik kutbu aramasının ilk tahmini).
+
+Üç yer zaten kaydırıyordu ve bulgu değildir: stok hacmi (bütün koordinatlar sınırın ilk köşesinden alınır), dikiş
+çizgileri penceresi, formun konum alanı.
+
+**Karar.** Çekirdekte `ring_centroid` (her nokta türü için; ilk köşeye göre). Sekiz kopya ona bağlandı ya da aynı
+kaydırmayla yazıldı (birkaç alanın ortak merkezi ilk alanın ilk köşesinden; etiket motorununki kendi sırasını
+koruyarak). Kopyaların alan eşikleri ve alansız halkadaki davranışları olduğu gibi kaldı.
+
+**Sınama.** Üç kopyanın sınaması düzeltmeden önce kırmızıydı (10 m'lik karenin merkezi 3,6 m kayık). Çekirdeğin altın
+dosyaları (800 + 377 sınama, etiket motoru dahil) ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
+
 **Bu sırada bulunan, bu işten bağımsız kırmızı sınamalar.**
 
 - `file_digest` (uygulama) ve `bands` (baskı) sınamaları bağlı katmanı CBS projesinde kuruyordu; CBS projesi bağlı

@@ -985,23 +985,16 @@ fn space_point(parts: &[kentos_commands::SpacePart]) -> V {
     else {
         return V::new(0.0, 0.0);
     };
-    let n = ring.len();
-    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        let k = p.x * q.y - q.x * p.y;
-        a += k;
-        cx += (p.x + q.x) * k;
-        cy += (p.y + q.y) * k;
+    match kentos_geometry_core::geometry::ring_centroid(ring) {
+        Some([x, y]) => V::new(x, y),
+        None => {
+            let m = ring.len() as f64;
+            V::new(
+                ring.iter().map(|p| p.x).sum::<f64>() / m,
+                ring.iter().map(|p| p.y).sum::<f64>() / m,
+            )
+        }
     }
-    if a == 0.0 {
-        let m = n as f64;
-        return V::new(
-            ring.iter().map(|p| p.x).sum::<f64>() / m,
-            ring.iter().map(|p| p.y).sum::<f64>() / m,
-        );
-    }
-    V::new(cx / (3.0 * a), cy / (3.0 * a))
 }
 
 fn space_label(s: &kentos_commands::SpaceFields) -> String {

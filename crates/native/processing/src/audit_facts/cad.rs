@@ -433,12 +433,21 @@ fn font_name(font: Option<DrawingFont>) -> &'static str {
 /// The area-weighted centroid of `areas`' rings by their vertices (an outer ring adds, a hole takes away, whichever way
 /// round they run), else their points' mean: a place to order the rooms by, not a measure.
 fn centre(areas: &[kentos_geometry_core::geom::arrangement::Area]) -> [f64; 2] {
-    // A ring's area (unsigned) and its centroid's coordinates times it.
+    // Every ring is read from the first corner of the first area: summed from raw map coordinates the products cancel
+    // away metres (docs/adr/9401 §9.4).
+    let o = areas
+        .first()
+        .and_then(|a| a.outer.pts.first().copied())
+        .unwrap_or(Vec2::new(0.0, 0.0));
+    // A ring's area (unsigned) and its centroid's coordinates, from `o`, times it.
     let moment = |pts: &[Vec2]| {
         let (mut a, mut x, mut y) = (0.0, 0.0, 0.0);
         let n = pts.len();
         for i in 0..n {
-            let (p, q) = (pts[i], pts[(i + 1) % n]);
+            let (p, q) = (
+                Vec2::new(pts[i].x - o.x, pts[i].y - o.y),
+                Vec2::new(pts[(i + 1) % n].x - o.x, pts[(i + 1) % n].y - o.y),
+            );
             let cross = p.x * q.y - q.x * p.y;
             a += cross;
             x += (p.x + q.x) * cross;
@@ -459,7 +468,7 @@ fn centre(areas: &[kentos_geometry_core::geom::arrangement::Area]) -> [f64; 2] {
         points.extend(area.outer.pts.iter().copied());
     }
     if sa > 1e-12 {
-        return [sx / sa, sy / sa];
+        return [o.x + sx / sa, o.y + sy / sa];
     }
     let n = points.len().max(1) as f64;
     [

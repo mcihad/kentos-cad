@@ -67,6 +67,30 @@ pub fn ring_area<P: Copy + Into<[f64; 2]>>(ring: &[P]) -> f64 {
     a / 2.0
 }
 
+/// The area centroid of a ring, for any point type that gives its `[x, y]`; none for a ring of fewer than three
+/// corners or without area. Coordinates are taken relative to the first vertex, as in [`ring_area`]: summed from raw
+/// Transverse Mercator coordinates the products cancel away metres (a 10 m square's centroid strayed 3.6 m, a small
+/// column's more than a kilometre; docs/adr/0122, docs/adr/9401 §9.4). The one sum of its kind: no crate keeps a copy.
+pub fn ring_centroid<P: Copy + Into<[f64; 2]>>(ring: &[P]) -> Option<[f64; 2]> {
+    if ring.len() < 3 {
+        return None;
+    }
+    let [ox, oy] = ring[0].into();
+    let [lx, ly] = ring[ring.len() - 1].into();
+    let (mut jx, mut jy) = (lx - ox, ly - oy);
+    let (mut a2, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    for &q in ring {
+        let [x, y] = q.into();
+        let (ix, iy) = (x - ox, y - oy);
+        let f = jx * iy - ix * jy;
+        a2 += f;
+        cx += (jx + ix) * f;
+        cy += (jy + iy) * f;
+        (jx, jy) = (ix, iy);
+    }
+    (a2 != 0.0 && a2.is_finite()).then(|| [ox + cx / (3.0 * a2), oy + cy / (3.0 * a2)])
+}
+
 /// Length along the vertices; a closed path adds the closing segment.
 pub fn path_length(pts: &[Vec2], closed: bool) -> f64 {
     let mut l = 0.0;

@@ -545,16 +545,21 @@ pub fn pole(rings: &[Vec<Vec2>], precision: f64) -> Option<(Vec2, f64)> {
     (best.d > 0.0).then_some((best.c, best.d))
 }
 
-/// A ring's centroid by its area (the first point when it has none).
+/// A ring's centroid by its area (the first point when it has none). Coordinates are taken from the first point: summed
+/// from raw map coordinates the products cancel away metres (docs/adr/9401 §9.4).
 pub fn centroid(ring: &[Vec2]) -> Vec2 {
     let (mut area, mut x, mut y) = (0.0, 0.0, 0.0);
     let n = ring.len();
     if n == 0 {
         return Vec2::default();
     }
+    let o = ring[0];
     let mut j = n - 1;
     for i in 0..n {
-        let (a, b) = (ring[i], ring[j]);
+        let (a, b) = (
+            Vec2::new(ring[i].x - o.x, ring[i].y - o.y),
+            Vec2::new(ring[j].x - o.x, ring[j].y - o.y),
+        );
         let f = a.x * b.y - b.x * a.y;
         x += (a.x + b.x) * f;
         y += (a.y + b.y) * f;
@@ -564,7 +569,7 @@ pub fn centroid(ring: &[Vec2]) -> Vec2 {
     if area == 0.0 {
         return ring[0];
     }
-    Vec2::new(x / area, y / area)
+    Vec2::new(o.x + x / area, o.y + y / area)
 }
 
 /// The convex hull (Andrew's monotone chain), counter-clockwise, without

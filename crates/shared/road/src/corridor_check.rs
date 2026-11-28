@@ -140,16 +140,7 @@ fn height(t: &[[f64; 3]; 3], p: [f64; 2]) -> f64 {
 
 /// The centroid of a polygon of nonzero area.
 fn centroid(ring: &[[f64; 2]]) -> [f64; 2] {
-    let n = ring.len();
-    let (mut cx, mut cy, mut a2) = (0.0, 0.0, 0.0);
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        let w = p[0] * q[1] - q[0] * p[1];
-        a2 += w;
-        cx += (p[0] + q[0]) * w;
-        cy += (p[1] + q[1]) * w;
-    }
-    [cx / (3.0 * a2), cy / (3.0 * a2)]
+    kentos_geometry_core::geometry::ring_centroid(ring).unwrap_or([f64::NAN, f64::NAN])
 }
 
 /// The top surface's parts over each other: each pair of strips that share no station, their overlapping triangles'
@@ -352,5 +343,22 @@ mod tests {
         let t = [[0.0, 0.0, 1.0], [1.0, 0.0, 2.0], [0.0, 1.0, 3.0]];
         assert!((height(&t, [0.25, 0.25]) - 1.75).abs() < 1e-12);
         assert!((centroid(&[[0.0, 0.0], [3.0, 0.0], [0.0, 3.0]])[0] - 1.0).abs() < 1e-12);
+    }
+
+    /// A ring's centroid at Transverse Mercator coordinates is where the ring is (docs/adr/9401 §9.4): summed from raw
+    /// coordinates it strayed metres (a 10 m square's by 3.6 m, a small column's by more than a kilometre).
+    #[test]
+    fn a_centroid_at_large_coordinates_is_in_its_ring() {
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let c = centroid(&[[e, n], [e + 10.0, n], [e + 10.0, n + 10.0], [e, n + 10.0]]);
+        assert!(
+            (c[0] - (e + 5.0)).abs() < 1e-6 && (c[1] - (n + 5.0)).abs() < 1e-6,
+            "{c:?}"
+        );
+        let c = centroid(&[[e, n], [e + 0.5, n], [e + 0.5, n + 0.3], [e, n + 0.3]]);
+        assert!(
+            (c[0] - (e + 0.25)).abs() < 1e-6 && (c[1] - (n + 0.15)).abs() < 1e-6,
+            "{c:?}"
+        );
     }
 }

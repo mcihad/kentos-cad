@@ -258,6 +258,10 @@ düzenlenir.
   - Alan: çekirdekte `ring_area`; çizimin alanını bildiren on kopya ona bağlı (TM koordinatında 10 m'lik kare
     99,99976 çıkıyordu). Kalan: ham koordinatla toplayan öbür 29 yer tek tek okunmadı (çoğu yalnız yön ya da yerel
     koordinat).
+  - Ağırlık merkezi (§9.4): ham koordinatla toplayan sekiz kopya bulundu ve çekirdeğin `ring_centroid`'ine
+    bağlandı. TM koordinatında 10 m'lik karenin merkezi 3,6 m, küçük bir kolonunki 1,4 km kayıyordu. Yol'un koridor
+    denetimi ve yüzey kapsamı çizimi, Mimari denetimin mahal noktası, gölge, çıkma izdüşümü, net genişlik, işlem
+    araçlarının denetim olguları, etiket motoru. Üç sınama önce kırmızıydı.
   - Kalan: NCZ okuyucusundaki kopya (`ncz/src/emit.rs`); dosyadaki 26 ad atfıyla birlikte temizlenir.
   - Kalan: çizime dilin kendi yuvarlamasıyla yazılan sayı dört değilmiş. Tarama (bir yazının ya da özniteliğin
     yanında `{:.N}`) uygulama katmanında yirmi kadar yer daha gösteriyor: Yol'un çizim komutları (koridor, menfez,

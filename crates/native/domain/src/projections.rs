@@ -97,16 +97,10 @@ fn inner_point(shape: &[Area]) -> Option<Vec2> {
         .iter()
         .max_by(|x, y| region::net_area(x).total_cmp(&region::net_area(y)))?;
     let pts = &largest.outer.pts;
-    let (mut cx, mut cy, mut a2) = (0.0, 0.0, 0.0);
-    for k in 0..pts.len() {
-        let (p, q) = (pts[k], pts[(k + 1) % pts.len()]);
-        let c = p.x * q.y - q.x * p.y;
-        a2 += c;
-        cx += (p.x + q.x) * c;
-        cy += (p.y + q.y) * c;
-    }
-    if a2.abs() > 1e-12 {
-        let c = Vec2::new(cx / (3.0 * a2), cy / (3.0 * a2));
+    if (2.0 * kentos_geometry_core::geometry::ring_area(pts)).abs() > 1e-12
+        && let Some([x, y]) = kentos_geometry_core::geometry::ring_centroid(pts)
+    {
+        let c = Vec2::new(x, y);
         if region::inside_area(largest, c) {
             return Some(c);
         }

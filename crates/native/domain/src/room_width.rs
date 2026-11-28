@@ -85,16 +85,11 @@ pub fn net_parts(search: &mut SpaceSearch<'_>, s: &SpaceFields) -> Vec<SpacePart
 }
 
 fn centroid(ring: &[V]) -> Option<V> {
-    let n = ring.len();
-    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        let k = p.x * q.y - q.x * p.y;
-        a += k;
-        cx += (p.x + q.x) * k;
-        cy += (p.y + q.y) * k;
-    }
-    (a.abs() > 1e-12).then(|| V::new(cx / (3.0 * a), cy / (3.0 * a)))
+    let twice = 2.0 * kentos_geometry_core::geometry::ring_area(ring);
+    (twice.abs() > 1e-12)
+        .then(|| kentos_geometry_core::geometry::ring_centroid(ring))
+        .flatten()
+        .map(|[x, y]| V::new(x, y))
 }
 
 fn ring_distance(rings: &[Vec<V>], p: V) -> f64 {
@@ -147,5 +142,27 @@ mod tests {
         let c = c.expect("its centre");
         assert!((c.x - 2.0).abs() < 1e-6 && (c.y - 1.5).abs() < 1e-6);
         assert_eq!(width_of(&[]), (0.0, None));
+    }
+}
+
+#[cfg(test)]
+mod centroid_tests {
+    /// A ring's centroid at Transverse Mercator coordinates is where the ring is (docs/adr/9401 §9.4): summed from raw
+    /// coordinates it strayed metres (a 10 m square's by 3.6 m, a small column's by more than a kilometre).
+    #[test]
+    fn a_centroid_at_large_coordinates_is_in_its_ring() {
+        use kentos_geometry_core::Vec2 as V;
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let ring = [
+            V::new(e, n),
+            V::new(e + 10.0, n),
+            V::new(e + 10.0, n + 10.0),
+            V::new(e, n + 10.0),
+        ];
+        let c = super::centroid(&ring).expect("a ring with area");
+        assert!(
+            (c.x - (e + 5.0)).abs() < 1e-6 && (c.y - (n + 5.0)).abs() < 1e-6,
+            "{c:?}"
+        );
     }
 }
