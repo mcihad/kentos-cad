@@ -400,13 +400,43 @@ impl Graph {
     }
 }
 
+/// Walks as long as each other, to the nanometre. A symmetric room's two ways are the same length, and their sums
+/// part in their last places only; those places must not choose between them (docs/adr/9403 §7).
+const SAME_WALK: f64 = 1e-9;
+
+/// The nearest of `items`; of those as near as it, the first by `tie` (the first of them when it says they are equal,
+/// as `min_by` gives the first of equals).
+fn nearest_by<T>(
+    items: Vec<T>,
+    length: impl Fn(&T) -> f64,
+    tie: impl Fn(&T, &T) -> Ordering,
+) -> Option<T> {
+    let least = items.iter().map(&length).fold(f64::INFINITY, f64::min);
+    items
+        .into_iter()
+        .filter(|t| length(t) <= least + SAME_WALK)
+        .min_by(|a, b| tie(a, b))
+}
+
+/// The nearest of `items`; of those as near as it, the first.
+fn nearest<T>(items: Vec<T>, length: impl Fn(&T) -> f64) -> Option<T> {
+    nearest_by(items, length, |_, _| Ordering::Equal)
+}
+
+/// The farthest of `items`; of those as far as it, the last (as `max_by` gives the last of equals).
+fn farthest<T>(items: Vec<T>, length: impl Fn(&T) -> f64) -> Option<T> {
+    let most = items.iter().map(&length).fold(f64::NEG_INFINITY, f64::max);
+    items.into_iter().rfind(|t| length(t) + SAME_WALK >= most)
+}
+
 /// From a start in a room: the best first node and the walk's length to the sources `d` measures.
 fn best(g: &Graph, room: &Room, room_nodes: &[usize], d: &[f64], p: V) -> Option<(usize, f64)> {
-    room_nodes
+    let ways: Vec<(usize, f64)> = room_nodes
         .iter()
         .filter(|&&k| d[k].is_finite() && room.sees(p, g.at[k]))
         .map(|&k| (k, dist(p, g.at[k]) + d[k]))
-        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .collect();
+    nearest(ways, |w| w.1)
 }
 
 /// The walk from a start through `first` along `next` to the sources: its node ids (the start not among them).
@@ -707,19 +737,21 @@ pub fn escape(doc: &Document) -> Escape {
         // A start's walk to the nearest exit and the part it shares with the walk to the nearest other.
         let exit_route =
             |room: &Room, nodes: &[usize], per: &[(Vec<f64>, Vec<Option<usize>>)], p: V| {
-                let mut ways: Vec<(usize, usize, f64)> = per
+                let ways: Vec<(usize, usize, f64)> = per
                     .iter()
                     .enumerate()
                     .filter_map(|(gi, (d, _))| best(&g, room, nodes, d, p).map(|(k, l)| (gi, k, l)))
                     .collect();
-                ways.sort_by(|a, b| a.2.total_cmp(&b.2));
-                let &(g1, k1, l1) = ways.first()?;
+                let exits = ways.len();
+                // The nearest exit and the nearest other; of two as near, the first in the exits' order.
+                let (g1, k1, l1) = nearest(ways.clone(), |w| w.2)?;
+                let other = nearest(ways.into_iter().filter(|w| w.0 != g1).collect(), |w| w.2);
                 let ids1 = chain(k1, &per[g1].1);
                 let mut path = vec![p];
                 path.extend(ids1.iter().map(|&k| g.at[k]));
-                let one_way = match ways.get(1) {
+                let one_way = match other {
                     None => l1,
-                    Some(&(g2, k2, _)) => {
+                    Some((g2, k2, _)) => {
                         let ids2 = chain(k2, &per[g2].1);
                         let shared = ids1.iter().zip(&ids2).take_while(|(a, b)| a == b).count();
                         if shared == 0 {
@@ -732,7 +764,7 @@ pub fn escape(doc: &Document) -> Escape {
                 Some(ExitRoute {
                     route: Route { length: l1, path },
                     one_way,
-                    exits: ways.len(),
+                    exits,
                 })
             };
         let empty = Vec::new();
@@ -748,10 +780,13 @@ pub fn escape(doc: &Document) -> Escape {
                 _ => vec![room.label],
             };
             // The farthest start by the walk to the nearest exit.
-            let exit = starts
-                .iter()
-                .filter_map(|&p| exit_route(room, nodes, per, p))
-                .max_by(|a, b| a.route.length.total_cmp(&b.route.length));
+            let exit = farthest(
+                starts
+                    .iter()
+                    .filter_map(|&p| exit_route(room, nodes, per, p))
+                    .collect(),
+                |e| e.route.length,
+            );
             // A dwelling unit's room: to its unit's entrance, through its own rooms (48/2).
             let doors: Vec<usize> = entrances
                 .iter()
@@ -762,7 +797,7 @@ pub fn escape(doc: &Document) -> Escape {
                 .then(|| {
                     let unit = room.unit.clone();
                     let (d, next) = g.reach(&doors, |r| rooms[r].dwelling && rooms[r].unit == unit);
-                    starts
+                    let routes: Vec<Route> = starts
                         .iter()
                         .filter_map(|&p| {
                             best(&g, room, nodes, &d, p).map(|(k, l)| {
@@ -771,13 +806,14 @@ pub fn escape(doc: &Document) -> Escape {
                                 Route { path, length: l }
                             })
                         })
-                        .max_by(|a, b| a.length.total_cmp(&b.length))
+                        .collect();
+                    farthest(routes, |r| r.length)
                 })
                 .flatten();
             // To its own nearest passage, inside it (50/3).
             let door = own_doors.get(&i).and_then(|mine| {
                 let (d, next) = g.reach(mine, |r| r == i);
-                starts
+                let routes: Vec<Route> = starts
                     .iter()
                     .filter_map(|&p| {
                         best(&g, room, nodes, &d, p).map(|(k, l)| {
@@ -786,7 +822,8 @@ pub fn escape(doc: &Document) -> Escape {
                             Route { path, length: l }
                         })
                     })
-                    .max_by(|a, b| a.length.total_cmp(&b.length))
+                    .collect();
+                farthest(routes, |r| r.length)
             });
             // From the outer side of each of its doors to the nearest exit, the nearest (50/4, 50/5): the walk goes on
             // in the room the door opens into, as that room's own walks do. A door into an escape stair's room, or the
@@ -799,7 +836,7 @@ pub fn escape(doc: &Document) -> Escape {
                 one_way: 0.0,
                 exits: 1,
             };
-            let door_exit = sides
+            let door_exits: Vec<DoorExit> = sides
                 .iter()
                 .filter(|(k, _)| g.room[*k] == i)
                 .filter_map(|&(k, outer)| {
@@ -828,16 +865,15 @@ pub fn escape(doc: &Document) -> Escape {
                         into: Some(into.slot),
                     })
                 })
-                // The nearest; of two as near, the one into the outside, then by the room's persistent id: the same
-                // whatever the drawing's order.
-                .min_by(|a, b| {
-                    let id = |d: &DoorExit| d.into.map(|s| doc.uid(s));
-                    a.exit
-                        .route
-                        .length
-                        .total_cmp(&b.exit.route.length)
-                        .then_with(|| id(a).cmp(&id(b)))
-                });
+                .collect();
+            // The nearest; of two as near, the one into the outside, then by the room's persistent id: the same
+            // whatever the drawing's order.
+            let id = |d: &DoorExit| d.into.map(|s| doc.uid(s));
+            let door_exit = nearest_by(
+                door_exits,
+                |d| d.exit.route.length,
+                |a, b| id(a).cmp(&id(b)),
+            );
             out.rooms.push(RoomEscape {
                 room: room.slot,
                 level: level.clone(),
@@ -988,5 +1024,49 @@ mod area_tests {
             "{}",
             super::signed_area(&square)
         );
+    }
+}
+
+#[cfg(test)]
+mod same_walk_tests {
+    use super::{farthest, nearest, nearest_by};
+
+    /// Two walks of one length are not told apart by their sums' last places (docs/adr/9403 §7): a room with a door in
+    /// the middle of a side has two corners as far from it, 8 − 4.45 and 11.55 − 8, the same 3.55 m and one last place
+    /// apart as doubles. The farthest is the last of such, the nearest the first, whichever of them the place favours.
+    #[test]
+    fn walks_as_long_are_chosen_by_their_order_not_by_their_last_places() {
+        let (left, right) = (8.0 - 4.45, 11.55 - 8.0);
+        assert_ne!(left, right, "the two are a last place apart");
+        for (a, b) in [(left, right), (right, left)] {
+            assert_eq!(
+                farthest(vec![(0, a), (1, b), (2, 1.0)], |w| w.1).map(|w| w.0),
+                Some(1)
+            );
+            assert_eq!(
+                nearest(vec![(0, 9.0), (1, a), (2, b)], |w| w.1).map(|w| w.0),
+                Some(1)
+            );
+            // A rule of the caller's chooses among those as near, and only among those.
+            let by_name = |x: &(i32, f64), y: &(i32, f64)| y.0.cmp(&x.0);
+            assert_eq!(
+                nearest_by(vec![(0, 0.5), (1, a), (2, b)], |w| w.1, by_name).map(|w| w.0),
+                Some(0)
+            );
+            assert_eq!(
+                nearest_by(vec![(0, 9.0), (1, a), (2, b)], |w| w.1, by_name).map(|w| w.0),
+                Some(2)
+            );
+        }
+        // A millimetre is a difference.
+        assert_eq!(
+            farthest(vec![(0, 3.551), (1, 3.55)], |w| w.1).map(|w| w.0),
+            Some(0)
+        );
+        assert_eq!(
+            nearest(vec![(0, 3.551), (1, 3.55)], |w| w.1).map(|w| w.0),
+            Some(1)
+        );
+        assert_eq!(farthest(Vec::<(i32, f64)>::new(), |w| w.1), None);
     }
 }

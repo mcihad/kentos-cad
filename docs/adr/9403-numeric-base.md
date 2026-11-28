@@ -259,6 +259,23 @@ ince plaka ile oturtulan rasterin çıktı ızgarasının köşesi 1,4 ve 2,3 mm
 - Açık: `fixtures/raster/v1/georef.json` üretecinin denetimi bu değişiklikten önce de farklıydı (ortamın GDAL sürümü);
   dokunulmadı.
 
+**Eşit uzunluktaki kaçış yolları (28 Kasım 2026).** Mimari denetim olgularının saklanan dosyasında
+(`fixtures/audit-facts/v1/mimari.json`) uzunluk hesabı değişince iki odanın kaçış yolu başka köşeden başladı: değişen
+son basamak değil, seçimin kendisiydi.
+
+- **Neden:** kapısı bir kenarının ortasında olan odada iki köşe kapıya aynı uzaklıktadır (8 − 4,45 ve 11,55 − 8: ikisi
+  de 3,55 m, çift duyarlıklı sayı olarak bir son basamak ayrı). “En uzak başlangıç” ve “en yakın düğüm” seçimleri
+  uzunlukları tam karşılaştırıyordu (`max_by`, `min_by`); hangi köşenin seçileceğine toplamların son basamağı karar
+  veriyordu. Saklanan dosyada iki odada ilk köşe, birinde son köşe seçiliydi: tutarlı bir kural yoktu.
+- **Düzeltme** (`kentos_domain::escape`): bir nanometreden az ayrışan yürüyüşler aynı uzunlukta sayılır
+  (`SAME_WALK`). Aynı uzunluktakilerden en uzak aranırken sıradaki son, en yakın aranırken ilk alınır; bu, kodun
+  kesin eşitlikte zaten yaptığıdır (`max_by` eşitlerin sonuncusunu, `min_by` ilkini verir), yalnız artık son basamağa
+  bağlı değildir. Kapıların çıkışında var olan kural (önce dışarı açılan, sonra kalıcı kimlik) aynı toleransla
+  uygulanır.
+- **Sonuç:** saklanan dosyada üç sayı değişti (iki odada başlangıç köşesi 4,45 → 11,55; uzunluklar, 11,481 m ve
+  4,881 m, aynı). Sınaması: `walks_as_long_are_chosen_by_their_order_not_by_their_last_places`. Ortak durumların hiçbiri
+  değişmedi.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
