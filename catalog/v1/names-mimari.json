@@ -29,6 +29,7 @@
     { "name": "AZ", "command": "tool.siteGround" },
     { "name": "ZK", "command": "tool.groundLevel" },
     { "name": "RL", "command": "tool.colorLegend" },
+    { "name": "GL", "command": "tool.sunShadow" },
     { "name": "CT", "command": "tool.roof" },
     { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },

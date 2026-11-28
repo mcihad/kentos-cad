@@ -1045,6 +1045,8 @@ pub struct Memory {
     pub network_trim: f64,
     pub network_lines: bool,
     pub network_trace: kentos_geometry_core::ops::network::TraceKind,
+    /// Gölge's place typed, time zone, day and hours (docs/adr/8177 §3.3).
+    pub sun_shadow: crate::shadow_tool::Kept,
 }
 
 /// A picture file the host read for Resim ekle (docs/adr/0192 §5): its
@@ -1346,6 +1348,7 @@ impl Default for Memory {
             network_trim: crate::network::FIRST_TRIM,
             network_lines: false,
             network_trace: kentos_geometry_core::ops::network::TraceKind::Connected,
+            sun_shadow: crate::shadow_tool::Kept::DEFAULT,
         }
     }
 }

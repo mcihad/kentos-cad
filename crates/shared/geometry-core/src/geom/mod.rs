@@ -50,6 +50,7 @@ pub mod column_join;
 pub mod casework;
 pub mod tag;
 pub mod section;
+pub mod sun;
 pub mod stair_body;
 pub mod stair_rails;
 pub mod viewmark;

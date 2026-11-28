@@ -516,6 +516,8 @@ pub mod ground_tool;
 pub mod ground_level_tool;
 #[path = "arch/color_legend_tool.rs"]
 pub mod color_legend_tool;
+#[path = "arch/shadow_tool.rs"]
+pub mod shadow_tool;
 #[path = "arch/railing_tools.rs"]
 pub mod railing_tools;
 #[path = "arch/roof_part_tools.rs"]

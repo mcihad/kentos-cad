@@ -15485,6 +15485,23 @@
    "tests": 1
   },
   {
+   "id": "tool.sunShadow",
+   "kind": "command",
+   "title": "Gölge",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Gölge: kesit modelinin cisimleri güneş ışınları boyunca ±0,00'daki zemine süpürülür, birleşimlerinden binanın oturduğu alan çıkarılır; tek saat düz çizgi taramalı ve çerçeveli, birden çok saat çerçevesi ve saatiyle gölge katmanına; Gölge öznitelikli eski gölge silinir (ADR 8177 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.tag",
    "kind": "command",
    "title": "Etiket",

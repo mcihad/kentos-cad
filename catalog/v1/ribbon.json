@@ -2568,6 +2568,7 @@
        "tool.siteParcel",
        "tool.siteGround",
        "tool.groundLevel",
+       "tool.sunShadow",
        "tool.escapeRoutes",
        "tool.walkRoute",
        "arch.template",

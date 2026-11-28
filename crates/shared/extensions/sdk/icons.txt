@@ -1151,6 +1151,7 @@ subdivide-parts
 subtypes
 success
 sun
+sun-shadow
 superelevation-editor
 superelevation-new
 surface-add-point

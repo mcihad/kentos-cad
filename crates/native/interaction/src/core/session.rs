@@ -136,14 +136,13 @@ pub const TOOLS: &[&str] = &[
     arch_tools::STAIR_ID,
     arch_tools::SPIRAL_ID,
     arch_tools::RAMP_ID,
-    // docs/adr/8041 §1: Kiriş; 8172–8176: temeller, Radye, profiller, Arazi zemini, Zemin kotu, Renk planı lejandı.
+    // docs/adr/8041 §1: Kiriş; 8172–8177: temeller, Radye, profiller, arazi, Zemin kotu, Renk planı lejandı, Gölge.
     crate::beam_tools::BEAM_ID,
     crate::beam_tools::RAIL_ID,
-    crate::footing_tools::PAD_ID,
-    crate::footing_tools::STRIP_ID,
+    crate::footing_tools::PAD_ID, crate::footing_tools::STRIP_ID,
     crate::slab_tools::RAFT_ID,
     crate::profile_tools::MOULDING_ID, crate::profile_tools::COPING_ID,
-    crate::ground_tool::ID, crate::ground_level_tool::ID, crate::color_legend_tool::ID,
+    crate::ground_tool::ID, crate::ground_level_tool::ID, crate::color_legend_tool::ID, crate::shadow_tool::ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
@@ -597,6 +596,7 @@ impl Session {
             crate::ground_tool::ID => Box::new(crate::ground_tool::GroundTool::new()),
             crate::ground_level_tool::ID => Box::new(crate::ground_level_tool::GroundLevelTool::new()),
             crate::color_legend_tool::ID => Box::new(crate::color_legend_tool::ColorLegendTool::new()),
+            crate::shadow_tool::ID => Box::new(crate::shadow_tool::ShadowTool::new()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
             crate::roof_part_tools::CHIMNEY_ID => {

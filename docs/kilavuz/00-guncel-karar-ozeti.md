@@ -75,6 +75,21 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **Güneş ve gölge (28 Kasım 2026, MB-15 1. bölüm; [ADR 8177](../adr/8177-sun-and-shadow.md)).**
+  - `geom::sun::at`: güneşin azimutu ve yüksekliği enlem, boylam, saat dilimi, gün ve saatten (NOAA genel güneş konumu
+    formülleri; ölçülen sapma 0,15°'nin altında, kırılma yok). Türkiye saati güneşin yarım saat önünde: Sivas'ta güneş
+    öğlesi 12:30–12:34; saatler saat dilimiyle yazılır. `Sun::in_plan`: coğrafi kuzey `north::model_north`'tan, yoksa
+    plan kuzeyi (söylenir).
+  - Gölge (`shadows::shadow_of`): kesit modelinin ±0,00 üstündeki cisimleri ışın boyunca zemine süpürülür (prizma
+    alt–üst, çatı yüzü köşe köşe, merdiven kolu), birleşimden binanın oturduğu alan çıkar: ±0,00'a inen cisimler +
+    dış çevre (`building_corners`) + bir cismin örttüğü boşluklar (yoksa odaların içi taranıyordu). Dışbükey halka
+    tek zarf, saatler yan yana (`shadows_of`): gün boyu 10,5 s → 0,46 s (hata ayıklama, kesit binası). Zemin
+    ±0,00'da düz; tesviye zemin, komşular ve iç avlu yok.
+  - Gölge aracı (GL), Proje ▾: Tarih (21 Aralık, 21 Mart, 21 Haziran, 23 Eylül), Saat (09, 12, 15 ya da 09–15 saatlik),
+    konumsuz projede E/B istemin seçeneği (masaüstü harfi araca ancak seçenekse verir), saat dilimi Z (UTC+3). Önizlemeli; tek saat taramalı, birden çok saat çerçeve ve uçta saat;
+    MM-XXXX-GOLGE, tek adım, eskisinin yerine. Canlı değil. Konum ve seçimler `Memory::sun_shadow`'da (uygulama açık
+    kaldıkça). Sözleşme ve `.kcad` değişmedi.
+
 - **Mahal renk planı (28 Kasım 2026, MB-14 1. bölüm; [ADR 8176](../adr/8176-room-colour-plan.md)).**
   - `ArchSettings.colorPlan` (`usage` | `unit`), Mimari verisi 44. Belge: `space_fills`, `color_legend`,
     `covered_layers`. Kullanım: yazılı kullanım adı geçer, yoksa ad (`room_names`) gruplara (sabit renkli); bölüm:

@@ -41,6 +41,7 @@ mod roof_sections;
 mod sections;
 mod site_ground;
 mod color_plan;
+mod shadows;
 #[cfg(feature = "mod-arch")]
 mod arch_ifc;
 mod ifc_required;

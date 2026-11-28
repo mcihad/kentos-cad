@@ -1506,6 +1506,9 @@ pub mod fire_marks;
 #[path = "arch/color_legend.rs"]
 pub mod color_legend;
 #[cfg(feature = "mod-arch")]
+#[path = "arch/shadows.rs"]
+pub mod shadows;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/permit_set.rs"]
 pub mod permit_set;
 #[cfg(feature = "mod-arch")]

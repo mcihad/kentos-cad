@@ -3454,6 +3454,24 @@
       "status": "implemented"
     },
     {
+      "id": "tool.sunShadow",
+      "title": "Gölge",
+      "short": "Gölge",
+      "icon": "sunShadow",
+      "description": "Binanın ±0,00'daki zemine düşen gölgesini çizer: duvar, kolon, kiriş, döşeme, çatı ve merdiven cisimleri güneş ışınları boyunca zemine düşürülür, birleşimlerinden binanın oturduğu alan çıkarılır. Tarih (T) 21 Aralık, 21 Mart, 21 Haziran ya da 23 Eylül; saat (S) 09:00, 12:00, 15:00 ya da 09:00–15:00 arası saat saat. Güneşin yüksekliği ve azimutu enlem, boylam, gün ve saatten hesaplanır: konum projenin koordinat sisteminden, yoksa yazılan enlemden (E) ve boylamdan (B); saat dilimi (Z) Türkiye için UTC+3; coğrafi kuzey koordinat sisteminden ya da kuzey okundan, yoksa plan kuzeyi. Gölge ayarlar değiştikçe önizlenir; Enter ya da tıklama onu Gölge katmanına (MM-XXXX-GOLGE) tek geri alma adımında çizer: tek saat taramalı ve çerçeveli, birden çok saat her biri çerçevesi ve ucunda saatiyle. Yeniden çizilince eskisinin yerini alır; bina değişirse yeniden çizilir.",
+      "aliases": [
+        "GOLGE",
+        "GÖLGE",
+        "GUNESGOLGESI",
+        "GÜNEŞGÖLGESİ",
+        "GOLGEDIYAGRAMI",
+        "GÖLGEDİYAGRAMI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.colorPlan.off",
       "title": "Renk planı: Kapalı",
       "short": "Kapalı",
@@ -6111,6 +6129,7 @@
     "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sunShadow": "<circle cx=\"4.5\" cy=\"4.5\" r=\"2\"/><path d=\"M4.5 1v.8M4.5 7.2V8M1 4.5h.8M7.2 4.5H8\" stroke-width=\"1\"/><path d=\"M1.5 16.5h17\"/><rect x=\"7.5\" y=\"8.5\" width=\"3.5\" height=\"8\"/><path d=\"M11 8.5 18 16.5H11z\" fill=\"currentColor\" fill-opacity=\".4\" stroke=\"none\"/>",
     "groundLevel": "<circle cx=\"5\" cy=\"10\" r=\"2.2\"/><path d=\"M1.5 10h7M5 6.5v7\" stroke-width=\"1\"/><path d=\"M10.5 7.5h7M10.5 12.5h7\"/>",
     "colorPlanOff": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1\"/><path d=\"M3.5 15.5 16.5 4.5\" stroke-width=\"1\"/>",
     "colorPlanUsage": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"6.5\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"10\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13M2.5 10h7.5\" stroke-width=\"1\"/>",

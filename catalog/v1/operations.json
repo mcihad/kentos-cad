@@ -2561,6 +2561,14 @@
       ],
       "note": "Zemin kotu: kot simgesi (daire ve haç) ve iki yazı, “tzk 849.85 (-5.65)” ve “tsk 850.10 (-4.40)”, simgeler katmanına tek adımda; değerler aracın vaziyet zemininden okuduğudur, yazılar kendileri (ADR 8174 §7)."
     },
+    "tool.sunShadow": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create",
+        "cad.entities.delete"
+      ],
+      "note": "Gölge: kesit modelinin cisimleri güneş ışınları boyunca ±0,00'daki zemine süpürülür, birleşimlerinden binanın oturduğu alan çıkarılır; tek saat düz çizgi taramalı ve çerçeveli, birden çok saat çerçevesi ve saatiyle gölge katmanına; Gölge öznitelikli eski gölge silinir (ADR 8177 §3)."
+    },
     "arch.colorPlan.off": {
       "level": "semantic",
       "via": [

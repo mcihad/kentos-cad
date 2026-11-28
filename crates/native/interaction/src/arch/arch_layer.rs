@@ -69,6 +69,8 @@ pub enum Kind {
     /// A legend of the drawing's symbols and materials (EK-4 4.17.6).
     Legend,
     Schedule,
+    /// The building's shadow on the ground (docs/adr/8177): EK-2 Tablo 2.3 has none, GENL.
+    Shadow,
 }
 
 impl Kind {
@@ -110,7 +112,8 @@ impl Kind {
             | Kind::Tag
             | Kind::Symbol
             | Kind::Legend
-            | Kind::Schedule => EK4_GENERAL,
+            | Kind::Schedule
+            | Kind::Shadow => EK4_GENERAL,
         }
     }
 
@@ -131,6 +134,7 @@ impl Kind {
             Kind::Symbol => word("SEMBOL"),
             Kind::Legend => word("LEJANT"),
             Kind::Schedule => word("CIZELGE"),
+            Kind::Shadow => word("GOLGE"),
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(kentos_commands::BeamRole::PadFooting) => word("TEKIL"),
             Kind::Beam(kentos_commands::BeamRole::StripFooting) => word("SUREKLI"),
@@ -210,6 +214,7 @@ impl Kind {
             Kind::Symbol => "İşaret",
             Kind::Legend => "Lejant",
             Kind::Schedule => "Çizelge",
+            Kind::Shadow => "Gölge",
         }
     }
 
@@ -251,6 +256,7 @@ impl Kind {
             Kind::Symbol => "işaret",
             Kind::Legend => "lejant",
             Kind::Schedule => "çizelge",
+            Kind::Shadow => "gölge",
         }
     }
 
@@ -284,7 +290,7 @@ impl Kind {
             },
             Kind::Casework | Kind::Furniture(_) => look("fg-dim", 0.18),
             Kind::Dimension => look("#56B6C2", 0.18),
-            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule => look("fg", 0.18),
+            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule | Kind::Shadow => look("fg", 0.18),
             Kind::Symbol => look("fg", 0.25),
         }
     }
@@ -483,6 +489,7 @@ mod tests {
             Kind::Symbol,
             Kind::Legend,
             Kind::Schedule,
+            Kind::Shadow,
             Kind::Beam(kentos_commands::BeamRole::Beam),
             Kind::Beam(kentos_commands::BeamRole::Lintel),
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
