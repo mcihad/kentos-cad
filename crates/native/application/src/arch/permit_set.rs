@@ -805,13 +805,14 @@ pub(crate) fn edit(
 
 /// The particulars and a tadilat set's views written (settings edits, never an undo step), then the set's sheets (one
 /// undo step). The sheets made, with the change's answer and what was left out.
+///
+/// All or nothing. The set is planned before anything is written, so a plan that is refused (no storey, an unknown
+/// building, views that do not stand, a template that does not read) leaves the drawing as it was. The settings are
+/// outside the undo history: when the sheets themselves are refused, the settings go back as they were.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: &PermitSet,
 ) -> Result<(SheetsEdited, Vec<permit::Made>, Vec<String>), String> {
-    let mut settings = cx.doc.settings().clone();
-    settings.variables = with_particulars_of(cx.doc, &input.values);
-    cx.doc.set_settings(settings);
     let planned = pages(
         cx.doc,
         input.phase,
@@ -821,22 +822,33 @@ pub fn execute(
         input.building.as_deref(),
     )
     .map_err(|s| s.into_error().message)?;
-    if let Some(views) = &planned.views {
-        if let Some(why) = kentos_commands::views_problem(views) {
-            return Err(format!("Tadilat takımının görünümleri yazılamadı: {why}"));
-        }
-        let mut settings = cx.doc.settings().clone();
-        settings.named_views = views.clone();
-        cx.doc.set_settings(settings);
+    if let Some(views) = &planned.views
+        && let Some(why) = kentos_commands::views_problem(views)
+    {
+        return Err(format!("Tadilat takımının görünümleri yazılamadı: {why}"));
     }
     let (edit, made) = edit(cx.doc, input.phase, &planned).map_err(|s| s.into_error().message)?;
+    let before = cx.doc.settings().clone();
+    let mut settings = before.clone();
+    settings.variables = with_particulars_of(cx.doc, &input.values);
+    if let Some(views) = &planned.views {
+        settings.named_views = views.clone();
+    }
+    cx.doc.set_settings(settings);
     match sheets_edit::execute(cx, edit) {
         CommandResult::Completed { output, .. } => {
             point_marks(cx.doc, &planned.pages, &made);
             Ok((output, made, planned.notes))
         }
-        CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
-        _ => Err("Ruhsat takımı kurulamadı.".into()),
+        refused => {
+            cx.doc.set_settings(before);
+            Err(match refused {
+                CommandResult::Failed { error } | CommandResult::NeedsInput { error } => {
+                    error.message
+                }
+                _ => "Ruhsat takımı kurulamadı.".into(),
+            })
+        }
     }
 }
 
@@ -872,6 +884,45 @@ fn point_marks(doc: &mut Document, pages: &[Page], made: &[permit::Made]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A drawing with a layer and no storey: no set can be made of it.
+    fn drawing_without_storeys() -> Document {
+        let text = r#"{"format":"kentos.document","version":1,"name":"t","settings":{"srid":5256,"lengthDecimals":3,
+            "areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":100},"origin":{"x":0,"y":0},
+            "layers":[{"id":"a","name":"Çizim","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
+            "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]}}"#;
+        Document::from_snapshot(
+            kentos_commands::DocumentSnapshotV1::from_json(text).expect("reads"),
+        )
+        .expect("opens")
+    }
+
+    /// The settings are outside the undo history: a set that is refused must not have written its particulars.
+    #[test]
+    fn a_refused_set_writes_no_particulars() {
+        let mut doc = drawing_without_storeys();
+        let before = doc.settings().clone();
+        let revision = doc.revision();
+        let refused = execute(
+            &mut ExecutionContext::new(&mut doc),
+            &PermitSet {
+                phase: Phase::Permit,
+                values: vec![("ada".to_owned(), "101".to_owned())],
+                tables: Vec::new(),
+                lists: Vec::new(),
+                renovation: false,
+                building: None,
+            },
+        );
+        assert!(refused.is_err(), "no storey, no set");
+        assert!(
+            *doc.settings() == before,
+            "the particulars of a set that was not made are not written: {:?}",
+            doc.settings().variables
+        );
+        assert_eq!(doc.revision(), revision, "nothing was written");
+    }
 
     #[test]
     fn section_places_follow_ek_2() {

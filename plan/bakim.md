@@ -214,7 +214,8 @@ düzenlenir.
 
 ### Aşama 1 — Doğruluk düzeltmeleri
 
-- [ ] **BK-10** (A1) İmar takımı `call::recorded` üzerinden; ret ayarları geri alır.
+- [x] **BK-10** (A1; [ADR 9401](../docs/adr/9401-correctness-fixes-from-the-review.md) §1) İmar takımı önce planlanır,
+  sonra yazar; paftalar reddedilirse ayarlar geri konur. Kalıcı çözüm takımın kendi komutudur (BK-19).
 - [ ] **BK-11** (A2) Çok adımlı Kaydet için tek yardımcı (`document::in_step`, `shell/document.rs:691` üstüne); üç
   pencere ve `leader_tools`.
 - [ ] **BK-12** (A3) Arka plan yanıtı koşu kimliği taşır; beş aktarım ve IFC karşılaştırması.
