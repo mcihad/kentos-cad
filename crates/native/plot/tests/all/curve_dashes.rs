@@ -116,7 +116,7 @@ fn curve_dashes_are_cut_at_true_arc_distances_at_three_scales() {
             let pieces: Vec<_> = paths.iter().filter(|p| p.stroke.is_some()).collect();
             // Paper millimetres along the curve from its start, by angle.
             let along = |q: [f64; 2]| {
-                let a = q[1].atan2(q[0]);
+                let a = kentos_num::atan2(q[1], q[0]);
                 let mm = |t: f64| t * r * 1000. / s;
                 // A start read a rounding below its own angle is the start, not a whole turn on.
                 let turn = |t: f64| {
@@ -352,7 +352,7 @@ fn curve_dash_pictures() {
             let n = (sweep * 15. / 4.).floor() as i32;
             for k in 0..=n {
                 let a = a0 + f64::from(k) * 4. / 15.;
-                let (u, v) = (a.cos(), a.sin());
+                let (u, v) = (kentos_num::cos(a), kentos_num::sin(a));
                 add(
                     json!({"kind":"line","a":c(cx + 16. * u, 20. + 16. * v),"b":c(cx + 18. * u, 20. + 18. * v)}),
                     None,

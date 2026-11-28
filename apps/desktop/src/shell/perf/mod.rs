@@ -75,8 +75,8 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             .map(|k| {
                 let a = k as f64 / 20.0 * std::f64::consts::TAU;
                 Vec2 {
-                    x: x0 + 12.5 + 11.0 * a.cos(),
-                    y: y0 + 12.5 + 9.0 * a.sin(),
+                    x: x0 + 12.5 + 11.0 * kentos_num::cos(a),
+                    y: y0 + 12.5 + 9.0 * kentos_num::sin(a),
                 }
             })
             .collect();

@@ -280,7 +280,7 @@ fn ghosts(t: &LabelText, mask: bool) -> Vec<TextGhost> {
             .enumerate()
             .map(|(i, ch)| {
                 let (a, b) = (at(i as isize - 1), at(i as isize + 1));
-                let deg = (b.y - a.y).atan2(b.x - a.x).to_degrees();
+                let deg = kentos_num::atan2(b.y - a.y, b.x - a.x).to_degrees();
                 ghost(
                     at(i as isize),
                     ch.to_string(),
@@ -294,7 +294,10 @@ fn ghosts(t: &LabelText, mask: bool) -> Vec<TextGhost> {
     if lines.len() == 1 {
         return vec![ghost(t.p, t.text.clone(), t.rotation, t.align)];
     }
-    let (c, s) = (t.rotation.to_radians().cos(), t.rotation.to_radians().sin());
+    let (c, s) = (
+        kentos_num::cos(t.rotation.to_radians()),
+        kentos_num::sin(t.rotation.to_radians()),
+    );
     lines
         .iter()
         .enumerate()

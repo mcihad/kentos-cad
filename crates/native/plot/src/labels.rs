@@ -96,7 +96,7 @@ fn face(l: &mut MapLabel, f: &TextFace) {
         l.font = Some(font);
         l.weight = if f.bold { 600 } else { 400 };
         l.italic = f.italic;
-        l.lean = f.oblique.unwrap_or(0.).to_radians().tan();
+        l.lean = kentos_num::tan(f.oblique.unwrap_or(0.).to_radians());
     } else {
         l.italic = false;
     }
@@ -132,7 +132,7 @@ fn shx(
 }
 
 fn ring(at: Vec2, rotation: f64, width: f64, height: f64, lean: f64) -> Vec<[f64; 2]> {
-    let (s, c) = rotation.to_radians().sin_cos();
+    let (s, c) = kentos_num::sin_cos(rotation.to_radians());
     [[0., 0.], [width, 0.], [width, height], [0., height]]
         .map(|[x, y]| {
             let x = x + y * lean;
@@ -158,7 +158,7 @@ fn mask(l: &mut MapLabel, ground_height: f64, ground_width: f64, centered: bool)
     } else {
         width(l, ground_height)
     };
-    let (s, c) = l.rotation.to_radians().sin_cos();
+    let (s, c) = kentos_num::sin_cos(l.rotation.to_radians());
     let x = if centered { -w / 2. } else { 0. };
     let margin = ground_height * 0.1;
     let offset = Vec2::new(
@@ -198,7 +198,7 @@ pub fn moved(
     let at = map.forward(l.at)?;
     // The east a metre on, moved: the turn of the paper's east against the project's.
     let east = map.forward(Vec2::new(l.at.x + 1.0, l.at.y))?;
-    let turn = (east.y - at.y).atan2(east.x - at.x).to_degrees();
+    let turn = kentos_num::atan2(east.y - at.y, east.x - at.x).to_degrees();
     let ring = |r: &[[f64; 2]]| -> Option<Vec<[f64; 2]>> {
         r.iter()
             .map(|p| map.forward(Vec2::new(p[0], p[1])).map(|q| [q.x, q.y]))
@@ -973,7 +973,7 @@ fn backdrop(
     let Some(back) = &s.background else { return };
     let px = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(PX_MM);
     let pad = back.padding.unwrap_or(2.) * px;
-    let (sn, cs) = rotation.to_radians().sin_cos();
+    let (sn, cs) = kentos_num::sin_cos(rotation.to_radians());
     let (hw, hh) = (w / 2. + pad, h / 2. + pad);
     let p = |x: f64, y: f64| [at.x + cs * x - sn * y, at.y + sn * x + cs * y];
     let points = match back.shape {
@@ -981,7 +981,10 @@ fn backdrop(
         kentos_contracts::LabelShape::Ellipse => (0..32)
             .map(|i| {
                 let t = i as f64 / 32. * std::f64::consts::TAU;
-                p(hw * 2f64.sqrt() * t.cos(), hh * 2f64.sqrt() * t.sin())
+                p(
+                    hw * 2f64.sqrt() * kentos_num::cos(t),
+                    hh * 2f64.sqrt() * kentos_num::sin(t),
+                )
             })
             .collect(),
         kentos_contracts::LabelShape::Round => {
@@ -995,7 +998,7 @@ fn backdrop(
             ] {
                 for i in 0..=5 {
                     let t = (from + i as f64 * 18.).to_radians();
-                    pts.push(p(cx + r * t.cos(), cy + r * t.sin()));
+                    pts.push(p(cx + r * kentos_num::cos(t), cy + r * kentos_num::sin(t)));
                 }
             }
             pts
@@ -1046,7 +1049,7 @@ fn line(
     let mut x = 0.;
     let mut out = Vec::new();
     let font = kentos_native_application::geometry::drawing_font(base.font);
-    let (s, c) = base.rotation.to_radians().sin_cos();
+    let (s, c) = kentos_num::sin_cos(base.rotation.to_radians());
     let em = height * base.width_factor / 1000.;
     while i < end {
         let run = runs

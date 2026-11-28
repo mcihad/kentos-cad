@@ -127,7 +127,10 @@ pub struct Crossing {
 /// The place and left normal of the square line at `station`.
 fn normal(al: &Alignment, station: f64) -> Option<([f64; 2], [f64; 2])> {
     let p = al.at(station)?;
-    Some(([p.x, p.y], [-p.direction.sin(), p.direction.cos()]))
+    Some((
+        [p.x, p.y],
+        [-kentos_num::sin(p.direction), kentos_num::cos(p.direction)],
+    ))
 }
 
 /// Every pair of square lines at `stations` (each `widths` (left, right) wide) that meet within both, on the same side

@@ -103,7 +103,7 @@ fn same_unit_products_ratios_and_trigonometry_keep_the_existing_numeric_values()
     let values = parameter_values(&d, d.constraints()).unwrap();
     assert!((values["diagonal"] - 5.).abs() < 1e-12);
     assert!((values["ratio"] - 4. / 3.).abs() < 1e-12);
-    assert!((values["projection"] - 4. * (std::f64::consts::PI / 6.).cos()).abs() < 1e-12);
+    assert!((values["projection"] - 4. * kentos_num::cos(std::f64::consts::PI / 6.)).abs() < 1e-12);
     assert!((values["math_pi"] - std::f64::consts::PI).abs() < 1e-12);
     refused(&mut d, json!([set("projection", "width + turn")]));
     let saved = d.to_snapshot_v2();

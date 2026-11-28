@@ -781,7 +781,7 @@ fn lattice_settings_find_and_review_preserve_roots_and_expose_independent_direct
             }
             let (a, b) = (23_f64.to_radians(), 81_f64.to_radians());
             entities.push(json!({"kind":"insert","id":entities.len()+1,"layerId":"a","attrs":{},"block":raw["blocks"][0]["id"],
-            "p":{"x":c as f64*2.*a.cos()+r as f64*3.*b.cos(),"y":c as f64*2.*a.sin()+r as f64*3.*b.sin()},"scale":1.,"rotation":0.}));
+            "p":{"x":c as f64*2.*kentos_num::cos(a)+r as f64*3.*kentos_num::cos(b),"y":c as f64*2.*kentos_num::sin(a)+r as f64*3.*kentos_num::sin(b)},"scale":1.,"rotation":0.}));
         }
     }
     raw["entities"] = json!(entities);

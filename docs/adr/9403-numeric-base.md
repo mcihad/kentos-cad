@@ -296,6 +296,19 @@ kodudur.
 - Araç metin dosyalarını da okur (`ulp_diff.py --text`: IFC, DXF; sayılar arasındaki her şey aynı olmalıdır).
 - Koşulanlar: önceki adımlarla aynı takımlar; hepsi yeşil (önceden var olan kırmızılar aynı).
 
+**Platformun yöntemleriyle yapılan çağrılar (28 Kasım 2026).** Hesap crate'lerinde `x.sin()`, `x.atan2(y)`,
+`x.powi(n)`… biçiminde yazılmış 1 190 çağrı sayısal temele bağlandı (33 crate, 349 dosya; mekanik dönüşüm,
+derleyiciyle denetlendi: float32 ve ikili sayı türünün yöntemleri olduğu gibi bırakıldı). `powi` temelde tam üssün
+doğru yuvarlanmış kuvvetidir (kare, sayının kendisi ve tersi tek kesin işlemdir; `10ⁿ` artık çarpımların birikmiş
+hatasını taşımaz).
+
+- Kalan platform çağrıları (`sin` 36, `cos` 38, `tan` 3, `sin_cos` 7, `atan2` 6, `exp` 1, `ln` 2, `log10` 1, `powf` 2, `powi` 3, `hypot` 3) masaüstü crate'lerinin float32 ekran çizimidir; bekçi sayıyı tutar.
+  Bunlardan altısı sınırı aşan üç üretim dosyasındadır (`arch_audit.rs`, `arch_tools.rs`, `casework.rs`): dönüşüm o
+  satırları uzatıp dosyayı büyütüyordu; dosyalar bölünürken geçer (BK-40). Aynı nedenle iki dosyanın dosya içi
+  sınama modülü kendi dosyasına taşındı (`sections/tests.rs`, `geopackage_tests.rs`).
+- Hiçbir ortak durum ve hiçbir saklı çıktı oynamadı. Koşulanlar: önceki adımlarla aynı takımlar; hepsi yeşil
+  (önceden var olan kırmızılar aynı).
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

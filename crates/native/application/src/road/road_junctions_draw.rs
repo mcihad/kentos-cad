@@ -77,7 +77,7 @@ fn check(
                         y: q.on_b.y,
                     },
                 ],
-                bulges: Some(vec![(q.sweep.to_radians() / 4.0).tan(), 0.0]),
+                bulges: Some(vec![kentos_num::tan(q.sweep.to_radians() / 4.0), 0.0]),
                 zs: None,
                 ms: None,
                 parts: None,

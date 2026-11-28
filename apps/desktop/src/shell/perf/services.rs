@@ -70,7 +70,7 @@ fn kizilay(level: u32) -> TileRef {
     let n = f64::from(1u32 << level);
     let col = ((lon + 180.0) / 360.0 * n).floor() as u64;
     let lat = lat.to_radians();
-    let row = ((1.0 - (lat.tan() + 1.0 / lat.cos()).ln() / std::f64::consts::PI) / 2.0 * n).floor()
+    let row = ((1.0 - kentos_num::ln(kentos_num::tan(lat) + 1.0 / kentos_num::cos(lat)) / std::f64::consts::PI) / 2.0 * n).floor()
         as u64;
     TileRef { level, col, row }
 }

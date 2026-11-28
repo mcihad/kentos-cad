@@ -982,7 +982,7 @@ impl OpenPanel {
             .or(min)
             .unwrap_or(0.0);
         let decimals = step.to_string().split_once('.').map_or(0, |(_, d)| d.len()) as i32;
-        let scale = 10f64.powi(decimals);
+        let scale = kentos_num::powi(10f64, decimals);
         let mut next = ((now + f64::from(sign) * step) * scale).round() / scale;
         if let Some(min) = min {
             next = next.max(min);

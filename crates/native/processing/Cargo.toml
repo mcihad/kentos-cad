@@ -63,6 +63,8 @@ serde_json = { workspace = true }
 # The audit facts' architecture drawing is a .kcad v2 file (fixtures/audit-facts/v1/mimari.kcad), read as the other
 # architecture fixtures are.
 [dev-dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 kentos-kcad = { path = "../../shared/kcad" }
 
 [features]

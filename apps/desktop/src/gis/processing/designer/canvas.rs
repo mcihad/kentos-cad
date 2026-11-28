@@ -340,7 +340,7 @@ impl canvas::Program<Message> for Diagram<'_> {
                     mouse::ScrollDelta::Lines { y, .. } => -f64::from(*y) * 100.0,
                     mouse::ScrollDelta::Pixels { y, .. } => -f64::from(*y),
                 };
-                let f = (-dy * c::WHEEL).exp();
+                let f = kentos_num::exp(-dy * c::WHEEL);
                 let view = plan::zoom_at(
                     self.view,
                     Pt::new(f64::from(p.x), f64::from(p.y)),

@@ -72,7 +72,8 @@ fn drawn(def: &kentos_commands::AlignmentDef, b: &Built) -> Drawn {
                 if (r.at..=r.until).contains(&s)
                     && let Some((p, dir)) = place(s)
                 {
-                    out.ticks.push((s, p, [dir.sin(), -dir.cos()], k));
+                    out.ticks
+                        .push((s, p, [kentos_num::sin(dir), -kentos_num::cos(dir)], k));
                 }
                 k += step;
             }
@@ -277,7 +278,10 @@ impl Layer<'_> {
             if let Some((p, dir)) = d.start {
                 // Left of the start, away from the km words on the right.
                 let at = screen(p);
-                let (lx, ly) = (-(dir.sin() as f32), -(dir.cos() as f32));
+                let (lx, ly) = (
+                    -(kentos_num::sin(dir) as f32),
+                    -(kentos_num::cos(dir) as f32),
+                );
                 frame.fill_text(canvas::Text {
                     content: d.name.clone(),
                     position: Point::new(at.x + lx * 16.0, at.y + ly * 16.0 - 6.0),

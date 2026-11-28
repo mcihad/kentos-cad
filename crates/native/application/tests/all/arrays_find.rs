@@ -932,8 +932,8 @@ fn skew_lattice_has_two_observed_axes_two_holes_and_metadata_only_adoption() {
                 continue;
             }
             ps.push((
-                c as f64 * 2. * ac.cos() + r as f64 * 3. * ar.cos(),
-                c as f64 * 2. * ac.sin() + r as f64 * 3. * ar.sin(),
+                c as f64 * 2. * kentos_num::cos(ac) + r as f64 * 3. * kentos_num::cos(ar),
+                c as f64 * 2. * kentos_num::sin(ac) + r as f64 * 3. * kentos_num::sin(ar),
             ));
         }
     }
@@ -990,8 +990,10 @@ fn a_millimetre_lattice_at_large_world_coordinates_uses_the_full_observed_span()
                 continue;
             }
             ps.push((
-                4e9 + c as f64 * 0.003 * ac.cos() + r as f64 * 0.005 * ar.cos(),
-                -4e9 + c as f64 * 0.003 * ac.sin() + r as f64 * 0.005 * ar.sin(),
+                4e9 + c as f64 * 0.003 * kentos_num::cos(ac)
+                    + r as f64 * 0.005 * kentos_num::cos(ar),
+                -4e9 + c as f64 * 0.003 * kentos_num::sin(ac)
+                    + r as f64 * 0.005 * kentos_num::sin(ar),
             ));
         }
     }

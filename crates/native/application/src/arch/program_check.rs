@@ -168,8 +168,11 @@ fn span_edge_distance(s: (V, V), e: &Edge) -> f64 {
     let ends = match *e {
         Edge::Seg { a, b } => [a, b],
         Edge::Arc { c, r, a0, sweep } => [
-            V::new(c.x + r * a0.cos(), c.y + r * a0.sin()),
-            V::new(c.x + r * (a0 + sweep).cos(), c.y + r * (a0 + sweep).sin()),
+            V::new(c.x + r * kentos_num::cos(a0), c.y + r * kentos_num::sin(a0)),
+            V::new(
+                c.x + r * kentos_num::cos(a0 + sweep),
+                c.y + r * kentos_num::sin(a0 + sweep),
+            ),
         ],
     };
     let mut best = closest_on_edge(e, s.0).d.min(closest_on_edge(e, s.1).d);

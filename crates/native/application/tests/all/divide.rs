@@ -68,11 +68,12 @@ fn an_elliptical_arcs_parts_are_equal_along_its_true_length() {
         (0..n)
             .map(|k| {
                 let t = t0 + (t1 - t0) * (f64::from(k) + 0.5) / f64::from(n);
-                kentos_num::hypot(a * t.sin(), b * t.cos()) * (t1 - t0) / f64::from(n)
+                kentos_num::hypot(a * kentos_num::sin(t), b * kentos_num::cos(t)) * (t1 - t0)
+                    / f64::from(n)
             })
             .sum::<f64>()
     };
-    let param = |x: f64, y: f64| (y / b).atan2(x / a);
+    let param = |x: f64, y: f64| kentos_num::atan2(y / b, x / a);
     let ts: Vec<f64> = output
         .entities
         .iter()

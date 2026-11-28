@@ -148,7 +148,9 @@ fn timing() {
         seed ^= seed << 17;
         (seed >> 11) as f64 / (1u64 << 53) as f64
     };
-    let ground = |x: f64, y: f64| 100.0 + 0.05 * x - 0.02 * y + 3.0 * ((x - 500.0) / 500.0).powi(2);
+    let ground = |x: f64, y: f64| {
+        100.0 + 0.05 * x - 0.02 * y + 3.0 * kentos_num::powi((x - 500.0) / 500.0, 2)
+    };
     let mut input = SurfaceInput::default();
     for _ in 0..100_000 {
         let (x, y) = (next() * 1000.0, next() * 1000.0);

@@ -263,7 +263,7 @@ impl crate::app::App {
                         && layers.is_visible(&im.base.layer_id) =>
                 {
                     let i = &im.image;
-                    let (c, s) = (i.rotation.cos(), i.rotation.sin());
+                    let (c, s) = (kentos_num::cos(i.rotation), kentos_num::sin(i.rotation));
                     let at = |u: f64, v: f64| {
                         kentos_interaction::Vec2::new(i.p.x + u * c - v * s, i.p.y + u * s + v * c)
                     };

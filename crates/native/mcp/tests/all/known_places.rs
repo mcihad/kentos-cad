@@ -79,9 +79,17 @@ fn the_known_points_places_over_mcp() {
     let years = 2005.0 - 2026.84;
     let (f, l) = (f64::to_radians(lat), f64::to_radians(lon));
     let rows_enu = [
-        [-l.sin(), l.cos(), 0.0],
-        [-f.sin() * l.cos(), -f.sin() * l.sin(), f.cos()],
-        [f.cos() * l.cos(), f.cos() * l.sin(), f.sin()],
+        [-kentos_num::sin(l), kentos_num::cos(l), 0.0],
+        [
+            -kentos_num::sin(f) * kentos_num::cos(l),
+            -kentos_num::sin(f) * kentos_num::sin(l),
+            kentos_num::cos(f),
+        ],
+        [
+            kentos_num::cos(f) * kentos_num::cos(l),
+            kentos_num::cos(f) * kentos_num::sin(l),
+            kentos_num::sin(f),
+        ],
     ];
     for (i, row) in rows_enu.iter().enumerate() {
         let want: f64 = (0..3).map(|j| row[j] * v[j] * years).sum();

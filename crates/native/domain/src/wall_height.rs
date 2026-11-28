@@ -109,7 +109,7 @@ impl Document {
         let (Some(rise), [a, e]) = (b.rise, b.pts.as_slice()) else {
             return Some(bottom);
         };
-        let length = ((e.x - a.x).powi(2) + (e.y - a.y).powi(2)).sqrt();
+        let length = (kentos_num::powi(e.x - a.x, 2) + kentos_num::powi(e.y - a.y, 2)).sqrt();
         if length <= 0.0 {
             return Some(bottom);
         }
@@ -229,7 +229,8 @@ pub enum WallTop {
 /// The middle of a path of straight stretches by its length.
 fn axis_middle(pts: &[Vec2]) -> Option<Vec2> {
     let first = *pts.first()?;
-    let length = |a: Vec2, b: Vec2| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+    let length =
+        |a: Vec2, b: Vec2| (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt();
     let total: f64 = pts.windows(2).map(|p| length(p[0], p[1])).sum();
     let mut left = total / 2.0;
     for p in pts.windows(2) {
@@ -254,7 +255,8 @@ fn middle(w: &WallFields) -> Option<Vec2> {
     if w.closed && pts.len() > 2 {
         stretches.push((pts[pts.len() - 1], first));
     }
-    let length = |a: Vec2, b: Vec2| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+    let length =
+        |a: Vec2, b: Vec2| (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt();
     let total: f64 = stretches.iter().map(|(a, b)| length(*a, *b)).sum();
     if total <= 0.0 {
         return Some(first);

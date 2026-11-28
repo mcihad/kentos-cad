@@ -187,7 +187,7 @@ impl Running {
         let mut target = self.said;
         if let Some((until, began, seconds)) = self.stretch {
             let gone = now.saturating_duration_since(began).as_secs_f64();
-            let k = 1.0 - (-gone / seconds.max(0.05)).exp();
+            let k = 1.0 - kentos_num::exp(-gone / seconds.max(0.05));
             target = self.said + (until - self.said) * 0.95 * k;
         }
         let dt = now
@@ -195,7 +195,7 @@ impl Running {
             .as_secs_f64()
             .min(0.25);
         self.moved = now;
-        let a = 1.0 - (-dt / 0.12).exp();
+        let a = 1.0 - kentos_num::exp(-dt / 0.12);
         self.shown = js_max(self.shown, self.shown + (target - self.shown) * a).min(1.0);
     }
 }

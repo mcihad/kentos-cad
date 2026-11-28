@@ -1112,7 +1112,7 @@ mod tests {
         let Val::Num(w) = at(&e, 16.5, &f) else {
             panic!()
         };
-        let t = (1.2f64.powf(3.5) - 1.0) / (1.2f64.powf(7.0) - 1.0);
+        let t = (kentos_num::pow(1.2f64, 3.5) - 1.0) / (kentos_num::pow(1.2f64, 7.0) - 1.0);
         assert!((w - (6.5 + 13.5 * t)).abs() < 1e-12);
         let old = parse(
             &json!({"base": 1.2, "stops": [[13, 6.5], [20, 20]]}),

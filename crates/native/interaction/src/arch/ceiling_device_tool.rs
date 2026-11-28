@@ -59,7 +59,7 @@ impl Device {
             (0..32)
                 .map(|i| {
                     let a = f64::from(i) * std::f64::consts::TAU / 32.0;
-                    point(0.15 * a.cos(), 0.15 * a.sin())
+                    point(0.15 * kentos_num::cos(a), 0.15 * kentos_num::sin(a))
                 })
                 .collect()
         } else {
@@ -174,7 +174,7 @@ impl CeilingDeviceTool {
         let Some((_, at, turn, aligned)) = self.hover.and_then(|p| self.target(p, cx)) else {
             return;
         };
-        let (sin, cos) = turn.to_radians().sin_cos();
+        let (sin, cos) = kentos_num::sin_cos(turn.to_radians());
         for (line, closed) in self.device.outline() {
             let pts = line
                 .into_iter()

@@ -741,17 +741,21 @@ fn named_points(e: &Entity, layer: &str) -> Option<Vec<Point>> {
             point("Merkez", a.c.x, a.c.y),
             point(
                 "Başlangıç",
-                a.c.x + a.r * a.a0.cos(),
-                a.c.y + a.r * a.a0.sin(),
+                a.c.x + a.r * kentos_num::cos(a.a0),
+                a.c.y + a.r * kentos_num::sin(a.a0),
             ),
-            point("Bitiş", a.c.x + a.r * a.a1.cos(), a.c.y + a.r * a.a1.sin()),
+            point(
+                "Bitiş",
+                a.c.x + a.r * kentos_num::cos(a.a1),
+                a.c.y + a.r * kentos_num::sin(a.a1),
+            ),
         ],
         Entity::Ellipse(el) => {
             let minor = (-el.major.y * el.ratio, el.major.x * el.ratio);
             let at = |t: f64| {
                 (
-                    el.c.x + el.major.x * t.cos() + minor.0 * t.sin(),
-                    el.c.y + el.major.y * t.cos() + minor.1 * t.sin(),
+                    el.c.x + el.major.x * kentos_num::cos(t) + minor.0 * kentos_num::sin(t),
+                    el.c.y + el.major.y * kentos_num::cos(t) + minor.1 * kentos_num::sin(t),
                 )
             };
             let mut out = vec![

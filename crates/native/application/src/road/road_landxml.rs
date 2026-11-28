@@ -42,7 +42,7 @@ fn losses(message: String, path: &str) -> CommandWarning {
 /// they are parallel).
 pub fn element_geometry(e: &Element) -> WGeom {
     let end = e.point(e.length);
-    let (c0, s0) = (e.theta0.cos(), e.theta0.sin());
+    let (c0, s0) = (kentos_num::cos(e.theta0), kentos_num::sin(e.theta0));
     match e.kind {
         Kind::Tangent => WGeom::Line {
             start: e.start,
@@ -54,7 +54,7 @@ pub fn element_geometry(e: &Element) -> WGeom {
             let center = [e.start[0] - s0 / k, e.start[1] + c0 / k];
             let delta = k.abs() * e.length;
             let pi = (delta < std::f64::consts::PI - 1e-9).then(|| {
-                let t = r * (0.5 * delta).tan();
+                let t = r * kentos_num::tan(0.5 * delta);
                 [e.start[0] + t * c0, e.start[1] + t * s0]
             });
             WGeom::Curve {
@@ -68,7 +68,7 @@ pub fn element_geometry(e: &Element) -> WGeom {
         }
         Kind::Spiral => {
             let th1 = e.theta(e.length);
-            let (c1, s1) = (th1.cos(), th1.sin());
+            let (c1, s1) = (kentos_num::cos(th1), kentos_num::sin(th1));
             let cross = c0 * s1 - s0 * c1;
             let pi = if cross.abs() < 1e-12 {
                 e.point(0.5 * e.length)

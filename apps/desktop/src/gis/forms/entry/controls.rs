@@ -553,7 +553,7 @@ pub(super) fn entry_control<'a>(
             } else {
                 field.scale.unwrap_or(2).min(6) as usize
             };
-            let step = 10f64.powi(-(places as i32));
+            let step = kentos_num::powi(10f64, -(places as i32));
             let now = value.trim().parse::<f64>().unwrap_or(lo).clamp(lo, hi);
             let set_value = set.clone();
             row![

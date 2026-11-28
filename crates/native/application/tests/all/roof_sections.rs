@@ -866,7 +866,9 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
     for z in &zigzags {
         let sides: Vec<f64> = z[1..z.len() - 1]
             .windows(2)
-            .map(|w| ((w[1].0 - w[0].0).powi(2) + (w[1].1 - w[0].1).powi(2)).sqrt())
+            .map(|w| {
+                (kentos_num::powi(w[1].0 - w[0].0, 2) + kentos_num::powi(w[1].1 - w[0].1, 2)).sqrt()
+            })
             .collect();
         let t = if sides.iter().all(|d| (d - side(0.05)).abs() < 1e-9) {
             roof_zigzags += 1;

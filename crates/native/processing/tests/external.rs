@@ -694,9 +694,9 @@ fn an_input_goes_with_its_shape_as_geojson_its_arcs_tessellated() {
         .windows(2)
         .map(|w| w[0].0 * w[1].1 - w[1].0 * w[0].1)
         .sum();
-    let theta = 4.0 * 0.4f64.atan();
-    let r = (10.0f64.powi(2) + 4.0f64.powi(2)) / (2.0 * 4.0);
-    let exact = 600.0 + r * r / 2.0 * (theta - theta.sin());
+    let theta = 4.0 * kentos_num::atan(0.4f64);
+    let r = (kentos_num::powi(10.0f64, 2) + kentos_num::powi(4.0f64, 2)) / (2.0 * 4.0);
+    let exact = 600.0 + r * r / 2.0 * (theta - kentos_num::sin(theta));
     assert!(
         (twice.abs() / 2.0 - exact).abs() < 0.05,
         "{} m² for {exact} m²",

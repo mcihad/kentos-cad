@@ -108,7 +108,10 @@ fn arc_tool(app: &mut App) {
         value: "pocket".into(),
     }));
     // A point beside the arc's middle part, inside it.
-    let p = [4.85 * (0.7f64).cos(), 4.85 * (0.7f64).sin()];
+    let p = [
+        4.85 * kentos_num::cos(0.7f64),
+        4.85 * kentos_num::sin(0.7f64),
+    ];
     let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(p[0], p[1]));
     let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
         Point::new(x as f32, y as f32),

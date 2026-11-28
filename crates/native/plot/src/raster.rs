@@ -385,7 +385,7 @@ fn draw_labels(
         let Some(outline) = crate::images::outline(&l.text, font, l.weight, l.italic) else {
             continue;
         };
-        let (s, c) = l.rotation.to_radians().sin_cos();
+        let (s, c) = kentos_num::sin_cos(l.rotation.to_radians());
         let size = kentos_sheet::projection::Scale::for_rendering(scale)
             .model_metres_from_mm(l.size)
             / f64::from(outline.size);
@@ -459,7 +459,7 @@ fn draw_unicode(
     let k = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(label.size)
         / u.text.height
         * u.scale;
-    let (s, c) = u.rotation.sin_cos();
+    let (s, c) = kentos_num::sin_cos(u.rotation);
     let anchor = [label.at.x - origin[0], label.at.y - origin[1]];
     let anchor = [
         view.m[0] * anchor[0] + view.m[1] * anchor[1] + view.t[0],

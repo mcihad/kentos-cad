@@ -484,7 +484,7 @@ mod tests {
                 && keeps(&p, [9.0, 9.0, 0.0])
                 && !keeps(&p, [10.01, 10.01, 2.0])
         );
-        let lean = |a: f64| [a.sin(), 0.0, a.cos()];
+        let lean = |a: f64| [kentos_num::sin(a), 0.0, kentos_num::cos(a)];
         let nearly = Section::from_face([1.0, 1.0, 3.0], lean(1e-6), [1.0, 1.0, 50.0], &model);
         assert!(
             matches!(

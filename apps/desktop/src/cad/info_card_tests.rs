@@ -21,8 +21,8 @@ fn identifying() -> App {
 fn between() -> [f64; 2] {
     let r = 3.625_f64;
     [
-        486_524.34 + r * 1f64.cos() - E,
-        4_420_199.52 + r * 1f64.sin() - N,
+        486_524.34 + r * kentos_num::cos(1f64) - E,
+        4_420_199.52 + r * kentos_num::sin(1f64) - N,
     ]
 }
 

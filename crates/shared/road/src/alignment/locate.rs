@@ -81,7 +81,8 @@ impl Alignment {
             if let Some(next) = self.elements.get(i + 1) {
                 let end = e.end();
                 let fl = f(e, e.length, end, p);
-                let fr = (p[0] - end[0]) * next.theta0.cos() + (p[1] - end[1]) * next.theta0.sin();
+                let fr = (p[0] - end[0]) * kentos_num::cos(next.theta0)
+                    + (p[1] - end[1]) * kentos_num::sin(next.theta0);
                 if fl > 0.0 && fr < 0.0 {
                     let mut c = foot(next, i + 1, 0.0, p, true);
                     // The side by the mean direction.
@@ -142,7 +143,7 @@ fn located(e: &Element, i: usize, s: f64) -> Located {
 
 /// +1 when `p` is right of the direction at `at`, −1 left, by the cross product.
 fn side(direction: f64, at: [f64; 2], p: [f64; 2]) -> f64 {
-    let (c, s) = (direction.cos(), direction.sin());
+    let (c, s) = (kentos_num::cos(direction), kentos_num::sin(direction));
     let cross = c * (p[1] - at[1]) - s * (p[0] - at[0]);
     if cross > 0.0 { -1.0 } else { 1.0 }
 }
@@ -157,14 +158,15 @@ fn foot(e: &Element, i: usize, s: f64, p: [f64; 2], corner: bool) -> Foot {
 /// (p − P(s))·T(s), with P(s) given.
 fn f(e: &Element, s: f64, place: [f64; 2], p: [f64; 2]) -> f64 {
     let th = e.theta(s);
-    (p[0] - place[0]) * th.cos() + (p[1] - place[1]) * th.sin()
+    (p[0] - place[0]) * kentos_num::cos(th) + (p[1] - place[1]) * kentos_num::sin(th)
 }
 
 fn feet_on(e: &Element, p: [f64; 2]) -> Vec<f64> {
     let l = e.length;
     match e.kind {
         Kind::Tangent => {
-            let s = (p[0] - e.start[0]) * e.theta0.cos() + (p[1] - e.start[1]) * e.theta0.sin();
+            let s = (p[0] - e.start[0]) * kentos_num::cos(e.theta0)
+                + (p[1] - e.start[1]) * kentos_num::sin(e.theta0);
             if (0.0..=l).contains(&s) {
                 vec![s]
             } else {
@@ -173,14 +175,14 @@ fn feet_on(e: &Element, p: [f64; 2]) -> Vec<f64> {
         }
         Kind::Arc => {
             let k = e.k0;
-            let n = [-e.theta0.sin(), e.theta0.cos()];
+            let n = [-kentos_num::sin(e.theta0), kentos_num::cos(e.theta0)];
             let c = [e.start[0] + n[0] / k, e.start[1] + n[1] / k];
             let r0 = [e.start[0] - c[0], e.start[1] - c[1]];
             let q = [p[0] - c[0], p[1] - c[1]];
             if q[0] == 0.0 && q[1] == 0.0 {
                 return vec![];
             }
-            let alpha = (r0[0] * q[1] - r0[1] * q[0]).atan2(r0[0] * q[0] + r0[1] * q[1]);
+            let alpha = kentos_num::atan2(r0[0] * q[1] - r0[1] * q[0], r0[0] * q[0] + r0[1] * q[1]);
             let tau = std::f64::consts::TAU;
             [alpha, alpha - tau, alpha + tau]
                 .into_iter()
@@ -233,8 +235,10 @@ fn refine(e: &Element, p: [f64; 2], mut a: f64, mut b: f64, mut fa: f64) -> f64 
         }
         // f' = −1 + κ (p − P)·N.
         let th = e.theta(s);
-        let fp =
-            -1.0 + e.curvature(s) * (-(p[0] - place[0]) * th.sin() + (p[1] - place[1]) * th.cos());
+        let fp = -1.0
+            + e.curvature(s)
+                * (-(p[0] - place[0]) * kentos_num::sin(th)
+                    + (p[1] - place[1]) * kentos_num::cos(th));
         let next = if fp != 0.0 { s - fv / fp } else { f64::NAN };
         s = if next.is_finite() && next > a && next < b {
             next

@@ -312,7 +312,7 @@ fn text(
     let r = t.rotation.to_radians();
     let (Some(p0), Some(p1)) = (
         frame.paper(t.at),
-        frame.paper([t.at[0] + r.cos(), t.at[1] + r.sin()]),
+        frame.paper([t.at[0] + kentos_num::cos(r), t.at[1] + kentos_num::sin(r)]),
     ) else {
         return;
     };

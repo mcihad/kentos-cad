@@ -151,7 +151,7 @@ fn equal(app: &mut App) {
     set(app, "gridSystem", "Q", "yes");
     click(app, [0.0, 0.0]);
     let t = 20f64.to_radians();
-    hover(app, [20.0 * t.cos(), 20.0 * t.sin()]);
+    hover(app, [20.0 * kentos_num::cos(t), 20.0 * kentos_num::sin(t)]);
 }
 
 /// Mimari denetim's Akslar: B on the grid's B (deleted) and B again 2.5 m above (named C … the next free).
@@ -321,8 +321,8 @@ mod tests {
         click(
             &mut app,
             [
-                20.0 * 20f64.to_radians().cos(),
-                20.0 * 20f64.to_radians().sin(),
+                20.0 * kentos_num::cos(20f64.to_radians()),
+                20.0 * kentos_num::sin(20f64.to_radians()),
             ],
         );
         let xs: Vec<_> = objects(&app)

@@ -199,7 +199,7 @@ pub fn reasons(lengths: &[f64], volumes: &[f64]) -> Vec<Option<Reason>> {
 
 /// `v` rounded to `decimals`, half away from zero.
 pub fn round(v: f64, decimals: u32) -> f64 {
-    let k = 10f64.powi(decimals as i32);
+    let k = kentos_num::powi(10f64, decimals as i32);
     (v * k).round() / k
 }
 

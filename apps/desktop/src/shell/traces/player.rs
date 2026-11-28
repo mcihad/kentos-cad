@@ -207,8 +207,8 @@ impl Seen {
                 let at = |t: f64| {
                     let (m, r) = (e.major, e.ratio);
                     [
-                        e.c.x + m.x * t.cos() - m.y * r * t.sin(),
-                        e.c.y + m.y * t.cos() + m.x * r * t.sin(),
+                        e.c.x + m.x * kentos_num::cos(t) - m.y * r * kentos_num::sin(t),
+                        e.c.y + m.y * kentos_num::cos(t) + m.x * r * kentos_num::sin(t),
                     ]
                 };
                 let pts = if e.t0 == e.t1 {
@@ -232,7 +232,7 @@ impl Seen {
             // An insert's point, and where the definition's points one metre
             // east and north of its base go: turn, scale and mirror (docs/adr/0144).
             Entity::Insert(i) => {
-                let (s, c) = i.rotation.sin_cos();
+                let (s, c) = kentos_num::sin_cos(i.rotation);
                 let k = if i.mirror { -1.0 } else { 1.0 };
                 let (x, y, m) = (i.p.x, i.p.y, i.scale);
                 (

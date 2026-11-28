@@ -282,7 +282,7 @@ impl RoofPartTool {
                 let k = kentos_native_application::roofs::nearest_edge(pts, points::wire(at));
                 let (a, b) = (pts[k], pts[(k + 1) % pts.len()]);
                 let quarter = std::f64::consts::FRAC_PI_2;
-                let mut turn = (b.y - a.y).atan2(b.x - a.x).rem_euclid(quarter);
+                let mut turn = kentos_num::atan2(b.y - a.y, b.x - a.x).rem_euclid(quarter);
                 if turn > quarter / 2.0 {
                     turn -= quarter;
                 }
@@ -347,7 +347,10 @@ impl RoofPartTool {
             (0..24)
                 .map(|k| {
                     let a = std::f64::consts::TAU * f64::from(k) / 24.0;
-                    Vec2::new(part.at.x + r * a.cos(), part.at.y + r * a.sin())
+                    Vec2::new(
+                        part.at.x + r * kentos_num::cos(a),
+                        part.at.y + r * kentos_num::sin(a),
+                    )
                 })
                 .collect()
         } else {

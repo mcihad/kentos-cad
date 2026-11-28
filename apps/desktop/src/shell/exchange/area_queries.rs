@@ -386,7 +386,7 @@ fn density(d: f64) -> String {
     if d >= 1.0 || d <= 0.0 || !d.is_finite() {
         return fixed(d);
     }
-    let decimals = (2 - d.log10().floor() as i32).clamp(3, 12) as usize;
+    let decimals = (2 - kentos_num::log10(d).floor() as i32).clamp(3, 12) as usize;
     let t = format!("{d:.decimals$}");
     t.trim_end_matches('0').trim_end_matches('.').to_owned()
 }

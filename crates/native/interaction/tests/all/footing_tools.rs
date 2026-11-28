@@ -49,7 +49,7 @@ fn axis(k: &kentos_commands::BeamFields) -> ([f64; 2], f64, f64) {
     let (dx, dy) = (z.x - a.x, z.y - a.y);
     (
         [(a.x + z.x) / 2.0 - E, (a.y + z.y) / 2.0 - N],
-        dy.atan2(dx).to_degrees(),
+        kentos_num::atan2(dy, dx).to_degrees(),
         (dx * dx + dy * dy).sqrt(),
     )
 }

@@ -486,7 +486,7 @@ fn the_wheel_zooms_at_the_pointer_and_only_over_the_area() {
     else {
         panic!("a notch zooms");
     };
-    assert!((factor - 0.15f64.exp()).abs() < 1e-12);
+    assert!((factor - kentos_num::exp(0.15f64)).abs() < 1e-12);
     assert_eq!(at, Point::new(400.0, 300.0));
     assert_eq!(mouse_event(&mut state, notch, over(20.0, 20.0)), None);
     let back = mouse::Event::WheelScrolled {
@@ -497,7 +497,7 @@ fn the_wheel_zooms_at_the_pointer_and_only_over_the_area() {
     else {
         panic!("a touchpad zooms");
     };
-    assert!((factor - (-0.15f64).exp()).abs() < 1e-12);
+    assert!((factor - kentos_num::exp(-0.15f64)).abs() < 1e-12);
 }
 
 fn sample() -> Document {

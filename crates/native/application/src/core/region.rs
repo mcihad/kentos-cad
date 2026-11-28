@@ -1444,7 +1444,7 @@ pub(crate) fn lines_over(ring: &[Vec2], p: &kentos_geometry_core::entity::HatchP
         .filter(|f| f.spacing > 0.0)
         .map(|f| {
             let r = f.angle.to_radians();
-            let (c, s) = (r.cos(), r.sin());
+            let (c, s) = (kentos_num::cos(r), kentos_num::sin(r));
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
             for q in ring {
                 let v = -q.x * s + q.y * c;

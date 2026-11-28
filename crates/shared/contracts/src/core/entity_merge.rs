@@ -259,7 +259,7 @@ mod tests {
                 (0..200)
                     .map(|i| {
                         let a = f64::from(i) * std::f64::consts::TAU / 200.0;
-                        json!({ "x": 487000.0 + 10.0 * a.cos() + if i == 0 { dx } else { 0.0 }, "y": 4420000.0 + 10.0 * a.sin() })
+                        json!({ "x": 487000.0 + 10.0 * kentos_num::cos(a) + if i == 0 { dx } else { 0.0 }, "y": 4420000.0 + 10.0 * kentos_num::sin(a) })
                     })
                     .collect(),
             )

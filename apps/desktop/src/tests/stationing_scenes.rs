@@ -26,7 +26,7 @@ use crate::tools_screens::Scene;
 /// The axis (1), the line (2) and the point (3).
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     o.bulged(
         "yol",
         &[[-40.0, -10.0], [-20.0, -10.0], [0.0, -10.0]],

@@ -194,7 +194,10 @@ fn objects(
         let half = if r.kind == "tick" { 1.5 * mm } else { 3.0 * mm };
         // Right of the direction; curve points are written on the left.
         let side = if curve { -1.0 } else { 1.0 };
-        let (nx, ny) = (side * at.direction.sin(), -side * at.direction.cos());
+        let (nx, ny) = (
+            side * kentos_num::sin(at.direction),
+            -side * kentos_num::cos(at.direction),
+        );
         out.push(object(EntityGeometry::Line {
             a: Vec2 {
                 x: at.x - nx * half,
@@ -208,7 +211,7 @@ fn objects(
             ms: None,
         }));
         let Some(words) = &r.text else { continue };
-        let mut angle = ny.atan2(nx).to_degrees();
+        let mut angle = kentos_num::atan2(ny, nx).to_degrees();
         let mut align = TextAlign::MiddleLeft;
         // Read left to right: a text pointing left turns round and is held at its right end.
         if !(-90.0..=90.0).contains(&angle) {

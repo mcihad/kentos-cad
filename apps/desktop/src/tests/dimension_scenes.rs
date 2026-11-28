@@ -40,7 +40,7 @@ const C: [f64; 2] = [20.0, -60.0];
 /// The point `deg` degrees round the road's outer edge.
 fn on_edge(deg: f64) -> [f64; 2] {
     let t = deg * PI / 180.0;
-    [C[0] + 50.0 * t.cos(), C[1] + 50.0 * t.sin()]
+    [C[0] + 50.0 * kentos_num::cos(t), C[1] + 50.0 * kentos_num::sin(t)]
 }
 
 /// A parcel and the curved road below it.
@@ -227,7 +227,7 @@ fn half_radius(app: &mut App) {
     let circle = o.circle("parsel", c, R);
     let on = |t: f64| {
         // Absolute, as the tool computes it; back to the scene's offsets exactly.
-        let (x, y) = ((E + c[0]) + t.cos() * R, (N + c[1]) + t.sin() * R);
+        let (x, y) = ((E + c[0]) + kentos_num::cos(t) * R, (N + c[1]) + kentos_num::sin(t) * R);
         [x - E, y - N]
     };
     // Values 5 m high, to read at the whole circle's scale.
@@ -273,7 +273,7 @@ fn quick(app: &mut App) {
     let road = o.bulged(
         "yol",
         &[[0.0, -16.0], [10.0, -16.0], [20.0, -26.0]],
-        &[0.0, -(PI / 8.0).tan()],
+        &[0.0, -kentos_num::tan(PI / 8.0)],
     );
     open(app, o);
     app.selection

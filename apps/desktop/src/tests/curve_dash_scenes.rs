@@ -29,7 +29,7 @@ fn drawing(app: &mut App) {
         let n = (sweep * 15.0 / 4.0_f64).floor() as i32;
         for k in 0..=n {
             let a = a0 + f64::from(k) * 4.0 / 15.0;
-            let (u, v) = (a.cos(), a.sin());
+            let (u, v) = (kentos_num::cos(a), kentos_num::sin(a));
             o.line("ref", [cx + 16.0 * u, 20.0 + 16.0 * v], [cx + 18.0 * u, 20.0 + 18.0 * v]);
         }
     }

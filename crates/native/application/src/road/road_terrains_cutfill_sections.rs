@@ -37,7 +37,7 @@ pub(crate) fn section_labels(sections: &[CutFillSection]) -> Vec<CutFillSectionL
     let mut out = Vec::with_capacity(2 * sections.len());
     for s in sections {
         let [l, r] = s.ends;
-        let angle = (r[1] - l[1]).atan2(r[0] - l[0]).to_degrees();
+        let angle = kentos_num::atan2(r[1] - l[1], r[0] - l[0]).to_degrees();
         let flipped = angle > 90.0 || angle <= -90.0;
         let rotation = match (flipped, angle > 90.0) {
             (false, _) => angle,

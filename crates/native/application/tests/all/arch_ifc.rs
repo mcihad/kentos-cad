@@ -1254,7 +1254,7 @@ fn a_sloped_rafter_rises_along_its_axis_and_says_its_slope() {
         .find(|p| p.name == "Pset_MemberCommon")
         .and_then(|p| p.props.iter().find(|(k, _)| k == "Slope"))
         .map(|(_, v)| v.clone());
-    assert_eq!(slope, Some(Value::PlaneAngle(0.75f64.atan())));
+    assert_eq!(slope, Some(Value::PlaneAngle(kentos_num::atan(0.75f64))));
     assert!(
         matches!(
             e.shapes.as_slice(),
@@ -2234,7 +2234,7 @@ fn a_sloped_slab_is_a_sloped_plate_of_its_closed_forms() {
         .find(|(n, _)| n == "PitchAngle")
         .map(|(_, v)| v.clone());
     assert!(
-        matches!(pitch, Some(Value::PlaneAngle(a)) if near(a, 0.1_f64.atan())),
+        matches!(pitch, Some(Value::PlaneAngle(a)) if near(a, kentos_num::atan(0.1_f64))),
         "{pitch:?}"
     );
     // The 3D view's triangles close the same volume.

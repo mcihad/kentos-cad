@@ -306,8 +306,9 @@ impl StationLabels {
         {
             let n = p.pts.len().min(ms.len());
             let seg = |i: usize| {
-                ((p.pts[i + 1].x - p.pts[i].x).powi(2) + (p.pts[i + 1].y - p.pts[i].y).powi(2))
-                    .sqrt()
+                (kentos_num::powi(p.pts[i + 1].x - p.pts[i].x, 2)
+                    + kentos_num::powi(p.pts[i + 1].y - p.pts[i].y, 2))
+                .sqrt()
             };
             let first = ms[..n].iter().position(Option::is_some);
             let last = ms[..n].iter().rposition(Option::is_some);

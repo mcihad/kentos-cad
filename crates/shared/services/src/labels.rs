@@ -243,7 +243,7 @@ fn along(path: &[[f64; 2]], cum: &[f64], d: f64) -> Option<([f64; 2], f64)> {
     let t = if len > 0.0 { (d - cum[i]) / len } else { 0.0 };
     Some((
         [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-        (b[1] - a[1]).atan2(b[0] - a[0]),
+        kentos_num::atan2(b[1] - a[1], b[0] - a[0]),
     ))
 }
 

@@ -254,7 +254,7 @@ pub fn work_area_centre(crs: &System) -> Vec2 {
     if crs.projection.as_deref() == Some("Pseudo-Mercator") {
         let r = 6_378_137.0;
         let x = r * (WORK_LON * PI / 180.0);
-        let y = r * (PI / 4.0 + WORK_LAT * PI / 360.0).tan().ln();
+        let y = r * kentos_num::ln(kentos_num::tan(PI / 4.0 + WORK_LAT * PI / 360.0));
         return Vec2 {
             x: (x / 1000.0).round() * 1000.0,
             y: (y / 1000.0).round() * 1000.0,

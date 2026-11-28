@@ -188,13 +188,14 @@ impl Binding {
         let rows = self.table.rows.unwrap_or(UNKNOWN_ROWS) as f64;
         let expected = (rows * ROW_SECONDS * (next - self.said)).max(0.05);
         let gone = now.saturating_duration_since(self.said_at).as_secs_f64();
-        let target = self.said + (next - self.said) * 0.95 * (1.0 - (-gone / expected).exp());
+        let target =
+            self.said + (next - self.said) * 0.95 * (1.0 - kentos_num::exp(-gone / expected));
         let dt = now
             .saturating_duration_since(self.moved)
             .as_secs_f64()
             .min(0.25);
         self.moved = now;
-        let a = 1.0 - (-dt / 0.12).exp();
+        let a = 1.0 - kentos_num::exp(-dt / 0.12);
         self.shown = self
             .shown
             .max(self.shown + (target - self.shown) * a)

@@ -2277,22 +2277,29 @@ pub fn plan_north(doc: &Document) -> P {
                 _ => None,
             })
         })
-        .map_or(P::new(0.0, 1.0), |r| P::new(-r.sin(), r.cos()))
+        .map_or(P::new(0.0, 1.0), |r| {
+            P::new(-kentos_num::sin(r), kentos_num::cos(r))
+        })
 }
 
 /// The direction an elevation mark's facade faces: back at the mark (its look, degrees from east, turned round),
 /// named by the nearest of the eight directions from the plan's north.
 pub fn facing(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Facing {
     let a = mark.angle.unwrap_or(90.0).to_radians();
-    FACINGS[rank_of(plan_north(doc), P::new(-a.cos(), -a.sin()))]
+    FACINGS[rank_of(
+        plan_north(doc),
+        P::new(-kentos_num::cos(a), -kentos_num::sin(a)),
+    )]
 }
 
 /// Which of the eight directions (an index into [`FACINGS`]) `face` points to, from the plan's north `n`.
 fn rank_of(n: P, face: P) -> usize {
     let east = P::new(n.y, -n.x);
-    let bearing = (face.x * east.x + face.y * east.y)
-        .atan2(face.x * n.x + face.y * n.y)
-        .to_degrees();
+    let bearing = kentos_num::atan2(
+        face.x * east.x + face.y * east.y,
+        face.x * n.x + face.y * n.y,
+    )
+    .to_degrees();
     ((bearing.rem_euclid(360.0) + 22.5) / 45.0).floor() as usize % 8
 }
 
@@ -2382,7 +2389,11 @@ pub fn facade_marks(doc: &Document) -> Vec<kentos_commands::NewViewMark> {
         points: vec![Vec2 { x: p.x, y: p.y }],
         radius: None,
         at: None,
-        angle: Some(look.y.atan2(look.x).to_degrees().rem_euclid(360.0)),
+        angle: Some(
+            kentos_num::atan2(look.y, look.x)
+                .to_degrees()
+                .rem_euclid(360.0),
+        ),
         flip: false,
         mark: (k + 1).to_string(),
         target: None,
@@ -2428,7 +2439,7 @@ pub fn frame_for(m: &Model, mark: &kentos_commands::ViewMarkFields) -> Option<Fr
         ViewMarkForm::Elevation => {
             let c = p(*mark.points.first()?);
             let a = mark.angle.unwrap_or(90.0).to_radians();
-            let look = P::new(a.cos(), a.sin());
+            let look = P::new(kentos_num::cos(a), kentos_num::sin(a));
             let t = P::new(look.y, -look.x);
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
             for q in m.solids.iter().flat_map(|s| s.rings.iter().flatten()) {
@@ -2851,12 +2862,12 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         }
         let mid = (u0 + u1) / 2.0;
         let top = sl.z(frame.at(mid, 0.0));
-        let turn = ku.atan();
+        let turn = kentos_num::atan(ku);
         let lift = text * 0.5;
         out.put(
             "MM-XXXX-ETIKET",
             json!({"kind": "text",
-                   "p": {"x": mid - turn.sin() * lift, "y": top + turn.cos() * lift},
+                   "p": {"x": mid - kentos_num::sin(turn) * lift, "y": top + kentos_num::cos(turn) * lift},
                    "text": kentos_geometry_core::geom::roof::slope_words(grade * 100.0),
                    "height": text, "rotation": turn.to_degrees(), "align": "bottomCenter", "lineWeight": FAINT}),
         );
@@ -2947,8 +2958,8 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             let ly = top - 0.4 - k as f64 * 3.0 * text;
             let elbow = P::new(lx - 0.2, ly);
             let Some(from) = at.iter().copied().min_by(|a, b| {
-                let da = (a.x - elbow.x).powi(2) + (a.y - elbow.y).powi(2);
-                let db = (b.x - elbow.x).powi(2) + (b.y - elbow.y).powi(2);
+                let da = kentos_num::powi(a.x - elbow.x, 2) + kentos_num::powi(a.y - elbow.y, 2);
+                let db = kentos_num::powi(b.x - elbow.x, 2) + kentos_num::powi(b.y - elbow.y, 2);
                 da.total_cmp(&db)
             }) else {
                 continue;
@@ -3322,55 +3333,5 @@ fn uncut(cuts: &[sec::Cut], span: (f64, f64), z: f64) -> Vec<(f64, f64)> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn titles_and_levels_are_written_as_turkiye_writes_them() {
-        assert_eq!(title("a"), "A-A KESİTİ");
-        assert_eq!(title("i"), "İ-İ KESİTİ");
-        assert_eq!(title(""), "KESİT");
-        assert_eq!(label("B"), "B-B");
-        assert_eq!(level_words(0.0), "±0.00");
-        assert_eq!(level_words(3.0), "+3.00");
-        assert_eq!(level_words(-2.75), "-2.75");
-        assert_eq!(block_name("A"), "MM-XXXX-KESITA");
-    }
-
-    #[test]
-    fn a_marks_block_is_the_same_in_every_file() {
-        let u = Uuid::parse_str("0192f5a1-7242-7000-8000-000000000001").unwrap();
-        assert_eq!(block_id(u), block_id(u));
-        assert_ne!(
-            block_id(u),
-            block_id(Uuid::parse_str("0192f5a1-7242-7000-8000-000000000002").unwrap())
-        );
-    }
-
-    #[test]
-    fn the_ground_stops_at_what_is_cut() {
-        let cut = sec::Cut {
-            solid: 0,
-            ring: vec![
-                P::new(1.0, -0.5),
-                P::new(3.0, -0.5),
-                P::new(3.0, 0.2),
-                P::new(1.0, 0.2),
-            ],
-        };
-        assert_eq!(
-            uncut(&[cut], (-2.0, 6.0), 0.0),
-            vec![(-2.0, 1.0), (3.0, 6.0)]
-        );
-    }
-
-    #[test]
-    fn seen_pieces_on_one_line_are_joined() {
-        let joined = merged(vec![
-            (P::new(0.0, 1.0), P::new(2.0, 1.0)),
-            (P::new(3.0, 1.0), P::new(1.5, 1.0)),
-            (P::new(5.0, 1.0), P::new(6.0, 1.0)),
-        ]);
-        assert_eq!(joined.len(), 2);
-    }
-}
+#[path = "sections/tests.rs"]
+mod tests;

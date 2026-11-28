@@ -433,7 +433,9 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
             let aspect = if up[0] == 0.0 && up[1] == 0.0 {
                 0
             } else {
-                let direction = up[0].atan2(up[1]).to_degrees().rem_euclid(360.0);
+                let direction = kentos_num::atan2(up[0], up[1])
+                    .to_degrees()
+                    .rem_euclid(360.0);
                 1 + ((direction + 22.5) / 45.0).floor().rem_euclid(8.0) as usize
             };
             // Counter-clockwise, as an area's outer ring.

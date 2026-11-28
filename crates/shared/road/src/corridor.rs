@@ -291,7 +291,10 @@ pub struct Built {
 
 /// A place at `offset` (right positive) on a sample line.
 pub fn place(line: &SampleLine, offset: f64) -> [f64; 2] {
-    let (rx, ry) = (line.direction.sin(), -line.direction.cos());
+    let (rx, ry) = (
+        kentos_num::sin(line.direction),
+        -kentos_num::cos(line.direction),
+    );
     [line.at[0] + rx * offset, line.at[1] + ry * offset]
 }
 

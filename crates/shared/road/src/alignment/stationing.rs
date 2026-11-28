@@ -111,7 +111,7 @@ impl Stationing {
 
 /// A km written the Turkish way: `2+345.678` (`-0+012.000` below zero), with `digits` decimals.
 pub fn km_text(km: f64, digits: usize) -> String {
-    let scale = 10f64.powi(digits as i32);
+    let scale = kentos_num::powi(10f64, digits as i32);
     let rounded = (km.abs() * scale).round() / scale;
     let whole = (rounded / 1000.0).floor();
     let rest = rounded - whole * 1000.0;

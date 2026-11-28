@@ -77,7 +77,7 @@ impl Place {
     }
 
     fn turn(&self) -> f64 {
-        self.b.atan2(self.a)
+        kentos_num::atan2(self.b, self.a)
     }
 }
 
@@ -137,29 +137,29 @@ fn bulged(pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool) -> Vec<Vec2> {
             continue;
         }
         // The arc from p to q whose bulge is tan(θ/4).
-        let theta = 4.0 * b.atan();
-        let chord = ((q.x - p.x).powi(2) + (q.y - p.y).powi(2)).sqrt();
+        let theta = 4.0 * kentos_num::atan(b);
+        let chord = (kentos_num::powi(q.x - p.x, 2) + kentos_num::powi(q.y - p.y, 2)).sqrt();
         if chord < 1e-12 {
             continue;
         }
-        let r = chord / (2.0 * (theta / 2.0).sin());
+        let r = chord / (2.0 * kentos_num::sin(theta / 2.0));
         let mid = Vec2 {
             x: (p.x + q.x) / 2.0,
             y: (p.y + q.y) / 2.0,
         };
         let (ux, uy) = ((q.x - p.x) / chord, (q.y - p.y) / chord);
-        let h = r * (theta / 2.0).cos();
+        let h = r * kentos_num::cos(theta / 2.0);
         let c = Vec2 {
             x: mid.x - uy * h,
             y: mid.y + ux * h,
         };
-        let a0 = (p.y - c.y).atan2(p.x - c.x);
+        let a0 = kentos_num::atan2(p.y - c.y, p.x - c.x);
         let steps = ((theta.abs() / (std::f64::consts::PI / 18.0)).ceil() as usize).clamp(2, 72);
         for k in 1..steps {
             let a = a0 + theta * k as f64 / steps as f64;
             out.push(Vec2 {
-                x: c.x + r.abs() * a.cos(),
-                y: c.y + r.abs() * a.sin(),
+                x: c.x + r.abs() * kentos_num::cos(a),
+                y: c.y + r.abs() * kentos_num::sin(a),
             });
         }
     }
@@ -176,7 +176,7 @@ fn to_left(pts: &[Vec2], d: f64, closed: bool) -> Vec<Vec2> {
     }
     let n = pts.len();
     let normal = |a: Vec2, b: Vec2| -> Option<(f64, f64)> {
-        let len = ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+        let len = (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt();
         (len > 1e-12).then(|| (-(b.y - a.y) / len, (b.x - a.x) / len))
     };
     (0..n)
@@ -223,8 +223,8 @@ fn arc(c: Vec2, r: f64, a0: f64, a1: f64) -> Vec<Vec2> {
         .map(|k| {
             let a = a0 + sweep * k as f64 / steps as f64;
             Vec2 {
-                x: c.x + r * a.cos(),
-                y: c.y + r * a.sin(),
+                x: c.x + r * kentos_num::cos(a),
+                y: c.y + r * kentos_num::sin(a),
             }
         })
         .collect()
@@ -351,8 +351,12 @@ impl Walk<'_> {
                     .map(|k| {
                         let t = el.t0 + sweep * k as f64 / 96.0;
                         Vec2 {
-                            x: el.c.x + el.major.x * t.cos() + minor.x * t.sin(),
-                            y: el.c.y + el.major.y * t.cos() + minor.y * t.sin(),
+                            x: el.c.x
+                                + el.major.x * kentos_num::cos(t)
+                                + minor.x * kentos_num::sin(t),
+                            y: el.c.y
+                                + el.major.y * kentos_num::cos(t)
+                                + minor.y * kentos_num::sin(t),
                         }
                     })
                     .collect();
@@ -393,7 +397,7 @@ impl Walk<'_> {
                 }
                 let (sx, sy) = (i.scale, i.y_scale.unwrap_or(i.scale));
                 let sy = if i.mirror { -sy } else { sy };
-                let (cos, sin) = (i.rotation.cos(), i.rotation.sin());
+                let (cos, sin) = (kentos_num::cos(i.rotation), kentos_num::sin(i.rotation));
                 let local = Place {
                     a: cos * sx,
                     b: sin * sx,
@@ -464,7 +468,7 @@ impl Walk<'_> {
                 let c = colored!(col.base);
                 let f = &col.column;
                 let (hw, hd) = (f.width / 2.0, f.depth.unwrap_or(f.width) / 2.0);
-                let (cos, sin) = (f.rotation.cos(), f.rotation.sin());
+                let (cos, sin) = (kentos_num::cos(f.rotation), kentos_num::sin(f.rotation));
                 let corner = |x: f64, y: f64| Vec2 {
                     x: f.at.x + x * cos - y * sin,
                     y: f.at.y + x * sin + y * cos,
@@ -891,7 +895,7 @@ mod tests {
             );
             assert!(pts.len() > 3);
             for p in &pts {
-                let r = ((p.x - 1.0).powi(2) + p.y.powi(2)).sqrt();
+                let r = (kentos_num::powi(p.x - 1.0, 2) + kentos_num::powi(p.y, 2)).sqrt();
                 assert!(
                     (r - 1.0).abs() < 1e-9 && p.y * side >= -1e-9,
                     "{bulge}: {p:?}"

@@ -125,6 +125,17 @@ pub fn pow(x: f64, y: f64) -> f64 {
     positive_power(x, y)
 }
 
+/// x to a whole power, correctly rounded like [`pow`]: a square, the number itself and its inverse are one exact
+/// operation each, which rounds as the power does.
+pub fn powi(x: f64, n: i32) -> f64 {
+    match n {
+        2 => x * x,
+        1 => x,
+        -1 => 1.0 / x,
+        _ => pow(x, f64::from(n)),
+    }
+}
+
 /// x to the power y for a finite x > 0 and a finite y ≠ 0.
 fn positive_power(x: f64, y: f64) -> f64 {
     exact_power(x, y).unwrap_or_else(|| pxfm::f_pow(x, y))
@@ -239,4 +250,41 @@ pub fn erfc(x: f64) -> f64 {
 /// The natural logarithm of the gamma function's absolute value.
 pub fn lgamma(x: f64) -> f64 {
     pxfm::f_lgamma(x)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A whole power by its shortcuts is the power itself, bit for bit, special values too.
+    #[test]
+    fn a_whole_power_is_the_power() {
+        let xs = [
+            0.0,
+            -0.0,
+            1.0,
+            -1.0,
+            0.1,
+            -3.7,
+            2.5e-160,
+            -4.1e170,
+            1.0000000000000002,
+            5e-324,
+            f64::MAX,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            486_512.34,
+            -4_420_187.52,
+        ];
+        for x in xs {
+            for n in -5..=6 {
+                let (got, want) = (powi(x, n), pow(x, f64::from(n)));
+                assert!(
+                    got.to_bits() == want.to_bits() || (got.is_nan() && want.is_nan()),
+                    "powi({x:e}, {n}) = {got:e}, pow gives {want:e}"
+                );
+            }
+        }
+    }
 }

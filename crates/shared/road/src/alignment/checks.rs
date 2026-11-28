@@ -184,7 +184,9 @@ pub fn check(al: &Alignment, pis: &[PiInput], rules: &AlignmentRules) -> Vec<Fin
                 continue;
             }
             let (a, b) = (&pis[i - 1], &pis[i + 1]);
-            let turn = wrap((b.y - p.y).atan2(b.x - p.x) - (p.y - a.y).atan2(p.x - a.x));
+            let turn = wrap(
+                kentos_num::atan2(b.y - p.y, b.x - p.x) - kentos_num::atan2(p.y - a.y, p.x - a.x),
+            );
             if turn == 0.0 {
                 continue;
             }

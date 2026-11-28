@@ -184,7 +184,9 @@ impl BeamFields {
     pub fn plan_length(&self) -> f64 {
         self.pts
             .windows(2)
-            .map(|p| ((p[1].x - p[0].x).powi(2) + (p[1].y - p[0].y).powi(2)).sqrt())
+            .map(|p| {
+                (kentos_num::powi(p[1].x - p[0].x, 2) + kentos_num::powi(p[1].y - p[0].y, 2)).sqrt()
+            })
             .sum()
     }
 

@@ -295,9 +295,9 @@ fn solve(l: &[Vec<f64>], b: &[f64]) -> Vec<f64> {
 
 /// Rz(κ)·Ry(φ)·Rx(ω).
 pub fn rotation(w: [f64; 3]) -> [[f64; 3]; 3] {
-    let (sa, ca) = w[0].sin_cos();
-    let (sb, cb) = w[1].sin_cos();
-    let (sg, cg) = w[2].sin_cos();
+    let (sa, ca) = kentos_num::sin_cos(w[0]);
+    let (sb, cb) = kentos_num::sin_cos(w[1]);
+    let (sg, cg) = kentos_num::sin_cos(w[2]);
     [
         [cg * cb, -sg * ca + cg * sb * sa, sg * sa + cg * sb * ca],
         [sg * cb, cg * ca + sg * sb * sa, -cg * sa + sg * sb * ca],

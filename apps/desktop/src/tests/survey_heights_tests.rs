@@ -337,7 +337,7 @@ fn traverse_round(app: &mut App) {
     let back: (f64, f64) = (486500.0, 4420700.0);
     let path: [(f64, f64); 5] = [s1, (486800.0, 4420350.0), (486950.0, 4420050.0), (486650.0, 4419900.0), s1];
     let heights = [1100.0, 1135.2, 1162.8, 1121.4, 1100.0];
-    let bearing = |a: (f64, f64), b: (f64, f64)| (b.0 - a.0).atan2(b.1 - a.1);
+    let bearing = |a: (f64, f64), b: (f64, f64)| kentos_num::atan2(b.0 - a.0, b.1 - a.1);
     let grad = |r: f64| (r * 200.0 / PI).rem_euclid(400.0);
     let _ = app.run("calc.traverse");
     calc(app, Event::TraverseKind(crate::calc::traverse::Kind::Closed));
@@ -369,7 +369,7 @@ fn traverse_round(app: &mut App) {
             ),
         );
         calc(app, Event::Cell(i, DISTANCE, format!("{s:.3}")));
-        calc(app, Event::Cell(i, ZENITH, format!("{:.4}", grad(FRAC_PI_2 - cot.atan()))));
+        calc(app, Event::Cell(i, ZENITH, format!("{:.4}", grad(FRAC_PI_2 - kentos_num::atan(cot)))));
         calc(app, Event::Cell(i, INSTRUMENT, format!("{inst:.2}")));
         calc(app, Event::Cell(i, TARGET, format!("{target:.2}")));
     }

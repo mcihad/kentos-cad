@@ -104,7 +104,10 @@ fn an_outline_of_many_corners_is_thinned_to_the_clip_s_limit() {
     let ring: Vec<[f64; 2]> = (0..2000)
         .map(|k| {
             let t = f64::from(k) / 2000.0 * std::f64::consts::TAU;
-            [500_000.0 + 40.0 * t.cos(), 4_400_000.0 + 40.0 * t.sin()]
+            [
+                500_000.0 + 40.0 * kentos_num::cos(t),
+                4_400_000.0 + 40.0 * kentos_num::sin(t),
+            ]
         })
         .collect();
     let clip = clip_of(true, ring);

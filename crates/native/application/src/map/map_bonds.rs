@@ -172,7 +172,7 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
     (sine > PARALLEL).then(|| {
         format!(
             "bağlanan kenarlar paralel olmalı (0,001° içinde); aralarında {:.4}° var",
-            sine.min(1.0).asin().to_degrees()
+            kentos_num::asin(sine.min(1.0)).to_degrees()
         )
     })
 }

@@ -190,7 +190,7 @@ pub enum OveWhy {
 pub const MEET: f64 = 1e-3;
 
 fn unit(a: f64) -> [f64; 2] {
-    [a.cos(), a.sin()]
+    [kentos_num::cos(a), kentos_num::sin(a)]
 }
 
 /// An angle into (−π, π].
@@ -212,7 +212,11 @@ fn spiral_end(r: f64, l: f64) -> ([f64; 2], f64, f64) {
     }
     let tau = l / (2.0 * r);
     let e = integral(0.0, 0.0, 1.0 / (r * l), l);
-    (e, e[1] - r * (1.0 - tau.cos()), e[0] - r * tau.sin())
+    (
+        e,
+        e[1] - r * (1.0 - kentos_num::cos(tau)),
+        e[0] - r * kentos_num::sin(tau),
+    )
 }
 
 /// A curve's place, before it is chained.
@@ -275,8 +279,8 @@ fn centre_of(
 fn plan(pis: &[PiInput], i: usize) -> Result<Option<Planned>, ChainError> {
     let p = &pis[i];
     let (a, b, c) = (&pis[i - 1], p, &pis[i + 1]);
-    let din = (b.y - a.y).atan2(b.x - a.x);
-    let dout = (c.y - b.y).atan2(c.x - b.x);
+    let din = kentos_num::atan2(b.y - a.y, b.x - a.x);
+    let dout = kentos_num::atan2(c.y - b.y, c.x - b.x);
     let delta = wrap(dout - din);
     if (delta.abs() - std::f64::consts::PI).abs() < 1e-12 {
         return Err(ChainError::TurnTooSharp { pi: p.id.clone() });
@@ -332,9 +336,9 @@ fn solve_ove(
     c2: &Planned,
 ) -> Result<(Planned, Planned), ChainError> {
     let (a0, b, c, d) = (&pis[i - 1], &pis[i], &pis[i + 1], &pis[i + 2]);
-    let din = (b.y - a0.y).atan2(b.x - a0.x);
-    let dmid = (c.y - b.y).atan2(c.x - b.x);
-    let dout = (d.y - c.y).atan2(d.x - c.x);
+    let din = kentos_num::atan2(b.y - a0.y, b.x - a0.x);
+    let dmid = kentos_num::atan2(c.y - b.y, c.x - b.x);
+    let dout = kentos_num::atan2(d.y - c.y, d.x - c.x);
     let bc = kentos_num::hypot(c.x - b.x, c.y - b.y);
     let (r1, r2, sign) = (c1.radius, c2.radius, c1.sign);
     let closing = r1 > r2;
@@ -551,7 +555,7 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
     }
     for i in 0..pis.len() - 1 {
         let (a, b) = (&pis[i], &pis[i + 1]);
-        let dir = (b.y - a.y).atan2(b.x - a.x);
+        let dir = kentos_num::atan2(b.y - a.y, b.x - a.x);
         if tangents[i] > 0.0 {
             let u = unit(dir);
             let start = [a.x + t_out(i) * u[0], a.y + t_out(i) * u[1]];
@@ -659,8 +663,11 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
         // Where the PI's geometry says the curve ends; an ove's first curve ends inside the next, which checks it.
         if c.ove_out.is_none() {
             let n = &pis[c.index + 1];
-            let dout = (n.y - b.y).atan2(n.x - b.x);
-            let st = [b.x + c.t_out * dout.cos(), b.y + c.t_out * dout.sin()];
+            let dout = kentos_num::atan2(n.y - b.y, n.x - b.x);
+            let st = [
+                b.x + c.t_out * kentos_num::cos(dout),
+                b.y + c.t_out * kentos_num::sin(dout),
+            ];
             out.residual.place = out
                 .residual
                 .place

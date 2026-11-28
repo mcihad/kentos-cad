@@ -94,10 +94,11 @@ fn ring_area(r: &Ring) -> f64 {
         s += (a[0] * b[1] - b[0] * a[1]) / 2.0;
         let k = r.bulges[i];
         if k != 0.0 {
-            let theta = 4.0 * k.atan();
-            let chord = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt();
-            let rad = chord / (2.0 * (theta / 2.0).sin().abs());
-            s += rad * rad / 2.0 * (theta - theta.sin());
+            let theta = 4.0 * kentos_num::atan(k);
+            let chord =
+                (kentos_num::powi(b[0] - a[0], 2) + kentos_num::powi(b[1] - a[1], 2)).sqrt();
+            let rad = chord / (2.0 * kentos_num::sin(theta / 2.0).abs());
+            s += rad * rad / 2.0 * (theta - kentos_num::sin(theta));
         }
     }
     s

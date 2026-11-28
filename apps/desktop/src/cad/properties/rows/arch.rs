@@ -1027,7 +1027,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                         "Eğim",
                         format!(
                             "{} (%{})",
-                            f.angle(x.grade().abs().atan()),
+                            f.angle(kentos_num::atan(x.grade().abs())),
                             f.percent(x.grade().abs() * 100.0)
                         ),
                     )),

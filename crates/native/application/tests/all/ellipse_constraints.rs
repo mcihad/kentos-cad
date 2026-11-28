@@ -217,7 +217,7 @@ fn an_elliptical_arc_grip_keeps_only_the_requested_endpoint_and_solves_its_other
     let before = d.to_snapshot_v2();
     let mut target = ellipse(&d).clone();
     target.t0 = 0.3;
-    let target_point = (4. * 0.3f64.cos(), 2. * 0.3f64.sin());
+    let target_point = (4. * kentos_num::cos(0.3f64), 2. * kentos_num::sin(0.3f64));
     let input: EntitiesEdit=serde_json::from_value(json!({"operation":"grip","changes":[{"kind":"update","uid":d.uid(Slot(1)).unwrap().to_string(),"geometry":geometry::edit_geometry(geometry::shape(&Entity::Ellipse(target))).unwrap()}]})).unwrap();
     let planned = done(edit::plan(&ExecutionContext::new(&mut d), &input));
     assert_eq!(d.to_snapshot_v2(), before);
@@ -368,8 +368,8 @@ fn full_ellipse_axis_grips_keep_nonzero_seam_and_followers_across_axis_swaps() {
                 }
                 if let Entity::Line(l) = &mut raw.entities[1] {
                     l.a = Vec2 {
-                        x: origin.0 + 4. * 0.6f64.cos(),
-                        y: origin.1 + 2. * 0.6f64.sin(),
+                        x: origin.0 + 4. * kentos_num::cos(0.6f64),
+                        y: origin.1 + 2. * kentos_num::sin(0.6f64),
                     };
                     l.b = Vec2 {
                         x: origin.0 + 8.,
@@ -414,8 +414,8 @@ fn full_ellipse_axis_grips_keep_nonzero_seam_and_followers_across_axis_swaps() {
                 };
                 assert!(
                     kentos_num::hypot(
-                        l.a.x - (origin.0 + a * 0.6f64.cos()),
-                        l.a.y - (origin.1 + b * 0.6f64.sin())
+                        l.a.x - (origin.0 + a * kentos_num::cos(0.6f64)),
+                        l.a.y - (origin.1 + b * kentos_num::sin(0.6f64))
                     ) < 3e-9,
                     "{index} {length} {l:?}"
                 );
@@ -450,8 +450,8 @@ fn axis_dimension_drawing(origin: (f64, f64)) -> Document {
         e.t1 = 0.6;
     }
     let p = Vec2 {
-        x: origin.0 + 4. * 0.6f64.cos(),
-        y: origin.1 + 2. * 0.6f64.sin(),
+        x: origin.0 + 4. * kentos_num::cos(0.6f64),
+        y: origin.1 + 2. * kentos_num::sin(0.6f64),
     };
     if let Entity::Line(l) = &mut raw.entities[1] {
         l.a = p;

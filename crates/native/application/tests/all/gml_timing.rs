@@ -66,8 +66,8 @@ fn gml_timing() {
                 let mut ring: Vec<Coord> = (0..11)
                     .map(|k| {
                         c(
-                            x + (k as f64).cos() * 10.0,
-                            4420000.0 + (k as f64).sin() * 10.0,
+                            x + kentos_num::cos(k as f64) * 10.0,
+                            4420000.0 + kentos_num::sin(k as f64) * 10.0,
                         )
                     })
                     .collect();

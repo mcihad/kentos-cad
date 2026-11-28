@@ -1465,7 +1465,9 @@ pub(super) fn commit(
                 return Vec::new();
             }
             let old = s.slab.slope;
-            let dir_now = old.map_or(0.0, |sl| (sl.to.y - sl.from.y).atan2(sl.to.x - sl.from.x));
+            let dir_now = old.map_or(0.0, |sl| {
+                kentos_num::atan2(sl.to.y - sl.from.y, sl.to.x - sl.from.x)
+            });
             let (dir, grade) = match field {
                 Field::SlabSlope(_) => (dir_now, n / 100.0),
                 _ => (f.angle_from_typed(n), old.map_or(0.0, |sl| sl.grade())),

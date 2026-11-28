@@ -994,7 +994,7 @@ fn ucs_points(summary: &Value, args: &Value, to_world: bool) -> Result<Value, Va
             format!("En çok {UCS_POINTS_MAX} nokta çevrilir."),
         ));
     }
-    let (c, s) = (a.cos(), a.sin());
+    let (c, s) = (kentos_num::cos(a), kentos_num::sin(a));
     let mut out = Vec::with_capacity(points.len());
     for (i, p) in points.iter().enumerate() {
         let (Some(x), Some(y)) = (p["x"].as_f64(), p["y"].as_f64()) else {

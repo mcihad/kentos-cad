@@ -1142,7 +1142,10 @@ impl SheetPainter<'_> {
             .paper_pixels_per_mm(r.pixels_per_metre);
         let k = (px_per_mm * crate::sheet_pdf::PX_MM).max(1e-6);
         let (w, h) = (f64::from(r.size.width) / k, f64::from(r.size.height) / k);
-        let (s, co) = (f64::from(turn).sin().abs(), f64::from(turn).cos().abs());
+        let (s, co) = (
+            kentos_num::sin(f64::from(turn)).abs(),
+            kentos_num::cos(f64::from(turn)).abs(),
+        );
         // Rounded to a thousandth of a pixel before the ceiling: the content's size is a float32 of the screen's
         // or the file's own zoom, and a 1e-7 of noise must not make the window a pixel larger in one and not the
         // other (docs/adr/0533 §5: the same map at the same scale is placed the same on both).

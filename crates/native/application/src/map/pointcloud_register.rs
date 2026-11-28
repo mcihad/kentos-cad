@@ -282,9 +282,9 @@ impl Rigid {
 
 /// Rz(κ)·Ry(φ)·Rx(ω).
 fn rotation(w: P) -> [[f64; 3]; 3] {
-    let (sa, ca) = w[0].sin_cos();
-    let (sb, cb) = w[1].sin_cos();
-    let (sg, cg) = w[2].sin_cos();
+    let (sa, ca) = kentos_num::sin_cos(w[0]);
+    let (sb, cb) = kentos_num::sin_cos(w[1]);
+    let (sg, cg) = kentos_num::sin_cos(w[2]);
     [
         [cg * cb, -sg * ca + cg * sb * sa, sg * sa + cg * sb * ca],
         [sg * cb, cg * ca + sg * sb * sa, -cg * sa + sg * sb * ca],
@@ -412,7 +412,7 @@ fn on_edge(points: &[P], p: P, n: P, near: &[(f64, u32)]) -> bool {
         .filter_map(|(_, i)| {
             let q = sub(points[*i as usize], p);
             let (a, b) = (dot(q, u), dot(q, v));
-            (a != 0.0 || b != 0.0).then(|| b.atan2(a))
+            (a != 0.0 || b != 0.0).then(|| kentos_num::atan2(b, a))
         })
         .collect();
     if angles.len() < 2 {
@@ -860,7 +860,7 @@ pub(crate) fn registered_from(
         moving: reject
             .as_ref()
             .and_then(|r| r.angle)
-            .map(|a| (own.as_slice(), a.to_radians().cos())),
+            .map(|a| (own.as_slice(), kentos_num::cos(a.to_radians()))),
     };
     let radius_rms = if moving.is_empty() {
         1.0
@@ -942,7 +942,7 @@ pub(crate) fn registered_from(
         0.0
     };
     let (a, bb, d) = (m[3][3], m[3][4], m[4][4]);
-    let plan_min = (a + d) / 2.0 - (((a - d) / 2.0).powi(2) + bb * bb).sqrt();
+    let plan_min = (a + d) / 2.0 - (kentos_num::powi((a - d) / 2.0, 2) + bb * bb).sqrt();
     let horizontal = if m[5][5] > 0.0 {
         (plan_min.max(0.0) / m[5][5]).sqrt()
     } else {
@@ -1028,9 +1028,9 @@ pub(crate) fn registered_from(
     let control_after = stats(|c| c.dz_after);
     let r = now.r;
     let rotation = [
-        r[2][1].atan2(r[2][2]),
-        (-r[2][0]).clamp(-1.0, 1.0).asin(),
-        r[1][0].atan2(r[0][0]),
+        kentos_num::atan2(r[2][1], r[2][2]),
+        kentos_num::asin((-r[2][0]).clamp(-1.0, 1.0)),
+        kentos_num::atan2(r[1][0], r[0][0]),
     ];
     // The matrix in the project's coordinates: t' = c + t − R c.
     let rc = [dot(r[0], c), dot(r[1], c), dot(r[2], c)];
@@ -1160,9 +1160,9 @@ mod tests {
             .map(|i| {
                 let f = i as f64;
                 [
-                    (f * 0.37).sin() * 10.0,
-                    (f * 0.11).cos() * 10.0,
-                    (f * 0.07).sin(),
+                    kentos_num::sin(f * 0.37) * 10.0,
+                    kentos_num::cos(f * 0.11) * 10.0,
+                    kentos_num::sin(f * 0.07),
                 ]
             })
             .collect();

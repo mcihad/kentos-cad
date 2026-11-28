@@ -127,8 +127,8 @@ pub(crate) fn read_told(
         ));
     };
     let (ta, tb) = (
-        [pa.direction.cos(), pa.direction.sin()],
-        [pb.direction.cos(), pb.direction.sin()],
+        [kentos_num::cos(pa.direction), kentos_num::sin(pa.direction)],
+        [kentos_num::cos(pb.direction), kentos_num::sin(pb.direction)],
     );
     if (ta[0] * tb[1] - ta[1] * tb[0]).abs() < 1e-9 {
         return Err(bad(
@@ -136,10 +136,7 @@ pub(crate) fn read_told(
             "legs",
         ));
     }
-    let angle = (ta[0] * tb[0] + ta[1] * tb[1])
-        .clamp(-1.0, 1.0)
-        .acos()
-        .to_degrees();
+    let angle = kentos_num::acos((ta[0] * tb[0] + ta[1] * tb[1]).clamp(-1.0, 1.0)).to_degrees();
     let p = [pa.x, pa.y];
     let mut warnings = Vec::new();
     let mut stale = false;

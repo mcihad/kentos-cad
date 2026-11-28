@@ -55,7 +55,7 @@ fn an_arc_pocket_prints_at_1_50_with_its_cavity_along_the_arc() {
     let mut session = session();
     // The page's centre on the arc wall's middle at 0,934 rad, where CG1's pocket is.
     let th = 0.934_f64;
-    let at = [5.0 * th.cos(), 5.0 * th.sin()];
+    let at = [5.0 * kentos_num::cos(th), 5.0 * kentos_num::sin(th)];
     let sheet = json!({ "op": "addSheet", "sheet": {
         "id": "yay", "name": "Yaylı cep 1:50",
         "page": { "paper": "a3", "orientation": "landscape", "size": { "width": 420000, "height": 297000 },
@@ -83,7 +83,7 @@ fn an_arc_pocket_prints_at_1_50_with_its_cavity_along_the_arc() {
         let mut inside = false;
         for k in 0..=500 {
             let r = 4.75 + 0.001 * f64::from(k);
-            let p = on_page(r * a.cos(), r * a.sin());
+            let p = on_page(r * kentos_num::cos(a), r * kentos_num::sin(a));
             let (x, y) = (
                 ((p[0] - (cx - 30.0)) * PX).round() as usize,
                 ((p[1] - (cy - 30.0)) * PX).round() as usize,

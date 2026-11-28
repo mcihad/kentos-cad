@@ -94,7 +94,8 @@ fn nearest_edge(e: &Entity, p: Vec2, reach: f64) -> Option<Found> {
             Some(arc) => {
                 let (ux, uy) = (a.x - arc.c.x, a.y - arc.c.y);
                 let (vx, vy) = (p.x - arc.c.x, p.y - arc.c.y);
-                let mut t = (ux * vy - uy * vx).atan2(ux * vx + uy * vy) * arc.sweep.signum();
+                let mut t =
+                    kentos_num::atan2(ux * vy - uy * vx, ux * vx + uy * vy) * arc.sweep.signum();
                 if t < 0.0 {
                     t += std::f64::consts::TAU;
                 }
@@ -353,12 +354,12 @@ impl Tool for WallShift {
         // The picked edge marked: an arc in short chords along its circle.
         let marked = match k.arc {
             Some((c, r, sweep)) => {
-                let a0 = (k.a.y - c.y).atan2(k.a.x - c.x);
+                let a0 = kentos_num::atan2(k.a.y - c.y, k.a.x - c.x);
                 let n = ((sweep.abs() / 0.05).ceil() as usize).clamp(4, 256);
                 (0..=n)
                     .map(|i| {
                         let t = a0 + sweep * i as f64 / n as f64;
-                        Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())
+                        Vec2::new(c.x + r * kentos_num::cos(t), c.y + r * kentos_num::sin(t))
                     })
                     .collect()
             }

@@ -547,7 +547,7 @@ fn system_made(
     let (cos, sin) = if angle == 0.0 {
         (1.0, 0.0)
     } else {
-        (angle.cos(), angle.sin())
+        (kentos_num::cos(angle), kentos_num::sin(angle))
     };
     let o = s.origin;
     let world = |x: f64, y: f64| Vec2 {

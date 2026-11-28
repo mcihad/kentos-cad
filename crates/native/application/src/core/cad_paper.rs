@@ -129,7 +129,7 @@ pub fn write(cad: &CadShape, item: &Item, height: f64, base: &Value) -> Option<(
     };
     let zero = p([0., 0.]);
     let a = f64::from(item.rotation).to_radians() / 1000.;
-    let (sn, cs) = a.sin_cos();
+    let (sn, cs) = kentos_num::sin_cos(a);
     let warp = Warp::Affine {
         from: Vec2::new(0., 0.),
         to: zero,

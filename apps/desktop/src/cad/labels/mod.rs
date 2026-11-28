@@ -1093,7 +1093,8 @@ fn face_font(
             f,
             if face.bold || bold_run { 600 } else { 400 },
             face.italic || italic_run,
-            face.oblique.map_or(0.0, |o| o.to_radians().tan() as f32),
+            face.oblique
+                .map_or(0.0, |o| kentos_num::tan(o.to_radians()) as f32),
         ),
         None => (project, if bold_run { 600 } else { 400 }, italic_run, 0.0),
     };

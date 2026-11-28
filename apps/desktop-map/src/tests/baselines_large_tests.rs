@@ -45,9 +45,9 @@ fn network_file() -> std::path::PathBuf {
                     let (a, b) = (at(r, c), at(r + dr, c + dc));
                     let kf = k as f64;
                     let noise = [
-                        0.003 * (kf * 0.7).sin(),
-                        0.003 * (kf * 1.3).cos(),
-                        0.006 * (kf * 0.9).sin(),
+                        0.003 * kentos_num::sin(kf * 0.7),
+                        0.003 * kentos_num::cos(kf * 1.3),
+                        0.006 * kentos_num::sin(kf * 0.9),
                     ];
                     let d = [0, 1, 2].map(|q| b[q] - a[q] + noise[q]);
                     text += &format!(

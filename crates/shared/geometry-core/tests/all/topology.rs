@@ -109,7 +109,12 @@ fn an_arc_goes_as_two_ends_and_a_bulge_and_comes_back() {
             serde_json::from_str(&run_named("topologyArcPath", &json!([arc]).to_string()).unwrap())
                 .unwrap();
         let sweep = (a1 - a0).rem_euclid(2.0 * pi);
-        let end = |a: f64| [e + 3.0 + 12.5 * a.cos(), n - 2.0 + 12.5 * a.sin()];
+        let end = |a: f64| {
+            [
+                e + 3.0 + 12.5 * kentos_num::cos(a),
+                n - 2.0 + 12.5 * kentos_num::sin(a),
+            ]
+        };
         let pts: Vec<[f64; 2]> = path["pts"]
             .as_array()
             .unwrap()
@@ -123,7 +128,10 @@ fn an_arc_goes_as_two_ends_and_a_bulge_and_comes_back() {
             );
         }
         let bulge = path["bulges"][0].as_f64().unwrap();
-        assert!((bulge - (sweep / 4.0).tan()).abs() < 1e-12, "{bulge}");
+        assert!(
+            (bulge - kentos_num::tan(sweep / 4.0)).abs() < 1e-12,
+            "{bulge}"
+        );
         assert_eq!(path["bulges"][1], 0.0);
         assert_eq!(path["zs"], json!([null, null]));
         let back: Value = serde_json::from_str(

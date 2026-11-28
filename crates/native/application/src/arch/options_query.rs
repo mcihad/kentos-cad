@@ -35,8 +35,8 @@ fn path_length(pts: &[kentos_commands::Vec2], bulges: Option<&[f64]>, closed: bo
             if bulge == 0.0 {
                 chord
             } else {
-                let theta = 4.0 * bulge.atan();
-                chord * theta.abs() / (2.0 * (theta / 2.0).sin().abs())
+                let theta = 4.0 * kentos_num::atan(bulge);
+                chord * theta.abs() / (2.0 * kentos_num::sin(theta / 2.0).abs())
             }
         })
         .sum()

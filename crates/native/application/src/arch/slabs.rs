@@ -227,7 +227,7 @@ pub fn slope_across(
     dir: f64,
     grade: f64,
 ) -> Option<kentos_commands::SlabSlope> {
-    let u = (dir.cos(), dir.sin());
+    let u = (kentos_num::cos(dir), kentos_num::sin(dir));
     let pts: Vec<kentos_commands::Vec2> = parts
         .iter()
         .flat_map(|part| {

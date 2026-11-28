@@ -368,8 +368,8 @@ fn moves_an_arcs_end_keeping_its_angle() {
         panic!("an arc");
     };
     let on = |a: f64| Vec2 {
-        x: c.x + r * a.cos(),
-        y: c.y + r * a.sin(),
+        x: c.x + r * kentos_num::cos(a),
+        y: c.y + r * kentos_num::sin(a),
     };
     // Its start is on the line's end now, its end where it was, and it still turns a quarter.
     assert!(near(on(*a0), [10.0, 0.0]), "{:?}", rel(on(*a0)));

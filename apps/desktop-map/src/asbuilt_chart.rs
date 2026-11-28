@@ -414,7 +414,7 @@ impl AsbuiltChartApp for App {
 
 /// 1, 2 or 5 times a power of ten, the smallest not below `v` (v > 0).
 fn nice(v: f64) -> f64 {
-    let p = 10f64.powf(v.max(1e-9).log10().floor());
+    let p = kentos_num::pow(10f64, kentos_num::log10(v.max(1e-9)).floor());
     [1.0, 2.0, 5.0, 10.0]
         .into_iter()
         .map(|k| k * p)

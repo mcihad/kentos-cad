@@ -227,11 +227,11 @@ fn closing_semicircle_station_and_tangent_are_analytic_in_both_windings() {
         let places = kentos_domain::arrays::placements(&array, Some(&path))
             .expect("4 + 2π metre closed path");
         let last = places[2];
-        assert!((last.p.x - (2. + 2. * 2.0_f64.cos())).abs() < 1e-12);
-        assert!((last.p.y - winding * 2. * 2.0_f64.sin()).abs() < 1e-12);
+        assert!((last.p.x - (2. + 2. * kentos_num::cos(2.0_f64))).abs() < 1e-12);
+        assert!((last.p.y - winding * 2. * kentos_num::sin(2.0_f64)).abs() < 1e-12);
         let angle = winding * (2. + std::f64::consts::FRAC_PI_2);
-        assert!((last.rotation.cos() - angle.cos()).abs() < 1e-12);
-        assert!((last.rotation.sin() - angle.sin()).abs() < 1e-12);
+        assert!((kentos_num::cos(last.rotation) - kentos_num::cos(angle)).abs() < 1e-12);
+        assert!((kentos_num::sin(last.rotation) - kentos_num::sin(angle)).abs() < 1e-12);
     }
 }
 

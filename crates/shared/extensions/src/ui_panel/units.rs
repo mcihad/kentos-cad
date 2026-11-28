@@ -49,8 +49,8 @@ pub fn tidy(x: f64) -> f64 {
     if x == 0.0 || !x.is_finite() {
         return x;
     }
-    let digits = 11 - x.abs().log10().floor() as i32;
-    let scale = 10f64.powi(digits.clamp(-300, 300));
+    let digits = 11 - kentos_num::log10(x.abs()).floor() as i32;
+    let scale = kentos_num::powi(10f64, digits.clamp(-300, 300));
     (x * scale).round() / scale
 }
 

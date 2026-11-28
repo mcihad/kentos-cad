@@ -129,7 +129,7 @@ fn cutout_timing() {
     let line: Vec<[f64; 2]> = (0..=400)
         .map(|k| {
             let s = k as f64 * 2.5;
-            [s, 500.0 + 200.0 * (s / 160.0).sin()]
+            [s, 500.0 + 200.0 * kentos_num::sin(s / 160.0)]
         })
         .collect();
     for p in line.windows(2) {

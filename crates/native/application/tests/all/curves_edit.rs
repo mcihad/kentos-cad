@@ -11,7 +11,7 @@ use serde_json::json;
 fn drawing() -> Document {
     let wave = |n: u32| -> Vec<serde_json::Value> {
         (0..n)
-            .map(|i| json!({"x": f64::from(i) * 2.0, "y": (f64::from(i) * 0.37).sin() * 3.0}))
+            .map(|i| json!({"x": f64::from(i) * 2.0, "y": kentos_num::sin(f64::from(i) * 0.37) * 3.0}))
             .collect()
     };
     let snapshot = json!({"format":"kentos.document","version":1,"name":"Eğriyi düzenle","settings":{"srid":0,

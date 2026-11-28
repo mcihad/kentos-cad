@@ -353,10 +353,10 @@ pub(crate) fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
                 "Sonlu bir açı verin.",
                 "layout.rowAngle",
             )?;
-            if (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.))
-                .to_radians()
-                .sin()
-                .abs()
+            if kentos_num::sin(
+                (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.)).to_radians(),
+            )
+            .abs()
                 < 1e-6
             {
                 return Err(refuse(

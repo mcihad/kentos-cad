@@ -44,7 +44,7 @@ fn pad(z: f64) -> Platform {
 /// the box, four side prisms and four corner pyramids on a six-segment fan.
 fn closed_form(h: f64, s: f64) -> f64 {
     let r = h * s;
-    let fan_area = 6.0 * 0.5 * r * r * (15f64).to_radians().sin();
+    let fan_area = 6.0 * 0.5 * r * r * kentos_num::sin((15f64).to_radians());
     100.0 * h + 4.0 * 10.0 * 0.5 * r * h + 4.0 * fan_area * h / 3.0
 }
 
@@ -250,7 +250,10 @@ fn a_line_along_a_triangles_edge_reads_the_terrain() {
     })
     .expect("builds");
     let a = 1.25 * std::f64::consts::PI;
-    let s = t.section(&[[0.0, 0.0], [100.0 * a.cos(), 100.0 * a.sin()]]);
+    let s = t.section(&[
+        [0.0, 0.0],
+        [100.0 * kentos_num::cos(a), 100.0 * kentos_num::sin(a)],
+    ]);
     assert!(
         (s[0].z.expect("on the terrain") - 100.0).abs() < 1e-9,
         "{s:?}"

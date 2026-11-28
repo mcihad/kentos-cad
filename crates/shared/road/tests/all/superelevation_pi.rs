@@ -31,8 +31,8 @@ fn kgm_s1(sign: f64) -> Alignment {
         pi("s1", 1000.0, 0.0, 600.0, 76.8),
         pi(
             "b",
-            1000.0 + 1000.0 * delta.cos(),
-            1000.0 * delta.sin(),
+            1000.0 + 1000.0 * kentos_num::cos(delta),
+            1000.0 * kentos_num::sin(delta),
             0.0,
             0.0,
         ),

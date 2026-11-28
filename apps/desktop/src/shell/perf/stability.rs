@@ -375,8 +375,8 @@ fn stability() {
     let near = 1.0 / (200.0 * 0.000_264_58);
     let band = lod::build_band(near, tol);
     // band = floor(log2(tol / s)) − 1 changes where tol / s is a power of two.
-    let band_edge = tol / 2f64.powi(band + 1);
-    let quarter_edge = 2f64.powf(((near.log2() * 4.0).floor() + 0.5) / 4.0);
+    let band_edge = tol / kentos_num::powi(2f64, band + 1);
+    let quarter_edge = kentos_num::pow(2f64, ((kentos_num::log2(near) * 4.0).floor() + 0.5) / 4.0);
     let step = 1e-7;
     // The styled curves' first coarser level's ceiling (docs/adr/1063 §3): the fine chords above, the coarse below.
     let level_edge = kentos_native_style::batches::CURVE_LEVELS[0];
@@ -472,7 +472,7 @@ fn stability() {
         let a: f64 = 0.7;
         asks.push((
             "daire, en yakın",
-            [c.c.x + c.r * a.cos(), c.c.y + c.r * a.sin()],
+            [c.c.x + c.r * kentos_num::cos(a), c.c.y + c.r * kentos_num::sin(a)],
             SnapKind::Nearest,
             Some((c.c, c.r)),
         ));

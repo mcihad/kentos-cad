@@ -718,8 +718,8 @@ struct Arc {
 fn arc_of(from: Vec2, to: Vec2, bulge: f64) -> Arc {
     let (dx, dy) = (to.x - from.x, to.y - from.y);
     let c = kentos_num::hypot(dx, dy);
-    let sweep = 4.0 * bulge.atan();
-    let radius = c / (2.0 * (sweep.abs() / 2.0).sin());
+    let sweep = 4.0 * kentos_num::atan(bulge);
+    let radius = c / (2.0 * kentos_num::sin(sweep.abs() / 2.0));
     // The centre lies off the chord's middle, on its left for a counter-clockwise arc: (1 − b²) / (4b) of the chord's
     // left normal (−dy, dx).
     let k = (1.0 - bulge * bulge) / (4.0 * bulge);
@@ -730,7 +730,7 @@ fn arc_of(from: Vec2, to: Vec2, bulge: f64) -> Arc {
     Arc {
         centre,
         radius,
-        start: (from.y - centre.y).atan2(from.x - centre.x),
+        start: kentos_num::atan2(from.y - centre.y, from.x - centre.x),
         sweep,
     }
 }
@@ -738,7 +738,7 @@ fn arc_of(from: Vec2, to: Vec2, bulge: f64) -> Arc {
 impl Arc {
     /// How far round the arc, in its own sense (0 at `from`), a point at angle `a` is, in [0, 2π).
     fn turn(&self, q: Vec2) -> f64 {
-        let a = (q.y - self.centre.y).atan2(q.x - self.centre.x);
+        let a = kentos_num::atan2(q.y - self.centre.y, q.x - self.centre.x);
         (self.sweep.signum() * (a - self.start)).rem_euclid(std::f64::consts::TAU)
     }
 
@@ -755,8 +755,8 @@ impl Arc {
     fn at(&self, t: f64) -> Vec2 {
         let a = self.start + self.sweep.signum() * t;
         Vec2 {
-            x: self.centre.x + self.radius * a.cos(),
-            y: self.centre.y + self.radius * a.sin(),
+            x: self.centre.x + self.radius * kentos_num::cos(a),
+            y: self.centre.y + self.radius * kentos_num::sin(a),
         }
     }
 }
@@ -1046,11 +1046,11 @@ pub(crate) fn recorded_area(paths: &[(u32, bool, Vec<Vec2>, Vec<f64>)]) -> f64 {
 /// A boundary's length: the chord's, an arc's c·θ / (2 sin(θ/2)).
 fn length(b: &RecordedBoundary) -> f64 {
     let c = kentos_num::hypot(b.to.x - b.from.x, b.to.y - b.from.y);
-    let theta = (4.0 * b.bulge.atan()).abs();
+    let theta = (4.0 * kentos_num::atan(b.bulge)).abs();
     if theta <= 1e-12 {
         c
     } else {
-        c * theta / (2.0 * (theta / 2.0).sin())
+        c * theta / (2.0 * kentos_num::sin(theta / 2.0))
     }
 }
 

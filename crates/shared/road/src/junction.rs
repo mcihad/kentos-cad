@@ -67,8 +67,8 @@ pub fn crossings_told(
                     break;
                 }
                 let (ta, tb) = (
-                    [p.direction.cos(), p.direction.sin()],
-                    [q.direction.cos(), q.direction.sin()],
+                    [kentos_num::cos(p.direction), kentos_num::sin(p.direction)],
+                    [kentos_num::cos(q.direction), kentos_num::sin(q.direction)],
                 );
                 // F + [ta, -tb] · [dsa, dsb] = 0.
                 let d = -ta[0] * tb[1] + ta[1] * tb[0];
@@ -133,7 +133,7 @@ pub fn fillet(p: [f64; 2], a: Edge, b: Edge, r: f64) -> Option<Return> {
         [on_a[0] - center[0], on_a[1] - center[1]],
         [on_b[0] - center[0], on_b[1] - center[1]],
     );
-    let sweep = (va[0] * vb[1] - va[1] * vb[0]).atan2(va[0] * vb[0] + va[1] * vb[1]);
+    let sweep = kentos_num::atan2(va[0] * vb[1] - va[1] * vb[0], va[0] * vb[0] + va[1] * vb[1]);
     Some(Return {
         center,
         on_a,

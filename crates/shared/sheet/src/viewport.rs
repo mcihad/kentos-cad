@@ -537,7 +537,7 @@ pub fn linked_view<'a>(
 
 /// A named view's area on the ground: its four corners counter-clockwise, turned by its twist (docs/adr/0781 §2).
 pub fn view_ring(v: &NamedModelView) -> Vec<[f64; 2]> {
-    let (s, c) = v.twist.sin_cos();
+    let (s, c) = kentos_num::sin_cos(v.twist);
     let (hw, hh) = (v.width / 2.0, v.height / 2.0);
     [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
         .iter()

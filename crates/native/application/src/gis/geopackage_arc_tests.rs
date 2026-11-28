@@ -69,11 +69,11 @@ fn perimeter(r: &Ring) -> f64 {
             let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
             let chord = kentos_num::hypot(b.x - a.x, b.y - a.y);
             let k = r.bulges.as_ref().map_or(0.0, |v| v[i]);
-            let half = 2.0 * k.atan();
+            let half = 2.0 * kentos_num::atan(k);
             if half == 0.0 {
                 chord
             } else {
-                chord * half / half.sin()
+                chord * half / kentos_num::sin(half)
             }
         })
         .sum()
@@ -89,7 +89,7 @@ fn area(r: &Ring) -> f64 {
 
 /// `PARK` with every point turned by `deg` about its first vertex.
 fn turned(deg: f64) -> String {
-    let (s, c) = deg.to_radians().sin_cos();
+    let (s, c) = kentos_num::sin_cos(deg.to_radians());
     let (x0, y0) = (488_066.289_881_28, 4_422_216.233_202_77);
     let mut out = String::new();
     let mut number = String::new();
@@ -165,13 +165,13 @@ fn a_real_arc_past_half_a_circle_keeps_its_sweep_and_direction() {
     let at = |deg: f64| {
         let t: f64 = deg.to_radians();
         Coord {
-            x: cx + r * t.cos(),
-            y: cy + r * t.sin(),
+            x: cx + r * kentos_num::cos(t),
+            y: cy + r * kentos_num::sin(t),
             z: None,
             m: None,
         }
     };
-    let want = (270f64.to_radians() / 4.0).tan();
+    let want = kentos_num::tan(270f64.to_radians() / 4.0);
     let ccw = arc_bulge(&at(0.0), &at(135.0), &at(270.0)).expect("an arc");
     assert!((ccw - want).abs() < 1e-9 * want, "{ccw} for {want}");
     let cw = arc_bulge(&at(270.0), &at(135.0), &at(0.0)).expect("an arc");
@@ -179,7 +179,7 @@ fn a_real_arc_past_half_a_circle_keeps_its_sweep_and_direction() {
     // A semicircle is 1, a quarter tan(22.5°).
     assert!((arc_bulge(&at(0.0), &at(90.0), &at(180.0)).unwrap() - 1.0).abs() < 1e-12);
     let quarter = arc_bulge(&at(0.0), &at(45.0), &at(90.0)).unwrap();
-    assert!((quarter - 22.5f64.to_radians().tan()).abs() < 1e-9);
+    assert!((quarter - kentos_num::tan(22.5f64.to_radians())).abs() < 1e-9);
     // Three points on one line: straight; a and b one point: a whole circle, not one bulge.
     assert_eq!(arc_bulge(&at(0.0), &at(0.0), &at(90.0)), None);
     assert_eq!(arc_bulge(&at(0.0), &at(180.0), &at(0.0)), None);

@@ -38,9 +38,9 @@ fn network() -> (Vec<Value>, Vec<Value>) {
                     let (a, b) = (at(r, c), at(r + dr, c + dc));
                     let k = baselines.len() as f64;
                     let noise = [
-                        0.003 * (k * 0.7).sin(),
-                        0.003 * (k * 1.3).cos(),
-                        0.006 * (k * 0.9).sin(),
+                        0.003 * kentos_num::sin(k * 0.7),
+                        0.003 * kentos_num::cos(k * 1.3),
+                        0.006 * kentos_num::sin(k * 0.9),
                     ];
                     let d: [f64; 3] = [0, 1, 2].map(|q| b[q] - a[q] + noise[q]);
                     baselines.push(json!({

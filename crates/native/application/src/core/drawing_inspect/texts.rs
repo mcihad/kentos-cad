@@ -276,7 +276,7 @@ pub(super) fn table_findings(
         return out;
     }
     let mut inspected_sources = HashSet::new();
-    let (sin, cos) = table.rotation.to_radians().sin_cos();
+    let (sin, cos) = kentos_num::sin_cos(table.rotation.to_radians());
     for field in &table.fields {
         let (r, c) = (field.row as usize, field.col as usize);
         let Some(cached) = table.cells.get(r).and_then(|row| row.get(c)) else {

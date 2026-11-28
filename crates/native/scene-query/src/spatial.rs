@@ -2437,7 +2437,7 @@ impl UnicodeText {
         }
         let [a, b, c, d] = self.plan.as_ref().ok()?.frame?;
         let m = self.height * 0.1;
-        let (s, cost) = self.rotation.to_radians().sin_cos();
+        let (s, cost) = kentos_num::sin_cos(self.rotation.to_radians());
         Some(
             [
                 [a - m, b - m],

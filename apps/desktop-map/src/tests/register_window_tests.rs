@@ -1126,7 +1126,7 @@ fn an_axis_and_an_angle_from_the_pane_move_the_scan() {
         .collect();
     // The quaternion (cos θ/2, sin θ/2 · ẑ): a rotation of 0.5° about Z.
     let h = 0.5_f64.to_radians() / 2.0;
-    let (w, z) = (h.cos(), h.sin());
+    let (w, z) = (kentos_num::cos(h), kentos_num::sin(h));
     let want = [
         [1.0 - 2.0 * z * z, -2.0 * z * w, 0.0],
         [2.0 * z * w, 1.0 - 2.0 * z * z, 0.0],

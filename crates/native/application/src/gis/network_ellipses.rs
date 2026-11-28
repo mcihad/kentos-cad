@@ -549,8 +549,8 @@ mod tests {
             .map(|k| {
                 let a = f64::from(k) * TAU / 16.0;
                 ellipse_at(
-                    14.0 * a.cos(),
-                    14.0 * a.sin(),
+                    14.0 * kentos_num::cos(a),
+                    14.0 * kentos_num::sin(a),
                     Vec2 { x: 0.0, y: 11.0 },
                     1.0,
                 )

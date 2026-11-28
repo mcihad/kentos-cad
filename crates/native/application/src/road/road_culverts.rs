@@ -203,7 +203,7 @@ pub(crate) fn read_told(
         ))
     })?;
     let angle = place.direction - std::f64::consts::FRAC_PI_2 + def.skew.to_radians();
-    let c = def.skew.to_radians().cos();
+    let c = kentos_num::cos(def.skew.to_radians());
     let ends = ["left", "right"]
         .into_iter()
         .enumerate()
@@ -211,8 +211,8 @@ pub(crate) fn read_told(
             side: side.into(),
             distance: b.ends[k],
             offset: b.ends[k] * c,
-            x: place.x + angle.cos() * b.ends[k],
-            y: place.y + angle.sin() * b.ends[k],
+            x: place.x + kentos_num::cos(angle) * b.ends[k],
+            y: place.y + kentos_num::sin(angle) * b.ends[k],
             invert: b.inverts[k],
         })
         .collect();

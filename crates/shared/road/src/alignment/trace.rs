@@ -75,12 +75,12 @@ pub fn elements_of(points: &[[f64; 2]], bulges: &[f64]) -> Vec<FitElement> {
                     length: chord,
                 };
             }
-            let turn = 4.0 * bulge.atan();
-            let radius = chord / (2.0 * (turn / 2.0).sin()).abs();
+            let turn = 4.0 * kentos_num::atan(bulge);
+            let radius = chord / (2.0 * kentos_num::sin(turn / 2.0)).abs();
             // The centre: from the chord's middle along its left normal, signed by the turn.
             let (mx, my) = (0.5 * (a[0] + b[0]), 0.5 * (a[1] + b[1]));
             let (ux, uy) = ((b[0] - a[0]) / chord, (b[1] - a[1]) / chord);
-            let h = radius * (turn / 2.0).cos() * turn.signum();
+            let h = radius * kentos_num::cos(turn / 2.0) * turn.signum();
             let center = [mx - uy * h, my + ux * h];
             FitElement {
                 kind: FitKind::Curve {
@@ -161,8 +161,8 @@ pub fn line_of(points: &[[f64; 2]]) -> ([f64; 2], [f64; 2]) {
         syy += dy * dy;
         sxy += dx * dy;
     }
-    let theta = 0.5 * (2.0 * sxy).atan2(sxx - syy);
-    let mut d = [theta.cos(), theta.sin()];
+    let theta = 0.5 * kentos_num::atan2(2.0 * sxy, sxx - syy);
+    let mut d = [kentos_num::cos(theta), kentos_num::sin(theta)];
     let (first, last) = (points[0], points[points.len() - 1]);
     if d[0] * (last[0] - first[0]) + d[1] * (last[1] - first[1]) < 0.0 {
         d = [-d[0], -d[1]];
@@ -189,18 +189,18 @@ fn foot(c: [f64; 2], d: [f64; 2], p: [f64; 2]) -> [f64; 2] {
 /// The sum of the squared distances of `points` to the arc of radius `r` tangent to both lines at the PI `v`, the
 /// lines' directions in `d` (in) and `e` (out).
 fn misfit(v: [f64; 2], d: [f64; 2], e: [f64; 2], r: f64, points: &[[f64; 2]]) -> f64 {
-    let turn = (d[0] * e[1] - d[1] * e[0]).atan2(d[0] * e[0] + d[1] * e[1]);
+    let turn = kentos_num::atan2(d[0] * e[1] - d[1] * e[0], d[0] * e[0] + d[1] * e[1]);
     let half = 0.5 * turn.abs();
     // The bisector inward: the sum of the reversed in direction and the out direction.
     let (bx, by) = (e[0] - d[0], e[1] - d[1]);
     let bl = kentos_num::hypot(bx, by);
     let c = [
-        v[0] + bx / bl * r / half.cos(),
-        v[1] + by / bl * r / half.cos(),
+        v[0] + bx / bl * r / kentos_num::cos(half),
+        v[1] + by / bl * r / kentos_num::cos(half),
     ];
     points
         .iter()
-        .map(|p| (kentos_num::hypot(p[0] - c[0], p[1] - c[1]) - r).powi(2))
+        .map(|p| kentos_num::powi(kentos_num::hypot(p[0] - c[0], p[1] - c[1]) - r, 2))
         .sum()
 }
 
@@ -276,12 +276,12 @@ pub fn best_fit(points: &[[f64; 2]], max_radius: f64) -> Result<Vec<PiInput>, Tr
         } else {
             // The arc's tangent points stay on the runs' own lines: its tangent length at most the PI's distance to
             // the runs' far ends.
-            let turn = (d0[0] * d1[1] - d0[1] * d1[0])
-                .atan2(d0[0] * d1[0] + d0[1] * d1[1])
-                .abs();
+            let turn =
+                kentos_num::atan2(d0[0] * d1[1] - d0[1] * d1[0], d0[0] * d1[0] + d0[1] * d1[1])
+                    .abs();
             let reach = |q: [f64; 2]| kentos_num::hypot(q[0] - v[0], q[1] - v[1]);
             let room = reach(p[runs[k - 1].0]).min(reach(p[runs[k].1]));
-            best_radius(v, d0, d1, &between, room / (0.5 * turn).tan())
+            best_radius(v, d0, d1, &between, room / kentos_num::tan(0.5 * turn))
         };
         places.push(v);
         radii.push(radius);
@@ -305,7 +305,7 @@ mod tests {
     #[test]
     fn a_polyline_with_an_arc_gives_its_pi() {
         // A tangent east, a quarter turn left of radius 10, a tangent north.
-        let b = (std::f64::consts::FRAC_PI_8).tan();
+        let b = kentos_num::tan(std::f64::consts::FRAC_PI_8);
         let pis = from_elements(
             &[[0.0, 0.0], [20.0, 0.0], [30.0, 10.0], [30.0, 30.0]],
             &[0.0, b, 0.0],
@@ -330,7 +330,10 @@ mod tests {
         }
         for i in 1..40 {
             let a = std::f64::consts::FRAC_PI_2 * i as f64 / 40.0;
-            pts.push([50.0 + 50.0 * a.sin(), 50.0 - 50.0 * a.cos()]);
+            pts.push([
+                50.0 + 50.0 * kentos_num::sin(a),
+                50.0 - 50.0 * kentos_num::cos(a),
+            ]);
         }
         for i in 0..=25 {
             pts.push([100.0, 50.0 + i as f64 * 2.0]);

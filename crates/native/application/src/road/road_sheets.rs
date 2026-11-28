@@ -308,11 +308,11 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                 ));
             }
         };
-        let theta = (pb.y - pa.y).atan2(pb.x - pa.x);
+        let theta = kentos_num::atan2(pb.y - pa.y, pb.x - pa.x);
         let center = [0.5 * (pa.x + pb.x), 0.5 * (pa.y + pb.y)];
         let degrees = theta.to_degrees().rem_euclid(360.0);
         let mdeg = (degrees * 1000.0).round() as i64 % 360_000;
-        let (c, s) = (theta.cos(), theta.sin());
+        let (c, s) = (kentos_num::cos(theta), kentos_num::sin(theta));
         let n = (((b - a) / 1.0).ceil() as usize).clamp(2, 2000);
         let mut off = (0..=n)
             .filter_map(|i| core.at(a + (b - a) * i as f64 / n as f64))
@@ -451,8 +451,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
             let s = 0.5 * (w[0].to + w[1].from);
             let Some(p) = core.at(s) else { continue };
             let (t, n) = (
-                [p.direction.cos(), p.direction.sin()],
-                [-p.direction.sin(), p.direction.cos()],
+                [kentos_num::cos(p.direction), kentos_num::sin(p.direction)],
+                [-kentos_num::sin(p.direction), kentos_num::cos(p.direction)],
             );
             let reach = 0.45 * height;
             out_lines(
@@ -568,7 +568,7 @@ fn out_lines(
         None,
         Some(0.5),
     ));
-    let degrees = n[1].atan2(n[0]).to_degrees();
+    let degrees = kentos_num::atan2(n[1], n[0]).to_degrees();
     let (on_paper, _) = crate::road_plan_axes::readable(degrees - turn, TextAlign::MiddleCenter);
     // Turned to read, the words' foot faces one side of the line or the other: each sits off its own side.
     let flipped = (on_paper + turn - degrees).rem_euclid(360.0) > 90.0

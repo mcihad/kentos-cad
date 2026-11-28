@@ -62,7 +62,7 @@ fn sinc(x: f64) -> f64 {
     if x.abs() < 1e-4 {
         1.0 - x * x / 6.0
     } else {
-        x.sin() / x
+        kentos_num::sin(x) / x
     }
 }
 
@@ -81,7 +81,7 @@ pub fn integral(theta0: f64, k0: f64, c: f64, s: f64) -> [f64; 2] {
         let half = k0 * s / 2.0;
         let chord = s * sinc(half);
         let mid = theta0 + half;
-        return [chord * mid.cos(), chord * mid.sin()];
+        return [chord * kentos_num::cos(mid), chord * kentos_num::sin(mid)];
     }
     let turn = (k0.abs() + 0.5 * c.abs() * s.abs()) * s.abs();
     let pieces = ((turn / PIECE_TURN).ceil() as usize).clamp(1, 1 << 20);
@@ -94,8 +94,8 @@ pub fn integral(theta0: f64, k0: f64, c: f64, s: f64) -> [f64; 2] {
         for (node, weight) in GL_NODES.iter().zip(GL_WEIGHTS) {
             for t in [mid - half * node, mid + half * node] {
                 let th = theta0 + k0 * t + 0.5 * c * t * t;
-                px += weight * th.cos();
-                py += weight * th.sin();
+                px += weight * kentos_num::cos(th);
+                py += weight * kentos_num::sin(th);
             }
         }
         x += px * half;
@@ -178,8 +178,12 @@ mod tests {
         let (l, rr) = (80.0, 250.0);
         let t: f64 = l / (2.0 * rr);
         let [x, y] = integral(0.0, 0.0, 1.0 / (rr * l), l);
-        let sx = l * (1.0 - t.powi(2) / 10.0 + t.powi(4) / 216.0 - t.powi(6) / 9360.0);
-        let sy = l * (t / 3.0 - t.powi(3) / 42.0 + t.powi(5) / 1320.0 - t.powi(7) / 75600.0);
+        let sx = l
+            * (1.0 - kentos_num::powi(t, 2) / 10.0 + kentos_num::powi(t, 4) / 216.0
+                - kentos_num::powi(t, 6) / 9360.0);
+        let sy = l
+            * (t / 3.0 - kentos_num::powi(t, 3) / 42.0 + kentos_num::powi(t, 5) / 1320.0
+                - kentos_num::powi(t, 7) / 75600.0);
         assert!(
             (x - sx).abs() < 1e-10 && (y - sy).abs() < 1e-10,
             "{x} {sx} {y} {sy}"

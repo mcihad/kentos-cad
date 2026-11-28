@@ -201,8 +201,8 @@ fn arc_length(chord: f64, bulge: f64) -> f64 {
     if bulge == 0.0 {
         return chord;
     }
-    let theta = 4.0 * bulge.abs().atan();
-    chord * theta / (2.0 * (theta / 2.0).sin())
+    let theta = 4.0 * kentos_num::atan(bulge.abs());
+    chord * theta / (2.0 * kentos_num::sin(theta / 2.0))
 }
 
 pub(crate) fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {

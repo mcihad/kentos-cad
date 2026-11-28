@@ -124,7 +124,7 @@ pub fn align(doc: &Document, room: Slot, p: Vec2) -> Option<(Vec2, f64)> {
         if dx <= 1e-8 || dy <= 1e-8 {
             return None;
         }
-        let (sin, cos) = h.pattern.angle.to_radians().sin_cos();
+        let (sin, cos) = kentos_num::sin_cos(h.pattern.angle.to_radians());
         let (x, y) = (p.x - origin.x, p.y - origin.y);
         let (u, v) = (
             ((x * cos + y * sin) / dx).floor() + 0.5,

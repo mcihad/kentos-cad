@@ -104,7 +104,7 @@ fn centre_through(app: &mut App) {
         crate::drawing_menus::Event::SnapOnce(Some(kentos_interaction::SnapKind::Center)),
     ));
     let at = 0.8_f64;
-    hover(app, [10.0 + 8.0 * at.cos(), 4.0 + 8.0 * at.sin()]);
+    hover(app, [10.0 + 8.0 * kentos_num::cos(at), 4.0 + 8.0 * kentos_num::sin(at)]);
 }
 
 /// Ekleme noktası: the cursor near the text's insertion point.
@@ -196,7 +196,7 @@ fn room_blocks() -> serde_json::Value {
 
 /// Where a room point is in the first room (turned 30°, 1.5 times as large, at the origin).
 fn in_room(q: [f64; 2]) -> [f64; 2] {
-    let (s, c) = 30f64.to_radians().sin_cos();
+    let (s, c) = kentos_num::sin_cos(30f64.to_radians());
     [1.5 * (c * q[0] - s * q[1]), 1.5 * (s * q[0] + c * q[1])]
 }
 

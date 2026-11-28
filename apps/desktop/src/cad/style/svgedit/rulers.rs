@@ -57,7 +57,7 @@ impl Rulers {
 
 /// The smallest 1-2-5 step not below `v` (`niceStep`).
 pub fn nice_step(v: f64) -> f64 {
-    let e = 10f64.powf(v.log10().floor());
+    let e = kentos_num::pow(10f64, kentos_num::log10(v).floor());
     let m = v / e;
     (if m <= 1.0 {
         1.0
@@ -267,7 +267,7 @@ pub fn draw_guides(frame: &mut Frame, ed: &SvgEditor, size: Size, c: &RulerColor
     let far = f64::from(size.width + size.height) * 2.0;
     for g in &ed.doc.guides {
         let [x, y] = ed.camera.to_screen([g.x, g.y]);
-        let (dy, dx) = g.angle.to_radians().sin_cos();
+        let (dy, dx) = kentos_num::sin_cos(g.angle.to_radians());
         let a = Point::new((x - dx * far) as f32, (y - dy * far) as f32);
         let b = Point::new((x + dx * far) as f32, (y + dy * far) as f32);
         let deleting = ed.rulers.deleting(&g.id);

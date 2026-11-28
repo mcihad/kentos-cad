@@ -67,7 +67,7 @@ fn kabul_et_draws_the_ellipses_with_the_points_in_one_step() {
         && e.base.attrs.get("Büyütme").map(String::as_str) == Some("2000")));
     // Turned some 30° east of the map's north, the convergence taken off; the minor axis 0.375 of the major.
     let e = &drawn[0];
-    let bearing = e.major.x.atan2(e.major.y).to_degrees();
+    let bearing = kentos_num::atan2(e.major.x, e.major.y).to_degrees();
     assert!(
         (bearing - 29.67).abs() < 0.05 && (e.ratio - 0.375).abs() < 0.001,
         "{bearing} {}",

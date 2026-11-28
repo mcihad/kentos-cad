@@ -72,7 +72,7 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
             .unwrap_or(i64::from(text.style.size)) as f64;
         let rotation = ((-t.rotation * 1000.).round() as i32).rem_euclid(360000);
         let angle = f64::from(rotation).to_radians() / 1000.;
-        let (sn, cs) = (angle.sin(), angle.cos());
+        let (sn, cs) = (kentos_num::sin(angle), kentos_num::cos(angle));
         let (dx, dy) = (-f64::from(w) / 2., baseline - f64::from(h) / 2.);
         // The sheet rotates about the frame centre; CAD text rotates about its baseline anchor.
         let left = (t.p.x * 1e6 - cs * dx + sn * dy - f64::from(w) / 2.).round() as i32;
@@ -381,7 +381,7 @@ pub(crate) fn world_point(item: &Item, p: [f64; 2], height: f64) -> Vec2 {
         f64::from(item.frame.top) + f64::from(item.frame.height) / 2.,
     ];
     let a = f64::from(item.rotation).to_radians() / 1000.;
-    let (sn, cs) = (a.sin(), a.cos());
+    let (sn, cs) = (kentos_num::sin(a), kentos_num::cos(a));
     let (x, y) = (p[0] - c[0], p[1] - c[1]);
     Vec2 {
         x: (c[0] + cs * x - sn * y) / 1e6,
@@ -589,7 +589,7 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                         let major = width.max(height) / 2.;
                         base["kind"] = json!("ellipse");
                         base["c"] = json!(center);
-                        base["major"] = json!({"x": major * angle.cos(), "y": major * angle.sin()});
+                        base["major"] = json!({"x": major * kentos_num::cos(angle), "y": major * kentos_num::sin(angle)});
                         base["ratio"] = json!(width.min(height) / width.max(height));
                         base["t0"] = json!(0.);
                         base["t1"] = json!(std::f64::consts::TAU);

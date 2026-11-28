@@ -252,11 +252,11 @@ impl Places {
                     let r = l.rotation.to_radians();
                     let (along, across) = (2.0 * g.height, 0.6 * g.height);
                     let c = kentos_geometry_core::Vec2::new(
-                        l.text_at.x - r.sin() * g.height / 2.0,
-                        l.text_at.y + r.cos() * g.height / 2.0,
+                        l.text_at.x - kentos_num::sin(r) * g.height / 2.0,
+                        l.text_at.y + kentos_num::cos(r) * g.height / 2.0,
                     );
-                    let hw = r.cos().abs() * along + r.sin().abs() * across;
-                    let hh = r.sin().abs() * along + r.cos().abs() * across;
+                    let hw = kentos_num::cos(r).abs() * along + kentos_num::sin(r).abs() * across;
+                    let hh = kentos_num::sin(r).abs() * along + kentos_num::cos(r).abs() * across;
                     self.taken.push([c.x - hw, c.y - hh, c.x + hw, c.y + hh]);
                 }
                 _ => {}

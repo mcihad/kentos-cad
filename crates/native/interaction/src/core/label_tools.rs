@@ -134,7 +134,7 @@ impl LabelTool {
         if dx == 0.0 && dy == 0.0 {
             return None;
         }
-        let mut a = dy.atan2(dx).to_degrees();
+        let mut a = kentos_num::atan2(dy, dx).to_degrees();
         while a > 90.0 {
             a -= 180.0;
         }
@@ -242,7 +242,10 @@ fn write(
 /// The dashed box round a label, as it would stand at `middle` turned `angle` degrees.
 fn frame(hit: &LabelHit, middle: Vec2, angle: f64, metres: f64) -> Stroke {
     let (hw, hh) = ((hit.w / 2.0 + 3.0) * metres, (hit.h / 2.0 + 3.0) * metres);
-    let (c, s) = (angle.to_radians().cos(), angle.to_radians().sin());
+    let (c, s) = (
+        kentos_num::cos(angle.to_radians()),
+        kentos_num::sin(angle.to_radians()),
+    );
     let at = |u: f64, v: f64| Vec2::new(middle.x + u * c - v * s, middle.y + u * s + v * c);
     Stroke {
         pts: vec![at(-hw, -hh), at(hw, -hh), at(hw, hh), at(-hw, hh)],

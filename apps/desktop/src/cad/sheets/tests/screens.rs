@@ -1001,7 +1001,7 @@ pub(super) fn logo_png(side: u32) -> Vec<u8> {
                     f64::from(i) + (f64::from(k % 4) + 0.5) / 4.0,
                     f64::from(j) + (f64::from(k / 4) + 0.5) / 4.0,
                 ];
-                let r = ((p[0] - c).powi(2) + (p[1] - c).powi(2)).sqrt();
+                let r = (kentos_num::powi(p[0] - c, 2) + kentos_num::powi(p[1] - c, 2)).sqrt();
                 if r > 0.47 * s {
                     continue;
                 }

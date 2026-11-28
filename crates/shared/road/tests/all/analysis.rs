@@ -68,7 +68,7 @@ fn slopes_and_aspects_by_square() {
         .bands(Measure::Aspect, &[0.0, 45.0, 315.0, 360.0], false)
         .expect("bands");
     assert!((a.flat_area - 25.0).abs() < 1e-9, "{a:?}");
-    let west_south = (-0.2_f64).atan2(0.05).to_degrees() + 360.0;
+    let west_south = kentos_num::atan2(-0.2_f64, 0.05).to_degrees() + 360.0;
     assert!(west_south > 270.0 && west_south < 315.0);
     assert!((a.bands[0].area - 25.0).abs() < 1e-9, "{a:?}");
     assert!((a.bands[1].area - 50.0).abs() < 1e-9, "{a:?}");

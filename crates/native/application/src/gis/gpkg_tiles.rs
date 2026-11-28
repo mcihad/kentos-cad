@@ -1316,8 +1316,8 @@ pub mod write {
                 matrix_height: i64::from(l.matrix),
                 tile_width: side,
                 tile_height: side,
-                pixel_x_size: a * 2f64.powi(j as i32),
-                pixel_y_size: b * 2f64.powi(j as i32),
+                pixel_x_size: a * kentos_num::powi(2f64, j as i32),
+                pixel_y_size: b * kentos_num::powi(2f64, j as i32),
             })
             .collect();
         out.reverse();
@@ -1635,7 +1635,7 @@ pub mod write {
         }
         let matrices = zooms_of(&lv, a, -d);
         let top = lv.len() as i64 - 1;
-        let span = f64::from(GPKG_TILE_SIDE) * 2f64.powi(top as i32);
+        let span = f64::from(GPKG_TILE_SIDE) * kentos_num::powi(2f64, top as i32);
         let (srs_id, _) = srs_for(f.srid);
         let set = NewTileSet {
             name: table.clone(),

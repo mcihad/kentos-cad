@@ -412,7 +412,7 @@ pub fn drawn(doc: &Document, haul: &str) -> Option<Drawn> {
     let built = hauls::alignment_of(doc, def).ok()?;
     let length = built.core.length;
     let steps = ((length / 2.0).ceil() as usize).clamp(2, 20_000);
-    let (sin_cos, shift) = (|t: f64| t.sin_cos(), built.offset);
+    let (sin_cos, shift) = (|t: f64| kentos_num::sin_cos(t), built.offset);
     let axis = (0..=steps)
         .filter_map(|k| {
             let l = built.core.at(length * k as f64 / steps as f64)?;

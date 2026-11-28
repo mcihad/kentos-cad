@@ -189,7 +189,7 @@ fn similarity(
         let angle = (w[0] * w[0] + w[1] * w[1] + w[2] * w[2]).sqrt();
         let turn = if angle > 0.0 {
             let k = w.map(|v| v / angle);
-            let (s, c) = angle.sin_cos();
+            let (s, c) = kentos_num::sin_cos(angle);
             let kk = [[0.0, -k[2], k[1]], [k[2], 0.0, -k[0]], [-k[1], k[0], 0.0]];
             let mut m = [[0.0; 3]; 3];
             for i in 0..3 {
@@ -282,7 +282,7 @@ fn error_ellipse(c: [f64; 6], p: f64) -> ErrorEllipse {
     let mid = (nn + ee) / 2.0;
     let half = kentos_num::hypot((nn - ee) / 2.0, en);
     let (k2, k1) = (chi2_quantile(2.0, p).sqrt(), chi2_quantile(1.0, p).sqrt());
-    let mut azimuth = 0.5 * (2.0 * en).atan2(nn - ee) * RAD;
+    let mut azimuth = 0.5 * kentos_num::atan2(2.0 * en, nn - ee) * RAD;
     if azimuth < 0.0 {
         azimuth += 180.0;
     }

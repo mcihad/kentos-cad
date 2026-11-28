@@ -136,7 +136,7 @@ pub(super) fn trees(app: &mut App) {
         let ring: Vec<[f64; 2]> = (0..16)
             .map(|k| {
                 let a = f64::from(k) * std::f64::consts::TAU / 16.0;
-                [x + 6.0 + 5.0 * a.cos(), y + 6.0 + 5.0 * a.sin()]
+                [x + 6.0 + 5.0 * kentos_num::cos(a), y + 6.0 + 5.0 * kentos_num::sin(a)]
             })
             .collect();
         ids.push(o.path("agac", &ring, true));

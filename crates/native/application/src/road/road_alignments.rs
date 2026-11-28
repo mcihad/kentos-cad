@@ -338,7 +338,10 @@ impl Built {
     pub fn place(&self, station: f64) -> Option<AlignmentPlace> {
         let at = self.core.at(station)?;
         let d = self.offset;
-        let (x, y) = (at.x + d * at.direction.sin(), at.y - d * at.direction.cos());
+        let (x, y) = (
+            at.x + d * kentos_num::sin(at.direction),
+            at.y - d * kentos_num::cos(at.direction),
+        );
         let k = at.curvature;
         let km = self.km(station);
         Some(AlignmentPlace {
@@ -449,8 +452,8 @@ fn ground(doc: &Document, built: &Built) -> (Option<f64>, String) {
             let place = |p: [f64; 2], s: f64| {
                 let th = e.theta(s);
                 kentos_geometry_core::Vec2 {
-                    x: p[0] + built.offset * th.sin(),
-                    y: p[1] - built.offset * th.cos(),
+                    x: p[0] + built.offset * kentos_num::sin(th),
+                    y: p[1] - built.offset * kentos_num::cos(th),
                 }
             };
             let grid_piece =

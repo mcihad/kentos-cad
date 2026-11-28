@@ -90,8 +90,8 @@ fn holds_over(criterion: Criterion, weir: &Weir, h: f64) -> bool {
     if h <= 0.0 {
         return false;
     }
-    let q = weir.cd * h.powf(1.5);
-    let depth = (q * q / G).cbrt();
+    let q = weir.cd * kentos_num::pow(h, 1.5);
+    let depth = kentos_num::cbrt(q * q / G);
     let speed = (G * depth).sqrt();
     match criterion {
         Criterion::Submerged => true,
@@ -132,7 +132,7 @@ pub fn threshold(
             break;
         }
     }
-    Some(culvert.flow_at(weir.crest + hi, tw) + weir.cd * weir.length * hi.powf(1.5))
+    Some(culvert.flow_at(weir.crest + hi, tw) + weir.cd * weir.length * kentos_num::pow(hi, 1.5))
 }
 
 /// The spans (hours) where the linear hydrograph `points` (time, flow) is above `q`, and their whole length.

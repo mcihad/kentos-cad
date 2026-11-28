@@ -49,7 +49,7 @@ fn ground() -> (Bench, [Slot; 4]) {
     let road = b.add_bulged(
         "cizim",
         &[[0.0, -10.0], [10.0, -10.0], [20.0, -20.0]],
-        &[0.0, -(std::f64::consts::PI / 8.0).tan()],
+        &[0.0, -kentos_num::tan(std::f64::consts::PI / 8.0)],
     );
     let spot = b.add_point_z("cizim", [50.0, 50.0], 100.0);
     (b, [west, east, road, spot])

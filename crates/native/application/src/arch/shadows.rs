@@ -275,7 +275,7 @@ fn covered(model: &crate::sections::Model, ground: Vec<Area>) -> Vec<Area> {
 /// [`shadow`] of `caster`: an hour's of a day's diagram made once.
 pub fn shadow_of(caster: &Caster, sun: [f64; 3]) -> Vec<Area> {
     let [sx, sy, up] = sun;
-    if up <= 0.5f64.to_radians().sin() {
+    if up <= kentos_num::sin(0.5f64.to_radians()) {
         return Vec::new();
     }
     let v = (-sx / up, -sy / up);

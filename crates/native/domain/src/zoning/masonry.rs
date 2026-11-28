@@ -170,7 +170,8 @@ fn carried(pts: &[Vec2], bulges: Option<&[f64]>, by: f64) -> Vec<Vec2> {
 
 /// The point halfway along a polyline.
 fn middle(pts: &[Vec2]) -> Option<Vec2> {
-    let len = |a: Vec2, b: Vec2| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+    let len =
+        |a: Vec2, b: Vec2| (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt();
     let total: f64 = pts.windows(2).map(|w| len(w[0], w[1])).sum();
     let mut left = total / 2.0;
     for w in pts.windows(2) {

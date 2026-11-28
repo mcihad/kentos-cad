@@ -1904,7 +1904,7 @@ fn moved_path(
         return None;
     }
     let turn = (q1.y - q0.y).atan2(q1.x - q0.x) - (p1.y - p0.y).atan2(p1.x - p0.x);
-    let (sin, cos) = turn.sin_cos();
+    let (sin, cos) = kentos_num::sin_cos(turn);
     if (q0.x - p0.x).abs() <= SLACK && (q0.y - p0.y).abs() <= SLACK && sin.abs() <= SLACK {
         return None;
     }

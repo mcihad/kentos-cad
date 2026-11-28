@@ -104,7 +104,10 @@ pub fn draw(doc: &mut Document, level: Option<&str>) -> Result<Drawn, String> {
             let (ux, uy) = (dx / len, dy / len);
             let s = height * 1.4;
             let side = |k: f64| {
-                let (c, n) = (25f64.to_radians().cos(), 25f64.to_radians().sin() * k);
+                let (c, n) = (
+                    kentos_num::cos(25f64.to_radians()),
+                    kentos_num::sin(25f64.to_radians()) * k,
+                );
                 V::new(b.x - s * (ux * c - uy * n), b.y - s * (uy * c + ux * n))
             };
             objects.push(object(polyline(vec![side(1.0), b, side(-1.0)])));

@@ -664,7 +664,8 @@ fn edge_distance(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     match kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge) {
         None => kentos_geometry_core::geometry::dist_to_segment(p, a, b),
         Some(arc) => {
-            let along = (arc.sweep.signum() * ((p.y - arc.c.y).atan2(p.x - arc.c.x) - arc.a0))
+            let along = (arc.sweep.signum()
+                * (kentos_num::atan2(p.y - arc.c.y, p.x - arc.c.x) - arc.a0))
                 .rem_euclid(2.0 * std::f64::consts::PI);
             if along <= arc.sweep.abs() {
                 (kentos_num::hypot(p.x - arc.c.x, p.y - arc.c.y) - arc.r).abs()

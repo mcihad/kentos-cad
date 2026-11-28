@@ -138,7 +138,9 @@ impl RailingFields {
 
     /// The length of its line, metres, round to its first point when closed.
     pub fn length(&self) -> f64 {
-        let d = |a: &Vec2, b: &Vec2| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+        let d = |a: &Vec2, b: &Vec2| {
+            (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt()
+        };
         let open: f64 = self.pts.windows(2).map(|p| d(&p[0], &p[1])).sum();
         match (self.closed, self.pts.first(), self.pts.last()) {
             (true, Some(a), Some(b)) => open + d(b, a),

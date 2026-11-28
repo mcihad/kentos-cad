@@ -808,7 +808,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             .as_ref()
             .map_or(kentos_commands::TOPOLOGY_TOLERANCE, |t| t.tolerance()),
         display_decimals: decimals,
-        display_step: 10f64.powi(-i32::try_from(decimals).unwrap_or(0)),
+        display_step: kentos_num::powi(10f64, -i32::try_from(decimals).unwrap_or(0)),
     };
     CommandResult::Completed {
         output: CrsTransformed {

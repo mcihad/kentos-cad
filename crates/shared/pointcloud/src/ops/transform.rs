@@ -102,7 +102,7 @@ impl Affine {
         }
         let (x, y, z) = (axis[0] / n, axis[1] / n, axis[2] / n);
         let r = degrees.to_radians();
-        let (s, c) = (r.sin(), r.cos());
+        let (s, c) = (kentos_num::sin(r), kentos_num::cos(r));
         let k = 1.0 - c;
         let rot = [
             [k * x * x + c, k * x * y - s * z, k * x * z + s * y],
@@ -149,9 +149,9 @@ impl Affine {
             ));
         }
         let (a, b, c) = (yaw.to_radians(), pitch.to_radians(), roll.to_radians());
-        let (s1, c1) = (a.sin(), a.cos());
-        let (s2, c2) = (b.sin(), b.cos());
-        let (s3, c3) = (c.sin(), c.cos());
+        let (s1, c1) = (kentos_num::sin(a), kentos_num::cos(a));
+        let (s2, c2) = (kentos_num::sin(b), kentos_num::cos(b));
+        let (s3, c3) = (kentos_num::sin(c), kentos_num::cos(c));
         let rot = [
             [c2 * c1, s3 * s2 * c1 - c3 * s1, c3 * s2 * c1 + s3 * s1],
             [c2 * s1, s3 * s2 * s1 + c3 * c1, c3 * s2 * s1 - s3 * c1],
@@ -315,7 +315,7 @@ impl Affine {
         let m = &self.m;
         let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
         let s = (ax * ax + ay * ay + az * az).sqrt();
-        s.atan2(m[0] + m[5] + m[10] - 1.0) * (180.0 / std::f64::consts::PI)
+        kentos_num::atan2(s, m[0] + m[5] + m[10] - 1.0) * (180.0 / std::f64::consts::PI)
     }
 
     /// How far the point `c` goes.
@@ -496,7 +496,7 @@ mod tests {
     ];
 
     fn turn_z(t: f64, by: [f64; 3]) -> Affine {
-        let (s, c) = t.sin_cos();
+        let (s, c) = kentos_num::sin_cos(t);
         Affine::new([
             c, -s, 0.0, by[0], s, c, 0.0, by[1], 0.0, 0.0, 1.0, by[2], 0.0, 0.0, 0.0, 1.0,
         ])

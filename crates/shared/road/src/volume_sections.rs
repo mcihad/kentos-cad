@@ -108,13 +108,13 @@ impl Segment {
             return Some(Segment::Line { a, b, len: chord });
         }
         // The arc's angle, counterclockwise above 0; its centre left of the chord for a counterclockwise arc.
-        let sweep = 4.0 * bulge.atan();
-        let r = chord / (2.0 * (sweep / 2.0).sin()).abs();
+        let sweep = 4.0 * kentos_num::atan(bulge);
+        let r = chord / (2.0 * kentos_num::sin(sweep / 2.0)).abs();
         let m = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
-        let along = (chord / 2.0) / (sweep / 2.0).tan();
+        let along = (chord / 2.0) / kentos_num::tan(sweep / 2.0);
         let left = [-dy / chord, dx / chord];
         let c = [m[0] + left[0] * along, m[1] + left[1] * along];
-        let start = (a[1] - c[1]).atan2(a[0] - c[0]);
+        let start = kentos_num::atan2(a[1] - c[1], a[0] - c[0]);
         Some(Segment::Arc {
             c,
             r,
@@ -145,9 +145,18 @@ impl Segment {
             } => {
                 let turn = sweep.signum();
                 let angle = start + turn * l / r;
-                let p = [c[0] + r * angle.cos(), c[1] + r * angle.sin()];
+                let p = [
+                    c[0] + r * kentos_num::cos(angle),
+                    c[1] + r * kentos_num::sin(angle),
+                ];
                 // Counterclockwise the way is the radius turned left; clockwise turned right.
-                (p, [-turn * angle.sin(), turn * angle.cos()])
+                (
+                    p,
+                    [
+                        -turn * kentos_num::sin(angle),
+                        turn * kentos_num::cos(angle),
+                    ],
+                )
             }
         }
     }
@@ -222,7 +231,7 @@ pub fn axis(azimuth: f64) -> [f64; 2] {
         270.0 => [-1.0, 0.0],
         a => {
             let r = a.to_radians();
-            [r.sin(), r.cos()]
+            [kentos_num::sin(r), kentos_num::cos(r)]
         }
     }
 }
@@ -750,7 +759,7 @@ mod tests {
     /// ½π(30² − 10²) = 400π, a metre high, is the same: on a circle the middle radius's length is exact).
     #[test]
     fn on_an_arc_the_sections_follow_the_radius() {
-        let p = |r: f64, a: f64| [r * a.cos(), r * a.sin(), 1.0];
+        let p = |r: f64, a: f64| [r * kentos_num::cos(a), r * kentos_num::sin(a), 1.0];
         let mut comparison = Vec::new();
         let n = 720;
         let (from, span) = (-0.1, std::f64::consts::PI + 0.2);

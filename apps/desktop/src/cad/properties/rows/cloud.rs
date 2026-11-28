@@ -168,10 +168,11 @@ fn place_words(x: &kentos_commands::PointCloudFields) -> String {
         return "Dosyanın kendi yeri".to_owned();
     };
     let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
-    let angle = (ax * ax + ay * ay + az * az)
-        .sqrt()
-        .atan2(m[0] + m[5] + m[10] - 1.0)
-        .to_degrees();
+    let angle = kentos_num::atan2(
+        (ax * ax + ay * ay + az * az).sqrt(),
+        m[0] + m[5] + m[10] - 1.0,
+    )
+    .to_degrees();
     let b = s.bounds;
     let c = [
         (b[0] + b[3]) / 2.0,
@@ -179,7 +180,10 @@ fn place_words(x: &kentos_commands::PointCloudFields) -> String {
         (b[2] + b[5]) / 2.0,
     ];
     let q = kentos_commands::pose_apply(&m, c);
-    let d = ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt();
+    let d = (kentos_num::powi(q[0] - c[0], 2)
+        + kentos_num::powi(q[1] - c[1], 2)
+        + kentos_num::powi(q[2] - c[2], 2))
+    .sqrt();
     format!(
         "Nesnede: dönme {}°, kayma {} m",
         fixed(angle, 4),

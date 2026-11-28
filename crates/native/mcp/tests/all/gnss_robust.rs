@@ -30,9 +30,9 @@ fn network() -> (Vec<Value>, Vec<Value>) {
                     let blunder = if k == BLUNDER { 0.09 } else { 0.0 };
                     let kf = k as f64;
                     let noise = [
-                        0.003 * (kf * 0.7).sin(),
-                        0.003 * (kf * 1.3).cos(),
-                        0.006 * (kf * 0.9).sin(),
+                        0.003 * kentos_num::sin(kf * 0.7),
+                        0.003 * kentos_num::cos(kf * 1.3),
+                        0.006 * kentos_num::sin(kf * 0.9),
                     ];
                     let d: [f64; 3] = [0, 1, 2].map(|q| b[q] - a[q] + noise[q] + blunder * up[q]);
                     baselines.push(json!({

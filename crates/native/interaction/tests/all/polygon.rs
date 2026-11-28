@@ -237,7 +237,7 @@ fn arc_options_shape_one_segment() {
     b.confirm();
     let (_, bulges) = newest(&b);
     let bulges = bulges.expect("one arc");
-    assert!((bulges[1] - (std::f64::consts::PI / 8.0).tan()).abs() < 1e-12);
+    assert!((bulges[1] - kentos_num::tan(std::f64::consts::PI / 8.0)).abs() < 1e-12);
     assert_eq!([bulges[0], bulges[2], bulges[3]], [0.0, 0.0, 0.0]);
 
     // A radius too short for the chord warns with the chord limit.

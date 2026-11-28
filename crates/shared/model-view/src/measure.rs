@@ -45,7 +45,7 @@ pub const CREASE_DEGREES: f64 = 25.0;
 /// A body's edges as pairs of indices into its vertices: where one of its faces ends (an open body's rim), where more
 /// than two meet, or where two turn by at least `crease_degrees`; its corners joined by their exact coordinates.
 pub fn edges(vertices: &[V3], triangles: &[[u32; 3]], crease_degrees: f64) -> Vec<[u32; 2]> {
-    let cos = crease_degrees.to_radians().cos();
+    let cos = kentos_num::cos(crease_degrees.to_radians());
     let mut corners: HashMap<[u64; 3], u32> = HashMap::new();
     let mut index: HashMap<(u32, u32), usize> = HashMap::new();
     let mut found: Vec<([u32; 2], Vec<V3>)> = Vec::new();
@@ -198,11 +198,7 @@ pub fn angle(a: V3, vertex: V3, b: V3) -> Option<f64> {
         return None;
     }
     // atan2 of the cross's length and the dot: exact near 0° and 180°, where acos is not.
-    Some(
-        math::length(math::cross(u, v))
-            .atan2(math::dot(u, v))
-            .to_degrees(),
-    )
+    Some(kentos_num::atan2(math::length(math::cross(u, v)), math::dot(u, v)).to_degrees())
 }
 
 /// A body's face: its area (m²), its outline's segments and its unit normal.
@@ -221,7 +217,7 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
     let [a, b, c] = corners(triangles.get(triangle)?)?;
     let n = normal(a, b, c)?;
     let offset = math::dot(n, a);
-    let flat = 0.1f64.to_radians().cos();
+    let flat = kentos_num::cos(0.1f64.to_radians());
     let in_plane = |t: &[u32; 3]| {
         corners(t).is_some_and(|[p, q, r]| {
             normal(p, q, r).is_some_and(|m| math::dot(m, n).abs() >= flat)

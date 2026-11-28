@@ -573,11 +573,16 @@ fn rings_of(e: &Entity) -> Option<Vec<(Vec<Ring>, bool)>> {
             while sweep <= 0.0 {
                 sweep += std::f64::consts::TAU;
             }
-            let at = |t: f64| P::new(a.c.x + a.r * t.cos(), a.c.y + a.r * t.sin());
+            let at = |t: f64| {
+                P::new(
+                    a.c.x + a.r * kentos_num::cos(t),
+                    a.c.y + a.r * kentos_num::sin(t),
+                )
+            };
             vec![(
                 vec![Ring {
                     pts: vec![at(a.a0), at(a.a1)],
-                    bulges: Some(vec![(sweep / 4.0).tan()]),
+                    bulges: Some(vec![kentos_num::tan(sweep / 4.0)]),
                 }],
                 false,
             )]

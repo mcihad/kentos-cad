@@ -1310,7 +1310,7 @@ impl canvas::Program<Message> for Barrel<'_> {
 /// A round step for about `n` ticks over `span`.
 fn tick(span: f64, n: f64) -> f64 {
     let raw = (span / n).max(1e-9);
-    let p = 10f64.powf(raw.log10().floor());
+    let p = kentos_num::pow(10f64, kentos_num::log10(raw).floor());
     [1.0, 2.0, 2.5, 5.0, 10.0]
         .into_iter()
         .map(|k| k * p)

@@ -247,10 +247,10 @@ fn quadrant(
         ));
     };
     let c = [r.cx, r.cy];
-    let start = (r.on_a.y - r.cy).atan2(r.on_a.x - r.cx);
+    let start = kentos_num::atan2(r.on_a.y - r.cy, r.on_a.x - r.cx);
     let sweep = r.sweep.to_radians();
     let turn = sweep.signum();
-    let along = |a: f64| [-turn * a.sin(), turn * a.cos()];
+    let along = |a: f64| [-turn * kentos_num::sin(a), turn * kentos_num::cos(a)];
     let (ta, tb) = (along(start), along(start + sweep));
     let run = |radius: f64| {
         let arc = swept::arc_places(c, radius, start, sweep, step);

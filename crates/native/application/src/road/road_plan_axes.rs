@@ -63,8 +63,8 @@ impl Room {
     pub fn holds(&self, p: [f64; 2], turn: f64) -> bool {
         let r = turn.to_radians();
         let d = [p[0] - self.center[0], p[1] - self.center[1]];
-        (d[0] * r.cos() + d[1] * r.sin()).abs() <= self.half[0]
-            && (-d[0] * r.sin() + d[1] * r.cos()).abs() <= self.half[1]
+        (d[0] * kentos_num::cos(r) + d[1] * kentos_num::sin(r)).abs() <= self.half[0]
+            && (-d[0] * kentos_num::sin(r) + d[1] * kentos_num::cos(r)).abs() <= self.half[1]
     }
 }
 
@@ -320,7 +320,7 @@ pub fn curve_data(
         format!("D = {:.4}", grad(dc)),
         format!("R = {}", n2(c.radius)),
         format!("L = {}", n2(c.radius * dc)),
-        format!("T = {}", n2(c.radius * (0.5 * dc).tan())),
+        format!("T = {}", n2(c.radius * kentos_num::tan(0.5 * dc))),
     ]);
     if let Some((s, normal)) = schedule {
         let got = kentos_road::superelevation_pi::curve_super(s, *normal, c);
@@ -354,7 +354,10 @@ fn kmh(v: f64) -> String {
 
 /// Where the lines through `a` and `b` in directions `ta` and `tb` (radians) meet; none when they are parallel.
 fn meet(a: [f64; 2], ta: f64, b: [f64; 2], tb: f64) -> Option<[f64; 2]> {
-    let (da, db) = ([ta.cos(), ta.sin()], [tb.cos(), tb.sin()]);
+    let (da, db) = (
+        [kentos_num::cos(ta), kentos_num::sin(ta)],
+        [kentos_num::cos(tb), kentos_num::sin(tb)],
+    );
     let cross = da[0] * db[1] - da[1] * db[0];
     if cross.abs() < 1e-12 {
         return None;
@@ -458,7 +461,10 @@ fn axis(out: &mut Vec<NewObject>, b: &Built, parallel: bool, _m: f64) {
 
 /// The tangent and the left normal of a direction θ (counterclockwise from the x axis): (cos θ, sin θ), (−sin θ, cos θ).
 fn frame(dir: f64) -> ([f64; 2], [f64; 2]) {
-    ([dir.cos(), dir.sin()], [-dir.sin(), dir.cos()])
+    (
+        [kentos_num::cos(dir), kentos_num::sin(dir)],
+        [-kentos_num::sin(dir), kentos_num::cos(dir)],
+    )
 }
 
 fn hectometres(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64) {
@@ -590,7 +596,10 @@ fn curves(
         };
         let lines = curve_data(named, c, pi.speed.or(def.design_speed), pt, inner, schedule);
         let r = turn.to_radians();
-        let (ex, ey) = ([r.cos(), r.sin()], [-r.sin(), r.cos()]);
+        let (ex, ey) = (
+            [kentos_num::cos(r), kentos_num::sin(r)],
+            [-kentos_num::sin(r), kentos_num::cos(r)],
+        );
         // Upright on the paper: a point `x` along and `y` up from `o`.
         let on = |o: [f64; 2], x: f64, y: f64| {
             [o[0] + ex[0] * x + ey[0] * y, o[1] + ex[1] * x + ey[1] * y]
@@ -930,7 +939,10 @@ fn ends(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64, room: Op
         for (i, l) in lines.into_iter().enumerate() {
             let k = 1.6 * h * i as f64;
             out.push(text(
-                [at[0] + down.cos() * k, at[1] + down.sin() * k],
+                [
+                    at[0] + kentos_num::cos(down) * k,
+                    at[1] + kentos_num::sin(down) * k,
+                ],
                 l,
                 h,
                 degrees,

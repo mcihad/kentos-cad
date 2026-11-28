@@ -92,7 +92,7 @@ fn check(
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     warnings.extend(read.warnings);
     let r = &read.report;
-    let (cos, sin) = (read.angle.cos(), read.angle.sin());
+    let (cos, sin) = (kentos_num::cos(read.angle), kentos_num::sin(read.angle));
     let half = 0.5 * r.width;
     let along = |d: f64, side: f64| {
         [

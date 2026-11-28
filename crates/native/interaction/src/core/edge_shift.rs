@@ -273,7 +273,7 @@ impl EdgeShift {
                 Level::Warn,
                 format!(
                     "Kenar referansa paralel değil (aralarında {:.4}° var); uzaklık yalnız 0,001° içinde paralel kenarlar arasında tutulur.",
-                    s.min(1.0).asin().to_degrees()
+                    kentos_num::asin(s.min(1.0)).to_degrees()
                 ),
             );
             return;

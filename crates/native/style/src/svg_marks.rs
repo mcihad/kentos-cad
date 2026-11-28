@@ -115,7 +115,7 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
             // The marker shader turns its box by `turn` counter-clockwise in its pixels, y up as the ground's
             // (`markerVertex`): on the ground the linear part [[cos, -sin], [sin, cos]], by columns. Its offset (in the
             // batch's unit, the ground's) is added before the turn, so it turns with it.
-            let (s, c) = turn.sin_cos();
+            let (s, c) = kentos_num::sin_cos(turn);
             let (ox, oy) = (offset[0], offset[1]);
             let (tx, ty) = (x + c * ox - s * oy, y + s * ox + c * oy);
             instances.extend([w * c, w * s, -w * s, w * c, tx, ty, w, 0.0]);
@@ -218,8 +218,8 @@ pub fn boxes<'a>(
             let (wc, ws) = (f64::from(x[0]), f64::from(x[1]));
             let w = kentos_num::hypot(wc, ws);
             let h = w * mark.aspect;
-            let turn = ws.atan2(wc);
-            let (s, c) = turn.sin_cos();
+            let turn = kentos_num::atan2(ws, wc);
+            let (s, c) = kentos_num::sin_cos(turn);
             // The translation is the place and the turned offset; the box's middle is the anchor's way off it.
             let (ax, ay) = (mark.anchor[0] * w, mark.anchor[1] * h);
             let middle = [
@@ -846,7 +846,7 @@ mod tests {
             (u - 0.5) * w - anchor[0] * w + offset[0],
             (0.5 - v) * h - anchor[1] * h + offset[1],
         ];
-        let (s, c) = m[2].sin_cos();
+        let (s, c) = kentos_num::sin_cos(m[2]);
         [m[0] + c * q[0] - s * q[1], m[1] + s * q[0] + c * q[1]]
     }
 

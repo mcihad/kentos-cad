@@ -49,7 +49,8 @@ pub fn screen_error(
     }
     match camera.projection {
         Projection::Perspective { fov_y, .. } => {
-            geometric_error * viewport.height / (distance.max(1e-7) * 2.0 * (fov_y / 2.0).tan())
+            geometric_error * viewport.height
+                / (distance.max(1e-7) * 2.0 * kentos_num::tan(fov_y / 2.0))
         }
         Projection::Orthographic { height, .. } => {
             geometric_error / (height / viewport.height.max(1.0))

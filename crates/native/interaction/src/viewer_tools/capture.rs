@@ -129,7 +129,7 @@ impl Capture {
             }
             Kind::Circle => pts.first().map(|&c| Shape::Circle {
                 center: c,
-                radius: ((p.x - c.x).powi(2) + (p.y - c.y).powi(2)).sqrt(),
+                radius: (kentos_num::powi(p.x - c.x, 2) + kentos_num::powi(p.y - c.y, 2)).sqrt(),
             }),
             Kind::Line | Kind::Polygon => None,
         }
@@ -253,7 +253,10 @@ impl Tool for Capture {
                     (0..48)
                         .map(|i| {
                             let a = f64::from(i) / 48.0 * std::f64::consts::TAU;
-                            Vec2::new(center.x + radius * a.cos(), center.y + radius * a.sin())
+                            Vec2::new(
+                                center.x + radius * kentos_num::cos(a),
+                                center.y + radius * kentos_num::sin(a),
+                            )
                         })
                         .collect(),
                 );

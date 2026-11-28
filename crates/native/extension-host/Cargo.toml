@@ -11,6 +11,8 @@ publish.workspace = true
 # host, MCP and the Python host share it. Not inside kentos-native-application: the registry changes often while the
 # extension system grows, and that crate takes minutes to rebuild (docs/adr/8054).
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 kentos-extensions = { path = "../../shared/extensions" }
 serde = { workspace = true }
 serde_json = { workspace = true }

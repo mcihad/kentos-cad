@@ -139,11 +139,11 @@ impl Labels<'_> {
         let own_bold = text_face.font.is_some() && text_face.bold;
         // The slant's tangent: a raised or lowered run starts that much further along.
         let slant = match (text_face.font, text_face.oblique) {
-            (Some(_), Some(o)) => o.to_radians().tan(),
+            (Some(_), Some(o)) => kentos_num::tan(o.to_radians()),
             _ => 0.0,
         };
         let r = rotation.to_radians();
-        let (c, s) = (r.cos(), r.sin());
+        let (c, s) = (kentos_num::cos(r), kentos_num::sin(r));
         let size = height * self.camera.get().scale;
         // Metres along the baseline: thousandths of an em, the height, the width factor.
         let em = height * width_factor / 1000.0;
@@ -808,7 +808,10 @@ impl Labels<'_> {
                             continue;
                         }
                         let r = rotation.to_radians();
-                        let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
+                        let (u, v) = (
+                            Vec2::new(kentos_num::cos(r), kentos_num::sin(r)),
+                            Vec2::new(-kentos_num::sin(r), kentos_num::cos(r)),
+                        );
                         let corner = |x: f64, y: f64| {
                             let x = x + y * lean;
                             self.screen(Vec2::new(
@@ -1047,8 +1050,8 @@ impl Labels<'_> {
                     if r[1] == kentos_geometry_core::store::labels::LABEL_PARAGRAPH_MASK {
                         let rad = r[4].to_radians();
                         let (u, v) = (
-                            Vec2::new(rad.cos(), rad.sin()),
-                            Vec2::new(-rad.sin(), rad.cos()),
+                            Vec2::new(kentos_num::cos(rad), kentos_num::sin(rad)),
+                            Vec2::new(-kentos_num::sin(rad), kentos_num::cos(rad)),
                         );
                         let lean = kentos_native_application::geometry::core_face(&p.face).lean();
                         let corner = |x: f64, y: f64| {

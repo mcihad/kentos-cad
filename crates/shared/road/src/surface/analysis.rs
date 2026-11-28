@@ -264,9 +264,8 @@ impl Surface {
             for k in 0..3 {
                 let (a, b, c) = (p[k], p[(k + 1) % 3], p[(k + 2) % 3]);
                 let (x, y) = ([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]]);
-                let angle = (x[0] * y[1] - x[1] * y[0])
-                    .abs()
-                    .atan2(x[0] * y[0] + x[1] * y[1]);
+                let angle =
+                    kentos_num::atan2((x[0] * y[1] - x[1] * y[0]).abs(), x[0] * y[0] + x[1] * y[1]);
                 let i = t[k] as usize;
                 for d in 0..3 {
                     sum[i][d] += angle * n[d];

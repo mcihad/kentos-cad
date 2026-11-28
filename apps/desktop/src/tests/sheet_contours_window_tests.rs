@@ -422,7 +422,7 @@ fn built_screens() {
                 .filter(|e| e.base().layer_id == "zemin")
                 .min_by(|a, b| {
                     let d = |e: &kentos_commands::Entity| match e {
-                        kentos_commands::Entity::Point(p) => (p.p.x - 330.0).powi(2) + (p.p.y - 250.0).powi(2),
+                        kentos_commands::Entity::Point(p) => kentos_num::powi(p.p.x - 330.0, 2) + kentos_num::powi(p.p.y - 250.0, 2),
                         _ => f64::INFINITY,
                     };
                     d(a).total_cmp(&d(b))

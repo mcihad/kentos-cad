@@ -177,7 +177,7 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
         );
         geo.push(Row::text("Eğim", shown).editor(number(Field::SlabSlope(slot))));
         if let Some(sl) = x.slope {
-            let dir = (sl.to.y - sl.from.y).atan2(sl.to.x - sl.from.x);
+            let dir = kentos_num::atan2(sl.to.y - sl.from.y, sl.to.x - sl.from.x);
             // Its words carry the angle's mark (° or g): no unit column beside it.
             geo.push(
                 Row::figure("Eğim yönü", f.angle(dir))

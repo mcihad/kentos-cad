@@ -24,7 +24,7 @@ fn nearest_on(ring: &[Vec2], p: Vec2) -> Option<(Vec2, f64)> {
             0.0
         };
         let q = Vec2::new(a.x + dx * t, a.y + dy * t);
-        let d = (q.x - p.x).powi(2) + (q.y - p.y).powi(2);
+        let d = kentos_num::powi(q.x - p.x, 2) + kentos_num::powi(q.y - p.y, 2);
         if best.is_none_or(|(_, e)| d < e) {
             best = Some((q, d));
         }
@@ -61,7 +61,7 @@ fn middle(areas: &[Area]) -> Option<(Vec2, f64)> {
         }
     }
     b[0].is_finite().then(|| {
-        let diag = ((b[2] - b[0]).powi(2) + (b[3] - b[1]).powi(2)).sqrt();
+        let diag = (kentos_num::powi(b[2] - b[0], 2) + kentos_num::powi(b[3] - b[1], 2)).sqrt();
         (Vec2::new((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0), diag)
     })
 }

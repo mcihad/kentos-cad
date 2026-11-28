@@ -996,7 +996,10 @@ fn standalone_table_field_is_checked_read_only_refreshed_explicitly_and_undoable
             && stale.message.contains("Eski")
             && stale.message.contains("Güncel proje")
     );
-    assert!((stale.points[0].x - (1. + 1.5 * 30_f64.to_radians().cos() + 0.125)).abs() < 1e-12);
+    assert!(
+        (stale.points[0].x - (1. + 1.5 * kentos_num::cos(30_f64.to_radians()) + 0.125)).abs()
+            < 1e-12
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
     assert!(!doc.is_dirty());
     let result = registry::run(
@@ -1239,8 +1242,9 @@ fn invalid_in_memory_block_table_is_checked_defensively_without_mutation() {
         .unwrap();
     assert_eq!(stale.uids, [uid.to_string()]);
     // Local table cell center, followed by inner scale/rotation/translation and root translation.
-    let local_x = 1. + 1.5 * 30_f64.to_radians().cos() + 0.125;
-    let local_y = 2. + 1.5 * 30_f64.to_radians().sin() - 0.25 * 30_f64.to_radians().cos();
+    let local_x = 1. + 1.5 * kentos_num::cos(30_f64.to_radians()) + 0.125;
+    let local_y = 2. + 1.5 * kentos_num::sin(30_f64.to_radians())
+        - 0.25 * kentos_num::cos(30_f64.to_radians());
     assert!(
         (stale.points[0].x - (12. - 2. * local_y)).abs() < 1e-12,
         "{stale:?}"

@@ -750,7 +750,7 @@ pub fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Cam
             (0..=n)
                 .map(|i| {
                     let a = a0 + sweep * i as f64 / n as f64;
-                    screen(c.x + a.cos() * r, c.y + a.sin() * r)
+                    screen(c.x + kentos_num::cos(a) * r, c.y + kentos_num::sin(a) * r)
                 })
                 .collect()
         }
@@ -1248,7 +1248,10 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
                 let n = ((sweep.abs() / (std::f64::consts::PI / 48.0)).ceil() as usize).max(8);
                 for i in 0..=n {
                     let t = a0 + sweep * i as f64 / n as f64;
-                    let q = at(Vec2::new(c.x + r * t.cos(), c.y + r * t.sin()));
+                    let q = at(Vec2::new(
+                        c.x + r * kentos_num::cos(t),
+                        c.y + r * kentos_num::sin(t),
+                    ));
                     if i == 0 {
                         b.move_to(q);
                     } else {
@@ -1374,7 +1377,7 @@ fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, color
     for line in &track.lines {
         let [ox, oy] = camera.world_to_screen(line.origin);
         let r = line.angle.to_radians();
-        let (dx, dy) = screen_dir(camera, r.cos(), r.sin(), 1e4);
+        let (dx, dy) = screen_dir(camera, kentos_num::cos(r), kentos_num::sin(r), 1e4);
         frame.stroke(
             &Path::line(
                 Point::new(ox as f32, oy as f32),

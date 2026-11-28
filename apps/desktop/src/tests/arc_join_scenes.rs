@@ -24,7 +24,7 @@ use crate::viewport::Event;
 
 /// tan(π/8): a quarter circle's bulge.
 fn quarter() -> f64 {
-    (std::f64::consts::PI / 8.0).tan()
+    kentos_num::tan(std::f64::consts::PI / 8.0)
 }
 
 /// A (1) and B (2).

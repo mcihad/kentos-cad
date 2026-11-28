@@ -226,7 +226,9 @@ fn within(ring: &[Vec2], p: Vec2) -> bool {
 fn start_of(e: &Edge) -> Vec2 {
     match *e {
         Edge::Seg { a, .. } => a,
-        Edge::Arc { c, r, a0, .. } => Vec2::new(c.x + r * a0.cos(), c.y + r * a0.sin()),
+        Edge::Arc { c, r, a0, .. } => {
+            Vec2::new(c.x + r * kentos_num::cos(a0), c.y + r * kentos_num::sin(a0))
+        }
     }
 }
 

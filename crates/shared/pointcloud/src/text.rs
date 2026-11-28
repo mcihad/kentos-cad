@@ -100,7 +100,7 @@ fn decimal(s: &str) -> Option<Decimal> {
 
 impl Decimal {
     fn value(self) -> f64 {
-        let v = self.digits as f64 / 10f64.powi(self.places as i32);
+        let v = self.digits as f64 / kentos_num::powi(10f64, self.places as i32);
         if self.neg { -v } else { v }
     }
 
@@ -345,7 +345,7 @@ impl Scan {
             d -= 1;
             coarsened = true;
         }
-        let scale = 10f64.powi(-(d as i32));
+        let scale = kentos_num::powi(10f64, -(d as i32));
         Ok(Plan {
             columns,
             count: self.count,

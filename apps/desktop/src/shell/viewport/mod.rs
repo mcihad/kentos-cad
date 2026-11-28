@@ -968,7 +968,7 @@ pub fn gesture(
         mouse::Event::WheelScrolled { delta } => {
             let at = cursor.position_in(bounds)?;
             let steps = wheel_steps(delta);
-            let factor = steps.exp();
+            let factor = kentos_num::exp(steps);
             (steps != 0.0 && factor.is_finite())
                 .then_some((Some(Event::Zoomed { factor, at }), true))
         }

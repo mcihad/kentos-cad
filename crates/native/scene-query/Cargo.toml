@@ -10,6 +10,8 @@ publish.workspace = true
 # here, so a viewer, a phone and the renderer take it without the authoring crates (application, interaction), the
 # heavy codecs (DWG, IFC) or the schema generators. The authoring crates re-export its modules under their old paths.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 # The walls' and texts' drawing rules shared with the files (DXF, KCAD): the rules only, none of the codecs, which a
 # viewer and a phone do not read (docs/adr/8054 §11; scripts/arch/deps.mjs checks the graph).

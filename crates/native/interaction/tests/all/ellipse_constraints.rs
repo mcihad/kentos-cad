@@ -77,7 +77,7 @@ fn an_elliptical_arc_curve_can_designate_its_center_when_a_point_is_required() {
     b.start("constraint");
     assert!(b.type_text("U"));
     // The centre is outside the arc's bounding box; the hovered curve designates it.
-    b.click(8. * 0.7f64.cos(), 4. * 0.7f64.sin());
+    b.click(8. * kentos_num::cos(0.7f64), 4. * kentos_num::sin(0.7f64));
     assert_eq!(b.points(), 1, "{:?}", b.log);
     b.click(12., 0.);
     assert!(b.type_text("12"));
@@ -98,7 +98,10 @@ fn fixing_a_circle_by_its_curve_still_fixes_center_and_radius() {
     let slot = b.add_circle("cizim", [-20., 0.], 5.);
     b.start("constraint");
     assert!(b.type_text("SB"));
-    b.click(-20. + 5. * 0.8f64.cos(), 5. * 0.8f64.sin());
+    b.click(
+        -20. + 5. * kentos_num::cos(0.8f64),
+        5. * kentos_num::sin(0.8f64),
+    );
     let c = &b.doc.constraints().constraints[0];
     let ConstraintRule::Fix { a } = c.rule else {
         panic!()
@@ -242,7 +245,7 @@ fn an_elliptical_arc_end_grip_previews_readonly_and_follows_its_dimension_in_one
     use kentos_commands::{CommandResult, ConstraintsQuery, Entity};
     let mut b = arc_drag_bench(false);
     let before = b.doc.to_snapshot_v2();
-    let target = [4. * 0.3f64.cos(), 2. * 0.3f64.sin()];
+    let target = [4. * kentos_num::cos(0.3f64), 2. * kentos_num::sin(0.3f64)];
     b.click(4., 0.);
     assert!(b.session.grip_active());
     b.move_to(target[0], target[1]);
@@ -299,13 +302,13 @@ fn an_elliptical_arc_grip_conflict_keeps_the_last_valid_drawing() {
     let mut b = arc_drag_bench(true);
     let before = b.doc.to_snapshot_v2();
     b.click(4., 0.);
-    b.move_to(4. * 0.3f64.cos(), 2. * 0.3f64.sin());
+    b.move_to(4. * kentos_num::cos(0.3f64), 2. * kentos_num::sin(0.3f64));
     assert_eq!(
         b.session.preview(&Default::default()).unwrap().tag_tone,
         kentos_interaction::Tone::Danger
     );
     assert_eq!(b.doc.to_snapshot_v2(), before);
-    b.click(4. * 0.3f64.cos(), 2. * 0.3f64.sin());
+    b.click(4. * kentos_num::cos(0.3f64), 2. * kentos_num::sin(0.3f64));
     assert_eq!(b.doc.to_snapshot_v2(), before, "{:?}", b.log);
 }
 
@@ -320,7 +323,7 @@ fn a_named_full_axis_previews_and_commits_without_freezing_its_other_radius() {
     raw["settings"]["workspace"] = json!("cad");
     raw["entities"] = json!([
         {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{},"c":{"x":E,"y":N},"major":{"x":4,"y":0},"ratio":0.5,"t0":0.6,"t1":0.6},
-        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":E+4.*0.6f64.cos(),"y":N+2.*0.6f64.sin()},"b":{"x":E+8.,"y":N+3.}}
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":E+4.*kentos_num::cos(0.6f64),"y":N+2.*kentos_num::sin(0.6f64)},"b":{"x":E+8.,"y":N+3.}}
     ]);
     let mut b = Bench::on(&raw.to_string());
     b.draft.snap = false;
@@ -328,7 +331,7 @@ fn a_named_full_axis_previews_and_commits_without_freezing_its_other_radius() {
     let c = part(1, "center");
     let s = part(1, "start");
     let f = part(2, "start");
-    let distance = kentos_num::hypot(4. * 0.6f64.cos(), 2. * 0.6f64.sin());
+    let distance = kentos_num::hypot(4. * kentos_num::cos(0.6f64), 2. * kentos_num::sin(0.6f64));
     let result=constraints_edit::execute(&mut ExecutionContext::new(&mut b.doc),serde_json::from_value(json!({"edit":{"kind":"add","constraints":[
         {"rule":{"kind":"fix","a":c}},{"rule":{"kind":"distance","a":c,"b":s,"parameter":"uzaklik"},"value":format!("{distance:.17}m")},
         {"rule":{"kind":"coincident","a":s,"b":f}}]}})).unwrap());

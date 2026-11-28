@@ -133,7 +133,9 @@ impl std::fmt::Display for GradingError {
 /// The plane's height at (x, y), raised by `offset`.
 pub fn plane_z(p: &Platform, x: f64, y: f64, offset: f64) -> f64 {
     let d = p.direction.to_radians();
-    p.base[2] + offset + p.grade * ((x - p.base[0]) * d.cos() + (y - p.base[1]) * d.sin())
+    p.base[2]
+        + offset
+        + p.grade * ((x - p.base[0]) * kentos_num::cos(d) + (y - p.base[1]) * kentos_num::sin(d))
 }
 
 fn area2(ring: &[[f64; 2]]) -> f64 {
@@ -320,14 +322,17 @@ pub fn grade_told(
             (here[0] - prev[0]) * (next[1] - here[1]) - (here[1] - prev[1]) * (next[0] - here[0]);
         if turn > 0.0 {
             // Convex: a fan from the incoming edge's square to the outgoing one's, counterclockwise.
-            let (a1, mut a2) = (n1[1].atan2(n1[0]), n2[1].atan2(n2[0]));
+            let (a1, mut a2) = (
+                kentos_num::atan2(n1[1], n1[0]),
+                kentos_num::atan2(n2[1], n2[0]),
+            );
             while a2 < a1 {
                 a2 += std::f64::consts::TAU;
             }
             let k = ((a2 - a1).to_degrees() / p.fan).ceil().max(1.0) as usize;
             for j in 0..=k {
                 let a = a1 + (a2 - a1) * j as f64 / k as f64;
-                push(here, [a.cos(), a.sin()], i, true);
+                push(here, [kentos_num::cos(a), kentos_num::sin(a)], i, true);
             }
         } else {
             // Straight or reflex: one line along the bisector.

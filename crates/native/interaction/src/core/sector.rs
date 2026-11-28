@@ -211,7 +211,7 @@ impl Sector {
         let end = atan2(hover.y - c.y, hover.x - c.x);
         let f = self.format;
         let tag = |lines: Vec<String>| Tag { at: hover, lines };
-        let at = |a: f64| Vec2::new(c.x + r * a.cos(), c.y + r * a.sin());
+        let at = |a: f64| Vec2::new(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a));
         let Some((pts, bulges)) = Self::ring(c, r, a0, end) else {
             return Preview {
                 strokes: vec![Stroke::solid(vec![c, at(a0)], false)],
@@ -248,7 +248,10 @@ impl Sector {
         let (r, end) = match self.radius {
             Some(r) => (
                 r,
-                Vec2::new(c.x + r * direction.cos(), c.y + r * direction.sin()),
+                Vec2::new(
+                    c.x + r * kentos_num::cos(direction),
+                    c.y + r * kentos_num::sin(direction),
+                ),
             ),
             None => (dist(c, hover), hover),
         };

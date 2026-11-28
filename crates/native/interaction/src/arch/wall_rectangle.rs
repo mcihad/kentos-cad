@@ -105,7 +105,10 @@ impl WallRectangle {
         match self.size {
             None => Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
             Some((length, width)) => {
-                let (c, s) = (self.rotation.cos(), self.rotation.sin());
+                let (c, s) = (
+                    kentos_num::cos(self.rotation),
+                    kentos_num::sin(self.rotation),
+                );
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
                 let along = if dx * c + dy * s < 0.0 { -1.0 } else { 1.0 };
                 let across = if -dx * s + dy * c < 0.0 { -1.0 } else { 1.0 };

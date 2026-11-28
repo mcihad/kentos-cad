@@ -765,9 +765,9 @@ fn partition_preview(app: &mut App) {
 /// Ölçülü bölme started at 150 mm (docs/adr/0734).
 fn curved(app: &mut App) {
     let mut o = Objects::new();
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     let at = |r: f64, deg: f64| {
-        crate::furniture_scenes::xy(r * deg.to_radians().cos(), r * deg.to_radians().sin())
+        crate::furniture_scenes::xy(r * kentos_num::cos(deg.to_radians()), r * kentos_num::sin(deg.to_radians()))
     };
     o.push(
         "duvar",
@@ -816,7 +816,7 @@ fn partition_arc_between(app: &mut App) {
     for deg in [15.0f64, 75.0] {
         click(
             app,
-            [6.0 * deg.to_radians().cos(), 6.0 * deg.to_radians().sin()],
+            [6.0 * kentos_num::cos(deg.to_radians()), 6.0 * kentos_num::sin(deg.to_radians())],
         );
     }
     // Placed on the inside: the written wall between the two radial walls.

@@ -192,9 +192,9 @@ fn run(
                 Some(t) if most > 1 => {
                     let m = t.matrix();
                     let w = [
-                        m[9].atan2(m[10]),
-                        -m[8].clamp(-1.0, 1.0).asin(),
-                        m[4].atan2(m[0]),
+                        kentos_num::atan2(m[9], m[10]),
+                        -kentos_num::asin(m[8].clamp(-1.0, 1.0)),
+                        kentos_num::atan2(m[4], m[0]),
                     ];
                     let c = t.apply(centre);
                     (w, [c[0] - centre[0], c[1] - centre[1], c[2] - centre[2]], m)

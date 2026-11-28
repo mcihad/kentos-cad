@@ -440,8 +440,10 @@ impl Ground {
             for cx in lo[0]..=hi[0] {
                 for &i in &grid.cells[cy * grid.nx + cx] {
                     let q = closest_on_triangle(p, &self.tris[i as usize]);
-                    let d = ((q[0] - p[0]).powi(2) + (q[1] - p[1]).powi(2) + (q[2] - p[2]).powi(2))
-                        .sqrt();
+                    let d = (kentos_num::powi(q[0] - p[0], 2)
+                        + kentos_num::powi(q[1] - p[1], 2)
+                        + kentos_num::powi(q[2] - p[2], 2))
+                    .sqrt();
                     if best.is_none_or(|b| d < b.1) {
                         best = Some((q, d));
                     }

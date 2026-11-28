@@ -141,8 +141,8 @@ pub(crate) fn shape_json(shape: &kentos_interaction::capture::Shape) -> Value {
                 .map(|i| {
                     let a = f64::from(i) / 64.0 * std::f64::consts::TAU;
                     kentos_interaction::Vec2::new(
-                        center.x + radius * a.cos(),
-                        center.y + radius * a.sin(),
+                        center.x + radius * kentos_num::cos(a),
+                        center.y + radius * kentos_num::sin(a),
                     )
                 })
                 .collect();

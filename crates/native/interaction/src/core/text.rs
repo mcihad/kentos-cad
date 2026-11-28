@@ -671,7 +671,7 @@ impl Tool for Text {
             // pointer as the alignment says (docs/adr/0145), the pointer's point marked.
             (Stage::Pos, _) => {
                 let a = memory.text_angle.to_radians();
-                let (dx, dy) = (a.cos(), a.sin());
+                let (dx, dy) = (kentos_num::cos(a), kentos_num::sin(a));
                 let height = self.box_height;
                 let width = height * 4.0 * memory.text_width_factor;
                 let (along, up) = memory

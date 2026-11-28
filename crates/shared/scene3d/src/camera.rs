@@ -135,9 +135,9 @@ impl Camera {
     ) -> Camera {
         let (a, e) = (azimuth.to_radians(), elevation.to_radians());
         let eye = [
-            target[0] + distance * e.cos() * a.cos(),
-            target[1] + distance * e.cos() * a.sin(),
-            target[2] + distance * e.sin(),
+            target[0] + distance * kentos_num::cos(e) * kentos_num::cos(a),
+            target[1] + distance * kentos_num::cos(e) * kentos_num::sin(a),
+            target[2] + distance * kentos_num::sin(e),
         ];
         Camera {
             eye,
@@ -175,7 +175,7 @@ impl Camera {
         ]);
         let projection = match self.projection {
             Projection::Perspective { fov_y, near } => {
-                let g = 1.0 / (fov_y / 2.0).tan();
+                let g = 1.0 / kentos_num::tan(fov_y / 2.0);
                 M4::from_rows([
                     [g / aspect, 0.0, 0.0, 0.0],
                     [0.0, g, 0.0, 0.0],
@@ -208,7 +208,7 @@ impl Camera {
         let (s, u, f) = self.basis();
         let planes = match self.projection {
             Projection::Perspective { fov_y, near } => {
-                let ty = (fov_y / 2.0).tan();
+                let ty = kentos_num::tan(fov_y / 2.0);
                 let tx = ty * aspect;
                 vec![
                     (f, -near),
@@ -244,7 +244,7 @@ impl Camera {
         let ny = 1.0 - 2.0 * y / viewport.height.max(1.0);
         match self.projection {
             Projection::Perspective { fov_y, .. } => {
-                let ty = (fov_y / 2.0).tan();
+                let ty = kentos_num::tan(fov_y / 2.0);
                 let tx = ty * viewport.aspect();
                 let d = math::add(
                     f,

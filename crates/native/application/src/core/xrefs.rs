@@ -1143,7 +1143,7 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
         .named_views
         .iter()
         .filter(|v| {
-            let (c, s) = (v.twist.cos(), v.twist.sin());
+            let (c, s) = (kentos_num::cos(v.twist), kentos_num::sin(v.twist));
             let (hw, hh) = (v.width / 2.0, v.height / 2.0);
             let corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
                 .map(|(x, y)| (v.center.x + x * c - y * s, v.center.y + x * s + y * c));

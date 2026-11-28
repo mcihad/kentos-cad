@@ -135,7 +135,7 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
 /// (radians, 0..2π]; its ends otherwise.
 fn to_arc(p: Vec2, c: Vec2, r: f64, a0: f64, sweep: f64, ends: (Vec2, Vec2)) -> f64 {
     let tau = std::f64::consts::TAU;
-    let ang = (p.y - c.y).atan2(p.x - c.x);
+    let ang = kentos_num::atan2(p.y - c.y, p.x - c.x);
     let rel = (ang - a0).rem_euclid(tau);
     if rel <= sweep || p == c {
         (dist(p, c) - r).abs()
@@ -154,8 +154,8 @@ fn to_edge(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     if chord == 0.0 {
         return dist(p, a);
     }
-    let theta = 4.0 * bulge.atan();
-    let r = chord / (2.0 * (theta / 2.0).sin().abs());
+    let theta = 4.0 * kentos_num::atan(bulge);
+    let r = chord / (2.0 * kentos_num::sin(theta / 2.0).abs());
     // The centre: from the chord's middle along its left normal by chord·(1 − b²)/(4b) (a semicircle's is the middle).
     let (mx, my) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     let (ux, uy) = ((b.x - a.x) / chord, (b.y - a.y) / chord);
@@ -164,7 +164,10 @@ fn to_edge(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
         x: mx - uy * k,
         y: my + ux * k,
     };
-    let (sa, sb) = ((a.y - c.y).atan2(a.x - c.x), (b.y - c.y).atan2(b.x - c.x));
+    let (sa, sb) = (
+        kentos_num::atan2(a.y - c.y, a.x - c.x),
+        kentos_num::atan2(b.y - c.y, b.x - c.x),
+    );
     let sweep = theta.abs();
     if bulge > 0.0 {
         to_arc(p, c, r, sa, sweep, (a, b))
@@ -219,8 +222,8 @@ pub(crate) fn to_original(o: &Entity, p: Vec2) -> f64 {
         Entity::Circle(c) => (dist(p, c.c) - c.r).abs(),
         Entity::Arc(a) => {
             let at = |t: f64| Vec2 {
-                x: a.c.x + a.r * t.cos(),
-                y: a.c.y + a.r * t.sin(),
+                x: a.c.x + a.r * kentos_num::cos(t),
+                y: a.c.y + a.r * kentos_num::sin(t),
             };
             let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
             let sweep = if sweep == 0.0 {
@@ -254,8 +257,8 @@ pub(crate) fn places(e: &Entity) -> Vec<Vec2> {
             .map(|k| {
                 let t = k as f64 * std::f64::consts::FRAC_PI_2;
                 Vec2 {
-                    x: c.c.x + c.r * t.cos(),
-                    y: c.c.y + c.r * t.sin(),
+                    x: c.c.x + c.r * kentos_num::cos(t),
+                    y: c.c.y + c.r * kentos_num::sin(t),
                 }
             })
             .collect(),
@@ -283,8 +286,8 @@ fn arc_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
     if bulge == 0.0 || !bulge.is_finite() || chord == 0.0 {
         return Vec::new();
     }
-    let theta = 4.0 * bulge.atan();
-    let r = chord / (2.0 * (theta / 2.0).sin().abs());
+    let theta = 4.0 * kentos_num::atan(bulge);
+    let r = chord / (2.0 * kentos_num::sin(theta / 2.0).abs());
     let (mx, my) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     let (ux, uy) = ((b.x - a.x) / chord, (b.y - a.y) / chord);
     let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
@@ -292,12 +295,12 @@ fn arc_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
         x: mx - uy * k,
         y: my + ux * k,
     };
-    let sa = (a.y - c.y).atan2(a.x - c.x);
+    let sa = kentos_num::atan2(a.y - c.y, a.x - c.x);
     [0.25, 0.5, 0.75]
         .iter()
         .map(|t| Vec2 {
-            x: c.x + r * (sa + theta * t).cos(),
-            y: c.y + r * (sa + theta * t).sin(),
+            x: c.x + r * kentos_num::cos(sa + theta * t),
+            y: c.y + r * kentos_num::sin(sa + theta * t),
         })
         .collect()
 }

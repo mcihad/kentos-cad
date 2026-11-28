@@ -229,7 +229,7 @@ pub fn simplified(line: &[[f64; 3]], tolerance: f64) -> Vec<[f64; 3]> {
             let d = if span > 0.0 {
                 ((p[0] - a[0]) * dy - (p[1] - a[1]) * dx).abs() / span
             } else {
-                ((p[0] - a[0]).powi(2) + (p[1] - a[1]).powi(2)).sqrt()
+                (kentos_num::powi(p[0] - a[0], 2) + kentos_num::powi(p[1] - a[1], 2)).sqrt()
             };
             if d > far {
                 far = d;

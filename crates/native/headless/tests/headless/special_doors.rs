@@ -209,7 +209,10 @@ fn special_doors_print_at_1_50_with_the_drum_and_the_pocket() {
         let a = deg.to_radians();
         let near = (0..=12).any(|k| {
             let r = (19.5 + 0.08 * f64::from(k)) * PX;
-            let (x, y) = (25.0 * PX + r * a.cos(), 25.0 * PX - r * a.sin());
+            let (x, y) = (
+                25.0 * PX + r * kentos_num::cos(a),
+                25.0 * PX - r * kentos_num::sin(a),
+            );
             px[(y.round() as usize).min(h - 1) * w + (x.round() as usize).min(w - 1)] < 160
         });
         assert!(near, "the drum at {deg}°");

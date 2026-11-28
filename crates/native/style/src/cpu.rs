@@ -101,7 +101,7 @@ const MIN_STEP: u32 = 8;
 /// The atlas's step for an image shown `px` pixels large (`step_for`).
 fn step_for(px: f64) -> u32 {
     let p = px.max(f64::from(MIN_STEP)).min(f64::from(MAX_STEP));
-    (2f64.powf(p.log2().ceil()) as u32).clamp(MIN_STEP, MAX_STEP)
+    (kentos_num::pow(2f64, kentos_num::log2(p).ceil()) as u32).clamp(MIN_STEP, MAX_STEP)
 }
 
 /// Draws a layer's batches into `pixmap` in their order, as the styled pipelines draw them.
@@ -531,8 +531,15 @@ fn joins_of(meta: u32, len: f64, ext: f64, flipped: bool) -> [f64; 4] {
     };
     let (cs, ce) = ((meta >> 2) & 2047, (meta >> 13) & 2047);
     let (ts, te) = (turn(cs), turn(ce));
-    let reach = if cs != 0 { (0.5 * ts).tan().abs() } else { 0.0 }
-        + if ce != 0 { (0.5 * te).tan().abs() } else { 0.0 };
+    let reach = if cs != 0 {
+        kentos_num::tan(0.5 * ts).abs()
+    } else {
+        0.0
+    } + if ce != 0 {
+        kentos_num::tan(0.5 * te).abs()
+    } else {
+        0.0
+    };
     let mut joins = [0.0; 4];
     if len > ext * reach + 1.0 {
         let unit = |x: f64, y: f64| {
@@ -540,12 +547,12 @@ fn joins_of(meta: u32, len: f64, ext: f64, flipped: bool) -> [f64; 4] {
             [x / l, y / l]
         };
         if cs != 0 {
-            let [x, y] = unit(1.0 + ts.cos(), -ts.sin());
+            let [x, y] = unit(1.0 + kentos_num::cos(ts), -kentos_num::sin(ts));
             joins[0] = x;
             joins[1] = y;
         }
         if ce != 0 {
-            let [x, y] = unit(1.0 + te.cos(), te.sin());
+            let [x, y] = unit(1.0 + kentos_num::cos(te), kentos_num::sin(te));
             joins[2] = x;
             joins[3] = y;
         }
@@ -715,7 +722,7 @@ fn hatch(st: &Style, dashes: &[f64], p: [f64; 2], k: f64, kw: f64) -> f64 {
 /// `gradientFs` (docs/adr/0186 §3): the first colour mixed toward the second.
 fn gradient(st: &Style, p: [f64; 2]) -> V4 {
     let mut t = if st.flags[1] == 2 {
-        let d = ((p[0] - st.b[0]).powi(2) + (p[1] - st.b[1]).powi(2)).sqrt();
+        let d = (kentos_num::powi(p[0] - st.b[0], 2) + kentos_num::powi(p[1] - st.b[1], 2)).sqrt();
         1.0 - clamp01(d / st.b[2].max(1e-9))
     } else {
         let u =
@@ -1017,9 +1024,9 @@ fn m_ngon(p: [f64; 2], a: f64, n: f64, a0: f64) -> f64 {
         return -a;
     }
     let s = std::f64::consts::TAU / n;
-    let mut t = p[1].atan2(p[0]) - a0;
+    let mut t = kentos_num::atan2(p[1], p[0]) - a0;
     t -= s * (t / s + 0.5).floor();
-    length(p) * t.cos() - a
+    length(p) * kentos_num::cos(t) - a
 }
 
 fn sd_star(q: [f64; 2], r: f64, rf: f64) -> f64 {
@@ -1051,10 +1058,10 @@ fn sd_gear(p: [f64; 2], r: f64, n: f64, depth: f64) -> f64 {
         return -rb;
     }
     let a = std::f64::consts::TAU / n;
-    let k = (p[1].atan2(p[0]) / a + 0.5).floor() * a;
+    let k = (kentos_num::atan2(p[1], p[0]) / a + 0.5).floor() * a;
     let q = [
-        k.cos() * p[0] + k.sin() * p[1],
-        -k.sin() * p[0] + k.cos() * p[1],
+        kentos_num::cos(k) * p[0] + kentos_num::sin(k) * p[1],
+        -kentos_num::sin(k) * p[0] + kentos_num::cos(k) * p[1],
     ];
     let hw = 0.25 * a * (rb + 0.5 * (r - rb));
     let x0 = rb - 0.5 * (r - rb);
@@ -1063,7 +1070,7 @@ fn sd_gear(p: [f64; 2], r: f64, n: f64, depth: f64) -> f64 {
 
 fn sd_arc(q: [f64; 2], r: f64, ap: f64) -> f64 {
     let p = [q[0].abs(), q[1]];
-    let sc = [ap.sin(), ap.cos()];
+    let sc = [kentos_num::sin(ap), kentos_num::cos(ap)];
     if sc[1] * p[0] > sc[0] * p[1] {
         return length([p[0] - sc[0] * r, p[1] - sc[1] * r]);
     }
@@ -1224,7 +1231,7 @@ fn markers(
         let hs = [mw * 0.5, mh * 0.5];
         // Where the shader puts the quad: the point, then the anchor and offset turned with it.
         let at = view.px(m[0] + b.origin[0], m[1] + b.origin[1]);
-        let (sa, ca) = m[2].sin_cos();
+        let (sa, ca) = kentos_num::sin_cos(m[2]);
         let shift = [-st.a[2] * mw + st.a[0] * k, -st.a[3] * mh + st.a[1] * k];
         let to_px = |l: [f64; 2]| {
             let q = [l[0] + shift[0], l[1] + shift[1]];

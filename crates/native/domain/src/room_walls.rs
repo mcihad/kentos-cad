@@ -77,11 +77,11 @@ impl Document {
             let Some((centre, radius)) = arc(a, b, bulge) else {
                 continue;
             };
-            let sweep = 4.0 * bulge.atan();
-            let start = (a.y - centre.y).atan2(a.x - centre.x);
+            let sweep = 4.0 * kentos_num::atan(bulge);
+            let start = kentos_num::atan2(a.y - centre.y, a.x - centre.x);
             let middle = Vec2 {
-                x: centre.x + radius * (start + sweep / 2.0).cos(),
-                y: centre.y + radius * (start + sweep / 2.0).sin(),
+                x: centre.x + radius * kentos_num::cos(start + sweep / 2.0),
+                y: centre.y + radius * kentos_num::sin(start + sweep / 2.0),
             };
             if let Some(t) = walls
                 .iter()
@@ -165,9 +165,9 @@ fn facing_arc(w: &WallFields, centre: Vec2, radius: f64, middle: Vec2) -> Option
             continue;
         }
         // Its middle within the run's sweep, turning as the run turns.
-        let sweep = 4.0 * b.atan();
-        let start = (p.y - c.y).atan2(p.x - c.x);
-        let at = (middle.y - c.y).atan2(middle.x - c.x);
+        let sweep = 4.0 * kentos_num::atan(b);
+        let start = kentos_num::atan2(p.y - c.y, p.x - c.x);
+        let at = kentos_num::atan2(middle.y - c.y, middle.x - c.x);
         let turned =
             if sweep > 0.0 { at - start } else { start - at }.rem_euclid(std::f64::consts::TAU);
         if turned > sweep.abs() + ON / r {
@@ -193,10 +193,10 @@ fn arc(p: Vec2, q: Vec2, b: f64) -> Option<(Vec2, f64)> {
     if l <= ON || b == 0.0 || !b.is_finite() {
         return None;
     }
-    let half = 2.0 * b.atan();
-    let radius = (l / 2.0 / half.sin()).abs();
+    let half = 2.0 * kentos_num::atan(b);
+    let radius = (l / 2.0 / kentos_num::sin(half)).abs();
     // From the chord's middle along its left normal: the centre stands left of a counter-clockwise arc.
-    let h = l / 2.0 / half.tan();
+    let h = l / 2.0 / kentos_num::tan(half);
     Some((
         Vec2 {
             x: (p.x + q.x) / 2.0 - c.y / l * h,

@@ -188,7 +188,7 @@ impl Ink for Collect<'_> {
             let x0 = if along { -w / 2.0 } else { 0.0 };
             let m = h * 0.1;
             let v = if along { 0.0 } else { m };
-            let (s, c) = rotation.to_radians().sin_cos();
+            let (s, c) = kentos_num::sin_cos(rotation.to_radians());
             [
                 [x0 - m, -0.23 * h - v],
                 [x0 + w + m, -0.23 * h - v],
@@ -241,7 +241,7 @@ impl Ink for Collect<'_> {
             underline: (piece.underline > 0.0).then(|| {
                 // From the baseline's start 0.12 of the height down, 0.06 thick, the bar's length along.
                 let (w, h) = (f64::from(piece.underline) * px, f64::from(piece.size) * px);
-                let (s, c) = rotation.to_radians().sin_cos();
+                let (s, c) = kentos_num::sin_cos(rotation.to_radians());
                 [
                     [0.0, -0.12 * h],
                     [w, -0.12 * h],

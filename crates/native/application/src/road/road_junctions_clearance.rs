@@ -84,7 +84,7 @@ fn answer(
         left: def.legs[k].left,
         right: def.legs[k].right,
     };
-    let sine = (report.angle.to_radians()).sin();
+    let sine = kentos_num::sin(report.angle.to_radians());
     let crossing = report.legs[lower].station;
     let (n, m, _, _) = overlap_grid(deck(upper), deck(lower), crossing, sine, input.step);
     if n.saturating_mul(m) > MOST_CLEARANCE_SAMPLES {

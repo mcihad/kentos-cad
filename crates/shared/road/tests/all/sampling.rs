@@ -29,7 +29,10 @@ fn coded(family: &Value, s: f64) -> Coded {
         None => ((s, 0.0), (0.0, -1.0)),
         Some(r) => {
             let th = s / r;
-            ((r * th.sin(), r * (1.0 - th.cos())), (th.sin(), -th.cos()))
+            (
+                (r * kentos_num::sin(th), r * (1.0 - kentos_num::cos(th))),
+                (kentos_num::sin(th), -kentos_num::cos(th)),
+            )
         }
     };
     let get = |k: &str, d: f64| family[k].as_f64().unwrap_or(d);
@@ -49,7 +52,7 @@ fn coded(family: &Value, s: f64) -> Coded {
             let z = z0
                 + g * s
                 + c * s * s / 2.0
-                + a * (2.0 * std::f64::consts::PI * s / lam).sin()
+                + a * kentos_num::sin(2.0 * std::f64::consts::PI * s / lam)
                 + p["dz"].as_f64().unwrap_or(0.0);
             out.push((
                 p["code"].as_str().expect("code").to_owned(),

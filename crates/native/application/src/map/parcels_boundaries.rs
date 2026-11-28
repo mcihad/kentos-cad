@@ -121,8 +121,8 @@ fn length(a: Vec2, b: Vec2, bulge: f64) -> f64 {
     if bulge == 0.0 || c == 0.0 {
         return c;
     }
-    let theta = 4.0 * bulge.atan();
-    c * theta / (2.0 * (theta / 2.0).sin())
+    let theta = 4.0 * kentos_num::atan(bulge);
+    c * theta / (2.0 * kentos_num::sin(theta / 2.0))
 }
 
 /// An edge's middle on its curve (a bulge bows right of the way from `a` to `b` when positive).
@@ -139,9 +139,9 @@ fn segment(c: f64, bulge: f64) -> f64 {
     if bulge == 0.0 {
         return 0.0;
     }
-    let theta = 4.0 * bulge.abs().atan();
-    let r = c / (2.0 * (theta / 2.0).sin());
-    (r * r / 2.0 * (theta - theta.sin())).copysign(bulge)
+    let theta = 4.0 * kentos_num::atan(bulge.abs());
+    let r = c / (2.0 * kentos_num::sin(theta / 2.0));
+    (r * r / 2.0 * (theta - kentos_num::sin(theta))).copysign(bulge)
 }
 
 /// An arc's circle, relative to its start `a`: the centre and the radius of the arc from `a` to `b` with `bulge`
@@ -180,17 +180,21 @@ fn along_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64, tol: f64) -> Option<f64> {
     if (kentos_num::hypot(px - o.x, py - o.y) - r).abs() > tol {
         return None;
     }
-    let theta = 4.0 * bulge.atan();
-    let a0 = (-o.y).atan2(-o.x);
-    let d = (((py - o.y).atan2(px - o.x) - a0) * theta.signum()).rem_euclid(std::f64::consts::TAU);
+    let theta = 4.0 * kentos_num::atan(bulge);
+    let a0 = kentos_num::atan2(-o.y, -o.x);
+    let d = ((kentos_num::atan2(py - o.y, px - o.x) - a0) * theta.signum())
+        .rem_euclid(std::f64::consts::TAU);
     Some(d / theta.abs())
 }
 
 /// The arc's point at the fraction `t` of its angle from `a`.
 fn arc_point(a: Vec2, b: Vec2, bulge: f64, t: f64) -> [f64; 2] {
     let (o, r) = circle(a, b, bulge);
-    let angle = (-o.y).atan2(-o.x) + 4.0 * bulge.atan() * t;
-    [a.x + o.x + r * angle.cos(), a.y + o.y + r * angle.sin()]
+    let angle = kentos_num::atan2(-o.y, -o.x) + 4.0 * kentos_num::atan(bulge) * t;
+    [
+        a.x + o.x + r * kentos_num::cos(angle),
+        a.y + o.y + r * kentos_num::sin(angle),
+    ]
 }
 
 /// A boundary's box: its ends'; an arc of at most a half circle's grown by its rise on every side (it bows no farther
@@ -493,14 +497,14 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         }
         // A chain of the arc's own parts (each boundary's bulge the arc's between its two fractions) is the arc split at
         // corners it lacks: those stay missing corners, nothing is drawn with chords.
-        let theta = 4.0 * edge.bulge.atan();
+        let theta = 4.0 * kentos_num::atan(edge.bulge);
         let own_parts = chain.iter().all(|&(f, u, w)| {
             let forward = if edges[f].lo == u {
                 edges[f].bulge
             } else {
                 -edges[f].bulge
             };
-            (forward - (theta * (on[&w] - on[&u]) / 4.0).tan()).abs() <= BULGE
+            (forward - kentos_num::tan(theta * (on[&w] - on[&u]) / 4.0)).abs() <= BULGE
         });
         if own_parts {
             continue;

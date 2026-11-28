@@ -44,7 +44,7 @@ pub fn crest(a: f64, s: f64, eye: f64, object: f64) -> f64 {
     if a == 0.0 {
         return 0.0;
     }
-    let h = (eye.sqrt() + object.sqrt()).powi(2);
+    let h = kentos_num::powi(eye.sqrt() + object.sqrt(), 2);
     let within = a * s * s / (200.0 * h);
     if within <= s {
         (2.0 * s - 200.0 * h / a).max(0.0).min(within)
@@ -60,7 +60,7 @@ pub fn headlight(a: f64, s: f64, height: f64, beam: f64) -> f64 {
     if a == 0.0 {
         return 0.0;
     }
-    let lift = height + s * beam.to_radians().tan();
+    let lift = height + s * kentos_num::tan(beam.to_radians());
     let within = a * s * s / (200.0 * lift);
     if within <= s {
         (2.0 * s - 200.0 * lift / a).max(0.0).min(within)

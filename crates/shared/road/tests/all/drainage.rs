@@ -181,7 +181,7 @@ fn a_catchment_of_a_valley_outlet() {
 fn manning_and_the_rational_method_by_hand() {
     // A 1 m pipe at 1 % with n = 0.013: A = π/4, R = 0.25.
     let f = drainage::manning(Channel::Pipe { diameter: 1.0 }, 0.01, 0.013).expect("flows");
-    let v = 0.25_f64.powf(2.0 / 3.0) * 0.1 / 0.013;
+    let v = kentos_num::pow(0.25_f64, 2.0 / 3.0) * 0.1 / 0.013;
     assert!(
         (f.velocity - v).abs() < 1e-12
             && (f.discharge - v * std::f64::consts::FRAC_PI_4).abs() < 1e-12

@@ -85,7 +85,7 @@ impl canvas::Program<Message> for AreaMap {
             n = n.max(p[1]);
         }
         // Equirectangular at the middle latitude, fitted with a margin.
-        let k = ((s + n) / 2.0).to_radians().cos().max(0.2);
+        let k = kentos_num::cos(((s + n) / 2.0).to_radians()).max(0.2);
         let pad = 10.0_f32;
         let (bw, bh) = (bounds.width - 2.0 * pad, bounds.height - 2.0 * pad);
         let scale =

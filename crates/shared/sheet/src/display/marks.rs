@@ -1005,7 +1005,7 @@ fn diagram(
     let sines: Vec<f64> = shown
         .iter()
         .flatten()
-        .map(|a| (f64::from(grid) / 1000.0 + a).to_radians().sin())
+        .map(|a| kentos_num::sin((f64::from(grid) / 1000.0 + a).to_radians()))
         .collect();
     let left = sines.iter().fold(0.0_f64, |m, s| m.max(-s));
     let right = sines.iter().fold(0.0_f64, |m, s| m.max(*s));
@@ -1083,7 +1083,10 @@ fn diagram(
     let line = Stroke::solid(color, round_um((len / 90.0).max(180.0)));
     let tip_of = |drawn_deg: f64, at: f64| -> [f64; 2] {
         let a = (f64::from(grid) / 1000.0 + drawn_deg).to_radians();
-        [base[0] + at * a.sin(), base[1] - at * a.cos()]
+        [
+            base[0] + at * kentos_num::sin(a),
+            base[1] - at * kentos_num::cos(a),
+        ]
     };
     let label = |pen: &mut Pen, t: &str, drawn_deg: f64| {
         let p = tip_of(drawn_deg, len + tag_cap * 1.4);
@@ -1109,7 +1112,10 @@ fn diagram(
             .map(|i| {
                 let a = (f64::from(grid) / 1000.0 + drawn[1] + f64::from(i) * 36.0).to_radians();
                 let rr = if i % 2 == 0 { r } else { r * 0.4 };
-                [tip[0] + rr * a.sin(), tip[1] - rr * a.cos()]
+                [
+                    tip[0] + rr * kentos_num::sin(a),
+                    tip[1] - rr * kentos_num::cos(a),
+                ]
             })
             .collect();
         pen.path(&star, true, Some(color), None);
@@ -1122,8 +1128,8 @@ fn diagram(
         let back = tip_of(drawn[2], len - tag_cap * 1.6);
         let a = (f64::from(grid) / 1000.0 + drawn[2]).to_radians();
         let side = [
-            back[0] + tag_cap * 0.6 * a.cos(),
-            back[1] + tag_cap * 0.6 * a.sin(),
+            back[0] + tag_cap * 0.6 * kentos_num::cos(a),
+            back[1] + tag_cap * 0.6 * kentos_num::sin(a),
         ];
         pen.path(&[tip, side, back], true, Some(color), None);
         label(pen, "MK", drawn[2]);

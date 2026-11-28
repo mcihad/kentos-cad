@@ -45,9 +45,9 @@ pub enum TraceError {
 fn arc(a: [f64; 2], b: [f64; 2], bulge: f64) -> ([f64; 2], f64) {
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
     let chord = kentos_num::hypot(dx, dy);
-    let turn = 4.0 * bulge.atan();
-    let r = chord / (2.0 * (0.5 * turn).sin()).abs();
-    let h = r * (0.5 * turn).cos() * turn.signum();
+    let turn = 4.0 * kentos_num::atan(bulge);
+    let r = chord / (2.0 * kentos_num::sin(0.5 * turn)).abs();
+    let h = r * kentos_num::cos(0.5 * turn) * turn.signum();
     (
         [
             0.5 * (a[0] + b[0]) - dy / chord * h,
@@ -216,7 +216,7 @@ mod tests {
             [100.0 + s, 100.0 - s],
             [200.0, 0.0],
         ];
-        let bulge = -(std::f64::consts::FRAC_PI_8).tan();
+        let bulge = -kentos_num::tan(std::f64::consts::FRAC_PI_8);
         let pvis = from_drawing(&pts, &[0.0, bulge, 0.0], view, 0.0).expect("a profile");
         assert_eq!(pvis.len(), 3);
         assert!(

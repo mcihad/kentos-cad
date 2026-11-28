@@ -165,7 +165,10 @@ pub(super) fn bands(t: &[f64], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
             + r;
         let corner = |k: usize, radius: f64| {
             let angle = k as f64 * std::f64::consts::TAU / RING as f64;
-            [c[0] + radius * angle.cos(), c[1] + radius * angle.sin()]
+            [
+                c[0] + radius * kentos_num::cos(angle),
+                c[1] + radius * kentos_num::sin(angle),
+            ]
         };
         let boxes: Vec<[f64; 4]> = triangles.iter().map(|t| bounds(t)).collect();
         for k in 0..=BANDS {
@@ -215,7 +218,7 @@ pub(super) fn bands(t: &[f64], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
     // Stripes of u = (d·p − from) / max(to − from, 1e-9), clamped (the shader's): t = u, or 1 − |2u − 1| along a
     // cylinder.
     let den = (g.to - g.from).max(1e-9);
-    let d = [g.dir.cos(), g.dir.sin()];
+    let d = [kentos_num::cos(g.dir), kentos_num::sin(g.dir)];
     let (a, b) = ([d[0] / den, d[1] / den], -g.from / den);
     // Along a cylinder t runs twice as fast: twice the stripes keep each band's step.
     let n = if g.shape == 1 { 2 * BANDS } else { BANDS };
@@ -278,10 +281,12 @@ mod tests {
     /// The renderers' `gradientFs` at a point: the grey it gives.
     fn shader(g: &Gradient, p: [f64; 2]) -> f64 {
         let t = if g.shape == 2 {
-            let d = ((p[0] - g.centre[0]).powi(2) + (p[1] - g.centre[1]).powi(2)).sqrt();
+            let d = (kentos_num::powi(p[0] - g.centre[0], 2)
+                + kentos_num::powi(p[1] - g.centre[1], 2))
+            .sqrt();
             1.0 - (d / g.radius.max(1e-9)).clamp(0.0, 1.0)
         } else {
-            let u = ((p[0] * g.dir.cos() + p[1] * g.dir.sin() - g.from)
+            let u = ((p[0] * kentos_num::cos(g.dir) + p[1] * kentos_num::sin(g.dir) - g.from)
                 / (g.to - g.from).max(1e-9))
             .clamp(0.0, 1.0);
             if g.shape == 1 {

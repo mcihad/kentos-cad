@@ -64,7 +64,7 @@ fn a_column_s_shadow_runs_as_far_as_it_is_high_under_a_sun_at_45_degrees() {
     // A low sun: longer; the sun down: none.
     let long: f64 = area_of(&shadows::shadow(
         &doc,
-        [0.0, -0.9, 30f64.to_radians().sin()],
+        [0.0, -0.9, kentos_num::sin(30f64.to_radians())],
     ));
     assert!(long > area, "{long}");
     assert!(

@@ -263,7 +263,7 @@ mod tests {
             panic!("a pie");
         };
         assert_eq!(
-            total.m as f64 / 10f64.powi(total.scale as i32),
+            total.m as f64 / kentos_num::powi(10f64, total.scale as i32),
             250.0,
             "120.5 + 79.5 + 50"
         );

@@ -466,7 +466,10 @@ impl Open {
         };
         let o = place.origin(drawing_font(Some(font)));
         let r = self.rotation.to_radians();
-        Vec2::new(o.x - r.sin() * self.height, o.y + r.cos() * self.height)
+        Vec2::new(
+            o.x - kentos_num::sin(r) * self.height,
+            o.y + kentos_num::cos(r) * self.height,
+        )
     }
 }
 

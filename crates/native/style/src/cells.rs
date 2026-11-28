@@ -868,7 +868,7 @@ mod tests {
             .collect();
         places.sort_by_key(|&(x, y, _)| ((y / 500.0) as u32, (x / 500.0) as u32));
         for (x, y, turn) in places {
-            let (s, c) = turn.sin_cos();
+            let (s, c) = kentos_num::sin_cos(turn);
             data.extend([c, s, -s, c, x, y, 1.0, 0.0].map(|v| v as f32));
         }
         let mut layer = stroke(data, None);
@@ -948,10 +948,10 @@ mod tests {
                     (k + 1) as f64 / 200.0 * std::f64::consts::TAU,
                 );
                 [
-                    3.0 * a.cos(),
-                    3.0 * a.sin(),
-                    3.0 * b.cos(),
-                    3.0 * b.sin(),
+                    3.0 * kentos_num::cos(a),
+                    3.0 * kentos_num::sin(a),
+                    3.0 * kentos_num::cos(b),
+                    3.0 * kentos_num::sin(b),
                     0.0,
                     3.0,
                 ]

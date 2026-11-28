@@ -126,7 +126,10 @@ fn arrays_keep_source_and_anchors_and_follow_analytic_arc_length_with_one_undo()
                             // angle pi+s/10. Faces lie at radius 9.9 and 10.1.
                             let angle = std::f64::consts::PI + s / 10.0;
                             let radius = if j % 2 == 0 { 9.9 } else { 10.1 };
-                            (10.0 + radius * angle.cos(), radius * angle.sin())
+                            (
+                                10.0 + radius * kentos_num::cos(angle),
+                                radius * kentos_num::sin(angle),
+                            )
                         } else {
                             (s, if j % 2 == 0 { 0.1 } else { -0.1 })
                         };

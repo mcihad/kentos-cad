@@ -73,7 +73,8 @@ fn every_widening_is_the_references() {
 /// The difference form loses digits at a large radius; the product form does not.
 #[test]
 fn a_large_radius_keeps_its_digits() {
-    let sum = 6.6f64.powi(2) - 0.8f64.powi(2) + 12.5f64.powi(2);
+    let sum =
+        kentos_num::powi(6.6f64, 2) - kentos_num::powi(0.8f64, 2) + kentos_num::powi(12.5f64, 2);
     let r = 1.0e6;
     let exact = sum / (2.0 * r) + sum * sum / (8.0 * r * r * r);
     let got = offtracking(r, sum).unwrap();
@@ -155,7 +156,8 @@ fn the_steady_state_bounds_the_drive() {
             width: 2.59,
         }),
     };
-    let sum = 6.6f64.powi(2) - 0.8f64.powi(2) + 12.5f64.powi(2);
+    let sum =
+        kentos_num::powi(6.6f64, 2) - kentos_num::powi(0.8f64, 2) + kentos_num::powi(12.5f64, 2);
     let mut rows = Vec::new();
     for (radius, spiral, deflection) in [
         (60.0, 0.0, 15.0),
@@ -190,8 +192,8 @@ fn the_steady_state_bounds_the_drive() {
             },
             PiInput {
                 id: "b".into(),
-                x: 400.0 * d.cos(),
-                y: 400.0 * d.sin(),
+                x: 400.0 * kentos_num::cos(d),
+                y: 400.0 * kentos_num::sin(d),
                 radius: 0.0,
                 spiral_in: 0.0,
                 spiral_out: 0.0,

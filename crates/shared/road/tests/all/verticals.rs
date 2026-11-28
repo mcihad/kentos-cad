@@ -130,7 +130,7 @@ fn the_length_in_space_is_the_arc_length() {
         "15 % grade",
     );
     let c = &v.curves[1];
-    let arc = 500.0 * (c.g_out.atan() - c.g_in.atan()).abs();
+    let arc = 500.0 * (kentos_num::atan(c.g_out) - kentos_num::atan(c.g_in)).abs();
     near(
         v.length_to(c.end[0]).unwrap() - v.length_to(c.start[0]).unwrap(),
         arc,

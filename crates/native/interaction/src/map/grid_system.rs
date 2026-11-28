@@ -231,7 +231,9 @@ impl GridSystemTool {
     /// The turn now: the pointer's direction from the origin with İki nokta, else the one typed.
     fn turn(&self) -> f64 {
         match (self.two_points, self.origin, self.hover) {
-            (true, Some(o), Some(h)) if (h.x, h.y) != (o.x, o.y) => (h.y - o.y).atan2(h.x - o.x),
+            (true, Some(o), Some(h)) if (h.x, h.y) != (o.x, o.y) => {
+                kentos_num::atan2(h.y - o.y, h.x - o.x)
+            }
             _ => self.angle,
         }
     }

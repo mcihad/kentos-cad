@@ -165,7 +165,7 @@ pub fn in_use() -> bool {
 
 /// The quarter-octave step of a view's pixels per metre.
 fn step_of(px_per_m: f64) -> i64 {
-    (px_per_m.max(1e-12).log2() * 4.0).round() as i64
+    (kentos_num::log2(px_per_m.max(1e-12)) * 4.0).round() as i64
 }
 
 /// The box a read covers for a view: the view and half of it again on every side.

@@ -103,7 +103,7 @@ fn a_slice_takes_the_centre_the_start_and_the_end_direction() {
     assert!(near(bulges[0], 0.0) && near(bulges[2], 0.0));
     // A quarter turn: the bulge is tan(π / 16 · 2) = tan(π / 8).
     assert!(
-        near(bulges[1], (std::f64::consts::PI / 8.0).tan()),
+        near(bulges[1], kentos_num::tan(std::f64::consts::PI / 8.0)),
         "{bulges:?}"
     );
     assert_eq!(b.last_level(), Some(Level::Success));

@@ -2942,6 +2942,7 @@ dependencies = [
  "kentos-domain",
  "kentos-imza-domain",
  "kentos-kcad",
+ "kentos-num",
  "kentos-services",
  "kentos-sheet",
  "reqwest",
@@ -3241,6 +3242,7 @@ name = "kentos-extension-host"
 version = "0.1.0"
 dependencies = [
  "kentos-extensions",
+ "kentos-num",
  "serde",
  "serde_json",
 ]
@@ -3268,6 +3270,7 @@ dependencies = [
  "kentos-commands",
  "kentos-expression",
  "kentos-forms",
+ "kentos-num",
  "kentos-zip",
  "roxmltree 0.21.2",
  "schemars",
@@ -3565,6 +3568,7 @@ name = "kentos-kcad"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-num",
  "serde",
  "serde_json",
  "sha2",
@@ -3758,6 +3762,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-formats",
  "kentos-geometry-core",
+ "kentos-num",
  "laz",
  "serde",
  "serde_json",
@@ -3805,6 +3810,7 @@ dependencies = [
  "kentos-kcad",
  "kentos-launch",
  "kentos-native-application",
+ "kentos-num",
  "kentos-pointcloud",
  "kentos-project",
  "kentos-raster",
@@ -3932,6 +3938,7 @@ dependencies = [
  "kentos-formats",
  "kentos-forms",
  "kentos-geometry-core",
+ "kentos-num",
  "kentos-project",
  "kentos-sheet",
  "serde",
@@ -3942,6 +3949,7 @@ dependencies = [
 name = "kentos-scene3d"
 version = "0.1.0"
 dependencies = [
+ "kentos-num",
  "serde_json",
 ]
 
@@ -4014,6 +4022,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-expression",
  "kentos-geometry-core",
+ "kentos-num",
  "serde_json",
 ]
 

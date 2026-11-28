@@ -410,7 +410,7 @@ fn fill_paths(
             }
             // The batch's angle is in radians (the renderers' `cos(angle)`).
             let a = *angle;
-            let d = [a.cos(), a.sin()];
+            let d = [kentos_num::cos(a), kentos_num::sin(a)];
             let n = [-d[1], d[0]];
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
             for p in t.as_chunks::<2>().0.iter() {
@@ -580,7 +580,7 @@ fn marker_paths(
     for m in v.as_chunks::<5>().0.iter() {
         let w = m[3];
         let h = if m[4] > 0.0 { m[4] } else { w };
-        let (sa, ca) = m[2].sin_cos();
+        let (sa, ca) = kentos_num::sin_cos(m[2]);
         // The shape's centre from its point: the anchor and the offset, turned with it.
         let qx = offset[0] - anchor[0] * w;
         let qy = offset[1] - anchor[1] * h;
@@ -673,7 +673,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
                     return None;
                 }
                 let a = *angle;
-                let n = [-a.sin(), a.cos()];
+                let n = [-kentos_num::sin(a), kentos_num::cos(a)];
                 let t = layer.values(b.range.clone()).unwrap_or_default();
                 let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
                 for p in t.as_chunks::<2>().0.iter() {

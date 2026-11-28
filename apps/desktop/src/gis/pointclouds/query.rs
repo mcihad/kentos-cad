@@ -71,7 +71,8 @@ fn nearest_in(entry: &Entry, at: [f64; 2], reach: f64) -> Result<Option<(f64, Fa
                 for r in records.chunks_exact(layout.len.max(1)) {
                     let mut f = Facts::of(layout, r, scale, offset);
                     f.xyz = kentos_commands::pose_apply(p, f.xyz);
-                    let d = (f.xyz[0] - at[0]).powi(2) + (f.xyz[1] - at[1]).powi(2);
+                    let d = kentos_num::powi(f.xyz[0] - at[0], 2)
+                        + kentos_num::powi(f.xyz[1] - at[1], 2);
                     if d <= r2 && best.as_ref().is_none_or(|(b, _)| d < *b) {
                         best = Some((d, f));
                     }

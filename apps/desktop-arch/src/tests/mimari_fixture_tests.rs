@@ -133,7 +133,10 @@ fn lavabo_enter_and_a_click_by_a_wall_place_the_washbasin_against_it() {
         insert.p
     );
     // Its front (+y) toward the room, east.
-    let (fx, fy) = (-insert.rotation.sin(), insert.rotation.cos());
+    let (fx, fy) = (
+        -kentos_num::sin(insert.rotation),
+        kentos_num::cos(insert.rotation),
+    );
     assert!(
         (fx - 1.0).abs() < 1e-9 && fy.abs() < 1e-9,
         "turned {}",

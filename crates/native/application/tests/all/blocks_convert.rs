@@ -360,7 +360,7 @@ fn text_variants_drawing() -> Document {
     let mut entities = Vec::new();
     for k in 0..4 {
         let angle = k as f64 * std::f64::consts::PI / 6.;
-        let (s, c) = angle.sin_cos();
+        let (s, c) = kentos_num::sin_cos(angle);
         let x = k as f64 * 10.;
         entities.push(json!({"kind":"line","id":k*2+1,"layerId":"a","attrs":{},"a":{"x":x,"y":0.},"b":{"x":x+2.*c,"y":2.*s}}));
         entities.push(json!({"kind":"text","id":k*2+2,"layerId":"a","attrs":{},"p":{"x":x+0.5*c-0.2*s,"y":0.5*s+0.2*c},"text":format!("A{k:02}"),"height":0.2,"rotation":angle.to_degrees()}));

@@ -178,10 +178,10 @@ fn problem(
             row_angle,
         } = a.layout
         {
-            let separation = (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.))
-                .to_radians()
-                .sin()
-                .abs();
+            let separation = kentos_num::sin(
+                (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.)).to_radians(),
+            )
+            .abs();
             if rows == 0
                 || cols == 0
                 || (cols > 1 && dx.abs() < 1e-9)

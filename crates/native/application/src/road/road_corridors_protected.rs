@@ -100,7 +100,7 @@ pub(crate) fn answer(
         .filter_map(|c| {
             let sec = c.section.as_ref()?;
             let (l, r) = (sec.left.points.last()?[0], sec.right.points.last()?[0]);
-            let (sin, cos) = c.line.direction.sin_cos();
+            let (sin, cos) = kentos_num::sin_cos(c.line.direction);
             let at = |o: f64| [c.line.at[0] + sin * o, c.line.at[1] - cos * o];
             Some((c.line.station, at(l), at(r)))
         })

@@ -40,20 +40,20 @@ pub fn flatten(points: &[[f64; 2]], bulges: &[f64], closed: bool) -> Vec<[f64; 2
         let bulge = bulges.get(i).copied().unwrap_or(0.0);
         let chord = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
         if bulge.abs() > 1e-12 && chord > 0.0 {
-            let sweep = 4.0 * bulge.atan();
-            let r = chord / (2.0 * (0.5 * sweep).sin().abs());
+            let sweep = 4.0 * kentos_num::atan(bulge);
+            let r = chord / (2.0 * kentos_num::sin(0.5 * sweep).abs());
             // The centre: from the chord's middle, along its left normal by r·cos(sweep/2) (signed with the sweep).
             let (mx, my) = (0.5 * (a[0] + b[0]), 0.5 * (a[1] + b[1]));
             let (ux, uy) = ((b[0] - a[0]) / chord, (b[1] - a[1]) / chord);
-            let h = r * (0.5 * sweep).cos() * sweep.signum();
+            let h = r * kentos_num::cos(0.5 * sweep) * sweep.signum();
             let c = [mx - uy * h, my + ux * h];
-            let start = (a[1] - c[1]).atan2(a[0] - c[0]);
+            let start = kentos_num::atan2(a[1] - c[1], a[0] - c[0]);
             // Chords of sag s span 2·acos(1 − s/r).
-            let step = 2.0 * (1.0 - (SAG / r).min(1.0)).acos();
+            let step = 2.0 * kentos_num::acos(1.0 - (SAG / r).min(1.0));
             let pieces = ((sweep.abs() / step.max(1e-9)).ceil() as usize).clamp(1, MAX_POINTS);
             for k in 1..pieces {
                 let t = start + sweep * k as f64 / pieces as f64;
-                out.push([c[0] + r * t.cos(), c[1] + r * t.sin()]);
+                out.push([c[0] + r * kentos_num::cos(t), c[1] + r * kentos_num::sin(t)]);
             }
         }
         out.push(b);
@@ -555,7 +555,7 @@ mod tests {
         // A bulge of tan(π/8) is a quarter circle; radius 10 from (10, 0) to (0, 10) about the origin.
         let pts = flatten(
             &[[10.0, 0.0], [0.0, 10.0]],
-            &[(std::f64::consts::PI / 8.0).tan()],
+            &[kentos_num::tan(std::f64::consts::PI / 8.0)],
             false,
         );
         let length: f64 = pts.windows(2).map(|w| dist(w[0], w[1])).sum();

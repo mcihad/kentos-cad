@@ -61,11 +61,12 @@ impl OrbitCamera {
         self.target = bounds.center();
         let up = FOV.to_radians() / 2.0;
         let half = if aspect > 0.0 && aspect < 1.0 {
-            (up.tan() * aspect).atan()
+            kentos_num::atan(kentos_num::tan(up) * aspect)
         } else {
             up
         };
-        self.distance = (ex.shown_box(bounds).diagonal() / 2.0).max(1.0) / half.sin() * room;
+        self.distance =
+            (ex.shown_box(bounds).diagonal() / 2.0).max(1.0) / kentos_num::sin(half) * room;
     }
 
     /// A drag of `dx`, `dy` logical pixels: about the target.
@@ -76,16 +77,19 @@ impl OrbitCamera {
 
     /// A right drag: along the ground, the target's distance a window's width across.
     pub fn pan(&mut self, dx: f64, dy: f64) {
-        let k = self.distance * (FOV.to_radians() / 2.0).tan() * 2.0 / 600.0;
+        let k = self.distance * kentos_num::tan(FOV.to_radians() / 2.0) * 2.0 / 600.0;
         let a = self.azimuth.to_radians();
-        let (right, ahead) = ([-a.sin(), a.cos()], [-a.cos(), -a.sin()]);
+        let (right, ahead) = (
+            [-kentos_num::sin(a), kentos_num::cos(a)],
+            [-kentos_num::cos(a), -kentos_num::sin(a)],
+        );
         self.target[0] -= (right[0] * dx - ahead[0] * dy) * k;
         self.target[1] -= (right[1] * dx - ahead[1] * dy) * k;
     }
 
     /// The wheel: `steps` notches nearer (negative: farther).
     pub fn dolly(&mut self, steps: f64) {
-        self.distance = (self.distance * 0.85f64.powf(steps)).clamp(1.0, 1.0e6);
+        self.distance = (self.distance * kentos_num::pow(0.85f64, steps)).clamp(1.0, 1.0e6);
     }
 
     /// From the south, looking north, its height and distance kept.
@@ -118,7 +122,7 @@ impl OrbitCamera {
     /// −(cos a, sin a) from its azimuth's side; north is (cos a, −sin a) in the screen's right and ahead.
     pub fn north_on_screen(&self) -> f32 {
         let a = self.azimuth.to_radians();
-        a.cos().atan2(-a.sin()).to_degrees() as f32
+        kentos_num::atan2(kentos_num::cos(a), -kentos_num::sin(a)).to_degrees() as f32
     }
 
     /// The side the model is seen from, in words (“kuzeydoğudan”).
@@ -141,14 +145,18 @@ impl OrbitCamera {
     /// side the model is seen.
     pub fn light(&self) -> [f64; 3] {
         let (a, e) = ((self.azimuth + 35.0).to_radians(), 50f64.to_radians());
-        [e.cos() * a.cos(), e.cos() * a.sin(), e.sin()]
+        [
+            kentos_num::cos(e) * kentos_num::cos(a),
+            kentos_num::cos(e) * kentos_num::sin(a),
+            kentos_num::sin(e),
+        ]
     }
 
     /// The camera as an axonometric (docs/adr/8175 §3.1): parallel lines, the view as tall at the target as the
     /// perspective's there, so switching keeps the picture's size and the wheel still zooms; the eye backed off past
     /// the model by `reach` (its farthest point from the target), an orthographic view's frustum starting at its eye.
     pub fn axonometric(&self, ex: &Exaggeration, reach: f64) -> Camera {
-        let height = 2.0 * self.distance * (FOV.to_radians() / 2.0).tan();
+        let height = 2.0 * self.distance * kentos_num::tan(FOV.to_radians() / 2.0);
         let reach = reach.max(0.0);
         let back = self.distance + reach + 1.0;
         Camera::orbit(
@@ -350,7 +358,11 @@ mod tests {
         );
         // A point beside the target across the view (at its depth): as far out in both, the same scale there.
         let a = c.azimuth.to_radians();
-        let beside = [c.target[0] - a.sin(), c.target[1] + a.cos(), c.target[2]];
+        let beside = [
+            c.target[0] - kentos_num::sin(a),
+            c.target[1] + kentos_num::cos(a),
+            c.target[2],
+        ];
         let (pb, _, _) = persp.project(beside, &viewport).unwrap();
         let (ab, _, _) = axo.project(beside, &viewport).unwrap();
         assert!(

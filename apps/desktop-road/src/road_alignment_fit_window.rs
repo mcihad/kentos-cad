@@ -413,18 +413,18 @@ fn arc_points(a: [f64; 2], b: [f64; 2], g: f64) -> Vec<[f64; 2]> {
     }
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
     let chord = kentos_num::hypot(dx, dy);
-    let turn = 4.0 * g.atan();
-    let r = chord / (2.0 * (0.5 * turn).sin()).abs();
-    let h = r * (0.5 * turn).cos() * turn.signum();
+    let turn = 4.0 * kentos_num::atan(g);
+    let r = chord / (2.0 * kentos_num::sin(0.5 * turn)).abs();
+    let h = r * kentos_num::cos(0.5 * turn) * turn.signum();
     let c = [
         0.5 * (a[0] + b[0]) - dy / chord * h,
         0.5 * (a[1] + b[1]) + dx / chord * h,
     ];
-    let a0 = (a[1] - c[1]).atan2(a[0] - c[0]);
+    let a0 = kentos_num::atan2(a[1] - c[1], a[0] - c[0]);
     (0..16)
         .map(|k| {
             let t = a0 + turn * k as f64 / 16.0;
-            [c[0] + r * t.cos(), c[1] + r * t.sin()]
+            [c[0] + r * kentos_num::cos(t), c[1] + r * kentos_num::sin(t)]
         })
         .collect()
 }

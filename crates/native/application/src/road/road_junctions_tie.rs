@@ -108,7 +108,7 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         left: def.legs[p].left,
         right: def.legs[p].right,
     };
-    let sine = report.angle.to_radians().sin();
+    let sine = kentos_num::sin(report.angle.to_radians());
     let edges = edge_stations(
         deck,
         &secondary.alignment.core,

@@ -238,7 +238,7 @@ fn arc_extremes(a: &Coord, m: &Coord, b: &Coord, f: &mut dyn FnMut(f64, f64)) {
     let cy = (sq(a) * (b.x - m.x) + sq(m) * (a.x - b.x) + sq(b) * (m.x - a.x)) / d;
     let r = kentos_num::hypot(a.x - cx, a.y - cy);
     let tau = std::f64::consts::TAU;
-    let ang = |c: &Coord| (c.y - cy).atan2(c.x - cx);
+    let ang = |c: &Coord| kentos_num::atan2(c.y - cy, c.x - cx);
     let (t0, t2) = (ang(a), ang(b));
     let ccw = (m.x - a.x) * (b.y - a.y) - (m.y - a.y) * (b.x - a.x) > 0.0;
     // The sweep from a to b through m, counter-clockwise positive.
@@ -255,7 +255,7 @@ fn arc_extremes(a: &Coord, m: &Coord, b: &Coord, f: &mut dyn FnMut(f64, f64)) {
             -(t0 - t).rem_euclid(tau)
         };
         if along.abs() <= s.abs() {
-            f(cx + r * t.cos(), cy + r * t.sin());
+            f(cx + r * kentos_num::cos(t), cy + r * kentos_num::sin(t));
         }
     }
 }

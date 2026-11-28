@@ -135,7 +135,7 @@ mod tests {
                     Finding::Found(format!("tr.ornek.e{culprit}")),
                     "{n} / {culprit}"
                 );
-                let most = 1 + (n as f64).log2().ceil() as u32;
+                let most = 1 + kentos_num::log2(n as f64).ceil() as u32;
                 assert_eq!(Bisection::most_rounds(n), most);
                 assert!(rounds <= most, "{n} extensions: {rounds} rounds > {most}");
             }

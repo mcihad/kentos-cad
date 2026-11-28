@@ -39,7 +39,7 @@ impl<F: FnMut() -> bool> Search<'_, '_, F> {
         if !radius.is_finite() || radius <= self.tolerance * 2. {
             return Ok(true);
         }
-        let start = (self.seed.y - center.y).atan2(self.seed.x - center.x);
+        let start = kentos_num::atan2(self.seed.y - center.y, self.seed.x - center.x);
         let mut ring = Vec::new();
         for p in self.points {
             if !self.budget.tick(self.stopped)? {
@@ -47,7 +47,8 @@ impl<F: FnMut() -> bool> Search<'_, '_, F> {
             }
             let r = kentos_num::hypot(p.x - center.x, p.y - center.y);
             if (r - radius).abs() <= self.tolerance {
-                let angle = ((p.y - center.y).atan2(p.x - center.x) - start).rem_euclid(TAU);
+                let angle =
+                    (kentos_num::atan2(p.y - center.y, p.x - center.x) - start).rem_euclid(TAU);
                 ring.push((angle, *p));
             }
         }

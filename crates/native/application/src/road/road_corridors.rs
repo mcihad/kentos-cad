@@ -592,9 +592,9 @@ fn solve(
                 .points
                 .windows(2)
                 .map(|w| {
-                    ((w[1][1] - w[0][1]).powi(2)
-                        + (w[1][2] - w[0][2]).powi(2)
-                        + (w[1][3] - w[0][3]).powi(2))
+                    (kentos_num::powi(w[1][1] - w[0][1], 2)
+                        + kentos_num::powi(w[1][2] - w[0][2], 2)
+                        + kentos_num::powi(w[1][3] - w[0][3], 2))
                     .sqrt()
                 })
                 .sum();

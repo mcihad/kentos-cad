@@ -220,7 +220,9 @@ struct ViewBuilt {
 
 /// The view's logical px per metre in quarter octaves: a view-dependent build is made for it (docs/adr/0213 §3).
 pub fn quarter_scale(px_per_m: f64) -> f64 {
-    (kentos_geometry_core::jsmath::js_round(px_per_m.max(1e-12).log2() * 4.0) / 4.0).exp2()
+    kentos_num::exp2(
+        kentos_geometry_core::jsmath::js_round(kentos_num::log2(px_per_m.max(1e-12)) * 4.0) / 4.0,
+    )
 }
 
 /// A heat map's box: the view and half of it on every side.

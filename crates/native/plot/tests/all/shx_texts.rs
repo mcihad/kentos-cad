@@ -321,7 +321,7 @@ fn a_blocks_text_prints_in_its_embedded_shx_font_where_the_insert_puts_it() {
                 p["y"].as_f64().unwrap() - at[1],
             ];
             // The block's point q with turn(q) + at = p.
-            let (s, c) = (-turn).to_radians().sin_cos();
+            let (s, c) = kentos_num::sin_cos((-turn).to_radians());
             text["p"] = json!({"x": d[0] * c - d[1] * s, "y": d[0] * s + d[1] * c});
             text["rotation"] = json!(r - turn);
             text["layerId"] = json!("");

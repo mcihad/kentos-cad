@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn a_ring_with_arcs_is_closed_and_a_bow_tie_is_not() {
-        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
         let curved = Shape::Prism {
             rings: vec![vec![[6.15, 0.0], [0.0, 6.15], [0.0, 5.85], [5.85, 0.0]]],
             bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],

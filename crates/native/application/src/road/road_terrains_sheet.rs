@@ -328,7 +328,7 @@ fn built_up_spots(
         .collect();
     // Docs/adr/5120: the grid runs from its origin, turned by its rotation; the corners are read in its own axes.
     let o = b.origin.unwrap_or([0.0, 0.0]);
-    let (sin, cos) = b.rotation.unwrap_or(0.0).sin_cos();
+    let (sin, cos) = kentos_num::sin_cos(b.rotation.unwrap_or(0.0));
     let own = |c: &P| {
         let (dx, dy) = (c[0] - o[0], c[1] - o[1]);
         [dx * cos + dy * sin, dy * cos - dx * sin]
@@ -567,7 +567,7 @@ fn labels(
                 .and_then(|t| surface.slope_of(t))
                 .and_then(|s| s.aspect)
             {
-                let uphill = [-aspect.sin(), -aspect.cos()];
+                let uphill = [-kentos_num::sin(aspect), -kentos_num::cos(aspect)];
                 let left = [-d[1], d[0]];
                 if left[0] * uphill[0] + left[1] * uphill[1] < 0.0 {
                     d = [-d[0], -d[1]];
@@ -577,7 +577,7 @@ fn labels(
                 z,
                 text: level_text(z),
                 at,
-                rotation: d[1].atan2(d[0]).to_degrees(),
+                rotation: kentos_num::atan2(d[1], d[0]).to_degrees(),
             });
             s += every;
         }

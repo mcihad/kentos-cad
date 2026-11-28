@@ -130,7 +130,7 @@ fn the_run_keeps_its_physics() {
     // (v²/2b = 25 m before the end: there the brakes and the rolling stop it, not the engine).
     let level = run(&[[0.0, 0.0], [5000.0, 0.0]], 40000.0, &t, 0.03, Some(100.0)).unwrap();
     let rolling = 40000.0 * G * 0.03 * (5000.0 - 25.0);
-    let kinetic = 0.5 * 40000.0 * 10.0f64.powi(2);
+    let kinetic = 0.5 * 40000.0 * kentos_num::powi(10.0f64, 2);
     assert!(
         (level.work - rolling - kinetic).abs() < 1e-3 * rolling,
         "{} vs {}",

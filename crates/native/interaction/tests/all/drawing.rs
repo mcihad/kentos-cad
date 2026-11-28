@@ -140,7 +140,10 @@ fn the_typed_angle_stays_for_the_next_construction_lines() {
         panic!("a construction line");
     };
     let a = 12.34567_f64.to_radians();
-    assert!((x.dir.x - a.cos()).abs() < 1e-12 && (x.dir.y - a.sin()).abs() < 1e-12);
+    assert!(
+        (x.dir.x - kentos_num::cos(a)).abs() < 1e-12
+            && (x.dir.y - kentos_num::sin(a)).abs() < 1e-12
+    );
 }
 
 #[test]

@@ -43,7 +43,10 @@ fn points_of(edges: &[Edge]) -> Vec<V> {
                 let n = ((sweep.abs() / ARC_STEP).ceil() as usize).max(1);
                 for k in 0..n {
                     let t = a0 + sweep * k as f64 / n as f64;
-                    out.push(V::new(c.x + r * t.cos(), c.y + r * t.sin()));
+                    out.push(V::new(
+                        c.x + r * kentos_num::cos(t),
+                        c.y + r * kentos_num::sin(t),
+                    ));
                 }
             }
         }

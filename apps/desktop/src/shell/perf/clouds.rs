@@ -83,7 +83,7 @@ fn mix(a: u64, b: u64) -> u64 {
 
 /// The ground's height at (x, y) from the lower left: hills and a little roughness.
 fn ground_z(x: f64, y: f64) -> f64 {
-    850.0 + 15.0 * (x / 180.0).sin() * (y / 140.0).cos() + 3.0 * (x / 23.0 + y / 31.0).sin()
+    850.0 + 15.0 * kentos_num::sin(x / 180.0) * kentos_num::cos(y / 140.0) + 3.0 * kentos_num::sin(x / 23.0 + y / 31.0)
 }
 
 /// What stands at (x, y): a building's height, or a tree's crown height, or nothing.
@@ -110,7 +110,7 @@ fn over(x: f64, y: f64) -> Over {
         let cx = 4.0 + (k % 32) as f64;
         let cy = 4.0 + ((k >> 8) % 32) as f64;
         let r = 2.0 + ((k >> 16) % 30) as f64 / 10.0;
-        let d2 = (u - cx).powi(2) + (v - cy).powi(2);
+        let d2 = kentos_num::powi(u - cx, 2) + kentos_num::powi(v - cy, 2);
         if d2 < r * r {
             let top = 6.0 + ((k >> 24) % 120) as f64 / 10.0;
             return Over::Tree(top * (1.0 - 0.4 * d2 / (r * r)));
@@ -546,8 +546,8 @@ fn clouds() {
             .map(|k| {
                 let a = f64::from(k) / 64.0 * std::f64::consts::TAU;
                 kentos_geometry_core::vec2::Vec2::new(
-                    X0 + 500.0 + 300.0 * a.cos(),
-                    Y0 + 500.0 + 300.0 * a.sin(),
+                    X0 + 500.0 + 300.0 * kentos_num::cos(a),
+                    Y0 + 500.0 + 300.0 * kentos_num::sin(a),
                 )
             })
             .collect(),

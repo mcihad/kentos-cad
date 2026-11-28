@@ -79,7 +79,7 @@ pub fn stray(a: &Coded, middle: &Coded, b: &Coded) -> Stray {
             0.0
         };
         let (cx, cy, cz) = (pa[0] + t * dx, pa[1] + t * dy, pa[2] + t * (pb[2] - pa[2]));
-        let plan = ((p[0] - cx).powi(2) + (p[1] - cy).powi(2)).sqrt();
+        let plan = (kentos_num::powi(p[0] - cx, 2) + kentos_num::powi(p[1] - cy, 2)).sqrt();
         let height = (p[2] - cz).abs();
         if plan > out.plan {
             out.plan = plan;

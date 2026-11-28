@@ -510,10 +510,10 @@ impl canvas::Program<Message> for Curve<'_> {
             30.0
         });
         let high = (4.0 * most_r).max(1000.0);
-        let (r0, r1) = (low.ln(), high.ln());
+        let (r0, r1) = (kentos_num::ln(low), kentos_num::ln(high));
         let samples: Vec<(f64, f64)> = (0..=160)
             .filter_map(|i| {
-                let r = (r0 + (r1 - r0) * f64::from(i) / 160.0).exp();
+                let r = kentos_num::exp(r0 + (r1 - r0) * f64::from(i) / 160.0);
                 wid::widening(r, &vehicle, &road)
                     .ok()
                     .map(|w| (r, w.widening))
@@ -532,7 +532,7 @@ impl canvas::Program<Message> for Curve<'_> {
             width: bounds.width - 60.0,
             height: bounds.height - 34.0,
         };
-        let x = |r: f64| plot.x + plot.width * ((r.ln() - r0) / (r1 - r0)) as f32;
+        let x = |r: f64| plot.x + plot.width * ((kentos_num::ln(r) - r0) / (r1 - r0)) as f32;
         let y = |v: f64| plot.y + plot.height * ((top - v) / (top - bottom)) as f32;
         let thin = |c: Color| Stroke::default().with_color(c).with_width(1.0);
         // The grid: radii 20, 50, 100, 200, 500, 1000, 2000 m; widening every half metre or metre.

@@ -577,7 +577,7 @@ fn file_paint() {
     let _ = app.update(Message::Run("view.zoomExtents"));
     shot.settle(&mut app, App::view, &mut update);
     // Eight wheel steps in (0.15 each, docs/adr/0056).
-    app.viewport.camera.scale *= (8.0f64 * 0.15).exp();
+    app.viewport.camera.scale *= kentos_num::exp(8.0f64 * 0.15);
     let camera = app.viewport.camera;
     let v = camera.visible_bounds();
     let frames = 10;

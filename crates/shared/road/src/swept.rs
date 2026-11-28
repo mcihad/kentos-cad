@@ -102,17 +102,17 @@ fn follow(r: [f64; 2], f: [f64; 2], g: [f64; 2], l: f64) -> [f64; 2] {
         (b[0] * u[0] + b[1] * u[1]) / l,
         (b[0] * n[0] + b[1] * n[1]) / l,
     );
-    let phi = sn.atan2(c);
+    let phi = kentos_num::atan2(sn, c);
     // tan(φ/2) e^(−s/L); φ = ±π (the bar pointing back) stays.
-    let half = (phi / 2.0).tan() * (-s / l).exp();
+    let half = kentos_num::tan(phi / 2.0) * kentos_num::exp(-s / l);
     let phi2 = if half.is_finite() {
-        2.0 * half.atan()
+        2.0 * kentos_num::atan(half)
     } else {
         phi
     };
     [
-        g[0] - l * (phi2.cos() * u[0] + phi2.sin() * n[0]),
-        g[1] - l * (phi2.cos() * u[1] + phi2.sin() * n[1]),
+        g[0] - l * (kentos_num::cos(phi2) * u[0] + kentos_num::sin(phi2) * n[0]),
+        g[1] - l * (kentos_num::cos(phi2) * u[1] + kentos_num::sin(phi2) * n[1]),
     ]
 }
 
@@ -141,7 +141,10 @@ pub fn arc_places(
     (0..=n)
         .map(|k| {
             let a = start + sweep * k as f64 / n as f64;
-            [centre[0] + radius * a.cos(), centre[1] + radius * a.sin()]
+            [
+                centre[0] + radius * kentos_num::cos(a),
+                centre[1] + radius * kentos_num::sin(a),
+            ]
         })
         .collect()
 }
@@ -164,8 +167,8 @@ pub fn bulge_places(a: [f64; 2], b: [f64; 2], bulge: f64, step: f64) -> Vec<[f64
         (a[1] + b[1]) / 2.0 + dx / c * h,
     ];
     let radius = kentos_num::hypot(a[0] - centre[0], a[1] - centre[1]);
-    let start = (a[1] - centre[1]).atan2(a[0] - centre[0]);
-    let mut out = arc_places(centre, radius, start, 4.0 * bulge.atan(), step);
+    let start = kentos_num::atan2(a[1] - centre[1], a[0] - centre[0]);
+    let mut out = arc_places(centre, radius, start, 4.0 * kentos_num::atan(bulge), step);
     if let Some(last) = out.last_mut() {
         *last = b;
     }

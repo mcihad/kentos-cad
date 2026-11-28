@@ -92,7 +92,7 @@ fn holes(doc: &Document) -> Vec<Hole> {
         .filter_map(|o| {
             let w = walls.get(&o.host)?;
             let (a, b) = (w.pts[0], w.pts[1]);
-            let len = ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+            let len = (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt();
             let u = ((b.x - a.x) / len, (b.y - a.y) / len);
             let mid = match o.anchor {
                 kentos_commands::OpeningAnchor::Start => o.at + o.width / 2.0,

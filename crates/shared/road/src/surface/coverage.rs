@@ -249,7 +249,10 @@ pub(super) fn chain(
                     let turn = |o: u32| {
                         let q = at(o);
                         let d = [q[0] - pc[0], q[1] - pc[1]];
-                        (din[0] * d[1] - din[1] * d[0]).atan2(din[0] * d[0] + din[1] * d[1])
+                        kentos_num::atan2(
+                            din[0] * d[1] - din[1] * d[0],
+                            din[0] * d[0] + din[1] * d[1],
+                        )
                     };
                     turn(outs[x]).total_cmp(&turn(outs[y]))
                 })

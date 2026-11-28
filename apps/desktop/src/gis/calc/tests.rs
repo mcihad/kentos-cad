@@ -824,7 +824,8 @@ fn a_closed_traverse_carries_its_heights() {
     let k = doc.settings().refraction();
     let d = |z: f64| {
         let z = z * std::f64::consts::PI / 200.0;
-        100.0 * z.cos() / z.sin() + 1.5 - 1.6 + (1.0 - k) * 100.0 * 100.0 / (2.0 * 6_371_000.0)
+        100.0 * kentos_num::cos(z) / kentos_num::sin(z) + 1.5 - 1.6
+            + (1.0 - k) * 100.0 * 100.0 / (2.0 * 6_371_000.0)
     };
     let raw = [99.0, 101.0, 100.5, 99.5].map(d);
     let f: f64 = raw.iter().sum();

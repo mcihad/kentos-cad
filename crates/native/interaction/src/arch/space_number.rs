@@ -609,7 +609,7 @@ fn clockwise(uids: &[String], cx: &Context<'_>) -> Vec<String> {
         placed.iter().map(|(_, p)| p.y).sum::<f64>() / n,
     );
     let turn = |p: Vec2| {
-        let a = (p.x - c.x).atan2(p.y - c.y);
+        let a = kentos_num::atan2(p.x - c.x, p.y - c.y);
         if a < 0.0 {
             a + std::f64::consts::TAU
         } else {

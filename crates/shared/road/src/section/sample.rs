@@ -25,7 +25,7 @@ pub fn sample_line(al: &Alignment, station: f64, left: f64, right: f64) -> Optio
     }
     let p = al.at(station)?;
     // Right of the direction θ is (sin θ, −cos θ).
-    let (rx, ry) = (p.direction.sin(), -p.direction.cos());
+    let (rx, ry) = (kentos_num::sin(p.direction), -kentos_num::cos(p.direction));
     Some(SampleLine {
         station,
         left,

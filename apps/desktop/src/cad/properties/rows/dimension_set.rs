@@ -142,7 +142,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
             format!("Cephe · {} duvar", 1 + span.walls.len())
         };
         out.insert(1, Row::text("Kaynak", &source));
-        let angle = span.direction.y.atan2(span.direction.x).to_degrees();
+        let angle = kentos_num::atan2(span.direction.y, span.direction.x).to_degrees();
         out.push(Row::text(
             "Doğrultu",
             format!("{:.2}°", (angle + 360.0) % 360.0),

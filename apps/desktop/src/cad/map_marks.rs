@@ -165,7 +165,7 @@ pub fn ucs_origin(size: Size, angle: f64) -> Point {
 /// How far the icon turned by `angle` reaches left of and below its origin, in pixels: its arms' tips with their
 /// names and a name's half width round them.
 fn ucs_reach(angle: f64) -> (f32, f32) {
-    let (c, s) = (angle.cos() as f32, angle.sin() as f32);
+    let (c, s) = (kentos_num::cos(angle) as f32, kentos_num::sin(angle) as f32);
     let turn = |dx: f32, dy: f32| (dx * c + dy * s, -dx * s + dy * c);
     // The ends: the origin, each tip with its arrow, each name with room for its letter round it.
     let mut points = vec![
@@ -202,7 +202,7 @@ fn ucs_icon(
 ) {
     let ink = Stroke::default().with_color(colors.fg).with_width(1.5);
     // Screen y grows downward: a turn counter-clockwise on the ground is clockwise here.
-    let (c, s) = (angle.cos() as f32, angle.sin() as f32);
+    let (c, s) = (kentos_num::cos(angle) as f32, kentos_num::sin(angle) as f32);
     let turn = |dx: f32, dy: f32| Point::new(o.x + dx * c + dy * s, o.y - dx * s + dy * c);
     let x_tip = turn(UCS_ARM, 0.0);
     let y_tip = turn(0.0, -UCS_ARM);
@@ -269,7 +269,7 @@ fn ucs_icon(
 /// (docs/adr/9327: the deepest zoom said “0.0010 cm”), “5.0 mm”, “10 µm”.
 pub fn scale_length(scale: f64) -> (f64, String) {
     let raw = TARGET / scale;
-    let p = 10f64.powf(raw.log10().floor());
+    let p = kentos_num::pow(10f64, kentos_num::log10(raw).floor());
     let mut best = p;
     for m in [2.0, 5.0, 10.0] {
         let v = m * p;
@@ -324,7 +324,7 @@ fn two_digits(v: f64) -> String {
     if v == 0.0 || !v.is_finite() {
         return format!("{v:.1}");
     }
-    let exponent = v.abs().log10().floor() as i32;
+    let exponent = kentos_num::log10(v.abs()).floor() as i32;
     let decimals = (1 - exponent).max(0) as usize;
     format!("{v:.decimals$}")
 }
@@ -468,7 +468,7 @@ mod tests {
                 o.y + bottom
             );
             // The tips themselves, as the icon draws them.
-            let (c, s) = (a.cos() as f32, a.sin() as f32);
+            let (c, s) = (kentos_num::cos(a) as f32, kentos_num::sin(a) as f32);
             for (dx, dy) in [(UCS_ARM + 2.0, 0.0), (0.0, -UCS_ARM - 2.0)] {
                 let (x, y) = (o.x + dx * c + dy * s, o.y - dx * s + dy * c);
                 assert!(x >= 0.0 && y <= size.height, "{deg}°: tip at {x}, {y}");

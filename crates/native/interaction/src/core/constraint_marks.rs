@@ -157,7 +157,7 @@ fn value_words(v: f64) -> String {
             mantissa.trim_end_matches('0').trim_end_matches('.')
         )
     } else {
-        let precision = (11.0 - v.abs().log10().floor()).clamp(0.0, 17.0) as usize;
+        let precision = (11.0 - kentos_num::log10(v.abs()).floor()).clamp(0.0, 17.0) as usize;
         let text = format!("{v:.precision$}");
         if precision == 0 {
             text

@@ -256,7 +256,9 @@ fn same(a: &Entity, b: &Entity, tol: f64) -> Option<f64> {
             (d <= tol).then_some(d)
         }
         (Entity::Arc(x), Entity::Arc(y)) => {
-            let end = |c: Vec2, r: f64, a: f64| P::new(c.x + r * a.cos(), c.y + r * a.sin());
+            let end = |c: Vec2, r: f64, a: f64| {
+                P::new(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a))
+            };
             let d = js_max(
                 js_max(far(p(x.c), p(y.c)), (x.r - y.r).abs()),
                 js_max(

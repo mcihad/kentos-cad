@@ -184,7 +184,7 @@ impl PlaceTextFile {
         let face = styles::text_face(cx);
         let r = m.text_angle.to_radians();
         // Down the texts' own up: each line 1.5 heights under the one before.
-        let down = Vec2::new(r.sin(), -r.cos());
+        let down = Vec2::new(kentos_num::sin(r), -kentos_num::cos(r));
         let geometries: Vec<EntityGeometry> = file
             .lines
             .iter()
@@ -352,7 +352,7 @@ impl Tool for PlaceTextFile {
         let (along, up) = m.text_align.map_or((0.0, 0.0), |a| (a.along(), a.up()));
         let height = m.heights.mm(AnnotationKind::Text) / 1000.0 * self.scale;
         let r = m.text_angle.to_radians();
-        let (dx, dy) = (r.cos(), r.sin());
+        let (dx, dy) = (kentos_num::cos(r), kentos_num::sin(r));
         // A point `x` along the texts' baseline and `y` up from it, counted from the pointer.
         let at = |x: f64, y: f64| Vec2::new(h.x + dx * x - dy * y, h.y + dy * x + dx * y);
         let strokes = file

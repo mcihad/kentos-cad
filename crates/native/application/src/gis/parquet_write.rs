@@ -55,7 +55,7 @@ fn arc(a: &Coord, m: &Coord, b: &Coord, out: &mut Vec<Coord>) {
         out.extend([*m, *b]);
         return;
     };
-    let ang = |p: &Coord| (p.y - cy).atan2(p.x - cx);
+    let ang = |p: &Coord| kentos_num::atan2(p.y - cy, p.x - cx);
     let (a0, am, a1) = (ang(a), ang(m), ang(b));
     let tau = std::f64::consts::TAU;
     let ccw = |from: f64, to: f64| (to - from).rem_euclid(tau);
@@ -742,8 +742,8 @@ mod tests {
     fn a_small_arc_at_map_coordinates_keeps_its_corners_on_the_circle() {
         let (cx, cy, r) = (487_080.0, 4_420_080.0, 0.6);
         let at = |t: f64| Coord {
-            x: cx + r * t.cos(),
-            y: cy + r * t.sin(),
+            x: cx + r * kentos_num::cos(t),
+            y: cy + r * kentos_num::sin(t),
             z: None,
             m: None,
         };

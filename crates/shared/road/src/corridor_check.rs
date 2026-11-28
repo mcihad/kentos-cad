@@ -53,7 +53,7 @@ pub fn margins(
             if sides.is_empty() {
                 continue;
             }
-            let (sin, cos) = line.direction.sin_cos();
+            let (sin, cos) = kentos_num::sin_cos(line.direction);
             let mut best: Option<(f64, f64, f64)> = None;
             for p in top_line_of(line, sec, counts) {
                 let o = (p[0] - line.at[0]) * sin - (p[1] - line.at[1]) * cos;

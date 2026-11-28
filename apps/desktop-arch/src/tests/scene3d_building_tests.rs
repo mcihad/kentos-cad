@@ -454,7 +454,7 @@ fn the_sun_lights_the_building_by_the_shadow_tool_s_place_and_steps_its_hours() 
     assert_eq!((at.day, at.hour), (0, 12.0), "the tool's day and hour");
     let up = towards.expect("lit by the sun")[2];
     assert!(
-        (up - 26.5f64.to_radians().sin()).abs() < 0.01,
+        (up - kentos_num::sin(26.5f64.to_radians())).abs() < 0.01,
         "21 Aralık 12:00, 26,5° up: {up}"
     );
     assert!(

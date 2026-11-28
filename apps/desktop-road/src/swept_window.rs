@@ -716,12 +716,15 @@ impl canvas::Program<Message> for Plan<'_> {
         // The curb returns, each round its centre through its sweep, and the legs' edges a little beyond.
         if let Some(j) = self.junction {
             for r in &j.returns {
-                let start = (r.on_a.y - r.cy).atan2(r.on_a.x - r.cx);
+                let start = kentos_num::atan2(r.on_a.y - r.cy, r.on_a.x - r.cx);
                 let sweep = r.sweep.to_radians();
                 let arc: Vec<[f64; 2]> = (0..=40)
                     .map(|k| {
                         let a = start + sweep * f64::from(k) / 40.0;
-                        [r.cx + r.radius * a.cos(), r.cy + r.radius * a.sin()]
+                        [
+                            r.cx + r.radius * kentos_num::cos(a),
+                            r.cy + r.radius * kentos_num::sin(a),
+                        ]
                     })
                     .collect();
                 frame.stroke(

@@ -83,7 +83,7 @@ impl Surface {
         let gy = (ux * vz - uz * vx) / d;
         let slope = kentos_num::hypot(gx, gy);
         let aspect = (slope > 0.0).then(|| {
-            let az = (-gx).atan2(-gy);
+            let az = kentos_num::atan2(-gx, -gy);
             if az < 0.0 {
                 az + std::f64::consts::TAU
             } else {
@@ -328,8 +328,8 @@ mod told_tests {
         for k in 0..12 {
             let a = f64::from(k) * std::f64::consts::TAU / 12.0;
             points.push(SpotPoint {
-                x: 20.0 * a.cos(),
-                y: 20.0 * a.sin(),
+                x: 20.0 * kentos_num::cos(a),
+                y: 20.0 * kentos_num::sin(a),
                 z: 0.0,
                 source: None,
             });

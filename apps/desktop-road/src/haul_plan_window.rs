@@ -1275,7 +1275,7 @@ impl canvas::Program<Message> for NetworkMap<'_> {
         let want = (w / 5.0) / scale;
         let step = [1.0, 2.0, 5.0]
             .iter()
-            .flat_map(|m| (0..6).map(move |e| m * 10f64.powi(e)))
+            .flat_map(|m| (0..6).map(move |e| m * kentos_num::powi(10f64, e)))
             .filter(|v| *v <= want)
             .fold(1.0, f64::max);
         let (sx, sy) = (m as f32, (h - 10.0) as f32);

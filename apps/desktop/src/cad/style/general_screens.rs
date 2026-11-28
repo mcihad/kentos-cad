@@ -397,9 +397,14 @@ pub(super) fn town() -> Document {
         (0..n)
             .map(|k| {
                 let a = k as f64 / n as f64 * std::f64::consts::TAU;
-                let rr =
-                    r * (1.0 + wobble * (3.0 * a).sin() * 0.5 + wobble * (5.0 * a).cos() * 0.3);
-                (cx + rr * a.cos(), cy + rr * a.sin() * 0.8)
+                let rr = r
+                    * (1.0
+                        + wobble * kentos_num::sin(3.0 * a) * 0.5
+                        + wobble * kentos_num::cos(5.0 * a) * 0.3);
+                (
+                    cx + rr * kentos_num::cos(a),
+                    cy + rr * kentos_num::sin(a) * 0.8,
+                )
             })
             .collect()
     };
@@ -724,7 +729,7 @@ pub(super) fn neighbourhood() -> Document {
         (0..20)
             .map(|k| {
                 let a = k as f64 / 20.0 * std::f64::consts::TAU;
-                (cx + r * a.cos(), cy + r * a.sin())
+                (cx + r * kentos_num::cos(a), cy + r * kentos_num::sin(a))
             })
             .collect()
     };

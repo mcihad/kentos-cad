@@ -320,7 +320,10 @@ fn along(pts: &[[f64; 2]], bulges: &[f64], s: f64) -> [f64; 2] {
             return match arc {
                 Some(arc) => {
                     let angle = arc.a0 + arc.sweep.signum() * t / arc.r;
-                    [arc.c.x + arc.r * angle.cos(), arc.c.y + arc.r * angle.sin()]
+                    [
+                        arc.c.x + arc.r * kentos_num::cos(angle),
+                        arc.c.y + arc.r * kentos_num::sin(angle),
+                    ]
                 }
                 None => {
                     let f = t / length;

@@ -22,7 +22,7 @@ use crate::sheets_set::{recipe_draws, set_of};
 
 /// The box of a named view's area: its four corners turned by its twist.
 fn view_box(v: &NamedView) -> [f64; 4] {
-    let (s, c) = v.twist.sin_cos();
+    let (s, c) = kentos_num::sin_cos(v.twist);
     let (hw, hh) = (v.width / 2.0, v.height / 2.0);
     let mut b = [
         f64::INFINITY,

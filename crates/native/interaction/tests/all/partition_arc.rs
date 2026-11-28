@@ -15,7 +15,7 @@ fn bench() -> Bench {
     let pts = [Vec2::new(E + 8.0, N), Vec2::new(E, N + 8.0)];
     assert!(b.run(|_, cx| kentos_interaction::wall::write(
         &pts,
-        &[FRAC_PI_8.tan()],
+        &[kentos_num::tan(FRAC_PI_8)],
         false,
         false,
         cx
@@ -28,7 +28,7 @@ fn bench() -> Bench {
 /// The point on the arc at `deg` degrees, local.
 fn on_arc(deg: f64) -> [f64; 2] {
     let t = deg.to_radians();
-    [8.0 * t.cos(), 8.0 * t.sin()]
+    [8.0 * kentos_num::cos(t), 8.0 * kentos_num::sin(t)]
 }
 
 /// The newest wall's arc: its centre, local, and its radius.

@@ -29,7 +29,11 @@ fn timing() {
     for j in 0..=ny {
         for i in 0..=nx {
             let (x, y) = (i as f64, j as f64);
-            vs.push([x0 + x, y0 + y, 1200.0 + 0.02 * x + 6.0 * (y / 90.0).sin()]);
+            vs.push([
+                x0 + x,
+                y0 + y,
+                1200.0 + 0.02 * x + 6.0 * kentos_num::sin(y / 90.0),
+            ]);
         }
     }
     let mut ts = Vec::with_capacity(nx * ny * 2);

@@ -27,7 +27,7 @@ fn drawing(stale: bool) -> Document {
         let pts: Vec<serde_json::Value> = (0..12)
             .map(|k| {
                 let a = f64::from(k) * std::f64::consts::TAU / 12.0;
-                json!({"x": x + 12.0 * a.cos(), "y": y + 12.0 * a.sin()})
+                json!({"x": x + 12.0 * kentos_num::cos(a), "y": y + 12.0 * kentos_num::sin(a)})
             })
             .collect();
         let owner = if stale && i % 10 == 0 {

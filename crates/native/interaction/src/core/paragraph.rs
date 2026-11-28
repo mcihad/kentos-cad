@@ -435,7 +435,7 @@ impl Tool for ParagraphText {
         };
         let memory = self.seen.map_or_else(Memory::default, |(m, _)| m);
         let r = memory.text_angle.to_radians();
-        let (c, s) = (r.cos(), r.sin());
+        let (c, s) = (kentos_num::cos(r), kentos_num::sin(r));
         let (corner, width) = corner_box(first, h, memory.text_angle);
         // The box's depth: from its top down to the lower of the two corners.
         let up = |p: Vec2| -p.x * s + p.y * c;

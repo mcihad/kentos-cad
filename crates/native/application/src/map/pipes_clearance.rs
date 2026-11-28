@@ -377,12 +377,12 @@ fn closest(a: &Edge, b: &Edge) -> (f64, Vec2, Vec2) {
                 let u = Vec2::new((c2.x - c1.x) / d, (c2.y - c1.y) / d);
                 for k1 in [1.0, -1.0] {
                     let p = Vec2::new(c1.x + k1 * r1 * u.x, c1.y + k1 * r1 * u.y);
-                    if !on_edge_arc(a01, s1, (k1 * u.y).atan2(k1 * u.x)) {
+                    if !on_edge_arc(a01, s1, kentos_num::atan2(k1 * u.y, k1 * u.x)) {
                         continue;
                     }
                     for k2 in [1.0, -1.0] {
                         let q = Vec2::new(c2.x + k2 * r2 * u.x, c2.y + k2 * r2 * u.y);
-                        if on_edge_arc(a02, s2, (k2 * u.y).atan2(k2 * u.x)) {
+                        if on_edge_arc(a02, s2, kentos_num::atan2(k2 * u.y, k2 * u.x)) {
                             take(dist(p, q), p, q);
                         }
                     }
@@ -406,7 +406,7 @@ fn normal_feet(s0: Vec2, s1: Vec2, c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<
     let mut out = Vec::new();
     for k in [1.0, -1.0] {
         let p = Vec2::new(c.x + k * r * n.x, c.y + k * r * n.y);
-        if !on_edge_arc(a0, sweep, (k * n.y).atan2(k * n.x)) {
+        if !on_edge_arc(a0, sweep, kentos_num::atan2(k * n.y, k * n.x)) {
             continue;
         }
         let t = ((p.x - s0.x) * dx + (p.y - s0.y) * dy) / (l * l);

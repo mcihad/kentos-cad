@@ -225,8 +225,8 @@ impl Room {
                 };
                 if turn * orient * hole > 1e-12 {
                     // Convex: the point on the bisector `WALL_CLEAR` from both walls' lines.
-                    let half = (u1.x * u2.x + u1.y * u2.y).clamp(-1.0, 1.0).acos() / 2.0;
-                    let s = half.sin();
+                    let half = kentos_num::acos((u1.x * u2.x + u1.y * u2.y).clamp(-1.0, 1.0)) / 2.0;
+                    let s = kentos_num::sin(half);
                     if s > 1e-6 {
                         let at = V::new(v.x + bis.x * WALL_CLEAR / s, v.y + bis.y * WALL_CLEAR / s);
                         if self.holds(at) && self.clear_of_walls(at) {

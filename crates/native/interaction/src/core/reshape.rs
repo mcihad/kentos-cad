@@ -502,7 +502,9 @@ fn chevron_at_half(pts: &[Vec2], closed: bool, size: f64) -> Option<Vec<Vec2>> {
     if closed && let (Some(first), Some(last)) = (pts.first(), pts.last()) {
         edges.push((*last, *first));
     }
-    let length = |(a, b): &(Vec2, Vec2)| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+    let length = |(a, b): &(Vec2, Vec2)| {
+        (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt()
+    };
     let total: f64 = edges.iter().map(length).sum();
     if total.is_nan() || total <= 0.0 {
         return None;

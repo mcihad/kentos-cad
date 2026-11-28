@@ -12,7 +12,7 @@ use crate::files_testing::app_with_drawing;
 /// One way: S·cot z + i − t (+ the curvature and refraction for k), z in grad.
 fn one_way(z: f64, i: f64, t: f64) -> f64 {
     let z = z * std::f64::consts::PI / 200.0;
-    100.0 * z.cos() / z.sin() + i - t
+    100.0 * kentos_num::cos(z) / kentos_num::sin(z) + i - t
 }
 
 /// The pair's k (Baselga et al. 2014, eq. 11): ½ sin z + ½ sin z′ + (2R/s) cos((z + z′)/2), s = S / sin z.
@@ -21,7 +21,9 @@ fn pair_k(z: f64, zb: f64) -> f64 {
         z * std::f64::consts::PI / 200.0,
         zb * std::f64::consts::PI / 200.0,
     );
-    z.sin() / 2.0 + zb.sin() / 2.0 + 2.0 * 6_371_000.0 / (100.0 / z.sin()) * ((z + zb) / 2.0).cos()
+    kentos_num::sin(z) / 2.0
+        + kentos_num::sin(zb) / 2.0
+        + 2.0 * 6_371_000.0 / (100.0 / kentos_num::sin(z)) * kentos_num::cos((z + zb) / 2.0)
 }
 
 fn typed(app: &mut App) {

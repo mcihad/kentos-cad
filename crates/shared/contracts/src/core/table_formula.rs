@@ -668,7 +668,7 @@ impl Sheet<'_> {
                     '*' => x * y,
                     '/' if y == 0.0 => return Value::Error(DIV_ZERO),
                     '/' => x / y,
-                    _ => x.powf(y),
+                    _ => kentos_num::pow(x, y),
                 };
                 if z.is_finite() {
                     Value::Number(z)

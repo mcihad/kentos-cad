@@ -207,7 +207,7 @@ fn a_window_is_a_hole_through_the_wall() {
 #[test]
 fn a_curved_prism_is_a_closed_mesh_of_its_flattened_arcs() {
     let (r1, r2) = (6.15, 5.85);
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     let wall = element(
         Class::Wall,
         vec![Shape::Prism {
@@ -236,9 +236,9 @@ fn a_curved_prism_is_a_closed_mesh_of_its_flattened_arcs() {
     let exact = 0.9 * std::f64::consts::PI * 3.0;
     // Each chord's segment, r²/2 (φ − sin φ), the arc cut in as many equal chords as keep each within 5° (19 here): the
     // outer arc's lost, the inner arc's gained.
-    let sweep = 4.0 * quarter.atan();
+    let sweep = 4.0 * kentos_num::atan(quarter);
     let n = (sweep / (std::f64::consts::TAU / 72.0)).ceil();
     let phi = sweep / n;
-    let short = n * (r1 * r1 - r2 * r2) / 2.0 * (phi - phi.sin()) * 3.0;
+    let short = n * (r1 * r1 - r2 * r2) / 2.0 * (phi - kentos_num::sin(phi)) * 3.0;
     assert!((v - (exact - short)).abs() < 1e-9, "{v} {exact} {short}");
 }

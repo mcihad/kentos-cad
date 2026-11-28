@@ -30,7 +30,7 @@ fn round(b: &mut Bench, from: f64, to: f64) {
     let steps = 12;
     for k in 0..=steps {
         let a = (from + (to - from) * f64::from(k) / f64::from(steps)).to_radians();
-        b.move_to(1.5 * a.cos(), 1.5 * a.sin());
+        b.move_to(1.5 * kentos_num::cos(a), 1.5 * kentos_num::sin(a));
     }
 }
 
@@ -58,21 +58,21 @@ fn the_pointer_turns_it_and_it_ends_at_its_last_riser() {
     );
     assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
     b.click(
-        1.5 * 120f64.to_radians().cos(),
-        1.5 * 120f64.to_radians().sin(),
+        1.5 * kentos_num::cos(120f64.to_radians()),
+        1.5 * kentos_num::sin(120f64.to_radians()),
     );
     let s = stair(&b);
     assert_eq!(s.risers, 18, "3.00 m under 0.175 m risers");
     let sweep: f64 = 17.0 * 0.28 / 1.5;
     let b0 = s.bulges.as_ref().expect("curved")[0];
     assert!(
-        (b0 - (sweep / 4.0).tan()).abs() < 1e-9,
+        (b0 - kentos_num::tan(sweep / 4.0)).abs() < 1e-9,
         "ends at its last riser: {b0}"
     );
     let end = s.pts[1];
     assert!(
-        (end.x - (E + 1.5 * sweep.cos())).abs() < 1e-9
-            && (end.y - (N + 1.5 * sweep.sin())).abs() < 1e-9,
+        (end.x - (E + 1.5 * kentos_num::cos(sweep))).abs() < 1e-9
+            && (end.y - (N + 1.5 * kentos_num::sin(sweep))).abs() < 1e-9,
         "{end:?}"
     );
     assert!(
@@ -92,8 +92,8 @@ fn the_other_way_round_turns_it_clockwise() {
     b.click(1.5, 0.);
     round(&mut b, 0.0, -60.0);
     b.click(
-        1.5 * (-60f64).to_radians().cos(),
-        1.5 * (-60f64).to_radians().sin(),
+        1.5 * kentos_num::cos((-60f64).to_radians()),
+        1.5 * kentos_num::sin((-60f64).to_radians()),
     );
     let s = stair(&b);
     assert!(s.bulges.as_ref().expect("curved")[0] < 0.0, "clockwise");
@@ -109,7 +109,7 @@ fn a_typed_turn_with_the_clicked_end_goes_past_a_half_turn() {
     let s = stair(&b);
     let b0 = s.bulges.as_ref().expect("curved")[0];
     assert!(
-        (b0 - (270f64.to_radians() / 4.0).tan()).abs() < 1e-9,
+        (b0 - kentos_num::tan(270f64.to_radians() / 4.0)).abs() < 1e-9,
         "three quarters round: {b0}"
     );
     // Going round by the pointer past a half turn keeps its way too.
@@ -117,12 +117,12 @@ fn a_typed_turn_with_the_clicked_end_goes_past_a_half_turn() {
     b.click(1.5, 0.);
     round(&mut b, 0.0, 300.0);
     b.click(
-        1.5 * 300f64.to_radians().cos(),
-        1.5 * 300f64.to_radians().sin(),
+        1.5 * kentos_num::cos(300f64.to_radians()),
+        1.5 * kentos_num::sin(300f64.to_radians()),
     );
     let b1 = stair(&b).bulges.expect("curved")[0];
     assert!(
-        (b1 - (300f64.to_radians() / 4.0).tan()).abs() < 1e-6,
+        (b1 - kentos_num::tan(300f64.to_radians() / 4.0)).abs() < 1e-6,
         "300° counter-clockwise, not 60° back: {b1}"
     );
 }

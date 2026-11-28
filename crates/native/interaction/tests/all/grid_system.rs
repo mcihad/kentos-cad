@@ -140,7 +140,7 @@ fn two_points_turn_the_system_to_the_pointer() {
     let (dx, dy) = (across_y[1].x - across_y[0].x, across_y[1].y - across_y[0].y);
     // Far from the origin the stored points carry ~1e-9 m of rounding.
     assert!(
-        (dy.atan2(dx).to_degrees() - 30.0).abs() < 1e-6,
+        (kentos_num::atan2(dy, dx).to_degrees() - 30.0).abs() < 1e-6,
         "turned 30°: {across_y:?}"
     );
 }
@@ -181,8 +181,8 @@ fn the_curved_system_puts_radial_grids_arcs_and_columns() {
         .expect("A-2");
     let t = (-30f64).to_radians();
     assert!(
-        (a2.at.x - (E + 6.0 * t.cos())).abs() < 1e-6
-            && (a2.at.y - (N + 6.0 * t.sin())).abs() < 1e-6,
+        (a2.at.x - (E + 6.0 * kentos_num::cos(t))).abs() < 1e-6
+            && (a2.at.y - (N + 6.0 * kentos_num::sin(t))).abs() < 1e-6,
         "{:?}",
         a2.at
     );

@@ -54,7 +54,9 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     let pis = &setup["settings"]["road"]["alignments"][0]["pis"];
     let p = |i: usize| [pis[i]["x"].as_f64().unwrap(), pis[i]["y"].as_f64().unwrap()];
     let (a, b, c) = (p(0), p(1), p(2));
-    let delta = ((c[1] - b[1]).atan2(c[0] - b[0]) - (b[1] - a[1]).atan2(b[0] - a[0])).abs();
+    let delta = (kentos_num::atan2(c[1] - b[1], c[0] - b[0])
+        - kentos_num::atan2(b[1] - a[1], b[0] - a[0]))
+    .abs();
     let grad = |rad: f64| rad * 200.0 / std::f64::consts::PI;
     // R 150 and clothoids of 40 m: D, L and T are the circular part's, Dc = Δ − 2·Ls/(2R) (KGM 2019 EK-10: A and S-A).
     let (r, ls) = (150.0_f64, 40.0_f64);
@@ -67,7 +69,7 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     assert!(has("R = 150.00"));
     assert!(has(&format!("L = {:.2}", r * dc)), "L in {words:?}");
     assert!(
-        has(&format!("T = {:.2}", r * (0.5 * dc).tan())),
+        has(&format!("T = {:.2}", r * kentos_num::tan(0.5 * dc))),
         "T in {words:?}"
     );
     assert!(
@@ -77,9 +79,11 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     // The sample's only schedule, rows on the right (outside): −2.5 % at 150 to +6 % at 200 and back from 300 to 350.
     // Level at 150 + 50 · 2.5/8.5: Lt = 250/17, Lr = 600/17 each way. TS from the clothoids' series (p, k), ST = TS +
     // R·Δ + Ls: the rise starts 44.7 m before TS, and the way out is back to normal 7.9 m before ST (La 0).
-    let shift = ls.powi(2) / (24.0 * r) - ls.powi(4) / (2688.0 * r.powi(3));
-    let k = ls / 2.0 - ls.powi(3) / (240.0 * r * r);
-    let ts = kentos_num::hypot(b[0] - a[0], b[1] - a[1]) - ((r + shift) * (0.5 * delta).tan() + k);
+    let shift = kentos_num::powi(ls, 2) / (24.0 * r)
+        - kentos_num::powi(ls, 4) / (2688.0 * kentos_num::powi(r, 3));
+    let k = ls / 2.0 - kentos_num::powi(ls, 3) / (240.0 * r * r);
+    let ts = kentos_num::hypot(b[0] - a[0], b[1] - a[1])
+        - ((r + shift) * kentos_num::tan(0.5 * delta) + k);
     let st = ts + r * delta + ls;
     assert!(has("Se = % 6.00"), "Se in {words:?}");
     assert!(
@@ -127,7 +131,8 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
         unit([c[0] - b[0], c[1] - b[1]]),
     );
     let w = unit([ua[0] + uc[0], ua[1] + uc[1]]);
-    let inside = ((r + shift) / (0.5 * delta).cos() - r) - (r / (0.5 * dc).cos() - r);
+    let inside =
+        ((r + shift) / kentos_num::cos(0.5 * delta) - r) - (r / kentos_num::cos(0.5 * dc) - r);
     let inner = [b[0] + w[0] * inside, b[1] + w[1] * inside];
     assert!(
         (value("X =") - inner[1]).abs() < 1e-3 && (value("Y =") - inner[0]).abs() < 1e-3,

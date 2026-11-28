@@ -88,7 +88,7 @@ fn short_curves_are_lengthened_in_their_kind_and_saved() {
     assert_eq!(out.curves.len(), 3, "{out:?}");
     let s = out.stopping.expect("stopping");
     assert!(
-        (s - (80.0 / 3.6 * 2.5 + (80.0f64 / 3.6).powi(2) / (2.0 * 3.4))).abs() < 1e-9,
+        (s - (80.0 / 3.6 * 2.5 + kentos_num::powi(80.0f64 / 3.6, 2) / (2.0 * 3.4))).abs() < 1e-9,
         "{s}"
     );
     let [p1, p2, p3] = [&out.curves[0], &out.curves[1], &out.curves[2]];

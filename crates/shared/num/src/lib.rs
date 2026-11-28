@@ -18,6 +18,6 @@ mod hypot;
 
 pub use elementary::{
     acos, asin, asinh, atan, atan2, atanh, cbrt, cos, cosh, erfc, exp, exp2, lgamma, ln, log2,
-    log10, pow, sin, sin_cos, sinh, tan, tanh,
+    log10, pow, powi, sin, sin_cos, sinh, tan, tanh,
 };
 pub use hypot::hypot;

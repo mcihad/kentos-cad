@@ -11,6 +11,8 @@ publish.workspace = true
 # package's forms answer to the form package's own rules (kentos-commands' `FormPackage::problem`, the same words
 # `cad.forms.import` refuses with); an icon is read as XML by roxmltree, which refuses a DTD and so entity bombs.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-commands = { path = "../commands", default-features = false }
 # The form core's preflight (docs/adr/0401 §4), over the package's own fields: rules that do not compile, widgets that
 # do not fit, fields named twice. What needs the project it is installed into (another layer's list) is said there.

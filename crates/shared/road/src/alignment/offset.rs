@@ -33,7 +33,10 @@ pub enum OffsetError {
 pub fn place(al: &Alignment, station: f64, d: f64) -> Option<[f64; 2]> {
     let at = al.at(station)?;
     // Right of the direction: (sin θ, −cos θ).
-    Some([at.x + d * at.direction.sin(), at.y - d * at.direction.cos()])
+    Some([
+        at.x + d * kentos_num::sin(at.direction),
+        at.y - d * kentos_num::cos(at.direction),
+    ])
 }
 
 /// The offset's length.
@@ -118,7 +121,7 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
     for w in al.elements.windows(2) {
         let jump = super::chain::wrap(w[1].theta0 - w[0].theta(w[0].length));
         if jump.abs() > 1e-9 && jump * d < 0.0 {
-            let reach = d.abs() * (jump.abs() / 2.0).tan();
+            let reach = d.abs() * kentos_num::tan(jump.abs() / 2.0);
             let s = w[1].station;
             if let Some((a, b)) = refine(al, d, (s - reach).max(0.0), (s + reach).min(al.length)) {
                 keep(a, b);
@@ -161,7 +164,7 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
 /// The offset place at a station and its derivative (1 + κ·d)·(cos θ, sin θ), κ left positive and d right positive.
 fn with_tangent(al: &Alignment, s: f64, d: f64) -> Option<([f64; 2], [f64; 2])> {
     let at = al.at(s)?;
-    let (sin, cos) = at.direction.sin_cos();
+    let (sin, cos) = kentos_num::sin_cos(at.direction);
     let grow = 1.0 + at.curvature * d;
     Some(([at.x + d * sin, at.y - d * cos], [grow * cos, grow * sin]))
 }

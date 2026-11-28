@@ -602,7 +602,7 @@ pub fn class_label(c: NumericClass, digits: u32) -> String {
 
 /// A number to `digits` decimals as a label writes it (`Math.round`, then its shortest text).
 pub fn rounded(v: f64, digits: u32) -> String {
-    let p = 10f64.powi(digits as i32);
+    let p = kentos_num::powi(10f64, digits as i32);
     number::to_string(js_round(v * p) / p)
 }
 

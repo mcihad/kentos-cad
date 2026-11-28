@@ -114,7 +114,9 @@ fn gpkg_tiles_timing() {
     });
     let dem = dir.join("dem.tif");
     tif(&dem, 1, RasterSample::F32, |x, y, _| {
-        850.0 + 40.0 * (f64::from(x) / 37.0).sin() + 25.0 * (f64::from(y) / 29.0).cos()
+        850.0
+            + 40.0 * kentos_num::sin(f64::from(x) / 37.0)
+            + 25.0 * kentos_num::cos(f64::from(y) / 29.0)
     });
     let line = |what: &str, t: Instant, extra: String| {
         println!(

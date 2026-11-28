@@ -242,7 +242,7 @@ pub(super) fn inspect(
             if length <= NEAR {
                 continue;
             }
-            let angle = (s.b.y - s.a.y).atan2(s.b.x - s.a.x);
+            let angle = kentos_num::atan2(s.b.y - s.a.y, s.b.x - s.a.x);
             let quarter = std::f64::consts::FRAC_PI_2;
             let deviation = (angle - (angle / quarter).round() * quarter).abs();
             if deviation > 1e-12 && deviation <= tolerance {
@@ -256,10 +256,10 @@ pub(super) fn inspect(
                         format!(
                             "Kenar yatay ya da düşeyden {:.4}° sapıyor; ucu {:.4} m kayık.",
                             deviation.to_degrees(),
-                            length * deviation.sin()
+                            length * kentos_num::sin(deviation)
                         ),
                         "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
-                        Some(length * deviation.sin()),
+                        Some(length * kentos_num::sin(deviation)),
                     ),
                     limit,
                 );

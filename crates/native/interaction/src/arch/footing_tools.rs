@@ -197,8 +197,8 @@ impl FootingTool {
             .and_then(|s| Self::column_middle(s, cx))
             .unwrap_or((at, self.turn));
         let (dx, dy) = (
-            turn.cos() * self.length / 2.0,
-            turn.sin() * self.length / 2.0,
+            kentos_num::cos(turn) * self.length / 2.0,
+            kentos_num::sin(turn) * self.length / 2.0,
         );
         let ends = [
             Vec2::new(middle.x - dx, middle.y - dy),

@@ -642,7 +642,8 @@ impl canvas::Program<Message> for Draft {
         if let Some(tracking) = self.preview.tracking {
             let o = screen(tracking.origin);
             let rad = tracking.angle.to_radians();
-            let (dx, dy) = crate::marks::screen_dir(&camera, rad.cos(), rad.sin(), 1e4);
+            let (dx, dy) =
+                crate::marks::screen_dir(&camera, kentos_num::cos(rad), kentos_num::sin(rad), 1e4);
             let far = Point::new(o.x + dx, o.y + dy);
             let ray = Path::line(o, far);
             frame.stroke(

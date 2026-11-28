@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn a_curved_wall_s_volumes_are_the_closed_form_s() {
         let (r1, r2) = (6.15, 5.85);
-        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
         let shapes = vec![Shape::Prism {
             rings: vec![vec![[r1, 0.0], [0.0, r1], [0.0, r2], [r2, 0.0]]],
             bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],
@@ -517,9 +517,9 @@ mod tests {
         );
         let at = |r: f64, deg: f64| {
             let a: f64 = deg.to_radians();
-            [r * a.cos(), r * a.sin()]
+            [r * kentos_num::cos(a), r * kentos_num::sin(a)]
         };
-        let ten = (10f64.to_radians() / 4.0).tan();
+        let ten = kentos_num::tan(10f64.to_radians() / 4.0);
         let window = opening(
             vec![at(r1, 30.0), at(r2, 30.0), at(r2, 40.0), at(r1, 40.0)],
             vec![0.0, ten, 0.0, -ten],
@@ -540,7 +540,7 @@ mod tests {
     #[test]
     fn a_curved_wall_s_cut_body_is_its_bands_with_their_arcs() {
         let (r1, r2) = (6.15, 5.85);
-        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
         let shapes = vec![Shape::Prism {
             rings: vec![vec![[r1, 0.0], [0.0, r1], [0.0, r2], [r2, 0.0]]],
             bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],
@@ -549,9 +549,9 @@ mod tests {
         }];
         let at = |r: f64, deg: f64| {
             let a: f64 = deg.to_radians();
-            [r * a.cos(), r * a.sin()]
+            [r * kentos_num::cos(a), r * kentos_num::sin(a)]
         };
-        let ten = (10f64.to_radians() / 4.0).tan();
+        let ten = kentos_num::tan(10f64.to_radians() / 4.0);
         let window = opening(
             vec![at(r1, 30.0), at(r2, 30.0), at(r2, 40.0), at(r1, 40.0)],
             vec![0.0, ten, 0.0, -ten],

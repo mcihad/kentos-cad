@@ -22,7 +22,7 @@ use crate::tools_screens::Scene;
 /// The road's centreline (1).
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     o.bulged(
         "yol",
         &[[0.0, 0.0], [40.0, 0.0], [52.0, 12.0], [52.0, 40.0]],

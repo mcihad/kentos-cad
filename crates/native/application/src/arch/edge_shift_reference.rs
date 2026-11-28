@@ -114,7 +114,7 @@ pub(crate) fn by_reference(
         return Err(refused(
             format!(
                 "Kenar referansa paralel değil (aralarında {:.4}° var); uzaklık yalnız 0,001° içinde paralel kenarlar arasında tutulur.",
-                sine.min(1.0).asin().to_degrees()
+                kentos_num::asin(sine.min(1.0)).to_degrees()
             ),
             "work.reference.at",
         ));

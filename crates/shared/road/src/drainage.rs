@@ -774,7 +774,7 @@ pub fn manning(channel: Channel, slope: f64, n: f64) -> Option<Flow> {
         _ => return None,
     };
     let radius = area / perimeter;
-    let velocity = radius.powf(2.0 / 3.0) * slope.sqrt() / n;
+    let velocity = kentos_num::pow(radius, 2.0 / 3.0) * slope.sqrt() / n;
     Some(Flow {
         area,
         perimeter,

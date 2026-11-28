@@ -1483,7 +1483,7 @@ impl FlightTool {
     fn angle_of(&self, p: Vec2) -> Option<f64> {
         let c = *self.pts.first()?;
         let (dx, dy) = (p.x - c.x, p.y - c.y);
-        (dx != 0.0 || dy != 0.0).then(|| dy.atan2(dx))
+        (dx != 0.0 || dy != 0.0).then(|| kentos_num::atan2(dy, dx))
     }
 
     /// Follows the pointer round the centre (docs/adr/0709): its turn grows by each move's own, so that going on round
@@ -1515,7 +1515,7 @@ impl FlightTool {
             self.turned
         };
         let r = kentos_num::hypot(a.x - c.x, a.y - c.y);
-        let t = (a.y - c.y).atan2(a.x - c.x) + sweep;
+        let t = kentos_num::atan2(a.y - c.y, a.x - c.x) + sweep;
         Some((
             vec![a, Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())],
             vec![(sweep / 4.0).tan(), 0.0],

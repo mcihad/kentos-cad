@@ -45,7 +45,7 @@ pub fn nearest(raw: f64) -> f64 {
     if !raw.is_finite() || raw <= 1.0 {
         return 1.0;
     }
-    let r = raw.ln();
+    let r = kentos_num::ln(raw);
     SCALES
         .iter()
         .copied()

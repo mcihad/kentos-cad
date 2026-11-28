@@ -47,16 +47,22 @@ fn curve(c: &Curve, tolerance: f64, ring: bool) -> Curve {
     }
 }
 
+/// x², as the product: one exact operation, the same bits on every platform (the data drivers' ground depends on no
+/// other KentOS crate, docs/adr/9100).
+fn sq(x: f64) -> f64 {
+    x * x
+}
+
 /// The distance of `p` from the segment `a`–`b`.
 fn distance(p: &Coord, a: &Coord, b: &Coord) -> f64 {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let len2 = dx * dx + dy * dy;
     if len2 == 0.0 {
-        return ((p.x - a.x).powi(2) + (p.y - a.y).powi(2)).sqrt();
+        return (sq(p.x - a.x) + sq(p.y - a.y)).sqrt();
     }
     let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0);
     let (qx, qy) = (a.x + t * dx, a.y + t * dy);
-    ((p.x - qx).powi(2) + (p.y - qy).powi(2)).sqrt()
+    (sq(p.x - qx) + sq(p.y - qy)).sqrt()
 }
 
 fn line(points: &[Coord], tolerance: f64, ring: bool) -> Vec<Coord> {
@@ -106,7 +112,7 @@ fn line(points: &[Coord], tolerance: f64, ring: bool) -> Vec<Coord> {
 fn ring_least(points: &[Coord]) -> Vec<Coord> {
     let n = points.len();
     let start = points[0];
-    let d2 = |a: &Coord, b: &Coord| (a.x - b.x).powi(2) + (a.y - b.y).powi(2);
+    let d2 = |a: &Coord, b: &Coord| sq(a.x - b.x) + sq(a.y - b.y);
     let (mut far, mut most) = (1usize, -1.0);
     for (i, p) in points.iter().enumerate().take(n - 1).skip(1) {
         let d = d2(p, &start);

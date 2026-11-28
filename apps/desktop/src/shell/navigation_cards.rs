@@ -141,7 +141,7 @@ impl App {
     /// The magnifier's zoom: the kept one, at the nearest of its steps.
     pub(crate) fn magnifier_zoom(&self) -> u32 {
         let kept = self.layout.number("magnifierZoom");
-        let off = |z: u32| (f64::from(z) / kept).log2().abs();
+        let off = |z: u32| kentos_num::log2(f64::from(z) / kept).abs();
         ZOOMS
             .into_iter()
             .reduce(|a, b| if off(b) < off(a) { b } else { a })
@@ -673,7 +673,7 @@ impl canvas::Program<Message> for OverviewCanvas<'_> {
             }
             iced::Event::Mouse(mouse::Event::WheelScrolled { delta }) if cursor.is_over(bounds) => {
                 let steps = crate::viewport::wheel_steps(delta);
-                let factor = steps.exp();
+                let factor = kentos_num::exp(steps);
                 (steps != 0.0 && factor.is_finite()).then(|| {
                     canvas::Action::publish(Message::Viewport(crate::viewport::Event::Zoomed {
                         factor,

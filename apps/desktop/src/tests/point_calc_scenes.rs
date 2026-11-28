@@ -22,7 +22,7 @@ use crate::tools_screens::{Pointed, Scene, press_caption};
 /// The route (1), the line (2), the point 101 (3) and the angle's corner and arms (4–6).
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     o.bulged(
         "yol",
         &[[-40.0, -10.0], [-20.0, -10.0], [0.0, -10.0]],

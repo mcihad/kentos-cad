@@ -419,7 +419,10 @@ fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
     };
     // Ada: middle centre at 180°, its point 0.08 of its height up; Yol: baseline
     // centre at 200°, 0.92 heights along its old up.
-    let (sin20, cos20) = (20f64.to_radians().sin(), 20f64.to_radians().cos());
+    let (sin20, cos20) = (
+        kentos_num::sin(20f64.to_radians()),
+        kentos_num::cos(20f64.to_radians()),
+    );
     near(&text_at(&b, 1), [-10.0, 5.16]);
     near(&text_at(&b, 2), [10.0 + 1.84 * sin20, 5.0 - 1.84 * cos20]);
     near(&text_at(&b, 3), [0.0, -5.0]);

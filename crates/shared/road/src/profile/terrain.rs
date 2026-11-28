@@ -53,7 +53,7 @@ fn bounds(e: &Element) -> ([f64; 2], [f64; 2]) {
         }
     }
     // The chords' sagitta at most turn²·L/8 per piece; one metre more covers it.
-    let pad = 1.0 + e.length * (turn / n as f64).powi(2);
+    let pad = 1.0 + e.length * kentos_num::powi(turn / n as f64, 2);
     ([lo[0] - pad, lo[1] - pad], [hi[0] + pad, hi[1] + pad])
 }
 
@@ -70,7 +70,7 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
     };
     match e.kind {
         Kind::Tangent => {
-            let d = [e.theta0.cos(), e.theta0.sin()];
+            let d = [kentos_num::cos(e.theta0), kentos_num::sin(e.theta0)];
             let denom = d[0] * r[1] - d[1] * r[0];
             if denom == 0.0 {
                 return vec![];
@@ -86,7 +86,7 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
         }
         Kind::Arc => {
             let k = e.k0;
-            let n = [-e.theta0.sin(), e.theta0.cos()];
+            let n = [-kentos_num::sin(e.theta0), kentos_num::cos(e.theta0)];
             let c = [e.start[0] + n[0] / k, e.start[1] + n[1] / k];
             let rad = 1.0 / k.abs();
             // |a + u·r − c|² = R²
@@ -113,7 +113,8 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
             let mut out = Vec::new();
             for u in roots {
                 let p = [a[0] + u * r[0] - c[0], a[1] + u * r[1] - c[1]];
-                let alpha = (r0[0] * p[1] - r0[1] * p[0]).atan2(r0[0] * p[0] + r0[1] * p[1]);
+                let alpha =
+                    kentos_num::atan2(r0[0] * p[1] - r0[1] * p[0], r0[0] * p[0] + r0[1] * p[1]);
                 for al in [alpha, alpha - tau, alpha + tau] {
                     let s = al / k;
                     if keep(s, u) {

@@ -24,7 +24,7 @@ use crate::tools_screens::Scene;
 /// The pipe (1), the swing (2) and the oval's edge (3).
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let quarter = (PI / 8.0).tan();
+    let quarter = kentos_num::tan(PI / 8.0);
     o.bulged(
         "cizim",
         &[[0.0, 0.0], [5.0, 0.0], [7.0, 2.0], [7.0, 6.0]],

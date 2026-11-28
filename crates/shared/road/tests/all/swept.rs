@@ -19,7 +19,7 @@ fn circle(r: f64, turns: f64, n: usize) -> Vec<[f64; 2]> {
     (0..=m)
         .map(|k| {
             let a = std::f64::consts::TAU * k as f64 / n as f64;
-            [r * a.sin(), r - r * a.cos()]
+            [r * kentos_num::sin(a), r - r * kentos_num::cos(a)]
         })
         .collect()
 }
@@ -78,8 +78,8 @@ fn after_a_right_angle_the_rear_draws_a_tractrix() {
     let l = 6.0;
     let s = swept::drive(&car(l), &[[0.0, -10.0], [0.0, 0.0], [5.0, 0.0]], 0.1).expect("drives");
     let last = s.samples.last().expect("samples");
-    let phi = 2.0 * (-5.0_f64 / l).exp().atan();
-    let want = [5.0 - l * phi.cos(), -l * phi.sin()];
+    let phi = 2.0 * kentos_num::atan(kentos_num::exp(-5.0_f64 / l));
+    let want = [5.0 - l * kentos_num::cos(phi), -l * kentos_num::sin(phi)];
     assert!(
         (last.rear[0] - want[0]).abs() < 1e-9 && (last.rear[1] - want[1]).abs() < 1e-9,
         "{:?} {want:?}",
@@ -143,7 +143,7 @@ fn arcs_as_places() {
     let q = swept::bulge_places(
         [10.0, 0.0],
         [0.0, 10.0],
-        (std::f64::consts::PI / 8.0).tan(),
+        kentos_num::tan(std::f64::consts::PI / 8.0),
         1.0,
     );
     assert_eq!(q.len(), 17);
@@ -157,7 +157,7 @@ fn arcs_as_places() {
     let r = swept::bulge_places(
         [10.0, 0.0],
         [0.0, 10.0],
-        -(std::f64::consts::PI / 8.0).tan(),
+        -kentos_num::tan(std::f64::consts::PI / 8.0),
         1.0,
     );
     let mid = r[8];

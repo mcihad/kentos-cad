@@ -134,21 +134,21 @@ fn facing(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<(f64, f64)> {
 /// The points within `d` of segment `ab`: a band with round ends, anticlockwise, its arcs in `n` steps.
 fn band(a: Vec2, b: Vec2, d: f64, n: usize) -> Ring {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let start = dy.atan2(dx) - std::f64::consts::FRAC_PI_2;
+    let start = kentos_num::atan2(dy, dx) - std::f64::consts::FRAC_PI_2;
     let mut pts = Vec::with_capacity(2 * n + 2);
     // Around b from the right side to the left, then around a back to the right.
     for k in 0..=n {
         let t = start + std::f64::consts::PI * k as f64 / n as f64;
         pts.push(Vec2 {
-            x: b.x + d * t.cos(),
-            y: b.y + d * t.sin(),
+            x: b.x + d * kentos_num::cos(t),
+            y: b.y + d * kentos_num::sin(t),
         });
     }
     for k in 0..=n {
         let t = start + std::f64::consts::PI + std::f64::consts::PI * k as f64 / n as f64;
         pts.push(Vec2 {
-            x: a.x + d * t.cos(),
-            y: a.y + d * t.sin(),
+            x: a.x + d * kentos_num::cos(t),
+            y: a.y + d * kentos_num::sin(t),
         });
     }
     Ring { pts, bulges: None }

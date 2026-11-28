@@ -409,7 +409,7 @@ fn a_fillet_rounds_a_polyline_corner_by_a_typed_radius() {
         .filter(|b| *b != 0.0)
         .collect();
     assert_eq!(arcs.len(), 1);
-    assert!((arcs[0] - (std::f64::consts::PI / 8.0).tan()).abs() < 1e-12);
+    assert!((arcs[0] - kentos_num::tan(std::f64::consts::PI / 8.0)).abs() < 1e-12);
     assert_eq!(
         p.base.attrs.get("Ad").map(String::as_str),
         Some("Yol"),
@@ -823,7 +823,7 @@ fn a_fillet_rounds_a_corner_of_another_part() {
     ));
     let arcs: Vec<f64> = bulges.into_iter().flatten().filter(|b| *b != 0.0).collect();
     assert_eq!(arcs.len(), 1);
-    assert!((arcs[0].abs() - (std::f64::consts::PI / 8.0).tan()).abs() < 1e-12);
+    assert!((arcs[0].abs() - kentos_num::tan(std::f64::consts::PI / 8.0)).abs() < 1e-12);
     assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"));
 }
 

@@ -6,7 +6,7 @@ use super::*;
 /// A residue in m³ with its sign at `decimals`: “0”, “+1”, “−0,01”.
 pub(super) fn residue(v: f64, decimals: u32) -> String {
     let d = decimals as usize;
-    if v.abs() < 0.5 * 10f64.powi(-(decimals as i32)) {
+    if v.abs() < 0.5 * kentos_num::powi(10f64, -(decimals as i32)) {
         "0".into()
     } else if v < 0.0 {
         format!("−{}", grouped(-v, d))
@@ -61,7 +61,7 @@ pub(super) fn ledger_words(l: &kentos_commands::VolumeLedgerRead) -> String {
     let off: Vec<String> = l
         .columns
         .iter()
-        .filter(|c| c.residue.abs() >= 0.5 * 10f64.powi(-(l.decimals as i32)))
+        .filter(|c| c.residue.abs() >= 0.5 * kentos_num::powi(10f64, -(l.decimals as i32)))
         .map(|c| {
             format!(
                 "{} {} m³",

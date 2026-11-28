@@ -77,7 +77,7 @@ mod tests {
         // V³/(46.656·R·C): 80 km/h on R 250 at C 0.6.
         let l = comfort_spiral(80.0, 250.0, 0.0, 0.6);
         assert!(
-            (l - 80f64.powi(3) / (46.656 * 250.0 * 0.6)).abs() < 1e-9,
+            (l - kentos_num::powi(80f64, 3) / (46.656 * 250.0 * 0.6)).abs() < 1e-9,
             "{l}"
         );
         // With e the unbalanced part only; full balance asks none.

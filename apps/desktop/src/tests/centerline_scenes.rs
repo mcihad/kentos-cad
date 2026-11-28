@@ -22,7 +22,7 @@ use crate::tools_screens::Scene;
 /// blue layer (the trace's Dere).
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let quarter = kentos_num::tan(std::f64::consts::PI / 8.0);
     o.bulged(
         "yol",
         &[[-40.0, -23.0], [-20.0, -23.0], [-13.0, -16.0]],

@@ -152,10 +152,10 @@ pub(crate) fn crossings_at(part: &ScopePart, y: f64) -> Vec<f64> {
             if h < 0.0 {
                 continue;
             }
-            let sweep = 4.0 * bulge.atan();
-            let a0 = (a[1] - cy).atan2(a[0] - cx);
+            let sweep = 4.0 * kentos_num::atan(bulge);
+            let a0 = kentos_num::atan2(a[1] - cy, a[0] - cx);
             for x in [cx - h.sqrt(), cx + h.sqrt()] {
-                let d = (((y - cy).atan2(x - cx) - a0) * sweep.signum())
+                let d = ((kentos_num::atan2(y - cy, x - cx) - a0) * sweep.signum())
                     .rem_euclid(std::f64::consts::TAU);
                 if d < sweep.abs() {
                     xs.push(x);
@@ -259,7 +259,7 @@ fn text_inside(
 
 /// A part turned `angle` radians about `about`.
 fn turned(part: &ScopePart, about: [f64; 2], angle: f64) -> ScopePart {
-    let (s, c) = angle.sin_cos();
+    let (s, c) = kentos_num::sin_cos(angle);
     let mut out = part.clone();
     for r in &mut out.rings {
         for p in &mut r.pts {
@@ -293,7 +293,7 @@ fn turns(part: &ScopePart) -> Vec<f64> {
         }
     }
     if let Some((_, a, b)) = longest {
-        let mut angle = (b[1] - a[1]).atan2(b[0] - a[0]).to_degrees();
+        let mut angle = kentos_num::atan2(b[1] - a[1], b[0] - a[0]).to_degrees();
         if angle > 90.0 {
             angle -= 180.0;
         } else if angle <= -90.0 {
@@ -333,7 +333,7 @@ fn fitted(
         } else {
             let r = turn.to_radians();
             let local = label_at(&turned(part, origin, -r))?;
-            let (s, c) = r.sin_cos();
+            let (s, c) = kentos_num::sin_cos(r);
             let (x, y) = (local[0] - origin[0], local[1] - origin[1]);
             [origin[0] + x * c - y * s, origin[1] + x * s + y * c]
         };

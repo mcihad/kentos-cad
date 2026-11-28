@@ -194,7 +194,7 @@ impl Thinner {
         let c = self.rule.cell;
         let key = ((p[0] / c).floor() as i64, (p[1] / c).floor() as i64);
         let (cx, cy) = ((key.0 as f64 + 0.5) * c, (key.1 as f64 + 0.5) * c);
-        let d = (p[0] - cx).powi(2) + (p[1] - cy).powi(2);
+        let d = kentos_num::powi(p[0] - cx, 2) + kentos_num::powi(p[1] - cy, 2);
         let pick = Pick { order, p };
         match self.cells.get_mut(&key) {
             None => {

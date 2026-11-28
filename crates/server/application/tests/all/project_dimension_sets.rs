@@ -1094,9 +1094,8 @@ async fn rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_memb
         // every centre interval projects along that face, not its slanted chord.
         let face_start = q(0., face);
         let face_end = q(8., face);
-        let angle = (face_end.y - face_start.y)
-            .atan2(face_end.x - face_start.x)
-            .to_degrees();
+        let angle =
+            kentos_num::atan2(face_end.y - face_start.y, face_end.x - face_start.x).to_degrees();
         let set = &mut source.dimension_sets[0];
         set.face = if right {
             DimensionSetFace::Right

@@ -93,8 +93,8 @@ fn moving_preview() {
                     let angle = i as f64 * std::f64::consts::TAU / 32.;
                     at(
                         &app,
-                        origin[0] + 4. + 0.2 * angle.cos(),
-                        origin[1] + 3. + 0.2 * angle.sin(),
+                        origin[0] + 4. + 0.2 * kentos_num::cos(angle),
+                        origin[1] + 3. + 0.2 * kentos_num::sin(angle),
                     )
                 })
                 .collect();

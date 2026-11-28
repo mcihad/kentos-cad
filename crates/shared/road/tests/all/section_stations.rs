@@ -116,9 +116,13 @@ fn the_breaks_carry_the_ground_better_than_an_interval() {
         1278.0
             + 0.012 * u
             + 0.018 * v
-            + 9.0 * (-(((u - 420.0) / 140.0).powi(2) + ((v - 330.0) / 110.0).powi(2))).exp()
-            - 6.5 * (-((u - 0.55 * v - 560.0) / 45.0).powi(2)).exp()
-            + 0.6 * (u / 37.0).sin() * (v / 53.0).cos()
+            + 9.0
+                * kentos_num::exp(
+                    -(kentos_num::powi((u - 420.0) / 140.0, 2)
+                        + kentos_num::powi((v - 330.0) / 110.0, 2)),
+                )
+            - 6.5 * kentos_num::exp(-kentos_num::powi((u - 0.55 * v - 560.0) / 45.0, 2))
+            + 0.6 * kentos_num::sin(u / 37.0) * kentos_num::cos(v / 53.0)
     };
     let mut seed = 58u64;
     let mut jitter = || {

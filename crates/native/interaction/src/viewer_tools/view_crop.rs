@@ -57,13 +57,13 @@ impl Frame {
 
     /// A point of the frame's own axes (x along its width) on the ground.
     fn ground(&self, u: f64, v: f64) -> Vec2 {
-        let (s, c) = self.twist.sin_cos();
+        let (s, c) = kentos_num::sin_cos(self.twist);
         Vec2::new(self.center.x + u * c - v * s, self.center.y + u * s + v * c)
     }
 
     /// A ground point in the frame's own axes.
     fn local(&self, p: Vec2) -> (f64, f64) {
-        let (s, c) = self.twist.sin_cos();
+        let (s, c) = kentos_num::sin_cos(self.twist);
         let (dx, dy) = (p.x - self.center.x, p.y - self.center.y);
         (dx * c + dy * s, -dx * s + dy * c)
     }

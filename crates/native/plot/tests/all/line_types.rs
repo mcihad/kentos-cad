@@ -562,7 +562,7 @@ fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
                     let p = points[n / 2];
                     [r * p[0], r * p[1]]
                 } else {
-                    [r * angle.cos(), r * angle.sin()]
+                    [r * kentos_num::cos(angle), r * kentos_num::sin(angle)]
                 };
                 for axis in 0..2 {
                     let actual = (mark.points[0][axis] + mark.points[1][axis]) * 0.5;

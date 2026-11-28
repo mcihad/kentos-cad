@@ -70,7 +70,7 @@ fn join(
     let (Some(d1), Some(d2)) = (unit(a, b), unit(b, c)) else {
         return;
     };
-    let turn = (d1[0] * d2[1] - d1[1] * d2[0]).atan2(d1[0] * d2[0] + d1[1] * d2[1]);
+    let turn = kentos_num::atan2(d1[0] * d2[1] - d1[1] * d2[0], d1[0] * d2[0] + d1[1] * d2[1]);
     if turn.abs() < JOIN_TURN {
         return;
     }
@@ -79,7 +79,7 @@ fn join(
     let (n1, n2) = ([-d1[1] * s, d1[0] * s], [-d2[1] * s, d2[0] * s]);
     let (p1, p2) = ([b[0] + n1[0], b[1] + n1[1]], [b[0] + n2[0], b[1] + n2[1]]);
     // The miter reaches hw / cos(turn / 2) from the corner: its length over the width is 1 / cos(turn / 2).
-    let half = (turn / 2.0).cos();
+    let half = kentos_num::cos(turn / 2.0);
     match how {
         LineJoin::Miter if half > 0.0 && 1.0 / half <= MITER_LIMIT => {
             let m = [n1[0] + n2[0], n1[1] + n2[1]];
@@ -90,11 +90,14 @@ fn join(
         }
         LineJoin::Round => {
             let steps = (turn.abs() / (std::f64::consts::PI / 8.0)).ceil().max(1.0) as usize;
-            let start = n1[1].atan2(n1[0]);
+            let start = kentos_num::atan2(n1[1], n1[0]);
             let mut prev = p1;
             for i in 1..=steps {
                 let angle = start + turn * i as f64 / steps as f64;
-                let q = [b[0] + hw * angle.cos(), b[1] + hw * angle.sin()];
+                let q = [
+                    b[0] + hw * kentos_num::cos(angle),
+                    b[1] + hw * kentos_num::sin(angle),
+                ];
                 out.push(GlyphQuad::triangle(b, prev, q, color));
                 prev = q;
             }

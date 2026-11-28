@@ -51,10 +51,10 @@ impl Section {
     fn wet(&self, y: f64) -> (f64, f64) {
         match *self {
             Section::Circle { diameter } => {
-                let theta = 2.0 * (1.0 - 2.0 * y / diameter).clamp(-1.0, 1.0).acos();
+                let theta = 2.0 * kentos_num::acos((1.0 - 2.0 * y / diameter).clamp(-1.0, 1.0));
                 (
-                    diameter * diameter / 8.0 * (theta - theta.sin()),
-                    diameter * (theta / 2.0).sin(),
+                    diameter * diameter / 8.0 * (theta - kentos_num::sin(theta)),
+                    diameter * kentos_num::sin(theta / 2.0),
                 )
             }
             Section::Box { width, .. } => (width * y, width),
@@ -68,7 +68,9 @@ impl Section {
             return 0.0;
         }
         match *self {
-            Section::Box { width, height } => ((q / width).powi(2) / G).cbrt().min(height),
+            Section::Box { width, height } => {
+                kentos_num::cbrt(kentos_num::powi(q / width, 2) / G).min(height)
+            }
             Section::Circle { diameter } => {
                 let target = q * q / G;
                 let (mut lo, mut hi) = (0.0, diameter);
@@ -96,7 +98,7 @@ impl Section {
         if t > 0.0 && y < self.rise() {
             y + a / (2.0 * t)
         } else {
-            y + (q / self.full().0).powi(2) / (2.0 * G)
+            y + kentos_num::powi(q / self.full().0, 2) / (2.0 * G)
         }
     }
 }
@@ -248,8 +250,12 @@ impl Culvert {
         let x = KU * qc / (a * d.sqrt());
         let i = self.inlet;
         let unsubmerged = |x: f64| match i.form {
-            1 => self.section.critical_head(qc) / d + i.k * x.powf(i.m) + i.ks * self.slope,
-            _ => i.k * x.powf(i.m),
+            1 => {
+                self.section.critical_head(qc) / d
+                    + i.k * kentos_num::pow(x, i.m)
+                    + i.ks * self.slope
+            }
+            _ => i.k * kentos_num::pow(x, i.m),
         };
         let submerged = |x: f64| i.c * x * x + i.y + i.ks * self.slope;
         let ratio = if x <= 3.5 {
@@ -276,9 +282,12 @@ impl Culvert {
         let v = qc / a;
         let dc = self.section.critical(qc);
         let tw_eff = tw.max((dc + d) / 2.0);
-        let losses =
-            (1.0 + self.ke + 2.0 * G * self.n * self.n * self.length / r.powf(4.0 / 3.0)) * v * v
-                / (2.0 * G);
+        let losses = (1.0
+            + self.ke
+            + 2.0 * G * self.n * self.n * self.length / kentos_num::pow(r, 4.0 / 3.0))
+            * v
+            * v
+            / (2.0 * G);
         tw_eff + losses - self.slope * self.length
     }
 
@@ -389,7 +398,9 @@ pub fn perform(culvert: &Culvert, weir: &Weir, q: f64, tw: f64) -> Performance {
         };
     }
     // The head over the crest at which the culvert and the road together carry q.
-    let total = |h: f64| culvert.flow_at(weir.crest + h, tw) + weir.cd * weir.length * h.powf(1.5);
+    let total = |h: f64| {
+        culvert.flow_at(weir.crest + h, tw) + weir.cd * weir.length * kentos_num::pow(h, 1.5)
+    };
     let (mut lo, mut hi) = (0.0, hw - weir.crest);
     for _ in 0..200 {
         let m = 0.5 * (lo + hi);
@@ -406,7 +417,7 @@ pub fn perform(culvert: &Culvert, weir: &Weir, q: f64, tw: f64) -> Performance {
     let through = culvert.flow_at(weir.crest + h, tw);
     let over = q - through;
     let unit = over / weir.length;
-    let depth = (unit * unit / G).cbrt();
+    let depth = kentos_num::cbrt(unit * unit / G);
     let speed = (G * depth).sqrt();
     Performance {
         headwater: weir.crest + h,

@@ -351,7 +351,7 @@ pub(crate) fn at(built: &Built, surface: Option<&Surface>, station: f64) -> Opti
         rate: red.map(|r| r.2),
         radius: red
             .filter(|r| r.2 != 0.0)
-            .map(|r| (1.0 + r.1 * r.1).powf(1.5) / r.2.abs()),
+            .map(|r| kentos_num::pow(1.0 + r.1 * r.1, 1.5) / r.2.abs()),
         along3d: built.vertical.length_to(station),
         black,
         difference: red.zip(black).map(|(r, b)| r.0 - b),

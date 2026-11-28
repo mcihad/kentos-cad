@@ -124,7 +124,8 @@ fn color(c: [f64; 4], opacity: f64) -> Color {
 fn degrees(x: f64, y: f64) -> (f64, f64) {
     const R: f64 = 6_378_137.0;
     let lon = (x / R).to_degrees();
-    let lat = (2.0 * (y / R).exp().atan() - std::f64::consts::FRAC_PI_2).to_degrees();
+    let lat =
+        (2.0 * kentos_num::atan(kentos_num::exp(y / R)) - std::f64::consts::FRAC_PI_2).to_degrees();
     (lon, lat)
 }
 

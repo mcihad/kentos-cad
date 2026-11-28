@@ -553,7 +553,7 @@ fn even_ring(dense: &[Vec2], arc: f64) -> Vec<Vec2> {
     }
     let side = |i: usize| {
         let (a, b) = (dense[i], dense[(i + 1) % n]);
-        ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt()
+        (kentos_num::powi(b.x - a.x, 2) + kentos_num::powi(b.y - a.y, 2)).sqrt()
     };
     let total: f64 = (0..n).map(side).sum();
     let count = (total / arc).round().max(3.0);

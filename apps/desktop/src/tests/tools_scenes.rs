@@ -531,7 +531,7 @@ fn dense() -> Objects {
     let road: Vec<[f64; 2]> = (0..=28)
         .map(|i| {
             let x = i as f64 * 2.0;
-            [x, 24.0 + 4.0 * (x / 9.0).sin() + noise(i)]
+            [x, 24.0 + 4.0 * kentos_num::sin(x / 9.0) + noise(i)]
         })
         .collect();
     o.path("cizim", &road, false);
@@ -746,7 +746,7 @@ fn kerbs() -> Objects {
 fn arch() -> Objects {
     let mut o = Objects::new();
     o.arc("yol", [30.0, -20.0], 45.0, 1.1, 2.05);
-    let (sx, sy) = (30.0 + 45.0 * 1.1f64.cos(), -20.0 + 45.0 * 1.1f64.sin());
+    let (sx, sy) = (30.0 + 45.0 * kentos_num::cos(1.1f64), -20.0 + 45.0 * kentos_num::sin(1.1f64));
     let car = [
         [-2.0, -1.0],
         [1.0, -1.0],

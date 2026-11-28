@@ -75,7 +75,7 @@ fn ln_gamma(x: f64) -> f64 {
     ];
     if x < 0.5 {
         let pi = std::f64::consts::PI;
-        return (pi / (pi * x).sin()).ln() - ln_gamma(1.0 - x);
+        return kentos_num::ln(pi / kentos_num::sin(pi * x)) - ln_gamma(1.0 - x);
     }
     let x = x - 1.0;
     let t = x + 7.5;
@@ -83,7 +83,8 @@ fn ln_gamma(x: f64) -> f64 {
     for (i, c) in C.iter().enumerate().skip(1) {
         a += c / (x + i as f64);
     }
-    0.5 * (2.0 * std::f64::consts::PI).ln() + (x + 0.5) * t.ln() - t + a.ln()
+    0.5 * kentos_num::ln(2.0 * std::f64::consts::PI) + (x + 0.5) * kentos_num::ln(t) - t
+        + kentos_num::ln(a)
 }
 
 /// The regularized lower incomplete gamma P(a, x): its series below a + 1, its continued fraction (Lentz) above.
@@ -91,7 +92,7 @@ fn gamma_p(a: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
     }
-    let lead = a * x.ln() - x - ln_gamma(a);
+    let lead = a * kentos_num::ln(x) - x - ln_gamma(a);
     if x < a + 1.0 {
         let (mut sum, mut term, mut ap) = (1.0 / a, 1.0 / a, a);
         for _ in 0..10_000 {
@@ -102,7 +103,7 @@ fn gamma_p(a: f64, x: f64) -> f64 {
                 break;
             }
         }
-        (sum.ln() + lead).exp()
+        kentos_num::exp(kentos_num::ln(sum) + lead)
     } else {
         let tiny = 1e-300;
         let mut b = x + 1.0 - a;
@@ -127,7 +128,7 @@ fn gamma_p(a: f64, x: f64) -> f64 {
                 break;
             }
         }
-        1.0 - (h.ln() + lead).exp()
+        1.0 - kentos_num::exp(kentos_num::ln(h) + lead)
     }
 }
 
@@ -170,12 +171,21 @@ pub fn accuracy(differences: &[f64], survey: Option<f64>) -> Option<Accuracy> {
     let median = quantile(&by, 0.5);
     let nmad = NMAD * quantile(&sorted(differences.iter().map(|d| (d - median).abs())), 0.5);
     let abs = sorted(differences.iter().map(|d| d.abs()));
-    let moment = |k: i32| differences.iter().map(|d| (d - mean).powi(k)).sum::<f64>() / nf;
+    let moment = |k: i32| {
+        differences
+            .iter()
+            .map(|d| kentos_num::powi(d - mean, k))
+            .sum::<f64>()
+            / nf
+    };
     let m2 = moment(2);
     // Equal differences have no spread: their mean's rounding leaves m₂ ~1e-36, not 0; within 1e-12 of RMSE² it is 0.
     let spread = m2 > 1e-12 * rmse * rmse;
     let (skewness, kurtosis) = if spread {
-        (moment(3) / m2.powf(1.5), moment(4) / (m2 * m2) - 3.0)
+        (
+            moment(3) / kentos_num::pow(m2, 1.5),
+            moment(4) / (m2 * m2) - 3.0,
+        )
     } else {
         (0.0, 0.0)
     };

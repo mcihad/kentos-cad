@@ -50,7 +50,8 @@ fn bulges(server: &mut Server, drawing: &Value, uid: &str) -> Vec<f64> {
 fn two_arcs_of_one_circle_become_one_over_mcp() {
     let mut server = Server::new();
     let place = json!({"kind": "vertex", "part": 0, "ring": 0, "index": 1});
-    let want = ((4.0 * 0.5f64.atan() + 4.0 * 0.25f64.atan()) / 4.0).tan();
+    let want =
+        kentos_num::tan((4.0 * kentos_num::atan(0.5f64) + 4.0 * kentos_num::atan(0.25f64)) / 4.0);
     let (drawing, uids) = opened(&mut server, "bir");
     let r = call(
         &mut server,

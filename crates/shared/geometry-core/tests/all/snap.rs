@@ -378,7 +378,10 @@ fn extensions_and_directions_are_acquired_on_a_block_s_pieces() {
     s.put_json(&case["entities"].to_string()).expect("entities");
     let corner = pt(&case["expect"]["point"]);
     let got = s.extensions_at(1.0, corner);
-    let (c, si) = (30f64.to_radians().cos(), 30f64.to_radians().sin());
+    let (c, si) = (
+        kentos_num::cos(30f64.to_radians()),
+        kentos_num::sin(30f64.to_radians()),
+    );
     // The room's walls at (6, 4) run west (to (0, 4)) and south (to (6, 0)); beyond the corner: east and north,
     // turned 30°.
     let want = [Vec2::new(c, si), Vec2::new(-si, c)];

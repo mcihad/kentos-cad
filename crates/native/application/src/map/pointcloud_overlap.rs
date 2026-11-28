@@ -66,7 +66,7 @@ impl Sums {
             self.n, self.u, self.v, self.u, self.uu, self.uv, self.v, self.uv, self.vv,
         ];
         let d = det3(m);
-        if d.abs() <= 1e-9 * self.n.powi(3) * h.powi(4) {
+        if d.abs() <= 1e-9 * kentos_num::powi(self.n, 3) * kentos_num::powi(h, 4) {
             return None;
         }
         let mz = [

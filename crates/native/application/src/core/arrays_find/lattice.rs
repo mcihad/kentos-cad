@@ -22,8 +22,8 @@ fn layout(p: &Proposal, column: Vector, row: Vector) -> ArrayLayout {
         cols: p.cols,
         dx: kentos_num::hypot(column.0, column.1),
         dy: kentos_num::hypot(row.0, row.1),
-        column_angle: column.1.atan2(column.0).to_degrees(),
-        row_angle: row.1.atan2(row.0).to_degrees(),
+        column_angle: kentos_num::atan2(column.1, column.0).to_degrees(),
+        row_angle: kentos_num::atan2(row.1, row.0).to_degrees(),
     }
 }
 #[allow(clippy::too_many_arguments)]

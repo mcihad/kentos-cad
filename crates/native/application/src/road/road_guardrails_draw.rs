@@ -76,7 +76,7 @@ fn check(
         let at = |s: f64| {
             let o = hinge_at(sides, s) + outward;
             core.at(s).map(|p| {
-                let (sin, cos) = p.direction.sin_cos();
+                let (sin, cos) = kentos_num::sin_cos(p.direction);
                 ([p.x + sin * o, p.y - cos * o], p.direction)
             })
         };
@@ -115,7 +115,7 @@ fn check(
             }
             // Outward of the rail by a text's height.
             let side = if run.right { 1.0 } else { -1.0 };
-            let (sin, cos) = direction.sin_cos();
+            let (sin, cos) = kentos_num::sin_cos(direction);
             objects.push(object(EntityGeometry::Text {
                 layout: None,
                 annotative: None,

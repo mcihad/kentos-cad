@@ -195,8 +195,8 @@ fn a_dimension_a_hatch_and_an_arc_stretch_in_one_step() {
     // A new arc: its start (−20, −24) moved to (−18, −24), its end (−24, −20) stayed.
     let at = |angle: f64| {
         [
-            a.c.x + a.r * angle.cos() - 487000.0,
-            a.c.y + a.r * angle.sin() - 4420000.0,
+            a.c.x + a.r * kentos_num::cos(angle) - 487000.0,
+            a.c.y + a.r * kentos_num::sin(angle) - 4420000.0,
         ]
     };
     let ends = [at(a.a0), at(a.a1)];

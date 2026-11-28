@@ -380,7 +380,10 @@ fn picture() {
     let mut s = 0.0;
     while s <= al.length {
         let at = al.at(s).unwrap();
-        let (nx, ny) = (at.direction.sin(), -at.direction.cos());
+        let (nx, ny) = (
+            kentos_num::sin(at.direction),
+            -kentos_num::cos(at.direction),
+        );
         let long = (s as i64) % 500 == 0;
         let l = if long { 18.0 } else { 9.0 };
         svg += &format!(
@@ -451,7 +454,7 @@ fn a_kinks_inner_offset_crosses_at_the_textbook_stations() {
     ])
     .expect("builds");
     for d in [-0.3f64, -7.5, -40.0] {
-        let reach = d.abs() * (std::f64::consts::PI / 8.0).tan();
+        let reach = d.abs() * kentos_num::tan(std::f64::consts::PI / 8.0);
         match offset::check(&kinked, d) {
             Err(offset::OffsetError::Crosses { a, b, kink }) => {
                 near(a, 600.0 - reach, 1e-9, "before");

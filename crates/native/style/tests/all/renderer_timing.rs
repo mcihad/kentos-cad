@@ -76,7 +76,7 @@ fn points(n: u32) -> Vec<Entity> {
             let r = next() * 120.0;
             let a = next() * std::f64::consts::TAU;
             let e = json!({ "kind": "point", "id": i + 1, "layerId": "k", "attrs": { "Önem": ((i % 5) + 1).to_string() },
-                "p": { "x": X0 + cx + r * a.cos(), "y": Y0 + cy + r * a.sin() } });
+                "p": { "x": X0 + cx + r * kentos_num::cos(a), "y": Y0 + cy + r * kentos_num::sin(a) } });
             serde_json::from_value(e).expect("a point")
         })
         .collect()

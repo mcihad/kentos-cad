@@ -360,7 +360,11 @@ pub fn wall_fit(p: Vec2, reach: f64, cx: &Context<'_>) -> Option<(Vec2, f64)> {
                 }
                 // The front toward the pointer: the face's left when the pointer is on it, else the way back.
                 let left = (p.x - q.x) * -dy + (p.y - q.y) * dx >= 0.0;
-                let turn = if left { dy.atan2(dx) } else { (-dy).atan2(-dx) };
+                let turn = if left {
+                    kentos_num::atan2(dy, dx)
+                } else {
+                    kentos_num::atan2(-dy, -dx)
+                };
                 best = Some((d, q, turn.to_degrees()));
             }
         }

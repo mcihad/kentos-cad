@@ -136,7 +136,7 @@ fn the_exchange_set_opens_edits_and_goes_back_with_every_loss_said() {
             }
             let (x, y) = (x / sw - origin.0, y / sw - origin.1);
             // The half circle from (0, 0) to (2, 0) about (1, 0), under x×2, y×0.5: centre (2, 0) from its start.
-            let r = ((x - 2.0) / 2.0).powi(2) + (y / 0.5).powi(2);
+            let r = kentos_num::powi((x - 2.0) / 2.0, 2) + kentos_num::powi(y / 0.5, 2);
             assert!((r - 1.0).abs() < 1e-9, "piece {piece}, t {t}: {r}");
         }
     }

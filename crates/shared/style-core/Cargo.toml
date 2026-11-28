@@ -11,6 +11,8 @@ publish.workspace = true
 # or a runtime. It uses the geometry core's JavaScript number semantics and
 # call table (docs/adr/0008).
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-geometry-core = { path = "../geometry-core" }
 # The expression language (docs/adr/0100), re-exported as `expr` and `js`.
 kentos-expression = { path = "../expression" }

@@ -756,7 +756,7 @@ fn drag_handle(
 
 /// A size rounded to a 1-2-5 step near `unit` (what a pixel is worth), so dragging gives tidy values.
 pub fn nice_round(v: f64, unit: f64) -> f64 {
-    let e = 10f64.powf(unit.log10().floor());
+    let e = kentos_num::pow(10f64, kentos_num::log10(unit).floor());
     let step = if unit / e < 2.0 {
         e
     } else if unit / e < 5.0 {

@@ -157,7 +157,12 @@ fn statistics(
         0.0
     };
     let std = if n > 1 {
-        (differences.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / (n - 1) as f64).sqrt()
+        (differences
+            .iter()
+            .map(|d| kentos_num::powi(d - mean, 2))
+            .sum::<f64>()
+            / (n - 1) as f64)
+            .sqrt()
     } else {
         0.0
     };

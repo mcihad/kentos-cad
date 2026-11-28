@@ -194,11 +194,11 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
             x: (a.x + b.x) / 2.0 - uy * k,
             y: (a.y + b.y) / 2.0 + ux * k,
         };
-        let theta = 4.0 * bulge.atan();
-        let r = chord / (2.0 * (theta / 2.0).sin().abs());
+        let theta = 4.0 * kentos_num::atan(bulge);
+        let r = chord / (2.0 * kentos_num::sin(theta / 2.0).abs());
         let start = if bulge > 0.0 { a } else { b };
-        let a0 = (start.y - c.y).atan2(start.x - c.x);
-        let rel = ((p.y - c.y).atan2(p.x - c.x) - a0).rem_euclid(std::f64::consts::TAU);
+        let a0 = kentos_num::atan2(start.y - c.y, start.x - c.x);
+        let rel = (kentos_num::atan2(p.y - c.y, p.x - c.x) - a0).rem_euclid(std::f64::consts::TAU);
         if rel <= theta.abs() {
             let d = kentos_num::hypot(p.x - c.x, p.y - c.y);
             // A counter-clockwise arc has its centre on the left: inside the circle is left.

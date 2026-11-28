@@ -189,7 +189,10 @@ fn many_neighbour_edges_leave_the_region_to_the_clicks() {
     let round: Vec<[f64; 2]> = (0..2400)
         .map(|i| {
             let a = f64::from(i) * std::f64::consts::TAU / 2400.0;
-            [-44.0 + 3.0 * a.cos(), -30.0 + 3.0 * a.sin()]
+            [
+                -44.0 + 3.0 * kentos_num::cos(a),
+                -30.0 + 3.0 * kentos_num::sin(a),
+            ]
         })
         .collect();
     b.add_path("parsel", &round, true);

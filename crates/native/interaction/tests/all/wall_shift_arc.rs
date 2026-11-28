@@ -81,9 +81,9 @@ fn corridor() -> (Bench, Slot) {
     b.session.exit();
     let at = |r: f64, deg: f64| {
         let t = deg.to_radians();
-        json!({"x": E + 2.0 + r * t.cos(), "y": N + 3.0 + r * t.sin()})
+        json!({"x": E + 2.0 + r * kentos_num::cos(t), "y": N + 3.0 + r * kentos_num::sin(t)})
     };
-    let bulge = (std::f64::consts::FRAC_PI_2 / 4.0).tan();
+    let bulge = kentos_num::tan(std::f64::consts::FRAC_PI_2 / 4.0);
     let made = registry::run(
         &mut ExecutionContext::new(&mut b.doc),
         "cad.walls.create",
@@ -129,9 +129,9 @@ fn an_arc_s_temporary_distance_to_its_concentric_arc_moves_it_about_its_centre()
     assert!(b.session.is_running(), "the number's field");
     b.run(|s, cx| s.text_typed(Some("1.5"), cx));
     let (pts, bulges) = wall(&b, inner);
-    let r = ((pts[0].0 - 2.0).powi(2) + (pts[0].1 - 3.0).powi(2)).sqrt();
+    let r = (kentos_num::powi(pts[0].0 - 2.0, 2) + kentos_num::powi(pts[0].1 - 3.0, 2)).sqrt();
     assert!((r - 2.7).abs() < 1e-9, "{r} {pts:?}");
-    assert!((bulges[0] - (std::f64::consts::FRAC_PI_2 / 4.0).tan()).abs() < 1e-9);
+    assert!((bulges[0] - kentos_num::tan(std::f64::consts::FRAC_PI_2 / 4.0)).abs() < 1e-9);
     assert_eq!(b.doc.undo().as_deref(), Some("Duvarı düzenle"), "one step");
 }
 
@@ -169,6 +169,6 @@ fn the_corridor_s_padlock_bonds_the_two_arcs() {
     .unwrap();
     assert_eq!(answer["status"], "completed", "{answer}");
     let (pts, _) = wall(&b, inner);
-    let r = ((pts[0].0 - 2.0).powi(2) + (pts[0].1 - 3.0).powi(2)).sqrt();
+    let r = (kentos_num::powi(pts[0].0 - 2.0, 2) + kentos_num::powi(pts[0].1 - 3.0, 2)).sqrt();
     assert!((r - 3.5).abs() < 1e-9, "{r}");
 }

@@ -467,8 +467,8 @@ fn a_curved_opening_measures_the_real_chord_then_keeps_its_roles_after_rehost() 
         panic!()
     };
     // A radius-5 semicircle; the left face radius is 4.9, half-angle pi/10.
-    let dx = 4.9 * (PI / 10.).sin();
-    let y = -4.9 * (PI / 10.).cos();
+    let dx = 4.9 * kentos_num::sin(PI / 10.);
+    let y = -4.9 * kentos_num::cos(PI / 10.);
     for (a, b) in [(d.a.x, 5. - dx), (d.a.y, y), (d.b.x, 5. + dx), (d.b.y, y)] {
         assert!((a - b).abs() < 1e-9, "{a} != {b}");
     }

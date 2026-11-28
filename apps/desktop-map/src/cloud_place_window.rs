@@ -150,10 +150,11 @@ fn moved_middle(m: Option<&[f64]>, b: &[f64; 6]) -> [f64; 3] {
 
 fn turn_and_shift(m: &[f64], b: &[f64; 6]) -> (f64, f64) {
     let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
-    let angle = (ax * ax + ay * ay + az * az)
-        .sqrt()
-        .atan2(m[0] + m[5] + m[10] - 1.0)
-        .to_degrees();
+    let angle = kentos_num::atan2(
+        (ax * ax + ay * ay + az * az).sqrt(),
+        m[0] + m[5] + m[10] - 1.0,
+    )
+    .to_degrees();
     let c = [
         (b[0] + b[3]) / 2.0,
         (b[1] + b[4]) / 2.0,
@@ -164,7 +165,10 @@ fn turn_and_shift(m: &[f64], b: &[f64; 6]) -> (f64, f64) {
     });
     (
         angle,
-        ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt(),
+        (kentos_num::powi(q[0] - c[0], 2)
+            + kentos_num::powi(q[1] - c[1], 2)
+            + kentos_num::powi(q[2] - c[2], 2))
+        .sqrt(),
     )
 }
 
@@ -426,9 +430,9 @@ impl CloudPlaceWindowApp for App {
                             moved_middle(src.pose.as_ref().map(|m| &m[..]), &src.bounds),
                             moved_middle(pose.as_deref(), &src.bounds),
                         );
-                        let step = ((to[0] - from[0]).powi(2)
-                            + (to[1] - from[1]).powi(2)
-                            + (to[2] - from[2]).powi(2))
+                        let step = (kentos_num::powi(to[0] - from[0], 2)
+                            + kentos_num::powi(to[1] - from[1], 2)
+                            + kentos_num::powi(to[2] - from[2], 2))
                         .sqrt();
                         rows.push(vec![
                             name,

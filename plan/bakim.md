@@ -438,7 +438,9 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
     `pow` ve `atan2`'nin özel değerleri ve tam orta noktaya düşen kuvvetler temelin kendi kodudur (kitaplık
     standarttan sapıyordu); başvuru `fixtures/numeric/v1/elementary.json` (8 176 durum, bit bit). `jsmath`'in dışa
     aktardıkları ve doğrudan `libm` çağrıları temele bağlandı; saklanan beş çıktı farkı okunarak yazıldı.
-  - [ ] Platformun yöntemleriyle yapılan çağrılar (`x.sin()`, `x.atan2(y)`, `powi`…; bekçide ~900) sayısal temele.
+  - [x] Platformun yöntemleriyle yapılan 1 190 çağrı (`x.sin()`, `x.atan2(y)`, `powi`…) sayısal temele (33 crate);
+    kalanlar masaüstü çiziminin float32 ekran hesabı ve sınırı aşan üç dosyadaki altı çağrı (bekçide; BK-40 ile).
+    Hiçbir ortak durum ya da saklı çıktı oynamadı.
   - [ ] Platform kitaplığı yasağının bütün hesap crate'lerine yayılması; `jsmath`'in silinmesi.
 
 ## Doğrulama

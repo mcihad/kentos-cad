@@ -398,7 +398,7 @@ impl Pen {
     pub(super) fn of(piece: &Piece<'_>, run: Option<&Run>) -> Pen {
         let s = f64::from(piece.size);
         let width = run.map_or(0.0, |r| f64::from(r.width));
-        let (sin, cos) = f64::from(piece.angle).sin_cos();
+        let (sin, cos) = kentos_num::sin_cos(f64::from(piece.angle));
         Pen {
             size: s,
             narrow: f64::from(piece.width_factor),

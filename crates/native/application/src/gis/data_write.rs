@@ -975,8 +975,8 @@ fn arc_chords(a: Coord, m: Coord, b: Coord, out: &mut Vec<Coord>) {
     let (a2, m2, b2) = (ax * ax + ay * ay, mx * mx + my * my, bx * bx + by * by);
     let cx = (a2 * (my - by) + m2 * (by - ay) + b2 * (ay - my)) / d;
     let cy = (a2 * (bx - mx) + m2 * (ax - bx) + b2 * (mx - ax)) / d;
-    let r = ((ax - cx).powi(2) + (ay - cy).powi(2)).sqrt();
-    let angle = |x: f64, y: f64| (y - cy).atan2(x - cx);
+    let r = (kentos_num::powi(ax - cx, 2) + kentos_num::powi(ay - cy, 2)).sqrt();
+    let angle = |x: f64, y: f64| kentos_num::atan2(y - cy, x - cx);
     let (t0, tm, t1) = (angle(ax, ay), angle(mx, my), angle(bx, by));
     let tau = std::f64::consts::TAU;
     // Counter-clockwise when the middle comes before the end going that way.
@@ -995,8 +995,8 @@ fn arc_chords(a: Coord, m: Coord, b: Coord, out: &mut Vec<Coord>) {
         let k = i as f64 / n as f64;
         let t = t0 + sweep * k;
         out.push(Coord {
-            x: cx + r * t.cos(),
-            y: cy + r * t.sin(),
+            x: cx + r * kentos_num::cos(t),
+            y: cy + r * kentos_num::sin(t),
             z: lerp(a.z, b.z, k),
             m: lerp(a.m, b.m, k),
         });

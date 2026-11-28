@@ -96,7 +96,7 @@ impl Piece {
                 let t = s - s0;
                 let (u0, u1) = (g0, g0 + r * t);
                 if (u1 - u0).abs() > 1e-3 {
-                    let f = |u: f64| 0.5 * (u * kentos_num::hypot(u, 1.0) + u.asinh());
+                    let f = |u: f64| 0.5 * (u * kentos_num::hypot(u, 1.0) + kentos_num::asinh(u));
                     (f(u1) - f(u0)) / r
                 } else {
                     const X: [f64; 5] = [
@@ -122,7 +122,7 @@ impl Piece {
                 }
             }
             Piece::Circle { s0, sc, radius, .. } => {
-                let phi = |x: f64| ((x - sc) / radius).clamp(-1.0, 1.0).asin();
+                let phi = |x: f64| kentos_num::asin(((x - sc) / radius).clamp(-1.0, 1.0));
                 radius * (phi(s) - phi(s0))
             }
         }
@@ -295,13 +295,16 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
                 )
             }
             VCurve::Circle { radius } => {
-                let (t1, t2) = (g1.atan(), g2.atan());
+                let (t1, t2) = (kentos_num::atan(g1), kentos_num::atan(g2));
                 let sag = t2 > t1;
-                let tl = radius * ((t2 - t1).abs() / 2.0).tan();
-                let (bs, bz) = (s - tl * t1.cos(), z - tl * t1.sin());
-                let es = s + tl * t2.cos();
+                let tl = radius * kentos_num::tan((t2 - t1).abs() / 2.0);
+                let (bs, bz) = (s - tl * kentos_num::cos(t1), z - tl * kentos_num::sin(t1));
+                let es = s + tl * kentos_num::cos(t2);
                 let sign = if sag { 1.0 } else { -1.0 };
-                let (sc, zc) = (bs - sign * radius * t1.sin(), bz + sign * radius * t1.cos());
+                let (sc, zc) = (
+                    bs - sign * radius * kentos_num::sin(t1),
+                    bz + sign * radius * kentos_num::cos(t1),
+                );
                 (
                     vec![Piece::Circle {
                         s0: bs,

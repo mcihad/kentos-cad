@@ -276,7 +276,10 @@ fn ring(
             // The curve's parameter at a point: its share along the major and the minor axis.
             let param = |p: (f64, f64, f64)| {
                 let d = sub(p, centre);
-                (dot(d, minor) / dot(minor, minor)).atan2(dot(d, major) / dot(major, major))
+                kentos_num::atan2(
+                    dot(d, minor) / dot(minor, minor),
+                    dot(d, major) / dot(major, major),
+                )
             };
             let (t0, t1) = (param(from), param(to));
             let sweep = if forward { up(t0, t1) } else { -up(t1, t0) };
@@ -288,24 +291,24 @@ fn ring(
                     for q in 0..4 {
                         let m = t0 + sweep * f64::from(q) / 4.0;
                         ring.pts.push((
-                            centre.0 + major.0 * m.cos() + minor.0 * m.sin(),
-                            centre.1 + major.1 * m.cos() + minor.1 * m.sin(),
+                            centre.0 + major.0 * kentos_num::cos(m) + minor.0 * kentos_num::sin(m),
+                            centre.1 + major.1 * kentos_num::cos(m) + minor.1 * kentos_num::sin(m),
                         ));
-                        ring.bulges.push((plan / 16.0).tan());
+                        ring.bulges.push(kentos_num::tan(plan / 16.0));
                     }
                 } else {
                     ring.pts.push((from.0, from.1));
-                    ring.bulges.push((plan / 4.0).tan());
+                    ring.bulges.push(kentos_num::tan(plan / 4.0));
                 }
             } else {
                 // An elliptic arc: points, the chord within its share of the semi-major axis.
-                let step = 2.0 * (1.0 - ELLIPSE_SHARE).acos();
+                let step = 2.0 * kentos_num::acos(1.0 - ELLIPSE_SHARE);
                 let n = ((sweep.abs() / step).ceil() as usize).clamp(2, 4096);
                 for k in 0..n {
                     let t = t0 + sweep * k as f64 / n as f64;
                     ring.pts.push((
-                        centre.0 + major.0 * t.cos() + minor.0 * t.sin(),
-                        centre.1 + major.1 * t.cos() + minor.1 * t.sin(),
+                        centre.0 + major.0 * kentos_num::cos(t) + minor.0 * kentos_num::sin(t),
+                        centre.1 + major.1 * kentos_num::cos(t) + minor.1 * kentos_num::sin(t),
                     ));
                     ring.bulges.push(0.0);
                 }
@@ -428,7 +431,7 @@ fn at_least_three(ring: &mut Ring) {
             (a.0 + b.0) / 2.0 + dy * sagitta,
             (a.1 + b.1) / 2.0 - dx * sagitta,
         );
-        let half = (bulge.atan() / 2.0).tan();
+        let half = kentos_num::tan(kentos_num::atan(bulge) / 2.0);
         ring.bulges[k] = half;
         ring.pts.insert(k + 1, mid);
         ring.bulges.insert(k + 1, half);
@@ -673,7 +676,7 @@ mod tests {
         let hole = &faces[0][1];
         assert_eq!(hole.pts.len(), 4);
         // Reversed: clockwise, each quarter's bulge −tan(π/8).
-        let q = (std::f64::consts::PI / 8.0).tan();
+        let q = kentos_num::tan(std::f64::consts::PI / 8.0);
         assert!(
             hole.bulges.iter().all(|b| (b + q).abs() < 1e-12),
             "{:?}",
@@ -704,7 +707,7 @@ mod tests {
             x.abs() < 1e-12 && (y + 1.0).abs() < 1e-12,
             "the arc's middle: ({x}, {y})"
         );
-        let q = (std::f64::consts::PI / 8.0).tan();
+        let q = kentos_num::tan(std::f64::consts::PI / 8.0);
         assert_eq!(ring.bulges[0], 1.0, "the first half as it was");
         assert!((ring.bulges[1] - q).abs() < 1e-12 && (ring.bulges[2] - q).abs() < 1e-12);
         assert!(ring.area2() > 0.0, "counter-clockwise");

@@ -321,7 +321,7 @@ fn grid_system_turned(app: &mut App) {
     typed(app, "P");
     click(app, [3.0, 1.0]);
     let turn = 30f64.to_radians();
-    hover(app, [3.0 + 12.0 * turn.cos(), 1.0 + 12.0 * turn.sin()]);
+    hover(app, [3.0 + 12.0 * kentos_num::cos(turn), 1.0 + 12.0 * kentos_num::sin(turn)]);
 }
 
 /// The system written with its columns tagged from S1, column B-3 selected: its place and grids in Öznitelikler.
@@ -349,7 +349,7 @@ fn round(app: &mut App, centre: [f64; 2], r: f64, to: f64) {
     let steps = (to.abs() / 15.0).ceil() as i32;
     for k in 1..=steps {
         let a = (to * f64::from(k) / f64::from(steps)).to_radians();
-        hover(app, [centre[0] + r * a.cos(), centre[1] + r * a.sin()]);
+        hover(app, [centre[0] + r * kentos_num::cos(a), centre[1] + r * kentos_num::sin(a)]);
     }
 }
 

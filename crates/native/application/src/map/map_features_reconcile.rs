@@ -200,8 +200,8 @@ impl<'a> Curve<'a> {
                 for e in 1..8 {
                     let angle = a.a0 + a.sweep * f64::from(e) / 8.0;
                     out.push(Vec2 {
-                        x: a.c.x + a.r * angle.cos(),
-                        y: a.c.y + a.r * angle.sin(),
+                        x: a.c.x + a.r * kentos_num::cos(angle),
+                        y: a.c.y + a.r * kentos_num::sin(angle),
                     });
                 }
             }
@@ -223,7 +223,7 @@ fn within(a: &BulgeArc, angle: f64) -> bool {
 /// A point's distance to an arc from `s` to `e` (docs/adr/3340): to its circle where the point's direction from the
 /// centre lies within the sweep, else to the nearer end.
 fn to_arc(p: Vec2, a: &BulgeArc, s: Vec2, e: Vec2) -> f64 {
-    let angle = (p.y - a.c.y).atan2(p.x - a.c.x);
+    let angle = kentos_num::atan2(p.y - a.c.y, p.x - a.c.x);
     let centre = Vec2 { x: a.c.x, y: a.c.y };
     if within(a, angle) {
         (distance(p, centre) - a.r).abs()
@@ -276,8 +276,8 @@ fn curve_bounds(c: Curve<'_>) -> [f64; 4] {
                 let angle = std::f64::consts::FRAC_PI_2 * f64::from(q);
                 if within(&a, angle) || within(&a, angle - std::f64::consts::TAU) {
                     pts.push(Vec2 {
-                        x: a.c.x + a.r * angle.cos(),
-                        y: a.c.y + a.r * angle.sin(),
+                        x: a.c.x + a.r * kentos_num::cos(angle),
+                        y: a.c.y + a.r * kentos_num::sin(angle),
                     });
                 }
             }

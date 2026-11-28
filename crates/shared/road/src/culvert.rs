@@ -104,7 +104,7 @@ pub fn barrel(
     slope: f64,
     flow_right: bool,
 ) -> Barrel {
-    let c = skew.to_radians().cos();
+    let c = kentos_num::cos(skew.to_radians());
     let ends = [toes[0] / c - extend, toes[1] / c + extend];
     let fall = slope * if flow_right { 1.0 } else { -1.0 };
     Barrel {
@@ -125,7 +125,7 @@ pub fn cover(
     flow_right: bool,
     shape: &Shape,
 ) -> Option<(f64, f64)> {
-    let c = skew.to_radians().cos();
+    let c = kentos_num::cos(skew.to_radians());
     let fall = slope * if flow_right { 1.0 } else { -1.0 };
     top.iter()
         .map(|p| (p[1] - (invert - fall * p[0] / c + shape.top()), p[0]))

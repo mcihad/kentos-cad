@@ -57,9 +57,17 @@ fn the_schema_207_sample_moves_its_known_point_by_its_velocity_over_mcp() {
     // V·Δt in the point's east, north, up.
     let d: Vec<f64> = v.iter().map(|c| c * years).collect();
     let rows = [
-        [-lon.sin(), lon.cos(), 0.0],
-        [-lat.sin() * lon.cos(), -lat.sin() * lon.sin(), lat.cos()],
-        [lat.cos() * lon.cos(), lat.cos() * lon.sin(), lat.sin()],
+        [-kentos_num::sin(lon), kentos_num::cos(lon), 0.0],
+        [
+            -kentos_num::sin(lat) * kentos_num::cos(lon),
+            -kentos_num::sin(lat) * kentos_num::sin(lon),
+            kentos_num::cos(lat),
+        ],
+        [
+            kentos_num::cos(lat) * kentos_num::cos(lon),
+            kentos_num::cos(lat) * kentos_num::sin(lon),
+            kentos_num::sin(lat),
+        ],
     ];
     for (i, row) in rows.iter().enumerate() {
         let want: f64 = (0..3).map(|j| row[j] * d[j]).sum();

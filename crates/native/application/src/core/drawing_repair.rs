@@ -354,7 +354,7 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
                 at,
             ));
         }
-        let (deviation, dir) = axis((other.y - pivot.y).atan2(other.x - pivot.x));
+        let (deviation, dir) = axis(kentos_num::atan2(other.y - pivot.y, other.x - pivot.x));
         if deviation > tolerance {
             return Err(fail(
                 codes::REPAIR_ANGLE_TOO_LARGE,

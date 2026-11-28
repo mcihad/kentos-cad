@@ -685,7 +685,7 @@ impl canvas::Program<Message> for Plan<'_> {
         let (hw, hh) = (0.5 * self.laid.length, 0.5 * self.laid.height);
         let corners = |c: [f64; 2], deg: f64| {
             let t = deg.to_radians();
-            let (co, si) = (t.cos(), t.sin());
+            let (co, si) = (kentos_num::cos(t), kentos_num::sin(t));
             [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]
                 .map(|[u, v]| [c[0] + u * co - v * si, c[1] + u * si + v * co])
         };

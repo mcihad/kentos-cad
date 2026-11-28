@@ -208,7 +208,7 @@ pub fn program(image: &AtlasImage) -> Option<Vec<f64>> {
                 triangles as f64,
             ]);
         }
-        let (sin, cos) = m.rotation.sin_cos();
+        let (sin, cos) = kentos_num::sin_cos(m.rotation);
         for [cx, cy] in centres {
             let at = 1 + p * PLACE;
             out[at..at + PLACE].copy_from_slice(&[

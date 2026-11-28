@@ -267,7 +267,7 @@ fn draw(doc: &Document, input: &ArchWalk) -> Result<ArchWalked, Stop> {
                 || edges(std::slice::from_ref(area)).iter().any(|e| {
                     let Edge::Seg { a, b } = *e else { return false };
                     kentos_geometry_core::labels::geom::segment_distance2(at, a, b)
-                        <= (radius + 2.0 * MARGIN).powi(2)
+                        <= kentos_num::powi(radius + 2.0 * MARGIN, 2)
                 })
         })
         .and_then(|(slot, _)| doc.uid(*slot))

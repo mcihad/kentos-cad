@@ -52,7 +52,7 @@ fn dist_seg(p: Pt, a: Pt, b: Pt) -> f64 {
     } else {
         0.0
     };
-    ((p[0] - a[0] - t * dx).powi(2) + (p[1] - a[1] - t * dy).powi(2)).sqrt()
+    (kentos_num::powi(p[0] - a[0] - t * dx, 2) + kentos_num::powi(p[1] - a[1] - t * dy, 2)).sqrt()
 }
 
 /// Whether a shape takes a press at `p` (drawing units); `px` is a pixel in drawing units.
@@ -62,7 +62,7 @@ pub fn shape_hit(s: &Obj, p: Pt, px: f64) -> bool {
         let turn = s.opt_num("rotate").unwrap_or(0.0);
         let q = if turn != 0.0 {
             let (x, y) = (s.num("x"), s.num("y"));
-            let (sin, cos) = (-turn).to_radians().sin_cos();
+            let (sin, cos) = kentos_num::sin_cos((-turn).to_radians());
             let (dx, dy) = (p[0] - x, p[1] - y);
             [x + dx * cos - dy * sin, y + dx * sin + dy * cos]
         } else {
@@ -182,7 +182,7 @@ impl SvgEditor {
         }
         for g in &self.doc.guides {
             let [x, y] = self.camera.to_screen([g.x, g.y]);
-            let (dy, dx) = g.angle.to_radians().sin_cos();
+            let (dy, dx) = kentos_num::sin_cos(g.angle.to_radians());
             // Distance from the endless line through (x, y) along (dx, dy).
             let d = ((s[0] - x) * dy - (s[1] - y) * dx).abs();
             if d <= GUIDE_PX {

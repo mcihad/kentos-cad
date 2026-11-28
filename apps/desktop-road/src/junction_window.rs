@@ -1240,7 +1240,10 @@ impl canvas::Program<Message> for Crossing<'_> {
         };
         for (leg, e) in r.legs.iter().zip(&self.edges) {
             let d = leg.direction.to_radians();
-            let (t, n) = ([d.cos(), d.sin()], [d.sin(), -d.cos()]);
+            let (t, n) = (
+                [kentos_num::cos(d), kentos_num::sin(d)],
+                [kentos_num::sin(d), -kentos_num::cos(d)],
+            );
             for (off, color, width) in [
                 (0.0, tk.muted, 1.0),
                 (e[1], tk.text, 1.4),
@@ -1261,14 +1264,17 @@ impl canvas::Program<Message> for Crossing<'_> {
         }
         for q in &r.returns {
             let (a0, sweep) = (
-                (q.on_a.y - q.cy).atan2(q.on_a.x - q.cx),
+                kentos_num::atan2(q.on_a.y - q.cy, q.on_a.x - q.cx),
                 q.sweep.to_radians(),
             );
             let arc = Path::new(|p| {
                 let n = 24;
                 for k in 0..=n {
                     let a = a0 + sweep * f64::from(k) / f64::from(n);
-                    let pt = at(q.cx + q.radius * a.cos(), q.cy + q.radius * a.sin());
+                    let pt = at(
+                        q.cx + q.radius * kentos_num::cos(a),
+                        q.cy + q.radius * kentos_num::sin(a),
+                    );
                     if k == 0 {
                         p.move_to(pt);
                     } else {

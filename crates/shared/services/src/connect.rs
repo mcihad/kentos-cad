@@ -1095,7 +1095,9 @@ fn union(boxes: impl Iterator<Item = [f64; 4]>) -> Option<[f64; 4]> {
 fn mercator_degrees(e: [f64; 4]) -> [f64; 4] {
     const R: f64 = 6_378_137.0;
     let lon = |x: f64| (x / R).to_degrees();
-    let lat = |y: f64| (2.0 * (y / R).exp().atan() - std::f64::consts::FRAC_PI_2).to_degrees();
+    let lat = |y: f64| {
+        (2.0 * kentos_num::atan(kentos_num::exp(y / R)) - std::f64::consts::FRAC_PI_2).to_degrees()
+    };
     [lon(e[0]), lat(e[1]), lon(e[2]), lat(e[3])]
 }
 

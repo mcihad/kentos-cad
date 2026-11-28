@@ -51,7 +51,9 @@ pub struct SlabSlope {
 impl SlabSlope {
     /// Its arrow's length in plan, metres.
     pub fn run(&self) -> f64 {
-        ((self.to.x - self.from.x).powi(2) + (self.to.y - self.from.y).powi(2)).sqrt()
+        (kentos_num::powi(self.to.x - self.from.x, 2)
+            + kentos_num::powi(self.to.y - self.from.y, 2))
+        .sqrt()
     }
 
     /// Its grade, rise over run (0 for an arrow of no length).

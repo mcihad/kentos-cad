@@ -218,7 +218,12 @@ fn grid_and_both_polar_windings_use_explicit_layout_order_and_preserve_root_ids(
             .filter(|k| ![2, 6].contains(k))
             .map(|k| {
                 let a = direction * k as f64 * std::f64::consts::TAU / 8.;
-                (k, 10. + 4. * a.cos(), 20. + 4. * a.sin(), a + 0.3)
+                (
+                    k,
+                    10. + 4. * kentos_num::cos(a),
+                    20. + 4. * kentos_num::sin(a),
+                    a + 0.3,
+                )
             })
             .collect();
         let mut doc = drawing(&points);
@@ -529,7 +534,12 @@ fn skew_grid_edits_keep_row_column_identity_overrides_gaps_and_bound_dimensions(
         .filter(|k| *k != 2)
         .map(|k| {
             let (c, r) = ((k % 3) as f64, (k / 3) as f64);
-            (k, c * 2. * angle.cos(), c * 2. * angle.sin() + r * 3., 0.)
+            (
+                k,
+                c * 2. * kentos_num::cos(angle),
+                c * 2. * kentos_num::sin(angle) + r * 3.,
+                0.,
+            )
         })
         .collect();
     let mut doc = drawing(&coords);
@@ -574,7 +584,10 @@ fn skew_grid_edits_keep_row_column_identity_overrides_gaps_and_bound_dimensions(
     }
     assert_eq!(at(&doc, &uid(&doc, 1)), held);
     let p = at(&doc, &bound);
-    assert!((p.x - 2.5).abs() < 1e-12 && (p.y - 5. * 60_f64.to_radians().sin()).abs() < 1e-12);
+    assert!(
+        (p.x - 2.5).abs() < 1e-12
+            && (p.y - 5. * kentos_num::sin(60_f64.to_radians())).abs() < 1e-12
+    );
     let Some(Entity::Dimension(d)) = doc.get(dim) else {
         panic!()
     };
