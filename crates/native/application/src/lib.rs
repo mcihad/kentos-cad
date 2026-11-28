@@ -226,7 +226,7 @@ pub mod gpkg_into;
 pub mod import_merge;
 #[path = "core/layer_kind.rs"]
 pub mod layer_kind;
-#[path = "gis/lineage.rs"]
+#[path = "core/lineage.rs"]
 pub mod lineage;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/maplibre.rs"]
