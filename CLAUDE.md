@@ -64,6 +64,10 @@ satıra (749 KB) büyüdüğü için bölündü.
   Karar tablosu (modül × var/yok, kanal × var/yok) işin ADR'sine yazılır. “Yok” yalnız gerekçeyle yazılır; örneğin geri
   al, yinele ve dosya işleri eklentiye kapalıdır. Var olan bir işe dokunulunca aynı denetim onun için de yapılır.
   Kanalların nerede bağlandığı ve hangi sınamanın koşacağı §9.2'dedir; biri kırmızıyken iş bitmiş sayılmaz.
+- **Bekçiler ve biçim (28 Kasım 2026, ADR 9400):** kod `cargo fmt --all` ile biçimlenir; commit'ten önce `make guard`
+  yeşildir (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim; derleme istemez). Boy sınırı
+  biçimlenmiş kodu ölçer: satır sıkıştırmak ya da başka bir dolanma yok, dosya bölünür. Bir crate'in bütünleşik
+  sınamaları tek ikilidir (`tests/all/main.rs`).
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
 - **Masaüstü testleri** `RUST_MIN_STACK=67108864` ister. Pencere resimleri `#[ignore]` `screens` testleridir:
@@ -158,7 +162,7 @@ tamamlanmış veya mevzuata uygun diye sunulmaz.
 
 Çevredeki adlandırmayı/üslubu koruyun; yorum nedenini anlatsın. Tek dosya tek
 sorumluluk taşısın; başında kısa amaç yorumu olsun, 400 satır üstünde ayrıştırmayı değerlendirin. Hiçbir Rust dosyası
-2 000 satırı geçmez: `scripts/dev/source_size.py` (`make arch`) denetler; bugün aşanlar tabanda, büyüyemez, eklemeden önce bölünür.
+2 000 satırı geçmez: `scripts/dev/source_size.py` (`make guard`) denetler; bugün aşanlar tabanda, büyüyemez, eklemeden önce bölünür.
 Signal'i sahibi değiştirir; UI command/belge API'sini kullanır.
 Sabit UI rengi, vurgu, font boyu veya CDN fontu eklemeyin; CSS jetonları,
 yerel fontları kullanın. Katman rengi veridir;

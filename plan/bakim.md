@@ -195,12 +195,15 @@ düzenlenir.
 
 ### Aşama 0 — Zemin
 
-- [ ] **BK-01 — Biçim tabanı** (D1, D2). `cargo fmt --all` tek mekanik commit, `.git-blame-ignore-revs`. Boy tabanı
-  gerçek sayılarla yeniden yazılır (ADR 9400 §3: “taban yalnız azalır” kuralına bir kerelik istisna); masaüstü
-  çekirdeğinde sınırı geçen dosya aynı dilimde bölünür. Önce ve sonra `module_deps.py` çıktısı aynı olmalı.
-- [ ] **BK-02 — Bekçiler yeşil** (D4). `standards → launch`; üç yeni kabuk/gis bağı ortak çekirdeğe ya da profile.
-- [ ] **BK-03 — `make guard` ve hook.** `deps.mjs`, `source_size.py`, `module_deps.py --check`, başka uygulama adı
-  bekçisi, `scripts/cad/manifest.py --check`, `cargo fmt --all -- --check`; Claude Code `Stop` hook'u onu koşar.
+- [x] **BK-01 — Biçim tabanı** (D1, D2; [ADR 9400](../docs/adr/9400-maintenance-plan.md) §2–3). `cargo fmt --all`
+  `27d390b97` (3 008 dosya), `.git-blame-ignore-revs`. Boy tabanı gerçek sayılarla yeniden yazıldı (69 → 87 dosya);
+  masaüstü çekirdeğinde sınırı geçen `cad/surface_analysis_window.rs` üç dosyaya bölündü. `module_deps.py` çıktısı ve
+  Rust kaynağını okuyan üreteçler önce ve sonra aynı; `cargo build -p kentos-cad` derler.
+- [x] **BK-02 — Bekçiler yeşil** (D4). `standards → launch` bağı kurala yazıldı (CLAUDE.md §26). Üç yeni bağın kökü
+  `cad/labels`'taki çizici altyapısıydı; `shell/glyph_layer.rs`'e taşındı. Kabuk → gis 42 → 41.
+- [x] **BK-03 — `make guard` ve hook.** `deps.mjs`, `source_size.py`, `module_deps.py --check`,
+  `scripts/cad/manifest.py --check`, `cargo fmt --all -- --check`; Claude Code `Stop` hook'u
+  (`scripts/dev/guard_hook.sh`) onu koşar. Başka uygulama adı bekçisi masaüstü sınamasıdır, derleme ister, girmez.
 - [ ] **BK-04 — Sınama ikilileri** (E1). MCP 166 → 1 (`tests/all/main.rs`, ortak `call`), sunucu 41 → 1. Bağlama
   süresi ve `target/` boyu önce ve sonra ölçülür.
 - [ ] **BK-05 — Ölçüm tabanı.** Clippy'nin sonucu; sıfırdan ve tek satır değişiklikte derleme süresi; `docs/perf/`.

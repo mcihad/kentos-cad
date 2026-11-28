@@ -46,7 +46,7 @@ PORTAL_URL := http://localhost:$(PORTAL_PORT)
 		restart status logs logs-api logs-desktop \
 		db-status db-start db-stop db-setup db-migrate kentosd \
 		build-portal build-api build-rust build-desktop catalog \
-		check verify test-rust test-portal test-desktop test-module fixtures-changed fixtures-check fmt fmt-check arch ui-snapshots desktop-snapshot \
+		check verify guard test-rust test-portal test-desktop test-module fixtures-changed fixtures-check fmt fmt-check arch ui-snapshots desktop-snapshot \
 		clean clean-rust
 
 ##@ Yardım
@@ -177,8 +177,8 @@ catalog: ## Ürün komutu katalogunu yeniden yazar (ADR 0013; farkı okuyup comm
 
 ##@ Test ve denetim (sırayla, ağır iş kilidiyle)
 
-check: ## Hızlı takım: fmt-check + test-rust + test-desktop + test-portal
-	@$(MAKE) fmt-check test-rust test-desktop test-portal
+check: ## Hızlı takım: guard + test-rust + test-desktop + test-portal
+	@$(MAKE) guard test-rust test-desktop test-portal
 
 verify: ## Commit öncesi tam takım: check + portal ve masaüstü derlemesi
 	@$(MAKE) check build-portal build-desktop
@@ -209,9 +209,21 @@ fmt: ## Rust kaynaklarını biçimler
 fmt-check: ## Rust biçim denetimi
 	cargo fmt --all -- --check
 
-arch: ## Crate bağımlılık yönü (ADR 0010) ve kaynak boyu (2 000 satır; taban yalnız küçülür) denetimi
-	pnpm arch:deps
-	python3 scripts/dev/source_size.py
+# The guards that need no build (docs/adr/9400 §4): every one runs, so one red does not hide the others.
+GUARDS := "node scripts/arch/deps.mjs" \
+	"python3 scripts/dev/source_size.py" \
+	"python3 scripts/dev/module_deps.py --check" \
+	"python3 scripts/cad/manifest.py --check" \
+	"cargo fmt --all -- --check -l"
+
+guard: ## Derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim (ADR 9400)
+	@fail=0; \
+	for step in $(GUARDS); do \
+	  echo "• $$step"; $$step || fail=1; \
+	done; \
+	if [ $$fail = 0 ]; then echo "Bekçiler yeşil."; else echo "Bekçiler kırmızı: yukarıdakileri düzeltin."; exit 1; fi
+
+arch: guard ## make guard ile aynı (eski ad)
 
 ui-snapshots: ## Arayüz vitrinini ekransız çizer, başvuru görüntüleriyle karşılaştırır
 	$(HEAVY) cargo build -q -p kentos-ui-showcase

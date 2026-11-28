@@ -18,6 +18,7 @@ cargo run -p kentos-cad -- --modul cbs   # doğrudan; kentos-desktop ADR 9199'da
 pnpm install
 pnpm rust:test           # sunucu ve ortak crate'ler: cargo test + clippy -D warnings + bağımlılık yönü
 pnpm rust:test:desktop   # kentos-ui, vitrin, pafta tasarımcısı (kentos-sheet-ui), masaüstü, dört modül paketi, kentos-cad ve başlatıcı: cargo test + clippy
+make guard               # derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim (ADR 9400)
 pnpm arch:deps           # yalnız bağımlılık yönü denetimi (ADR 0010, ARCH-01)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan, çekirdeklere paylaşılarak (ADR 0021)
 ./target/debug/kentos-cad kullan usage-parcel   # kullanım senaryosunu masaüstünde oynatıp adım adım resimle (.run/shots/kullanim; fixtures/interaction/README.md)

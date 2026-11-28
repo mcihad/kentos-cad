@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/scripts/dev/guard_hook.sh\"",
+            "timeout": 180,
+            "statusMessage": "Bekçiler koşuyor (make guard)…"
+          }
+        ]
+      }
+    ]
+  }
+}

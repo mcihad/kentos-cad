@@ -60,11 +60,16 @@ kod tablosuna yanlış kod yazmak ya da başka bir dolanma kabul edilmez: dosya 
 ### 4. Tek denetim komutu ve hook
 
 `make guard` derleme istemeyen bütün bekçileri koşar: `scripts/arch/deps.mjs`, `scripts/dev/source_size.py`,
-`scripts/dev/module_deps.py --check`, başka uygulama adı bekçisi, `scripts/cad/manifest.py --check`,
-`cargo fmt --all -- --check`. `make arch` ona bağlanır.
+`scripts/dev/module_deps.py --check`, `scripts/cad/manifest.py --check`, `cargo fmt --all -- --check`. Biri kırmızı
+olsa da hepsi koşar. `make arch` aynı komuttur (eski ad); `make check` biçim denetimi yerine onu çağırır.
 
-Claude Code'un `Stop` hook'u (`.claude/settings.json`, depoda) oturum biterken `make guard`'ı koşar ve kırmızıyı
-oturuma geri verir. Bu, 24 Kasım'ın “şimdilik otomatik denetim yok” kararını (todos-new.md F5) yalnız bu kadar
+Başka uygulama adı bekçisi masaüstünün sınamasıdır (`apps/desktop/src/tests/other_names_tests.rs`) ve derleme ister;
+`make guard`'a girmez, masaüstü dilimlerinin ortak sınamalarıyla koşar.
+
+Claude Code'un `Stop` hook'u (`.claude/settings.json`, depoda; `scripts/dev/guard_hook.sh`) oturum dururken
+`make guard`'ı koşar; kırmızıysa duruşu bir kez engeller ve bekçilerin çıktısını oturuma geri verir. HEAD ve çalışma
+ağacı son yeşil koşudan beri değişmediyse koşmaz (`.run/guard.ok`). Ölçüm (28 Kasım 2026, bu Mac): yeşil koşu 25 sn,
+değişiklik yokken 0,1 sn. Bu, 24 Kasım'ın “şimdilik otomatik denetim yok” kararını (todos-new.md F5) yalnız bu kadar
 değiştirir: CI ve git hook'u yine yoktur.
 
 ### 5. Sınama ikilileri
@@ -88,6 +93,25 @@ Zemin (Aşama 0) hiçbir komutu, aracı ya da arayüz yüzeyini değiştirmez.
 | | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
 |---|---|---|---|---|---|---|---|---|
 | Biçim tabanı, bekçiler, sınama ikilileri | değişmedi | değişmedi | değişmedi | değişmedi | değişmedi | değişmedi | değişmedi | değişmedi |
+
+## Yapılanlar
+
+- **BK-01 (28 Kasım 2026).** `cargo fmt --all` `27d390b97`: 3 008 dosya, +224 128 / −62 060 satır; üç dosya ikinci
+  geçişte oturdu. `module_deps.py`'nin sayıları ve Rust kaynağını okuyan yedi üreteç ile `scripts/cad/manifest.py`,
+  `scripts/crs/coverage.py` önce ve sonra aynı. Biçimlenince 2 488 satıra çıkan
+  `apps/desktop/src/cad/surface_analysis_window.rs` üç dosyaya bölündü (pencere 1 412, `content.rs` 579, `chart.rs`
+  516). Boy tabanı yeniden yazıldı: 69 → 87 dosya.
+- **BK-02 (28 Kasım 2026).**
+  - `kentos-standards → kentos-launch`: bağ doğrudur (paketlerin yeri `kentos_launch::install`'dan sorulur, CLAUDE.md
+    §26); `scripts/arch/deps.mjs`'in `standards` grubu `launch`'ı kullanabilir.
+  - Kabuk → cad ve gis → cad: yeni üç bağın hepsi `crate::labels`'ın `GlyphSlot`, `gpu_text` ve `text_run`'ınaydı. Bunlar
+    etikete değil çizim alanının çizicisine aittir; `apps/desktop/src/shell/glyph_layer.rs`'e taşındı (yuva, metnin
+    şekillendirilmesi, ölçüm boyu). `cad/labels` oradan alır ve eski adlarıyla yeniden dışa aktarır. `gpu_frame.rs`'in
+    sınamaları kendi dosyasında (`gpu_frame_tests.rs`). Taban: kabuk → cad 77, gis → cad 54 (aşım yok), kabuk → gis
+    42 → 41.
+  - `shell/scene3d_sun.rs`'in kullanılmayan iki içe aktarımı kalktı (derleme uyarısızdır).
+- **BK-03 (28 Kasım 2026).** `make guard`, `scripts/dev/guard_hook.sh`, `.claude/settings.json`. Hook dört yolda
+  sınandı: yeşil, değişiklik yok, kırmızı (engeller, çıktıyı verir), zaten engellemiş (geçer).
 
 ## Doğrulama
 
