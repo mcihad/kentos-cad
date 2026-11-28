@@ -13,7 +13,7 @@ use kentos_formats::math::{cos, sin};
 
 const PI: f64 = std::f64::consts::PI;
 
-fn fixture(name: &str) -> Vec<u8> {
+pub(super) fn fixture(name: &str) -> Vec<u8> {
     let path = format!(
         "{}/../../../fixtures/formats/v1/{name}",
         env!("CARGO_MANIFEST_DIR")

@@ -1,6 +1,7 @@
 //! SORTENTSTABLE: source handles are sort keys, not KentOS entity identities.
 use super::entity::Parsed;
 use super::lexer::Lexer;
+use super::strings::Decoder;
 use std::collections::HashMap;
 
 /// What the drawing's objects say, read in one pass over the file.
@@ -15,7 +16,7 @@ pub struct Objects {
 }
 
 /// The drawing's objects (see [`Objects`]).
-pub fn mapping(bytes: &[u8]) -> Result<Objects, String> {
+pub fn mapping(bytes: &[u8], dec: Decoder) -> Result<Objects, String> {
     let mut lex = Lexer::new(bytes);
     let mut in_wipeouts = false;
     let mut frames = None;
@@ -46,7 +47,8 @@ pub fn mapping(bytes: &[u8]) -> Result<Objects, String> {
             && p.code == 1
             && let Some(h) = image.take()
         {
-            images.insert(h, p.text().trim().to_string());
+            // The file's name is the drawing's string: in its code page (docs/adr/9401 §3).
+            images.insert(h, dec.string(p.value).trim().to_string());
         }
         if p.code == 0 {
             in_wipeouts = p.text().eq_ignore_ascii_case("WIPEOUTVARIABLES");

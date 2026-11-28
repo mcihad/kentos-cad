@@ -610,7 +610,7 @@ pub fn parse(
             }
         }
         "HATCH" => Kind::Hatch(Box::new(
-            parse_hatch(list, fit_data_in_hatch_splines).map_err(|r| bad(&r))?,
+            parse_hatch(list, fit_data_in_hatch_splines, &g.dec).map_err(|r| bad(&r))?,
         )),
         "DIMENSION" | "ARC_DIMENSION" | "LARGE_RADIAL_DIMENSION" => {
             // A definition point that cannot be read leaves the dimension to its block, as any other's.

@@ -6,6 +6,7 @@
 //! cursor, not looked up by code.
 
 use super::lexer::Pair;
+use super::strings::Decoder;
 use crate::num::{parse_int, parse_real};
 
 #[derive(Clone, Debug)]
@@ -281,7 +282,7 @@ fn path(c: &mut Cursor, fit_data: bool) -> Result<(Path, i64, Vec<u64>), String>
 }
 
 /// A HATCH's groups (common groups included; they are skipped).
-pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
+pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool, dec: &Decoder) -> Result<Hatch, String> {
     let mut h = Hatch {
         elevation: 0.0,
         name: String::new(),
@@ -318,7 +319,8 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
         }
         match code {
             30 => h.elevation = c.real(30)?,
-            2 => h.name = c.take(2)?.text().to_string(),
+            // The names are the drawing's strings: in its code page, as a layer's (docs/adr/9401 §3).
+            2 => h.name = dec.string(c.take(2)?.value).trim().to_string(),
             70 => h.solid = c.int(70)? == 1,
             71 => h.assoc = c.int(71)? != 0,
             91 => {
@@ -358,7 +360,7 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
             452 => h.one_colour = c.int(452)? != 0,
             460 => h.gradient_angle = c.real(460)?,
             461 => h.gradient_shift = c.real(461)?,
-            470 => h.gradient_name = c.take(470)?.text().to_string(),
+            470 => h.gradient_name = dec.string(c.take(470)?.value).trim().to_string(),
             // Each colour starts with its value (463); writers that leave it out start one with a second 63 or 421.
             463 => {
                 c.real(463)?;
@@ -407,7 +409,7 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
         })
         .chain(list[start..].iter().copied())
         .collect();
-        return parse_hatch(&marked, fit_data);
+        return parse_hatch(&marked, fit_data, dec);
     }
     Ok(h)
 }
@@ -416,6 +418,11 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
 mod tests {
     use super::*;
     use crate::dxf::lexer::Lexer;
+
+    /// The tests' drawings are UTF-8.
+    const UTF8: Decoder = Decoder {
+        enc: crate::text::Encoding::Utf8,
+    };
 
     fn groups(text: &str) -> Vec<Pair<'_>> {
         let mut l = Lexer::new(text.as_bytes());
@@ -429,7 +436,7 @@ mod tests {
     #[test]
     fn a_polyline_path_and_an_edge_path_with_an_arc() {
         let text = "100\nAcDbHatch\n10\n0\n20\n0\n30\n0\n2\nANSI31\n70\n0\n71\n0\n91\n2\n92\n3\n72\n1\n73\n1\n93\n2\n10\n0\n20\n0\n42\n1\n10\n2\n20\n0\n42\n1\n97\n0\n92\n0\n93\n2\n72\n1\n10\n0\n20\n0\n11\n1\n21\n0\n72\n2\n10\n0.5\n20\n0\n40\n0.5\n50\n0\n51\n180\n73\n1\n97\n0\n75\n1\n76\n1\n52\n0\n41\n1\n77\n0\n78\n1\n53\n45\n43\n0\n44\n0\n45\n-2.245\n46\n2.245\n79\n0\n98\n0\n";
-        let h = parse_hatch(&groups(text), false).expect("hatch");
+        let h = parse_hatch(&groups(text), false, &UTF8).expect("hatch");
         assert_eq!(h.name, "ANSI31");
         assert_eq!(h.paths.len(), 2);
         let Path::Poly { pts, bulges } = &h.paths[0] else {
@@ -447,7 +454,7 @@ mod tests {
     #[test]
     fn pattern_lines_whole_and_a_gradient() {
         let text = "100\nAcDbHatch\n2\nANSI33\n70\n0\n71\n1\n91\n0\n75\n0\n76\n1\n52\n30\n41\n2\n77\n0\n78\n2\n53\n75\n43\n0\n44\n0\n45\n-1\n46\n2\n79\n0\n53\n75\n43\n0.5\n44\n0.25\n45\n-1\n46\n2\n79\n2\n49\n6.35\n49\n-3.175\n98\n0\n450\n1\n451\n0\n460\n0.5\n461\n0\n452\n1\n462\n1\n453\n2\n463\n0\n63\n5\n421\n255\n463\n1\n421\n16776960\n470\nINVCYLINDER\n";
-        let h = parse_hatch(&groups(text), false).expect("hatch");
+        let h = parse_hatch(&groups(text), false, &UTF8).expect("hatch");
         assert_eq!(
             (h.kind, h.assoc, h.angle, h.scale),
             (Some(1), true, 30.0, 2.0)
@@ -490,7 +497,7 @@ mod tests {
     #[test]
     fn a_broken_path_says_where() {
         let text = "100\nAcDbHatch\n91\n1\n92\n2\n72\n0\n73\n1\n93\n3\n10\n0\n20\n0\n";
-        let e = parse_hatch(&groups(text), false).expect_err("error");
+        let e = parse_hatch(&groups(text), false, &UTF8).expect_err("error");
         assert!(e.contains("tarama sınırı eksik"), "{e}");
     }
 }

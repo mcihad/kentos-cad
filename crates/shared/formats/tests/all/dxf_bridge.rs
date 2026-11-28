@@ -5,7 +5,7 @@
 use kentos_contracts::{DxfReadOptions, Entity};
 use kentos_formats::dxf;
 
-use super::dxf::{dxf_of, groups, skipped};
+use super::dxf::{dxf_of, fixture, groups, skipped};
 
 /// An aligned text's baseline stands where another program draws it (docs/adr/8046 §3): a middle-centred Arial text
 /// of 40 = 2.5 at 11 = (0, 0) has its baseline half the file's height (its capitals) under 11 there, at −1.25; KentOS
@@ -512,4 +512,76 @@ fn a_boundary_of_pieces_is_joined_into_its_ring() {
         "{:?}",
         r.report.skipped
     );
+}
+
+/// An image's file is one of the drawing's strings: read in its code page (docs/adr/9401 §3). Before, a name with a
+/// Turkish letter in Windows-1254 was read as no name at all.
+#[test]
+fn an_image_s_file_is_read_in_the_drawing_s_code_page() {
+    let g = |code: i32, value: &str| (code, value.to_string());
+    let entities = vec![
+        g(0, "IMAGE"),
+        g(5, "92E9D8"),
+        g(8, "A_SHET"),
+        g(100, "AcDbEntity"),
+        g(100, "AcDbRasterImage"),
+        g(10, "1000"),
+        g(20, "2000"),
+        g(30, "0"),
+        g(11, "1"),
+        g(21, "0"),
+        g(31, "0"),
+        g(12, "0"),
+        g(22, "1"),
+        g(32, "0"),
+        g(13, "100"),
+        g(23, "50"),
+        g(340, "146B6"),
+        g(70, "7"),
+        g(280, "0"),
+    ];
+    let objects = vec![
+        g(0, "IMAGEDEF"),
+        g(5, "146B6"),
+        g(100, "AcDbRasterImageDef"),
+        g(1, "SEKIL.jpg"),
+    ];
+    let mut bytes = dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]);
+    let at = bytes
+        .windows(5)
+        .position(|w| w == b"SEKIL")
+        .expect("the file's name");
+    // “ŞEKİL” in Windows-1254.
+    bytes[at..at + 5].copy_from_slice(&[0xDE, b'E', b'K', 0xDD, b'L']);
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
+    let r = dxf::read(&bytes, &options).expect("read");
+    let note = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Görüntü (IMAGE)")
+        .expect("said");
+    assert!(note.reason.contains("“ŞEKİL.jpg”"), "{}", note.reason);
+}
+
+/// A hatch's pattern name is one of the drawing's strings: read in its code page, as a layer's name is (docs/adr/9401
+/// §3). The file is AC1018 and names no code page: Turkish.
+#[test]
+fn a_hatch_pattern_s_name_is_read_in_the_drawing_s_code_page() {
+    let mut bytes = fixture("hatch-patterns.dxf");
+    let at = bytes
+        .windows(6)
+        .position(|w| w == b"ANSI36")
+        .expect("the first pattern's name");
+    // “ÇİZGİ1” in Windows-1254.
+    bytes[at..at + 6].copy_from_slice(&[0xC7, 0xDD, b'Z', b'G', 0xDD, b'1']);
+    let r = dxf::read(&bytes, &DxfReadOptions::default()).expect("read");
+    let first = r.entities.iter().find_map(|e| match e {
+        Entity::Hatch(h) => Some(h.pattern.name.clone()),
+        _ => None,
+    });
+    assert_eq!(first, Some(Some("ÇİZGİ1".to_owned())));
 }

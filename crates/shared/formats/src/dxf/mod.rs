@@ -959,7 +959,7 @@ fn read_once(
     if !saw_section {
         return Err("Dosyada DXF bölümü yok; bir ASCII DXF dosyası seçin.".into());
     }
-    let objects = ordering::mapping(bytes)?;
+    let objects = ordering::mapping(bytes, rd.dec)?;
     let order = objects.order;
     let mut lib = std::mem::take(&mut rd.lib);
     for block in lib.blocks.values_mut() {
