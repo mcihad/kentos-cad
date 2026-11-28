@@ -6,7 +6,7 @@
 
 use crate::entity::Shape;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{cos, hypot, js_max, js_min, js_sign, sin};
+use crate::jsmath::{cos, hypot, maximum, minimum, sign, sin};
 use crate::ops::convert::{Zs, paths};
 use crate::ops::edges::edge_length;
 use crate::ops::path::path_of;
@@ -64,7 +64,7 @@ impl Walk {
         let e = &self.edges[i];
         let len = edge_length(e);
         let t = if len > 0.0 {
-            js_min(1.0, js_max(0.0, (s - self.cum[i]) / len))
+            minimum(1.0, maximum(0.0, (s - self.cum[i]) / len))
         } else {
             0.0
         };
@@ -89,7 +89,7 @@ impl Walk {
             }
             Edge::Arc { a0, sweep, .. } => {
                 let th = a0 + sweep * t;
-                let w = js_sign(sweep);
+                let w = sign(sweep);
                 Vec2::new(-sin(th) * w, cos(th) * w)
             }
         };

@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::{js_max, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum};
 use sha1::Digest as _;
 
 use crate::compound::shown;
@@ -149,7 +149,7 @@ fn dms(out: &mut String, v: f64, x_axis: bool, p: u32, style: Style, seconds: bo
     let mut secs = (minutes - whole_min) * 60.0;
     if seconds {
         if js_round(secs * k) >= 60.0 * k {
-            secs = js_max(secs - 60.0, 0.0);
+            secs = maximum(secs - 60.0, 0.0);
             whole_min += 1.0;
             if whole_min >= 60.0 {
                 whole_min -= 60.0;
@@ -157,7 +157,7 @@ fn dms(out: &mut String, v: f64, x_axis: bool, p: u32, style: Style, seconds: bo
             }
         }
     } else if js_round(minutes * k) >= 60.0 * k {
-        minutes = js_max(minutes - 60.0, 0.0);
+        minutes = maximum(minutes - 60.0, 0.0);
         deg += 1.0;
     }
     let zero = if seconds {

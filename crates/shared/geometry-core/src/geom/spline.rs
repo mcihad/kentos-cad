@@ -3,7 +3,7 @@
 
 use crate::api::Op;
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{hypot, js_max, js_min, or};
+use crate::jsmath::{hypot, maximum, minimum, or};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -57,9 +57,9 @@ fn segment_distance(p: Vec2, a: Vec2, c: Vec2) -> f64 {
     let t = if len2 == 0.0 {
         0.0
     } else {
-        js_min(
+        minimum(
             1.0,
-            js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+            maximum(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
         )
     };
     hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
@@ -95,12 +95,12 @@ pub fn catmull_rom_in_box(
     };
     let near = |a: Vec2, c: Vec2, m: Vec2, far: f64| {
         let lo = Vec2::new(
-            js_min(js_min(a.x, c.x), m.x) - far,
-            js_min(js_min(a.y, c.y), m.y) - far,
+            minimum(minimum(a.x, c.x), m.x) - far,
+            minimum(minimum(a.y, c.y), m.y) - far,
         );
         let hi = Vec2::new(
-            js_max(js_max(a.x, c.x), m.x) + far,
-            js_max(js_max(a.y, c.y), m.y) + far,
+            maximum(maximum(a.x, c.x), m.x) + far,
+            maximum(maximum(a.y, c.y), m.y) + far,
         );
         !(hi.x < b.min_x || lo.x > b.max_x || hi.y < b.min_y || lo.y > b.max_y)
     };
@@ -333,7 +333,7 @@ mod tests {
         let off = |p: Vec2| {
             fine.windows(2)
                 .map(|s| segment_distance(p, s[0], s[1]))
-                .fold(f64::INFINITY, js_min)
+                .fold(f64::INFINITY, minimum)
         };
         for s in round.windows(2) {
             let m = Vec2::new(0.5 * (s[0].x + s[1].x), 0.5 * (s[0].y + s[1].y));

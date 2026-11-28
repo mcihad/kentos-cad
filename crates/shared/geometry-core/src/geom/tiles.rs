@@ -7,7 +7,7 @@
 //! the caller's transformation). Both platforms draw with these, so they ask
 //! for the same tiles and draw them in the same place.
 
-use crate::jsmath::{js_max, js_min, log};
+use crate::jsmath::{log, maximum, minimum};
 
 /// Web Mercator's half side (EPSG:3857), metres: πR with R the WGS 84 semi-major axis.
 pub const MERCATOR_HALF: f64 = 20_037_508.342_789_244;
@@ -305,10 +305,10 @@ pub fn view_in(
             let y = view[1] + (view[3] - view[1]) * f64::from(j) / 4.0;
             if let Some((gx, gy)) = to_grid(x, y).filter(|(a, b)| a.is_finite() && b.is_finite()) {
                 any = true;
-                b[0] = js_min(b[0], gx);
-                b[1] = js_min(b[1], gy);
-                b[2] = js_max(b[2], gx);
-                b[3] = js_max(b[3], gy);
+                b[0] = minimum(b[0], gx);
+                b[1] = minimum(b[1], gy);
+                b[2] = maximum(b[2], gx);
+                b[3] = maximum(b[3], gy);
             }
         }
     }
@@ -472,8 +472,8 @@ impl MeshMap {
         }
         // A vertex may lie past the tile (its buffer): the edge cells reach out linearly.
         let (fu, fv) = (u * f64::from(n), v * f64::from(n));
-        let i = (js_max(fu.floor(), 0.0) as u32).min(n - 1);
-        let j = (js_max(fv.floor(), 0.0) as u32).min(n - 1);
+        let i = (maximum(fu.floor(), 0.0) as u32).min(n - 1);
+        let j = (maximum(fv.floor(), 0.0) as u32).min(n - 1);
         let (s, r) = (fu - f64::from(i), fv - f64::from(j));
         let (a, b, c, d) = (
             self.node(i, j),

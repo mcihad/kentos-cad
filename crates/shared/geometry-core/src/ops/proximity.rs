@@ -10,7 +10,7 @@
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{PI, hypot, js_max, js_min};
+use crate::jsmath::{PI, hypot, maximum, minimum};
 use crate::ops::geoprocess;
 use crate::ops::spatial_query::{
     Geometry, TOLERANCE, arc_toward, boxes_meet, edge_gap, ends, inside, intersects, meets_point,
@@ -176,11 +176,11 @@ fn angle_overlap((s1, w1): (f64, f64), (s2, w2): (f64, f64)) -> f64 {
     // The second interval shifted by whole turns to sit by the first.
     let base = s2 - ((s2 - s1) / tau).floor() * tau;
     for shift in [-tau, 0.0, tau] {
-        let a = js_max(s1, base + shift);
-        let b = js_min(s1 + w1, base + shift + w2);
-        best += js_max(0.0, b - a);
+        let a = maximum(s1, base + shift);
+        let b = minimum(s1 + w1, base + shift + w2);
+        best += maximum(0.0, b - a);
     }
-    js_min(best, js_min(w1, w2))
+    minimum(best, minimum(w1, w2))
 }
 
 /// The length two edges share within `tol`: straight ones on one line
@@ -206,9 +206,9 @@ pub fn edge_overlap(e1: &Edge, e2: &Edge, tol: f64) -> f64 {
             }
             let along = |v: Vec2| (v.x - p.x) * ux + (v.y - p.y) * uy;
             let (t0, t1) = (along(r), along(s));
-            let lo = js_max(0.0, js_min(t0, t1));
-            let hi = js_min(l, js_max(t0, t1));
-            js_max(0.0, hi - lo)
+            let lo = maximum(0.0, minimum(t0, t1));
+            let hi = minimum(l, maximum(t0, t1));
+            maximum(0.0, hi - lo)
         }
         (
             Edge::Arc {
@@ -319,8 +319,8 @@ pub fn interiors_overlap(a: &Geometry, b: &Geometry) -> bool {
         return false;
     }
     let (p, q) = (&a.bounds, &b.bounds);
-    if js_min(p.max_x, q.max_x) <= js_max(p.min_x, q.min_x)
-        || js_min(p.max_y, q.max_y) <= js_max(p.min_y, q.min_y)
+    if minimum(p.max_x, q.max_x) <= maximum(p.min_x, q.min_x)
+        || minimum(p.max_y, q.max_y) <= maximum(p.min_y, q.min_y)
     {
         return false;
     }

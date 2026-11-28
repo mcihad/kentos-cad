@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use kentos_geometry_core::api::json::{FromJson, Json};
-use kentos_geometry_core::jsmath::{hypot, js_max, js_min, js_round, or, stable_sort, truthy};
+use kentos_geometry_core::jsmath::{hypot, js_round, maximum, minimum, or, stable_sort, truthy};
 use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, slice, trim, utf16_len};
 
@@ -1084,8 +1084,8 @@ impl<'a> Importer<'a> {
                 let ry = to_user(node.attr("ry").filter(|v| *v != "auto"), self.height, 16.0);
                 let rx = rx.unwrap_or(ry.unwrap_or(0.0));
                 let ry = ry.unwrap_or(rx);
-                let rx = js_min(js_max(0.0, rx), w / 2.0);
-                let ry = js_min(js_max(0.0, ry), h / 2.0);
+                let rx = minimum(maximum(0.0, rx), w / 2.0);
+                let ry = minimum(maximum(0.0, ry), h / 2.0);
                 if (rx - ry).abs() < 1e-9 {
                     let mut f = Importer::base(&id, "rect");
                     f.extend([
@@ -1545,8 +1545,8 @@ pub fn doc_from_svg_tree(tree: &XmlTree, opts: &ImportOptions) -> Result<Importe
         let mut max_y = 0.0;
         for s in &shapes {
             let b = shape_box(s)?;
-            max_x = js_max(max_x, b.max_x);
-            max_y = js_max(max_y, b.max_y);
+            max_x = maximum(max_x, b.max_x);
+            max_y = maximum(max_y, b.max_y);
         }
         doc_width = or(max_x.ceil(), 100.0);
         doc_height = or(max_y.ceil(), 100.0);
@@ -1632,8 +1632,8 @@ pub fn color_usage(shapes: &[Obj]) -> Result<Vec<ColorUse>, String> {
     };
     for s in shapes {
         let b = shape_box(s)?;
-        let w = js_max(0.0, b.max_x - b.min_x);
-        let h = js_max(0.0, b.max_y - b.min_y);
+        let w = maximum(0.0, b.max_x - b.min_x);
+        let h = maximum(0.0, b.max_y - b.min_y);
         add(s.get("fill"), w * h);
         if s.text("stroke") != Some("none") {
             add(s.get("stroke"), 2.0 * (w + h) * s.num("strokeWidth"));

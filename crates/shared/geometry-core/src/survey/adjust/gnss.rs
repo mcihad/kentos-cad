@@ -16,7 +16,7 @@ pub use super::session::GnssSession;
 use super::session::{Group, whitener};
 use super::sparse::{Envelope, reverse_cuthill_mckee};
 use super::{ObservationResult, Observed, Statistics, name_key, statistics};
-use crate::jsmath::{atan2, cos, hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
 /// deviations (m) or their full covariance xx, xy, xz, yy, yz, zz (m²; a known point's north, east, up deviations turned
@@ -730,7 +730,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         for (comp, var) in [c[0], c[3], c[5]].into_iter().enumerate() {
             let (coef, l) = design(k, comp);
             let v: f64 = coef.iter().map(|&(i, a)| a * x[i]).sum::<f64>() - l;
-            worst = js_max(worst, v.abs() / (var * input.scale).sqrt());
+            worst = maximum(worst, v.abs() / (var * input.scale).sqrt());
         }
         worst
     };
@@ -796,7 +796,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let moved = next
             .iter()
             .zip(&factors)
-            .fold(0.0, |m, (a, b)| js_max(m, (a - b).abs()));
+            .fold(0.0, |m, (a, b)| maximum(m, (a - b).abs()));
         if moved <= TOLERANCE || rounds == MAX_ROUNDS {
             converged = moved <= TOLERANCE;
             break (weighted, x, q);
@@ -940,7 +940,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
                         }
                         v
                     };
-                    let senu = [0, 1, 2].map(|k| js_max(m(k, k), 0.0).sqrt());
+                    let senu = [0, 1, 2].map(|k| maximum(m(k, k), 0.0).sqrt());
                     let cenu = [m(0, 0), m(0, 1), m(0, 2), m(1, 1), m(1, 2), m(2, 2)];
                     (
                         [cov(0, 0).sqrt(), cov(1, 1).sqrt(), cov(2, 2).sqrt()],
@@ -993,7 +993,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
             let var = block(st, st, c, c) + block(sf, sf, c, c)
                 - block(st, sf, c, c)
                 - block(sf, st, c, c);
-            *out = js_max(var * s0 * s0, 0.0).sqrt();
+            *out = maximum(var * s0 * s0, 0.0).sqrt();
         }
         baselines.push(BaselineResidual {
             v,

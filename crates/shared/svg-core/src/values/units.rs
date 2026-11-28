@@ -1,7 +1,7 @@
 //! Transforms, lengths with units and the viewBox mapping with
 //! preserveAspectRatio.
 
-use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, sin, tan};
+use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin, tan};
 use kentos_style_core::js::text::{is_space, trim};
 
 use crate::path::{IDENTITY, Matrix, multiply, number_len};
@@ -138,9 +138,9 @@ pub fn view_box_transform(vb: &[f64], width: f64, height: f64, par: &str) -> Mat
     let mut ty = 0.0;
     if align != "none" {
         let s = if words.get(1) == Some(&"slice") {
-            js_max(sx, sy)
+            maximum(sx, sy)
         } else {
-            js_min(sx, sy)
+            minimum(sx, sy)
         };
         sx = s;
         sy = s;

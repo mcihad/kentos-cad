@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 use crate::api::Op;
 use crate::entity::HatchPattern;
 use crate::geom::hatch::MAX_HATCH_LINES;
-use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, js_max, js_min, sin, stable_sort};
+use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -617,8 +617,8 @@ fn family_pieces(rings: &[&[Vec2]], f: &FamilyPaint, budget: usize, out: &mut Ha
     };
     let (mut min_v, mut max_v) = (f64::INFINITY, f64::NEG_INFINITY);
     for p in outer {
-        min_v = js_min(min_v, p.v);
-        max_v = js_max(max_v, p.v);
+        min_v = minimum(min_v, p.v);
+        max_v = maximum(max_v, p.v);
     }
     let first = ((min_v - f.offset) / f.spacing).ceil();
     let last = ((max_v - f.offset) / f.spacing).floor();
@@ -670,7 +670,7 @@ fn family_pieces(rings: &[&[Vec2]], f: &FamilyPaint, budget: usize, out: &mut Ha
                                 out.dots.push(to_world(a, v));
                             }
                         } else if b > u0 && a < u1 {
-                            let (a, b) = (js_max(a, u0), js_min(b, u1));
+                            let (a, b) = (maximum(a, u0), minimum(b, u1));
                             if b - a > 1e-9 {
                                 out.segments.push([to_world(a, v), to_world(b, v)]);
                             }
@@ -726,8 +726,8 @@ pub fn too_dense(ring: &[Vec2], p: &HatchPattern) -> bool {
         let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
         for q in ring {
             let v = -q.x * s + q.y * c;
-            lo = js_min(lo, v);
-            hi = js_max(hi, v);
+            lo = minimum(lo, v);
+            hi = maximum(hi, v);
         }
         f.spacing > 0.0 && (hi - lo) / f.spacing + 1.0 > MAX_HATCH_LINES
     })

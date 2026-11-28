@@ -560,16 +560,16 @@ pub fn adjust(input: &NetworkInput) -> Result<NetworkResult, String> {
             let p = net.pos[k];
             net.pos
                 .insert(k.clone(), Vec2::new(p.x + delta[c], p.y + delta[c + 1]));
-            coords = crate::jsmath::js_max(
+            coords = crate::jsmath::maximum(
                 coords,
-                crate::jsmath::js_max(delta[c].abs(), delta[c + 1].abs()),
+                crate::jsmath::maximum(delta[c].abs(), delta[c + 1].abs()),
             );
         }
         let mut angles: f64 = 0.0;
         for s in &net.stations {
             let c = ocol[s];
             *net.orient.entry(s.clone()).or_insert(0.0) += delta[c];
-            angles = crate::jsmath::js_max(angles, delta[c].abs());
+            angles = crate::jsmath::maximum(angles, delta[c].abs());
         }
         if coords <= 1e-7 && angles <= 1e-10 {
             break;
@@ -601,7 +601,7 @@ pub fn adjust(input: &NetworkInput) -> Result<NetworkResult, String> {
                 sx,
                 sp: (sy * sy + sx * sx).sqrt(),
                 a: s0 * (half + root).sqrt(),
-                b: s0 * crate::jsmath::js_max(half - root, 0.0).sqrt(),
+                b: s0 * crate::jsmath::maximum(half - root, 0.0).sqrt(),
                 theta,
             }
         })

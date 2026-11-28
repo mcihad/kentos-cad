@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, js_cmp, js_max, js_min, js_round, or, sin, stable_sort,
+    PI, atan2, cos, hypot, js_cmp, js_round, maximum, minimum, or, sin, stable_sort,
 };
 
 use crate::fit::fit_run;
@@ -251,16 +251,16 @@ pub fn nest_rings(rings: Vec<Ring>, min_area: f64) -> Nested {
             f64::NEG_INFINITY,
         ];
         for &[x, y] in r {
-            b[0] = js_min(b[0], x);
-            b[1] = js_min(b[1], y);
-            b[2] = js_max(b[2], x);
-            b[3] = js_max(b[3], y);
+            b[0] = minimum(b[0], x);
+            b[1] = minimum(b[1], y);
+            b[2] = maximum(b[2], x);
+            b[3] = maximum(b[3], y);
         }
         b
     };
     for r in rings {
         let a = ring_area(&r);
-        if a.abs() < js_max(min_area, 1e-9) {
+        if a.abs() < maximum(min_area, 1e-9) {
             removed += 1;
             continue;
         }
@@ -304,9 +304,9 @@ fn seg_dist(p: Point, a: Point, b: Point) -> f64 {
     let dy = b[1] - a[1];
     let l2 = dx * dx + dy * dy;
     let t = if l2 != 0.0 && !l2.is_nan() {
-        js_max(
+        maximum(
             0.0,
-            js_min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2),
+            minimum(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2),
         )
     } else {
         0.0
@@ -379,7 +379,7 @@ pub fn simplify_indices(r: &Ring, tol: f64) -> Vec<usize> {
         }
         out
     };
-    let t = js_max(tol, 1e-6);
+    let t = maximum(tol, 1e-6);
     let mut kept = dp_chain(r, &chain(i0, i1), t);
     let back = dp_chain(r, &chain(i1, i0), t);
     if back.len() > 2 {
@@ -514,7 +514,7 @@ fn unit(x: f64, y: f64) -> Point {
 /// smooth.
 pub fn fit_traced_ring(dense: &Ring, o: &TraceOptions) -> Option<SubPath> {
     let corner_rad = (o.corner * PI) / 180.0;
-    let r = recover_corners(&compact_ring(dense), 1.5, js_min(corner_rad, PI / 3.0));
+    let r = recover_corners(&compact_ring(dense), 1.5, minimum(corner_rad, PI / 3.0));
     let idx = simplify_indices(&r, o.tolerance);
     // Too small for the tolerance (a speck kept on purpose): its own outline.
     let kept: Vec<usize> = if idx.len() >= 3 {
@@ -605,7 +605,7 @@ pub fn fit_traced_ring(dense: &Ring, o: &TraceOptions) -> Option<SubPath> {
         unit(pts[b][0] - pts[a][0], pts[b][1] - pts[a][1])
     };
     // Smoothing loosens the fit: fewer nodes, rounder curves.
-    let tol = js_max(o.tolerance, 0.05) * (0.6 + 0.8 * js_min(1.0, o.smooth));
+    let tol = maximum(o.tolerance, 0.05) * (0.6 + 0.8 * minimum(1.0, o.smooth));
     let mut nodes: Vec<PathNode> = Vec::new();
     for s in 0..splits.len() {
         let i0 = splits[s];

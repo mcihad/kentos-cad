@@ -21,7 +21,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::leader;
 use crate::geom::region::ring_area;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, hypot, js_cmp, js_max, js_min, stable_sort};
+use crate::jsmath::{PI, hypot, js_cmp, maximum, minimum, stable_sort};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::holes::{HoleAt, hole_at, hole_ring};
 use crate::text::Font;
@@ -103,10 +103,10 @@ impl Store {
             max_y: f64::NEG_INFINITY,
         };
         for p in fence {
-            q.min_x = js_min(q.min_x, p.x);
-            q.min_y = js_min(q.min_y, p.y);
-            q.max_x = js_max(q.max_x, p.x);
-            q.max_y = js_max(q.max_y, p.y);
+            q.min_x = minimum(q.min_x, p.x);
+            q.min_y = minimum(q.min_y, p.y);
+            q.max_x = maximum(q.max_x, p.x);
+            q.max_y = maximum(q.max_y, p.y);
         }
         let segs: Vec<Edge> = fence
             .windows(2)
@@ -217,7 +217,7 @@ impl Store {
         let quartile = |v: &[f64], k: usize| v[((v.len() - 1) * k + 2) / 4];
         let (x0, x1) = (quartile(&xs, 1), quartile(&xs, 3));
         let (y0, y1) = (quartile(&ys, 1), quartile(&ys, 3));
-        let reach = EXTENT_FACTOR * js_max(js_max(x1 - x0, y1 - y0), EXTENT_MIN_SIDE);
+        let reach = EXTENT_FACTOR * maximum(maximum(x1 - x0, y1 - y0), EXTENT_MIN_SIDE);
         items
             .into_iter()
             .filter(|it| {
@@ -329,10 +329,10 @@ fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bo
             for s in segs {
                 if let Edge::Seg { a, b } = s {
                     for q in [a, b] {
-                        area.min_x = js_min(area.min_x, q.x);
-                        area.min_y = js_min(area.min_y, q.y);
-                        area.max_x = js_max(area.max_x, q.x);
-                        area.max_y = js_max(area.max_y, q.y);
+                        area.min_x = minimum(area.min_x, q.x);
+                        area.min_y = minimum(area.min_y, q.y);
+                        area.max_x = maximum(area.max_x, q.x);
+                        area.max_y = maximum(area.max_y, q.y);
                     }
                 }
             }

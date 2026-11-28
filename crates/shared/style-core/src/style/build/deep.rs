@@ -184,7 +184,7 @@ mod tests {
     use crate::style::build::{LayerObjects, MODE_SET, Program, View, build_layer_with};
     use kentos_geometry_core::api::json::Json;
     use kentos_geometry_core::geom::deep::COARSE_STEP;
-    use kentos_geometry_core::jsmath::{hypot, js_max};
+    use kentos_geometry_core::jsmath::{hypot, maximum};
     use kentos_geometry_core::store::Store;
 
     const BOX: Bounds = Bounds {
@@ -450,7 +450,7 @@ mod tests {
                 let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
                 r - hypot((a.x + b.x) / 2.0 - c.x, (a.y + b.y) / 2.0 - c.y)
             })
-            .fold(0.0, js_max);
+            .fold(0.0, maximum);
         assert!(worst <= tol * 1.000_001, "{worst}");
         // 2 acos(1 − tol / r) a chord: about 466 a turn for 22 m at half a millimetre.
         assert!((460..=470).contains(&ring.len()), "{}", ring.len());

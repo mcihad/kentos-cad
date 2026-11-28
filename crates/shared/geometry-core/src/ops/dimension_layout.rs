@@ -2,7 +2,7 @@
 //! places where they do not fit between their extension lines, and whether its rows' rounded values add up to its
 //! rounded overall. Pure: the caller gives the frame's numbers, the texts' widths and the written values.
 
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// A row's dimension line's offset at a sheet scale (docs/adr/0730 §1): its row `scale / plot_scale` times as far across
 /// from the reference line as at the drawing's scale (`delta` its distance there, signed along the frame's normal), its
@@ -80,8 +80,8 @@ fn rect(v: &ValueBox, lines: &[RowLine], along: f64, across: f64) -> Rect {
     Rect {
         t0: c - v.width * 0.5,
         t1: c + v.width * 0.5,
-        o0: js_min(a, b),
-        o1: js_max(a, b),
+        o0: minimum(a, b),
+        o1: maximum(a, b),
         line: v.line,
     }
 }
@@ -127,7 +127,7 @@ pub fn place_values(values: &[ValueBox], lines: &[RowLine]) -> Vec<Placement> {
         let beyond = v.reading * (end + v.reading * (margin + v.width * 0.5) - c);
         let before = v.reading * (start - v.reading * (margin + v.width * 0.5) - c);
         let up = v.height * (1.0 + v.gap);
-        let down = js_min(v.lift, 0.0) - v.lift - v.height - v.gap * v.height;
+        let down = minimum(v.lift, 0.0) - v.lift - v.height - v.gap * v.height;
         let candidates = [(beyond, 0.0), (before, 0.0), (0.0, up), (0.0, down)];
         let chosen = candidates.into_iter().find(|&(along, across)| {
             !blocked(&rect(v, lines, along, across), &placed, lines, margin)

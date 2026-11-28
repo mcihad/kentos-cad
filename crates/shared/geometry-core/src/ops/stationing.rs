@@ -8,7 +8,7 @@
 
 use crate::api::Op;
 use crate::entity::Entity;
-use crate::jsmath::{atan2, cos, js_floor, js_max, js_round, sin};
+use crate::jsmath::{atan2, cos, js_round, maximum, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::tools::point_calc::{Walk, km_text};
@@ -174,7 +174,7 @@ fn interval_decimals(interval: f64) -> usize {
     let mut scale = 1.0;
     for d in 0..=6 {
         let v = interval * scale;
-        if (v - js_round(v)).abs() <= 1e-6 * js_max(v.abs(), 1.0) {
+        if (v - js_round(v)).abs() <= 1e-6 * maximum(v.abs(), 1.0) {
             return d;
         }
         scale *= 10.0;
@@ -198,7 +198,7 @@ pub fn stations(e: &crate::entity::Shape, rules: &Rules) -> Result<Vec<Station>,
     let end = start + length;
     // The multiples k·interval in [start, end], k whole, a multiple 10⁻⁹ m outside still in.
     let first = ((start - 1e-9) / interval).ceil();
-    let last = js_floor((end + 1e-9) / interval);
+    let last = f64::floor((end + 1e-9) / interval);
     let count = if last >= first {
         last - first + 1.0
     } else {
@@ -276,7 +276,7 @@ pub fn measure_stations(
     };
     let interval = rules.interval;
     let first = ((least - 1e-9) / interval).ceil();
-    let last = js_floor((most + 1e-9) / interval);
+    let last = f64::floor((most + 1e-9) / interval);
     let count = if last >= first {
         last - first + 1.0
     } else {
@@ -363,7 +363,7 @@ pub fn objects(stations: Vec<Station>, look: &Look) -> Stationing {
                 Side::Right => -1.0,
             };
             let n = Vec2::new(left.x * way, left.y * way);
-            let from = js_max(look.tick, 0.0) + look.height / 2.0;
+            let from = maximum(look.tick, 0.0) + look.height / 2.0;
             let a = atan2(n.y, n.x);
             let upright = a > std::f64::consts::FRAC_PI_2 || a < -std::f64::consts::FRAC_PI_2;
             let (turn, align) = if upright {

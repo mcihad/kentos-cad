@@ -18,7 +18,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{Shape, ellipse_geom, is_closed_outline, tessellate_circle};
 use kentos_geometry_core::geom::arc::{ArcGeom, tessellate_arc};
 use kentos_geometry_core::geom::ellipse::tessellate_ellipse;
-use kentos_geometry_core::jsmath::{TAU, acos, hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{TAU, acos, hypot, maximum, minimum};
 use kentos_geometry_core::store::{Expanded, Item, Store};
 
 use super::super::batch::{BatchSink, CURVE_LEVELS, CURVE_TOLERANCE_PX, Def};
@@ -103,7 +103,7 @@ impl Instancer {
             if let Some((look, _, m)) = look_of(store, item, x, sets, [mode, color, band]) {
                 let k = (m[0] * m[3] - m[1] * m[2]).abs().sqrt();
                 let most = me.scales.entry(look.clone()).or_insert(0.0);
-                *most = js_max(*most, if k.is_finite() { k } else { 0.0 });
+                *most = maximum(*most, if k.is_finite() { k } else { 0.0 });
                 *me.counts.entry(look).or_default() += 1;
             }
         }
@@ -197,7 +197,7 @@ pub(super) fn level_radius(s: &Shape) -> Option<f64> {
         Shape::Circle { r, .. } | Shape::Arc { r, .. } => *r,
         Shape::Ellipse { major, ratio, .. } => {
             let a = hypot(major.x, major.y);
-            js_max(a, a * ratio.abs())
+            maximum(a, a * ratio.abs())
         }
         _ => return None,
     };
@@ -213,7 +213,7 @@ fn chords(r: f64, px_per_m: f64) -> f64 {
         return LEAST_CHORDS;
     }
     let n = (std::f64::consts::PI / acos(1.0 - CURVE_TOLERANCE_PX / px)).ceil();
-    js_min(FINE_CHORDS, js_max(LEAST_CHORDS, n))
+    minimum(FINE_CHORDS, maximum(LEAST_CHORDS, n))
 }
 
 /// The curve's outline in `n` chords a full turn, as the fine one is made (its start, its sense, closed or open).

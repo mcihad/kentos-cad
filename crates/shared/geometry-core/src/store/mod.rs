@@ -51,7 +51,7 @@ use crate::api::json::{FromJson, Json};
 use crate::block::Blocks;
 use crate::entity::{Entity, Shape, entity_bounds_in};
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::text::Font;
 use rtree::{PackedTree, overlaps};
 
@@ -1613,10 +1613,10 @@ impl Store {
     pub fn extent(&self, ids: Option<&[f64]>) -> Option<Bounds> {
         let mut b = empty_bounds();
         let mut add = |it: &Item| {
-            b.min_x = js_min(b.min_x, it.bounds.min_x);
-            b.min_y = js_min(b.min_y, it.bounds.min_y);
-            b.max_x = js_max(b.max_x, it.bounds.max_x);
-            b.max_y = js_max(b.max_y, it.bounds.max_y);
+            b.min_x = minimum(b.min_x, it.bounds.min_x);
+            b.min_y = minimum(b.min_y, it.bounds.min_y);
+            b.max_x = maximum(b.max_x, it.bounds.max_x);
+            b.max_y = maximum(b.max_y, it.bounds.max_y);
         };
         match ids {
             Some(ids) => ids.iter().filter_map(|&id| self.get(id)).for_each(&mut add),

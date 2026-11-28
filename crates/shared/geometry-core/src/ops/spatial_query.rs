@@ -15,7 +15,7 @@ use crate::geom::centroid::shape_centroid;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geom::region::{inside_area, ring_edges};
 use crate::geometry::{Bounds, dist, empty_bounds, extend_bounds, is_empty_bounds};
-use crate::jsmath::{atan2, cos, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
@@ -275,16 +275,16 @@ pub(crate) fn arc_toward(e: &Edge, q: Vec2) -> Option<Vec2> {
 pub(crate) fn edge_gap(e1: &Edge, e2: &Edge) -> f64 {
     let mut best = f64::INFINITY;
     for p in ends(e1) {
-        best = js_min(best, closest_on_edge(e2, p).d);
+        best = minimum(best, closest_on_edge(e2, p).d);
     }
     for p in ends(e2) {
-        best = js_min(best, closest_on_edge(e1, p).d);
+        best = minimum(best, closest_on_edge(e1, p).d);
     }
     for (arc, other) in [(e1, e2), (e2, e1)] {
         if let Edge::Arc { c, .. } = *arc {
             let q = closest_on_edge(other, c).p;
             if let Some(p) = arc_toward(arc, q) {
-                best = js_min(best, closest_on_edge(other, p).d);
+                best = minimum(best, closest_on_edge(other, p).d);
             }
         }
     }
@@ -367,20 +367,20 @@ pub fn distance(a: &Geometry, b: &Geometry) -> f64 {
     let mut best = f64::INFINITY;
     for &p in &a.points {
         for &q in &b.points {
-            best = js_min(best, dist(p, q));
+            best = minimum(best, dist(p, q));
         }
         for e in &b.edges {
-            best = js_min(best, closest_on_edge(e, p).d);
+            best = minimum(best, closest_on_edge(e, p).d);
         }
     }
     for &q in &b.points {
         for e in &a.edges {
-            best = js_min(best, closest_on_edge(e, q).d);
+            best = minimum(best, closest_on_edge(e, q).d);
         }
     }
     for e1 in &a.edges {
         for e2 in &b.edges {
-            best = js_min(best, edge_gap(e1, e2));
+            best = minimum(best, edge_gap(e1, e2));
         }
     }
     best
@@ -401,7 +401,7 @@ pub fn relate(a: &Geometry, b: &Geometry, relation: Relation, within: f64) -> bo
         // Not farther than the distance: a hair over by rounding still counts.
         Relation::Near => {
             boxes_meet(&a.bounds, &b.bounds, within + TOLERANCE)
-                && distance(a, b) <= within + 1e-9 * js_max(within.abs(), 1.0)
+                && distance(a, b) <= within + 1e-9 * maximum(within.abs(), 1.0)
         }
         Relation::CenterIn => center_in(a, b),
     }
@@ -410,7 +410,7 @@ pub fn relate(a: &Geometry, b: &Geometry, relation: Relation, within: f64) -> bo
 /// How far around `a`'s box a reference can be and still stand in the relation.
 pub fn reach(relation: Relation, within: f64) -> f64 {
     match relation {
-        Relation::Near => js_max(within, 0.0) + TOLERANCE,
+        Relation::Near => maximum(within, 0.0) + TOLERANCE,
         _ => TOLERANCE,
     }
 }

@@ -15,7 +15,7 @@ use crate::entity::{Shape as Kind, area_parts};
 use crate::geom::intersect::point_at as at;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::ops::spatial_query::{Geometry, geometry_of, inside};
 use crate::vec2::Vec2;
@@ -237,8 +237,8 @@ pub fn tolerance(a: &Bounds, b: &Bounds) -> f64 {
     ]
     .iter()
     .filter(|v| v.is_finite())
-    .fold(0.0_f64, |m, v| js_max(m, v.abs()));
-    js_max(1e-9, big * 8.0 * f64::EPSILON)
+    .fold(0.0_f64, |m, v| maximum(m, v.abs()));
+    maximum(1e-9, big * 8.0 * f64::EPSILON)
 }
 
 /// What a query reads of an object for its matrix: its dimension, the edges it is noded along (an area's boundary, a
@@ -396,7 +396,7 @@ fn node(x: &Shape, y: &Shape, x_is_a: bool, both_areas: bool, eps: f64, m: &mut 
             if both_areas {
                 let n = normal(e, mid);
                 let len = dist(point_at(e, w[0]), point_at(e, w[1]));
-                let d = js_max(eps * 16.0, js_min(len * 1e-3, 1e-6));
+                let d = maximum(eps * 16.0, minimum(len * 1e-3, 1e-6));
                 for s in [1.0, -1.0] {
                     let q = Vec2::new(p.x + s * d * n.x, p.y + s * d * n.y);
                     let side = |g: &Shape| {

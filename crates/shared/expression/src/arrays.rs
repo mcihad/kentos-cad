@@ -8,7 +8,7 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
 
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::statistics::{self, Dec};
 
 use crate::compound::{self, Item, MOST_ITEMS};
@@ -346,7 +346,7 @@ pub fn call(f: Func, args: &[V], out: &mut String, s: &mut Scratch) -> R<'static
                 let i = i.trunc();
                 if i < 0.0 { n + i } else { i }
             };
-            let (a, b) = (js_max(at(from), 0.0), js_min(at(to), n - 1.0));
+            let (a, b) = (maximum(at(from), 0.0), minimum(at(to), n - 1.0));
             let kept: &[Item] = if a <= b && a < n {
                 &items[a as usize..=b as usize]
             } else {

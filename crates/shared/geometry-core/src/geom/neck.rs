@@ -23,7 +23,7 @@ use std::f64::consts::{PI, SQRT_2};
 
 use crate::Vec2;
 use crate::geometry::{point_in_polygon, signed_area};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::labels::geom::{inside_rings, pole, segment_distance2, signed_distance};
 
 /// How far apart the chords square to an edge are tried, metres.
@@ -66,7 +66,7 @@ pub fn least_width(rings: &[Vec<Vec2>], precision: f64) -> Option<LeastWidth> {
     if rings[0].len() < 3 {
         return None;
     }
-    let (c, d) = pole(&rings, js_max(precision, COARSE))?;
+    let (c, d) = pole(&rings, maximum(precision, COARSE))?;
     let back = |p: Vec2| Vec2::new(p.x + o.x, p.y + o.y);
     let region = Region::new(&rings, c, d, precision);
     if let Some(ch) = region.least() {
@@ -279,7 +279,7 @@ impl<'a> Region<'a> {
     /// Every chord tried.
     fn chords(&self) -> Vec<Tried> {
         // No neck is longer than the region's largest circle is wide.
-        let reach = 2.0 * (self.d + js_max(self.precision, COARSE)) + 2.0 * self.precision;
+        let reach = 2.0 * (self.d + maximum(self.precision, COARSE)) + 2.0 * self.precision;
         let mut out = Vec::new();
         for (r, ring) in self.rings.iter().enumerate() {
             for i in 0..ring.len() {
@@ -462,7 +462,7 @@ impl<'a> Region<'a> {
     /// Whether one side of a chord holds a circle as wide as the chord is long, to within the precision.
     fn holds(&self, side: &[Vec<Vec2>], ch: &Chord) -> bool {
         let half = ch.len / 2.0;
-        let need = js_max(half - self.precision, 0.0);
+        let need = maximum(half - self.precision, 0.0);
         let outer = &side[0];
         let (mut x0, mut y0, mut x1, mut y1) = (
             f64::INFINITY,
@@ -471,10 +471,10 @@ impl<'a> Region<'a> {
             f64::NEG_INFINITY,
         );
         for p in outer {
-            x0 = js_min(x0, p.x);
-            y0 = js_min(y0, p.y);
-            x1 = js_max(x1, p.x);
-            y1 = js_max(y1, p.y);
+            x0 = minimum(x0, p.x);
+            y0 = minimum(y0, p.y);
+            x1 = maximum(x1, p.x);
+            y1 = maximum(y1, p.y);
         }
         if x1 - x0 < 2.0 * need || y1 - y0 < 2.0 * need {
             return false;
@@ -585,12 +585,12 @@ fn fits(rings: &[Vec<Vec2>], r: f64, margin: f64) -> bool {
         f64::NEG_INFINITY,
     );
     for p in outer {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
-    let size = js_min(x1 - x0, y1 - y0);
+    let size = minimum(x1 - x0, y1 - y0);
     if !(size > 0.0) {
         return false;
     }

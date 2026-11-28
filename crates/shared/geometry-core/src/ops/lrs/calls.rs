@@ -10,7 +10,7 @@ use crate::api::Op;
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_arc;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::vec2::Vec2;
@@ -175,10 +175,10 @@ fn bounds_of(pts: &[Vec2]) -> Bounds {
             max_y: f64::NEG_INFINITY,
         },
         |b, p| Bounds {
-            min_x: js_min(b.min_x, p.x),
-            min_y: js_min(b.min_y, p.y),
-            max_x: js_max(b.max_x, p.x),
-            max_y: js_max(b.max_y, p.y),
+            min_x: minimum(b.min_x, p.x),
+            min_y: minimum(b.min_y, p.y),
+            max_x: maximum(b.max_x, p.x),
+            max_y: maximum(b.max_y, p.y),
         },
     )
 }

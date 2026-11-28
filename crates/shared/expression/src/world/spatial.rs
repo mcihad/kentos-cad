@@ -8,7 +8,7 @@
 use std::rc::Rc;
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::ops::geoprocess::{self, Class, clip};
 use kentos_geometry_core::ops::spatial_query::{self, Geometry, Relation, geometry_of};
 use kentos_geometry_core::store::Store;
@@ -148,7 +148,7 @@ impl Session<'_> {
                 .or_insert_with(|| store.extent(Some(&self.world.layers[l].ids)))
         }?;
         let b = &g.bounds;
-        let mut r = js_max(js_max(b.max_x - b.min_x, b.max_y - b.min_y), 1.0);
+        let mut r = maximum(maximum(b.max_x - b.min_x, b.max_y - b.min_y), 1.0);
         loop {
             let reach = padded(b, r);
             let mut best: Option<(usize, f64)> = None;

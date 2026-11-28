@@ -20,7 +20,7 @@
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, js_sign, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sign, sin};
 use crate::ops::edge_shift_arcs::{Curve, meet, sweep_to};
 use crate::ops::wall_shift::{
     Gap, Moved, TIE, bulge, edge, edge_count, ends_at, host_at, inline, level,
@@ -58,7 +58,7 @@ fn tangent(c: Vec2, p: Vec2, turn: f64) -> Vec2 {
 /// Whether `e` is within the arc from `a` that turns `sweep` about `c`, to the joins' tolerance along it.
 fn within(c: Vec2, a: Vec2, sweep: f64, r: f64, e: Vec2) -> bool {
     let (u, v) = (sub(a, c), sub(e, c));
-    let mut t = atan2(cross(u, v), dot(u, v)) * js_sign(sweep);
+    let mut t = atan2(cross(u, v), dot(u, v)) * sign(sweep);
     if t < 0.0 {
         t += 2.0 * PI;
     }
@@ -116,7 +116,7 @@ pub(crate) fn arc_gaps(
     let (a, b) = (me.pts[k], me.pts[(k + 1) % np]);
     let arc = bulge_arc(a, b, bulge(me, k))
         .ok_or_else(|| "Duvarın yay kenarının boyu yok.".to_owned())?;
-    let turn = js_sign(arc.sweep);
+    let turn = sign(arc.sweep);
     let span = arc.sweep.abs();
     let lf = left_face(me.spec);
     let rf = lf - me.spec.width;
@@ -150,17 +150,17 @@ pub(crate) fn arc_gaps(
             }
             // Its sweep as angles from this arc's start, the way this arc turns: from its end when it turns the other
             // way; the part past a full turn when that overlaps more.
-            let ot = js_sign(o.sweep);
+            let ot = sign(o.sweep);
             let s0 = turned(arc.c, a, if ot == turn { c0 } else { c1 }, turn);
             let len = o.sweep.abs();
-            let first = js_min(span, s0 + len) - s0;
+            let first = minimum(span, s0 + len) - s0;
             let wrapped = s0 + len - 2.0 * PI;
-            let (lo, hi) = if wrapped > 0.0 && js_min(span, wrapped) > first {
-                (0.0, js_min(span, wrapped))
+            let (lo, hi) = if wrapped > 0.0 && minimum(span, wrapped) > first {
+                (0.0, minimum(span, wrapped))
             } else {
-                (s0, js_min(span, s0 + len))
+                (s0, minimum(span, s0 + len))
             };
-            let lo = js_max(0.0, lo);
+            let lo = maximum(0.0, lo);
             if (hi - lo) * arc.r <= TIE {
                 continue;
             }
@@ -224,7 +224,7 @@ pub(crate) fn shift_arc(
     let (a, b) = (me.pts[k], me.pts[(k + 1) % np]);
     let arc = bulge_arc(a, b, bulge(me, k))
         .ok_or_else(|| "Duvarın yay kenarının boyu yok.".to_owned())?;
-    let turn = js_sign(arc.sweep);
+    let turn = sign(arc.sweep);
     let r1 = arc.r - turn * by;
     if !(r1 > TIE) {
         return Err(format!(
@@ -401,7 +401,7 @@ pub(crate) fn arc_corner(
     let (s0, s1) = (me.pts[side], me.pts[(side + 1) % np]);
     let arc =
         bulge_arc(s0, s1, bulge(me, side)).ok_or_else(|| "Bitişik yayın boyu yok.".to_owned())?;
-    if cross(tangent(arc.c, p, js_sign(arc.sweep)), u).abs() <= inline() {
+    if cross(tangent(arc.c, p, sign(arc.sweep)), u).abs() <= inline() {
         return Err(
             "Kaydırılan kenarın bitişiğindeki yay ona teğet (yuvarlatılmış köşe); böyle bir kenar kaydırılamaz."
                 .into(),

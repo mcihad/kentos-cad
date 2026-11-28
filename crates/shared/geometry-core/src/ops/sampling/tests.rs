@@ -18,7 +18,7 @@ use crate::entity::Shape;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{inside_area, net_area};
 use crate::geometry::Bounds;
-use crate::jsmath::{cos, js_max, js_min, sin};
+use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::ops::geoprocess::{Class, class_of};
@@ -587,10 +587,10 @@ fn cuts_along_a_line_are_the_overlays() {
             for e in crate::geom::region::ring_edges(&a.outer) {
                 let t = crate::geom::arrangement::tight_box(&e);
                 b = bx(
-                    js_min(b.min_x, t.min_x),
-                    js_min(b.min_y, t.min_y),
-                    js_max(b.max_x, t.max_x),
-                    js_max(b.max_y, t.max_y),
+                    minimum(b.min_x, t.min_x),
+                    minimum(b.min_y, t.min_y),
+                    maximum(b.max_x, t.max_x),
+                    maximum(b.max_y, t.max_y),
                 );
             }
             b
@@ -638,7 +638,7 @@ fn cuts_along_a_line_are_the_overlays() {
                     want.iter().map(net_area).sum(),
                 );
                 assert!(
-                    (sa - sb).abs() < 1e-9 * js_max(sb, 1.0),
+                    (sa - sb).abs() < 1e-9 * maximum(sb, 1.0),
                     "{across_x} {at}: {sa} {sb}\nbox {b:?}\ngot {got:?}\nwant {want:?}\narea {a:?}"
                 );
                 assert_eq!(got.len(), want.len(), "{across_x} {at}");

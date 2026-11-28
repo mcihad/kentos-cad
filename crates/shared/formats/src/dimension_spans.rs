@@ -502,13 +502,13 @@ pub fn scales_agree(
     delta: f64,
     plot_scale: f64,
 ) -> bool {
-    use kentos_geometry_core::jsmath::js_max;
+    use kentos_geometry_core::jsmath::maximum;
     use kentos_geometry_core::ops::dimension_layout::scaled_offset;
     if set.scales.is_empty() {
         return true;
     }
     let close =
-        |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * js_max(a.abs(), b.abs());
+        |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * maximum(a.abs(), b.abs());
     let Some(a) = d.annotative.as_deref() else {
         return false;
     };

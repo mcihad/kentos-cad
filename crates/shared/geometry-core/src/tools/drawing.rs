@@ -12,7 +12,7 @@ use crate::geom::bulge::{bulge_at, bulge_of_sweep, segment_tangent};
 use crate::geom::ellipse::{EllipseGeom, param_at_polar};
 use crate::geom::shapes::regular_polygon;
 use crate::geometry::dist;
-use crate::jsmath::{PI, asin, atan2, cos, hypot, js_sign, or, sin, tan};
+use crate::jsmath::{PI, asin, atan2, cos, hypot, or, sign, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -249,7 +249,7 @@ pub fn radius_bulge(last: Vec2, p: Vec2, r: f64, tangent: Option<Vec2>) -> Optio
         return None;
     }
     let side = match tangent {
-        Some(t) => or(js_sign(t.x * (p.y - last.y) - t.y * (p.x - last.x)), 1.0),
+        Some(t) => or(sign(t.x * (p.y - last.y) - t.y * (p.x - last.x)), 1.0),
         None => 1.0,
     };
     Some(side * tan(asin(c / (2.0 * r)) / 2.0))

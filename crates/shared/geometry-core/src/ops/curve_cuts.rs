@@ -14,7 +14,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, line_circle_params, line_line, on_edge_arc,
 };
 use crate::jsmath::{
-    TAU, atan2, hypot, js_cmp, js_max, js_max_all, js_min, js_min_all, or, stable_sort,
+    TAU, atan2, hypot, js_cmp, maximum, maximum_of, minimum, minimum_of, or, stable_sort,
 };
 use crate::vec2::Vec2;
 
@@ -147,8 +147,8 @@ pub fn trim_ellipse(e: &EllipseGeom, pick: Vec2, boundaries: &[Edge]) -> Cut {
         let hi = above.first().copied().unwrap_or(cuts[0] + TAU);
         return Cut::Pieces(vec![arc_of(e, hi, lo + TAU)]);
     }
-    let lo = js_max_all(std::iter::once(0.0).chain(cuts.iter().copied().filter(|&c| c < dp)));
-    let hi = js_min_all(std::iter::once(sw).chain(cuts.iter().copied().filter(|&c| c > dp)));
+    let lo = maximum_of(std::iter::once(0.0).chain(cuts.iter().copied().filter(|&c| c < dp)));
+    let hi = minimum_of(std::iter::once(sw).chain(cuts.iter().copied().filter(|&c| c > dp)));
     if lo <= 1e-9 && hi >= sw - 1e-9 {
         return Cut::Error("Tıklanan kısmı kesen bir kenar yok.".into());
     }
@@ -180,8 +180,8 @@ pub fn break_ellipse(e: &EllipseGeom, p1: Vec2, p2: Vec2) -> Cut {
         }
         return Cut::Pieces(vec![arc_of(e, 0.0, d1), arc_of(e, d1, sw)]);
     }
-    let lo = js_min(d1, d2);
-    let hi = js_max(d1, d2);
+    let lo = minimum(d1, d2);
+    let hi = maximum(d1, d2);
     let mut pieces = Vec::new();
     if lo > 1e-9 {
         pieces.push(arc_of(e, 0.0, lo));
@@ -213,7 +213,7 @@ pub fn extend_ellipse(e: &EllipseGeom, pick: Vec2, boundaries: &[Edge]) -> Geome
             norm_angle(e.t0 - t)
         };
         if delta > 1e-9 && delta < gap - 1e-9 {
-            best = js_min(best, delta);
+            best = minimum(best, delta);
         }
     }
     if !best.is_finite() {
@@ -358,9 +358,9 @@ pub fn trim_construction(e: &Construction, pick: Vec2, boundaries: &[Edge]) -> C
     let cuts = line_cuts(e, boundaries);
     let tp = param_on(e, pick);
     let start = if e.ray { 0.0 } else { f64::NEG_INFINITY };
-    let lo = js_max_all(std::iter::once(start).chain(cuts.iter().copied().filter(|&c| c < tp)));
+    let lo = maximum_of(std::iter::once(start).chain(cuts.iter().copied().filter(|&c| c < tp)));
     let hi =
-        js_min_all(std::iter::once(f64::INFINITY).chain(cuts.iter().copied().filter(|&c| c > tp)));
+        minimum_of(std::iter::once(f64::INFINITY).chain(cuts.iter().copied().filter(|&c| c > tp)));
     if lo == start && hi == f64::INFINITY {
         return Cut::Error("Tıklanan kısmı kesen bir kenar yok.".into());
     }
@@ -378,8 +378,8 @@ pub fn break_construction(e: &Construction, p1: Vec2, p2: Vec2) -> Cut {
     let t1 = param_on(e, p1);
     let t2 = param_on(e, p2);
     let start = if e.ray { 0.0 } else { f64::NEG_INFINITY };
-    let lo = js_max(start, js_min(t1, t2));
-    let hi = js_max(t1, t2);
+    let lo = maximum(start, minimum(t1, t2));
+    let hi = maximum(t1, t2);
     if (t1 - t2).abs() < 1e-9 {
         if lo <= start + 1e-9 {
             return Cut::Error(

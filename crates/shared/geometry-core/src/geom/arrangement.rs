@@ -16,7 +16,7 @@ use std::hash::BuildHasherDefault;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geometry::Bounds;
 use crate::jsmath::{
-    PI, TAU, atan2, cos, hypot, js_cmp, js_max, js_max_all, js_min, js_min_all, js_round, js_sign,
+    PI, TAU, atan2, cos, hypot, js_cmp, js_round, maximum, maximum_of, minimum, minimum_of, sign,
     sin, stable_sort,
 };
 use crate::predicates::{orient2d, orientation};
@@ -220,10 +220,10 @@ fn split_full_circles(edges: &[Edge]) -> Vec<Edge> {
 pub fn edge_box(e: &Edge) -> Bounds {
     match *e {
         Edge::Seg { a, b } => Bounds {
-            min_x: js_min(a.x, b.x),
-            min_y: js_min(a.y, b.y),
-            max_x: js_max(a.x, b.x),
-            max_y: js_max(a.y, b.y),
+            min_x: minimum(a.x, b.x),
+            min_y: minimum(a.y, b.y),
+            max_x: maximum(a.x, b.x),
+            max_y: maximum(a.y, b.y),
         },
         Edge::Arc { c, r, .. } => Bounds {
             min_x: c.x - r,
@@ -246,10 +246,10 @@ pub fn tight_box(e: &Edge) -> Bounds {
     let a = point_at(e, 0.0);
     let b = point_at(e, 1.0);
     let mut bx = Bounds {
-        min_x: js_min(a.x, b.x),
-        min_y: js_min(a.y, b.y),
-        max_x: js_max(a.x, b.x),
-        max_y: js_max(a.y, b.y),
+        min_x: minimum(a.x, b.x),
+        min_y: minimum(a.y, b.y),
+        max_x: maximum(a.x, b.x),
+        max_y: maximum(a.y, b.y),
     };
     for k in 0..4 {
         let theta = (k as f64 * PI) / 2.0;
@@ -258,10 +258,10 @@ pub fn tight_box(e: &Edge) -> Bounds {
         }
         let x = c.x + r * cos(theta);
         let y = c.y + r * sin(theta);
-        bx.min_x = js_min(bx.min_x, x);
-        bx.max_x = js_max(bx.max_x, x);
-        bx.min_y = js_min(bx.min_y, y);
-        bx.max_y = js_max(bx.max_y, y);
+        bx.min_x = minimum(bx.min_x, x);
+        bx.max_x = maximum(bx.max_x, x);
+        bx.min_y = minimum(bx.min_y, y);
+        bx.max_y = maximum(bx.max_y, y);
     }
     bx
 }
@@ -295,7 +295,7 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
         let in_disk = hypot(p.x - c.x, p.y - c.y) < r;
         if sweep.abs() >= TAU - 1e-12 {
             if in_disk {
-                total += js_sign(sweep) * TAU;
+                total += sign(sweep) * TAU;
             }
             continue;
         }
@@ -303,7 +303,7 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
         let side = orientation(a, b, p);
         if side == 0 && (a.x - p.x) * (b.x - p.x) + (a.y - p.y) * (b.y - p.y) < 0.0 {
             // p on the chord between the ends: the arc turns half a turn around it.
-            total += js_sign(sweep) * PI;
+            total += sign(sweep) * PI;
             continue;
         }
         total += subtended(a, b, p);
@@ -312,7 +312,7 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
         }
         // A counter-clockwise arc bulges to the right of its chord a→b.
         if if sweep > 0.0 { side < 0 } else { side > 0 } {
-            total += js_sign(sweep) * TAU;
+            total += sign(sweep) * TAU;
         }
     }
     js_round(total / TAU)
@@ -366,18 +366,18 @@ impl<'a> WindingIndex<'a> {
                     u_of(b.min_x, b.max_y),
                     u_of(b.max_x, b.max_y),
                 ];
-                (js_min_all(us), js_max_all(us))
+                (minimum_of(us), maximum_of(us))
             })
             .collect();
         let mut lo = f64::INFINITY;
         let mut hi = f64::NEG_INFINITY;
         for &(a, b) in &ranges {
-            lo = js_min(lo, a);
-            hi = js_max(hi, b);
+            lo = minimum(lo, a);
+            hi = maximum(hi, b);
         }
         let u0 = if lo.is_finite() { lo } else { 0.0 };
-        let count = js_max(1.0, js_min(4096.0, (edges.len() as f64 / 4.0).ceil()));
-        let h = js_max((hi - lo) / count, 1e-12);
+        let count = maximum(1.0, minimum(4096.0, (edges.len() as f64 / 4.0).ceil()));
+        let h = maximum((hi - lo) / count, 1e-12);
         let mut bands: Vec<Vec<usize>> = vec![Vec::new(); count as usize + 1];
         for (i, &(a, b)) in ranges.iter().enumerate() {
             let k1 = ((b - u0) / h).floor();
@@ -451,7 +451,7 @@ impl<'a> WindingIndex<'a> {
                 }
                 if !full {
                     let hit = Vec2::new(p.x + t * RAY_X, p.y + t * RAY_Y);
-                    let tol = 1e-9 * js_max(1.0, r);
+                    let tol = 1e-9 * maximum(1.0, r);
                     let s0 = point_at(e, 0.0);
                     let s1 = point_at(e, 1.0);
                     if hypot(hit.x - s0.x, hit.y - s0.y) < tol
@@ -461,7 +461,7 @@ impl<'a> WindingIndex<'a> {
                     }
                 }
                 // Travel direction at θ, across the ray (its u component).
-                let du = (-sin(theta) * -RAY_Y + cos(theta) * RAY_X) * js_sign(sweep);
+                let du = (-sin(theta) * -RAY_Y + cos(theta) * RAY_X) * sign(sweep);
                 w += if du > 0.0 { 1.0 } else { -1.0 };
             }
         }
@@ -798,13 +798,13 @@ impl BoxCells {
         let n = boxes.len();
         let mut sum = 0.0;
         for b in boxes {
-            sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+            sum += maximum(b.max_x - b.min_x, b.max_y - b.min_y);
         }
         let mut g = BoxCells {
             cells: FastMap::default(),
             big: Vec::new(),
             is_big: vec![false; n],
-            size: js_max((sum / js_max(1.0, n as f64)) * 2.0, 1e-9),
+            size: maximum((sum / maximum(1.0, n as f64)) * 2.0, 1e-9),
         };
         for (i, b) in boxes.iter().enumerate() {
             let (x0, x1) = (g.cell(b.min_x - TOL), g.cell(b.max_x + TOL));
@@ -848,8 +848,8 @@ impl BoxCells {
                     }
                     // The low corner of the meeting (within TOL), in both boxes' cells: its cell tries the pair.
                     let corner = (
-                        self.cell(js_max(a.min_x, b.min_x) - TOL),
-                        self.cell(js_max(a.min_y, b.min_y) - TOL),
+                        self.cell(maximum(a.min_x, b.min_x) - TOL),
+                        self.cell(maximum(a.min_y, b.min_y) - TOL),
                     );
                     if corner != key {
                         continue;
@@ -900,9 +900,9 @@ impl PieceGrid {
     fn new(boxes: &[Bounds]) -> PieceGrid {
         let mut sum = 0.0;
         for b in boxes {
-            sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+            sum += maximum(b.max_x - b.min_x, b.max_y - b.min_y);
         }
-        let size = js_max((sum / js_max(1.0, boxes.len() as f64)) * 2.0, 1e-9);
+        let size = maximum((sum / maximum(1.0, boxes.len() as f64)) * 2.0, 1e-9);
         let mut g = PieceGrid {
             cells: FastMap::default(),
             big: Vec::new(),
@@ -1025,7 +1025,7 @@ pub fn classify_with(
             Edge::Seg { a, b } => ((b.x - a.x) / len, (b.y - a.y) / len),
             Edge::Arc { a0, sweep, .. } => {
                 let a = a0 + sweep / 2.0;
-                let s = js_sign(sweep);
+                let s = sign(sweep);
                 (-sin(a) * s, cos(a) * s)
             }
         };
@@ -1043,9 +1043,9 @@ pub fn classify_with(
             {
                 return;
             }
-            near = js_min(near, closest_on_edge(&pieces[k].edge, m).d);
+            near = minimum(near, closest_on_edge(&pieces[k].edge, m).d);
         });
-        let eps = js_max(near * 0.25, 1e-9);
+        let eps = maximum(near * 0.25, 1e-9);
         shaky[index] = eps < 10.0 * TOL;
         let q = Vec2::new(m.x - ty * eps, m.y + tx * eps);
         left.clear();
@@ -1240,7 +1240,7 @@ mod tests {
                 if hypot(p.x - c.x, p.y - c.y) < r {
                     let side = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
                     if if sweep > 0.0 { side < 0.0 } else { side > 0.0 } {
-                        total += js_sign(sweep) * TAU;
+                        total += sign(sweep) * TAU;
                     }
                 }
             }

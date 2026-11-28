@@ -431,7 +431,10 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [x] Ad: `js_hypot` → `hypot` (890 kullanım, 233 dosya; mekanik, davranış aynı).
   - Açık, bu işten bağımsız (ADR 9403 §6): DWG codec'inin bir sınaması, Python kanalının tam koşusunda
     `cad.arch.performance` ve `cad.arch.ifc` durumları, `fixtures/raster/v1/georef.json` üretecinin ortam farkı.
-  - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).
+  - [x] Davranışı değişmeyen adlar: `js_min`/`js_max` → `minimum`/`maximum` (IEEE 754-2019), `js_min_all`/`js_max_all`
+    → `minimum_of`/`maximum_of`, `js_sign` → `sign` (tanımları `kentos-num`'da), `js_floor` → `f64::floor`
+    (1 969 kullanım, 279 dosya).
+  - [ ] Kalan taşınmış yardımcılar: `js_cmp`, `truthy`/`or`, `stable_sort`, `js_hypot_n` (tek tek karar).
   - [ ] Yuvarlama: 159 `js_round` yerinin sınıflandırması ve geçişi.
   - [ ] Metin: tek `trim`, tek katı sayı okuyucu, sayı yazımı (BK-50 ile).
   - [x] Aşkın işlevler (sahibin kararı 28 Kasım 2026: `pxfm`): `kentos-num` 21 işlevi doğru yuvarlanmış verir;

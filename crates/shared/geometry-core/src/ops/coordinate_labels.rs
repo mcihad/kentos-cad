@@ -15,7 +15,7 @@ use crate::api::Op;
 use crate::api::json::{FromJson, Json, read_field};
 use crate::display::fixed;
 use crate::entity::Shape;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::table::Listed;
 use crate::ops::vertex_points::Grid;
@@ -83,8 +83,8 @@ pub fn places(objects: &[Listed]) -> Vec<Place> {
         };
         let (lo, hi) = found.iter().fold((first, first), |(lo, hi), v| {
             (
-                Vec2::new(js_min(lo.x, v.0.x), js_min(lo.y, v.0.y)),
-                Vec2::new(js_max(hi.x, v.0.x), js_max(hi.y, v.0.y)),
+                Vec2::new(minimum(lo.x, v.0.x), minimum(lo.y, v.0.y)),
+                Vec2::new(maximum(hi.x, v.0.x), maximum(hi.y, v.0.y)),
             )
         });
         let centre = Vec2::new((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0);
@@ -355,7 +355,7 @@ pub fn label(place: &Place, o: &Options, units: &LabelUnits) -> Option<Label> {
         let widest = words
             .iter()
             .map(|t| width_em_in(t, o.font, o.bold) * h * o.width_factor)
-            .fold(0.0, js_max);
+            .fold(0.0, maximum);
         let w = widest + h;
         let x = e.x + h / 2.0 * sx;
         for (k, text) in words.into_iter().enumerate() {

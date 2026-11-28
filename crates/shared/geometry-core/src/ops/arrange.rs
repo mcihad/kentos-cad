@@ -15,7 +15,7 @@ use crate::api::json::Json;
 use crate::block::{Blocks, pieces_bounds};
 use crate::entity::{Entity, Shape, entity_bounds_in};
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::text::Font;
 use crate::vec2::Vec2;
@@ -119,10 +119,10 @@ pub fn at_of(b: &Bounds, mode: Mode) -> f64 {
 pub fn union(boxes: &[Bounds]) -> Option<Bounds> {
     let mut u = empty_bounds();
     for b in boxes {
-        u.min_x = js_min(u.min_x, b.min_x);
-        u.min_y = js_min(u.min_y, b.min_y);
-        u.max_x = js_max(u.max_x, b.max_x);
-        u.max_y = js_max(u.max_y, b.max_y);
+        u.min_x = minimum(u.min_x, b.min_x);
+        u.min_y = minimum(u.min_y, b.min_y);
+        u.max_x = maximum(u.max_x, b.max_x);
+        u.max_y = maximum(u.max_y, b.max_y);
     }
     (!is_empty_bounds(&u)).then_some(u)
 }

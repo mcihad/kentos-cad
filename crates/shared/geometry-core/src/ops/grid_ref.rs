@@ -10,7 +10,7 @@
 //! - **Along a segment** (an opening on its wall's face): where grids cross the segment, before and after a point on
 //!   it; one at the point counts before.
 
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::ops::wall_shift::{PARALLEL, TIE};
 use crate::vec2::Vec2;
 
@@ -89,7 +89,7 @@ pub fn beside(
             &mut best[usize::from(!left)],
             GridGap {
                 grid: i,
-                distance: if left { js_max(0.0, o) } else { -o },
+                distance: if left { maximum(0.0, o) } else { -o },
                 from: at,
                 to: along(at, n, o),
             },
@@ -127,7 +127,7 @@ pub fn around(
                 &mut best[k],
                 GridGap {
                     grid: i,
-                    distance: js_max(0.0, o),
+                    distance: maximum(0.0, o),
                     from: at,
                     to: along(at, n, o),
                 },
@@ -176,7 +176,7 @@ pub fn crossing_at(
             &mut best[usize::from(!before)],
             GridGap {
                 grid: i,
-                distance: js_max(0.0, if before { s - t } else { t - s }),
+                distance: maximum(0.0, if before { s - t } else { t - s }),
                 from: at,
                 to: along(a, u, t),
             },

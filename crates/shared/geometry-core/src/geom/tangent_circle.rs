@@ -7,7 +7,7 @@
 use crate::api::Op;
 use crate::geom::arc::Circle;
 use crate::geom::intersect::{Edge, circle_circle, line_circle_params, line_line};
-use crate::jsmath::{hypot, js_hypot_n, js_max, js_max_all, or};
+use crate::jsmath::{hypot, js_hypot_n, maximum, maximum_of, or};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -29,7 +29,7 @@ pub fn tangent_tangent_radius(
     // Two parallel lines 2r apart touch every circle of radius r between them (docs/adr/0289): the one beside
     // the picks, its centre on the middle line across from their midpoint.
     if let (Edge::Seg { a, b }, Some(gap)) = (*e1, parallel_gap(e1, e2))
-        && (gap - 2.0 * r).abs() <= 1e-9 * js_max(1.0, r)
+        && (gap - 2.0 * r).abs() <= 1e-9 * maximum(1.0, r)
     {
         let Edge::Seg { a: a2, .. } = *e2 else {
             return None;
@@ -230,8 +230,8 @@ fn solve3(ks: &[Constraint; 3], c0: Vec2, r0: f64, scale: f64) -> Option<Circle>
             break;
         }
     }
-    let worst = js_max_all(ks.iter().map(|k| residual(k, c, r)[0].abs()));
-    (worst <= 1e-9 * js_max(scale, r)).then_some(Circle { c, r })
+    let worst = maximum_of(ks.iter().map(|k| residual(k, c, r)[0].abs()));
+    (worst <= 1e-9 * maximum(scale, r)).then_some(Circle { c, r })
 }
 
 pub fn tangent_tangent_tangent(edges: &[Edge; 3], picks: &[Vec2; 3]) -> Option<Circle> {
@@ -242,7 +242,7 @@ pub fn tangent_tangent_tangent(edges: &[Edge; 3], picks: &[Vec2; 3]) -> Option<C
     );
     let local = edges.map(|e| shift(&e, o));
     let lp = picks.map(|p| Vec2::new(p.x - o.x, p.y - o.y));
-    let scale = js_max_all(std::iter::once(1.0).chain(lp.iter().map(|p| hypot(p.x, p.y))));
+    let scale = maximum_of(std::iter::once(1.0).chain(lp.iter().map(|p| hypot(p.x, p.y))));
     let options: Vec<Vec<Constraint>> = local
         .iter()
         .map(|e| match *e {

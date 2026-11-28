@@ -11,7 +11,7 @@
 
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_tangent};
 use crate::geometry::signed_area;
-use crate::jsmath::{TAU, cos, hypot, js_max, sin};
+use crate::jsmath::{TAU, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
 
 /// How far a mitre may reach from its vertex, in the wider half width.
@@ -50,7 +50,7 @@ fn edge_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
     let Some(arc) = bulge_arc(a, b, bulge) else {
         return vec![a, b];
     };
-    let k = js_max(2.0, (arc.sweep.abs() / STEP).ceil()) as usize;
+    let k = maximum(2.0, (arc.sweep.abs() / STEP).ceil()) as usize;
     let mut out = Vec::with_capacity(k + 1);
     out.push(a);
     for i in 1..k {
@@ -79,7 +79,7 @@ fn strip(a: Vec2, b: Vec2, bulge: f64, h0: f64, h1: f64) -> Option<Vec<Vec2>> {
             Vec2::new(a.x + n.x * h0, a.y + n.y * h0),
         ]));
     };
-    let k = js_max(2.0, (arc.sweep.abs() / STEP).ceil()) as usize;
+    let k = maximum(2.0, (arc.sweep.abs() / STEP).ceil()) as usize;
     let mut outer = Vec::with_capacity(k + 1);
     let mut inner = Vec::with_capacity(k + 1);
     for i in 0..=k {
@@ -91,7 +91,7 @@ fn strip(a: Vec2, b: Vec2, bulge: f64, h0: f64, h1: f64) -> Option<Vec<Vec2>> {
             arc.c.x + (arc.r + h) * c,
             arc.c.y + (arc.r + h) * s,
         ));
-        let ri = js_max(arc.r - h, 0.0);
+        let ri = maximum(arc.r - h, 0.0);
         inner.push(Vec2::new(arc.c.x + ri * c, arc.c.y + ri * s));
     }
     inner.reverse();
@@ -116,7 +116,7 @@ fn wedge(v: Vec2, tin: Vec2, hin: f64, tout: Vec2, hout: f64) -> Option<Vec<Vec2
     let s = (d.x * tout.y - d.y * tout.x) / cross;
     let m = Vec2::new(p1.x + tin.x * s, p1.y + tin.y * s);
     let reach = hypot(m.x - v.x, m.y - v.y);
-    let ring = if s >= 0.0 && reach <= MITRE * js_max(hin, hout) {
+    let ring = if s >= 0.0 && reach <= MITRE * maximum(hin, hout) {
         vec![v, p1, m, p2]
     } else {
         vec![v, p1, p2]

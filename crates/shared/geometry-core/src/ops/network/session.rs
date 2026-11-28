@@ -23,7 +23,7 @@ use crate::api::json::{self, Json};
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::js_min;
+use crate::jsmath::minimum;
 use crate::ops::parts::one_area;
 use crate::store::Store;
 use crate::vec2::Vec2;
@@ -804,7 +804,7 @@ impl NetworkSession {
                 .cmp(&key(b.facility))
                 .then(a.band.cmp(&b.band))
                 .then(a.span.piece.cmp(&b.span.piece))
-                .then(js_min(a.span.a, a.span.b).total_cmp(&js_min(b.span.a, b.span.b)))
+                .then(minimum(a.span.a, a.span.b).total_cmp(&minimum(b.span.a, b.span.b)))
         });
         Ok(Served {
             lines: sorted

@@ -12,7 +12,7 @@ use super::{
 use kentos_geometry_core::{
     Vec2,
     geom::ellipse::param_of_point,
-    jsmath::{atan2, cos, hypot, js_max, js_min, js_sign, sin},
+    jsmath::{atan2, cos, hypot, maximum, minimum, sign, sin},
 };
 use std::f64::consts::TAU;
 
@@ -22,7 +22,7 @@ const MAX_PIECES: usize = 20_000;
 
 /// The share of a sweep a parameter may run past an end and still be that end.
 fn along_sweep(angle: f64, start: f64, sweep: f64) -> f64 {
-    let d = ((angle - start) * js_sign(sweep)).rem_euclid(TAU);
+    let d = ((angle - start) * sign(sweep)).rem_euclid(TAU);
     let s = sweep.abs();
     if d <= s {
         d / s
@@ -125,12 +125,12 @@ pub(super) fn distances(route: &Route, path: &[Vec2]) -> Option<Vec<f64>> {
     }
     let ordered = out
         .windows(2)
-        .all(|w| w[1] >= w[0] - 1e-9 * js_max(total, 1.));
+        .all(|w| w[1] >= w[0] - 1e-9 * maximum(total, 1.));
     (ordered && out.iter().all(|d| d.is_finite())).then(|| {
         let mut top = 0.;
         out.into_iter()
             .map(|d| {
-                top = js_max(top, js_min(d, total));
+                top = maximum(top, minimum(d, total));
                 top
             })
             .collect()
@@ -226,7 +226,7 @@ pub(super) fn ink(
                 left = dash[di];
                 continue;
             }
-            let amount = js_min(left, len - at);
+            let amount = minimum(left, len - at);
             let to = at + amount;
             if to <= at {
                 return None;
@@ -283,7 +283,7 @@ pub(super) fn ink(
                 if t >= end + if closed { -slack } else { slack } {
                     break;
                 }
-                let t = js_min(t, end);
+                let t = minimum(t, end);
                 let seg = segments
                     .iter()
                     .position(|g| t <= g.3 && g.3 > g.2)

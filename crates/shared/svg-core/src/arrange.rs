@@ -9,7 +9,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{
-    PI, cos, js_cmp, js_max, js_min, js_round, sin, stable_sort, tan,
+    PI, cos, js_cmp, js_round, maximum, minimum, sin, stable_sort, tan,
 };
 
 use crate::model::{rotate_about as rotation, shape_box, transform_shape};
@@ -28,10 +28,10 @@ kentos_geometry_core::json_struct!(Unit { ids, bx => "box" });
 
 fn union_box(a: &Bounds, b: &Bounds) -> Bounds {
     Bounds {
-        min_x: js_min(a.min_x, b.min_x),
-        min_y: js_min(a.min_y, b.min_y),
-        max_x: js_max(a.max_x, b.max_x),
-        max_y: js_max(a.max_y, b.max_y),
+        min_x: minimum(a.min_x, b.min_x),
+        min_y: minimum(a.min_y, b.min_y),
+        max_x: maximum(a.max_x, b.max_x),
+        max_y: maximum(a.max_y, b.max_y),
     }
 }
 
@@ -363,8 +363,8 @@ pub fn rect_array(b: &Bounds, rows: f64, cols: f64, dx: f64, dy: f64, gap: bool)
     let sx = if gap { b.max_x - b.min_x + dx } else { dx };
     let sy = if gap { b.max_y - b.min_y + dy } else { dy };
     let mut out = Vec::new();
-    let nr = js_max(1.0, js_round(rows));
-    let nc = js_max(1.0, js_round(cols));
+    let nr = maximum(1.0, js_round(rows));
+    let nc = maximum(1.0, js_round(cols));
     let mut r = 0.0;
     while r < nr {
         let mut c = 0.0;
@@ -387,7 +387,7 @@ pub fn polar_array(
     rotate: bool,
     ccw: bool,
 ) -> Vec<Matrix> {
-    let n = js_max(1.0, js_round(count));
+    let n = maximum(1.0, js_round(count));
     let full = angle.abs() >= 360.0 - 1e-9;
     let step = if n > 1.0 {
         angle / (if full { n } else { n - 1.0 })

@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep, clean_bulge_path};
 use crate::geom::intersect::{circle_circle, line_circle_params, line_line};
-use crate::jsmath::{atan2, hypot, js_cmp, js_max, js_min, or, stable_sort};
+use crate::jsmath::{atan2, hypot, js_cmp, maximum, minimum, or, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -86,7 +86,10 @@ pub fn side_of(pts: &[Vec2], closed: bool, p: Vec2) -> i32 {
         let dx = b.x - a.x;
         let dy = b.y - a.y;
         let l2 = or(dx * dx + dy * dy, 1.0);
-        let t = js_max(0.0, js_min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+        let t = maximum(
+            0.0,
+            minimum(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2),
+        );
         let dd = hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
         if dd < best {
             best = dd;

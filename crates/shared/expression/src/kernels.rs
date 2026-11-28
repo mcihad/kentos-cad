@@ -4,7 +4,7 @@
 //! take the objects that were not. A fast pass settles only objects where
 //! the rules would give the same.
 
-use kentos_geometry_core::jsmath::{js_max, pow};
+use kentos_geometry_core::jsmath::{maximum, pow};
 
 use crate::exec::{BOOL, Col, NULL, NUM, Out, TEXT, THROWN};
 use crate::functions;
@@ -53,7 +53,7 @@ fn texts_equal(other: Col, c: &str, same: bool, out: &mut Out) -> bool {
 /// Numbers within 1e-9 of each other (relative above 1): the language's equality.
 #[inline]
 fn close(x: f64, y: f64) -> bool {
-    (x - y).abs() <= 1e-9 * js_max(js_max(1.0, x.abs()), y.abs())
+    (x - y).abs() <= 1e-9 * maximum(maximum(1.0, x.abs()), y.abs())
 }
 
 /// `f` over the batch as if both sides held finite numbers; whether some object did not.

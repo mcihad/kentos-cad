@@ -11,7 +11,7 @@ use super::{
     unread_note,
 };
 use crate::entity::Shape;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::ops::sampling::random::Sequence;
 
 /// The neighbourhood a run asks for: the concept, the band (none: the
@@ -260,7 +260,7 @@ fn permute_moran(
     }
     // Every permuted I is at most this in size: what a tie is measured against.
     let total: f64 = m.nb.lists.iter().flatten().map(|&(_, w)| w.abs()).sum();
-    let zmax = m.z.iter().fold(0.0f64, |a, v| js_max(a, v.abs()));
+    let zmax = m.z.iter().fold(0.0f64, |a, v| maximum(a, v.abs()));
     let bound = nf / m.s0 * total * zmax * zmax / m.m2;
     let mut seq = Sequence::new(inference.seed);
     let mut sims = Vec::with_capacity(r);

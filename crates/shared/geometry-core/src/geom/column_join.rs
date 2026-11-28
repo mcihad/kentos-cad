@@ -17,7 +17,7 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::line_line;
 use crate::geom::wall::{Body, ComponentFill, Detail, Drawn, Line, Spec, Stroke};
 use crate::geometry::{Bounds, point_in_polygon};
-use crate::jsmath::{TAU, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
 
 /// Lengths and parameters closer than this are the same.
@@ -85,10 +85,10 @@ fn bounds_of(pts: &[Vec2]) -> Bounds {
         max_y: f64::NEG_INFINITY,
     };
     for p in pts {
-        b.min_x = js_min(b.min_x, p.x);
-        b.min_y = js_min(b.min_y, p.y);
-        b.max_x = js_max(b.max_x, p.x);
-        b.max_y = js_max(b.max_y, p.y);
+        b.min_x = minimum(b.min_x, p.x);
+        b.min_y = minimum(b.min_y, p.y);
+        b.max_x = maximum(b.max_x, p.x);
+        b.max_y = maximum(b.max_y, p.y);
     }
     b
 }

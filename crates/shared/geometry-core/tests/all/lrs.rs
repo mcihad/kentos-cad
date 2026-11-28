@@ -6,7 +6,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::lrs::{Route, RouteIndex, RoutePart};
 use serde_json::{Value, json};
 
@@ -31,7 +31,7 @@ fn same(got: &Value, want: &Value, what: &str) {
         (Value::Number(g), Value::Number(w)) => {
             let (g, w) = (g.as_f64().expect("a number"), w.as_f64().expect("a number"));
             assert!(
-                (g - w).abs() <= TOL * js_max(w.abs(), 1.0),
+                (g - w).abs() <= TOL * maximum(w.abs(), 1.0),
                 "{what}: {g} ≠ {w}"
             );
         }
@@ -273,7 +273,7 @@ fn least(runs: usize, mut work: impl FnMut() -> usize) -> (f64, usize) {
     for _ in 0..runs {
         let t = std::time::Instant::now();
         count = work();
-        best = js_min(best, t.elapsed().as_secs_f64() * 1000.0);
+        best = minimum(best, t.elapsed().as_secs_f64() * 1000.0);
     }
     (best, count)
 }

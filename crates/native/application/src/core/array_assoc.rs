@@ -14,7 +14,7 @@ use kentos_commands::{
 use kentos_domain::arrays::{item_insert, placements};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::entity_bounds_in;
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 
 use crate::checks::{Stop, error};
 use crate::codes;
@@ -39,10 +39,10 @@ fn middle(doc: &Document, sources: &[&Entity]) -> Option<Vec2> {
     );
     for e in sources {
         let b = entity_bounds_in(&shape(e), font);
-        lo_x = js_min(lo_x, b.min_x);
-        lo_y = js_min(lo_y, b.min_y);
-        hi_x = js_max(hi_x, b.max_x);
-        hi_y = js_max(hi_y, b.max_y);
+        lo_x = minimum(lo_x, b.min_x);
+        lo_y = minimum(lo_y, b.min_y);
+        hi_x = maximum(hi_x, b.max_x);
+        hi_y = maximum(hi_y, b.max_y);
     }
     (lo_x <= hi_x && lo_y <= hi_y).then(|| Vec2 {
         x: (lo_x + hi_x) / 2.0,

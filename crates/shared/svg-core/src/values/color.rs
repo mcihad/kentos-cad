@@ -1,7 +1,7 @@
 //! Colours (every CSS syntax and keyword, with alpha) and paints (the
 //! symbol's colours, references and their fallback chains).
 
-use kentos_geometry_core::jsmath::{js_max, js_min, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
 use kentos_style_core::js::text::{is_space, slice, trim};
 
 use super::number::{parse_float, parse_hex, split_on};
@@ -169,7 +169,7 @@ kentos_geometry_core::json_struct!(Color { hex, alpha });
 
 /// Two hex digits of a channel (0–255, rounded; NaN writes "NAN" as JavaScript does).
 pub fn hex2(v: f64) -> String {
-    let r = js_round(js_max(0.0, js_min(255.0, v)));
+    let r = js_round(maximum(0.0, minimum(255.0, v)));
     if r.is_nan() {
         return "NAN".into();
     }
@@ -177,13 +177,13 @@ pub fn hex2(v: f64) -> String {
 }
 
 pub fn clamp01(v: f64) -> f64 {
-    js_max(0.0, js_min(1.0, v))
+    maximum(0.0, minimum(1.0, v))
 }
 
 fn hsl(h: f64, s: f64, l: f64) -> [f64; 3] {
     let k = |n: f64| (n + h / 30.0) % 12.0;
-    let a = s * js_min(l, 1.0 - l);
-    let f = |n: f64| l - a * js_max(-1.0, js_min(js_min(k(n) - 3.0, 9.0 - k(n)), 1.0));
+    let a = s * minimum(l, 1.0 - l);
+    let f = |n: f64| l - a * maximum(-1.0, minimum(minimum(k(n) - 3.0, 9.0 - k(n)), 1.0));
     [f(0.0) * 255.0, f(8.0) * 255.0, f(4.0) * 255.0]
 }
 
@@ -411,7 +411,7 @@ pub fn is_near_black(hex: &str) -> bool {
     let r = parse_hex(&slice(hex, 1, Some(3)));
     let g = parse_hex(&slice(hex, 3, Some(5)));
     let b = parse_hex(&slice(hex, 5, Some(7)));
-    js_max(js_max(r, g), b) <= 48.0
+    maximum(maximum(r, g), b) <= 48.0
 }
 
 /// A paint value as the model's paint (black is the symbol colour); None when it cannot be read.

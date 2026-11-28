@@ -5,7 +5,7 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::table::table_geom;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::label_memo::LabelMemo;
 use kentos_geometry_core::store::labels::{LABEL_CELL, LABEL_STRIDE};
@@ -272,7 +272,7 @@ fn the_memos_records_are_a_fresh_reads() {
             _ => {}
         }
         let cells = (step % 4 != 0).then(|| {
-            let side = js_max(view.max_x - view.min_x, view.max_y - view.min_y) * 0.55;
+            let side = maximum(view.max_x - view.min_x, view.max_y - view.min_y) * 0.55;
             Bounds {
                 min_x: view.min_x - side,
                 min_y: view.min_y - side,

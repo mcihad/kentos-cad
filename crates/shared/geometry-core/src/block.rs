@@ -43,7 +43,7 @@ use crate::block_dynamic::Dynamic;
 use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use crate::ops::warp::{Warp, warp_shape};
@@ -170,7 +170,7 @@ impl Underlay {
         let mut p = piece.clone();
         p.stroke.pdf_fill |= matches!(p.shape, Shape::Polygon { .. });
         if self.fade > 0.0 {
-            p.stroke.transparency = Some(crate::jsmath::js_max(
+            p.stroke.transparency = Some(crate::jsmath::maximum(
                 p.stroke.transparency.unwrap_or(0.0),
                 self.fade,
             ));
@@ -1100,10 +1100,10 @@ pub fn pieces_bounds(own: Bounds, pieces: &[Piece], font: Font) -> Bounds {
     let mut b = own;
     for piece in pieces.iter().filter(|p| !shows_nothing(&p.shape)) {
         let pb = entity_bounds_in(&piece.shape, font);
-        b.min_x = js_min(b.min_x, pb.min_x);
-        b.min_y = js_min(b.min_y, pb.min_y);
-        b.max_x = js_max(b.max_x, pb.max_x);
-        b.max_y = js_max(b.max_y, pb.max_y);
+        b.min_x = minimum(b.min_x, pb.min_x);
+        b.min_y = minimum(b.min_y, pb.min_y);
+        b.max_x = maximum(b.max_x, pb.max_x);
+        b.max_y = maximum(b.max_y, pb.max_y);
     }
     b
 }

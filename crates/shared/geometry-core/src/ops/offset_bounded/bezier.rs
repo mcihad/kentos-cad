@@ -1,7 +1,7 @@
 //! Rational Bézier interval bounds for a parallel curve. Bounds use positive
 //! Bernstein weights; subdivision refines bounds, never a sampled error guess.
 
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 #[derive(Clone, Debug)]
@@ -48,8 +48,8 @@ fn cross_bounds(v: &[[f64; 3]]) -> (f64, f64) {
         }
     }
     (
-        coeff.iter().copied().fold(f64::INFINITY, js_min),
-        coeff.iter().copied().fold(f64::NEG_INFINITY, js_max),
+        coeff.iter().copied().fold(f64::INFINITY, minimum),
+        coeff.iter().copied().fold(f64::NEG_INFINITY, maximum),
     )
 }
 
@@ -63,7 +63,7 @@ pub(super) struct Bounds {
 
 impl Bezier {
     pub fn from_points(pts: &[Vec2], weights: Option<&[f64]>) -> Self {
-        let max = weights.map_or(1., |w| w.iter().copied().fold(0., js_max));
+        let max = weights.map_or(1., |w| w.iter().copied().fold(0., maximum));
         Self(
             pts.iter()
                 .enumerate()
@@ -116,8 +116,8 @@ impl Bezier {
             .iter()
             .map(|p| [p[0] - o[0] * p[2], p[1] - o[1] * p[2], p[2]])
             .collect();
-        let wmin = c.iter().map(|p| p[2]).fold(f64::INFINITY, js_min);
-        let wmax = c.iter().map(|p| p[2]).fold(0., js_max);
+        let wmin = c.iter().map(|p| p[2]).fold(f64::INFINITY, minimum);
+        let wmax = c.iter().map(|p| p[2]).fold(0., maximum);
         if !(wmin > 0.) {
             return None;
         }
@@ -131,8 +131,8 @@ impl Bezier {
         let lower = v
             .iter()
             .map(|p| (p[0] * axis[0] + p[1] * axis[1]) / len)
-            .fold(f64::INFINITY, js_min);
-        let upper = v.iter().map(|p| norm([p[0], p[1]])).fold(0., js_max);
+            .fold(f64::INFINITY, minimum);
+        let upper = v.iter().map(|p| norm([p[0], p[1]])).fold(0., maximum);
         // Leave a floating point guard on the convex-hull bounds.
         let lower = lower - upper * 1e-11;
         if !(lower > 0.) {
@@ -144,12 +144,12 @@ impl Bezier {
         let b0 = c
             .iter()
             .map(|p| norm([p[0] / p[2], p[1] / p[2]]))
-            .fold(0., js_max);
+            .fold(0., maximum);
         for _ in 0..3 {
             dc = derivative(&dc);
             derivatives.push((
-                dc.iter().map(|p| norm([p[0], p[1]])).fold(0., js_max),
-                dc.iter().map(|p| p[2].abs()).fold(0., js_max),
+                dc.iter().map(|p| norm([p[0], p[1]])).fold(0., maximum),
+                dc.iter().map(|p| p[2].abs()).fold(0., maximum),
             ));
         }
         let [(a1, w1), (a2, w2), (a3, w3)] = derivatives[..] else {
@@ -175,11 +175,11 @@ impl Bezier {
         let lo = ks
             .into_iter()
             .map(|k| 1. - d * k)
-            .fold(f64::INFINITY, js_min);
+            .fold(f64::INFINITY, minimum);
         let hi = ks
             .into_iter()
             .map(|k| 1. - d * k)
-            .fold(f64::NEG_INFINITY, js_max);
+            .fold(f64::NEG_INFINITY, maximum);
         (second.is_finite() && lo.is_finite() && hi.is_finite()).then_some(Bounds {
             second,
             regular: (lo, hi),

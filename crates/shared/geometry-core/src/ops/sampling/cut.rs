@@ -16,7 +16,7 @@ use crate::geom::arrangement::{Area, Ring, TOL, WindingIndex, winding};
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::{Edge, intersect_edges, point_at};
 use crate::geom::region::{area_source, orient_ring, ring_area, ring_edges};
-use crate::jsmath::{atan2, js_sign};
+use crate::jsmath::{atan2, sign};
 use crate::vec2::Vec2;
 
 /// The cutting line: `x = at` when `across_x`, else `y = at`.
@@ -83,7 +83,7 @@ impl Piece {
                 (w, w)
             }
             Edge::Arc { a0, sweep, .. } => {
-                let turn = js_sign(sweep) * std::f64::consts::FRAC_PI_2;
+                let turn = sign(sweep) * std::f64::consts::FRAC_PI_2;
                 (a0 + turn, a0 + sweep + turn)
             }
         }
@@ -287,8 +287,8 @@ pub fn cut_area(area: &Area, line: Line) -> [Vec<Area>; 2] {
         } else {
             (b.min_x, b.max_x)
         };
-        lo = crate::jsmath::js_min(lo, a);
-        hi = crate::jsmath::js_max(hi, z);
+        lo = crate::jsmath::minimum(lo, a);
+        hi = crate::jsmath::maximum(hi, z);
     }
     let reach = (lo - 1.0, hi + 1.0);
     let rings_in: Vec<Ring> = std::iter::once(orient_ring(&area.outer, true))

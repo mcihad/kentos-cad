@@ -16,7 +16,7 @@ use crate::api::json::{ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arrangement::Area;
 use crate::geom::region::net_area;
-use crate::jsmath::{PI, js_max};
+use crate::jsmath::{PI, maximum};
 use crate::op;
 use crate::ops::areas::{areas_of_entity, polygon_of_area};
 use crate::ops::convert::{Elevations, Zs};
@@ -114,7 +114,7 @@ pub fn square_run(shape: &Shape, zs: Option<&Zs>, rule: &Squaring) -> Option<Squ
             moved |= m;
             for (a, b) in t.pts.iter().zip(&out.pts) {
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
-                shift = js_max(shift, (dx * dx + dy * dy).sqrt());
+                shift = maximum(shift, (dx * dx + dy * dy).sqrt());
             }
             out
         })

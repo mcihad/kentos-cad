@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use crate::Vec2;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// The distance between two points.
 pub fn far(a: Vec2, b: Vec2) -> f64 {
@@ -28,7 +28,7 @@ fn apart(a: &[Vec2], b: &[Vec2]) -> Option<f64> {
     (a.len() == b.len()).then(|| {
         a.iter()
             .zip(b)
-            .fold(0.0_f64, |m, (p, q)| js_max(m, far(*p, *q)))
+            .fold(0.0_f64, |m, (p, q)| maximum(m, far(*p, *q)))
     })
 }
 
@@ -128,7 +128,7 @@ pub fn thin(
             }
         }
         match drop {
-            Some(d) => loss = js_max(loss, d),
+            Some(d) => loss = maximum(loss, d),
             None => kept.push(i),
         }
     }
@@ -138,7 +138,7 @@ pub fn thin(
         if prev == end - 1 && prev != 0 && !keeps(prev) && bulge(prev) == 0.0 {
             let d = far(pts[end], pts[prev]);
             if d <= tol {
-                loss = js_max(loss, d);
+                loss = maximum(loss, d);
                 kept.pop();
             }
         }
@@ -210,11 +210,11 @@ pub fn merge_lines(lines: &[[Vec2; 2]], groups: &[u64], tol: f64, touching: bool
     let mut lengths: Vec<f64> = lines.iter().map(|[a, b]| far(*a, *b)).collect();
     lengths.sort_by(f64::total_cmp);
     let median = lengths.get(lengths.len() / 2).copied().unwrap_or(1.0);
-    let cell = js_max(js_max(median, tol * 4.0), 1e-6);
+    let cell = maximum(maximum(median, tol * 4.0), 1e-6);
     let key = |p: Vec2| ((p.x / cell).floor() as i64, (p.y / cell).floor() as i64);
     let cells_of = |a: Vec2, b: Vec2| {
-        let (x0, y0) = key(Vec2::new(js_min(a.x, b.x) - tol, js_min(a.y, b.y) - tol));
-        let (x1, y1) = key(Vec2::new(js_max(a.x, b.x) + tol, js_max(a.y, b.y) + tol));
+        let (x0, y0) = key(Vec2::new(minimum(a.x, b.x) - tol, minimum(a.y, b.y) - tol));
+        let (x1, y1) = key(Vec2::new(maximum(a.x, b.x) + tol, maximum(a.y, b.y) + tol));
         let mut out = Vec::new();
         // A line much longer than the cells is listed in at most 4096 of them; the rest is found through its ends.
         if (x1 - x0 + 1).saturating_mul(y1 - y0 + 1) > 4096 {
@@ -256,7 +256,7 @@ pub fn merge_lines(lines: &[[Vec2; 2]], groups: &[u64], tol: f64, touching: bool
             }
             let (s, e) = {
                 let (s, e) = (along(k, a), along(k, b));
-                (js_min(s, e), js_max(s, e))
+                (minimum(s, e), maximum(s, e))
             };
             // Overlapping is sharing a length; meeting end to end (within `tol`) only with `touching`.
             let meets = if touching {
@@ -271,8 +271,8 @@ pub fn merge_lines(lines: &[[Vec2; 2]], groups: &[u64], tol: f64, touching: bool
                 None => {
                     let cl = &mut clusters[c];
                     cl.members.push(i);
-                    cl.lo = js_min(cl.lo, s);
-                    cl.hi = js_max(cl.hi, e);
+                    cl.lo = minimum(cl.lo, s);
+                    cl.hi = maximum(cl.hi, e);
                     joined = Some(c);
                 }
                 Some(first) => {
@@ -287,8 +287,8 @@ pub fn merge_lines(lines: &[[Vec2; 2]], groups: &[u64], tol: f64, touching: bool
                     for m in &moved {
                         for p in lines[*m] {
                             let t = along(kk, p);
-                            clusters[keep].lo = js_min(clusters[keep].lo, t);
-                            clusters[keep].hi = js_max(clusters[keep].hi, t);
+                            clusters[keep].lo = minimum(clusters[keep].lo, t);
+                            clusters[keep].hi = maximum(clusters[keep].hi, t);
                         }
                     }
                     clusters[keep].members.extend(moved);
@@ -340,7 +340,7 @@ pub fn merge_lines(lines: &[[Vec2; 2]], groups: &[u64], tol: f64, touching: bool
                 if t > hi.0 {
                     hi = (t, (m, end));
                 }
-                loss = js_max(loss, off_line(*p, lines[k][0], lines[k][1]));
+                loss = maximum(loss, off_line(*p, lines[k][0], lines[k][1]));
             }
         }
         let (ka, (ux, uy)) = (lines[k][0], unit(k));

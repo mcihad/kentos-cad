@@ -168,8 +168,8 @@ impl Document {
                 match rows.iter().position(|r| *r == row) {
                     Some(k) => {
                         line_of[i] = k;
-                        lines[k].t0 = kentos_geometry_core::jsmath::js_min(lines[k].t0, t0);
-                        lines[k].t1 = kentos_geometry_core::jsmath::js_max(lines[k].t1, t1);
+                        lines[k].t0 = kentos_geometry_core::jsmath::minimum(lines[k].t0, t0);
+                        lines[k].t1 = kentos_geometry_core::jsmath::maximum(lines[k].t1, t1);
                     }
                     None => {
                         line_of[i] = rows.len();

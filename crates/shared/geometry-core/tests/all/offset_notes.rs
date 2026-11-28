@@ -4,7 +4,7 @@
 
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::curve_outline::{CURVE_TOL, spline_outline};
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::offset::{collapses, offset_noted};
 use kentos_geometry_core::vec2::Vec2;
@@ -16,7 +16,7 @@ fn v(x: f64, y: f64) -> Vec2 {
 fn seg_distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy);
-    let t = js_min(1.0, js_max(0.0, t));
+    let t = minimum(1.0, maximum(0.0, t));
     let (ex, ey) = (p.x - a.x - t * dx, p.y - a.y - t * dy);
     (ex * ex + ey * ey).sqrt()
 }
@@ -26,7 +26,7 @@ fn distance_to(p: Vec2, curve: &[Vec2]) -> f64 {
     curve
         .windows(2)
         .map(|w| seg_distance(p, w[0], w[1]))
-        .fold(f64::INFINITY, js_min)
+        .fold(f64::INFINITY, minimum)
 }
 
 #[test]

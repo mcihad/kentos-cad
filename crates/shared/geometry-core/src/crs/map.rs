@@ -4,7 +4,7 @@
 
 use super::{Choice, System, transform_in};
 use crate::Vec2;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// The deepest an edge is halved.
 const DEPTH: u32 = 8;
@@ -97,9 +97,9 @@ impl MapProjection {
                     .map_or(0.0, |q| crate::jsmath::hypot(q.x - chord.x, q.y - chord.y))
             };
             for (i, j) in [(0, 1), (1, 2), (2, 0)] {
-                worst = js_max(worst, stray(&[t[i], t[j]], &[m[i], m[j]]));
+                worst = maximum(worst, stray(&[t[i], t[j]], &[m[i], m[j]]));
             }
-            worst = js_max(worst, stray(t, &m));
+            worst = maximum(worst, stray(t, &m));
         }
         let mut level = 0;
         while level < most && worst > tolerance {
@@ -207,10 +207,10 @@ impl MapProjection {
         let mut take = |x: f64, y: f64| {
             if let Some(p) = self.inverse(Vec2::new(x, y)) {
                 out = [
-                    js_min(out[0], p.x),
-                    js_min(out[1], p.y),
-                    js_max(out[2], p.x),
-                    js_max(out[3], p.y),
+                    minimum(out[0], p.x),
+                    minimum(out[1], p.y),
+                    maximum(out[2], p.x),
+                    maximum(out[3], p.y),
                 ];
             }
         };

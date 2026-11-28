@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 const NODE: usize = 16;
 
@@ -79,10 +79,10 @@ pub struct PackedTree {
 
 fn union(a: Bounds, b: &Bounds) -> Bounds {
     Bounds {
-        min_x: js_min(a.min_x, b.min_x),
-        min_y: js_min(a.min_y, b.min_y),
-        max_x: js_max(a.max_x, b.max_x),
-        max_y: js_max(a.max_y, b.max_y),
+        min_x: minimum(a.min_x, b.min_x),
+        min_y: minimum(a.min_y, b.min_y),
+        max_x: maximum(a.max_x, b.max_x),
+        max_y: maximum(a.max_y, b.max_y),
     }
 }
 
@@ -349,8 +349,8 @@ mod tests {
 
     impl FromPoint {
         fn distance(&self, b: &Bounds) -> f64 {
-            let dx = js_max(0.0, js_max(b.min_x - self.x, self.x - b.max_x));
-            let dy = js_max(0.0, js_max(b.min_y - self.y, self.y - b.max_y));
+            let dx = maximum(0.0, maximum(b.min_x - self.x, self.x - b.max_x));
+            let dy = maximum(0.0, maximum(b.min_y - self.y, self.y - b.max_y));
             (dx * dx + dy * dy).sqrt()
         }
     }

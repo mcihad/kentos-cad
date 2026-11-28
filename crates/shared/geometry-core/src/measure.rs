@@ -5,7 +5,7 @@
 //! Rust port of the outline (docs/adr/0002-contracts-fixtures.md).
 
 use crate::geom::bulge::{bulge_path_length, bulge_ring_area};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 
 /// A ring in vertex + bulge form (a polygon's outer ring or one of its holes).
@@ -64,10 +64,10 @@ impl Bounds {
 
     /// Grows the box to hold `p`, padded by `pad` on every side.
     pub fn extend(&mut self, p: Vec2, pad: f64) {
-        self.min_x = js_min(self.min_x, p.x - pad);
-        self.min_y = js_min(self.min_y, p.y - pad);
-        self.max_x = js_max(self.max_x, p.x + pad);
-        self.max_y = js_max(self.max_y, p.y + pad);
+        self.min_x = minimum(self.min_x, p.x - pad);
+        self.min_y = minimum(self.min_y, p.y - pad);
+        self.max_x = maximum(self.max_x, p.x + pad);
+        self.max_y = maximum(self.max_y, p.y + pad);
     }
 }
 

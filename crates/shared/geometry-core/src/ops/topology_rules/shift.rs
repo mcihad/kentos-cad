@@ -7,7 +7,7 @@
 use super::written;
 use crate::entity::Shape;
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
 
 /// An object's source vertices kept and moved by a repair, and the farthest and total distance moved.
@@ -25,7 +25,7 @@ impl Shift {
         Shift {
             kept: self.kept + o.kept,
             moved: self.moved + o.moved,
-            max: js_max(self.max, o.max),
+            max: maximum(self.max, o.max),
             total: self.total + o.total,
         }
     }
@@ -86,7 +86,7 @@ pub fn shift(before: &Shape, after: &Shape, under: f64) -> (Shift, usize) {
         }
         let d = distance(after, v).unwrap_or(f64::INFINITY);
         out.moved += 1;
-        out.max = js_max(out.max, d);
+        out.max = maximum(out.max, d);
         out.total += d;
         if d < under {
             below += 1;

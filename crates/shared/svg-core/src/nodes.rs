@@ -7,7 +7,7 @@
 //! every function returns new sub-paths and leaves its input alone.
 
 use kentos_geometry_core::jsmath::{
-    PI, acos, hypot, js_cmp, js_max, js_min, or, sin, stable_sort, tan,
+    PI, acos, hypot, js_cmp, maximum, minimum, or, sin, stable_sort, tan,
 };
 
 use crate::bezier::{
@@ -103,7 +103,7 @@ pub fn node_type_of(sp: &SubPath, i: usize) -> Option<String> {
         return cusp;
     }
     Some(
-        if (la - lb).abs() < 1e-6 * js_max(js_max(la, lb), 1.0) {
+        if (la - lb).abs() < 1e-6 * maximum(maximum(la, lb), 1.0) {
             "symmetric"
         } else {
             "smooth"
@@ -540,9 +540,9 @@ fn slice_range(len: usize, start: f64, end: Option<f64>) -> (usize, usize) {
     let rel = |x: f64| -> usize {
         let x = if x.is_nan() { 0.0 } else { x.trunc() };
         if x < 0.0 {
-            js_max(len as f64 + x, 0.0) as usize
+            maximum(len as f64 + x, 0.0) as usize
         } else {
-            js_min(x, len as f64) as usize
+            minimum(x, len as f64) as usize
         }
     };
     let s = rel(start);
@@ -737,13 +737,16 @@ pub fn corner_at(sp: &SubPath, i: usize) -> Option<Corner> {
     let t1 = bez_tangent(&in_seg, 1.0);
     let t2 = bez_tangent(&out_seg, 0.0);
     let back: Pt = [-t1[0], -t1[1]];
-    let angle = acos(js_max(-1.0, js_min(1.0, back[0] * t2[0] + back[1] * t2[1])));
+    let angle = acos(maximum(
+        -1.0,
+        minimum(1.0, back[0] * t2[0] + back[1] * t2[1]),
+    ));
     let chord = |c: &Cubic| len(c[3][0] - c[0][0], c[3][1] - c[0][1]);
     Some(Corner {
         angle,
         back,
         ahead: t2,
-        max: js_min(chord(&in_seg), chord(&out_seg)),
+        max: minimum(chord(&in_seg), chord(&out_seg)),
     })
 }
 
@@ -910,7 +913,7 @@ fn cut_corner(
         // Tangents at the cut points, toward the corner and away from it; a circular arc's handles.
         let ta = bez_tangent(&keep_a, 1.0);
         let tb = bez_tangent(&keep_b, 0.0);
-        let turn = acos(js_max(-1.0, js_min(1.0, ta[0] * tb[0] + ta[1] * tb[1])));
+        let turn = acos(maximum(-1.0, minimum(1.0, ta[0] * tb[0] + ta[1] * tb[1])));
         let chord = len(q.x - p.x, q.y - p.y);
         let r = if turn > 1e-9 {
             chord / (2.0 * sin(turn / 2.0))
@@ -991,8 +994,8 @@ pub fn align_nodes(subs: &[SubPath], refs: &[NodeRef], axis: &str, to: &str) -> 
     if vals.len() < 2 {
         return subs.to_vec();
     }
-    let lo = vals.iter().fold(f64::INFINITY, |a, &b| js_min(a, b));
-    let hi = vals.iter().fold(f64::NEG_INFINITY, |a, &b| js_max(a, b));
+    let lo = vals.iter().fold(f64::INFINITY, |a, &b| minimum(a, b));
+    let hi = vals.iter().fold(f64::NEG_INFINITY, |a, &b| maximum(a, b));
     let target = match to {
         "min" => lo,
         "max" => hi,

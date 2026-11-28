@@ -603,7 +603,7 @@ pub(super) fn covered_by(
                         });
                         odd.iter().map(|&k| closest_on_edge(&all[k], p).d).fold(
                             nearest_edge(tree, &mut queue, all, p),
-                            crate::jsmath::js_min,
+                            crate::jsmath::minimum,
                         )
                     };
                     if d <= t {

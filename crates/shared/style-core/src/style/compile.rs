@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{PI, cos, hypot, js_max, js_min, js_round, sin};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, js_round, maximum, minimum, sin};
 
 use super::generate::{self, Gen};
 use super::model::{
@@ -242,10 +242,10 @@ pub fn marker_style(
             stroke: dd_color(stroke, t),
             stroke_width: stroke_width.map_or(0.0, conv),
             params: [
-                js_min(0.95, js_max(0.0, hole.unwrap_or(0.0))),
-                js_round(js_min(64.0, js_max(3.0, teeth.unwrap_or(12.0)))),
-                js_min(360.0, js_max(1.0, sweep.unwrap_or(180.0))) * DEG,
-                js_min(0.6, js_max(0.02, teeth_depth.unwrap_or(0.2))),
+                minimum(0.95, maximum(0.0, hole.unwrap_or(0.0))),
+                js_round(minimum(64.0, maximum(3.0, teeth.unwrap_or(12.0)))),
+                minimum(360.0, maximum(1.0, sweep.unwrap_or(180.0))) * DEG,
+                minimum(0.6, maximum(0.02, teeth_depth.unwrap_or(0.2))),
             ],
         },
         MarkerKind::Svg {
@@ -579,7 +579,7 @@ fn emit_markers_along(
         .collect();
     // Text that follows the line keeps half its length clear of sharp corners instead of bending round them.
     let clear = if follow {
-        styles.iter().map(text_half_length).fold(0.0, js_max)
+        styles.iter().map(text_half_length).fold(0.0, maximum)
     } else {
         0.0
     };
@@ -658,14 +658,14 @@ fn effect_spec(base: &Base, env: &Env) -> Option<EffectSpec> {
         ShadowSpec {
             dx: d * sin(s.angle * DEG),
             dy: d * cos(s.angle * DEG),
-            blur: js_max(len(s.blur), 0.0),
+            blur: maximum(len(s.blur), 0.0),
             color: s.color.clone(),
             opacity: unit_opacity(s.opacity),
         }
     };
     let glow = |g: &Glow| GlowSpec {
-        spread: js_max(len(g.spread), 0.0),
-        blur: js_max(len(g.blur), 0.0),
+        spread: maximum(len(g.spread), 0.0),
+        blur: maximum(len(g.blur), 0.0),
         color: g.color.clone(),
         opacity: unit_opacity(g.opacity),
     };
@@ -675,7 +675,7 @@ fn effect_spec(base: &Base, env: &Env) -> Option<EffectSpec> {
         glow: e.outer_glow.as_ref().map(glow),
         inner_shadow: e.inner_shadow.as_ref().map(shadow),
         inner_glow: e.inner_glow.as_ref().map(glow),
-        blur: e.blur.map_or(0.0, |b| js_max(len(b), 0.0)),
+        blur: e.blur.map_or(0.0, |b| maximum(len(b), 0.0)),
     })
 }
 
@@ -836,12 +836,12 @@ fn emit_fill_layer(
             );
             for p in outer {
                 let along = c * p.x + s * p.y;
-                from = js_min(from, along);
-                to = js_max(to, along);
-                x0 = js_min(x0, p.x);
-                y0 = js_min(y0, p.y);
-                x1 = js_max(x1, p.x);
-                y1 = js_max(y1, p.y);
+                from = minimum(from, along);
+                to = maximum(to, along);
+                x0 = minimum(x0, p.x);
+                y0 = minimum(y0, p.y);
+                x1 = maximum(x1, p.x);
+                y1 = maximum(y1, p.y);
             }
             let shape = match g.shape.as_str() {
                 "cylinder" => 1,
@@ -934,8 +934,8 @@ fn emit_fill_layer(
                         stagger,
                         angle,
                         offset,
-                        jitter: js_min(1.0, js_max(0.0, p.jitter.unwrap_or(0.0))),
-                        coverage: js_min(1.0, js_max(0.0, p.coverage.unwrap_or(1.0))),
+                        jitter: minimum(1.0, maximum(0.0, p.jitter.unwrap_or(0.0))),
+                        coverage: minimum(1.0, maximum(0.0, p.coverage.unwrap_or(1.0))),
                         seed: p.seed.unwrap_or(0.0),
                         opacity,
                         unit,

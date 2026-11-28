@@ -18,7 +18,7 @@ use crate::geom::bulge::{bulge_path_length, segment_mid, segment_tangent};
 use crate::geom::intersect::closest_on_edge;
 use crate::geom::region::{net_area, orient_ring, ring_edges};
 use crate::geom::wall_join::{WallIn, solve};
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::vec2::Vec2;
 
 /// How near a face's edge must run along a wall's face to be on it, metres.
@@ -356,8 +356,8 @@ pub fn label_at(parts: &[Area]) -> Option<Vec2> {
         .collect();
     let size = ring_edges(&largest.outer)
         .iter()
-        .fold(0.0, |m, e| js_max(m, crate::ops::edges::edge_length(e)));
-    crate::labels::geom::pole(&rings, js_max(size / 100.0, 1e-3)).map(|(p, _)| p)
+        .fold(0.0, |m, e| maximum(m, crate::ops::edges::edge_length(e)));
+    crate::labels::geom::pole(&rings, maximum(size / 100.0, 1e-3)).map(|(p, _)| p)
 }
 
 /// The label's lines: its number, its name, its area (two decimals, m²).
@@ -422,10 +422,10 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
         for p in &outer {
             let (dx, dy) = (p.x - o.x, p.y - o.y);
             let (u, v) = (dx * along.x + dy * along.y, dx * across.x + dy * across.y);
-            u0 = crate::jsmath::js_min(u0, u);
-            u1 = js_max(u1, u);
-            v0 = crate::jsmath::js_min(v0, v);
-            v1 = js_max(v1, v);
+            u0 = crate::jsmath::minimum(u0, u);
+            u1 = maximum(u1, u);
+            v0 = crate::jsmath::minimum(v0, v);
+            v1 = maximum(v1, v);
         }
         let at = |u: f64, v: f64| {
             Vec2::new(

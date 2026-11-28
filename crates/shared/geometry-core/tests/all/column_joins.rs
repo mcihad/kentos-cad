@@ -8,7 +8,7 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::column_join::{Foot, WallAt, cut, joined};
 use kentos_geometry_core::geom::wall::{Drawn, Spec, drawn};
-use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -49,8 +49,8 @@ fn lines(d: &Drawn) -> Vec<(f64, Vec<(f64, f64)>)> {
                 .map(|s| {
                     let xs = s.line.pts.iter().map(|p| p.x);
                     (
-                        xs.clone().fold(f64::INFINITY, js_min),
-                        xs.fold(f64::NEG_INFINITY, js_max),
+                        xs.clone().fold(f64::INFINITY, minimum),
+                        xs.fold(f64::NEG_INFINITY, maximum),
                     )
                 })
                 .collect();
@@ -126,7 +126,7 @@ fn columns_cut_and_join_walls_as_the_reference_says() {
             let mut caps: Vec<(f64, f64, f64)> = d
                 .caps
                 .iter()
-                .map(|(a, b)| (a.x, js_min(a.y, b.y), js_max(a.y, b.y)))
+                .map(|(a, b)| (a.x, minimum(a.y, b.y), maximum(a.y, b.y)))
                 .collect();
             caps.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
             let want_caps = want["caps"].as_array().unwrap();

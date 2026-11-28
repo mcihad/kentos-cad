@@ -7,7 +7,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
@@ -32,7 +32,7 @@ fn near(name: &str, what: &str, got: Vec2, want: Vec2, tol: f64) {
 
 fn num(name: &str, what: &str, got: f64, want: f64) {
     assert!(
-        (got - want).abs() <= TOL * js_max(want.abs(), 1.0),
+        (got - want).abs() <= TOL * maximum(want.abs(), 1.0),
         "{name}: {what} {got}, başvuru {want}"
     );
 }
@@ -41,7 +41,7 @@ fn num(name: &str, what: &str, got: f64, want: f64) {
 fn angle(name: &str, what: &str, got: f64, want: f64, period: f64) {
     let d = (got - want).rem_euclid(period);
     assert!(
-        js_min(d, period - d) <= 1e-9,
+        minimum(d, period - d) <= 1e-9,
         "{name}: {what} {got}, başvuru {want}"
     );
 }
@@ -240,7 +240,7 @@ fn check_piece(name: &str, got: &Shape, want: &Value) {
             for q in &pts[..=k] {
                 let (x, y) = (q.x - c.x, q.y - c.y);
                 let (cs, sn) = ((x * v.y - y * v.x) / d, (u.x * y - u.y * x) / d);
-                let off = (hypot(cs, sn) - 1.0).abs() * js_max(hypot(u.x, u.y), hypot(v.x, v.y));
+                let off = (hypot(cs, sn) - 1.0).abs() * maximum(hypot(u.x, u.y), hypot(v.x, v.y));
                 assert!(off <= 1e-4, "{name}: köşe {q:?} görüntüden {off} m uzak");
             }
         }

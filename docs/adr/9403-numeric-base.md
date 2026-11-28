@@ -309,6 +309,12 @@ hatasını taşımaz).
 - Hiçbir ortak durum ve hiçbir saklı çıktı oynamadı. Koşulanlar: önceki adımlarla aynı takımlar; hepsi yeşil
   (önceden var olan kırmızılar aynı).
 
+**Adlar (28 Kasım 2026).** Davranışı değişmeyen yardımcılar kendi adlarını aldı; tanımları `kentos-num`'dadır,
+`jsmath` onları yeniden dışa aktarır: `js_hypot` → `hypot` (890 kullanım), `js_min`/`js_max` → `minimum`/`maximum`,
+`js_min_all`/`js_max_all` → `minimum_of`/`maximum_of`, `js_sign` → `sign`, `js_floor` → `f64::floor` (1 969
+kullanım). Bekçideki `js_` sayısı 4 489'dan 2 000'in altına indi. Kalanlar davranış kararı ister: `js_round`
+(159 yer), `js_cmp`, `truthy`/`or`, `stable_sort`, `js_hypot_n` ve metin yardımcıları.
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

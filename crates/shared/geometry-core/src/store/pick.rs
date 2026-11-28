@@ -14,7 +14,7 @@ use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessel
 use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
 use crate::geom::leader::note_place;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, hypot, js_cmp, js_max, js_min};
+use crate::jsmath::{PI, hypot, js_cmp, maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::text::Font;
 use crate::vec2::Vec2;
@@ -285,7 +285,7 @@ impl Store {
                 .iter()
                 .filter(|part| crate::geom::region::inside_area(part, p))
                 .map(crate::geom::region::net_area)
-                .reduce(js_min)
+                .reduce(minimum)
             && out.area.is_none_or(|best| a < best)
         {
             out.area = Some(a);
@@ -424,7 +424,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
     {
         return area_parts(e)
             .iter()
-            .fold(f64::INFINITY, |d, q| js_min(d, edge_distance(q, p, font)));
+            .fold(f64::INFINITY, |d, q| minimum(d, edge_distance(q, p, font)));
     }
     match e {
         // An insert is clicked at its insertion point until its block is expanded (docs/adr/0144).
@@ -445,7 +445,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
                     a: b[i],
                     b: b[(i + 1) % 4],
                 };
-                d = js_min(d, closest_on_edge(&side, p).d);
+                d = minimum(d, closest_on_edge(&side, p).d);
             }
             return d;
         }
@@ -462,7 +462,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
                         a: b[i],
                         b: b[(i + 1) % 4],
                     };
-                    d = js_min(d, closest_on_edge(&side, p).d);
+                    d = minimum(d, closest_on_edge(&side, p).d);
                 }
                 return d;
             }
@@ -479,10 +479,10 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
                         a: b[i],
                         b: b[(i + 1) % 4],
                     };
-                    d = js_min(d, closest_on_edge(&side, p).d);
+                    d = minimum(d, closest_on_edge(&side, p).d);
                 }
                 for ed in entity_edges(e) {
-                    d = js_min(d, closest_on_edge(&ed, p).d);
+                    d = minimum(d, closest_on_edge(&ed, p).d);
                 }
                 return d;
             }
@@ -494,10 +494,10 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
         && let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g))
     {
         // The value text is part of the dimension: clicking it selects the dimension.
-        d = js_max(0.0, hypot(p.x - l.text_at.x, p.y - l.text_at.y) - height);
+        d = maximum(0.0, hypot(p.x - l.text_at.x, p.y - l.text_at.y) - height);
     }
     for ed in entity_edges(e) {
-        d = js_min(d, closest_on_edge(&ed, p).d);
+        d = minimum(d, closest_on_edge(&ed, p).d);
     }
     d
 }

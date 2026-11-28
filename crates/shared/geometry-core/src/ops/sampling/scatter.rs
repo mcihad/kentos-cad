@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use super::inside::Inside;
 use super::random::Sequence;
 use super::walk::Walk;
-use crate::jsmath::js_min;
+use crate::jsmath::minimum;
 use crate::vec2::Vec2;
 
 /// How many draws a candidate in an area may take.
@@ -93,7 +93,7 @@ fn locate(walks: &[Walk], s: f64) -> (usize, f64) {
     let last = walks.len() - 1;
     for (k, w) in walks.iter().enumerate() {
         if rest < w.length || k == last {
-            return (k, js_min(rest, w.length));
+            return (k, minimum(rest, w.length));
         }
         rest -= w.length;
     }

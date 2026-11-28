@@ -8,7 +8,7 @@
 //! values are text, arithmetic reads numbers out of text, an empty value is
 //! empty, and no operation looks at another object.
 
-use kentos_geometry_core::jsmath::{js_max, pow};
+use kentos_geometry_core::jsmath::{maximum, pow};
 
 use crate::compound::{is_compound, is_empty_compound, shown};
 use crate::js::collate;
@@ -143,7 +143,7 @@ pub fn equals(a: V, b: V, s: &mut Scratch) -> bool {
         _ => {}
     }
     if let (Some(na), Some(nb)) = (to_number(a), to_number(b)) {
-        return (na - nb).abs() <= 1e-9 * js_max(js_max(1.0, na.abs()), nb.abs());
+        return (na - nb).abs() <= 1e-9 * maximum(maximum(1.0, na.abs()), nb.abs());
     }
     let Scratch { a: sa, b: sb, .. } = s;
     as_text(a, sa) == as_text(b, sb)

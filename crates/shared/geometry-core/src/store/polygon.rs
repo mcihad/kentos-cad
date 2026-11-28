@@ -11,7 +11,7 @@ use crate::entity::{Shape, TextPlace, area_parts, entity_vertices, inside_polygo
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at, seg_seg};
 use crate::geom::leader;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::predicates::orientation;
@@ -80,7 +80,7 @@ pub fn ring_problem(ring: &[Vec2]) -> Option<&'static str> {
     }
     let scale = ring
         .iter()
-        .fold(1.0, |m, p| js_max(m, js_max(p.x.abs(), p.y.abs())));
+        .fold(1.0, |m, p| maximum(m, maximum(p.x.abs(), p.y.abs())));
     if !(signed_area(ring).abs() > 1e-12 * scale) {
         return Some(NO_AREA);
     }
@@ -267,10 +267,10 @@ fn ring_query(pts: &[Vec2]) -> Bounds {
         max_y: f64::NEG_INFINITY,
     };
     for p in pts {
-        q.min_x = js_min(q.min_x, p.x);
-        q.min_y = js_min(q.min_y, p.y);
-        q.max_x = js_max(q.max_x, p.x);
-        q.max_y = js_max(q.max_y, p.y);
+        q.min_x = minimum(q.min_x, p.x);
+        q.min_y = minimum(q.min_y, p.y);
+        q.max_x = maximum(q.max_x, p.x);
+        q.max_y = maximum(q.max_y, p.y);
     }
     padded(q, ON_BOUNDARY)
 }

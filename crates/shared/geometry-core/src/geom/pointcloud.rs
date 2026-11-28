@@ -10,7 +10,7 @@ use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap};
 
 use crate::entity::Shape;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::vec2::Vec2;
 
 /// A cloud's bounds (`[x₁, y₁, z₁, x₂, y₂, z₂]`); none for any other shape or bounds not finite.
@@ -201,8 +201,8 @@ pub fn near(tree: &Octree, at: [f64; 2], reach: f64, out: &mut Vec<u32>) {
         let l = tree.node_low(key);
         let s = tree.node_side(key);
         // The plan's distance from `at` to the node's square, along each axis (0 inside).
-        let dx = js_max(js_max(l[0] - at[0], at[0] - (l[0] + s)), 0.0);
-        let dy = js_max(js_max(l[1] - at[1], at[1] - (l[1] + s)), 0.0);
+        let dx = maximum(maximum(l[0] - at[0], at[0] - (l[0] + s)), 0.0);
+        let dy = maximum(maximum(l[1] - at[1], at[1] - (l[1] + s)), 0.0);
         dx * dx + dy * dy <= reach * reach
     };
     if !touches(tree.keys[root as usize]) {

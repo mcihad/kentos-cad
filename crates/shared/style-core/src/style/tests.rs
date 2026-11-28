@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{PointPart, Shape};
-use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, sin};
+use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin};
 use kentos_geometry_core::store::Store;
 
 use super::batch::Batches;
@@ -397,8 +397,8 @@ fn lays_sine_waves_along_a_path_connected_or_as_dashes() {
     assert_eq!(pts[0], v(0.0, 0.0));
     assert_eq!(pts[pts.len() - 1], v(20.0, 0.0));
     // A quarter of the first wave is its crest, one amplitude to the left.
-    let top = pts.iter().map(|p| p.y).fold(f64::MIN, js_max);
-    let bottom = pts.iter().map(|p| p.y).fold(f64::MAX, js_min);
+    let top = pts.iter().map(|p| p.y).fold(f64::MIN, maximum);
+    let bottom = pts.iter().map(|p| p.y).fold(f64::MAX, minimum);
     assert!(close(top, 1.0) && close(bottom, -1.0));
     // Two 7-unit repeats fit in 20; each wave is its own piece, centred on the path.
     let dashed = wave_paths(&path, false, &wave("sine", 5.0, 7.0, false, None));

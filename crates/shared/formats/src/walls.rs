@@ -575,7 +575,7 @@ mod tests {
             WallEntity,
         };
         use kentos_geometry_core::geom::wall::Detail;
-        use kentos_geometry_core::jsmath::{js_max, js_min};
+        use kentos_geometry_core::jsmath::{maximum, minimum};
         let wall = WallFields {
             pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 6.0, y: 0.0 }],
             bulges: None,
@@ -674,7 +674,7 @@ mod tests {
         );
         for e in &window {
             let Entity::Line(l) = e else { panic!("{e:?}") };
-            let (x0, x1) = (js_min(l.a.x, l.b.x), js_max(l.a.x, l.b.x));
+            let (x0, x1) = (minimum(l.a.x, l.b.x), maximum(l.a.x, l.b.x));
             assert!(
                 (x0 - 3.4).abs() < 1e-9 && (x1 - 4.6).abs() < 1e-9,
                 "jamb to jamb: {x0}–{x1}"

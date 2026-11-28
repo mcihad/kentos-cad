@@ -15,7 +15,7 @@ use crate::entity::{
     tessellate_circle,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, cos, js_max, js_min, sin};
+use crate::jsmath::{TAU, cos, maximum, minimum, sin};
 use crate::labels::engine::{
     self, Drawn, Geo, Obstacle, Options, Pinned, Scene, Shape as Ob, Unit,
 };
@@ -289,7 +289,7 @@ fn inside_stretches(walk: &Walk, rect: [f64; 4]) -> Vec<(f64, f64)> {
             let t1 = norm(e.x - a.x, e.y - a.y) / len;
             let (from, to) = (walk.at[i] + t0 * len, walk.at[i] + t1 * len);
             match out.last_mut() {
-                Some(last) if from <= last.1 + 1e-9 => last.1 = js_max(last.1, to),
+                Some(last) if from <= last.1 + 1e-9 => last.1 = maximum(last.1, to),
                 _ => out.push((from, to)),
             }
         }
@@ -377,12 +377,12 @@ const PROBE_CELL: f64 = 32.0;
 impl Contours {
     fn add(&mut self, a: Vec2, b: Vec2, z: f64, id: f64) {
         let (c0, c1) = (
-            (js_min(a.x, b.x) / PROBE_CELL).floor() as i64,
-            (js_max(a.x, b.x) / PROBE_CELL).floor() as i64,
+            (minimum(a.x, b.x) / PROBE_CELL).floor() as i64,
+            (maximum(a.x, b.x) / PROBE_CELL).floor() as i64,
         );
         let (r0, r1) = (
-            (js_min(a.y, b.y) / PROBE_CELL).floor() as i64,
-            (js_max(a.y, b.y) / PROBE_CELL).floor() as i64,
+            (minimum(a.y, b.y) / PROBE_CELL).floor() as i64,
+            (maximum(a.y, b.y) / PROBE_CELL).floor() as i64,
         );
         for c in c0..=c1 {
             for r in r0..=r1 {
@@ -396,12 +396,12 @@ impl Contours {
     fn nearest(&self, p: Vec2, d: Vec2, len: f64, own: f64) -> Option<f64> {
         let q = Vec2::new(p.x + d.x * len, p.y + d.y * len);
         let (c0, c1) = (
-            (js_min(p.x, q.x) / PROBE_CELL).floor() as i64,
-            (js_max(p.x, q.x) / PROBE_CELL).floor() as i64,
+            (minimum(p.x, q.x) / PROBE_CELL).floor() as i64,
+            (maximum(p.x, q.x) / PROBE_CELL).floor() as i64,
         );
         let (r0, r1) = (
-            (js_min(p.y, q.y) / PROBE_CELL).floor() as i64,
-            (js_max(p.y, q.y) / PROBE_CELL).floor() as i64,
+            (minimum(p.y, q.y) / PROBE_CELL).floor() as i64,
+            (maximum(p.y, q.y) / PROBE_CELL).floor() as i64,
         );
         let mut best: Option<(f64, f64)> = None;
         for c in c0..=c1 {
@@ -477,10 +477,10 @@ pub fn outline_box(pts: &[Vec2]) -> Option<Obb> {
             (p.x - a.x) * u.x + (p.y - a.y) * u.y,
             (p.x - a.x) * v.x + (p.y - a.y) * v.y,
         );
-        s0 = js_min(s0, s);
-        s1 = js_max(s1, s);
-        t0 = js_min(t0, t);
-        t1 = js_max(t1, t);
+        s0 = minimum(s0, s);
+        s1 = maximum(s1, s);
+        t0 = minimum(t0, t);
+        t1 = maximum(t1, t);
     }
     let (ms, mt) = ((s0 + s1) / 2.0, (t0 + t1) / 2.0);
     Some(Obb {
@@ -689,7 +689,7 @@ impl Store {
                 out.out_of_scale += 1;
             } else if cls
                 .min_feature_px
-                .is_some_and(|m| js_min(b.max_x - b.min_x, b.max_y - b.min_y) * scale < m)
+                .is_some_and(|m| minimum(b.max_x - b.min_x, b.max_y - b.min_y) * scale < m)
             {
                 out.small += 1;
             }
@@ -803,7 +803,7 @@ impl Store {
                     l.classes
                         .iter()
                         .map(|c| feature_floor(c, scale))
-                        .fold(f64::INFINITY, js_min)
+                        .fold(f64::INFINITY, minimum)
                 })
             })
             .collect();
@@ -875,7 +875,7 @@ impl Store {
                     .map_or(f64::INFINITY, |c| feature_floor(c, scale)),
             };
             let b = &it.bounds;
-            if js_min(b.max_x - b.min_x, b.max_y - b.min_y) * scale < floor {
+            if minimum(b.max_x - b.min_x, b.max_y - b.min_y) * scale < floor {
                 continue;
             }
             if !self.view_shown(it.id)
@@ -911,7 +911,7 @@ impl Store {
                 }
                 if cls
                     .min_feature_px
-                    .is_some_and(|m| js_min(b.max_x - b.min_x, b.max_y - b.min_y) * scale < m)
+                    .is_some_and(|m| minimum(b.max_x - b.min_x, b.max_y - b.min_y) * scale < m)
                 {
                     continue;
                 }
@@ -1067,10 +1067,10 @@ impl Store {
                         ];
                         for p in &clipped[0] {
                             bbox = [
-                                js_min(bbox[0], p.x),
-                                js_min(bbox[1], p.y),
-                                js_max(bbox[2], p.x),
-                                js_max(bbox[3], p.y),
+                                minimum(bbox[0], p.x),
+                                minimum(bbox[1], p.y),
+                                maximum(bbox[2], p.x),
+                                maximum(bbox[3], p.y),
                             ];
                         }
                         units.push(unit(
@@ -1297,7 +1297,7 @@ fn path_units<'s>(
             chunks.sort_unstable();
             for k in chunks {
                 let s0 = f64::from(k) * r;
-                let s1 = js_min(s0 + r, len);
+                let s1 = minimum(s0 + r, len);
                 if s1 <= s0 {
                     continue;
                 }
@@ -1356,7 +1356,7 @@ impl Store {
         let point_px = layer.map_or(0.0, |l| l.point);
         // Every point's symbol keeps labels off it a little.
         if let Shape::Point { p, parts, .. } = &it.shape {
-            let r = js_max(point_px / 2.0, SYMBOL_MIN);
+            let r = maximum(point_px / 2.0, SYMBOL_MIN);
             for q in std::iter::once(*p).chain(parts.iter().flatten().map(|q| q.p)) {
                 out.push(Obstacle {
                     owner: it.id,
@@ -1383,7 +1383,7 @@ impl Store {
         let w = Some(weight);
         match kind_of(&it.shape) {
             Some(Kind::Point) => {
-                let r = js_max(point_px / 2.0, SYMBOL_MIN);
+                let r = maximum(point_px / 2.0, SYMBOL_MIN);
                 let points: Vec<Vec2> = match &it.shape {
                     Shape::Point { p, parts, .. } => std::iter::once(*p)
                         .chain(parts.iter().flatten().map(|q| q.p))
@@ -1438,10 +1438,10 @@ impl Store {
                         ];
                         for p in rings.iter().flatten() {
                             bbox = [
-                                js_min(bbox[0], p.x),
-                                js_min(bbox[1], p.y),
-                                js_max(bbox[2], p.x),
-                                js_max(bbox[3], p.y),
+                                minimum(bbox[0], p.x),
+                                minimum(bbox[1], p.y),
+                                maximum(bbox[2], p.x),
+                                maximum(bbox[3], p.y),
                             ];
                         }
                         out.push(Obstacle {
@@ -1544,8 +1544,8 @@ pub fn labels_in(records: &[f64], stride: usize, from: Vec2, to: Vec2, all: bool
     if stride < crate::store::labels::LABEL_STRIDE {
         return Vec::new();
     }
-    let (x0, x1) = (js_min(from.x, to.x), js_max(from.x, to.x));
-    let (y0, y1) = (js_min(from.y, to.y), js_max(from.y, to.y));
+    let (x0, x1) = (minimum(from.x, to.x), maximum(from.x, to.x));
+    let (y0, y1) = (minimum(from.y, to.y), maximum(from.y, to.y));
     let quiet = engine::UNPLACED | engine::HIDDEN;
     let mut out: Vec<LabelHit> = Vec::new();
     for r in records.chunks_exact(stride) {

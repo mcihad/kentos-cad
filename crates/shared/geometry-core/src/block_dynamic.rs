@@ -7,7 +7,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, ParamValue, Params};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, hypot, js_max, js_round, sin};
+use crate::jsmath::{atan2, cos, hypot, js_round, maximum, sin};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
@@ -770,7 +770,7 @@ fn reflection(a: Vec2, b: Vec2) -> Affine {
 
 /// Two values the same: numbers and points within a hair.
 pub fn same(a: &ParamValue, b: &ParamValue) -> bool {
-    let near = |x: f64, y: f64| (x - y).abs() <= 1e-9 * js_max(x.abs(), 1.0);
+    let near = |x: f64, y: f64| (x - y).abs() <= 1e-9 * maximum(x.abs(), 1.0);
     match (a, b) {
         (ParamValue::Number(x), ParamValue::Number(y)) => near(*x, *y),
         (ParamValue::Point(p), ParamValue::Point(q)) => near(p.x, q.x) && near(p.y, q.y),

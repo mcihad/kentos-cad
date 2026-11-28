@@ -30,7 +30,7 @@
 //! `scripts/fixtures/section_cases.py` computes the same from these rules without KentOS's code, in exact fractions.
 
 use crate::geometry::point_in_rings;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// Two heights or two places closer than this are one, metres.
@@ -116,9 +116,9 @@ impl Frame {
                     hi = -1.0;
                 }
             } else if b > 0.0 {
-                lo = js_max(lo, -a / b);
+                lo = maximum(lo, -a / b);
             } else {
-                hi = js_min(hi, -a / b);
+                hi = minimum(hi, -a / b);
             }
         };
         let (dp, dq) = (self.d(p), self.d(q));
@@ -168,8 +168,8 @@ impl Flight {
 
     /// Its underside at distance `s`, never over its top there.
     pub fn bottom(&self, s: f64) -> f64 {
-        js_min(
-            js_max(self.floor, self.soffit + self.slope * s),
+        minimum(
+            maximum(self.floor, self.soffit + self.slope * s),
             self.top(s),
         )
     }
@@ -322,7 +322,7 @@ fn through(
     breaks.dedup_by(|a, b| (*a - *b).abs() <= EPS);
     let mut out: Vec<(f64, f64)> = Vec::new();
     for pair in breaks.windows(2) {
-        let (a, b) = (js_max(pair[0], lo), js_min(pair[1], hi));
+        let (a, b) = (maximum(pair[0], lo), minimum(pair[1], hi));
         if b - a <= EPS {
             continue;
         }
@@ -362,7 +362,7 @@ fn subtract(r: Rect, v: Rect) -> Vec<Rect> {
         return vec![r];
     }
     let mut out = Vec::new();
-    let (m0, m1) = (js_max(u0, v0), js_min(u1, v1));
+    let (m0, m1) = (maximum(u0, v0), minimum(u1, v1));
     if m0 > u0 + EPS {
         out.push((u0, m0, z0, z1));
     }
@@ -429,7 +429,7 @@ fn flight_traps(frame: &Frame, f: &Flight, p: Vec2, q: Vec2, (t0, t1): (f64, f64
                 d1: frame.d(b),
             }
         })
-        .filter(|tr| tr.top > js_min(tr.b0, tr.b1) + EPS)
+        .filter(|tr| tr.top > minimum(tr.b0, tr.b1) + EPS)
         .collect()
 }
 
@@ -483,17 +483,17 @@ impl Cover {
             ring.reverse();
         }
         let lo = Vec2::new(
-            ring.iter().map(|p| p.x).fold(f64::INFINITY, js_min),
-            ring.iter().map(|p| p.y).fold(f64::INFINITY, js_min),
+            ring.iter().map(|p| p.x).fold(f64::INFINITY, minimum),
+            ring.iter().map(|p| p.y).fold(f64::INFINITY, minimum),
         );
         let hi = Vec2::new(
-            ring.iter().map(|p| p.x).fold(f64::NEG_INFINITY, js_max),
-            ring.iter().map(|p| p.y).fold(f64::NEG_INFINITY, js_max),
+            ring.iter().map(|p| p.x).fold(f64::NEG_INFINITY, maximum),
+            ring.iter().map(|p| p.y).fold(f64::NEG_INFINITY, maximum),
         );
         let near = ring
             .iter()
             .map(|p| a + b * p.x + c * p.y)
-            .fold(f64::INFINITY, js_min);
+            .fold(f64::INFINITY, minimum);
         Some(Cover {
             ring,
             a,
@@ -541,9 +541,9 @@ impl Cover {
                     return None;
                 }
             } else if b > 0.0 {
-                lo = js_max(lo, -a / b);
+                lo = maximum(lo, -a / b);
             } else {
-                hi = js_min(hi, -a / b);
+                hi = minimum(hi, -a / b);
             }
         }
         (hi - lo > 1e-12).then_some((lo, hi))
@@ -557,11 +557,11 @@ impl Cover {
     /// The part `(t0, t1)` of the edge it hides: inside it or on its outline, and behind it (a cut: or in it).
     fn hides(&self, e: &Edge) -> Option<(f64, f64)> {
         let behind = if self.cut { -BEHIND } else { BEHIND };
-        if js_max(e.p.x, e.q.x) < self.lo.x - EPS
-            || js_min(e.p.x, e.q.x) > self.hi.x + EPS
-            || js_max(e.p.y, e.q.y) < self.lo.y - EPS
-            || js_min(e.p.y, e.q.y) > self.hi.y + EPS
-            || self.near > js_max(e.dp, e.dq) - behind
+        if maximum(e.p.x, e.q.x) < self.lo.x - EPS
+            || minimum(e.p.x, e.q.x) > self.hi.x + EPS
+            || maximum(e.p.y, e.q.y) < self.lo.y - EPS
+            || minimum(e.p.y, e.q.y) > self.hi.y + EPS
+            || self.near > maximum(e.dp, e.dq) - behind
         {
             return None;
         }
@@ -573,9 +573,9 @@ impl Cover {
                     hi = -1.0;
                 }
             } else if b > 0.0 {
-                lo = js_max(lo, -a / b);
+                lo = maximum(lo, -a / b);
             } else {
-                hi = js_min(hi, -a / b);
+                hi = minimum(hi, -a / b);
             }
         };
         let n = self.ring.len();
@@ -619,7 +619,7 @@ fn joined(mut spans: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = Vec::new();
     for (a, b) in spans {
         match out.last_mut() {
-            Some(last) if a <= last.1 => last.1 = js_max(last.1, b),
+            Some(last) if a <= last.1 => last.1 = maximum(last.1, b),
             _ => out.push((a, b)),
         }
     }
@@ -662,7 +662,7 @@ fn joints(e: &Edge, covers: &[Cover], finishes: &[Option<&str>]) -> Vec<(f64, f6
     let mut out = Vec::new();
     for &(a0, a1) in &left {
         for &(b0, b1) in &right {
-            let (lo, hi) = (js_max(a0, b0), js_min(a1, b1));
+            let (lo, hi) = (maximum(a0, b0), minimum(a1, b1));
             if hi > lo {
                 out.push((lo, hi));
             }
@@ -774,13 +774,13 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
                         runs = runs
                             .into_iter()
                             .flat_map(|(a, b)| {
-                                let (lo, hi) = (js_max(a, va), js_min(b, vb));
+                                let (lo, hi) = (maximum(a, va), minimum(b, vb));
                                 if hi - lo <= EPS {
                                     return vec![(a, b)];
                                 }
                                 let (zl, zh) = (s.z(frame.at(lo, 0.0)), s.z(frame.at(hi, 0.0)));
-                                if v.bottom > js_min(zl, zh) - s.thickness + EPS
-                                    || v.top < js_max(zl, zh) - EPS
+                                if v.bottom > minimum(zl, zh) - s.thickness + EPS
+                                    || v.top < maximum(zl, zh) - EPS
                                 {
                                     return vec![(a, b)];
                                 }
@@ -845,7 +845,7 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
             if a > t {
                 pieces.push((t, a));
             }
-            t = js_max(t, b);
+            t = maximum(t, b);
         }
         if t < 1.0 {
             pieces.push((t, 1.0));
@@ -860,7 +860,7 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
                 solid: e.solid,
                 a: at(a),
                 b: at(b),
-                depth: js_min(da, db),
+                depth: minimum(da, db),
             };
             // An edge two faces share (a corner's vertical edge) is drawn once.
             let (ka, kb) = (key(seen.a), key(seen.b));
@@ -906,7 +906,9 @@ pub fn seen_at(frame: &Frame, solids: &[Solid], at: Vec2) -> Option<(usize, f64)
             let on = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
             let (a, b) = (on(t0), on(t1));
             let (u0, u1) = (frame.u(a), frame.u(b));
-            if (u1 - u0).abs() <= EPS || at.x < js_min(u0, u1) - EPS || at.x > js_max(u0, u1) + EPS
+            if (u1 - u0).abs() <= EPS
+                || at.x < minimum(u0, u1) - EPS
+                || at.x > maximum(u0, u1) + EPS
             {
                 continue;
             }
@@ -1132,8 +1134,8 @@ fn flight_faces(
             {
                 edges.push(Edge {
                     solid,
-                    p: Vec2::new(tr.u1, js_min(tr.top, next.top)),
-                    q: Vec2::new(tr.u1, js_max(tr.top, next.top)),
+                    p: Vec2::new(tr.u1, minimum(tr.top, next.top)),
+                    q: Vec2::new(tr.u1, maximum(tr.top, next.top)),
                     dp: tr.d1,
                     dq: tr.d1,
                     plane: None,
@@ -1190,7 +1192,7 @@ fn flight_faces(
             let pt = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
             let (a, b) = (pt(t0), pt(t1));
             let (u0, u1, d0, d1) = (frame.u(a), frame.u(b), frame.d(a), frame.d(b));
-            let (z0, z1) = (js_min(low, high), js_max(low, high));
+            let (z0, z1) = (minimum(low, high), maximum(low, high));
             if let Some(depth) = vertical_depth(u0, d0, u1, d1) {
                 covers.extend(Cover::new(
                     vec![
@@ -1447,7 +1449,7 @@ fn sloped_seen_at(frame: &Frame, solid: &Solid, s: &Sloped, at: Vec2) -> Option<
             continue;
         }
         let (u0, u1) = (frame.u(p), frame.u(q));
-        if (u1 - u0).abs() <= EPS || at.x < js_min(u0, u1) - EPS || at.x > js_max(u0, u1) + EPS {
+        if (u1 - u0).abs() <= EPS || at.x < minimum(u0, u1) - EPS || at.x > maximum(u0, u1) + EPS {
             continue;
         }
         let k = (at.x - u0) / (u1 - u0);
@@ -1523,7 +1525,7 @@ mod tests {
             .seen
             .iter()
             .filter(|e| e.solid == 1 && (e.a.y - 3.0).abs() < 1e-9 && (e.b.y - 3.0).abs() < 1e-9)
-            .map(|e| (js_min(e.a.x, e.b.x), js_max(e.a.x, e.b.x)))
+            .map(|e| (minimum(e.a.x, e.b.x), maximum(e.a.x, e.b.x)))
             .collect();
         tops.sort_by(|a, b| a.0.total_cmp(&b.0));
         assert_eq!(tops.len(), 2, "{tops:?}");
@@ -1592,7 +1594,7 @@ mod tests {
         let reveals: Vec<&Seen> = s
             .seen
             .iter()
-            .filter(|e| (e.a.x - e.b.x).abs() < 1e-9 && (js_min(e.a.y, e.b.y) - 0.9).abs() < 1e-9)
+            .filter(|e| (e.a.x - e.b.x).abs() < 1e-9 && (minimum(e.a.y, e.b.y) - 0.9).abs() < 1e-9)
             .collect();
         assert_eq!(reveals.len(), 2, "{:?}", s.seen);
         assert!(reveals.iter().all(|e| (e.depth - 0.6).abs() < 1e-9));

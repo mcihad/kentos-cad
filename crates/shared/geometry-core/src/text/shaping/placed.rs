@@ -11,7 +11,7 @@ fn rules_of(flow: &rich::Layout, piece: usize) -> &[rich::Rule] {
 use crate::{
     entity::TextPlace,
     geom::affine::{self, Affine},
-    jsmath::{PI, atan2, js_max, js_min},
+    jsmath::{PI, atan2, maximum, minimum},
     text::{Font, TextAlign, along::Walk},
     vec2::Vec2,
 };
@@ -51,10 +51,10 @@ fn rect(m: &Affine, [a, b, c, d]: [f64; 4]) -> [[f64; 2]; 4] {
 fn include(ink: &mut Option<[f64; 4]>, p: [f64; 2]) {
     match ink {
         Some(b) => {
-            b[0] = js_min(b[0], p[0]);
-            b[1] = js_min(b[1], p[1]);
-            b[2] = js_max(b[2], p[0]);
-            b[3] = js_max(b[3], p[1]);
+            b[0] = minimum(b[0], p[0]);
+            b[1] = minimum(b[1], p[1]);
+            b[2] = maximum(b[2], p[0]);
+            b[3] = maximum(b[3], p[1]);
         }
         None => *ink = Some([p[0], p[1], p[0], p[1]]),
     }
@@ -233,11 +233,11 @@ pub fn layout(t: &TextPlace<'_>, font: Font, italic: bool) -> Result<Layout, Err
                 let left = glyphs[from..to]
                     .iter()
                     .map(|g| g.pen)
-                    .fold(f64::INFINITY, js_min);
+                    .fold(f64::INFINITY, minimum);
                 let right = glyphs[from..to]
                     .iter()
                     .map(|g| g.pen + g.advance)
-                    .fold(f64::NEG_INFINITY, js_max);
+                    .fold(f64::NEG_INFINITY, maximum);
                 let middle = (left + right) * sx / 2.;
                 let (p, tangent) = locate(start + middle, 0.);
                 let turn = atan2(tangent.y, tangent.x);
@@ -280,7 +280,7 @@ pub fn layout(t: &TextPlace<'_>, font: Font, italic: bool) -> Result<Layout, Err
                 }
                 for rule in &active {
                     let [a, b, c, d] = rule.rect;
-                    let (a, c) = (js_max(a, left), js_min(c, right));
+                    let (a, c) = (maximum(a, left), minimum(c, right));
                     if c > a {
                         out.rules.push(PlacedRule {
                             corners: rect(&m, [a, b, c, d]),

@@ -16,7 +16,7 @@ use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::hatch_pattern::carried;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::ops::rubber::{Link, RubberError, Sheet};
 use crate::ops::transform::transform_shape;
@@ -211,7 +211,7 @@ pub struct Warped {
 /// each halved while its middle's image lies more than [`CHORD`] from the
 /// chord of its ends' images.
 fn densify(warp: &Warp, point: &dyn Fn(f64) -> Vec2, t0: f64, t1: f64) -> Result<Vec<f64>, Beyond> {
-    let n = js_max(((t1 - t0).abs() / STEP).ceil(), 1.0) as usize;
+    let n = maximum(((t1 - t0).abs() / STEP).ceil(), 1.0) as usize;
     let mut out = vec![t0];
     for k in 0..n {
         let ta = t0 + (t1 - t0) * k as f64 / n as f64;
@@ -319,7 +319,7 @@ fn image_of(j: &Jacobian, m: Vec2, n: Vec2) -> Image {
     let phi = 0.5 * atan2(2.0 * q, p - s);
     let root = hypot((p - s) / 2.0, q);
     let s1 = ((p + s) / 2.0 + root).sqrt();
-    let s2 = js_max((p + s) / 2.0 - root, 0.0).sqrt();
+    let s2 = maximum((p + s) / 2.0 - root, 0.0).sqrt();
     let u1 = Vec2::new(cos(phi), sin(phi));
     Image {
         major: Vec2::new(s1 * u1.x, s1 * u1.y),
@@ -1108,7 +1108,7 @@ fn bend_of(shape: &Shape, sheet: &Sheet) -> f64 {
         for i in 0..edges {
             let j = (i + 1) % n;
             let bulge = bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0);
-            worst = js_max(worst, edge_bend(pts[i], pts[j], bulge, sheet));
+            worst = maximum(worst, edge_bend(pts[i], pts[j], bulge, sheet));
         }
         worst
     };
@@ -1124,12 +1124,12 @@ fn bend_of(shape: &Shape, sheet: &Sheet) -> f64 {
         } => {
             let mut worst = ring(pts, bulges.as_ref(), true);
             for h in holes.iter().flatten() {
-                worst = js_max(worst, ring(&h.pts, h.bulges.as_ref(), true));
+                worst = maximum(worst, ring(&h.pts, h.bulges.as_ref(), true));
             }
             for part in parts.iter().flatten() {
-                worst = js_max(worst, ring(&part.pts, part.bulges.as_ref(), true));
+                worst = maximum(worst, ring(&part.pts, part.bulges.as_ref(), true));
                 for h in part.holes.iter().flatten() {
-                    worst = js_max(worst, ring(&h.pts, h.bulges.as_ref(), true));
+                    worst = maximum(worst, ring(&h.pts, h.bulges.as_ref(), true));
                 }
             }
             worst
@@ -1137,7 +1137,7 @@ fn bend_of(shape: &Shape, sheet: &Sheet) -> f64 {
         Shape::Hatch { ring: r, holes, .. } => {
             let mut worst = ring(r, None, true);
             for h in holes.iter().flatten() {
-                worst = js_max(worst, ring(h, None, true));
+                worst = maximum(worst, ring(h, None, true));
             }
             worst
         }
@@ -1190,14 +1190,14 @@ fn edge_bend(a: Vec2, b: Vec2, bulge: f64, sheet: &Sheet) -> f64 {
                     arc.c.y + arc.r * sin(u),
                 ));
                 let here = Vec2::new(kept.c.x + kept.r * cos(v), kept.c.y + kept.r * sin(v));
-                worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
+                worst = maximum(worst, hypot(real.x - here.x, real.y - here.y));
             }
         }
         _ => {
             for t in QUARTERS {
                 let real = sheet.map(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
                 let here = Vec2::new(na.x + (nb.x - na.x) * t, na.y + (nb.y - na.y) * t);
-                worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
+                worst = maximum(worst, hypot(real.x - here.x, real.y - here.y));
             }
         }
     }
@@ -1216,7 +1216,7 @@ fn curve_bend(c: Vec2, m: Vec2, n: Vec2, span: (f64, f64), sheet: &Sheet) -> f64
         let v = Vec2::new(m.x * cos(t) + n.x * sin(t), m.y * cos(t) + n.y * sin(t));
         let real = sheet.map(Vec2::new(c.x + v.x, c.y + v.y));
         let here = Vec2::new(to.x + sa * v.x + sc * v.y, to.y + sb * v.x + sd * v.y);
-        worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
+        worst = maximum(worst, hypot(real.x - here.x, real.y - here.y));
     }
     worst
 }
@@ -1259,7 +1259,7 @@ pub fn sheet_shapes(shapes: &[Shape], zs: &[Vec<Vec<Option<f64>>>], links: &[Lin
         let (w, b) = sheet_shape(s, zs.get(i).unwrap_or(&none), &sheet);
         kept += usize::from(w.kept);
         bent += usize::from(b > CHORD);
-        bend = js_max(bend, b);
+        bend = maximum(bend, b);
         out.push(w);
     }
     SheetAll(Ok((out, kept, bent, bend)))
@@ -1361,7 +1361,7 @@ mod tests {
                 let limit = if path.ends_with(".x") || path.ends_with(".y") || path == ".bend" {
                     metres
                 } else {
-                    relative * js_max(y.abs(), 1.0)
+                    relative * maximum(y.abs(), 1.0)
                 };
                 if (x - y).abs() <= limit {
                     Ok(())

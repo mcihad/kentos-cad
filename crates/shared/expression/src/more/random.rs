@@ -6,7 +6,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::js_min;
+use kentos_geometry_core::jsmath::minimum;
 
 use crate::library::Func;
 use crate::scalar::{R, V, to_number};
@@ -101,7 +101,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
                 return R::V(V::Null);
             };
             let span = hi - lo + 1.0;
-            R::V(V::Num(js_min(lo + (unit(r) * span).floor(), hi)))
+            R::V(V::Num(minimum(lo + (unit(r) * span).floor(), hi)))
         }
         Func::RandF => {
             let lo = if args.is_empty() {

@@ -12,7 +12,7 @@ use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::offset::offset_path;
 use kentos_geometry_core::jsmath::{
-    PI, TAU, acos, atan, atan2, cos, hypot, js_max, js_min, js_round, sin,
+    PI, TAU, acos, atan, atan2, cos, hypot, js_round, maximum, minimum, sin,
 };
 use kentos_geometry_core::ops::generate::bounding::convex_hull;
 use kentos_geometry_core::ops::geoprocess::Class;
@@ -165,8 +165,8 @@ fn step(s: &Step, g: Gen, t: &dyn Values, env: &Env, unit: Unit) -> Gen {
         }
         Step::Extend { start, end } => match g {
             Gen::Lines(paths) => {
-                let a = js_max(len(start).unwrap_or(0.0), 0.0);
-                let b = js_max(len(end).unwrap_or(0.0), 0.0);
+                let a = maximum(len(start).unwrap_or(0.0), 0.0);
+                let b = maximum(len(end).unwrap_or(0.0), 0.0);
                 Gen::Lines(
                     paths
                         .into_iter()
@@ -197,10 +197,10 @@ fn step(s: &Step, g: Gen, t: &dyn Values, env: &Env, unit: Unit) -> Gen {
                 f64::NEG_INFINITY,
             );
             for p in &c {
-                x0 = js_min(x0, p.x);
-                y0 = js_min(y0, p.y);
-                x1 = js_max(x1, p.x);
-                y1 = js_max(y1, p.y);
+                x0 = minimum(x0, p.x);
+                y0 = minimum(y0, p.y);
+                x1 = maximum(x1, p.x);
+                y1 = maximum(y1, p.y);
             }
             if !(x1 > x0 && y1 > y0) {
                 return Gen::Areas(Vec::new());
@@ -240,7 +240,7 @@ fn step(s: &Step, g: Gen, t: &dyn Values, env: &Env, unit: Unit) -> Gen {
             else {
                 return Gen::Areas(Vec::new());
             };
-            let ri = js_max(len(inner).unwrap_or(0.0), 0.0);
+            let ri = maximum(len(inner).unwrap_or(0.0), 0.0);
             if w <= 0.0 || r <= 0.0 || ri >= r {
                 return Gen::Areas(Vec::new());
             }
@@ -263,7 +263,7 @@ fn step(s: &Step, g: Gen, t: &dyn Values, env: &Env, unit: Unit) -> Gen {
                 return Gen::Areas(Vec::new());
             }
             let turn = value(rotation, t).unwrap_or(0.0);
-            let n = js_min(n, 720.0) as usize;
+            let n = minimum(n, 720.0) as usize;
             Gen::Areas(
                 centres(&g)
                     .into_iter()
@@ -486,7 +486,7 @@ pub fn chords(sweep: f64, r: f64, tol: f64) -> usize {
     if r.is_nan() || r <= tol || !sweep.is_finite() || sweep == 0.0 {
         return 1;
     }
-    let most = js_max((720.0 * sweep / TAU).ceil(), 1.0);
+    let most = maximum((720.0 * sweep / TAU).ceil(), 1.0);
     let n = (sweep / (2.0 * acos(1.0 - tol / r))).ceil();
     n.clamp(1.0, most) as usize
 }

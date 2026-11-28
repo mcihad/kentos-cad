@@ -6,7 +6,9 @@
 
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, hypot, js_max, js_min, js_round, sin, truthy};
+use kentos_geometry_core::jsmath::{
+    PI, atan2, cos, hypot, js_round, maximum, minimum, sin, truthy,
+};
 use kentos_style_core::js::number;
 
 use crate::path::{
@@ -331,8 +333,8 @@ pub fn to_path(s: &Obj) -> Obj {
     }
     let mut subs: Vec<SubPath>;
     if kind == "rect" {
-        let r = js_min(
-            js_min(s.opt_num("r").unwrap_or(0.0), s.num("w") / 2.0),
+        let r = minimum(
+            minimum(s.opt_num("r").unwrap_or(0.0), s.num("w") / 2.0),
             s.num("h") / 2.0,
         );
         let k = 0.5523 * r;
@@ -528,7 +530,7 @@ pub fn transform_shape(s: &Obj, m: &Matrix) -> Result<Option<Obj>, String> {
                 out.put(
                     "r",
                     s.is("r")
-                        .then(|| Json::Num(s.num("r") * js_min(m[0], m[3]))),
+                        .then(|| Json::Num(s.num("r") * minimum(m[0], m[3]))),
                 );
                 return Ok(Some(out));
             }
@@ -576,8 +578,8 @@ pub fn transform_shape(s: &Obj, m: &Matrix) -> Result<Option<Obj>, String> {
 
 /// Maps box `a` onto box `b` (scaling about their corners).
 pub fn box_to_box(a: &Bounds, b: &Bounds) -> Matrix {
-    let sx = (b.max_x - b.min_x) / js_max(a.max_x - a.min_x, 1e-9);
-    let sy = (b.max_y - b.min_y) / js_max(a.max_y - a.min_y, 1e-9);
+    let sx = (b.max_x - b.min_x) / maximum(a.max_x - a.min_x, 1e-9);
+    let sy = (b.max_y - b.min_y) / maximum(a.max_y - a.min_y, 1e-9);
     [
         sx,
         0.0,

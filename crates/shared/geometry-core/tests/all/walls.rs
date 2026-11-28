@@ -6,7 +6,7 @@
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::wall::{self, Detail, Spec, View};
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -19,7 +19,7 @@ fn pt(v: &Value) -> Vec2 {
 
 fn num(name: &str, what: &str, got: f64, want: f64) {
     assert!(
-        (got - want).abs() <= TOL * js_max(want.abs(), 1.0),
+        (got - want).abs() <= TOL * maximum(want.abs(), 1.0),
         "{name}: {what} {got}, başvuru {want}"
     );
 }

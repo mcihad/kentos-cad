@@ -6,7 +6,7 @@
 //! `store::proximity`'s and `ops::proximity`'s unit tests.
 
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::jsmath::js_min;
+use kentos_geometry_core::jsmath::minimum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::proximity::{Measure, NEAREST_STRIDE, NEIGHBOR_STRIDE};
 use kentos_geometry_core::vec2::Vec2;
@@ -146,7 +146,7 @@ fn least(runs: usize, mut work: impl FnMut() -> usize) -> (f64, usize) {
     for _ in 0..runs {
         let t = std::time::Instant::now();
         count = work();
-        best = js_min(best, t.elapsed().as_secs_f64() * 1000.0);
+        best = minimum(best, t.elapsed().as_secs_f64() * 1000.0);
     }
     (best, count)
 }

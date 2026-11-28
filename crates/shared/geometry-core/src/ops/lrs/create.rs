@@ -3,7 +3,7 @@
 //! each.
 
 use super::{ON, RoutePart, dist, steps};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 use std::collections::HashMap;
 
@@ -232,10 +232,10 @@ fn chained(
         f64::NEG_INFINITY,
     );
     for p in all {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
     let corner = match priority {
         Priority::UpperLeft => Vec2::new(x0, y1),

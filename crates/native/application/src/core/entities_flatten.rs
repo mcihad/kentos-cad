@@ -30,11 +30,11 @@ impl Tally {
             self.vertices += 1;
             self.low = Some(
                 self.low
-                    .map_or(z, |l| kentos_geometry_core::jsmath::js_min(l, z)),
+                    .map_or(z, |l| kentos_geometry_core::jsmath::minimum(l, z)),
             );
             self.high = Some(
                 self.high
-                    .map_or(z, |h| kentos_geometry_core::jsmath::js_max(h, z)),
+                    .map_or(z, |h| kentos_geometry_core::jsmath::maximum(h, z)),
             );
         }
         plane

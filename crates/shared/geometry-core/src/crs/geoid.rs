@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use super::System;
 use super::Unreached;
 use super::datum::{from_geocentric, to_geocentric};
-use crate::jsmath::{PI, js_max, js_min};
+use crate::jsmath::{PI, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// The largest grid file read (1 GiB: EGM2008 at 1′ is 933 MB as GTX).
@@ -153,9 +153,9 @@ impl NodeGrid {
                 if back < -1e-9 {
                     return None;
                 }
-                fx = js_max(back, 0.0);
+                fx = maximum(back, 0.0);
             }
-            fx = js_min(fx, last_col);
+            fx = minimum(fx, last_col);
         }
         let (i0, j0) = (libm::floor(fx) as usize, libm::floor(fy) as usize);
         let (i1, j1) = if global {

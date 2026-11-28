@@ -20,7 +20,7 @@
 use std::time::Duration;
 
 use iced::Task;
-use kentos_geometry_core::jsmath::{cos, js_sign, sin};
+use kentos_geometry_core::jsmath::{cos, sign, sin};
 use kentos_geometry_core::store::snap::Extension;
 use kentos_interaction::object_tracking::{Acquired, DWELL_MS};
 use kentos_interaction::{Format, SnapKind, Vec2, dist};
@@ -131,7 +131,7 @@ fn guide(x: &Extension, d: f64) -> Guide {
             Guide::Path(
                 (0..=steps)
                     .map(|i| {
-                        let a = a0 + js_sign(sweep) * turn * i as f64 / steps as f64;
+                        let a = a0 + sign(sweep) * turn * i as f64 / steps as f64;
                         Vec2::new(c.x + r * cos(a), c.y + r * sin(a))
                     })
                     .collect(),

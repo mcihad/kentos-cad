@@ -22,7 +22,7 @@ use crate::geom::arrangement::{Area, edge_box, edge_len};
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, hypot, js_max, js_min, stable_sort};
+use crate::jsmath::{PI, hypot, maximum, minimum, stable_sort};
 use crate::ops::geoprocess::{Class, class_of};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
@@ -449,7 +449,7 @@ impl<'a> Pace<'a> {
         let part = if of == 0 {
             1.0
         } else {
-            js_min(done as f64 / of as f64, 1.0)
+            minimum(done as f64 / of as f64, 1.0)
         };
         self.watch.progress(self.from + self.share * part);
         true
@@ -489,9 +489,9 @@ impl Boxes {
     /// query grows by a margin over the rounding of a test that grows the other box instead).
     pub(crate) fn near(&self, b: &Bounds, t: f64, out: &mut Vec<u32>) {
         out.clear();
-        let m = js_max(
-            js_max(b.min_x.abs(), b.max_x.abs()),
-            js_max(b.min_y.abs(), b.max_y.abs()),
+        let m = maximum(
+            maximum(b.min_x.abs(), b.max_x.abs()),
+            maximum(b.min_y.abs(), b.max_y.abs()),
         );
         let grown = t + (m + t.abs()) * 1e-12;
         let q = Bounds {
@@ -508,24 +508,24 @@ impl Boxes {
 
 /// The distance from `p` to a box (0 inside).
 pub(crate) fn box_dist(b: &Bounds, p: Vec2) -> f64 {
-    let dx = js_max(js_max(b.min_x - p.x, p.x - b.max_x), 0.0);
-    let dy = js_max(js_max(b.min_y - p.y, p.y - b.max_y), 0.0);
+    let dx = maximum(maximum(b.min_x - p.x, p.x - b.max_x), 0.0);
+    let dy = maximum(maximum(b.min_y - p.y, p.y - b.max_y), 0.0);
     hypot(dx, dy)
 }
 
 /// A distance's lower bound with room for its rounding: what a best-first search may order a box by when what it
 /// holds is measured by another computation (`closest_on_edge`, `dist`).
 pub(crate) fn below(d: f64, p: Vec2) -> f64 {
-    js_max(d - (p.x.abs() + p.y.abs() + d) * 1e-12, 0.0)
+    maximum(d - (p.x.abs() + p.y.abs() + d) * 1e-12, 0.0)
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────
 
 fn grow(b: &mut Bounds, by: &Bounds) {
-    b.min_x = js_min(b.min_x, by.min_x);
-    b.min_y = js_min(b.min_y, by.min_y);
-    b.max_x = js_max(b.max_x, by.max_x);
-    b.max_y = js_max(b.max_y, by.max_y);
+    b.min_x = minimum(b.min_x, by.min_x);
+    b.min_y = minimum(b.min_y, by.min_y);
+    b.max_x = maximum(b.max_x, by.max_x);
+    b.max_y = maximum(b.max_y, by.max_y);
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
@@ -738,7 +738,7 @@ fn near_all<'a>(e: &Edge, edges: impl IntoIterator<Item = &'a Edge>, t: f64) -> 
     let mut out: Vec<(f64, f64)> = Vec::new();
     for (s0, s1) in all {
         match out.last_mut() {
-            Some(last) if s0 <= last.1 + 1e-12 => last.1 = js_max(last.1, s1),
+            Some(last) if s0 <= last.1 + 1e-12 => last.1 = maximum(last.1, s1),
             _ => out.push((s0, s1)),
         }
     }

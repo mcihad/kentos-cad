@@ -36,7 +36,7 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_point};
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{TAU, atan2, hypot, js_max, js_min};
+use crate::jsmath::{TAU, atan2, hypot, maximum, minimum};
 use crate::ops::edges::entity_edges;
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
@@ -977,11 +977,11 @@ fn along_point(shape: &Shape, part: usize, ring: usize, index: usize, t: f64) ->
 
 /// How near a snap's point must be to an edge to stand on it: a nanometre, or 1e-14 of its coordinates when larger.
 fn near_enough(at: Vec2) -> f64 {
-    js_max(1e-9, 1e-14 * js_max(at.x.abs(), at.y.abs()))
+    maximum(1e-9, 1e-14 * maximum(at.x.abs(), at.y.abs()))
 }
 
 fn clamp01(t: f64) -> f64 {
-    js_min(1.0, js_max(0.0, t))
+    minimum(1.0, maximum(0.0, t))
 }
 
 /// The fraction of a straight edge at which `at` lies on it; none off it.

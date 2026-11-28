@@ -28,7 +28,7 @@ pub mod walk;
 
 use crate::entity::{Shape, entity_bounds};
 use crate::geometry::{Bounds, is_empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::ops::convert::Zs;
 use crate::ops::geoprocess::{Class, class_of};
 use inside::Inside;
@@ -59,10 +59,10 @@ pub fn extent(shapes: &[Shape]) -> Option<Bounds> {
         out = Some(match out {
             None => b,
             Some(a) => Bounds {
-                min_x: js_min(a.min_x, b.min_x),
-                min_y: js_min(a.min_y, b.min_y),
-                max_x: js_max(a.max_x, b.max_x),
-                max_y: js_max(a.max_y, b.max_y),
+                min_x: minimum(a.min_x, b.min_x),
+                min_y: minimum(a.min_y, b.min_y),
+                max_x: maximum(a.max_x, b.max_x),
+                max_y: maximum(a.max_y, b.max_y),
             },
         });
     }

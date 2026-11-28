@@ -18,7 +18,7 @@ use super::turns::{Level, TurnIn, level_value};
 use crate::geom::arrangement::{edge_box, edge_len, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -36,7 +36,7 @@ pub(super) struct Cut {
 /// finds within the tolerance is among an index's candidates whatever the index's cells (a full build's and a
 /// rebuild's then find the same; docs/adr/0641 §1).
 pub(super) fn reach(tol: f64) -> f64 {
-    tol + js_max(tol * 1e-6, 1e-6)
+    tol + maximum(tol * 1e-6, 1e-6)
 }
 
 /// Boxes grown by a distance in a dense grid of square cells, counted then filled into one array: for the many
@@ -64,17 +64,17 @@ impl CellIndex {
         );
         let mut sum = 0.0;
         for (_, b) in boxes {
-            x0 = js_min(x0, b.min_x - grow);
-            y0 = js_min(y0, b.min_y - grow);
-            x1 = js_max(x1, b.max_x + grow);
-            y1 = js_max(y1, b.max_y + grow);
-            sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y) + 2.0 * grow;
+            x0 = minimum(x0, b.min_x - grow);
+            y0 = minimum(y0, b.min_y - grow);
+            x1 = maximum(x1, b.max_x + grow);
+            y1 = maximum(y1, b.max_y + grow);
+            sum += maximum(b.max_x - b.min_x, b.max_y - b.min_y) + 2.0 * grow;
         }
         if !x0.is_finite() {
             (x0, y0, x1, y1) = (0.0, 0.0, 0.0, 0.0);
         }
         // Cells about the boxes' usual size, at most four for each box over the whole extent.
-        let mut size = js_max(sum / n as f64, 1e-9);
+        let mut size = maximum(sum / n as f64, 1e-9);
         let most = (4 * n).max(1024) as f64;
         while ((x1 - x0) / size + 1.0) * ((y1 - y0) / size + 1.0) > most {
             size *= 2.0;
@@ -155,7 +155,7 @@ impl CellIndex {
         if !(x1 >= 0.0 && y1 >= 0.0) || x0 >= self.nx as f64 || y0 >= self.ny as f64 {
             return;
         }
-        let clamp = |v: f64, n: usize| (js_max(v, 0.0) as usize).min(n - 1);
+        let clamp = |v: f64, n: usize| (maximum(v, 0.0) as usize).min(n - 1);
         for y in clamp(y0, self.ny)..=clamp(y1, self.ny) {
             for x in clamp(x0, self.nx)..=clamp(x1, self.nx) {
                 let k = y * self.nx + x;

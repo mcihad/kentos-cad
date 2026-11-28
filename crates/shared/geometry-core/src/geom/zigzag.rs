@@ -4,7 +4,7 @@
 //! a size of their own, break into pieces in a band thinner than them or sloping across them.
 
 use crate::geometry::point_in_polygon;
-use crate::jsmath::{hypot, js_floor};
+use crate::jsmath::hypot;
 use crate::ops::generate::bounding::convex_hull;
 use crate::vec2::Vec2;
 
@@ -55,7 +55,7 @@ pub fn fitted(ring: &[Vec2], least: f64) -> Vec<Vec<Vec2>> {
     let across = Vec2::new(-u.y, u.x);
     let step = thick / 2.0;
     // One step past its far end: the clip ends it where the band does.
-    let count = (js_floor((hi - lo) / step) as usize + 1).min(MOST);
+    let count = (f64::floor((hi - lo) / step) as usize + 1).min(MOST);
     let pts: Vec<Vec2> = (0..=count)
         .map(|k| {
             let s = lo + k as f64 * step;

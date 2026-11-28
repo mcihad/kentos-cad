@@ -6,7 +6,7 @@ use crate::api::Op;
 use crate::geom::arc::{DEFAULT_STEP, circle_through, norm_angle};
 use crate::geom::intersect::Edge;
 use crate::geometry::{path_length, signed_area};
-use crate::jsmath::{PI, atan, atan2, cos, hypot, js_max, or, sin, tan};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, maximum, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -199,7 +199,7 @@ pub fn bulge_path_outline(
         let Some(arc) = bulge_arc(a, pts[(i + 1) % n], bulge_at(bulges, i)) else {
             continue;
         };
-        let steps = js_max(2.0, (arc.sweep.abs() / max_step).ceil());
+        let steps = maximum(2.0, (arc.sweep.abs() / max_step).ceil());
         let mut k = 1.0;
         while k < steps {
             let t = arc.a0 + (arc.sweep * k) / steps;

@@ -20,7 +20,7 @@ fn num(v: &Value) -> f64 {
 /// A coordinate to 1 nm, or to two units in the last place of a map coordinate's f64, whichever is larger: the
 /// reference is exact to 50 digits, the core's f64 rounds its final sum at a large coordinate's ulp (≈ 1 nm at 4.4e6).
 fn near(got: f64, want: f64, what: &str) {
-    let tol = kentos_geometry_core::jsmath::js_max(2.0 * f64::EPSILON * want.abs(), 1e-9);
+    let tol = kentos_geometry_core::jsmath::maximum(2.0 * f64::EPSILON * want.abs(), 1e-9);
     assert!((got - want).abs() <= tol, "{what}: {got} ≠ {want} (±{tol})");
 }
 
@@ -61,7 +61,7 @@ fn the_cut_leaves_the_target_beside_the_edge() {
             (cut.far, &want["far"], "far"),
         ] {
             assert!(
-                (g - num(w)).abs() <= 1e-9 * kentos_geometry_core::jsmath::js_max(scale, 1.0),
+                (g - num(w)).abs() <= 1e-9 * kentos_geometry_core::jsmath::maximum(scale, 1.0),
                 "{name}: {what} {g} ≠ {w}"
             );
         }

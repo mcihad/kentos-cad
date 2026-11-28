@@ -15,7 +15,7 @@ use crate::entity::{Entity, Part, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, clean_bulge_path};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{Division, Path, cuts_on, division_params, path_of, sub_path};
@@ -49,7 +49,7 @@ pub fn pieces_at(e: &Entity, path: &Path, cuts: &[f64]) -> Option<Vec<Entity>> {
         bounds.extend_from_slice(cuts);
         bounds.push(path.length);
     }
-    let eps = 1e-9 * js_max(1.0, path.length);
+    let eps = 1e-9 * maximum(1.0, path.length);
     let pieces: Vec<Entity> = bounds
         .windows(2)
         .filter(|w| w[1] - w[0] > eps)
@@ -376,7 +376,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
 /// not a finite number.
 fn anchor(s: &Shape) -> Option<f64> {
     let x = match s {
-        Shape::Line { a, b } => js_min(a.x, b.x),
+        Shape::Line { a, b } => minimum(a.x, b.x),
         Shape::Point { p, .. }
         | Shape::Text { p, .. }
         | Shape::Insert { p, .. }

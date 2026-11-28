@@ -5,7 +5,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part, leader_refused};
 use crate::geom::bulge::bulge_ring_area;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::curve_cuts::{Cut, break_construction, break_ellipse, construction_of, ellipse_of};
 use crate::ops::path::{nearest_s, path_of, sub_path};
@@ -47,7 +47,7 @@ pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
         return Cut::Error("Bu nesne kırılamaz.".into());
     };
     let l = path.length;
-    let eps = 1e-7 * js_max(1.0, l);
+    let eps = 1e-7 * maximum(1.0, l);
     let mut s1 = nearest_s(&path, p1);
     let mut s2 = nearest_s(&path, p2);
     let at_point = (s1 - s2).abs() <= eps || (path.closed && ((s1 - s2).abs() - l).abs() <= eps);
@@ -61,8 +61,8 @@ pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
             }
             return Cut::Pieces(vec![sub_path(&path, 0.0, s1, s), sub_path(&path, s1, l, s)]);
         }
-        let lo = js_min(s1, s2);
-        let hi = js_max(s1, s2);
+        let lo = minimum(s1, s2);
+        let hi = maximum(s1, s2);
         let mut pieces = Vec::new();
         if lo > eps {
             pieces.push(sub_path(&path, 0.0, lo, s));

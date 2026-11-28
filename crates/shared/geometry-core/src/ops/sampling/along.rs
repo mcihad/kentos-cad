@@ -4,7 +4,7 @@
 //! and its elevation.
 
 use super::walk::Walk;
-use crate::jsmath::{atan2, js_max, js_min};
+use crate::jsmath::{atan2, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// How the points are spaced.
@@ -18,7 +18,7 @@ pub enum Spacing {
 
 /// The distances along a path of length `l` (§5).
 pub fn distances(l: f64, closed: bool, spacing: &Spacing, ends: bool) -> Vec<f64> {
-    let eps = 1e-9 * js_max(1.0, l);
+    let eps = 1e-9 * maximum(1.0, l);
     let mut out = Vec::new();
     match *spacing {
         Spacing::Interval { step, start, end } => {
@@ -29,7 +29,7 @@ pub fn distances(l: f64, closed: bool, spacing: &Spacing, ends: bool) -> Vec<f64
                     if !(s <= l - end + eps) {
                         break;
                     }
-                    out.push(js_min(s, l));
+                    out.push(minimum(s, l));
                     k += 1;
                 }
             }
@@ -67,7 +67,7 @@ pub fn how_many(l: f64, spacing: &Spacing, ends: bool) -> f64 {
     let extra = if ends { 2.0 } else { 0.0 };
     match *spacing {
         Spacing::Interval { step, start, end } => {
-            let eps = 1e-9 * js_max(1.0, l);
+            let eps = 1e-9 * maximum(1.0, l);
             let span = l - end + eps - start;
             let n = if step > 0.0 && span >= 0.0 {
                 (span / step).floor() + 1.0

@@ -8,7 +8,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::opening::{self, Spec as OpeningSpec};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -270,7 +270,7 @@ fn cut_as_the_reference_says(text: &str) {
                             - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>();
                         let wa = wa.as_f64().unwrap();
                         assert!(
-                            (a - wa).abs() <= TOL * js_max(wa, 1.0),
+                            (a - wa).abs() <= TOL * maximum(wa, 1.0),
                             "{name}: {k} {what} alanı {a}, başvuru {wa}"
                         );
                     }

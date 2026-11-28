@@ -187,7 +187,7 @@ pub fn adjust(ps: &[Option<f64>], c: Correction) -> Vec<Option<f64>> {
         Correction::None => ps.to_vec(),
         Correction::Bonferroni => ps
             .iter()
-            .map(|p| p.map(|p| crate::jsmath::js_min(1.0, p * m)))
+            .map(|p| p.map(|p| crate::jsmath::minimum(1.0, p * m)))
             .collect(),
         Correction::Fdr => {
             let mut order: Vec<(f64, usize)> = ps

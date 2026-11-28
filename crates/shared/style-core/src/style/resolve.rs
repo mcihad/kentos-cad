@@ -3,7 +3,7 @@
 //! several rules (each draws, as the style window's rules say); every match carries the scale
 //! range it is drawn in, so the GPU switches it per frame without a rebuild.
 
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 
 use super::compile::Values;
 use super::model::{Renderer, Rule, SymbolSet, Unit};
@@ -37,11 +37,11 @@ pub struct Resolved<'a> {
 fn narrow(a: Scale, r: &Rule) -> Scale {
     Scale {
         min: match r.min_scale {
-            Some(m) => Some(js_max(a.min.unwrap_or(0.0), m)),
+            Some(m) => Some(maximum(a.min.unwrap_or(0.0), m)),
             None => a.min,
         },
         max: match r.max_scale {
-            Some(m) => Some(js_min(a.max.unwrap_or(f64::INFINITY), m)),
+            Some(m) => Some(minimum(a.max.unwrap_or(f64::INFINITY), m)),
             None => a.max,
         },
     }

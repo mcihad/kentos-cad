@@ -34,7 +34,7 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
@@ -639,7 +639,7 @@ impl Footprints {
     pub fn voronoi(&self, step: f64) -> Vec<Pt> {
         let l = len(sub(self.end, self.start));
         let q = l / step;
-        let n = js_max(
+        let n = maximum(
             if (q - q.round_ties_even()).abs() <= 1e-9 {
                 q.round_ties_even()
             } else {
@@ -770,7 +770,7 @@ fn nearest(g: &[Pt], p: Pt) -> Near {
         let better = match best {
             None => true,
             Some((m, was)) => {
-                let tie = (d - m).abs() <= 1e-12 * js_max(1.0, m);
+                let tie = (d - m).abs() <= 1e-12 * maximum(1.0, m);
                 (d < m && !tie) || (tie && matches!((near, was), (Near::Edge(_), Near::Corner(_))))
             }
         };
@@ -885,7 +885,7 @@ pub fn grid_path(w: usize, h: usize, diff: &[f64], from: usize, to: usize) -> Op
             if !searched(q) {
                 continue;
             }
-            let cand = js_max(key, diff[q]);
+            let cand = maximum(key, diff[q]);
             if cand < best[q] {
                 best[q] = cand;
                 heap.push(Entry { key: cand, at: q });

@@ -4,7 +4,7 @@
 
 use crate::api::Op;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_ring_area, segment_mid};
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -54,7 +54,7 @@ pub fn edge_labels(
             Some(arc) => arc.r * arc.sweep.abs(),
             None => chord,
         };
-        if length < js_max(min_length, 1e-9) || chord < 1e-12 {
+        if length < maximum(min_length, 1e-9) || chord < 1e-12 {
             continue;
         }
         let nx = (-dy / chord) * outside;

@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 
 use kentos_geometry_core::api::json::{FromJson, Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{js_max, js_min, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
 use kentos_style_core::js::text::{slice, utf16_len};
 
 use crate::import::{ReferenceSpec, text_of};
@@ -67,7 +67,7 @@ pub fn export_box(
         return Ok(whole);
     }
     let pad = chosen.iter().fold(0.0, |m, s| {
-        js_max(
+        maximum(
             m,
             if s.text("stroke") != Some("none") {
                 s.num("strokeWidth") / 2.0
@@ -79,8 +79,8 @@ pub fn export_box(
     Ok(ExportBox {
         x: b.min_x - pad,
         y: b.min_y - pad,
-        w: js_max(b.max_x - b.min_x + 2.0 * pad, 1e-3),
-        h: js_max(b.max_y - b.min_y + 2.0 * pad, 1e-3),
+        w: maximum(b.max_x - b.min_x + 2.0 * pad, 1e-3),
+        h: maximum(b.max_y - b.min_y + 2.0 * pad, 1e-3),
     })
 }
 
@@ -373,7 +373,7 @@ kentos_geometry_core::json_struct!(out PngSize { width, height });
 /// DPI with the drawing's width in mm (without one, a unit is a CSS pixel,
 /// 96 dpi).
 pub fn png_size(w: f64, h: f64, px: Option<f64>, dpi: f64, width_mm: Option<f64>) -> PngSize {
-    let clamp = |v: f64| js_max(1.0, js_min(8192.0, js_round(v)));
+    let clamp = |v: f64| maximum(1.0, minimum(8192.0, js_round(v)));
     let width = match px {
         Some(px) => px,
         None => (width_mm.unwrap_or((w * 25.4) / 96.0) / 25.4) * dpi,

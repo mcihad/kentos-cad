@@ -14,7 +14,7 @@ use crate::geom::ellipse::{
     EllipseGeom, ellipse_length, ellipse_sweep, is_full_ellipse, param_of_point,
 };
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_sign, or, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, or, sign, sin};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::path::{nearest_s, path_of, sub_path};
@@ -245,7 +245,7 @@ fn lengthened(e: &Entity, at_end: bool, new_length: f64) -> Result<Entity, Why> 
         {
             return Err(Why::Closes);
         }
-        if (new_length - l).abs() <= 1e-12 * js_max(1.0, l) {
+        if (new_length - l).abs() <= 1e-12 * maximum(1.0, l) {
             return Ok(entity_geometry(e));
         }
         let end = g.t0 + ellipse_sweep(&g);
@@ -272,7 +272,7 @@ fn lengthened(e: &Entity, at_end: bool, new_length: f64) -> Result<Entity, Why> 
         return Err(Why::NoLength);
     };
     let l = path.length;
-    if (new_length - l).abs() <= 1e-12 * js_max(1.0, l) {
+    if (new_length - l).abs() <= 1e-12 * maximum(1.0, l) {
         return Ok(entity_geometry(e));
     }
     if new_length < l {
@@ -358,7 +358,7 @@ fn lengthened(e: &Entity, at_end: bool, new_length: f64) -> Result<Entity, Why> 
                 }
                 Some(arc) => {
                     // Grow the arc on its circle: the sweep gains delta / r in its own direction.
-                    let sw = arc.sweep + js_sign(arc.sweep) * (delta / arc.r);
+                    let sw = arc.sweep + sign(arc.sweep) * (delta / arc.r);
                     if sw.abs() >= TAU - 1e-9 {
                         return Err(Why::Closes);
                     }
@@ -448,7 +448,7 @@ pub fn length_toward(e: &Shape, at_end: bool, p: Vec2) -> Option<f64> {
         }
         Edge::Arc { c, r, a0, sweep } => {
             // Arc: angle travelled from the fixed end of the segment, in its direction.
-            let dir = or(js_sign(sweep), 1.0);
+            let dir = or(sign(sweep), 1.0);
             let fixed_angle = if at_end { a0 } else { a0 + sweep };
             let walk = if at_end { dir } else { -dir };
             let theta = norm_angle((atan2(p.y - c.y, p.x - c.x) - fixed_angle) * walk);

@@ -7,10 +7,10 @@
 /// two ends among them; one bay for a stretch not longer than `most`. `[0, length]` when either is not above 0.
 pub fn divisions(length: f64, most: f64) -> Vec<f64> {
     if !(length > 0.0 && length.is_finite() && most > 0.0 && most.is_finite()) {
-        return vec![0.0, crate::jsmath::js_max(length, 0.0)];
+        return vec![0.0, crate::jsmath::maximum(length, 0.0)];
     }
     // A stretch that is a whole number of spacings is that many bays: the ratio's last bit does not add one.
-    let n = crate::jsmath::js_max(libm::ceil(length / most - 1e-9), 1.0) as usize;
+    let n = crate::jsmath::maximum(libm::ceil(length / most - 1e-9), 1.0) as usize;
     (0..=n).map(|k| length * k as f64 / n as f64).collect()
 }
 

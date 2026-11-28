@@ -460,7 +460,7 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
         .shapes
         .iter()
         .filter_map(|sh| match sh {
-            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.y).reduce(crate::jsmath::js_min),
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.y).reduce(crate::jsmath::minimum),
             _ => None,
         })
         .collect();
@@ -485,10 +485,10 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
         .shapes
         .iter()
         .filter_map(|sh| match sh {
-            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.x).reduce(crate::jsmath::js_max),
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.x).reduce(crate::jsmath::maximum),
             _ => None,
         })
-        .fold(0.0, crate::jsmath::js_max);
+        .fold(0.0, crate::jsmath::maximum);
     assert!(far > 4.0, "{far}");
 }
 

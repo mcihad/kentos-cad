@@ -6,7 +6,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Shape, area_parts, entity_area};
 use crate::geom::centroid::shape_centroid;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, hypot, js_max_all, js_min_all, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum_of, minimum_of, sin};
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::ops::path::{path_of, point_at_s};
 use crate::vec2::Vec2;
@@ -141,8 +141,8 @@ fn widest(rings: &[Vec<Edge>]) -> Option<(f64, Vec2)> {
     for e in rings.iter().flatten() {
         heights(e, &mut ys);
     }
-    let lo = js_min_all(ys.iter().copied());
-    let hi = js_max_all(ys.iter().copied());
+    let lo = minimum_of(ys.iter().copied());
+    let hi = maximum_of(ys.iter().copied());
     if !(lo < hi) {
         return None;
     }

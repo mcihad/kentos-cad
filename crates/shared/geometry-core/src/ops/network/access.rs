@@ -31,7 +31,7 @@
 
 use super::rules::{caseless, number};
 use crate::api::json::Json;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// A vehicle profile as the rules read it.
 #[derive(Clone, Debug, PartialEq)]
@@ -340,7 +340,7 @@ impl AccessRules {
             let base = rel as f64 * 1440.0;
             for &(s, e) in &hours {
                 let (s, e) = (base + s, base + if e > s { e } else { e + 1440.0 });
-                let (s, e) = (js_max(s, frame.0), js_min(e, frame.1));
+                let (s, e) = (maximum(s, frame.0), minimum(e, frame.1));
                 if s < e {
                     windows.push((s, e));
                 }

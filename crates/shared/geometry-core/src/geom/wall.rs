@@ -22,7 +22,7 @@ use crate::geom::bulge::{bulge_path_outline, has_bulges};
 use crate::geom::hatch_pattern::library_pattern;
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
 use crate::geometry::signed_area;
-use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// Conservative path box used by the native wall join candidate search.
@@ -660,9 +660,9 @@ fn nearest_on(line: &[Vec2], p: Vec2) -> Option<Vec2> {
         let (dx, dy) = (b.x - a.x, b.y - a.y);
         let len2 = dx * dx + dy * dy;
         let t = if len2 > 0.0 {
-            js_min(
+            minimum(
                 1.0,
-                js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+                maximum(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
             )
         } else {
             0.0
@@ -723,7 +723,7 @@ fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
             continue;
         }
         let step = thick / 2.0;
-        let n = crate::jsmath::js_floor(length / step) as usize;
+        let n = f64::floor(length / step) as usize;
         let mut pts = Vec::with_capacity(n.min(ZIGZAG_POINTS) + 1);
         for k in 0..=n.min(ZIGZAG_POINTS) {
             let Some(p) = along(&line, k as f64 * step) else {
@@ -1049,7 +1049,7 @@ fn curtain_pieces(
             let (s0, s1) = crate::geom::curtain::frame_span(
                 &lines,
                 k,
-                crate::jsmath::js_min(face, length / 2.0),
+                crate::jsmath::minimum(face, length / 2.0),
             );
             out.push(piece(
                 Shape::Polygon {
@@ -1163,7 +1163,7 @@ fn near_ring(ring: &[Vec2], p: Vec2) -> f64 {
             };
             hypot(a.x + dx * t - p.x, a.y + dy * t - p.y)
         })
-        .fold(f64::INFINITY, js_min)
+        .fold(f64::INFINITY, minimum)
 }
 
 /// The exterior walls among `bodies` (one storey's walls' body rings): those with a corner on the outline of all their
@@ -1225,12 +1225,15 @@ mod tests {
                 Shape::Polygon { pts, .. } => {
                     let xs: Vec<f64> = pts.iter().map(|q| q.x).collect();
                     let ys: Vec<f64> = pts.iter().map(|q| q.y).collect();
-                    let lo =
-                        |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, crate::jsmath::js_min);
+                    let lo = |v: &[f64]| {
+                        v.iter()
+                            .cloned()
+                            .fold(f64::INFINITY, crate::jsmath::minimum)
+                    };
                     let hi = |v: &[f64]| {
                         v.iter()
                             .cloned()
-                            .fold(f64::NEG_INFINITY, crate::jsmath::js_max)
+                            .fold(f64::NEG_INFINITY, crate::jsmath::maximum)
                     };
                     assert!(
                         (lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12,
@@ -1293,7 +1296,7 @@ mod tests {
                 Shape::Polygon { pts, .. } => Some(
                     pts.iter()
                         .map(|q| q.x)
-                        .fold(f64::INFINITY, crate::jsmath::js_min),
+                        .fold(f64::INFINITY, crate::jsmath::minimum),
                 ),
                 _ => None,
             })
@@ -1324,8 +1327,8 @@ mod tests {
             Shape::Polyline { pts, .. } => pts.windows(2).any(|w| {
                 (w[0].y - w[1].y).abs() < 1e-12
                     && w[0].y.abs() > 0.07
-                    && crate::jsmath::js_min(w[0].x, w[1].x) < 3.0
-                    && crate::jsmath::js_max(w[0].x, w[1].x) > 3.0
+                    && crate::jsmath::minimum(w[0].x, w[1].x) < 3.0
+                    && crate::jsmath::maximum(w[0].x, w[1].x) > 3.0
             }),
             _ => false,
         });

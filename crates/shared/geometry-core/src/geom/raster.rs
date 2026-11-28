@@ -126,7 +126,7 @@ pub fn visible(
     view: [f64; 4],
     out: &mut Vec<DrawTile>,
 ) {
-    use crate::jsmath::{js_max, js_min};
+    use crate::jsmath::{maximum, minimum};
     out.clear();
     let Some(&(lw, lh)) = sizes.get(level) else {
         return;
@@ -153,10 +153,10 @@ pub fn visible(
         f64::NEG_INFINITY,
     );
     for (i, j) in corners {
-        i0 = js_min(i0, i);
-        j0 = js_min(j0, j);
-        i1 = js_max(i1, i);
-        j1 = js_max(j1, j);
+        i0 = minimum(i0, i);
+        j0 = minimum(j0, j);
+        i1 = maximum(i1, i);
+        j1 = maximum(j1, j);
     }
     let (w, h) = (f64::from(width), f64::from(height));
     if !(i1 > 0.0 && j1 > 0.0 && i0 < w && j0 < h) {
@@ -166,22 +166,22 @@ pub fn visible(
     let span = f * f64::from(TILE);
     let last_x = lw.div_ceil(TILE).saturating_sub(1);
     let last_y = lh.div_ceil(TILE).saturating_sub(1);
-    let tile_of = |v: f64, last: u32| (js_max((v / span).floor(), 0.0) as u32).min(last);
+    let tile_of = |v: f64, last: u32| (maximum((v / span).floor(), 0.0) as u32).min(last);
     let (tx0, tx1) = (
-        tile_of(js_max(i0, 0.0), last_x),
-        tile_of(js_max(js_min(i1, w) - 1e-9, 0.0), last_x),
+        tile_of(maximum(i0, 0.0), last_x),
+        tile_of(maximum(minimum(i1, w) - 1e-9, 0.0), last_x),
     );
     let (ty0, ty1) = (
-        tile_of(js_max(j0, 0.0), last_y),
-        tile_of(js_max(js_min(j1, h) - 1e-9, 0.0), last_y),
+        tile_of(maximum(j0, 0.0), last_y),
+        tile_of(maximum(minimum(j1, h) - 1e-9, 0.0), last_y),
     );
     let at = |i: f64, j: f64| [x0 + a * i + b * j, y0 + c * i + d * j];
     for ty in ty0..=ty1 {
         for tx in tx0..=tx1 {
             let px0 = f64::from(tx) * span;
             let py0 = f64::from(ty) * span;
-            let px1 = js_min(px0 + span, w);
-            let py1 = js_min(py0 + span, h);
+            let px1 = minimum(px0 + span, w);
+            let py1 = minimum(py0 + span, h);
             let p = [at(px0, py0), at(px1, py0), at(px1, py1), at(px0, py1)];
             out.push(DrawTile {
                 level: level as u32,

@@ -12,7 +12,7 @@
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geom::bulge::{bulge_arc, bulge_at};
-use crate::jsmath::{acos, cos, hypot, js_max, sin};
+use crate::jsmath::{acos, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -74,7 +74,7 @@ pub fn arc_pieces(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
         1
     } else {
         let step = 2.0 * acos(1.0 - CHORD / arc.r);
-        js_max(libm::ceil(arc.sweep.abs() / step), 1.0) as usize
+        maximum(libm::ceil(arc.sweep.abs() / step), 1.0) as usize
     };
     let mut out = Vec::with_capacity(n + 1);
     out.push(a);

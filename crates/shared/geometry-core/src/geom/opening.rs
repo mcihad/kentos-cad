@@ -14,7 +14,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::Shape;
 use crate::geom::wall::{self, Spec as WallSpec, path_shape};
-use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::vec2::Vec2;
@@ -460,14 +460,14 @@ impl Recess {
 
     /// Its near and far distance from its face in a wall `thickness` thick, each within the wall.
     pub fn across(&self, thickness: f64) -> (f64, f64) {
-        let near = js_max(
+        let near = maximum(
             0.0,
-            js_min(
+            minimum(
                 self.inset.unwrap_or((thickness - self.depth) / 2.0),
                 thickness,
             ),
         );
-        (near, js_min(near + js_max(self.depth, 0.0), thickness))
+        (near, minimum(near + maximum(self.depth, 0.0), thickness))
     }
 }
 
@@ -556,7 +556,7 @@ pub fn pockets(width: f64, spec: &Spec) -> Vec<Pocket> {
     let lip = b.lip.unwrap_or(POCKET_LIP);
     let pocket = |at_end: bool, w: f64| Pocket {
         at_end,
-        length: js_max(w - lip - b.fit - spec.frame + POCKET_PLAY, 0.0),
+        length: maximum(w - lip - b.fit - spec.frame + POCKET_PLAY, 0.0),
         width: t + 2.0 * POCKET_PLAY,
     };
     if spec.leaves == 2 {
@@ -666,7 +666,7 @@ pub fn wall_path(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<P
 
 /// The edge of `path` the interval lies on, or none when it runs past an end or round a vertex.
 pub fn edge_of(path: &Path, s0: f64, s1: f64) -> Option<usize> {
-    let tol = SPAN_TOLERANCE * js_max(path.length, 1.0);
+    let tol = SPAN_TOLERANCE * maximum(path.length, 1.0);
     if !(s0.is_finite() && s1.is_finite()) || s1 <= s0 || s0 < -tol || s1 > path.length + tol {
         return None;
     }
@@ -949,7 +949,7 @@ fn pieces_cut(place: &[Vec2], spec: &Spec, cut_at: f64) -> Vec<Mark> {
             let Some(d) = spec.depth else {
                 return Vec::new();
             };
-            let [a0, b0, a1, b1] = across_jambs(place, spec.side_right, 0.0, js_min(d, t), t);
+            let [a0, b0, a1, b1] = across_jambs(place, spec.side_right, 0.0, minimum(d, t), t);
             vec![
                 mark(line(a0, b0)),
                 mark(along(b0, b1, centre)),
@@ -1002,7 +1002,7 @@ impl Parts<'_> {
         let f = frame_of(place)?;
         let half = f.length / 2.0 * 0.999;
         let fit = spec.build.fit.clamp(0.0, half);
-        let fr = spec.frame.clamp(0.0, js_max(half - fit, 0.0));
+        let fr = spec.frame.clamp(0.0, maximum(half - fit, 0.0));
         let clear = f.length - 2.0 * fr - 2.0 * fit;
         let t = f.thickness;
         let (dl, dr) = spec
@@ -1378,8 +1378,8 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
             if let Some(th) = b.threshold.filter(|v| *v > 0.0) {
                 let c = p.middle();
                 let (a, z) = (
-                    js_max(c - th / 2.0, 0.0),
-                    js_min(c + th / 2.0, p.f.thickness),
+                    maximum(c - th / 2.0, 0.0),
+                    minimum(c + th / 2.0, p.f.thickness),
                 );
                 out.push((
                     Part::Threshold,
@@ -1539,7 +1539,7 @@ fn multi_slide(p: &Parts, spec: &Spec, window: bool) -> Vec<Shape> {
     let u = p.f.along;
     let mut out = Vec::new();
     // A leaf a band its thickness wide (none: [`LEAF_THICKNESS`]) about its track, at most four fifths of the spacing.
-    let h = js_min(
+    let h = minimum(
         spec.build
             .leaf_thickness
             .filter(|t| *t > 0.0)
@@ -1558,7 +1558,7 @@ fn multi_slide(p: &Parts, spec: &Spec, window: bool) -> Vec<Shape> {
         if l.slides {
             let dir = if l.to_end { u } else { mul(u, -1.0) };
             let c = p.along_start(s0 + l.s + w / 2.0, d + sign * sp / 2.0);
-            let a = js_min(w / 3.0, 0.3);
+            let a = minimum(w / 3.0, 0.3);
             let h = a / 3.0;
             let tip = add(c, mul(dir, a / 2.0));
             let tail = sub(c, mul(dir, a / 2.0));
@@ -1580,7 +1580,7 @@ fn multi_slide(p: &Parts, spec: &Spec, window: bool) -> Vec<Shape> {
 /// A revolving door's drum (docs/adr/0777 §1): its middle and inside radius, centred on the light and the band's
 /// middle; the drum at most the light.
 fn drum_of(p: &Parts, spec: &Spec) -> (Vec2, f64) {
-    let r = js_min(spec.build.drum.unwrap_or(p.clear), p.clear) / 2.0;
+    let r = minimum(spec.build.drum.unwrap_or(p.clear), p.clear) / 2.0;
     (p.along_start(p.fit + p.fr + p.clear / 2.0, p.middle()), r)
 }
 

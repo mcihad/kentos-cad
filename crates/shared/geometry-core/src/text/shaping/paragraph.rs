@@ -5,7 +5,7 @@ use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::{Atom, Error, Format, Line, Paragraph, Style};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::text::paragraph::{DEFAULT_TAB, Flow, PITCH};
 
 /// Geometry in model units; em size retains the existing CAD height meaning.
@@ -348,7 +348,7 @@ pub fn layout_with_atoms(
     }
     let column_width = s
         .box_width
-        .unwrap_or_else(|| rows.iter().map(|r| r.left + r.width).fold(0., js_max));
+        .unwrap_or_else(|| rows.iter().map(|r| r.left + r.width).fold(0., maximum));
     let (per, count, step) = match flow.columns {
         Some(c) => (
             ((c.height / pitch).floor() as usize).max(1),
@@ -383,10 +383,10 @@ pub fn layout_with_atoms(
                 out.ink = Some(match out.ink {
                     None => b,
                     Some(a) => [
-                        js_min(a[0], b[0]),
-                        js_min(a[1], b[1]),
-                        js_max(a[2], b[2]),
-                        js_max(a[3], b[3]),
+                        minimum(a[0], b[0]),
+                        minimum(a[1], b[1]),
+                        maximum(a[2], b[2]),
+                        maximum(a[3], b[3]),
                     ],
                 });
             }

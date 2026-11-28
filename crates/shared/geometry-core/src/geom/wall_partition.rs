@@ -2,7 +2,7 @@
 //! an arc one (docs/adr/0734); its limits straight or arc wall edges. No screen or document dependencies.
 use crate::Vec2;
 use crate::geom::bulge::bulge_arc;
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin, tan};
 
 #[derive(Clone, Copy)]
 pub struct Edge {
@@ -197,7 +197,7 @@ impl Carrier {
             ) => {
                 let d = sub(*c2, *c);
                 let dist = hypot(d.x, d.y);
-                if dist <= 1e-9 * js_max(1.0, js_max(*r, *r2)) {
+                if dist <= 1e-9 * maximum(1.0, maximum(*r, *r2)) {
                     return Err(
                         "Sınır duvarı bölmeyle eş merkezli; kesişen başka bir kenar seçin.",
                     );
@@ -324,7 +324,7 @@ pub fn locate(
             };
             let a = meet(a)?;
             let b = meet(b)?;
-            (js_min(a, b), js_max(a, b))
+            (minimum(a, b), maximum(a, b))
         }
     };
     if t1 <= t0 {
@@ -411,7 +411,7 @@ mod tests {
                 let gap = [0.05, -0.05]
                     .iter()
                     .map(|d| (radius(p.path[0], p.path[1], p.bulge, *d) - face).abs())
-                    .fold(f64::INFINITY, js_min);
+                    .fold(f64::INFINITY, minimum);
                 assert!((gap - 1.5).abs() < 1e-12, "{gap}");
             }
         }

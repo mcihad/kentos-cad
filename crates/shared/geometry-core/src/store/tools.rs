@@ -25,7 +25,7 @@ use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::minor_axis;
 use crate::geom::intersect::Edge;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
@@ -80,8 +80,8 @@ fn ray_meets(o: Vec2, dir: Vec2, b: &Bounds) -> bool {
         }
         let t1 = (min - p) / d;
         let t2 = (max - p) / d;
-        lo = js_max(lo, js_min(t1, t2));
-        hi = js_min(hi, js_max(t1, t2));
+        lo = maximum(lo, minimum(t1, t2));
+        hi = minimum(hi, maximum(t1, t2));
     }
     // NaN (a degenerate box or ray) keeps the edge: the exact test decides.
     !(lo > hi)

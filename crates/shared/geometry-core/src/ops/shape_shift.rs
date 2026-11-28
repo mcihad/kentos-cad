@@ -88,7 +88,7 @@ fn point_at(e: &Edge, s: f64) -> Vec2 {
             Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
         }
         Edge::Arc { c, r, a0, sweep } => {
-            let ang = a0 + crate::jsmath::js_sign(sweep) * s / r;
+            let ang = a0 + crate::jsmath::sign(sweep) * s / r;
             Vec2::new(c.x + r * cos(ang), c.y + r * sin(ang))
         }
     }

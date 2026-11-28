@@ -9,7 +9,7 @@
 //! tolerance; measures, snaps and cuts use the curve itself.
 
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 
 const fn v(x: f64, y: f64) -> Vec2 {
@@ -307,7 +307,7 @@ impl<'a> Nurbs<'a> {
         if !self.valid() || !(tol > 0.0) {
             return Vec::new();
         }
-        let near_tol = js_min(tol, TOLERANCE);
+        let near_tol = minimum(tol, TOLERANCE);
         let breaks = self.breaks();
         let Some(&first) = breaks.first() else {
             return Vec::new();
@@ -338,14 +338,14 @@ impl<'a> Nurbs<'a> {
         let pm = self.point(um);
         let q1 = self.point(0.5 * (u0 + um));
         let q3 = self.point(0.5 * (um + u1));
-        let far = js_max(
-            js_max(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
+        let far = maximum(
+            maximum(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
             chord_distance(q3, p0, p1),
         );
         let (mut lo, mut hi) = (p0, p0);
         for p in [p1, pm, q1, q3] {
-            lo = Vec2::new(js_min(lo.x, p.x), js_min(lo.y, p.y));
-            hi = Vec2::new(js_max(hi.x, p.x), js_max(hi.y, p.y));
+            lo = Vec2::new(minimum(lo.x, p.x), minimum(lo.y, p.y));
+            hi = Vec2::new(maximum(hi.x, p.x), maximum(hi.y, p.y));
         }
         let near = !(hi.x + far < b.min_x
             || lo.x - far > b.max_x
@@ -380,8 +380,8 @@ impl<'a> Nurbs<'a> {
         let pm = self.point(um);
         let q1 = self.point(0.5 * (u0 + um));
         let q3 = self.point(0.5 * (um + u1));
-        let far = js_max(
-            js_max(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
+        let far = maximum(
+            maximum(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
             chord_distance(q3, p0, p1),
         );
         if depth >= DEPTH && far > tol && limit != usize::MAX {
@@ -405,7 +405,7 @@ impl<'a> Nurbs<'a> {
         };
         let mut total = 0.0;
         for w in self.breaks().windows(2) {
-            let (s, e) = (js_max(w[0], a), js_min(w[1], b));
+            let (s, e) = (maximum(w[0], a), minimum(w[1], b));
             if e > s {
                 total += integrate(&speed, s, e, 1e-14);
             }
@@ -449,7 +449,7 @@ impl<'a> Nurbs<'a> {
         let mut u = lo + (hi - lo) * s / total;
         for _ in 0..60 {
             let f = self.length_between(lo, u) - s;
-            if f.abs() <= 1e-12 * js_max(total, 1.0) {
+            if f.abs() <= 1e-12 * maximum(total, 1.0) {
                 break;
             }
             if f > 0.0 {
@@ -496,7 +496,7 @@ impl<'a> Nurbs<'a> {
                 break;
             }
             let next = (u - f / df).clamp(lo, hi);
-            if (next - u).abs() <= 1e-15 * js_max(hi - lo, 1.0) {
+            if (next - u).abs() <= 1e-15 * maximum(hi - lo, 1.0) {
                 u = next;
                 break;
             }
@@ -519,10 +519,10 @@ impl<'a> Nurbs<'a> {
             f64::NEG_INFINITY,
         ];
         for p in self.tessellate(TOLERANCE) {
-            b[0] = js_min(b[0], p.x);
-            b[1] = js_min(b[1], p.y);
-            b[2] = js_max(b[2], p.x);
-            b[3] = js_max(b[3], p.y);
+            b[0] = minimum(b[0], p.x);
+            b[1] = minimum(b[1], p.y);
+            b[2] = maximum(b[2], p.x);
+            b[3] = maximum(b[3], p.y);
         }
         b
     }
@@ -622,7 +622,7 @@ impl<'a> Nurbs<'a> {
     /// The part of the curve between parameters `a` < `b` in the domain.
     pub fn sub(&self, a: f64, b: f64) -> Option<OwnedNurbs> {
         let (lo, hi) = self.domain();
-        let (a, b) = (js_max(a, lo), js_min(b, hi));
+        let (a, b) = (maximum(a, lo), minimum(b, hi));
         if !(b > a) {
             return None;
         }

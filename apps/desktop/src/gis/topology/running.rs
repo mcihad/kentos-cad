@@ -170,11 +170,11 @@ impl Running {
     pub fn heard(&mut self, reply: &Reply) {
         match *reply {
             Reply::Progress(done) => {
-                self.said = js_max(self.said, done);
+                self.said = maximum(self.said, done);
                 self.stretch = None;
             }
             Reply::Stretch(from, until, seconds) => {
-                self.said = js_max(self.said, from);
+                self.said = maximum(self.said, from);
                 self.stretch = Some((until, Instant::now(), seconds));
             }
             Reply::Done | Reply::Failed(_) => {}
@@ -196,11 +196,11 @@ impl Running {
             .min(0.25);
         self.moved = now;
         let a = 1.0 - kentos_num::exp(-dt / 0.12);
-        self.shown = js_max(self.shown, self.shown + (target - self.shown) * a).min(1.0);
+        self.shown = maximum(self.shown, self.shown + (target - self.shown) * a).min(1.0);
     }
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+fn maximum(a: f64, b: f64) -> f64 {
     if a >= b { a } else { b }
 }
 

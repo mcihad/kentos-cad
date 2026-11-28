@@ -8,7 +8,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{js_max, js_min, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
 
 use super::model::Rgba;
 use super::place::positive;
@@ -38,16 +38,16 @@ impl Grid {
         if !positive(w) || !positive(h) || !positive(px_per_m) || !(w * h).is_finite() {
             return None;
         }
-        let cell = js_max(
-            js_max(f64::from(quality.max(1)) / px_per_m, w / MOST_SIDE),
-            js_max(h / MOST_SIDE, (w * h / MOST_CELLS).sqrt()),
+        let cell = maximum(
+            maximum(f64::from(quality.max(1)) / px_per_m, w / MOST_SIDE),
+            maximum(h / MOST_SIDE, (w * h / MOST_CELLS).sqrt()),
         );
         Some(Grid {
             min_x: b.min_x,
             max_y: b.max_y,
             cell,
-            width: js_max((w / cell).ceil(), 1.0) as usize,
-            height: js_max((h / cell).ceil(), 1.0) as usize,
+            width: maximum((w / cell).ceil(), 1.0) as usize,
+            height: maximum((h / cell).ceil(), 1.0) as usize,
         })
     }
 
@@ -135,7 +135,7 @@ pub fn colors(values: &[f64], max: f64, table: &[Rgba]) -> Vec<u8> {
         if !positive(v) {
             continue;
         }
-        let k = js_round(top * js_min(v / max, 1.0)) as usize;
+        let k = js_round(top * minimum(v / max, 1.0)) as usize;
         px.copy_from_slice(&table[k.min(table.len() - 1)]);
     }
     out
@@ -143,5 +143,5 @@ pub fn colors(values: &[f64], max: f64, table: &[Rgba]) -> Vec<u8> {
 
 /// The values' largest (0 when there are none).
 pub fn largest(values: &[f64]) -> f64 {
-    values.iter().copied().fold(0.0, js_max)
+    values.iter().copied().fold(0.0, maximum)
 }

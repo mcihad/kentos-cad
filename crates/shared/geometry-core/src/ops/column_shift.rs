@@ -14,7 +14,7 @@
 use crate::geom::arch::{ColumnSpec, column_box};
 use crate::geom::wall::left_face;
 use crate::geom::wall_join::WallIn;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::wall_shift::{PARALLEL, TIE, edge, edge_count, level};
 use crate::vec2::Vec2;
 
@@ -90,8 +90,8 @@ fn take(slot: &mut Option<Gap>, g: Gap) {
 /// none when they overlap by no more than [`TIE`].
 fn overlap(a: Vec2, u: Vec2, l: f64, c: Vec2, d: Vec2) -> Option<f64> {
     let (tc, td) = (dot(sub(c, a), u), dot(sub(d, a), u));
-    let lo = js_max(0.0, js_min(tc, td));
-    let hi = js_min(l, js_max(tc, td));
+    let lo = maximum(0.0, minimum(tc, td));
+    let hi = minimum(l, maximum(tc, td));
     (hi - lo > TIE).then_some((lo + hi) / 2.0)
 }
 
@@ -148,7 +148,7 @@ pub fn gaps(walls: &[WallIn<'_>], columns: &[ColumnIn<'_>], k: usize) -> [Option
                             edge: e,
                             left_face: left,
                         },
-                        distance: js_max(0.0, near),
+                        distance: maximum(0.0, near),
                         from: base,
                         to: along(base, n, near),
                     },
@@ -177,7 +177,7 @@ pub fn gaps(walls: &[WallIn<'_>], columns: &[ColumnIn<'_>], k: usize) -> [Option
                     Gap {
                         side,
                         target: Target::Column { column: j, side: s },
-                        distance: js_max(0.0, f),
+                        distance: maximum(0.0, f),
                         from: base,
                         to: along(base, n, f),
                     },

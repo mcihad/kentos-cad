@@ -9,7 +9,7 @@
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::nurbs::{Nurbs, OwnedNurbs, of, with_curve};
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::curve_cuts::Cut;
 use crate::vec2::Vec2;
 
@@ -122,12 +122,12 @@ pub fn trim(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
             .iter()
             .copied()
             .filter(|u| *u < up - eps)
-            .fold(lo, js_max);
+            .fold(lo, maximum);
         let after = all
             .iter()
             .copied()
             .filter(|u| *u > up + eps)
-            .fold(hi, js_min);
+            .fold(hi, minimum);
         if before <= lo + eps && after >= hi - eps {
             return Cut::Error("Tıklanan kısmı kesen bir kenar yok.".into());
         }
@@ -190,7 +190,7 @@ pub fn break_at(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
             };
             return Cut::Pieces(vec![piece(e, a, false), piece(e, b, false)]);
         }
-        let (a, b) = (js_min(u1, u2), js_max(u1, u2));
+        let (a, b) = (minimum(u1, u2), maximum(u1, u2));
         let mut pieces = Vec::new();
         if a > lo + eps
             && let Some(p) = c.sub(lo, a)

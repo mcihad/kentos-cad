@@ -28,7 +28,7 @@ use crate::geom::intersect::{
     Edge, circle_circle, intersect_edges, line_circle_params, line_line, ray_edge,
 };
 use crate::geom::wall::{self, Body, DEFAULT_PRIORITY, Drawn, JoinMode, Line, Spec, Stroke};
-use crate::jsmath::{PI, TAU, acos, cos, hypot, js_max, js_min};
+use crate::jsmath::{PI, TAU, acos, cos, hypot, maximum, minimum};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
@@ -302,7 +302,7 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
     let path = path_of(&shape)?;
     let last = pts[n - 1];
     let tan = segment_tangent(pts[n - 2], pts[n - 1], bulges[n - 2], true);
-    let eps = 1e-9 * js_max(path.length, 1.0);
+    let eps = 1e-9 * maximum(path.length, 1.0);
     // (moved by, how)
     let mut best: Option<(f64, Move)> = None;
     for (i, ed) in path.edges.iter().enumerate() {
@@ -310,7 +310,7 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
         for t in target {
             for h in intersect_edges(ed, t) {
                 let s = path.cum[i] + h.t * len;
-                let moved = js_max(path.length - s, 0.0);
+                let moved = maximum(path.length - s, 0.0);
                 if s > eps && moved <= reach && best.is_none_or(|b| moved < b.0) {
                     best = Some((moved, Move::Trim(s)));
                 }
@@ -472,7 +472,7 @@ fn spans(path: &Path, raw: &[Span]) -> Vec<(f64, f64)> {
             } else if path.closed {
                 (lo, hi)
             } else {
-                (js_max(lo, 0.0), js_min(hi, l))
+                (maximum(lo, 0.0), minimum(hi, l))
             }
         })
         .filter(|(a, b)| b > a)
@@ -481,7 +481,7 @@ fn spans(path: &Path, raw: &[Span]) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = Vec::new();
     for (a, b) in v {
         match out.last_mut() {
-            Some(last) if a <= last.1 => last.1 = js_max(last.1, b),
+            Some(last) if a <= last.1 => last.1 = maximum(last.1, b),
             _ => out.push((a, b)),
         }
     }
@@ -490,7 +490,7 @@ fn spans(path: &Path, raw: &[Span]) -> Vec<(f64, f64)> {
         let first = out[0];
         let n = out.len();
         if out[n - 1].1 >= first.0 + l {
-            out[n - 1].1 = js_max(out[n - 1].1, first.1 + l);
+            out[n - 1].1 = maximum(out[n - 1].1, first.1 + l);
             out.remove(0);
         }
     }
@@ -501,7 +501,7 @@ fn spans(path: &Path, raw: &[Span]) -> Vec<(f64, f64)> {
 /// the last to the first.
 fn kept(path: &Path, gaps: &[(f64, f64)]) -> Vec<(f64, f64)> {
     let l = path.length;
-    let eps = 1e-9 * js_max(l, 1.0);
+    let eps = 1e-9 * maximum(l, 1.0);
     let mut out = Vec::new();
     if path.closed {
         for i in 0..gaps.len() {
@@ -573,9 +573,9 @@ fn bands_between(a: &Line, b: &Line, closed: bool, cuts: &[(Span, Span)]) -> Vec
     for p in pairs {
         match merged.last_mut() {
             Some(last) if p.0.0 <= last.0.1 => {
-                last.0.1 = js_max(last.0.1, p.0.1);
-                last.1.0 = js_min(last.1.0, p.1.0);
-                last.1.1 = js_max(last.1.1, p.1.1);
+                last.0.1 = maximum(last.0.1, p.0.1);
+                last.1.0 = minimum(last.1.0, p.1.0);
+                last.1.1 = maximum(last.1.1, p.1.1);
             }
             _ => merged.push(p),
         }
@@ -708,7 +708,7 @@ struct Solver<'a> {
 /// rather than overlapping it (docs/adr/0771 §1); elsewhere the path's own.
 fn host_tangent(path: &Path, s: f64, dir: Vec2) -> Vec2 {
     let t = tangent_at_s(path, s);
-    let d = 1e-7 * js_max(1.0, path.length);
+    let d = 1e-7 * maximum(1.0, path.length);
     if !path.closed && (s <= d || s >= path.length - d) {
         return t;
     }
@@ -743,10 +743,10 @@ fn bounds_of(w: &WallIn<'_>, lines: Option<&Vec<Line>>) -> [f64; 4] {
         f64::NEG_INFINITY,
     ];
     let mut take = |p: Vec2| {
-        b[0] = js_min(b[0], p.x);
-        b[1] = js_min(b[1], p.y);
-        b[2] = js_max(b[2], p.x);
-        b[3] = js_max(b[3], p.y);
+        b[0] = minimum(b[0], p.x);
+        b[1] = minimum(b[1], p.y);
+        b[2] = maximum(b[2], p.x);
+        b[3] = maximum(b[3], p.y);
     };
     match lines {
         Some(ls) => {
@@ -1481,7 +1481,7 @@ impl<'a> Solver<'a> {
         };
         let offsets = wall::boundaries(spec);
         let (left, right) = (wall::left_face(spec), wall::left_face(spec) - spec.width);
-        let eps = CUT_EPS * js_max(1.0, js_max(left.abs(), right.abs()));
+        let eps = CUT_EPS * maximum(1.0, maximum(left.abs(), right.abs()));
         // Whether a hole leaves out the line `d` to the path's left: one inside it, or a face it opens on; a line it
         // only touches inside the wall stays (a niche's back on a component's boundary).
         let takes = |h: &Cut, d: f64| {
@@ -1535,7 +1535,7 @@ impl<'a> Solver<'a> {
             let mut cuts = extra.to_vec();
             let mut back = Vec::new();
             for (x, h) in holes.iter().enumerate() {
-                let (top, bottom) = (js_min(h.hi, upper), js_max(h.lo, lower));
+                let (top, bottom) = (minimum(h.hi, upper), maximum(h.lo, lower));
                 if top - bottom <= eps {
                     continue;
                 }

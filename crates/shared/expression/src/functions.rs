@@ -4,8 +4,8 @@
 //! written at the end of the caller's buffer.
 
 use kentos_geometry_core::jsmath::{
-    PI, acos, asin, atan, atan2, cos, exp, js_max, js_max_all, js_min, js_min_all, js_round,
-    js_sign, log, log2, log10, sin, tan,
+    PI, acos, asin, atan, atan2, cos, exp, js_round, log, log2, log10, maximum, maximum_of,
+    minimum, minimum_of, sign, sin, tan,
 };
 
 use crate::compound::shown;
@@ -22,7 +22,7 @@ const POW10: [f64; 13] = [
 
 /// `Math.max(0, Math.min(12, Math.round(d)))` as an index (d from `to_number`: never NaN).
 fn digits(d: f64) -> usize {
-    js_max(0.0, js_min(12.0, js_round(d))) as usize
+    maximum(0.0, minimum(12.0, js_round(d))) as usize
 }
 
 /// The power of ten `yuvarla` scales by for `d` digits (0 to 12).
@@ -34,7 +34,7 @@ pub fn scale(d: f64) -> f64 {
 /// 1.01, as the TypeScript did).
 #[inline]
 pub fn round(v: f64, k: f64) -> f64 {
-    js_round((v + js_sign(v) * f64::EPSILON * v.abs()) * k) / k
+    js_round((v + sign(v) * f64::EPSILON * v.abs()) * k) / k
 }
 
 /// A number function of finite numbers (`xs`, as many as it takes), directly:
@@ -48,8 +48,8 @@ pub fn number_function(f: Func, xs: &[f64]) -> Option<V<'static>> {
         Func::Number => V::Num(first),
         Func::Int => finite(first.trunc()),
         Func::Abs => finite(first.abs()),
-        Func::Min => finite(js_min_all(xs.iter().copied())),
-        Func::Max => finite(js_max_all(xs.iter().copied())),
+        Func::Min => finite(minimum_of(xs.iter().copied())),
+        Func::Max => finite(maximum_of(xs.iter().copied())),
         Func::Sqrt => finite(first.sqrt()),
         Func::Ceil => finite(first.ceil()),
         Func::Floor => finite(first.floor()),
@@ -155,8 +155,8 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
         Func::Number => num(0).map_or(V::Null, V::Num),
         Func::Int => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).trunc()),
         Func::Abs => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).abs()),
-        Func::Min => numeric_of(args, |n| js_min_all(n)),
-        Func::Max => numeric_of(args, |n| js_max_all(n)),
+        Func::Min => numeric_of(args, |n| minimum_of(n)),
+        Func::Max => numeric_of(args, |n| maximum_of(n)),
         Func::Sqrt => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).sqrt()),
         Func::Ceil => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).ceil()),
         Func::Floor => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).floor()),
@@ -231,7 +231,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 None => u16::from(b' '),
                 Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b' ')),
             };
-            let target = js_max(0.0, js_round(len));
+            let target = maximum(0.0, js_round(len));
             let mark = out.len();
             push_text(out, first);
             let n = utf16_len(&out[mark..]);
@@ -280,11 +280,11 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
             }
             let t = as_text(first, &mut s.a);
             let total = utf16_len(t);
-            let start = js_max(0.0, js_round(from) - 1.0);
+            let start = maximum(0.0, js_round(from) - 1.0);
             let end = if len == f64::INFINITY {
                 None
             } else {
-                Some(units(start + js_max(0.0, js_round(len)), total))
+                Some(units(start + maximum(0.0, js_round(len)), total))
             };
             text::push_slice(out, t, units(start, total), end);
             return R::Made;
@@ -300,7 +300,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 None => u16::from(b'0'),
                 Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b'0')),
             };
-            let target = js_max(0.0, js_round(len));
+            let target = maximum(0.0, js_round(len));
             let V::Text(t) = first.shown() else {
                 // A number's (or true/false's) text is written, then filled in front of.
                 let mark = out.len();

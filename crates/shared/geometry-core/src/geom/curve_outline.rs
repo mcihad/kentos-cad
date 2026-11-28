@@ -22,7 +22,7 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// How far a chord may come from the curve it stands for in a computation (m).
@@ -37,7 +37,7 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     let (px, py) = (p.x - a.x, p.y - a.y);
     let len2 = dx * dx + dy * dy;
     let t = if len2 > 0.0 {
-        js_min(1.0, js_max(0.0, (px * dx + py * dy) / len2))
+        minimum(1.0, maximum(0.0, (px * dx + py * dy) / len2))
     } else {
         0.0
     };
@@ -65,7 +65,7 @@ fn bezier_chords(
     if area.is_some_and(|a| !overlaps(&hull_box(c), a)) {
         return;
     }
-    let flat = js_max(to_segment(c[1], c[0], c[3]), to_segment(c[2], c[0], c[3])) <= tol;
+    let flat = maximum(to_segment(c[1], c[0], c[3]), to_segment(c[2], c[0], c[3])) <= tol;
     if flat || depth >= DEPTH {
         out.push((c[0], c[3]));
         return;
@@ -136,10 +136,10 @@ fn ellipse_chords(
     let bound = a * h * h / 8.0;
     if let Some(area) = area {
         let b = Bounds {
-            min_x: js_min(p0.x, p1.x) - bound,
-            min_y: js_min(p0.y, p1.y) - bound,
-            max_x: js_max(p0.x, p1.x) + bound,
-            max_y: js_max(p0.y, p1.y) + bound,
+            min_x: minimum(p0.x, p1.x) - bound,
+            min_y: minimum(p0.y, p1.y) - bound,
+            max_x: maximum(p0.x, p1.x) + bound,
+            max_y: maximum(p0.y, p1.y) + bound,
         };
         if !overlaps(&b, area) {
             return;
@@ -207,10 +207,10 @@ fn hull_box(c: &[Vec2; 4]) -> Bounds {
         max_y: c[0].y,
     };
     for p in &c[1..] {
-        b.min_x = js_min(b.min_x, p.x);
-        b.min_y = js_min(b.min_y, p.y);
-        b.max_x = js_max(b.max_x, p.x);
-        b.max_y = js_max(b.max_y, p.y);
+        b.min_x = minimum(b.min_x, p.x);
+        b.min_y = minimum(b.min_y, p.y);
+        b.max_x = maximum(b.max_x, p.x);
+        b.max_y = maximum(b.max_y, p.y);
     }
     b
 }
@@ -223,7 +223,7 @@ fn overlaps(a: &Bounds, b: &Bounds) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::{hypot, js_max};
+    use crate::jsmath::{hypot, maximum};
 
     /// The distance from p to the segment a–b.
     fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
@@ -259,7 +259,7 @@ mod tests {
                 }
             }
             at = best.1;
-            worst = js_max(worst, best.0);
+            worst = maximum(worst, best.0);
         }
         worst
     }

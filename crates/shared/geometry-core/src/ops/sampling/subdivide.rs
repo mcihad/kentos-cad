@@ -14,7 +14,7 @@ use crate::geom::arrangement::{Area, Ring, TOL, tight_box};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geom::region::{ring_area, ring_edges};
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::areas::polygon_of_area;
 use crate::ops::convert::{Elevations, Zs, paths};
 use crate::ops::elevation::ON;
@@ -34,10 +34,10 @@ enum Piece {
 }
 
 fn grow(b: &mut Bounds, o: &Bounds) {
-    b.min_x = js_min(b.min_x, o.min_x);
-    b.min_y = js_min(b.min_y, o.min_y);
-    b.max_x = js_max(b.max_x, o.max_x);
-    b.max_y = js_max(b.max_y, o.max_y);
+    b.min_x = minimum(b.min_x, o.min_x);
+    b.min_y = minimum(b.min_y, o.min_y);
+    b.max_x = maximum(b.max_x, o.max_x);
+    b.max_y = maximum(b.max_y, o.max_y);
 }
 
 fn edges_box(edges: &[Edge]) -> Bounds {

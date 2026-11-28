@@ -3,7 +3,7 @@
 use crate::entity::Shape;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc, sweep};
 use crate::geom::intersect::{circle_circle, line_circle_params};
-use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
 
 const EPS: f64 = 1e-9;
@@ -100,7 +100,8 @@ fn contacts(curve: Curve, center: Vec2, radius: f64) -> Vec<Vec2> {
                 .into_iter()
                 .map(|sign| add(c, scale(d, sign * r / n)))
                 .filter(|q| {
-                    (length(sub(*q, center)) - radius).abs() <= EPS * js_max(js_max(radius, r), 1.)
+                    (length(sub(*q, center)) - radius).abs()
+                        <= EPS * maximum(maximum(radius, r), 1.)
                 })
                 .collect()
         }
@@ -148,7 +149,7 @@ fn trimmed(s: &Shape, q: Vec2, pick: Vec2, origin: Vec2) -> Option<Shape> {
             let t = if t > sw && t > std::f64::consts::TAU - ON_ARC_EPS {
                 0.
             } else {
-                js_min(t, sw)
+                minimum(t, sw)
             };
             let mut picked = norm_angle(atan2(pick.y - c_local.y, pick.x - c_local.x) - a0);
             if picked > sw {
@@ -209,8 +210,8 @@ fn smooth(kept: &Shape, q: Vec2, center: Vec2, start: f64, origin: Vec2) -> bool
             let v = sub(q, sub(c, origin));
             let t = Vec2::new(-v.y, v.x);
             let theta = norm_angle(atan2(v.y, v.x));
-            let from_start = js_min(norm_angle(theta - a0), norm_angle(a0 - theta));
-            let from_end = js_min(norm_angle(theta - a1), norm_angle(a1 - theta));
+            let from_start = minimum(norm_angle(theta - a0), norm_angle(a0 - theta));
+            let from_end = minimum(norm_angle(theta - a1), norm_angle(a1 - theta));
             if from_start <= from_end {
                 t
             } else {
@@ -222,7 +223,7 @@ fn smooth(kept: &Shape, q: Vec2, center: Vec2, start: f64, origin: Vec2) -> bool
     let v = sub(q, center);
     let t = Vec2::new(-v.y, v.x);
     let theta = norm_angle(atan2(v.y, v.x));
-    let at_start = js_min(norm_angle(theta - start), norm_angle(start - theta)) <= ON_ARC_EPS;
+    let at_start = minimum(norm_angle(theta - start), norm_angle(start - theta)) <= ON_ARC_EPS;
     dot(away, if at_start { t } else { scale(t, -1.) }) < 0.
 }
 

@@ -22,7 +22,7 @@ use crate::Expr;
 use crate::parser::{BinOp, Node};
 use crate::scalar;
 use crate::value::Value;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 
 /// The SQL a source speaks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -304,7 +304,7 @@ fn compare((column, sort): (String, ColumnSort), lit: &Value, op: BinOp) -> Opti
             let x = number_of(lit)?;
             if op == BinOp::Eq {
                 // Wider than the language's 1e-9 · max(1, |a|, |b|): what it calls equal is inside.
-                let d = 1e-8 * js_max(x.abs(), 1.0);
+                let d = 1e-8 * maximum(x.abs(), 1.0);
                 return Some((
                     Sent::Between {
                         column,

@@ -14,7 +14,7 @@ use super::inference::{
 use super::weights::neighbours;
 use super::{Number, ObjectCopy, StatsRun, p_value, pair, text};
 use crate::entity::Shape;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::ops::sampling::random::Sequence;
 
 /// The conditional draws of a run (`inference::conditional_rows`).
@@ -101,7 +101,7 @@ impl Draws {
 
 /// The largest |v|.
 fn largest(v: &[f64]) -> f64 {
-    v.iter().fold(0.0f64, |a, x| js_max(a, x.abs()))
+    v.iter().fold(0.0f64, |a, x| maximum(a, x.abs()))
 }
 
 /// What the classes come from, the info's words.

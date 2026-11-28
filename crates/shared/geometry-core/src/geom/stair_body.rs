@@ -21,7 +21,7 @@ use crate::geom::arch::{
 };
 use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::section::Flight;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 
 /// A part of a stair's body.
@@ -145,7 +145,7 @@ pub fn stair_body(pts: &[Vec2], spec: &StairSpec, base: f64, waist: Option<f64>)
                 continue;
             }
             let top = base + rh * (i + 1) as f64;
-            let bottom = waist.map_or(base, |wst| js_max(top - rh - wst, base));
+            let bottom = waist.map_or(base, |wst| maximum(top - rh - wst, base));
             out.push(StairPart::Prism {
                 ring,
                 bulges: None,
@@ -223,7 +223,7 @@ fn curved(pts: &[Vec2], spec: &StairSpec, base: f64, waist: Option<f64>) -> Vec<
             ring = ring_of(-1.0);
         }
         let top = base + rh * (i + 1) as f64;
-        let bottom = waist.map_or(base, |wst| js_max(top - rh - wst, base));
+        let bottom = waist.map_or(base, |wst| maximum(top - rh - wst, base));
         out.push(StairPart::Prism {
             ring,
             bulges: Some(bulges),
@@ -316,16 +316,16 @@ pub fn low_under(
                     .steps
                     .iter()
                     .find(|(_, h)| *h >= limit)
-                    .map_or(f64::INFINITY, |(from, _)| js_max(*from, 0.0));
+                    .map_or(f64::INFINITY, |(from, _)| maximum(*from, 0.0));
                 // … and where its underside line does (never, if its floor is already over it).
                 let by_soffit = if !waist || f.floor >= limit {
                     0.0
                 } else if f.slope > 1e-12 {
-                    js_max((limit - f.soffit) / f.slope, 0.0)
+                    maximum((limit - f.soffit) / f.slope, 0.0)
                 } else {
                     f64::INFINITY
                 };
-                let reach = js_max(by_soffit, by_treads);
+                let reach = maximum(by_soffit, by_treads);
                 if reach <= 1e-12 {
                     continue;
                 }
@@ -336,7 +336,7 @@ pub fn low_under(
                 } else if f.floor > base + 1e-9 {
                     0.0
                 } else if f.slope > 1e-12 {
-                    js_min(js_max((base - f.soffit) / f.slope, 0.0), reach)
+                    minimum(maximum((base - f.soffit) / f.slope, 0.0), reach)
                 } else {
                     reach
                 };

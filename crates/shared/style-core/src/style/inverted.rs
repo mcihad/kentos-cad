@@ -16,7 +16,7 @@ use std::collections::BinaryHeap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::{Bounds, signed_area};
-use kentos_geometry_core::jsmath::js_min;
+use kentos_geometry_core::jsmath::minimum;
 
 use super::place::positive;
 
@@ -339,7 +339,7 @@ pub fn region(b: &Bounds, areas: &[&[Vec<Vec2>]], rule: Rule) -> Vec<[Vec2; 4]> 
                 continue;
             }
             let (ea, ec) = (edges[a], edges[c]);
-            let top = js_min(js_min(next, ea.hi.y), ec.hi.y);
+            let top = minimum(minimum(next, ea.hi.y), ec.hi.y);
             if ea.x_at(top) > ec.x_at(top) {
                 let (sa, sc) = (ea.slope(), ec.slope());
                 if sa != sc {

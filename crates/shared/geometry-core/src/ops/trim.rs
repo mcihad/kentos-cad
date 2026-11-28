@@ -13,7 +13,7 @@ use crate::geom::intersect::{
     Edge, circle_circle, full_circle, line_circle_params, on_edge_arc, point_at, ray_edge,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_max_all, js_min, js_min_all, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, maximum_of, minimum, minimum_of, sin};
 use crate::op;
 use crate::ops::curve_cuts::{
     Cut, Geometry, construction_of, ellipse_of, extend_ellipse, trim_construction, trim_ellipse,
@@ -52,10 +52,10 @@ pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
     };
     let cuts = cuts_on(&path, boundaries);
     let sp = nearest_s(&path, pick);
-    let eps = 1e-7 * js_max(1.0, path.length);
+    let eps = 1e-7 * maximum(1.0, path.length);
     if !path.closed {
-        let lo = js_max_all(std::iter::once(0.0).chain(cuts.iter().copied().filter(|&c| c < sp)));
-        let hi = js_min_all(
+        let lo = maximum_of(std::iter::once(0.0).chain(cuts.iter().copied().filter(|&c| c < sp)));
+        let hi = minimum_of(
             std::iter::once(path.length).chain(cuts.iter().copied().filter(|&c| c > sp)),
         );
         if lo <= eps && hi >= path.length - eps {
@@ -137,9 +137,9 @@ pub fn window_points(s: &Shape, w: &Bounds) -> Vec<Vec2> {
                     }
                     let r = q / p;
                     if p < 0.0 {
-                        t0 = js_max(t0, r);
+                        t0 = maximum(t0, r);
                     } else {
-                        t1 = js_min(t1, r);
+                        t1 = minimum(t1, r);
                     }
                 }
                 if !out && (t1 - t0) * hypot(d.x, d.y) > LEAST {
@@ -283,7 +283,7 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
             let mut best = f64::INFINITY;
             for b in boundaries {
                 for t in ray_edge(tip, dir, b, 1e-7) {
-                    best = js_min(best, t);
+                    best = minimum(best, t);
                 }
             }
             if !best.is_finite() {
@@ -350,7 +350,7 @@ fn arc_reach(c: Vec2, r: f64, from: f64, ccw: bool, gap: f64, boundaries: &[Edge
                 norm_angle(from - th)
             };
             if delta > 1e-9 && delta < gap - 1e-9 {
-                best = js_min(best, delta);
+                best = minimum(best, delta);
             }
         }
     }

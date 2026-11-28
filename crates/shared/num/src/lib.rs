@@ -15,9 +15,11 @@
 
 mod elementary;
 mod hypot;
+mod order;
 
 pub use elementary::{
     acos, asin, asinh, atan, atan2, atanh, cbrt, cos, cosh, erfc, exp, exp2, lgamma, ln, log2,
     log10, pow, powi, sin, sin_cos, sinh, tan, tanh,
 };
 pub use hypot::hypot;
+pub use order::{maximum, maximum_of, minimum, minimum_of, sign};

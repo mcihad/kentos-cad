@@ -10,7 +10,7 @@ use crate::geom::bulge::{
     bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
 };
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{hypot, js_min};
+use crate::jsmath::{hypot, minimum};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
@@ -39,7 +39,7 @@ pub fn near_hole(e: &Shape, p: Vec2) -> bool {
     let nearest = |edges: &[Edge]| {
         edges
             .iter()
-            .fold(f64::INFINITY, |m, ed| js_min(m, closest_on_edge(ed, p).d))
+            .fold(f64::INFINITY, |m, ed| minimum(m, closest_on_edge(ed, p).d))
     };
     // Every part's rings: its outer ring against its holes (docs/adr/0143).
     let (mut outer, mut inner) = (Vec::new(), Vec::new());

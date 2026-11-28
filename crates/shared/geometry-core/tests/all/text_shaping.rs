@@ -1493,11 +1493,11 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
         let left = group
             .iter()
             .map(|g| g.glyph.pen)
-            .fold(f64::INFINITY, kentos_geometry_core::jsmath::js_min);
+            .fold(f64::INFINITY, kentos_geometry_core::jsmath::minimum);
         let right = group
             .iter()
             .map(|g| g.glyph.pen + g.glyph.advance)
-            .fold(f64::NEG_INFINITY, kentos_geometry_core::jsmath::js_max);
+            .fold(f64::NEG_INFINITY, kentos_geometry_core::jsmath::maximum);
         let middle = (left + right) / 2.;
         let theta = middle / 10.;
         let m = group[0].transform;

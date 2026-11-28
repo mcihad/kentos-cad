@@ -5,7 +5,7 @@
 
 use crate::geom::wall::{self, Line, Spec};
 use crate::geom::wall_join::JOIN_TOLERANCE;
-use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::ops::dimension_set::{Openings, Point, Row, Span};
 use crate::ops::subref::Place;
 use crate::predicates::orient2d;
@@ -368,7 +368,7 @@ fn hidden(p: &Pt, bands: &[[Vec2; 4]], own: &[[Vec2; 4]], frame: &Frame, side: f
         let (lo, hi) = ts
             .iter()
             .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), t| {
-                (js_min(lo, *t), js_max(hi, *t))
+                (minimum(lo, *t), maximum(hi, *t))
             });
         if !(p.t > lo + SAME && p.t < hi - SAME) {
             return false;
@@ -383,10 +383,10 @@ fn hidden(p: &Pt, bands: &[[Vec2; 4]], own: &[[Vec2; 4]], frame: &Frame, side: f
             }
             let (oa, ob) = (frame.o(a), frame.o(b));
             if ta == tb {
-                far = js_max(js_max(far, side * oa), side * ob);
+                far = maximum(maximum(far, side * oa), side * ob);
             } else {
                 let o = oa + (p.t - ta) / (tb - ta) * (ob - oa);
-                far = js_max(far, side * o);
+                far = maximum(far, side * o);
             }
         }
         far > side * p.o + SAME
@@ -459,7 +459,7 @@ fn facade(
             for l in [&x.lines[0], &x.lines[x.lines.len() - 1]] {
                 for p in &l.pts {
                     let o = frame.o(*p);
-                    body = (js_min(body.0, o), js_max(body.1, o));
+                    body = (minimum(body.0, o), maximum(body.1, o));
                 }
             }
         }
@@ -726,7 +726,7 @@ fn space_rows(
                 }
                 if ring == 0 {
                     let o = frame.o(pts[k]);
-                    body = (js_min(body.0, o), js_max(body.1, o));
+                    body = (minimum(body.0, o), maximum(body.1, o));
                 }
             }
         }
@@ -792,7 +792,7 @@ fn space_rows(
                     let near = |p: Vec2| {
                         (orient2d(u, v, p) / l).abs() <= 1e-6 && {
                             let (tu, tv, tp) = (frame.t(u), frame.t(v), frame.t(p));
-                            tp >= js_min(tu, tv) - SAME && tp <= js_max(tu, tv) + SAME
+                            tp >= minimum(tu, tv) - SAME && tp <= maximum(tu, tv) + SAME
                         }
                     };
                     // Outward: right of the edge on a counter-clockwise ring.
@@ -935,7 +935,7 @@ pub fn plan(
             continue;
         }
         let (oa, ob) = (frame.o(a), frame.o(b));
-        if js_max(oa, ob) < rows.body.0 - SAME || js_min(oa, ob) > rows.body.1 + SAME {
+        if maximum(oa, ob) < rows.body.0 - SAME || minimum(oa, ob) > rows.body.1 + SAME {
             continue;
         }
         let t = frame.t(a);

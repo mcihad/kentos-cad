@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::{bulge_arc, tangent_bulge};
 use crate::geometry::{dist, signed_area};
-use crate::jsmath::{PI, asin, atan2, cos, hypot, js_max, js_min, js_round, or, sin, tan};
+use crate::jsmath::{PI, asin, atan2, cos, hypot, js_round, maximum, minimum, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -220,7 +220,7 @@ pub fn arc_start_center_chord(start: Vec2, center: Vec2, chord: f64) -> Option<A
     if r < 1e-9 || c < 1e-9 || c > 2.0 * r + 1e-9 {
         return None;
     }
-    let minor = 2.0 * asin(js_min(1.0, c / (2.0 * r)));
+    let minor = 2.0 * asin(minimum(1.0, c / (2.0 * r)));
     ccw(
         center,
         r,
@@ -257,7 +257,7 @@ pub fn arc_start_end_radius(start: Vec2, end: Vec2, radius: f64) -> Option<ArcGe
     if d < 1e-9 || r < d / 2.0 - 1e-9 {
         return None;
     }
-    let half = asin(js_min(1.0, d / (2.0 * r)));
+    let half = asin(minimum(1.0, d / (2.0 * r)));
     // In radians, without a round trip through degrees (docs/adr/0289).
     arc_start_end_sweep(
         start,
@@ -300,7 +300,7 @@ pub fn cloud_of(ring: &[Vec2], arc: f64) -> Option<Cloud> {
     for i in 0..ccw.len() {
         let a = ccw[i];
         let b = ccw[(i + 1) % ccw.len()];
-        let k = js_max(1.0, js_round(dist(a, b) / arc));
+        let k = maximum(1.0, js_round(dist(a, b) / arc));
         let mut j = 0.0;
         while j < k {
             pts.push(Vec2::new(
@@ -403,7 +403,7 @@ pub fn closed_outline(shape: &crate::entity::Shape, segments: f64) -> Option<Vec
 pub fn cloud_arcs(ring: &[Vec2], arc: f64) -> f64 {
     let n = ring.len();
     (0..n)
-        .map(|i| js_max(1.0, js_round(dist(ring[i], ring[(i + 1) % n]) / arc)))
+        .map(|i| maximum(1.0, js_round(dist(ring[i], ring[(i + 1) % n]) / arc)))
         .sum()
 }
 

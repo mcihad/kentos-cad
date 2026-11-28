@@ -6,7 +6,7 @@
 //! curve is not enough. Straight runs stay lines and sharp turns stay
 //! corners. Simplify, stroke to path and offsets use it.
 
-use kentos_geometry_core::jsmath::{PI, cos, hypot, js_floor, js_max, js_min, or};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, or};
 
 use crate::bezier::{Cubic, bez, bez_deriv, bez_deriv2};
 use crate::shape::{PathNode, Pt, SubPath};
@@ -41,9 +41,9 @@ pub fn dist_to_segment(p: Pt, a: Pt, b: Pt) -> f64 {
     let dy = b[1] - a[1];
     let l2 = dx * dx + dy * dy;
     let t = if l2 > 0.0 {
-        js_max(
+        maximum(
             0.0,
-            js_min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2),
+            minimum(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2),
         )
     } else {
         0.0
@@ -107,7 +107,7 @@ fn generate(d: &[Pt], first: usize, last: usize, u: &[f64], t1: Pt, t2: Pt) -> C
 
 fn max_error(d: &[Pt], first: usize, last: usize, c: &Cubic, u: &[f64]) -> (f64, usize) {
     let mut err = 0.0;
-    let mut at = js_floor((first + last) as f64 / 2.0) as usize;
+    let mut at = f64::floor((first + last) as f64 / 2.0) as usize;
     for i in first + 1..last {
         let p = bez(c, u[i - first]);
         let e = (p[0] - d[i][0]) * (p[0] - d[i][0]) + (p[1] - d[i][1]) * (p[1] - d[i][1]);
@@ -132,7 +132,7 @@ fn reparameterize(d: &[Pt], first: usize, c: &Cubic, u: &[f64]) -> Vec<f64> {
             if den.abs() < 1e-18 {
                 return t;
             }
-            js_min(1.0, js_max(0.0, t - num / den))
+            minimum(1.0, maximum(0.0, t - num / den))
         })
         .collect()
 }
@@ -179,7 +179,7 @@ fn fit_range(
     // Far off (a long smooth run): halve it, which keeps the pieces even;
     // close: split at the worst point, where the detail is.
     if err > tol2 * 256.0 {
-        at = js_floor((first + last) as f64 / 2.0) as usize;
+        at = f64::floor((first + last) as f64 / 2.0) as usize;
     }
     if at <= first {
         at = first + 1;

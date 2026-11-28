@@ -15,7 +15,7 @@ use crate::Vec2;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
 
 /// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
 /// in the box (a quarter pixel at the view's scale), world units.
@@ -57,12 +57,12 @@ fn crossing(p: Vec2, q: Vec2, b: &Bounds) -> Option<(f64, f64)> {
             if t > t1 {
                 return None;
             }
-            t0 = js_max(t0, t);
+            t0 = maximum(t0, t);
         } else {
             if t < t0 {
                 return None;
             }
-            t1 = js_min(t1, t);
+            t1 = minimum(t1, t);
         }
     }
     Some((t0, t1))
@@ -112,7 +112,7 @@ pub fn step_for(r: f64, tol: f64, most: f64) -> f64 {
     if !(tol > 0.0) || !(r > 0.0) || tol >= r {
         return most;
     }
-    js_min(2.0 * acos(1.0 - tol / r), most)
+    minimum(2.0 * acos(1.0 - tol / r), most)
 }
 
 /// A curve `c + u·cos t + v·sin t`: a circle of radius r (u = (r, 0), v = (0, r)) or an ellipse (u and v its axes,
@@ -138,7 +138,7 @@ impl Conic {
 
     /// Its longer half axis.
     fn reach(&self) -> f64 {
-        js_max(hypot(self.u.x, self.u.y), hypot(self.v.x, self.v.y))
+        maximum(hypot(self.u.x, self.u.y), hypot(self.v.x, self.v.y))
     }
 }
 
@@ -180,13 +180,13 @@ fn crossings(k: &Conic, t0: f64, turn: f64, span: f64, b: &Bounds, out: &mut Vec
 /// Near means within (a little more than) a coarse chord's stray of the box: a curve passing beside the box, the box
 /// on its inner side, would have its coarse chords cut across the box though the curve does not.
 fn in_box(k: &Conic, t0: f64, sweep: f64, b: &Bounds, fine: f64, coarse: f64) -> Vec<Vec2> {
-    let span = js_min(sweep.abs(), TAU);
+    let span = minimum(sweep.abs(), TAU);
     let turn = if sweep < 0.0 { -1.0 } else { 1.0 };
     let at = |s: f64| k.at(t0 + turn * s);
     if !(span > 0.0) || !(k.reach() > 0.0) {
         return vec![at(0.0)];
     }
-    let (fine, coarse) = (js_max(fine, 1e-12), js_max(coarse, 1e-12));
+    let (fine, coarse) = (maximum(fine, 1e-12), maximum(coarse, 1e-12));
     let stray = NEAR * k.reach() * (1.0 - cos(coarse / 2.0));
     let near = Bounds {
         min_x: b.min_x - stray,
@@ -207,18 +207,23 @@ fn in_box(k: &Conic, t0: f64, sweep: f64, b: &Bounds, fine: f64, coarse: f64) ->
         .map(|w| {
             let near = close(at((w[0] + w[1]) / 2.0));
             let step = if near { fine } else { coarse };
-            (w[0], w[1], js_max(((w[1] - w[0]) / step).ceil(), 1.0), near)
+            (
+                w[0],
+                w[1],
+                maximum(((w[1] - w[0]) / step).ceil(), 1.0),
+                near,
+            )
         })
         .collect();
     // Past the most, the near pieces' steps grow; the coarse ones keep theirs, or their chords could reach the box.
     let away: f64 = plan.iter().filter(|p| !p.3).map(|p| p.2).sum();
     let near_steps: f64 = plan.iter().filter(|p| p.3).map(|p| p.2).sum();
-    let thin = js_max(near_steps / js_max(MOST_POINTS as f64 - away, 1.0), 1.0);
+    let thin = maximum(near_steps / maximum(MOST_POINTS as f64 - away, 1.0), 1.0);
     let mut out = Vec::with_capacity((away + near_steps / thin) as usize + plan.len() + 1);
     out.push(at(0.0));
     for (u, v, n, near) in plan {
         let n = if near {
-            js_max((n / thin).ceil(), 1.0)
+            maximum((n / thin).ceil(), 1.0)
         } else {
             n
         };
@@ -405,7 +410,7 @@ mod tests {
                 let m = v((w[0].x + w[1].x) / 2.0, (w[0].y + w[1].y) / 2.0);
                 r - hypot(m.x - c.x, m.y - c.y)
             })
-            .fold(0.0, js_max)
+            .fold(0.0, maximum)
     }
 
     #[test]
@@ -548,7 +553,7 @@ mod tests {
                     c.x + major.x * cos(tm) + minor.x * sin(tm),
                     c.y + major.y * cos(tm) + minor.y * sin(tm),
                 );
-                worst = js_max(worst, hypot(on.x - m.x, on.y - m.y));
+                worst = maximum(worst, hypot(on.x - m.x, on.y - m.y));
             }
         }
         assert!(worst > 0.0 && worst <= tol * 1.000_001, "{worst}");

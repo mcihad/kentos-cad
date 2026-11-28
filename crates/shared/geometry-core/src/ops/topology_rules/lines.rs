@@ -10,7 +10,7 @@ use crate::entity::Shape;
 use crate::geom::arrangement::{edge_box, edge_len};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, js_max, js_sign, sin, stable_sort};
+use crate::jsmath::{atan2, cos, maximum, sign, sin, stable_sort};
 use crate::ops::edges::entity_edges;
 use crate::ops::geoprocess::validity::{Kind as Problem, problems, repair};
 use crate::ops::geoprocess::{Class, boundary_edges};
@@ -92,7 +92,7 @@ pub(super) fn duplicates(
                 };
                 let mut f =
                     Finding::new(rule, "duplicateEdge", vec![i, j], point_at(&longest, 0.5))
-                        .measured(MeasureKind::Length, js_max(la, lb))
+                        .measured(MeasureKind::Length, maximum(la, lb))
                         .fixes(if subject.is_some() {
                             &["deleteDuplicate"]
                         } else {
@@ -420,7 +420,7 @@ fn tangent(e: &Edge, at_end: bool) -> Vec2 {
         Edge::Seg { a, b } => Vec2::new(b.x - a.x, b.y - a.y),
         Edge::Arc { a0, sweep, .. } => {
             let th = if at_end { a0 + sweep } else { a0 };
-            let s = js_sign(sweep);
+            let s = sign(sweep);
             Vec2::new(-sin(th) * s, cos(th) * s)
         }
     }
@@ -584,7 +584,7 @@ pub(super) fn boundary_covered(
                         if c0 > s {
                             pieces.push((k, s, c0));
                         }
-                        s = js_max(s, c1);
+                        s = maximum(s, c1);
                     }
                     if s < 1.0 {
                         pieces.push((k, s, 1.0));

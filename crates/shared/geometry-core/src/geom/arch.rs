@@ -15,7 +15,7 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::display::fixed;
 use crate::entity::{HatchPattern, Shape};
-use crate::jsmath::{PI, atan, atan2, cos, hypot, js_max, js_min, js_round, sin};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, js_round, maximum, minimum, sin};
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
@@ -1048,8 +1048,8 @@ fn column_pieces_at(
         } else {
             let (w, d) = (spec.width / 2.0, spec.depth.unwrap_or(spec.width) / 2.0);
             Vec2::new(
-                centre.x + crate::jsmath::js_max(w, d),
-                centre.y + crate::jsmath::js_max(w, d),
+                centre.x + crate::jsmath::maximum(w, d),
+                centre.y + crate::jsmath::maximum(w, d),
             )
         };
         let p = Vec2::new(corner.x + h * 0.4, corner.y + h * 0.4);
@@ -1154,8 +1154,8 @@ impl Walk {
             .map(|k| {
                 let c = self.at[k];
                 (
-                    crate::jsmath::js_max(c - length / 2.0, 0.0),
-                    crate::jsmath::js_min(c + length / 2.0, s),
+                    crate::jsmath::maximum(c - length / 2.0, 0.0),
+                    crate::jsmath::minimum(c + length / 2.0, s),
                 )
             })
             .collect()
@@ -1177,7 +1177,7 @@ pub fn stair_landings(walk: &Walk, spec: &StairSpec) -> Vec<(f64, f64)> {
     for (a, b) in walk.landings(spec.landing()) {
         match out.last_mut() {
             Some(last) if a - last.1 < spec.tread - EPS => {
-                last.1 = crate::jsmath::js_max(last.1, b)
+                last.1 = crate::jsmath::maximum(last.1, b)
             }
             _ => out.push((a, b)),
         }
@@ -1260,7 +1260,7 @@ fn arc_railings(walk: &Walk, spec: &StairSpec, cut: Option<(f64, f64)>) -> Vec<(
         return out;
     };
     let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
-    let off = crate::jsmath::js_max(spec.width / 2.0 - RAILING_INSET, 0.0);
+    let off = crate::jsmath::maximum(spec.width / 2.0 - RAILING_INSET, 0.0);
     let total = walk.length();
     for (on_left, on) in [(true, r.left()), (false, r.right())] {
         if !on {
@@ -1295,7 +1295,7 @@ fn arc_railings(walk: &Walk, spec: &StairSpec, cut: Option<(f64, f64)>) -> Vec<(
 /// the turns, from the start to the end; `left`: the walking line's left.
 pub fn railing_line(pts: &[Vec2], half: f64, left: bool) -> Vec<Vec2> {
     let n = pts.len();
-    let b = band(pts, crate::jsmath::js_max(half - RAILING_INSET, 0.0));
+    let b = band(pts, crate::jsmath::maximum(half - RAILING_INSET, 0.0));
     if b.len() != 2 * n {
         return Vec::new();
     }
@@ -1318,7 +1318,7 @@ fn railing_split(
     if let Some(k) = walk.at.iter().position(|a| (a - s).abs() <= EPS) {
         return (line[..=k].to_vec(), line[k..].to_vec());
     }
-    let off = crate::jsmath::js_max(half - RAILING_INSET, 0.0) * if left { 1.0 } else { -1.0 };
+    let off = crate::jsmath::maximum(half - RAILING_INSET, 0.0) * if left { 1.0 } else { -1.0 };
     let (p, d) = walk.point(s);
     let n = self::left(d);
     let at = Vec2::new(p.x + n.x * off, p.y + n.y * off);
@@ -1380,7 +1380,7 @@ fn cut_span(walk: &Walk, spec: &StairSpec, stations: &[f64]) -> Option<(f64, f64
     match cut_riser(spec, stations) {
         Some(c) if c > 0 => {
             let s = stations[c - 1];
-            Some((s, crate::jsmath::js_min(s + spec.tread, walk.length())))
+            Some((s, crate::jsmath::minimum(s + spec.tread, walk.length())))
         }
         _ => None,
     }
@@ -1664,9 +1664,9 @@ fn arc_along(line: &[Vec2], p: Vec2) -> f64 {
         let (a, b) = (w[0], w[1]);
         let l = hypot(b.x - a.x, b.y - a.y);
         if l > EPS {
-            let t = js_max(
+            let t = maximum(
                 0.0,
-                js_min(
+                minimum(
                     l,
                     ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l,
                 ),
@@ -1926,7 +1926,7 @@ fn stair_upper_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Leve
     };
     let total = walk.length();
     let s = stations[c - 1];
-    let t = crate::jsmath::js_min(s + spec.tread, total);
+    let t = crate::jsmath::minimum(s + spec.tread, total);
     let side = |at: f64, k: f64| {
         let (p, d) = walk.point(at);
         let n = left(d);
@@ -2023,7 +2023,7 @@ pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
     match walk.arc {
         Some(a) => {
             let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
-            let off = crate::jsmath::js_max(half - RAILING_INSET, 0.0);
+            let off = crate::jsmath::maximum(half - RAILING_INSET, 0.0);
             let side = |k: f64| a.sweep.abs() * (a.r - turn * k * off);
             let railing_length = spec.railings.map_or(0.0, |r| {
                 (if r.left() { side(1.0) } else { 0.0 })
@@ -2130,7 +2130,7 @@ fn stair_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> 
     let end = match cut {
         Some(c) if c > 0 => {
             let s = stations[c - 1];
-            let t = crate::jsmath::js_min(s + spec.tread, walk.length());
+            let t = crate::jsmath::minimum(s + spec.tread, walk.length());
             // From its riser's left end to the right end of the next one's place (a balanced turn's risers slant).
             out.push(piece(line(
                 riser_ends(&walk, spec, s).0,
@@ -2194,7 +2194,7 @@ pub fn ramp_landings(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = Vec::new();
     for (a, b) in walk.landings(spec.landing()) {
         match out.last_mut() {
-            Some(last) if a < last.1 + EPS => last.1 = crate::jsmath::js_max(last.1, b),
+            Some(last) if a < last.1 + EPS => last.1 = crate::jsmath::maximum(last.1, b),
             _ => out.push((a, b)),
         }
     }

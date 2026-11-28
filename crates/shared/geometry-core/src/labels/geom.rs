@@ -9,7 +9,7 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::jsmath::{atan2, cos, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::vec2::Vec2;
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
@@ -127,10 +127,10 @@ impl Obb {
     /// Whether the segment `p`–`q` passes through it (touching it does not).
     pub fn hits_segment(&self, p: Vec2, q: Vec2) -> bool {
         let (p, q) = (self.local(p), self.local(q));
-        if js_max(p.x, q.x) <= -self.a || js_min(p.x, q.x) >= self.a {
+        if maximum(p.x, q.x) <= -self.a || minimum(p.x, q.x) >= self.a {
             return false;
         }
-        if js_max(p.y, q.y) <= -self.b || js_min(p.y, q.y) >= self.b {
+        if maximum(p.y, q.y) <= -self.b || minimum(p.y, q.y) >= self.b {
             return false;
         }
         // The segment's normal: the box's corners all on one side of its line.
@@ -142,8 +142,8 @@ impl Obb {
     /// Whether a disc of radius `r` round `p` covers any of it.
     pub fn hits_circle(&self, p: Vec2, r: f64) -> bool {
         let q = self.local(p);
-        let dx = js_max(q.x.abs() - self.a, 0.0);
-        let dy = js_max(q.y.abs() - self.b, 0.0);
+        let dx = maximum(q.x.abs() - self.a, 0.0);
+        let dy = maximum(q.y.abs() - self.b, 0.0);
         dx * dx + dy * dy < r * r
     }
 }
@@ -185,7 +185,7 @@ pub fn signed_distance(p: Vec2, rings: &[Vec<Vec2>]) -> f64 {
         let mut j = n - 1;
         for i in 0..n {
             let (a, b) = (ring[i], ring[j]);
-            least = js_min(least, segment_distance2(p, a, b));
+            least = minimum(least, segment_distance2(p, a, b));
             if crossings && crate::geometry::ray_crosses(p, a, b) {
                 inside = !inside;
             }
@@ -290,9 +290,9 @@ pub fn clip_path(pts: &[Vec2], r: [f64; 4]) -> Vec<Vec<Vec2>> {
             } else {
                 let t = q / p;
                 if p < 0.0 {
-                    t0 = js_max(t0, t);
+                    t0 = maximum(t0, t);
                 } else {
-                    t1 = js_min(t1, t);
+                    t1 = minimum(t1, t);
                 }
             }
         }
@@ -493,13 +493,13 @@ pub fn pole(rings: &[Vec<Vec2>], precision: f64) -> Option<(Vec2, f64)> {
         f64::NEG_INFINITY,
     );
     for p in outer {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
     let (w, h) = (x1 - x0, y1 - y0);
-    let size = js_min(w, h);
+    let size = minimum(w, h);
     if !(size > 0.0) {
         return None;
     }
@@ -628,10 +628,10 @@ pub fn long_axis(pts: &[Vec2]) -> Option<f64> {
         for p in &h {
             let d = sub(*p, a);
             let (s, t) = (dot(d, u), dot(d, v));
-            s0 = js_min(s0, s);
-            s1 = js_max(s1, s);
-            t0 = js_min(t0, t);
-            t1 = js_max(t1, t);
+            s0 = minimum(s0, s);
+            s1 = maximum(s1, s);
+            t0 = minimum(t0, t);
+            t1 = maximum(t1, t);
         }
         let area = (s1 - s0) * (t1 - t0);
         if best.is_none_or(|(least, _)| area < least) {

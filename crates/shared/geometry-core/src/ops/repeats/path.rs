@@ -3,7 +3,7 @@
 use super::{PATH_VERTEX_LIMIT, Shape, Vec2, finite};
 use crate::geom::bulge::{bulge_arc, bulge_at, is_arc_bulge, segment_mid};
 use crate::geometry::dist;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 
 #[derive(Clone, Copy)]
 struct Path<'a> {
@@ -129,7 +129,7 @@ fn same_arc((a, b, ab): (Vec2, Vec2, f64), (c, d, cd): (Vec2, Vec2, f64), t: f64
             };
             dist(x.c, y.c) <= t
                 && (x.r - y.r).abs() <= t
-                && (x.sweep - y.sweep).abs() * js_max(x.r, y.r) <= t
+                && (x.sweep - y.sweep).abs() * maximum(x.r, y.r) <= t
                 && dist(segment_mid(a, b, ab), segment_mid(c, d, cd)) <= t
         }
         _ => false,

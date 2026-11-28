@@ -51,7 +51,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{hypot, js_max};
+use kentos_geometry_core::jsmath::{hypot, maximum};
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
@@ -758,7 +758,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 overflow |= finite_shape(&before) && !finite_shape(&w.shape);
                 kept += usize::from(w.kept);
                 bent += usize::from(b > CHORD);
-                bend = js_max(bend, b);
+                bend = maximum(bend, b);
                 // Kinds stay on a sheet; the elevations stay with their vertices, a route's measures too
                 // (docs/adr/0224 §2).
                 let mut e = with_shape(entity, w.shape);

@@ -12,7 +12,7 @@ use crate::geom::ellipse::{
     is_full_ellipse,
 };
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
-use crate::jsmath::{atan2, hypot, js_cmp, js_floor, js_max, js_min, js_sign, or, stable_sort};
+use crate::jsmath::{atan2, hypot, js_cmp, maximum, minimum, or, sign, stable_sort};
 use crate::op;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::vec2::Vec2;
@@ -77,7 +77,7 @@ pub fn norm_s(path: &Path, s: f64) -> f64 {
     if path.closed {
         ((s % l) + l) % l
     } else {
-        js_max(0.0, js_min(l, s))
+        maximum(0.0, minimum(l, s))
     }
 }
 
@@ -94,7 +94,7 @@ pub fn point_at_s(path: &Path, s: f64) -> Vec2 {
     let q = norm_s(path, s);
     let i = edge_index_at(path, q);
     let len = or(edge_length(&path.edges[i]), 1.0);
-    point_at(&path.edges[i], js_min(1.0, (q - path.cum[i]) / len))
+    point_at(&path.edges[i], minimum(1.0, (q - path.cum[i]) / len))
 }
 
 /// Unit travel direction at s.
@@ -107,7 +107,7 @@ pub fn tangent_at_s(path: &Path, s: f64) -> Vec2 {
         }
         Edge::Arc { c, r, sweep, .. } => {
             let p = point_at_s(path, s);
-            let dir = or(js_sign(sweep), 1.0);
+            let dir = or(sign(sweep), 1.0);
             Vec2::new((-(p.y - c.y) / r) * dir, ((p.x - c.x) / r) * dir)
         }
     }
@@ -137,7 +137,7 @@ pub fn cuts_on(path: &Path, boundaries: &[Edge]) -> Vec<f64> {
             }
         }
     }
-    let eps = 1e-7 * js_max(1.0, path.length);
+    let eps = 1e-7 * maximum(1.0, path.length);
     let mut sorted: Vec<f64> = out
         .into_iter()
         .map(|s| if path.closed { norm_s(path, s) } else { s })
@@ -176,9 +176,9 @@ pub fn sub_path(path: &Path, s0: f64, s1: f64, source: &Shape) -> Entity {
         for (i, ed) in path.edges.iter().enumerate() {
             let len = edge_length(ed);
             let g0 = path.cum[i] + round as f64 * l;
-            let lo = js_max(s0, g0);
-            let hi = js_min(s1, g0 + len);
-            if hi - lo <= 1e-9 * js_max(1.0, l) {
+            let lo = maximum(s0, g0);
+            let hi = minimum(s1, g0 + len);
+            if hi - lo <= 1e-9 * maximum(1.0, l) {
                 continue;
             }
             let t1 = (hi - g0) / or(len, 1.0);
@@ -187,7 +187,7 @@ pub fn sub_path(path: &Path, s0: f64, s1: f64, source: &Shape) -> Entity {
                 Edge::Arc { sweep, .. } => bulge_of_sweep(sweep * (t1 - t0)),
                 Edge::Seg { .. } => 0.0,
             });
-            pts.push(point_at(ed, js_min(1.0, t1)));
+            pts.push(point_at(ed, minimum(1.0, t1)));
         }
     }
     bulges.push(0.0);
@@ -237,7 +237,7 @@ pub fn division_params(path: &Path, opts: &Division) -> Vec<f64> {
     let mut out = Vec::new();
     match *opts {
         Division::Parts(parts) => {
-            let n = js_floor(parts);
+            let n = f64::floor(parts);
             if n < 2.0 {
                 return out;
             }
@@ -252,7 +252,7 @@ pub fn division_params(path: &Path, opts: &Division) -> Vec<f64> {
             if !(step > 0.0) {
                 return out;
             }
-            let eps = 1e-9 * js_max(1.0, l);
+            let eps = 1e-9 * maximum(1.0, l);
             let mut s = step;
             while s < l - eps {
                 out.push(s);
@@ -334,7 +334,7 @@ pub fn division_places(
     };
     // An elliptical arc's places are measured along the true curve, not the path's fine chords.
     let l = ellipse.as_ref().map_or(path.length, ellipse_length);
-    let eps = 1e-9 * js_max(1.0, l);
+    let eps = 1e-9 * maximum(1.0, l);
     let mut ss = match (opts, start) {
         (Division::Step(step), Some(first)) => {
             let mut out = Vec::new();
@@ -418,7 +418,7 @@ fn ellipse_param_at(g: &EllipseGeom, path: &Path, l: f64, s: f64) -> f64 {
         }
         let step = (run - s) / speed;
         t = (t - step).clamp(g.t0, end);
-        if step.abs() <= 1e-15 * js_max(1.0, t.abs()) {
+        if step.abs() <= 1e-15 * maximum(1.0, t.abs()) {
             break;
         }
     }

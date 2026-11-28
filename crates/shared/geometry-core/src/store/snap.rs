@@ -22,7 +22,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::geom::leader;
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_round, js_sign, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_round, maximum, sign, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
@@ -138,7 +138,7 @@ impl Extension {
                 let (dx, dy) = (p.x - end.x, p.y - end.y);
                 let t = dx * dir.x + dy * dir.y;
                 let off = dx * dir.y - dy * dir.x;
-                (t >= -ON && off.abs() <= ON).then_some(js_max(t, 0.0))
+                (t >= -ON && off.abs() <= ON).then_some(maximum(t, 0.0))
             }
             Extension::Arc { c, r, a0, sweep } => {
                 if (hypot(p.x - c.x, p.y - c.y) - r).abs() > ON {
@@ -146,7 +146,7 @@ impl Extension {
                 }
                 // The angle travelled from the end in the sweep's sense, 0..2π.
                 let a = atan2(p.y - c.y, p.x - c.x);
-                let mut t = (a - a0) * js_sign(sweep);
+                let mut t = (a - a0) * sign(sweep);
                 while t < 0.0 {
                     t += 2.0 * PI;
                 }
@@ -167,7 +167,7 @@ impl Extension {
         match *self {
             Extension::Line { end, dir } => Some(Vec2::new(end.x + dir.x * d, end.y + dir.y * d)),
             Extension::Arc { c, r, a0, sweep } => {
-                (d <= sweep.abs() * r).then(|| point_on(c, r, a0 + js_sign(sweep) * d / r))
+                (d <= sweep.abs() * r).then(|| point_on(c, r, a0 + sign(sweep) * d / r))
             }
         }
     }
@@ -583,7 +583,7 @@ impl Store {
                     }
                     Edge::Arc { c, r, a0, sweep } => {
                         // The rest of the circle, from the end rested on away from the arc.
-                        let rest = (2.0 * PI - sweep.abs()) * js_sign(sweep);
+                        let rest = (2.0 * PI - sweep.abs()) * sign(sweep);
                         let (s, f) = (point_on(c, r, a0), point_on(c, r, a0 + sweep));
                         if rest.abs() <= 1e-12 {
                             continue;

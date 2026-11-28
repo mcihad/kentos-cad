@@ -11,7 +11,7 @@
 
 use kentos_geometry_core::geom::arrangement::{Rule, Source};
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::bezier::{
@@ -337,7 +337,7 @@ fn join_at(out: &mut Pieces, p: Pt, a: Pt, b: Pt, h: f64, join: Join, miter_limi
     if join == Join::Miter {
         let cos_t = n1[0] * n2[0] + n1[1] * n2[1];
         // SVG: miter length / stroke width = 1 / sin(θ/2), θ the angle between the segments.
-        let ratio = 1.0 / js_max(1e-18, (1.0 + cos_t) / 2.0).sqrt();
+        let ratio = 1.0 / maximum(1e-18, (1.0 + cos_t) / 2.0).sqrt();
         if ratio <= miter_limit.unwrap_or(4.0) {
             let k = h / (1.0 + cos_t);
             let m: Pt = [
@@ -540,14 +540,14 @@ fn stroke_source(subs: &[SubPath], st: &StrokeStyle, tol: f64) -> Source {
 /// circle fits one cubic), never more than a small part of the stroke width
 /// or offset (`size`), where a wobble would show.
 fn fit_tol_for(tol: f64, size: f64) -> f64 {
-    js_min(tol * 8.0, js_max(size * 0.02, tol * 2.0))
+    minimum(tol * 8.0, maximum(size * 0.02, tol * 2.0))
 }
 
 /// The outline of a stroke as closed sub-paths (the area the stroke paints).
 pub fn stroke_outline(subs: &[SubPath], st: &StrokeStyle) -> Vec<SubPath> {
     let extent = extent_of(&[subs]) + st.width;
     // Relative to the width (the outline's detail), never coarser than a thousandth of the drawing.
-    let tol = js_min(extent * 1e-3, js_max(st.width * 0.004, tol_for(extent)));
+    let tol = minimum(extent * 1e-3, maximum(st.width * 0.004, tol_for(extent)));
     let areas = overlay_z(&[stroke_source(subs, st, tol)], Rule::First);
     areas_to_sub_paths(&areas, None, fit_tol_for(tol, st.width))
 }
@@ -567,7 +567,7 @@ pub fn offset_region(input: &RegionInput, d: f64, join: Join) -> Vec<SubPath> {
             .collect();
     }
     let extent = extent_of(&[&input.subs]) + 2.0 * d.abs();
-    let tol = js_min(tol_for(extent), js_max(d.abs() * 0.01, 1e-7));
+    let tol = minimum(tol_for(extent), maximum(d.abs() * 0.01, 1e-7));
     let mut tr = Tracer::new(tol, extent);
     let src = region_source(input, &mut tr);
     let clean = overlay_z(&[src], Rule::First);

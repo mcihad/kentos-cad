@@ -7,7 +7,7 @@ use crate::entity::Shape;
 use crate::geom::bulge::{reverse_bulge_path, segment_tangent};
 use crate::geom::intersect::{Edge, intersect_edges, ray_edge};
 use crate::geom::wall::path_shape;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
@@ -104,7 +104,7 @@ pub fn split(p: &WallPath, at: Vec2) -> Result<(WallPath, Option<WallPath>, f64)
     let q = point_at_s(&path, s);
     let t = tangent_at_s(&path, s);
     let across = (at.x - q.x) * -t.y + (at.y - q.y) * t.x;
-    let eps = 1e-9 * js_max(path.length, 1.0);
+    let eps = 1e-9 * maximum(path.length, 1.0);
     if p.closed {
         let open = stretch(p, &path, s, s + path.length).ok_or(SplitRefusal::AtEnd)?;
         return Ok((open, None, across));
@@ -139,7 +139,7 @@ pub fn extend(p: &WallPath, at_end: bool, target: &[Edge]) -> Option<WallPath> {
 
 /// The arc lengths where `target` crosses the path, inside it, in order.
 pub fn crossings(path: &Path, target: &[Edge]) -> Vec<f64> {
-    let eps = 1e-9 * js_max(path.length, 1.0);
+    let eps = 1e-9 * maximum(path.length, 1.0);
     let mut out: Vec<f64> = Vec::new();
     for (i, ed) in path.edges.iter().enumerate() {
         let len = edge_length(ed);

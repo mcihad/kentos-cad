@@ -16,7 +16,7 @@ use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, TAU, atan2, hypot, js_cmp, js_max, js_min, js_sign, or, sin, stable_sort};
+use crate::jsmath::{PI, TAU, atan2, hypot, js_cmp, maximum, minimum, or, sin, stable_sort};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
@@ -56,8 +56,8 @@ fn leave(edge: &Edge, at: Vec2, far: Vec2) -> Leave {
         },
         Edge::Arc { sweep, .. } => {
             // The tangent turns from the chord by half the sweep; the radius follows from the chord.
-            let kappa =
-                js_sign(sweep) * 2.0 * sin(sweep.abs() / 2.0) / hypot(far.x - at.x, far.y - at.y);
+            let kappa = kentos_num::sign(sweep) * 2.0 * sin(sweep.abs() / 2.0)
+                / hypot(far.x - at.x, far.y - at.y);
             Leave {
                 angle: chord - sweep / 2.0 + kappa * RHO / 2.0,
                 kappa,
@@ -324,7 +324,7 @@ pub(crate) fn joinable(a: &Edge, b: &Edge) -> Option<Edge> {
         ) => {
             let same = hypot(ca.x - cb.x, ca.y - cb.y) <= TOL
                 && (ra - rb).abs() <= TOL
-                && js_sign(sa) == js_sign(sb);
+                && kentos_num::sign(sa) == kentos_num::sign(sb);
             (same && (sa + sb).abs() < TAU - 1e-6).then_some(Edge::Arc {
                 c: ca,
                 r: ra,
@@ -382,7 +382,7 @@ fn to_ring(edges: Vec<Edge>, cycle_from: &[usize], verts: &Vertices, origin: Vec
     let m = point_at(&e, 0.5);
     let q = point_at(&e, 0.5 + 1e-6);
     let l = or(hypot(q.x - m.x, q.y - m.y), 1.0);
-    let eps = js_min(edge_len(&e) * 1e-4, 1e-4);
+    let eps = minimum(edge_len(&e) * 1e-4, 1e-4);
     let probe = Vec2::new(m.x - ((q.y - m.y) / l) * eps, m.y + ((q.x - m.x) / l) * eps);
     LocalRing {
         ring,
@@ -510,17 +510,17 @@ impl Cores {
         );
         let mut sum = 0.0;
         for b in &boxes {
-            x0 = js_min(x0, b.min_x - r);
-            y0 = js_min(y0, b.min_y - r);
-            x1 = js_max(x1, b.max_x + r);
-            y1 = js_max(y1, b.max_y + r);
-            sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+            x0 = minimum(x0, b.min_x - r);
+            y0 = minimum(y0, b.min_y - r);
+            x1 = maximum(x1, b.max_x + r);
+            y1 = maximum(y1, b.max_y + r);
+            sum += maximum(b.max_x - b.min_x, b.max_y - b.min_y);
         }
         if !x0.is_finite() {
             (x0, y0, x1, y1) = (0.0, 0.0, 0.0, 0.0);
         }
         let n = boxes.len().max(1);
-        let mut size = js_max(js_max(r, sum / n as f64), 1e-9);
+        let mut size = maximum(maximum(r, sum / n as f64), 1e-9);
         while ((x1 - x0) / size + 1.0) * ((y1 - y0) / size + 1.0) > (4 * n).max(1024) as f64 {
             size *= 2.0;
         }
@@ -736,10 +736,10 @@ pub fn face_rings(sources: &[Source]) -> Vec<FaceRing> {
             for e in &r.edges {
                 let b = edge_box(e);
                 bx = Bounds {
-                    min_x: js_min(bx.min_x, b.min_x + o.x),
-                    min_y: js_min(bx.min_y, b.min_y + o.y),
-                    max_x: js_max(bx.max_x, b.max_x + o.x),
-                    max_y: js_max(bx.max_y, b.max_y + o.y),
+                    min_x: minimum(bx.min_x, b.min_x + o.x),
+                    min_y: minimum(bx.min_y, b.min_y + o.y),
+                    max_x: maximum(bx.max_x, b.max_x + o.x),
+                    max_y: maximum(bx.max_y, b.max_y + o.y),
                 };
             }
             FaceRing {
@@ -767,10 +767,10 @@ fn edges_box(list: &[Edge]) -> Bounds {
         |b, e| {
             let x = edge_box(e);
             Bounds {
-                min_x: js_min(b.min_x, x.min_x),
-                min_y: js_min(b.min_y, x.min_y),
-                max_x: js_max(b.max_x, x.max_x),
-                max_y: js_max(b.max_y, x.max_y),
+                min_x: minimum(b.min_x, x.min_x),
+                min_y: minimum(b.min_y, x.min_y),
+                max_x: maximum(b.max_x, x.max_x),
+                max_y: maximum(b.max_y, x.max_y),
             }
         },
     )
@@ -785,7 +785,7 @@ fn hair_left(e: &Edge) -> Vec2 {
     let m = point_at(e, 0.5);
     let q = point_at(e, 0.5 + 1e-6);
     let l = or(hypot(q.x - m.x, q.y - m.y), 1.0);
-    let eps = js_min(edge_len(e) * 1e-4, 1e-4);
+    let eps = minimum(edge_len(e) * 1e-4, 1e-4);
     Vec2::new(m.x - ((q.y - m.y) / l) * eps, m.y + ((q.x - m.x) / l) * eps)
 }
 

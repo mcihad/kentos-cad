@@ -19,7 +19,9 @@ use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_cmp, js_max, js_round, sin, stable_sort};
+use kentos_geometry_core::jsmath::{
+    atan2, cos, hypot, js_cmp, js_round, maximum, sin, stable_sort,
+};
 use kentos_geometry_core::triangulate::fill_into;
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
@@ -394,7 +396,7 @@ impl BatchSink {
             {
                 (
                     proxy_box(&e.bounds),
-                    js_max(e.bounds[2] - e.bounds[0], e.bounds[3] - e.bounds[1]),
+                    maximum(e.bounds[2] - e.bounds[0], e.bounds[3] - e.bounds[1]),
                 )
             } else {
                 (Vec::new(), 0.0)
@@ -493,7 +495,7 @@ impl BatchSink {
                 k,
                 0.0,
             ]);
-            e.kmax = js_max(e.kmax, k);
+            e.kmax = maximum(e.kmax, k);
             let [x0, y0, x1, y1] = b.bounds;
             for (x, y) in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)] {
                 e.grow(
@@ -996,7 +998,7 @@ impl Sink for BatchSink {
         let lod = self.lod;
         let e = &mut self.entries[e];
         let (tx, ty) = (e.base.x, e.base.y);
-        e.w = js_max(e.w, style.width / 2.0 + style.blur);
+        e.w = maximum(e.w, style.width / 2.0 + style.blur);
         let n = path.len();
         let count = if closed { n } else { n.saturating_sub(1) };
         let mut d = 0.0;

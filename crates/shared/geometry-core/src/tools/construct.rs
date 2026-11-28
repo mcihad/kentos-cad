@@ -10,7 +10,7 @@ use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{BulgePath, bulge_of_sweep};
 use crate::geom::dimension::{DimensionGeom, layout_dimension};
 use crate::geom::intersect::{circle_circle, line_line};
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -137,7 +137,7 @@ pub fn angle_at(vertex: Vec2, p1: Vec2, p2: Vec2) -> Option<Angle> {
         return None;
     }
     let sweep = norm_angle(atan2(v2.y, v2.x) - atan2(v1.y, v1.x));
-    let inner = js_min(sweep, TAU - sweep);
+    let inner = minimum(sweep, TAU - sweep);
     Some(Angle {
         sweep,
         inner,

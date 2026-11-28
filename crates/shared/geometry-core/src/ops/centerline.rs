@@ -10,7 +10,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{hypot, js_max, tan};
+use crate::jsmath::{hypot, maximum, tan};
 use crate::op;
 use crate::tools::point_calc::Walk;
 use crate::vec2::Vec2;
@@ -159,7 +159,7 @@ pub fn centerline(a: &Shape, b: &Shape, step: f64) -> Result<Centerline, String>
         forward
     };
     let lb = wb.length();
-    let longest = js_max(la, lb);
+    let longest = maximum(la, lb);
     if longest / step > MOST_POINTS {
         return Err(TOO_MANY.to_owned());
     }

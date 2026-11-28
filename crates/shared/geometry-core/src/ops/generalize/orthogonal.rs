@@ -5,7 +5,7 @@
 //! kept. An open path's ends and an arc edge's ends stay.
 
 use super::Track;
-use crate::jsmath::{PI, cos, js_min};
+use crate::jsmath::{PI, cos, minimum};
 use crate::vec2::Vec2;
 
 /// Below this squareness a shape is square (QGIS's 1e-8).
@@ -64,7 +64,7 @@ fn motion(a: Vec2, b: Vec2, c: Vec2, k: &Bounds) -> Vec2 {
     if lp == 0.0 || lq == 0.0 {
         return zero;
     }
-    let scale = 2.0 * js_min(lp, lq);
+    let scale = 2.0 * minimum(lp, lq);
     let (pnx, pny, qnx, qny) = (px / lp, py / lp, qx / lq, qy / lq);
     let mut d = pnx * qnx + pny * qny;
     if !k.takes(d) {
@@ -104,7 +104,7 @@ fn squareness(t: &Track, moves: &[bool], k: &Bounds) -> f64 {
         if !k.takes(d) {
             continue;
         }
-        sum += 2.0 * js_min((d - 1.0).abs(), js_min(d.abs(), (d + 1.0).abs()));
+        sum += 2.0 * minimum((d - 1.0).abs(), minimum(d.abs(), (d + 1.0).abs()));
     }
     sum
 }

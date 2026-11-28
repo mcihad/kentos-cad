@@ -13,7 +13,7 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as P;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::ops::overkill::{Turn, far, kept_bulges, merge_lines, same_points, thin};
 use serde_json::Value;
 
@@ -135,7 +135,7 @@ fn empty(e: &Entity, tol: f64) -> Option<f64> {
             let reach = path
                 .pts
                 .iter()
-                .fold(0.0_f64, |m, q| js_max(m, far(p(*q), first)));
+                .fold(0.0_f64, |m, q| maximum(m, far(p(*q), first)));
             Some(reach).filter(|d| *d <= tol)
         }
         Entity::Text(t) => t.text.trim().is_empty().then_some(0.0),
@@ -234,7 +234,7 @@ fn same(a: &Entity, b: &Entity, tol: f64) -> Option<f64> {
         }
         (Entity::Line(x), Entity::Line(y)) => {
             let (xa, xb, ya, yb) = (p(x.a), p(x.b), p(y.a), p(y.b));
-            let forward = js_max(far(xa, ya), far(xb, yb));
+            let forward = maximum(far(xa, ya), far(xb, yb));
             if forward <= tol
                 && same_opt(x.za, y.za, tol)
                 && same_opt(x.zb, y.zb, tol)
@@ -243,7 +243,7 @@ fn same(a: &Entity, b: &Entity, tol: f64) -> Option<f64> {
             {
                 return Some(forward);
             }
-            let back = js_max(far(xa, yb), far(xb, ya));
+            let back = maximum(far(xa, yb), far(xb, ya));
             (back <= tol
                 && same_opt(x.za, y.zb, tol)
                 && same_opt(x.zb, y.za, tol)
@@ -252,16 +252,16 @@ fn same(a: &Entity, b: &Entity, tol: f64) -> Option<f64> {
             .then_some(back)
         }
         (Entity::Circle(x), Entity::Circle(y)) => {
-            let d = js_max(far(p(x.c), p(y.c)), (x.r - y.r).abs());
+            let d = maximum(far(p(x.c), p(y.c)), (x.r - y.r).abs());
             (d <= tol).then_some(d)
         }
         (Entity::Arc(x), Entity::Arc(y)) => {
             let end = |c: Vec2, r: f64, a: f64| {
                 P::new(c.x + r * kentos_num::cos(a), c.y + r * kentos_num::sin(a))
             };
-            let d = js_max(
-                js_max(far(p(x.c), p(y.c)), (x.r - y.r).abs()),
-                js_max(
+            let d = maximum(
+                maximum(far(p(x.c), p(y.c)), (x.r - y.r).abs()),
+                maximum(
                     far(end(x.c, x.r, x.a0), end(y.c, y.r, y.a0)),
                     far(end(x.c, x.r, x.a1), end(y.c, y.r, y.a1)),
                 ),
@@ -326,11 +326,11 @@ fn find(items: &[Item], input: &EntitiesCleanup, tol: f64) -> Plan {
         if let Some(d) = empty(&it.e, tol) {
             gone[i] = true;
             report.empty += 1;
-            report.loss = js_max(report.loss, d);
+            report.loss = maximum(report.loss, d);
         }
     }
     // Duplicates: the kept objects by key and cell (geometry within `tol`), or by key and fields (the rest).
-    let cell = js_max(2.0 * tol, 1e-6);
+    let cell = maximum(2.0 * tol, 1e-6);
     let at = |q: P| ((q.x / cell).floor() as i64, (q.y / cell).floor() as i64);
     let mut grid: HashMap<(&str, i64, i64), Vec<usize>> = HashMap::new();
     let mut exact: HashMap<(&str, String), usize> = HashMap::new();
@@ -358,7 +358,7 @@ fn find(items: &[Item], input: &EntitiesCleanup, tol: f64) -> Plan {
             Some(d) => {
                 gone[i] = true;
                 report.duplicates += 1;
-                report.loss = js_max(report.loss, d);
+                report.loss = maximum(report.loss, d);
             }
             None => match probe(&it.e) {
                 Some(_) => {
@@ -408,7 +408,7 @@ fn find(items: &[Item], input: &EntitiesCleanup, tol: f64) -> Plan {
                 report.merged += 1;
             }
             report.merging += 1;
-            report.loss = js_max(report.loss, m.loss);
+            report.loss = maximum(report.loss, m.loss);
             updated.push((
                 kept,
                 EntityGeometry::Line {
@@ -457,7 +457,7 @@ fn find(items: &[Item], input: &EntitiesCleanup, tol: f64) -> Plan {
         };
         report.vertices += (n - kept.len()) as u32;
         report.paths += 1;
-        report.loss = js_max(report.loss, loss);
+        report.loss = maximum(report.loss, loss);
         let bulges = path
             .bulges
             .as_deref()

@@ -14,7 +14,7 @@ use kentos_commands::{
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{cos, hypot, js_sign, sin};
+use kentos_geometry_core::jsmath::{cos, hypot, sign, sin};
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::tools::ucs::Frame;
 use kentos_geometry_core::vec2::Vec2;
@@ -295,7 +295,7 @@ fn extension(doc: &Document, end: &ObjectEnd, d: f64, path: &str) -> Result<Vec2
             )
         }
         Edge::Arc { c, r, a0, sweep } => {
-            let turn = d / r * js_sign(sweep);
+            let turn = d / r * sign(sweep);
             let t = if at_start {
                 a0 - turn
             } else {

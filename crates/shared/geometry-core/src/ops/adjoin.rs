@@ -15,7 +15,7 @@ use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::adjoin_faces;
 use crate::geom::region::{area_source, intersect_area_sets, ring_edges, subtract_areas};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::ops::topology_edit::{Neighbour, Path, SAME, padded, paths_of, shape_of};
@@ -41,10 +41,10 @@ const EMPTY: Bounds = Bounds {
 
 fn grow(b: Bounds, e: Bounds) -> Bounds {
     Bounds {
-        min_x: js_min(b.min_x, e.min_x),
-        min_y: js_min(b.min_y, e.min_y),
-        max_x: js_max(b.max_x, e.max_x),
-        max_y: js_max(b.max_y, e.max_y),
+        min_x: minimum(b.min_x, e.min_x),
+        min_y: minimum(b.min_y, e.min_y),
+        max_x: maximum(b.max_x, e.max_x),
+        max_y: maximum(b.max_y, e.max_y),
     }
 }
 

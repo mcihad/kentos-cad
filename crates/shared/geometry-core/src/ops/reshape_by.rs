@@ -23,7 +23,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::region::{
     FaceIndex, intersect_areas, net_area, ring_edges, split_area, union_areas,
 };
-use crate::jsmath::{atan, hypot, js_max};
+use crate::jsmath::{atan, hypot, maximum};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -201,7 +201,7 @@ fn reshape_area(e: &Shape, sketch: &[Vec2]) -> Result<Shape, ReshapeRefusal> {
                 .iter()
                 .map(net_area)
                 .sum();
-            overlap <= 1e-9 * js_max(net_area(f).abs(), 1.0)
+            overlap <= 1e-9 * maximum(net_area(f).abs(), 1.0)
         })
         .collect();
     let result = match (cuts, pockets.is_empty()) {

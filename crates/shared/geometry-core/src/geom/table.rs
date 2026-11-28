@@ -32,7 +32,7 @@
 //! its rows, its lines and cells part after part; the outline holds them all.
 
 use crate::entity::{CellRange, Shape, TableBreaks};
-use crate::jsmath::{PI, cos, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::text::face::Face;
 use crate::text::{Font, width_em_in};
 use crate::vec2::Vec2;
@@ -235,7 +235,7 @@ impl TableGeom<'_> {
         let gap = b
             .gap
             .filter(|g| g.is_finite())
-            .map_or(0.0, |g| js_max(g, 0.0));
+            .map_or(0.0, |g| maximum(g, 0.0));
         let mut parts: Vec<TablePart> = Vec::new();
         let mut start = 0;
         while start < n {
@@ -308,7 +308,7 @@ impl TableGeom<'_> {
         let depth = parts
             .iter()
             .map(|p| p.rows.iter().map(|&r| self.rows[r]).sum::<f64>())
-            .fold(0.0, js_max);
+            .fold(0.0, maximum);
         let width: f64 = self.columns.iter().sum();
         let last = parts.last().map_or(0.0, |p| p.x);
         (last + width, depth)
@@ -643,10 +643,10 @@ impl TableGeom<'_> {
             .styles
             .iter()
             .filter_map(|s| s.height)
-            .fold(self.height.abs(), |a, b| js_max(a, b.abs()));
+            .fold(self.height.abs(), |a, b| maximum(a, b.abs()));
         let pad = (DROP.abs() + spread) * tallest + 1e-3;
-        let lo = ds.iter().copied().fold(f64::INFINITY, js_min) - pad;
-        let hi = ds.iter().copied().fold(f64::NEG_INFINITY, js_max) + pad;
+        let lo = ds.iter().copied().fold(f64::INFINITY, minimum) - pad;
+        let hi = ds.iter().copied().fold(f64::NEG_INFINITY, maximum) + pad;
         let mut picked: Vec<(usize, usize)> = Vec::new();
         // A row of a negative height, or one not a number, leaves the edges unordered: every row is looked at then.
         let ordered = self.rows.iter().all(|r| r.is_finite() && *r >= 0.0);

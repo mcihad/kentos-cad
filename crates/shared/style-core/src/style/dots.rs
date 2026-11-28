@@ -7,7 +7,7 @@
 //! edges of the dot's horizontal band (the answer is the full test's).
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 
 use super::place::positive;
 
@@ -79,8 +79,8 @@ impl Inside {
                 for i in 0..n {
                     let a = ring[i];
                     let b = ring[(i + 1) % n];
-                    min = Vec2::new(js_min(min.x, a.x), js_min(min.y, a.y));
-                    max = Vec2::new(js_max(max.x, a.x), js_max(max.y, a.y));
+                    min = Vec2::new(minimum(min.x, a.x), minimum(min.y, a.y));
+                    max = Vec2::new(maximum(max.x, a.x), maximum(max.y, a.y));
                     if a.y != b.y {
                         edges.push([a, b]);
                     }
@@ -94,8 +94,8 @@ impl Inside {
         let band = (max.y - min.y) / count as f64;
         let mut bands = vec![Vec::new(); count];
         for (k, [a, b]) in edges.iter().enumerate() {
-            let lo = js_max(((js_min(a.y, b.y) - min.y) / band).floor(), 0.0) as usize;
-            let hi = js_max(((js_max(a.y, b.y) - min.y) / band).floor(), 0.0) as usize;
+            let lo = maximum(((minimum(a.y, b.y) - min.y) / band).floor(), 0.0) as usize;
+            let hi = maximum(((maximum(a.y, b.y) - min.y) / band).floor(), 0.0) as usize;
             for list in bands
                 .iter_mut()
                 .take(hi.min(count - 1) + 1)

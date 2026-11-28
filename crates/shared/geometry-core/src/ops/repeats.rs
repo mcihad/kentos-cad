@@ -9,7 +9,7 @@ use crate::entity::Shape;
 use crate::geom::affine::translation;
 use crate::geom::arc::sweep;
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{atan2, cos, js_max, sin};
+use crate::jsmath::{atan2, cos, maximum, sin};
 use crate::ops::transform::transform_shape;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
@@ -164,7 +164,7 @@ fn equal_with(
             let (sa, sb) = (sweep(*a0, *a1), sweep(*b0, *b1));
             dist(*c, *d) <= tolerance
                 && (r - s).abs() <= tolerance
-                && (sa - sb).abs() * js_max(*r, *s) <= tolerance
+                && (sa - sb).abs() * maximum(*r, *s) <= tolerance
                 && [0.0, 0.5, 1.0]
                     .iter()
                     .all(|t| dist(on(*c, *r, a0 + sa * t), on(*d, *s, b0 + sb * t)) <= tolerance)

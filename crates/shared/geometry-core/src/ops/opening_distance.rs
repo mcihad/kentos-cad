@@ -3,7 +3,7 @@
 //! ends, the jambs of the edge's other openings, where other walls' faces cross it); this picks the nearest on each
 //! side by one rule, so the desktop, the headless server and the shared cases agree.
 
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 /// Slack, metres: a reference at a jamb (a touching opening) counts on that side.
@@ -44,7 +44,7 @@ pub fn nearest(candidates: &[Candidate], s: f64, before: bool) -> Option<Candida
     let edge = side
         .iter()
         .map(|c| c.s)
-        .reduce(|a, b| if before { js_max(a, b) } else { js_min(a, b) })?;
+        .reduce(|a, b| if before { maximum(a, b) } else { minimum(a, b) })?;
     side.into_iter()
         .filter(|c| (c.s - edge).abs() <= TIE)
         .min_by(|a, b| {

@@ -13,7 +13,7 @@
 //! ids in their place (`apps/web/src/style/svg/pathOps.ts`).
 
 use kentos_geometry_core::api::json::{Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{PI, atan2, hypot, js_max};
+use kentos_geometry_core::jsmath::{PI, atan2, hypot, maximum};
 
 use crate::bezier::{
     flatten_cubic, flatten_sub_path_tol, reverse_sub_path, ring_signed_area, segment_count,
@@ -225,7 +225,7 @@ pub fn cut_shapes(shapes: &[Obj], ids: &mut Ids) -> Result<OpResult, String> {
     let width = if has_stroke {
         bottom.field("strokeWidth")
     } else {
-        Some(Json::Num(js_max(bottom.num("strokeWidth"), 1.0)))
+        Some(Json::Num(maximum(bottom.num("strokeWidth"), 1.0)))
     };
     let add: Vec<Obj> = pieces
         .iter()

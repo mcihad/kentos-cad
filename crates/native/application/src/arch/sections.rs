@@ -2644,13 +2644,13 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         .seen
         .iter()
         .map(|e| e.depth)
-        .fold(0.0, kentos_geometry_core::jsmath::js_max);
+        .fold(0.0, kentos_geometry_core::jsmath::maximum);
     let (near, span) = if elevation {
         let near = s
             .seen
             .iter()
             .map(|e| e.depth)
-            .fold(f64::INFINITY, kentos_geometry_core::jsmath::js_min)
+            .fold(f64::INFINITY, kentos_geometry_core::jsmath::minimum)
             .min(far);
         (near, (far - near).max(4.0))
     } else {

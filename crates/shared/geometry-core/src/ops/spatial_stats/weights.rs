@@ -6,7 +6,7 @@
 use super::MOST_PAIRS;
 use super::kdtree::{KdTree, dist2};
 use super::nearest::nearest_distances;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::vec2::Vec2;
 
 /// How neighbours are found.
@@ -104,7 +104,7 @@ pub fn neighbours(
                     .iter()
                     .map(|&j| {
                         let w = if concept == Concept::Inverse && j as usize != i {
-                            1.0 / js_max(dist2(p, pts[j as usize]).sqrt(), 1.0)
+                            1.0 / maximum(dist2(p, pts[j as usize]).sqrt(), 1.0)
                         } else {
                             1.0
                         };

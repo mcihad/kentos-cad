@@ -15,7 +15,7 @@ use super::{
 };
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
 
 /// Why a dimension of docs/adr/0147 cannot be laid out: `layout_dimension`
@@ -240,7 +240,7 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
             lines.push([at2(c, t, r + k * g), at2(c, t, big + k * beyond)]);
         }
     }
-    let steps = js_max(8.0, (sweep / (PI / 36.0)).ceil());
+    let steps = maximum(8.0, (sweep / (PI / 36.0)).ceil());
     let mut i = 0.0;
     while i < steps {
         lines.push([
@@ -306,7 +306,7 @@ pub(super) fn jog_at(d: &DimensionGeom, p: Vec2) -> Option<f64> {
     let (u, s, t) = jogged_frame(d)?;
     let c = d.c?;
     let along = dot(Vec2::new(p.x - c.x, p.y - c.y), u);
-    Some(js_max(0.0, js_min(along, t - s.abs())))
+    Some(maximum(0.0, minimum(along, t - s.abs())))
 }
 
 /// The radius's direction u from the true centre a to b on the arc, and
@@ -340,7 +340,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (u, s, t) = jogged_frame(d)?;
     let n = Vec2::new(-u.y, u.x);
     let jog = s.abs();
-    let ta = js_min(js_max(d.offset, 0.0), t - jog);
+    let ta = minimum(maximum(d.offset, 0.0), t - jog);
     let p1 = add(c, u, ta);
     let p2 = add(add(p1, u, jog), n, -s);
     let mut lines = Vec::new();

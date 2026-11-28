@@ -20,7 +20,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::op;
 use crate::ops::fit::{self, Fit, FitKind, FitPair};
 use crate::ops::rubber::{Link, Sheet};
@@ -219,7 +219,7 @@ impl Poly {
         let (from, to) = (mean(src), mean(dst));
         let scale = src
             .iter()
-            .fold(0.0, |m, p| js_max(m, hypot(p.x - from.x, p.y - from.y)));
+            .fold(0.0, |m, p| maximum(m, hypot(p.x - from.x, p.y - from.y)));
         if !(scale > 0.0) {
             return Err(GeorefError::Collinear);
         }
@@ -257,7 +257,7 @@ const SINGULAR: f64 = 1e-12;
 /// Gaussian elimination with partial pivoting.
 fn gauss(mut a: Vec<Vec<f64>>, mut b: Vec<f64>) -> Option<Vec<f64>> {
     let n = b.len();
-    let largest = (0..n).fold(0.0, |m, i| js_max(m, a[i][i].abs()));
+    let largest = (0..n).fold(0.0, |m, i| maximum(m, a[i][i].abs()));
     for col in 0..n {
         let pivot = (col..n).max_by(|&i, &j| a[i][col].abs().total_cmp(&a[j][col].abs()))?;
         if a[pivot][col].abs() <= SINGULAR * largest {
@@ -356,7 +356,7 @@ fn refine(forward: &Map, guess: Vec2, target: Vec2) -> Option<Vec2> {
         }
         p = Vec2::new(p.x - sx, p.y - sy);
         let size = hypot(sx, sy);
-        if size <= SETTLED * (1.0 + js_max(p.x.abs(), p.y.abs()))
+        if size <= SETTLED * (1.0 + maximum(p.x.abs(), p.y.abs()))
             || (size > 0.5 * last && size <= NOISE)
         {
             return Some(p);

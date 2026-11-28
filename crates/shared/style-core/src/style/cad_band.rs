@@ -15,7 +15,7 @@ use kentos_geometry_core::{
         band,
         bulge::{BulgeArc, bulge_arc, bulge_at, bulge_of_sweep},
     },
-    jsmath::{cos, hypot, js_min, js_sign, sin},
+    jsmath::{cos, hypot, minimum, sign, sin},
 };
 
 const MAX_PIECES: usize = 20_000;
@@ -42,7 +42,7 @@ impl Edge {
         match self.arc {
             Some(a) => {
                 let angle = a.a0 + a.sweep * f.clamp(0., 1.);
-                let s = js_sign(a.sweep);
+                let s = sign(a.sweep);
                 Vec2::new(-sin(angle) * s, cos(angle) * s)
             }
             None => Vec2::new(
@@ -165,7 +165,7 @@ fn split(
                 left = dash[di];
                 continue;
             }
-            let amount = js_min(left, e.length - at);
+            let amount = minimum(left, e.length - at);
             let end = at + amount;
             if end <= at {
                 return Err("Geniş çizgi deseni bu koordinatta ayırt edilemiyor.".into());
@@ -248,7 +248,7 @@ fn dots(
             if t >= total + if closed { -slack } else { slack } {
                 break;
             }
-            places.push(js_min(t, total));
+            places.push(minimum(t, total));
         }
     }
     places.sort_by(f64::total_cmp);

@@ -13,7 +13,7 @@
 use crate::entity::{Shape, TextPlace};
 use crate::geom::leader;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::store::Store;
 use crate::store::label_memo::{Part, TableKept};
 use crate::store::labels::{
@@ -466,7 +466,7 @@ impl Store {
         }
         let k = match size {
             LabelSize::True | LabelSize::Print => 1.0,
-            LabelSize::Legible if px > 0.0 => js_max(LEGIBLE_PX / px, 1.0),
+            LabelSize::Legible if px > 0.0 => maximum(LEGIBLE_PX / px, 1.0),
             LabelSize::Screen { plot_scale } if plot_scale > 0.0 && scale > 0.0 => {
                 1000.0 / plot_scale * PX_PER_MM / scale
             }
@@ -669,9 +669,9 @@ fn keep_apart(groups: &[Group], view: &Bounds, scale: f64) -> Vec<bool> {
     let col0 = (view.min_x * scale / CELL).floor();
     let row0 = (-view.max_y * scale / CELL).floor();
     let cols =
-        (js_max((view.max_x * scale / CELL).floor() - col0 + 1.0, 1.0) as usize).min(1 << 14);
+        (maximum((view.max_x * scale / CELL).floor() - col0 + 1.0, 1.0) as usize).min(1 << 14);
     let rows =
-        (js_max((-view.min_y * scale / CELL).floor() - row0 + 1.0, 1.0) as usize).min(1 << 14);
+        (maximum((-view.min_y * scale / CELL).floor() - row0 + 1.0, 1.0) as usize).min(1 << 14);
     let mut taken = vec![false; cols * rows];
     // A group's cells: its outline grown about its anchor, on the view's cells.
     let cells = |g: &Group| -> Option<(usize, usize, usize, usize)> {
@@ -689,19 +689,19 @@ fn keep_apart(groups: &[Group], view: &Bounds, scale: f64) -> Vec<bool> {
             // Pixels from the first cell's corner: the world's cell lattice, read on the view's cells.
             let (x, y) = (q.x * scale - col0 * CELL, -q.y * scale - row0 * CELL);
             b = [
-                js_min(b[0], x),
-                js_min(b[1], y),
-                js_max(b[2], x),
-                js_max(b[3], y),
+                minimum(b[0], x),
+                minimum(b[1], y),
+                maximum(b[2], x),
+                maximum(b[3], y),
             ];
         }
         if !b.iter().all(|v| v.is_finite()) {
             return None;
         }
-        let c0 = js_max((b[0] / CELL).floor(), 0.0) as usize;
-        let r0 = js_max((b[1] / CELL).floor(), 0.0) as usize;
-        let c1 = (js_max((b[2] / CELL).floor(), 0.0) as usize).min(cols - 1);
-        let r1 = (js_max((b[3] / CELL).floor(), 0.0) as usize).min(rows - 1);
+        let c0 = maximum((b[0] / CELL).floor(), 0.0) as usize;
+        let r0 = maximum((b[1] / CELL).floor(), 0.0) as usize;
+        let c1 = (maximum((b[2] / CELL).floor(), 0.0) as usize).min(cols - 1);
+        let r1 = (maximum((b[3] / CELL).floor(), 0.0) as usize).min(rows - 1);
         // Wholly off the view: nothing to keep apart from.
         (b[2] >= 0.0 && b[3] >= 0.0 && c0 <= c1 && r0 <= r1).then_some((c0, r0, c1, r1))
     };

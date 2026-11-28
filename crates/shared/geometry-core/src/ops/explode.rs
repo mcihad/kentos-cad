@@ -17,7 +17,7 @@ use crate::geom::hatch::hatch_lines;
 use crate::geom::hatch_pattern::pattern_pieces;
 use crate::geom::intersect::Edge;
 use crate::geom::leader;
-use crate::jsmath::{PI, cos, hypot, js_max, sin};
+use crate::jsmath::{PI, cos, hypot, maximum, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
 use crate::text::{Font, width_em};
@@ -65,7 +65,7 @@ fn least_radius(e: &Shape, outline: &[Vec2]) -> f64 {
                     (ab * bc * ca) / (2.0 * cross.abs())
                 })
             })
-            .fold(f64::INFINITY, crate::jsmath::js_min),
+            .fold(f64::INFINITY, crate::jsmath::minimum),
     }
 }
 
@@ -108,13 +108,13 @@ pub fn curve_polyline(e: &Shape, density: Density) -> Option<Result<Shape, Strin
             if r.is_finite() && r > 0.0 {
                 // A chord of an arc of radius r subtending θ lies within r(1 − cos θ/2) of it.
                 let theta = 2.0 * crate::jsmath::acos((1.0 - tol / r).clamp(-1.0, 1.0));
-                (length / js_max(r * theta, f64::MIN_POSITIVE)).ceil()
+                (length / maximum(r * theta, f64::MIN_POSITIVE)).ceil()
             } else {
                 1.0
             }
         }
     };
-    let n = js_max(n, f64::from(least));
+    let n = maximum(n, f64::from(least));
     if n > f64::from(MAX_VERTICES) {
         return Some(Err(format!(
             "Bu sıklıkta eğri {MAX_VERTICES} köşeden çok olur; daha az bölüm, daha uzun aralık ya da daha büyük sapma verin."
@@ -326,7 +326,9 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
             };
             // An angular dimension's arc comes out as one arc, not as the chords it is drawn with.
             let on_arc = |p: Vec2| match arc {
-                Some((c, r, ..)) => (hypot(p.x - c.x, p.y - c.y) - r).abs() < 1e-9 * js_max(1.0, r),
+                Some((c, r, ..)) => {
+                    (hypot(p.x - c.x, p.y - c.y) - r).abs() < 1e-9 * maximum(1.0, r)
+                }
                 None => false,
             };
             let mut pieces: Vec<Entity> = l

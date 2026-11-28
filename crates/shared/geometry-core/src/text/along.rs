@@ -13,7 +13,7 @@ use crate::entity::{Shape, area_parts};
 use crate::geom::affine::{Affine, apply, apply_linear, is_reflection, length_scale};
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, minimum, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::store::labels::{LABEL_LINE, LABEL_PARAGRAPH_MASK, LABEL_PIECE_LINE};
@@ -298,7 +298,7 @@ impl Walk {
             }
             let index = starts.partition_point(|&(_, s)| s <= m).saturating_sub(1);
             let (i, start) = starts[index];
-            let t = js_min(1., (m - start) / self.lens[i]);
+            let t = minimum(1., (m - start) / self.lens[i]);
             (point_at(&self.edges[i], t), tangent(&self.edges[i], t))
         }
     }
@@ -331,7 +331,7 @@ impl Walk {
             cum += len;
         }
         let (i, start) = chosen;
-        let t = js_min(1.0, (m - start) / self.lens[i]);
+        let t = minimum(1.0, (m - start) / self.lens[i]);
         (point_at(&self.edges[i], t), tangent(&self.edges[i], t))
     }
 }
@@ -667,9 +667,9 @@ fn stretch(path: &Path, s0: f64, s1: f64) -> (Vec<Vec2>, Vec<f64>) {
         for (i, e) in path.edges.iter().enumerate() {
             let len = edge_length(e);
             let g0 = path.cum[i] + round as f64 * total;
-            let lo = js_max(s0, g0);
-            let hi = js_min(s1, g0 + len);
-            if hi - lo <= 1e-9 * js_max(1.0, total) {
+            let lo = maximum(s0, g0);
+            let hi = minimum(s1, g0 + len);
+            if hi - lo <= 1e-9 * maximum(1.0, total) {
                 continue;
             }
             let div = if len == 0.0 { 1.0 } else { len };
@@ -678,7 +678,7 @@ fn stretch(path: &Path, s0: f64, s1: f64) -> (Vec<Vec2>, Vec<f64>) {
                 Edge::Arc { sweep, .. } => bulge_of_sweep(sweep * (t1 - t0)),
                 Edge::Seg { .. } => 0.0,
             });
-            vs.push(point_at(e, js_min(1.0, t1)));
+            vs.push(point_at(e, minimum(1.0, t1)));
         }
     }
     let mut kept_v = vec![vs[0]];
@@ -725,12 +725,12 @@ pub fn piece(shape: &Shape, click: Vec2, length: f64, share: f64) -> Option<(Vec
     let end;
     if path.closed {
         start = ((start % total) + total) % total;
-        end = start + js_min(length, total);
+        end = start + minimum(length, total);
     } else if total < length {
         start = 0.0;
         end = total;
     } else {
-        start = js_max(0.0, js_min(total - length, start));
+        start = maximum(0.0, minimum(total - length, start));
         end = start + length;
     }
     let (vs, bulges) = stretch(&path, start, end);

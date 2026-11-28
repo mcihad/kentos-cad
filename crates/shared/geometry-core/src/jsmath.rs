@@ -9,7 +9,8 @@
 use std::cmp::Ordering;
 
 pub use kentos_num::{
-    acos, asin, atan, atan2, cos, exp, hypot, ln as log, log2, log10, pow, sin, tan,
+    acos, asin, atan, atan2, cos, exp, hypot, ln as log, log2, log10, maximum, maximum_of, minimum,
+    minimum_of, pow, sign, sin, tan,
 };
 
 pub const PI: f64 = std::f64::consts::PI;
@@ -28,58 +29,6 @@ pub fn js_round(x: f64) -> f64 {
     } else {
         r
     }
-}
-
-/// `Math.floor` (the same as f64::floor; named for symmetry with the other helpers).
-pub fn js_floor(x: f64) -> f64 {
-    x.floor()
-}
-
-/// `Math.sign`: NaN stays NaN and a zero keeps its sign.
-pub fn js_sign(x: f64) -> f64 {
-    if x.is_nan() || x == 0.0 {
-        x
-    } else if x > 0.0 {
-        1.0
-    } else {
-        -1.0
-    }
-}
-
-/// `Math.min(a, b)`: NaN wins, and −0 is smaller than +0.
-pub fn js_min(a: f64, b: f64) -> f64 {
-    if a.is_nan() || b.is_nan() {
-        f64::NAN
-    } else if a == b {
-        if a.is_sign_negative() { a } else { b }
-    } else if a < b {
-        a
-    } else {
-        b
-    }
-}
-
-/// `Math.max(a, b)`: NaN wins, and +0 is larger than −0.
-pub fn js_max(a: f64, b: f64) -> f64 {
-    if a.is_nan() || b.is_nan() {
-        f64::NAN
-    } else if a == b {
-        if a.is_sign_negative() { b } else { a }
-    } else if a > b {
-        a
-    } else {
-        b
-    }
-}
-
-/// `Math.min(...xs)`; +∞ for none.
-pub fn js_min_all(xs: impl IntoIterator<Item = f64>) -> f64 {
-    xs.into_iter().fold(f64::INFINITY, js_min)
-}
-
-/// `Math.max(...xs)`; −∞ for none.
-pub fn js_max_all(xs: impl IntoIterator<Item = f64>) -> f64 {
-    xs.into_iter().fold(f64::NEG_INFINITY, js_max)
 }
 
 /// The length of a vector of any number of parts: every part divided by the largest, the squares summed with
@@ -207,18 +156,6 @@ mod tests {
         }
         assert!(js_round(-0.4).is_sign_negative());
         assert!(js_round(f64::NAN).is_nan());
-    }
-
-    #[test]
-    fn sign_min_max_keep_nan_and_signed_zeros() {
-        assert!(js_sign(-0.0).is_sign_negative() && js_sign(-0.0) == 0.0);
-        assert!(js_sign(f64::NAN).is_nan());
-        assert_eq!(js_sign(-3.0), -1.0);
-        assert!(js_min(0.0, -0.0).is_sign_negative());
-        assert!(!js_max(-0.0, 0.0).is_sign_negative());
-        assert!(js_min(f64::NAN, 1.0).is_nan());
-        assert!(js_max(1.0, f64::NAN).is_nan());
-        assert_eq!(js_min_all([]), f64::INFINITY);
     }
 
     #[test]

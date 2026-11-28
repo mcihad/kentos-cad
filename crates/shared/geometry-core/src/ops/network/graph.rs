@@ -30,7 +30,7 @@ use super::turns::{Level, TurnIn, TurnTable, heading};
 use crate::geom::arrangement::{edge_len, reverse_edge, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -304,7 +304,7 @@ impl Graph {
             .map(|n| self.adj_start[n + 1] - self.adj_start[n])
             .collect();
         let times = (0..self.costs).map(|c| self.rules.is_time(c)).collect();
-        let reach = js_max(TURN_REACH, self.rules.tolerance);
+        let reach = maximum(TURN_REACH, self.rules.tolerance);
         let mut named: Vec<(u64, f64)> = Vec::new();
         for t in turns {
             let (Some(&first), Some(&last)) = (t.pts.first(), t.pts.last()) else {

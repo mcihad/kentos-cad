@@ -2,7 +2,7 @@
 //! `fixtures/gis-derivation/v1/chords.json` (`scripts/fixtures/cad_gis_derivation_cases.py`: the count and the
 //! sagitta at 50 digits with mpmath, no KentOS code).
 
-use kentos_geometry_core::jsmath::{PI, TAU, hypot, js_max};
+use kentos_geometry_core::jsmath::{PI, TAU, hypot, maximum};
 use kentos_geometry_core::ops::derive::{
     MAX_CHORDS, arc_chord_count, arc_chords, path_chords, sagitta,
 };
@@ -59,7 +59,7 @@ fn an_arc_is_cut_into_the_least_chords_that_hold_the_tolerance() {
         for p in &run.pts {
             let d = hypot(p.x - 10.5, p.y + 3.25);
             assert!(
-                (d - r).abs() <= 1e-12 * js_max(r, 1.0),
+                (d - r).abs() <= 1e-12 * maximum(r, 1.0),
                 "{name}: {d} off the circle {r}"
             );
         }
@@ -92,7 +92,7 @@ fn a_bulged_edge_has_the_arc_the_reference_works_out() {
         for p in &run.pts {
             let d = hypot(p.x - centre.x, p.y - centre.y);
             assert!(
-                (d - r).abs() <= 1e-8 * js_max(r, 1.0),
+                (d - r).abs() <= 1e-8 * maximum(r, 1.0),
                 "{name}: {d} off the circle {r}"
             );
         }

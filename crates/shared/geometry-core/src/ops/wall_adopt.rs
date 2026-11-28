@@ -116,16 +116,16 @@ fn covered(
                 .iter()
                 .map(|p| dot(u, sub(*p, a)))
                 .collect();
-            let lo = crate::jsmath::js_max(
+            let lo = crate::jsmath::maximum(
                 ts.iter()
                     .copied()
-                    .fold(f64::INFINITY, crate::jsmath::js_min),
+                    .fold(f64::INFINITY, crate::jsmath::minimum),
                 0.0,
             );
-            let hi = crate::jsmath::js_min(
+            let hi = crate::jsmath::minimum(
                 ts.iter()
                     .copied()
-                    .fold(f64::NEG_INFINITY, crate::jsmath::js_max),
+                    .fold(f64::NEG_INFINITY, crate::jsmath::maximum),
                 l,
             );
             if hi - lo > JOIN_TOLERANCE {
@@ -175,7 +175,9 @@ pub fn adopt(ring: &[Vec2], reference: Reference, walls: &[WallIn<'_>]) -> Adopt
     let mut merged: Vec<(f64, f64)> = Vec::new();
     for (x, y) in cover {
         match merged.last_mut() {
-            Some(last) if x <= last.1 + JOIN_TOLERANCE => last.1 = crate::jsmath::js_max(last.1, y),
+            Some(last) if x <= last.1 + JOIN_TOLERANCE => {
+                last.1 = crate::jsmath::maximum(last.1, y)
+            }
             _ => merged.push((x, y)),
         }
     }

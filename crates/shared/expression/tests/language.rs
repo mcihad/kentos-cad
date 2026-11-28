@@ -14,7 +14,7 @@ use kentos_expression::{
     Builtin, Expr, FieldType, Geometry, Measured, Objects, Schema, Scope, Value, Variable, compile,
     compile_with, geometry,
 };
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
 use serde_json::{Map, Value as Json};
 
@@ -308,7 +308,7 @@ fn same_near(a: &Json, b: &Json, near: bool) -> bool {
         b.get(1).and_then(Json::as_f64),
     ) {
         (Some(x), Some(y)) if near && a[0] == "n" && b[0] == "n" => {
-            (x - y).abs() <= 1e-9 * js_max(js_max(x.abs(), y.abs()), 1.0)
+            (x - y).abs() <= 1e-9 * maximum(maximum(x.abs(), y.abs()), 1.0)
         }
         _ => same(a, b, 0),
     }
@@ -572,7 +572,7 @@ fn the_calls_to_other_objects_speak_the_drawing_unit() {
                     want.get(1).and_then(Json::as_f64),
                 ) {
                     (Some("n"), Some(g), Some(w)) => {
-                        (g - w * k).abs() <= 1e-9 * js_max(js_max(g.abs(), (w * k).abs()), 1.0)
+                        (g - w * k).abs() <= 1e-9 * maximum(maximum(g.abs(), (w * k).abs()), 1.0)
                     }
                     _ => got == want,
                 };

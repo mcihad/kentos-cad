@@ -12,7 +12,7 @@ use crate::geom::arrangement::{WindingIndex, tight_box};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::area_source;
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::ops::spatial_query::{TOLERANCE, edges_meet, geometry_of};
 use crate::predicates::orientation;
 use crate::store::rtree::PackedTree;
@@ -28,10 +28,10 @@ pub struct Cover {
 }
 
 fn grow(b: &mut Bounds, o: &Bounds) {
-    b.min_x = js_min(b.min_x, o.min_x);
-    b.min_y = js_min(b.min_y, o.min_y);
-    b.max_x = js_max(b.max_x, o.max_x);
-    b.max_y = js_max(b.max_y, o.max_y);
+    b.min_x = minimum(b.min_x, o.min_x);
+    b.min_y = minimum(b.min_y, o.min_y);
+    b.max_x = maximum(b.max_x, o.max_x);
+    b.max_y = maximum(b.max_y, o.max_y);
 }
 
 fn point_box(p: Vec2) -> Bounds {

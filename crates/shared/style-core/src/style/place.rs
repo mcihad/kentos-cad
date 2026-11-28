@@ -7,7 +7,7 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::centroid;
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, js_cmp, js_floor, js_max, js_min, sin, stable_sort,
+    PI, atan2, cos, hypot, js_cmp, maximum, minimum, sin, stable_sort,
 };
 
 /// A marker place: where, and the path's direction there (radians).
@@ -91,7 +91,7 @@ fn find(segs: &[Seg], s: f64) -> usize {
 /// The point and direction at distance `s` along the pieces (`s` clamped to
 /// the piece; `pick` is where to look for it).
 fn point_on(g: &Seg, s: f64) -> Placed {
-    let t = js_min(1.0, js_max(0.0, (s - g.start) / g.len));
+    let t = minimum(1.0, maximum(0.0, (s - g.start) / g.len));
     Placed {
         at: Vec2::new(g.a.x + (g.b.x - g.a.x) * t, g.a.y + (g.b.y - g.a.y) * t),
         angle: g.angle,
@@ -193,21 +193,21 @@ pub fn place_along_counted(
             let mut s = if closed { first } else { offset_along };
             while s <= end && places.len() < MAX_MARKERS_PER_PATH {
                 if s >= -1e-9 {
-                    places.push((js_max(0.0, s), None));
+                    places.push((maximum(0.0, s), None));
                 }
                 s += interval;
             }
             if s <= end {
                 // The rest of the path's places, counted, not made.
-                let from = js_max(s, 0.0);
-                left += (js_floor((end - from) / interval) + 1.0) as u64;
+                let from = maximum(s, 0.0);
+                left += (f64::floor((end - from) / interval) + 1.0) as u64;
             }
             if clear > 0.0 {
                 let corners = sharp_corners(&segs, closed);
                 if !corners.is_empty() {
                     let gap = |s: f64, c: f64| {
                         if closed {
-                            js_min((s - c).abs(), total - (s - c).abs())
+                            minimum((s - c).abs(), total - (s - c).abs())
                         } else {
                             (s - c).abs()
                         }
@@ -279,7 +279,7 @@ pub fn place_along_counted(
         }
         _ => {}
     }
-    let count = group.map_or(1.0, |g| js_max(1.0, js_floor(g.count)));
+    let count = group.map_or(1.0, |g| maximum(1.0, f64::floor(g.count)));
     let spacing = group.map_or(f64::NAN, |g| g.spacing);
     if count == 1.0 || !positive(spacing) {
         let placed = places
@@ -311,7 +311,7 @@ pub fn place_along_counted(
             } else if s < -1e-9 || s > total + 1e-9 {
                 continue;
             }
-            out.push(at(js_min(total, js_max(0.0, s))));
+            out.push(at(minimum(total, maximum(0.0, s))));
         }
     }
     (out, left)
@@ -375,7 +375,7 @@ impl Walker {
 
     fn at(&self, s: f64) -> Placed {
         point_on(
-            &self.segs[find(&self.segs, js_min(self.total, js_max(0.0, s)))],
+            &self.segs[find(&self.segs, minimum(self.total, maximum(0.0, s)))],
             s,
         )
     }
@@ -403,7 +403,7 @@ pub fn wave_paths_counted(pts: &[Vec2], closed: bool, w: &WaveSpec) -> (Vec<Vec<
     if !positive(w.length) || pts.len() < 2 {
         return (vec![pts.to_vec()], 0);
     }
-    let spacing = js_max(w.length, w.spacing);
+    let spacing = maximum(w.length, w.spacing);
     let Some(along) = Walker::new(pts, closed) else {
         return (Vec::new(), 0);
     };
@@ -412,14 +412,14 @@ pub fn wave_paths_counted(pts: &[Vec2], closed: bool, w: &WaveSpec) -> (Vec<Vec<
     let first = match w.offset_along {
         None => 0.0,
         Some(o) if closed => wrap(o, spacing),
-        Some(o) => js_max(0.0, o),
+        Some(o) => maximum(0.0, o),
     };
     let fit = if w.offset_along.is_some() {
-        js_floor((total - first - w.length + 1e-9) / spacing) + 1.0
+        f64::floor((total - first - w.length + 1e-9) / spacing) + 1.0
     } else {
-        js_floor((total + 1e-9) / spacing)
+        f64::floor((total + 1e-9) / spacing)
     };
-    let count = js_min(MAX_WAVES_PER_PATH as f64, fit);
+    let count = minimum(MAX_WAVES_PER_PATH as f64, fit);
     // The waves that fit past the limit (none when the fit is not a number).
     let left = if fit > count { (fit - count) as u64 } else { 0 };
     // As the TypeScript compared: a NaN count draws no wave rather than the plain path.
@@ -453,7 +453,7 @@ pub fn wave_paths_counted(pts: &[Vec2], closed: bool, w: &WaveSpec) -> (Vec<Vec<
             let from = if k == 0.0 {
                 0.0
             } else {
-                js_max(0.0, s0 - (spacing - w.length))
+                maximum(0.0, s0 - (spacing - w.length))
             };
             along.corners_between(from, s0, &mut current);
         } else if !current.is_empty() {
@@ -514,8 +514,8 @@ pub fn interior_point(rings: &[Vec<Vec2>]) -> Option<Vec2> {
     let mut min_y = f64::INFINITY;
     let mut max_y = f64::NEG_INFINITY;
     for p in outer {
-        min_y = js_min(min_y, p.y);
-        max_y = js_max(max_y, p.y);
+        min_y = minimum(min_y, p.y);
+        max_y = maximum(max_y, p.y);
     }
     let mut best: Option<(f64, f64, f64)> = None;
     let mut xs: Vec<f64> = Vec::new();

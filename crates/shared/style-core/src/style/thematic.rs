@@ -3,7 +3,7 @@
 //! class among breaks, and a symbol with its main colour or its size
 //! changed (Sürekli renk, İki değişkenli renk, Orantılı sembol).
 
-use kentos_geometry_core::jsmath::{js_max, js_min, js_round, pow};
+use kentos_geometry_core::jsmath::{js_round, maximum, minimum, pow};
 
 use super::compile::MM_PER_PX;
 use super::model::{
@@ -46,7 +46,7 @@ pub fn ramp_color(stops: &[Rgba], t: f64) -> Rgba {
             let t = if t.is_nan() {
                 0.0
             } else {
-                js_min(1.0, js_max(0.0, t))
+                minimum(1.0, maximum(0.0, t))
             };
             let at = t * (stops.len() - 1) as f64;
             let k = (at.floor() as usize).min(stops.len() - 2);
@@ -66,17 +66,17 @@ pub fn share(v: f64, min: f64, max: f64) -> f64 {
     if !positive(max - min) {
         return 0.0;
     }
-    js_min(1.0, js_max(0.0, (v - min) / (max - min)))
+    minimum(1.0, maximum(0.0, (v - min) / (max - min)))
 }
 
 /// The share's step of 256 (`round(255 t)`): the colours and sizes a layer draws with.
 pub fn step(t: f64) -> u8 {
-    js_round(255.0 * js_min(1.0, js_max(0.0, t))) as u8
+    js_round(255.0 * minimum(1.0, maximum(0.0, t))) as u8
 }
 
 /// Orantılı sembol's size at share `t`: `min + (max − min) · tᵉ` (QGIS's size assistant).
 pub fn size_at(t: f64, min: f64, max: f64, exponent: f64) -> f64 {
-    let t = js_min(1.0, js_max(0.0, t));
+    let t = minimum(1.0, maximum(0.0, t));
     min + (max - min) * if exponent == 1.0 { t } else { pow(t, exponent) }
 }
 
@@ -161,7 +161,7 @@ pub fn marker_size(layers: &[&MarkerLayer], unit: Unit) -> f64 {
     layers
         .iter()
         .map(|m| convert(fixed_or(&m.size, 2.0), m.base.unit, unit))
-        .fold(0.0, js_max)
+        .fold(0.0, maximum)
 }
 
 /// A line symbol's width in `unit`: its widest line's.
@@ -173,7 +173,7 @@ pub fn line_width(symbol: &Symbol, unit: Unit) -> f64 {
             Layer::SimpleLine(l) => Some(convert(fixed_or(&l.width, 0.0), l.base.unit, unit)),
             _ => None,
         })
-        .fold(0.0, js_max)
+        .fold(0.0, maximum)
 }
 
 fn scale_marker(m: &mut MarkerLayer, k: f64) {

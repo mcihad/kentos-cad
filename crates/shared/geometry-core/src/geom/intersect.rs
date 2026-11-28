@@ -5,7 +5,7 @@
 
 use crate::api::Op;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc};
-use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::predicates::cross_accurate;
 use crate::vec2::Vec2;
@@ -60,7 +60,7 @@ pub fn line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
     let sx = d.x - c.x;
     let sy = d.y - c.y;
     let den = cross_accurate(a, b, c, d);
-    if den.abs() < EPS * js_max(1.0, hypot(rx, ry) * hypot(sx, sy)) {
+    if den.abs() < EPS * maximum(1.0, hypot(rx, ry) * hypot(sx, sy)) {
         return None; // parallel
     }
     let t = cross_accurate(a, c, c, d) / den;
@@ -121,7 +121,7 @@ pub fn line_circle_params(a: Vec2, b: Vec2, c: Vec2, r: f64) -> Vec<f64> {
     let fx = a.x + dx * s - c.x;
     let fy = a.y + dy * s - c.y;
     let h2 = r * r - (fx * fx + fy * fy);
-    let tol = 1e-12 * js_max(1.0, r * r);
+    let tol = 1e-12 * maximum(1.0, r * r);
     if h2 < -tol {
         return Vec::new();
     }
@@ -285,7 +285,7 @@ crate::json_struct!(Closest { p, t, d });
 pub fn closest_on_edge(e: &Edge, p: Vec2) -> Closest {
     match *e {
         Edge::Seg { .. } => {
-            let t = js_max(0.0, js_min(1.0, param_on(e, p)));
+            let t = maximum(0.0, minimum(1.0, param_on(e, p)));
             let q = point_at(e, t);
             Closest {
                 p: q,
@@ -463,7 +463,7 @@ mod tests {
     fn plain_line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
         let (rx, ry, sx, sy) = (b.x - a.x, b.y - a.y, d.x - c.x, d.y - c.y);
         let den = rx * sy - ry * sx;
-        if den.abs() < EPS * js_max(1.0, hypot(rx, ry) * hypot(sx, sy)) {
+        if den.abs() < EPS * maximum(1.0, hypot(rx, ry) * hypot(sx, sy)) {
             return None;
         }
         let (qx, qy) = (c.x - a.x, c.y - a.y);

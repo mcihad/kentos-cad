@@ -29,7 +29,7 @@ fn near(got: &Value, want: &Value, what: &str) {
             got[k].as_f64().expect("x, y"),
             want[k].as_f64().expect("x, y"),
         );
-        let tolerance = 1e-9 * kentos_geometry_core::jsmath::js_max(w.abs(), 1.0);
+        let tolerance = 1e-9 * kentos_geometry_core::jsmath::maximum(w.abs(), 1.0);
         assert!((g - w).abs() <= tolerance, "{what}.{k}: {g} ≠ {w}");
     }
 }
@@ -93,7 +93,7 @@ fn fourth_corners_and_range_rings_are_the_references() {
         assert_eq!(radii.len(), want.len(), "{name}");
         for (g, w) in radii.iter().zip(want) {
             let (g, w) = (g.as_f64().expect("radius"), w.as_f64().expect("radius"));
-            let tolerance = 1e-9 * kentos_geometry_core::jsmath::js_max(w.abs(), 1.0);
+            let tolerance = 1e-9 * kentos_geometry_core::jsmath::maximum(w.abs(), 1.0);
             assert!((g - w).abs() <= tolerance, "{name}: {g} ≠ {w}");
         }
         let rays = got["rays"].as_array().expect("rays");

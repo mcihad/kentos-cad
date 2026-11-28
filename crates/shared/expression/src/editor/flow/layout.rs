@@ -5,7 +5,7 @@
 //! tree not connected stands where it was put. The same trees give the same
 //! places on every platform.
 
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 
 use super::tree::{T, func_def, symbol, var_def};
 use super::types::{self, Type};
@@ -259,7 +259,7 @@ fn block(t: &T) -> f64 {
         return own;
     }
     let stacked = kids.iter().sum::<f64>() + STACK * (kids.len() - 1) as f64;
-    js_max(own, stacked)
+    maximum(own, stacked)
 }
 
 /// Where a node stands: its path, its top-left corner, and whether it is an inline constant.
@@ -352,7 +352,7 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
             let port_y = HEAD + ROW / 2.0;
             let top = port_y - HEAD / 2.0 - root_offset(t);
             placed.push((0, t, -COLUMN, top));
-            bottom = js_max(bottom, top + block(t));
+            bottom = maximum(bottom, top + block(t));
         }
     }
     for (i, t) in read.iter().enumerate().skip(1) {
@@ -363,7 +363,7 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
         };
         let top = y - root_offset(t);
         placed.push((i, t, x, top));
-        bottom = js_max(bottom, top + block(t));
+        bottom = maximum(bottom, top + block(t));
     }
     for &(tree, t, x, top) in &placed {
         let mut at = Vec::new();
@@ -403,10 +403,10 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
         ),
         |(l, t, r, b), n| {
             (
-                js_min(l, n.x),
-                js_min(t, n.y),
-                js_max(r, n.x + n.w),
-                js_max(b, n.y + n.h),
+                minimum(l, n.x),
+                minimum(t, n.y),
+                maximum(r, n.x + n.w),
+                maximum(b, n.y + n.h),
             )
         },
     );

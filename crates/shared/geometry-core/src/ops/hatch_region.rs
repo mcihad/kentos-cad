@@ -10,7 +10,7 @@ use crate::block::Blocks;
 use crate::entity::{Entity, Shape, TextPlace, polygon_ring};
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{inside_area, intersect_areas, net_area, subtract_areas};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
 use crate::text::Font;
@@ -158,7 +158,7 @@ pub fn seed_of(a: &Area) -> Option<Vec2> {
     let (lo, hi) = rings[0]
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
-            (js_min(lo, p.y), js_max(hi, p.y))
+            (minimum(lo, p.y), maximum(hi, p.y))
         });
     if !(hi > lo) {
         return None;

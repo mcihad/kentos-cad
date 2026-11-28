@@ -19,7 +19,7 @@
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::{ellipse_outline_tol, spline_outline_tol};
 use crate::geom::ellipse::EllipseGeom;
-use crate::jsmath::{PI, asin, cos, hypot, js_max, sin};
+use crate::jsmath::{PI, asin, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
 
 /// The derivation's algorithm and its version, as a dataset records them.
@@ -142,7 +142,7 @@ pub fn path_chords(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, tol: f64)
         };
         let count = arc_chord_count(arc.r, arc.sweep, tol);
         let step = arc.sweep / count as f64;
-        deviation = js_max(deviation, sagitta(arc.r, step));
+        deviation = maximum(deviation, sagitta(arc.r, step));
         for k in 1..count {
             let t = arc.a0 + arc.sweep * (k as f64) / (count as f64);
             out.push(Vec2::new(
@@ -203,7 +203,7 @@ mod tests {
             // Every point is on the circle.
             for p in &run.pts {
                 let d = hypot(p.x - 10.0, p.y + 3.0);
-                assert!((d - r).abs() <= 1e-12 * js_max(r, 1.0), "{d} {r}");
+                assert!((d - r).abs() <= 1e-12 * maximum(r, 1.0), "{d} {r}");
             }
         }
     }

@@ -11,7 +11,7 @@ use std::collections::{BinaryHeap, HashSet};
 
 use super::Track;
 use super::coverage::Coverage;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
@@ -96,17 +96,17 @@ impl Vertices {
             f64::NEG_INFINITY,
         );
         for p in &points {
-            x0 = js_min(x0, p.x);
-            y0 = js_min(y0, p.y);
-            x1 = js_max(x1, p.x);
-            y1 = js_max(y1, p.y);
+            x0 = minimum(x0, p.x);
+            y0 = minimum(y0, p.y);
+            x1 = maximum(x1, p.x);
+            y1 = maximum(y1, p.y);
         }
         if !(x1 >= x0) {
             (x0, y0, x1, y1) = (0.0, 0.0, 1.0, 1.0);
         }
         // About four vertices a cell, at most four cells a vertex.
-        let span = js_max(x1 - x0, y1 - y0);
-        let size = js_max(
+        let span = maximum(x1 - x0, y1 - y0);
+        let size = maximum(
             ((x1 - x0) * (y1 - y0) * 4.0 / n as f64).sqrt(),
             span / (2.0 * (n as f64).sqrt()),
         );
@@ -152,10 +152,10 @@ impl Vertices {
 
     /// Whether a vertex of any edge (not one of the corner's three) lies in the corner's triangle.
     fn in_corner(&self, a: Vec2, b: Vec2, c: Vec2) -> bool {
-        let lo_x = js_min(a.x, js_min(b.x, c.x));
-        let lo_y = js_min(a.y, js_min(b.y, c.y));
-        let hi_x = js_max(a.x, js_max(b.x, c.x));
-        let hi_y = js_max(a.y, js_max(b.y, c.y));
+        let lo_x = minimum(a.x, minimum(b.x, c.x));
+        let lo_y = minimum(a.y, minimum(b.y, c.y));
+        let hi_x = maximum(a.x, maximum(b.x, c.x));
+        let hi_y = maximum(a.y, maximum(b.y, c.y));
         // `as` saturates: a place before the grid is its first cell.
         let at = |v: f64, o: f64, most: usize| (((v - o) / self.size) as usize).min(most - 1);
         let (c0, c1) = (at(lo_x, self.x0, self.cols), at(hi_x, self.x0, self.cols));

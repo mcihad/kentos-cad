@@ -16,7 +16,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
@@ -163,7 +163,7 @@ pub fn half_box(spec: &Spec, scale: f64) -> (f64, f64) {
                 width_em(l, Font::DEFAULT) * h
             }
         })
-        .fold(h, js_max);
+        .fold(h, maximum);
     (w / 2.0, h * (1.0 + PITCH * (n - 1.0)) / 2.0)
 }
 
@@ -190,7 +190,7 @@ fn ring(at: Vec2, spec: &Spec, scale: f64) -> Option<(Vec<Vec2>, Option<Vec<f64>
             )
         }
         Frame::Rounded => {
-            let r = js_min(a, b) / 2.0;
+            let r = minimum(a, b) / 2.0;
             (
                 vec![
                     p(-a + r, -b),
@@ -219,13 +219,13 @@ fn ellipse(spec: &Spec, scale: f64) -> (f64, f64, f64, f64) {
     let w1 = if first.is_empty() {
         h
     } else {
-        js_max(h, width_em(first, Font::DEFAULT) * h)
+        maximum(h, width_em(first, Font::DEFAULT) * h)
     };
     let (ea, eb) = (
         std::f64::consts::SQRT_2 * (w1 / 2.0 + pad),
         std::f64::consts::SQRT_2 * (h / 2.0 + pad),
     );
-    let extra = js_max(0.0, eb + ELLIPSE_GAP * h - (PITCH * h - h / 2.0));
+    let extra = maximum(0.0, eb + ELLIPSE_GAP * h - (PITCH * h - h / 2.0));
     (b - h / 2.0, ea, eb, extra)
 }
 
@@ -264,9 +264,9 @@ fn exit(at: Vec2, spec: &Spec, scale: f64, d: Vec2) -> f64 {
             let (y1, ea, eb, _) = ellipse(spec, scale);
             let h = height(spec, scale);
             let n = spec.text.split('\n').count().max(1);
-            let x = js_max(ea, a);
+            let x = maximum(ea, a);
             let top = y1 + eb;
-            let bottom = js_min(y1 - eb, line_y(spec, scale, n - 1) - h / 2.0 - pad);
+            let bottom = minimum(y1 - eb, line_y(spec, scale, n - 1) - h / 2.0 - pad);
             vec![
                 Vec2::new(at.x - x, at.y + bottom),
                 Vec2::new(at.x + x, at.y + bottom),

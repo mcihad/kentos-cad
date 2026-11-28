@@ -12,7 +12,7 @@ use crate::entity::Shape;
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point, ellipse_sweep};
 use crate::geom::nurbs::{self, Nurbs, OwnedNurbs};
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{cos, hypot, maximum, minimum, sin};
 use crate::ops::curve_cuts::ellipse_of;
 use crate::vec2::Vec2;
 use bezier::Bezier;
@@ -70,7 +70,7 @@ fn source(s: &Shape, d: f64, through: Vec2) -> Result<Source, String> {
         }
         let mut e0 = e;
         e0.c = Vec2::new(0., 0.);
-        let count = js_max((sw / core::f64::consts::FRAC_PI_2).ceil(), 1.) as usize;
+        let count = maximum((sw / core::f64::consts::FRAC_PI_2).ceil(), 1.) as usize;
         let mut spans = Vec::new();
         for i in 0..count {
             let a = e.t0 + sw * i as f64 / count as f64;
@@ -96,10 +96,12 @@ fn source(s: &Shape, d: f64, through: Vec2) -> Result<Source, String> {
         }
         let origin = n.ctrl[0];
         let (lo, hi) = n.domain();
-        let max = n.weights.map_or(1., |w| w.iter().copied().fold(0., js_max));
+        let max = n
+            .weights
+            .map_or(1., |w| w.iter().copied().fold(0., maximum));
         let min = n
             .weights
-            .map_or(1., |w| w.iter().copied().fold(f64::INFINITY, js_min));
+            .map_or(1., |w| w.iter().copied().fold(f64::INFINITY, minimum));
         if !max.is_finite() || !min.is_finite() || max / min > 1e6 || !(hi - lo).is_finite() {
             return Err("Eğrinin ağırlık veya düğüm aralığı sayısal güvenlik sınırını aşıyor; eğriyi düzenleyin.".into());
         }
@@ -182,8 +184,8 @@ fn source(s: &Shape, d: f64, through: Vec2) -> Result<Source, String> {
         .iter()
         .flat_map(|b| b.0.iter())
         .map(|p| hypot(p[0] / p[2], p[1] / p[2]))
-        .fold(d, js_max);
-    let magnitude = js_max(js_max(js_max(origin.x.abs(), origin.y.abs()), size), 1.);
+        .fold(d, maximum);
+    let magnitude = maximum(maximum(maximum(origin.x.abs(), origin.y.abs()), size), 1.);
     let roundoff = 256.
         * f64::EPSILON
         * magnitude
@@ -231,7 +233,7 @@ impl Builder {
                     self.points.push(a);
                 }
                 self.points.push(z);
-                self.bound = js_max(self.bound, bound);
+                self.bound = maximum(self.bound, bound);
                 return Ok(());
             }
         }
@@ -328,7 +330,9 @@ pub fn nearest(s: &Shape, q: Vec2) -> Option<(Vec2, Vec2)> {
         }
         let origin = n.ctrl[0];
         let ctrl: Vec<_> = n.ctrl.iter().map(|p| local(*p, origin)).collect();
-        let max = n.weights.map_or(1., |w| w.iter().copied().fold(0., js_max));
+        let max = n
+            .weights
+            .map_or(1., |w| w.iter().copied().fold(0., maximum));
         let weights = n
             .weights
             .map(|w| w.iter().map(|x| x / max).collect::<Vec<_>>());

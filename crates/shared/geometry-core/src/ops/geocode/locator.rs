@@ -16,7 +16,7 @@ use crate::entity::Shape;
 use crate::geom::bulge::bulge_ring_area;
 use crate::geom::intersect::closest_on_edge;
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::ops::generate::pole::pole;
 use crate::ops::spatial_query::{Geometry, geometry_of, in_or_on};
 use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
@@ -205,8 +205,8 @@ fn point_bounds(p: Vec2) -> Bounds {
 
 /// The distance from `p` to a box (0 inside it).
 pub(super) fn box_gap(b: &Bounds, p: Vec2) -> f64 {
-    let dx = js_max(js_max(b.min_x - p.x, 0.0), p.x - b.max_x);
-    let dy = js_max(js_max(b.min_y - p.y, 0.0), p.y - b.max_y);
+    let dx = maximum(maximum(b.min_x - p.x, 0.0), p.x - b.max_x);
+    let dy = maximum(maximum(b.min_y - p.y, 0.0), p.y - b.max_y);
     hypot(dx, dy)
 }
 

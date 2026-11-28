@@ -48,7 +48,7 @@ use crate::geom::bulge::has_bulges;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::leader;
 use crate::geometry::{Bounds, signed_area};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -113,8 +113,8 @@ pub fn clip_line(p: Vec2, dir: Vec2, ray: bool, r: &Bounds) -> Option<[Vec2; 2]>
         }
         let a = (min - pp) / d;
         let b = (max - pp) / d;
-        t0 = js_max(t0, js_min(a, b));
-        t1 = js_min(t1, js_max(a, b));
+        t0 = maximum(t0, minimum(a, b));
+        t1 = minimum(t1, maximum(a, b));
     }
     if !(t1 > t0) {
         return None;

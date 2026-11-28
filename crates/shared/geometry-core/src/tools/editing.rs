@@ -13,7 +13,7 @@ use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
 use crate::geom::intersect::{Edge, line_line};
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
-use crate::jsmath::{PI, TAU, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
+use crate::jsmath::{PI, TAU, acos, atan2, cos, js_round, maximum, minimum, or, pow, sin, tan};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{path_of, point_at_s, tangent_at_s};
@@ -148,10 +148,10 @@ pub fn shapes_middle(shapes: &[Shape], font: Font) -> Option<Vec2> {
     let mut b = empty_bounds();
     for s in shapes {
         let e = entity_bounds_in(s, font);
-        b.min_x = js_min(b.min_x, e.min_x);
-        b.min_y = js_min(b.min_y, e.min_y);
-        b.max_x = js_max(b.max_x, e.max_x);
-        b.max_y = js_max(b.max_y, e.max_y);
+        b.min_x = minimum(b.min_x, e.min_x);
+        b.min_y = minimum(b.min_y, e.min_y);
+        b.max_x = maximum(b.max_x, e.max_x);
+        b.max_y = maximum(b.max_y, e.max_y);
     }
     if is_empty_bounds(&b) {
         return None;
@@ -278,7 +278,7 @@ pub fn path_array_transforms(
     };
     if let Some(s) = spacing {
         let last = place(count - 1.0);
-        let eps = 1e-9 * js_max(1.0, l);
+        let eps = 1e-9 * maximum(1.0, l);
         let fits = if p.closed {
             last < l - eps
         } else {
@@ -348,7 +348,7 @@ fn dot(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn angle_between(u: Vec2, v: Vec2) -> f64 {
-    acos(js_max(-1.0, js_min(1.0, dot(u, v))))
+    acos(maximum(-1.0, minimum(1.0, dot(u, v))))
 }
 
 /// The corner at a path vertex `at` between the segment from `prev` (bulge
@@ -374,7 +374,7 @@ pub fn vertex_corner(
         at,
         u1,
         u2,
-        reach: js_min(dist(at, prev), dist(at, next)),
+        reach: minimum(dist(at, prev), dist(at, next)),
         phi,
     })
 }
@@ -397,7 +397,7 @@ pub fn lines_corner_at(
         } else {
             Vec2::new(-d.x, -d.y)
         };
-        let reach = js_max(
+        let reach = maximum(
             dot(Vec2::new(a.x - x.x, a.y - x.y), u),
             dot(Vec2::new(b.x - x.x, b.y - x.y), u),
         );
@@ -416,7 +416,7 @@ pub fn lines_corner_at(
         at: x,
         u1,
         u2,
-        reach: js_min(r1, r2),
+        reach: minimum(r1, r2),
         phi,
     })
 }
@@ -427,9 +427,9 @@ pub fn lines_corner_at(
 pub fn pulled_distance(c: &CornerGeom, cursor: Option<Vec2>, tol: f64) -> f64 {
     let cur = cursor.unwrap_or(c.at);
     let v = Vec2::new(cur.x - c.at.x, cur.y - c.at.y);
-    let t = js_min(js_max(js_max(dot(v, c.u1), dot(v, c.u2)), 0.0), c.reach);
-    let step = pow(10.0, kentos_num::log10(js_max(tol, 1e-3)).floor());
-    js_min(js_round(t / step) * step, c.reach)
+    let t = minimum(maximum(maximum(dot(v, c.u1), dot(v, c.u2)), 0.0), c.reach);
+    let step = pow(10.0, kentos_num::log10(maximum(tol, 1e-3)).floor());
+    minimum(js_round(t / step) * step, c.reach)
 }
 
 /// Fillet radius for a pulled distance: that is where the arc meets the side (tangent length).
@@ -708,7 +708,7 @@ pub fn edge_arms(e1: &PickedEdge, e2: &PickedEdge, loc: Vec2) -> Option<Arms> {
         } else {
             e2
         };
-        js_max(dist(c, edge.at), 1e-3)
+        maximum(dist(c, edge.at), 1e-3)
     };
     Some(Arms {
         c,
@@ -736,7 +736,7 @@ pub fn radial_dimension(c: Vec2, r: f64, loc: Vec2) -> Radial {
     };
     Radial {
         b: Vec2::new(c.x + u.x * r, c.y + u.y * r),
-        offset: js_max(0.0, l - r),
+        offset: maximum(0.0, l - r),
     }
 }
 
@@ -792,8 +792,8 @@ pub fn arc_length_ends(edge: &Edge, between: Option<(Vec2, Vec2)>) -> Option<Arc
         return None;
     }
     Some(ArcEnds {
-        a: at(js_min(t1, t2)),
-        b: at(js_max(t1, t2)),
+        a: at(minimum(t1, t2)),
+        b: at(maximum(t1, t2)),
         c,
     })
 }

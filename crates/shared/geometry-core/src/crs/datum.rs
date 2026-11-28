@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use super::ntv2::{self, Grid};
 use crate::api::json::{FromJson, Json, ToJson, read_field};
-use crate::jsmath::{PI, js_floor};
+use crate::jsmath::PI;
 
 /// A datum: one of the registry's, or one the project defines.
 #[derive(Clone, Debug, PartialEq)]
@@ -556,7 +556,7 @@ pub(crate) fn path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap
 
 /// The summed accuracy to the millimetre (an estimate; 0.1 + 0.2 is 0.3).
 fn rounded(mut p: Path) -> Path {
-    p.accuracy = p.accuracy.map(|a| js_floor(a * 1000.0 + 0.5) / 1000.0);
+    p.accuracy = p.accuracy.map(|a| f64::floor(a * 1000.0 + 0.5) / 1000.0);
     p
 }
 

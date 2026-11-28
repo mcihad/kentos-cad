@@ -2,7 +2,7 @@
 //! operation for operation (docs/adr/0008).
 
 use crate::api::Op;
-use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, maximum, minimum};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
@@ -32,10 +32,10 @@ pub fn empty_bounds() -> Bounds {
 }
 
 pub fn extend_bounds(b: &mut Bounds, p: Vec2, pad: f64) {
-    b.min_x = js_min(b.min_x, p.x - pad);
-    b.min_y = js_min(b.min_y, p.y - pad);
-    b.max_x = js_max(b.max_x, p.x + pad);
-    b.max_y = js_max(b.max_y, p.y + pad);
+    b.min_x = minimum(b.min_x, p.x - pad);
+    b.min_y = minimum(b.min_y, p.y - pad);
+    b.max_x = maximum(b.max_x, p.x + pad);
+    b.max_y = maximum(b.max_y, p.y + pad);
 }
 
 pub fn is_empty_bounds(b: &Bounds) -> bool {
@@ -194,9 +194,9 @@ pub fn dist_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     let t = if len2 == 0.0 {
         0.0
     } else {
-        js_max(
+        maximum(
             0.0,
-            js_min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+            minimum(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
         )
     };
     hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))

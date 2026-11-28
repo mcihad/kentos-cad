@@ -18,7 +18,7 @@ pub type Circle = (Vec2, f64);
 pub const ON_CIRCLE: f64 = 1e-9;
 
 fn on(p: Vec2, c: &Circle) -> bool {
-    (hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * crate::jsmath::js_max(c.1, 1.0)
+    (hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * crate::jsmath::maximum(c.1, 1.0)
 }
 
 /// The edge from `a` to `b` as a chord of one of `circles`: the circle and the way it turns (+1 counter-clockwise);

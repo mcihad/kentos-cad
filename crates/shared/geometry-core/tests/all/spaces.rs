@@ -7,7 +7,7 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::space::{self, Method};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::WallIn;
-use kentos_geometry_core::jsmath::{js_max, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -109,13 +109,13 @@ fn spaces_are_found_and_measured_as_the_reference_says() {
             let area = space::area(std::slice::from_ref(&a));
             let wa = want["area"].as_f64().unwrap();
             assert!(
-                (area - wa).abs() <= TOL * js_max(wa, 1.0),
+                (area - wa).abs() <= TOL * maximum(wa, 1.0),
                 "{label}: alan {area}, başvuru {wa}"
             );
             let per = space::perimeter(std::slice::from_ref(&a));
             let wp = want["perimeter"].as_f64().unwrap();
             assert!(
-                (per - wp).abs() <= TOL * js_max(wp, 1.0),
+                (per - wp).abs() <= TOL * maximum(wp, 1.0),
                 "{label}: çevre {per}, başvuru {wp}"
             );
         }

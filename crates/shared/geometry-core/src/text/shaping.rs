@@ -9,7 +9,7 @@ mod scripts;
 use std::ops::Range;
 use std::sync::OnceLock;
 
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use rustybuzz::{BufferClusterLevel, Direction, Feature, UnicodeBuffer};
 use unicode_bidi::{BidiClass, BidiInfo, Level, ParagraphInfo, bidi_class};
 use unicode_script::Script as WritingScript;
@@ -681,10 +681,10 @@ impl<'a> Paragraph<'a> {
                             out.ink = Some(match out.ink {
                                 None => b,
                                 Some(v) => [
-                                    js_min(v[0], b[0]),
-                                    js_min(v[1], b[1]),
-                                    js_max(v[2], b[2]),
-                                    js_max(v[3], b[3]),
+                                    minimum(v[0], b[0]),
+                                    minimum(v[1], b[1]),
+                                    maximum(v[2], b[2]),
+                                    maximum(v[3], b[3]),
                                 ],
                             });
                         }
@@ -767,10 +767,10 @@ impl<'a> Paragraph<'a> {
                                 let (x, y) = (origin[0] + x + y * slant, origin[1] + y);
                                 match &mut out.ink {
                                     Some(b) => {
-                                        b[0] = js_min(b[0], x);
-                                        b[1] = js_min(b[1], y);
-                                        b[2] = js_max(b[2], x);
-                                        b[3] = js_max(b[3], y);
+                                        b[0] = minimum(b[0], x);
+                                        b[1] = minimum(b[1], y);
+                                        b[2] = maximum(b[2], x);
+                                        b[3] = maximum(b[3], y);
                                     }
                                     None => out.ink = Some([x, y, x, y]),
                                 }

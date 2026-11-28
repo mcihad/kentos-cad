@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use crate::api::Op;
 use crate::geometry::signed_area;
-use crate::jsmath::{hypot, js_cmp, js_max, or, stable_sort};
+use crate::jsmath::{hypot, js_cmp, maximum, or, stable_sort};
 use crate::op;
 use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
@@ -160,7 +160,7 @@ struct PointIndex {
 impl PointIndex {
     fn new(tolerance: f64) -> PointIndex {
         PointIndex {
-            cell: js_max(tolerance, 1e-9),
+            cell: maximum(tolerance, 1e-9),
             grid: HashMap::new(),
         }
     }

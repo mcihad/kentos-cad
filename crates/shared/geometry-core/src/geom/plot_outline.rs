@@ -2,7 +2,7 @@
 use crate::{
     Vec2,
     entity::Shape,
-    jsmath::{TAU, cos, hypot, js_max, sin},
+    jsmath::{TAU, cos, hypot, maximum, sin},
 };
 pub const MAX_POINTS: usize = 65_536;
 fn complex() -> String {
@@ -12,7 +12,7 @@ fn count(sweep: f64, second: f64, tol: f64) -> Result<usize, String> {
     if !tol.is_finite() || tol <= 0. || !second.is_finite() || second < 0. || !sweep.is_finite() {
         return Err(complex());
     }
-    let n = js_max((sweep.abs() * (second / (8. * tol)).sqrt()).ceil(), 1.);
+    let n = maximum((sweep.abs() * (second / (8. * tol)).sqrt()).ceil(), 1.);
     if n > MAX_POINTS as f64 {
         Err(complex())
     } else {
@@ -30,7 +30,7 @@ pub fn conic(
     closed: bool,
     tol: f64,
 ) -> Result<Vec<Vec2>, String> {
-    let radius = hypot(major.x, major.y) * js_max(ratio.abs(), 1.);
+    let radius = hypot(major.x, major.y) * maximum(ratio.abs(), 1.);
     let n = count(sweep, radius, tol)?.max(if closed { 8 } else { 1 });
     let length = n + usize::from(!closed);
     if length > MAX_POINTS {
@@ -135,7 +135,7 @@ pub fn outline(shape: &Shape, tol: f64) -> Result<Option<(Vec<Vec2>, bool)>, Str
                 };
                 let n = count(
                     1.,
-                    js_max(second(p[0], p[1], p[2]), second(p[1], p[2], p[3])),
+                    maximum(second(p[0], p[1], p[2]), second(p[1], p[2], p[3])),
                     tol,
                 )?;
                 if out.len() + n + 1 > MAX_POINTS {

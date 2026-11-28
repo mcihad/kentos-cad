@@ -702,7 +702,7 @@ fn run_checked(
         let a = crate::vec2::Vec2::new(x[vars[0]], x[vars[1]]);
         let b = crate::vec2::Vec2::new(x[vars[2]], x[vars[3]]);
         if let Some(bulge) =
-            crate::geom::bulge::bulge_of_radius(a, b, radius * crate::jsmath::js_sign(x[j]))
+            crate::geom::bulge::bulge_of_radius(a, b, radius * crate::jsmath::sign(x[j]))
         {
             x[j] = if x[j].abs() > 1.0 { 1.0 / bulge } else { bulge };
         }

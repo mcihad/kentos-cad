@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::intersect::{line_circle_params, tangent_points};
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -111,7 +111,7 @@ pub fn on_ellipse(e: &EllipseGeom, t: f64, eps: f64) -> bool {
 pub fn tessellate_ellipse(e: &EllipseGeom, per_turn: f64) -> Vec<Vec2> {
     let sw = ellipse_sweep(e);
     let full = sw >= TAU - 1e-12;
-    let n = js_max(
+    let n = maximum(
         if full { 16.0 } else { 4.0 },
         ((sw / TAU) * per_turn).ceil(),
     );
@@ -197,7 +197,7 @@ pub fn closest_param(e: &EllipseGeom, p: Vec2) -> f64 {
         return norm_angle(tb);
     }
     let tj = at(j);
-    let (mut lo, mut hi) = (js_min(tb, tj), js_max(tb, tj));
+    let (mut lo, mut hi) = (minimum(tb, tj), maximum(tb, tj));
     // The sign has to change across the bracket; otherwise the sample stays.
     if !(slope(lo) < 0.0 && slope(hi) > 0.0) {
         return norm_angle(tb);
@@ -228,7 +228,7 @@ pub fn closest_param(e: &EllipseGeom, p: Vec2) -> f64 {
         } else {
             (lo + hi) / 2.0
         };
-        let scale = js_max(1.0, t.abs());
+        let scale = maximum(1.0, t.abs());
         let done = (next - t).abs() <= 4e-16 * scale || hi - lo <= 4e-16 * scale;
         t = next;
         if done {

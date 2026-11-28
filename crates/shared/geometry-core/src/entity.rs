@@ -24,7 +24,7 @@ use crate::geom::spline::{catmull_rom, spline_length};
 use crate::geometry::{
     Bounds, centroid, empty_bounds, extend_bounds, path_length, point_in_polygon, signed_area,
 };
-use crate::jsmath::{PI, TAU, cos, js_max, sin};
+use crate::jsmath::{PI, TAU, cos, maximum, sin};
 use crate::op;
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
@@ -1091,7 +1091,7 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             t1,
         } => tessellate_ellipse(
             &ellipse_geom(*c, *major, *ratio, *t0, *t1),
-            js_max(64.0, segments * 2.0),
+            maximum(64.0, segments * 2.0),
         ),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             // Long enough for any preview; the renderer clips to the view.

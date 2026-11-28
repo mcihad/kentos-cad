@@ -10,7 +10,7 @@
 
 use crate::geom::arch::{Railings, StairSpec, Walk, railing_line, riser_stations, stair_landings};
 use crate::geom::stair_body::winding_zones;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::vec2::Vec2;
 
 const EPS: f64 = 1e-9;
@@ -128,7 +128,7 @@ pub fn rail_runs(
                 .iter()
                 .filter(|st| st.segment.is_none_or(|g| g == k))
                 .filter_map(|st| {
-                    let (lo, hi) = (js_max(st.from, s0), js_min(st.to, s1));
+                    let (lo, hi) = (maximum(st.from, s0), minimum(st.to, s1));
                     (hi - lo > EPS).then_some((lo, hi, st))
                 })
                 .collect();
@@ -140,7 +140,7 @@ pub fn rail_runs(
                 let closes = k + 2 == n && hi >= s1 - EPS;
                 if step > 0.0 {
                     // The first baluster at or past its start, by its number along the line.
-                    let mut j = js_max(((start - step / 2.0) / step - 1e-6).ceil(), 0.0);
+                    let mut j = maximum(((start - step / 2.0) / step - 1e-6).ceil(), 0.0);
                     loop {
                         let d = step / 2.0 + j * step;
                         if if closes {

@@ -4,7 +4,7 @@
 //! arc bent away are all found.
 
 use super::{Route, RoutePart, Walk};
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
 
 /// A point event's drift (m).
@@ -48,7 +48,7 @@ fn farthest(from: &[RoutePart], to: &[RoutePart]) -> f64 {
     let mut far: f64 = 0.0;
     for p in probes(from) {
         match walk.locate(p) {
-            Some(place) => far = js_max(far, place.distance.abs()),
+            Some(place) => far = maximum(far, place.distance.abs()),
             None => return f64::INFINITY,
         }
     }
@@ -57,5 +57,5 @@ fn farthest(from: &[RoutePart], to: &[RoutePart]) -> f64 {
 
 /// A line event's drift (m): the farthest probe of either from the other's path.
 pub fn line_drift(now: &[RoutePart], placed: &[RoutePart]) -> f64 {
-    js_max(farthest(now, placed), farthest(placed, now))
+    maximum(farthest(now, placed), farthest(placed, now))
 }

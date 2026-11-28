@@ -13,7 +13,7 @@
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at as edge_point};
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
-use crate::jsmath::{cos, hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{cos, hypot, maximum, minimum, sin, tan};
 use crate::vec2::Vec2;
 
 /// A unit enum read and written as one of its words.
@@ -204,7 +204,7 @@ pub fn measure_range(route: &Route) -> Option<(f64, f64)> {
         .flat_map(|p| p.ms.iter().flatten().copied())
         .fold(None, |r, m| match r {
             None => Some((m, m)),
-            Some((lo, hi)) => Some((js_min(lo, m), js_max(hi, m))),
+            Some((lo, hi)) => Some((minimum(lo, m), maximum(hi, m))),
         })
 }
 
@@ -319,7 +319,7 @@ impl Walk {
             if d > radius {
                 return None;
             }
-            far = js_max(far, d);
+            far = maximum(far, d);
         }
         Some(Along {
             from: self.locate(*first)?.m?,
@@ -349,7 +349,7 @@ impl Walk {
             let (Some(ma), Some(mb)) = (s.ma, s.mb) else {
                 continue;
             };
-            if js_min(ma, mb) <= m && m <= js_max(ma, mb) {
+            if minimum(ma, mb) <= m && m <= maximum(ma, mb) {
                 let t = if ma == mb { 0.0 } else { (m - ma) / (mb - ma) };
                 let foot = s.at(t);
                 if offset == 0.0 {
@@ -372,7 +372,7 @@ impl Walk {
             let (Some(ma), Some(mb)) = (s.ma, s.mb) else {
                 continue;
             };
-            if js_min(ma, mb) <= m && m <= js_max(ma, mb) {
+            if minimum(ma, mb) <= m && m <= maximum(ma, mb) {
                 let t = if ma == mb { 0.0 } else { (m - ma) / (mb - ma) };
                 let tan = s.tangent(t);
                 let along = self.at[k].2 + s.len * t;
@@ -407,7 +407,7 @@ impl Walk {
         if from == to {
             return Err(Fault::Same);
         }
-        let (lo, hi) = (js_min(from, to), js_max(from, to));
+        let (lo, hi) = (minimum(from, to), maximum(from, to));
         let mut parts: Vec<RoutePart> = Vec::new();
         // The open path, which the next edge's piece may go on.
         let mut open: Option<usize> = None;
@@ -428,7 +428,7 @@ impl Walk {
             } else {
                 let ta = (lo - ma) / (mb - ma);
                 let tb = (hi - ma) / (mb - ma);
-                (js_max(js_min(ta, tb), 0.0), js_min(js_max(ta, tb), 1.0))
+                (maximum(minimum(ta, tb), 0.0), minimum(maximum(ta, tb), 1.0))
             };
             if t1 - t0 <= 0.0 {
                 open = None;

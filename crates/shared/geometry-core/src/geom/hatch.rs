@@ -3,7 +3,7 @@
 //! neighbouring hatches line up across shared boundaries.
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, js_cmp, js_max, js_min, sin, stable_sort};
+use crate::jsmath::{PI, cos, js_cmp, maximum, minimum, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -52,8 +52,8 @@ pub fn hatch_lines(ring: &[Vec2], angle_deg: f64, spacing: f64, holes: &[Vec<Vec
     let mut min_v = f64::INFINITY;
     let mut max_v = f64::NEG_INFINITY;
     for p in &loc {
-        min_v = js_min(min_v, p.v);
-        max_v = js_max(max_v, p.v);
+        min_v = minimum(min_v, p.v);
+        max_v = maximum(max_v, p.v);
     }
     let first = (min_v / spacing).ceil();
     let last = (max_v / spacing).floor();

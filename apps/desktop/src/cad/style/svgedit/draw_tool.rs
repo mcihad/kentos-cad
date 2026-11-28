@@ -7,7 +7,7 @@
 use iced::widget::canvas::{Frame, Path, Stroke};
 use iced::{Color, Point, Size};
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::jsmath::{PI, atan2, hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{PI, atan2, hypot, maximum, minimum};
 use kentos_svg_core::model::{regular_polygon, rotate_about, transform_shape};
 use kentos_svg_core::shape::{Obj, PathNode, Pt, SubPath};
 
@@ -76,11 +76,11 @@ fn label(tool: ToolId) -> &'static str {
 
 /// A new shape's stroke width: a fiftieth of the canvas (a drawn line's a twenty-fifth), at least 1.
 pub fn shape_stroke_width(width: f64) -> f64 {
-    js_max(1.0, width / 50.0)
+    maximum(1.0, width / 50.0)
 }
 
 pub fn line_stroke_width(width: f64) -> f64 {
-    js_max(1.0, width / 25.0)
+    maximum(1.0, width / 25.0)
 }
 
 /// What a drag needs besides its two points (the web's `DragSpec`).
@@ -127,7 +127,7 @@ pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj>
             p0[0],
             p0[1],
             r,
-            js_max(3.0, spec.sides),
+            maximum(3.0, spec.sides),
             spec.star.then_some(r * 0.45),
         );
         s.set_text("kind", "path");
@@ -139,7 +139,7 @@ pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj>
             .flatten();
     }
     if spec.shift {
-        let k = js_max(dx.abs(), dy.abs());
+        let k = maximum(dx.abs(), dy.abs());
         // `Math.sign(d || 1)`: zero (either sign) and NaN count as 1.
         let sign = |d: f64| {
             if d == 0.0 || d.is_nan() {
@@ -160,8 +160,8 @@ pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj>
         )
     } else {
         (
-            js_min(p0[0], p0[0] + dx),
-            js_min(p0[1], p0[1] + dy),
+            minimum(p0[0], p0[0] + dx),
+            minimum(p0[1], p0[1] + dy),
             dx.abs(),
             dy.abs(),
         )

@@ -35,7 +35,7 @@ use std::collections::{HashMap, HashSet};
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::Shape;
-use crate::jsmath::{cos, js_max, js_min, sin};
+use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -699,13 +699,13 @@ fn best(a: &Comp, b: &Comp) -> Option<f64> {
                  bound: f64| {
         let mut m: f64 = 0.0;
         for i in 0..pa.len() {
-            m = js_max(m, d2(pa[i], pb[v(i)]));
+            m = maximum(m, d2(pa[i], pb[v(i)]));
             if m >= bound {
                 return m;
             }
         }
         for i in 0..ma.len() {
-            m = js_max(m, d2(ma[i], mb[e(i)]));
+            m = maximum(m, d2(ma[i], mb[e(i)]));
             if m >= bound {
                 return m;
             }
@@ -713,16 +713,19 @@ fn best(a: &Comp, b: &Comp) -> Option<f64> {
         m
     };
     match (a, b) {
-        (Comp::Fixed(pa), Comp::Fixed(pb)) if pa.len() == pb.len() => {
-            Some(pa.iter().zip(pb).map(|(p, q)| d2(*p, *q)).fold(0.0, js_max))
-        }
+        (Comp::Fixed(pa), Comp::Fixed(pb)) if pa.len() == pb.len() => Some(
+            pa.iter()
+                .zip(pb)
+                .map(|(p, q)| d2(*p, *q))
+                .fold(0.0, maximum),
+        ),
         (Comp::Path(pa, ma), Comp::Path(pb, mb))
             if pa.len() == pb.len() && ma.len() == mb.len() =>
         {
             let (n, k) = (pa.len(), ma.len());
             let forward = worst(pa, ma, pb, mb, &|i| i, &|i| i, f64::INFINITY);
             let back = worst(pa, ma, pb, mb, &|i| n - 1 - i, &|i| k - 1 - i, forward);
-            Some(js_min(forward, back))
+            Some(minimum(forward, back))
         }
         (Comp::Ring(pa, ma), Comp::Ring(pb, mb))
             if pa.len() == pb.len() && ma.len() == mb.len() =>
@@ -731,7 +734,7 @@ fn best(a: &Comp, b: &Comp) -> Option<f64> {
             let mut least = f64::INFINITY;
             for s in 0..n {
                 let f = worst(pa, ma, pb, mb, &|i| (s + i) % n, &|i| (s + i) % n, least);
-                least = js_min(least, f);
+                least = minimum(least, f);
                 // Backwards: vertex i to s − i, edge i (i → i + 1) to the edge from s − i − 1 to s − i.
                 let r = worst(
                     pa,
@@ -742,7 +745,7 @@ fn best(a: &Comp, b: &Comp) -> Option<f64> {
                     &|i| (s + 2 * n - i - 1) % n,
                     least,
                 );
-                least = js_min(least, r);
+                least = minimum(least, r);
             }
             Some(if n == 0 { 0.0 } else { least })
         }
@@ -769,8 +772,8 @@ fn centre(d: &Defs) -> Vec2 {
         Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
     );
     for p in points(d) {
-        lo = Vec2::new(js_min(lo.x, p.x), js_min(lo.y, p.y));
-        hi = Vec2::new(js_max(hi.x, p.x), js_max(hi.y, p.y));
+        lo = Vec2::new(minimum(lo.x, p.x), minimum(lo.y, p.y));
+        hi = Vec2::new(maximum(hi.x, p.x), maximum(hi.y, p.y));
     }
     Vec2::new((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0)
 }
@@ -790,7 +793,7 @@ fn difference(a: &Shape, da: &Defs, b: &Shape, db: &Defs) -> Option<(f64, bool)>
         let mut whole = true;
         for (x, y) in da.comps.iter().zip(&db.comps) {
             match best(x, y) {
-                Some(v) => most = js_max(most, v),
+                Some(v) => most = maximum(most, v),
                 None => {
                     whole = false;
                     break;
@@ -880,10 +883,10 @@ fn grown(d: &Defs, by: f64) -> (f64, f64, f64, f64) {
     );
     for p in points(d) {
         b = (
-            js_min(b.0, p.x),
-            js_min(b.1, p.y),
-            js_max(b.2, p.x),
-            js_max(b.3, p.y),
+            minimum(b.0, p.x),
+            minimum(b.1, p.y),
+            maximum(b.2, p.x),
+            maximum(b.3, p.y),
         );
     }
     (b.0 - by, b.1 - by, b.2 + by, b.3 + by)

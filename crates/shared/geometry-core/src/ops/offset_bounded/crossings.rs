@@ -2,7 +2,7 @@
 //! Exhausting the budget is an error, never the false answer “zero crossings”.
 use crate::entity::{Shape, is_closed_path};
 use crate::geom::intersect::{Edge, intersect_edges};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 
 pub(super) fn count(s: &Shape) -> Result<usize, String> {
@@ -17,10 +17,10 @@ pub(super) fn count(s: &Shape) -> Result<usize, String> {
             let a = pts[i];
             let b = pts[(i + 1) % pts.len()];
             (
-                js_min(a.x, b.x),
-                js_max(a.x, b.x),
-                js_min(a.y, b.y),
-                js_max(a.y, b.y),
+                minimum(a.x, b.x),
+                maximum(a.x, b.x),
+                minimum(a.y, b.y),
+                maximum(a.y, b.y),
                 i,
             )
         })
@@ -73,5 +73,5 @@ fn overlaps(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
     }
     let project = |p: Vec2| ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / length;
     let (u, v) = (project(c), project(d));
-    js_max(js_min(u, v), 0.) <= js_min(js_max(u, v), length) + 1e-10
+    maximum(minimum(u, v), 0.) <= minimum(maximum(u, v), length) + 1e-10
 }

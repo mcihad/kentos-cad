@@ -15,7 +15,6 @@
 //! after it its last. So a journey of any length meets each day's closures.
 
 use super::rules::PeriodRule;
-use crate::jsmath::js_floor;
 
 /// Minutes in a day.
 pub const DAY: f64 = 1440.0;
@@ -42,9 +41,9 @@ impl Frame {
     /// Where minute `t` falls: its place in the frame and the shift from it (`t = place + shift`).
     fn place(self, t: f64) -> (f64, f64) {
         let shift = if t < self.lead + self.cycle {
-            js_floor((t - self.lead) / self.cycle) * self.cycle
+            f64::floor((t - self.lead) / self.cycle) * self.cycle
         } else if t >= self.end - self.cycle {
-            js_floor((t - (self.end - self.cycle)) / self.cycle) * self.cycle
+            f64::floor((t - (self.end - self.cycle)) / self.cycle) * self.cycle
         } else {
             0.0
         };
@@ -54,11 +53,11 @@ impl Frame {
     /// The same going back: a minute at a step's start is the step before's (`(lead, end]` with its copies).
     fn place_before(self, t: f64) -> (f64, f64) {
         let shift = if t <= self.lead + self.cycle {
-            (-js_floor((self.lead + self.cycle - t) / self.cycle)) * self.cycle
+            (-f64::floor((self.lead + self.cycle - t) / self.cycle)) * self.cycle
         } else if t <= self.end {
             0.0
         } else {
-            (-js_floor((self.end - t) / self.cycle)) * self.cycle
+            (-f64::floor((self.end - t) / self.cycle)) * self.cycle
         };
         (t - shift, shift)
     }
@@ -224,8 +223,8 @@ impl Clock {
                 end,
                 cycle: super::access::WEEK,
             });
-            let first = js_floor(lead / DAY) as i64;
-            let last = js_floor(end / DAY) as i64;
+            let first = f64::floor(lead / DAY) as i64;
+            let last = f64::floor(end / DAY) as i64;
             let mut cuts: Vec<f64> = (first..last)
                 .flat_map(|k| day.iter().map(move |s| s.0 + k as f64 * DAY))
                 .chain(shut.iter().flat_map(|w| [w.0, w.1]))
@@ -237,7 +236,7 @@ impl Clock {
                 if shut.iter().any(|w| w.0 <= t && t < w.1) {
                     return 0.0;
                 }
-                let m = t - js_floor(t / DAY) * DAY;
+                let m = t - f64::floor(t / DAY) * DAY;
                 day.iter().rev().find(|s| s.0 <= m).map_or(0.0, |s| s.1)
             };
             let mut stretch: Vec<(f64, f64)> = cuts.into_iter().map(|t| (t, speed_at(t))).collect();
@@ -505,7 +504,7 @@ mod tests {
             .map(|d| {
                 (
                     f64::from(d) * DAY + 1320.0,
-                    crate::jsmath::js_min(f64::from(d) * DAY + 1800.0, 17.0 * DAY),
+                    crate::jsmath::minimum(f64::from(d) * DAY + 1800.0, 17.0 * DAY),
                 )
             })
             .collect();

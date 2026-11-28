@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json as CoreJson;
-use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
 use kentos_style_core::style::compile::{Env, Values};
 use kentos_style_core::style::generate::{Gen, run};
 use kentos_style_core::style::model::{Exprs, Unit};
@@ -68,7 +68,7 @@ fn gen_of(v: &Json) -> Gen {
 }
 
 fn close(a: Vec2, b: Vec2, tol: f64) -> bool {
-    let k = tol * js_max(js_max(a.x.abs(), a.y.abs()), 1.0);
+    let k = tol * maximum(maximum(a.x.abs(), a.y.abs()), 1.0);
     (a.x - b.x).abs() <= k && (a.y - b.y).abs() <= k
 }
 
@@ -150,15 +150,15 @@ fn check_buffer(name: &str, got: &Gen, input: &Gen, check: &Json, tol: f64) {
             Gen::Points(ps) => ps
                 .iter()
                 .map(|q| hypot(p.x - q.x, p.y - q.y))
-                .fold(f64::INFINITY, js_min),
+                .fold(f64::INFINITY, minimum),
             Gen::Lines(paths) => paths
                 .iter()
                 .flat_map(|(ps, _)| ps.windows(2).map(move |w| seg_distance(p, w[0], w[1])))
-                .fold(f64::INFINITY, js_min),
+                .fold(f64::INFINITY, minimum),
             Gen::Areas(_) => unreachable!("areas are checked exactly"),
         }
     };
-    let k = tol * js_max(d, 1.0);
+    let k = tol * maximum(d, 1.0);
     for rings in parts {
         for r in rings {
             for &p in r {

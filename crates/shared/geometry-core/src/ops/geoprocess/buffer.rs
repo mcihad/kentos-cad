@@ -10,7 +10,7 @@ use super::{Class, subtract_all, union_all};
 use crate::geom::arrangement::{Area, Ring, TOL};
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, sin};
 use crate::vec2::Vec2;
 
 /// Which side of a path a buffer takes (paths only; areas and points take both).
@@ -158,7 +158,7 @@ pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
             if lo > reach + hair {
                 break;
             }
-            reach = js_max(reach, hi);
+            reach = maximum(reach, hi);
         }
         reach >= std::f64::consts::PI - hair
     };
@@ -207,7 +207,7 @@ pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
 fn tangent(e: &Edge, t: f64) -> Vec2 {
     match *e {
         Edge::Seg { a, b } => {
-            let len = js_max(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
+            let len = maximum(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
             Vec2::new((b.x - a.x) / len, (b.y - a.y) / len)
         }
         Edge::Arc { a0, sweep, .. } => {
@@ -224,7 +224,7 @@ fn tangent(e: &Edge, t: f64) -> Vec2 {
 fn strip(e: &Edge, d: f64, left: bool) -> Area {
     match *e {
         Edge::Seg { a, b } => {
-            let len = js_max(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
+            let len = maximum(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
             let s = if left { d } else { -d };
             let (nx, ny) = (-(b.y - a.y) / len * s, (b.x - a.x) / len * s);
             piece(

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::f64::consts::FRAC_PI_4;
 
 use crate::geom::delaunay::{Delaunay, MOST_POINTS, NONE, TOO_FEW, next, prev, triangulate};
-use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::predicates::{incircle, orient2d};
 use crate::vec2::Vec2;
 
@@ -42,12 +42,12 @@ pub fn frame_of(sites: &[Vec2], margin: f64) -> Option<Frame> {
     let first = sites.first()?;
     let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x, first.y);
     for p in sites {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
-    let grow = js_max(x1 - x0, y1 - y0) * margin;
+    let grow = maximum(x1 - x0, y1 - y0) * margin;
     Some(Frame {
         min: Vec2::new(x0 - grow, y0 - grow),
         max: Vec2::new(x1 + grow, y1 + grow),
@@ -253,7 +253,7 @@ fn cells_of(pts: &[Vec2], d: &Delaunay, f: Frame) -> Vec<Option<Vec<Vec2>>> {
     for &c in cc.iter().chain(pts) {
         let r = reach(c);
         if r.is_finite() {
-            span = js_max(span, r);
+            span = maximum(span, r);
         }
     }
     let far = 8.0 * span + 1.0;

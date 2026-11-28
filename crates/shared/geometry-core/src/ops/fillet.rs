@@ -7,7 +7,7 @@ use crate::entity::{Entity, Shape, area_parts, locate_part, outer_count, replace
 use crate::geom::arc::{ArcGeom, norm_angle, sweep};
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path};
 use crate::geom::intersect::line_line;
-use crate::jsmath::{PI, acos, atan2, hypot, js_max, js_min, js_sign, sin, tan};
+use crate::jsmath::{PI, acos, atan2, hypot, maximum, minimum, sign, sin, tan};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::vec2::Vec2;
@@ -117,7 +117,7 @@ pub fn fillet_lines(l1: Seg, pick1: Vec2, l2: Seg, pick2: Vec2, r: f64) -> Fille
             join: None,
         });
     }
-    let cos_phi = js_max(-1.0, js_min(1.0, dot(k1.u, k2.u)));
+    let cos_phi = maximum(-1.0, minimum(1.0, dot(k1.u, k2.u)));
     let phi = acos(cos_phi);
     if phi < 1e-6 || PI - phi < 1e-6 {
         return Fillet(Corner::Error(
@@ -254,7 +254,7 @@ pub fn corner_of_path(
     }
     let u1 = Vec2::new((p.x - v.x) / lp, (p.y - v.y) / lp);
     let u2 = Vec2::new((nx.x - v.x) / ln, (nx.y - v.y) / ln);
-    let phi = acos(js_max(-1.0, js_min(1.0, dot(u1, u2))));
+    let phi = acos(maximum(-1.0, minimum(1.0, dot(u1, u2))));
     if phi < 1e-6 || PI - phi < 1e-6 {
         return err("Kenarlar aynı doğrultuda; burada köşe yok.");
     }
@@ -265,7 +265,7 @@ pub fn corner_of_path(
             }
             let d = radius / tan(phi / 2.0);
             // Turning left at the corner means the fillet runs counter-clockwise.
-            let turn = js_sign(-u1.x * u2.y + u1.y * u2.x);
+            let turn = sign(-u1.x * u2.y + u1.y * u2.x);
             (d, d, turn * tan((PI - phi) / 4.0))
         }
         CornerOp::Chamfer(d1, d2) => {

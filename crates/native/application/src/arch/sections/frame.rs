@@ -108,13 +108,13 @@ pub(super) fn column(
         .iter()
         .filter(|s| s.holds(centre) && (s.top - floor).abs() <= 0.5)
         .map(SlabAt::structure_top)
-        .fold(floor, kentos_geometry_core::jsmath::js_min);
+        .fold(floor, kentos_geometry_core::jsmath::minimum);
     // Down to the highest footing under its middle, of its storey, below where it would stand.
     let bottom = seats
         .iter()
         .filter(|f| f.level == c.arch.level && f.at.top <= bottom && f.at.holds(centre))
         .map(|f| f.at.top)
-        .reduce(kentos_geometry_core::jsmath::js_max)
+        .reduce(kentos_geometry_core::jsmath::maximum)
         .unwrap_or(bottom);
     let Some(h) = height else {
         m.left.insert((Left::NoHeight, owner));
@@ -124,7 +124,7 @@ pub(super) fn column(
         .iter()
         .filter(|s| s.holds(centre) && (s.top - (floor + h)).abs() <= 0.5)
         .map(SlabAt::structure_top)
-        .fold(floor + h, kentos_geometry_core::jsmath::js_min);
+        .fold(floor + h, kentos_geometry_core::jsmath::minimum);
     if top - bottom <= 1e-6 {
         return;
     }

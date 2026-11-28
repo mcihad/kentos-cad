@@ -15,7 +15,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{hypot, js_max, log};
+use crate::jsmath::{hypot, log, maximum};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
@@ -117,7 +117,7 @@ impl Sheet {
         let centre = Vec2::new(first.x + sx / n as f64, first.y + sy / n as f64);
         let mut size: f64 = 0.0;
         for l in links {
-            size = js_max(size, hypot(l.from.x - centre.x, l.from.y - centre.y));
+            size = maximum(size, hypot(l.from.x - centre.x, l.from.y - centre.y));
         }
         let sources: Vec<Vec2> = links
             .iter()
@@ -281,7 +281,7 @@ fn gauss(mut a: Vec<Vec<f64>>, mut b: Vec<[f64; 2]>) -> Option<Vec<[f64; 2]>> {
     let mut big: f64 = 0.0;
     for row in &a {
         for v in row {
-            big = js_max(big, v.abs());
+            big = maximum(big, v.abs());
         }
     }
     let least = SINGULAR * big;

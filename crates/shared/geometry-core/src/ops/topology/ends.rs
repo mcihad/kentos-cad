@@ -12,7 +12,7 @@ use super::{Out, TOUCH, TopoPath, TopoWorks, Work};
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, ray_edge};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max, js_min, tan};
+use crate::jsmath::{hypot, maximum, minimum, tan};
 use crate::store::rtree::{PackedTree, overlaps};
 use crate::vec2::Vec2;
 
@@ -52,10 +52,10 @@ fn edge_length(e: &Edge) -> f64 {
 fn edge_box(e: &Edge) -> Bounds {
     match *e {
         Edge::Seg { a, b } => Bounds {
-            min_x: js_min(a.x, b.x),
-            min_y: js_min(a.y, b.y),
-            max_x: js_max(a.x, b.x),
-            max_y: js_max(a.y, b.y),
+            min_x: minimum(a.x, b.x),
+            min_y: minimum(a.y, b.y),
+            max_x: maximum(a.x, b.x),
+            max_y: maximum(a.y, b.y),
         },
         Edge::Arc { c, r, .. } => Bounds {
             min_x: c.x - r,

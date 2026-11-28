@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::hash::{BuildHasherDefault, Hasher};
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, sin};
+use kentos_geometry_core::jsmath::{PI, cos, maximum, minimum, sin};
 
 use super::place::positive;
 
@@ -144,7 +144,7 @@ pub fn displaced(
     let mut rings = Vec::new();
     match placement {
         Placement::Ring => {
-            let r = js_max(s / 2.0, n as f64 * s / (2.0 * PI)) + spacing;
+            let r = maximum(s / 2.0, n as f64 * s / (2.0 * PI)) + spacing;
             for k in 0..n {
                 out.push(bearing(r, 2.0 * PI * k as f64 / n as f64));
             }
@@ -164,7 +164,7 @@ pub fn displaced(
             }
         }
         Placement::Grid => {
-            let cols = js_max((n as f64).sqrt().ceil(), 1.0) as usize;
+            let cols = maximum((n as f64).sqrt().ceil(), 1.0) as usize;
             let rows = n.div_ceil(cols);
             let a = (c / 2.0 + s / 2.0 + s) / 2.0 + spacing;
             let (w, h) = ((cols - 1) as f64 * a, (rows - 1) as f64 * a);
@@ -183,7 +183,7 @@ pub fn displaced(
 /// Kümeleme's symbol grows with its count `n` when asked: `min(2, 1 + ln n / ln 1000)`.
 pub fn growth(n: usize) -> f64 {
     let n = n.max(1) as f64;
-    js_min(
+    minimum(
         1.0 + kentos_geometry_core::jsmath::log(n) / kentos_geometry_core::jsmath::log(1000.0),
         2.0,
     )

@@ -8,7 +8,7 @@
 //! the years 1–9999 is an integer far below 2^53, so it is exact and compares
 //! exactly. The calendar is worked in integers (`i64`), never in floats.
 
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// Milliseconds in a second, a minute, an hour, a day and a week.
 const SECOND: i64 = 1000;
@@ -593,7 +593,7 @@ pub fn extent<'a>(times: impl IntoIterator<Item = &'a Time>) -> Option<(f64, f64
             if v.is_finite() {
                 out = Some(match out {
                     None => (v, v),
-                    Some((lo, hi)) => (js_min(lo, v), js_max(hi, v)),
+                    Some((lo, hi)) => (minimum(lo, v), maximum(hi, v)),
                 });
             }
         }

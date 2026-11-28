@@ -19,7 +19,7 @@ use crate::entity::{Entity, Shape, ellipse_geom, is_multi_part};
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point};
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::op;
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, tangent_at_s};
@@ -464,7 +464,7 @@ pub fn bisector(k: Vec2, a: Vec2, b: Vec2, d: f64) -> Option<Vec2> {
 /// The bisector's point nearest `p`, never behind K (a click).
 pub fn bisector_nearest(k: Vec2, a: Vec2, b: Vec2, p: Vec2) -> Option<Vec2> {
     let u = bisector_way(k, a, b)?;
-    let t = js_max(0.0, (p.x - k.x) * u.x + (p.y - k.y) * u.y);
+    let t = maximum(0.0, (p.x - k.x) * u.x + (p.y - k.y) * u.y);
     Some(Vec2::new(k.x + u.x * t, k.y + u.y * t))
 }
 

@@ -28,7 +28,7 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::overlay::{face_rings, overlay};
 use kentos_geometry_core::geom::region::{area_source, inside_area};
 use kentos_geometry_core::jsmath::{
-    PI, cos, js_cmp, js_floor, js_max, js_min, sin, stable_sort, tan, truthy,
+    PI, cos, js_cmp, maximum, minimum, sin, stable_sort, tan, truthy,
 };
 use kentos_geometry_core::vec2::Vec2;
 
@@ -168,7 +168,7 @@ impl Tracer {
     pub fn new(tol: f64, extent: f64) -> Tracer {
         Tracer {
             tol,
-            cell: js_max(js_max(extent / 48.0, tol * 4.0), 1e-9),
+            cell: maximum(maximum(extent / 48.0, tol * 4.0), 1e-9),
             owners: Vec::new(),
             chords: Vec::new(),
             grid: HashMap::new(),
@@ -186,10 +186,10 @@ impl Tracer {
             owner,
         });
         let s = self.cell;
-        let x0 = js_floor(js_min(a[0], b[0]) / s);
-        let x1 = js_floor(js_max(a[0], b[0]) / s);
-        let y0 = js_floor(js_min(a[1], b[1]) / s);
-        let y1 = js_floor(js_max(a[1], b[1]) / s);
+        let x0 = f64::floor(minimum(a[0], b[0]) / s);
+        let x1 = f64::floor(maximum(a[0], b[0]) / s);
+        let y0 = f64::floor(minimum(a[1], b[1]) / s);
+        let y1 = f64::floor(maximum(a[1], b[1]) / s);
         let mut x = x0;
         while x <= x1 {
             let mut y = y0;
@@ -273,10 +273,10 @@ impl Tracer {
         // The cells around the midpoint (a chord on a cell border may be filed on either side).
         let mut ids: Vec<usize> = Vec::new();
         let mut seen: HashSet<usize> = HashSet::new();
-        let mut x = js_floor((m[0] - eps) / s);
-        while x <= js_floor((m[0] + eps) / s) {
-            let mut y = js_floor((m[1] - eps) / s);
-            while y <= js_floor((m[1] + eps) / s) {
+        let mut x = f64::floor((m[0] - eps) / s);
+        while x <= f64::floor((m[0] + eps) / s) {
+            let mut y = f64::floor((m[1] - eps) / s);
+            while y <= f64::floor((m[1] + eps) / s) {
                 if let Some(list) = self.grid.get(&cell_key(x, y)) {
                     for &id in list {
                         if seen.insert(id) {
@@ -292,8 +292,8 @@ impl Tracer {
         let mut best_d = eps;
         for id in ids {
             let c = &self.chords[id];
-            let d = js_max(
-                js_max(dist_to_segment(p, c.a, c.b), dist_to_segment(q, c.a, c.b)),
+            let d = maximum(
+                maximum(dist_to_segment(p, c.a, c.b), dist_to_segment(q, c.a, c.b)),
                 dist_to_segment(m, c.a, c.b),
             );
             if d > best_d {
@@ -305,9 +305,9 @@ impl Tracer {
                 let dy = c.b[1] - c.a[1];
                 let l2 = dx * dx + dy * dy;
                 let u = if l2 > 0.0 {
-                    js_max(
+                    maximum(
                         0.0,
-                        js_min(1.0, ((r[0] - c.a[0]) * dx + (r[1] - c.a[1]) * dy) / l2),
+                        minimum(1.0, ((r[0] - c.a[0]) * dx + (r[1] - c.a[1]) * dy) / l2),
                     )
                 } else {
                     0.0
@@ -357,10 +357,10 @@ pub fn rings_cross(rings: &[Vec<Pt>]) -> bool {
                 r,
                 i,
                 n: ring.len(),
-                min_x: js_min(a[0], b[0]),
-                max_x: js_max(a[0], b[0]),
-                min_y: js_min(a[1], b[1]),
-                max_y: js_max(a[1], b[1]),
+                min_x: minimum(a[0], b[0]),
+                max_x: maximum(a[0], b[0]),
+                min_y: minimum(a[1], b[1]),
+                max_y: maximum(a[1], b[1]),
             });
         }
     }
@@ -526,7 +526,7 @@ fn arc_cubics(p: Pt, q: Pt, bulge: f64) -> Vec<Cubic> {
     let Some(arc) = bulge_arc(zv(p), zv(q), z(bulge)) else {
         return vec![[p, p, q, q]];
     };
-    let n = js_max(1.0, (arc.sweep.abs() / (PI / 2.0) - 1e-9).ceil());
+    let n = maximum(1.0, (arc.sweep.abs() / (PI / 2.0) - 1e-9).ceil());
     let step = arc.sweep / n;
     let k = (4.0 / 3.0) * tan(step / 4.0);
     let at = |a: f64| -> Pt { [arc.c.x + arc.r * cos(a), arc.c.y + arc.r * sin(a)] };
@@ -753,16 +753,16 @@ pub fn extent_of(list: &[&[SubPath]]) -> f64 {
         for sp in subs.iter() {
             for n in &sp.nodes {
                 for p in [Some([n.x, n.y]), n.in_, n.out].into_iter().flatten() {
-                    min_x = js_min(min_x, p[0]);
-                    min_y = js_min(min_y, p[1]);
-                    max_x = js_max(max_x, p[0]);
-                    max_y = js_max(max_y, p[1]);
+                    min_x = minimum(min_x, p[0]);
+                    min_y = minimum(min_y, p[1]);
+                    max_x = maximum(max_x, p[0]);
+                    max_y = maximum(max_y, p[1]);
                 }
             }
         }
     }
     if min_x.is_finite() {
-        js_max(js_max(max_x - min_x, max_y - min_y), 1e-6)
+        maximum(maximum(max_x - min_x, max_y - min_y), 1e-6)
     } else {
         1.0
     }
@@ -770,7 +770,7 @@ pub fn extent_of(list: &[&[SubPath]]) -> f64 {
 
 /// Flattening tolerance for a drawing of this size.
 pub fn tol_for(extent: f64) -> f64 {
-    js_max(extent * 1e-4, 1e-7)
+    maximum(extent * 1e-4, 1e-7)
 }
 
 /// A boolean of fill regions (Inkscape's Path menu).
@@ -897,10 +897,10 @@ pub fn cut_path(target: &[SubPath], cutters: &[Vec<SubPath>]) -> Vec<SubPath> {
                 knives.push(Knife {
                     a,
                     b,
-                    min_x: js_min(a[0], b[0]),
-                    max_x: js_max(a[0], b[0]),
-                    min_y: js_min(a[1], b[1]),
-                    max_y: js_max(a[1], b[1]),
+                    min_x: minimum(a[0], b[0]),
+                    max_x: maximum(a[0], b[0]),
+                    min_y: minimum(a[1], b[1]),
+                    max_y: maximum(a[1], b[1]),
                 });
             }
         }
@@ -921,10 +921,10 @@ pub fn cut_path(target: &[SubPath], cutters: &[Vec<SubPath>]) -> Vec<SubPath> {
                 let a = pts[k - 1];
                 let b = pts[k];
                 for kn in &knives {
-                    if kn.min_x > js_max(a[0], b[0])
-                        || kn.max_x < js_min(a[0], b[0])
-                        || kn.min_y > js_max(a[1], b[1])
-                        || kn.max_y < js_min(a[1], b[1])
+                    if kn.min_x > maximum(a[0], b[0])
+                        || kn.max_x < minimum(a[0], b[0])
+                        || kn.min_y > maximum(a[1], b[1])
+                        || kn.max_y < minimum(a[1], b[1])
                     {
                         continue;
                     }
@@ -958,7 +958,7 @@ fn cross_param(a: Pt, b: Pt, c: Pt, d: Pt) -> Option<f64> {
     let u = ((c[0] - a[0]) * ry - (c[1] - a[1]) * rx) / den;
     let e = 1e-12;
     if t >= -e && t <= 1.0 + e && u >= -e && u <= 1.0 + e {
-        Some(js_min(1.0, js_max(0.0, t)))
+        Some(minimum(1.0, maximum(0.0, t)))
     } else {
         None
     }
@@ -973,7 +973,7 @@ fn refine_on_line(cu: &Cubic, t0: f64, c: Pt, d: Pt) -> f64 {
         let p = bez(cu, t);
         let f = (p[0] - c[0]) * nx + (p[1] - c[1]) * ny;
         let h = 1e-6;
-        let q = bez(cu, js_min(1.0, t + h));
+        let q = bez(cu, minimum(1.0, t + h));
         let df = ((q[0] - c[0]) * nx + (q[1] - c[1]) * ny - f) / h;
         if df.abs() < 1e-18 {
             break;

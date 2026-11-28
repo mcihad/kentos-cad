@@ -149,8 +149,8 @@ fn numbers(op: BinOp, x: f64, y: f64) -> Option<Value<'static>> {
     let close = || {
         (x - y).abs()
             <= 1e-9
-                * kentos_geometry_core::jsmath::js_max(
-                    kentos_geometry_core::jsmath::js_max(1.0, x.abs()),
+                * kentos_geometry_core::jsmath::maximum(
+                    kentos_geometry_core::jsmath::maximum(1.0, x.abs()),
                     y.abs(),
                 )
     };

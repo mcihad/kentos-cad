@@ -28,7 +28,7 @@
 use std::f64::consts::PI;
 
 use crate::Vec2;
-use crate::jsmath::{atan2, cos, hypot, js_max, js_max_all, js_min, js_round, sin};
+use crate::jsmath::{atan2, cos, hypot, js_round, maximum, maximum_of, minimum, sin};
 
 #[cfg(test)]
 mod tests;
@@ -245,10 +245,10 @@ fn extent(f: &Frame, pts: impl IntoIterator<Item = Vec2>) -> (f64, f64, f64, f64
     );
     for p in pts {
         let (t, r) = (f.t(p), f.rho(p));
-        e.0 = js_min(e.0, t);
-        e.1 = js_max(e.1, t);
-        e.2 = js_min(e.2, r);
-        e.3 = js_max(e.3, r);
+        e.0 = minimum(e.0, t);
+        e.1 = maximum(e.1, t);
+        e.2 = minimum(e.2, r);
+        e.3 = maximum(e.3, r);
     }
     e
 }
@@ -273,9 +273,9 @@ fn clip(f: &Frame, a: Vec2, b: Vec2, bx: (f64, f64, f64, f64)) -> Option<(f64, f
         }
         let r = q / p;
         if p < 0.0 {
-            lo = js_max(lo, r);
+            lo = maximum(lo, r);
         } else {
-            hi = js_min(hi, r);
+            hi = minimum(hi, r);
         }
         if lo > hi {
             return None;
@@ -292,7 +292,7 @@ fn covers(mut parts: Vec<(f64, f64)>, gap: f64) -> bool {
         if lo > reach + gap {
             return false;
         }
-        reach = js_max(reach, hi);
+        reach = maximum(reach, hi);
     }
     reach >= 1.0 - gap
 }
@@ -413,11 +413,11 @@ fn runs(segments: &[Segment], classes: &[(Frame, Vec<usize>)], tol: f64) -> Vec<
             // Each run with its length-weighted place across.
             let mut cur: Option<(Run, f64, f64)> = None;
             for (rho, t0, t1, i) in line {
-                let w = js_max(t1 - t0, tol);
+                let w = maximum(t1 - t0, tol);
                 if let Some((r, sum, weight)) = &mut cur
                     && t0 <= r.t1 + tol
                 {
-                    r.t1 = js_max(r.t1, t1);
+                    r.t1 = maximum(r.t1, t1);
                     r.segs.push(i);
                     *sum += rho * w;
                     *weight += w;
@@ -656,7 +656,7 @@ impl Plan<'_> {
             let e = extent(&f, corners);
             let across = overlap(e.2, e.3, lo - o.tol, hi + o.tol);
             // Two jambs of a narrow opening make a band inside this one's faces: no wall crosses there.
-            let beyond = js_max(lo - o.tol - e.2, 0.0) + js_max(e.3 - hi - o.tol, 0.0);
+            let beyond = maximum(lo - o.tol - e.2, 0.0) + maximum(e.3 - hi - o.tol, 0.0);
             overlap(e.0, e.1, g0, g1) >= span / 2.0 && across >= 0.0 && beyond > 2.0 * o.tol
         });
         if crossing {
@@ -807,8 +807,8 @@ impl Plan<'_> {
             let (ta, tb) = (f.t(s.a), f.t(s.b));
             let rho = (f.rho(s.a) + f.rho(s.b)) / 2.0;
             (l > o.tol && (dot(dv, f.n) / l).abs() <= parallel).then_some((
-                js_min(ta, tb),
-                js_max(ta, tb),
+                minimum(ta, tb),
+                maximum(ta, tb),
                 rho,
             ))
         };
@@ -828,7 +828,7 @@ impl Plan<'_> {
         for (a, b) in spans {
             match groups.last_mut() {
                 Some(g) if a < g.1 - o.tol => {
-                    g.1 = js_max(g.1, b);
+                    g.1 = maximum(g.1, b);
                     g.2 += 1;
                 }
                 _ => groups.push((a, b, 1)),
@@ -866,16 +866,16 @@ impl Plan<'_> {
                 continue;
             };
             let te = f.t(*shut);
-            let (mut t0, mut t1) = (js_min(tc, te), js_max(tc, te));
+            let (mut t0, mut t1) = (minimum(tc, te), maximum(tc, te));
             // Its frames across the wall at its ends.
             for s in self.lines.segments.iter().filter(|s| s.role == Role::Door) {
                 let (ta, tb) = (f.t(s.a), f.t(s.b));
-                let (a, b) = (js_min(ta, tb), js_max(ta, tb));
+                let (a, b) = (minimum(ta, tb), maximum(ta, tb));
                 let (ra, rb) = (f.rho(s.a), f.rho(s.b));
-                let inside = js_min(ra, rb) >= d.lo - o.tol && js_max(ra, rb) <= d.hi + o.tol;
+                let inside = minimum(ra, rb) >= d.lo - o.tol && maximum(ra, rb) <= d.hi + o.tol;
                 if inside && b >= t0 - HINGE && a <= t1 + HINGE {
-                    t0 = js_min(t0, a);
-                    t1 = js_max(t1, b);
+                    t0 = minimum(t0, a);
+                    t1 = maximum(t1, b);
                 }
             }
             if !free(d, t0, t1) || t0 < d.t0 - o.tol || t1 > d.t1 + o.tol {
@@ -1002,7 +1002,7 @@ pub fn recognize(lines: &Lines, o: &Options) -> Recognized {
                     draft.first = usize::MAX;
                 }
             }
-            draft.t1 = js_max(draft.t1, p.t1);
+            draft.t1 = maximum(draft.t1, p.t1);
             draft.first = draft.first.min(p.first);
         }
         drafts.push(draft);
@@ -1056,7 +1056,7 @@ fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) -> 
             // The frame of east: t is x and rho is y.
             if p.x >= x0 - o.tol && p.x <= x1 + o.tol && p.y >= y0 - o.tol && p.y <= y1 + o.tol {
                 for q in &ring.pts {
-                    reach = js_max(reach, dot(sub(*q, p), dir));
+                    reach = maximum(reach, dot(sub(*q, p), dir));
                 }
             }
         }
@@ -1082,12 +1082,13 @@ fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) -> 
                 let q = hf.at(h.t0, h.mid());
                 let delta = cross(sub(q, p), hf.u) / s;
                 let x = Vec2::new(p.x + dir.x * delta, p.y + dir.y * delta);
-                let reach = js_max(h.width() / 2.0 + d.width() / 2.0, column_reach(p, dir)) + o.tol;
+                let reach =
+                    maximum(h.width() / 2.0 + d.width() / 2.0, column_reach(p, dir)) + o.tol;
                 if delta < -(h.width() / 2.0) - o.tol || delta > reach {
                     continue;
                 }
                 let tx = hf.t(x);
-                let near = js_max_all([
+                let near = maximum_of([
                     d.width() / 2.0,
                     h.width() / 2.0,
                     column_reach(x, hf.u),
@@ -1215,7 +1216,7 @@ fn taken(
     swings: &[bool],
     o: &Options,
 ) -> Vec<usize> {
-    let widest = js_max(js_max_all(drafts.iter().map(Draft::width)), 0.0);
+    let widest = maximum(maximum_of(drafts.iter().map(Draft::width)), 0.0);
     let ext = widest / 2.0 + o.tol;
     let walls: Vec<Region> = drafts
         .iter()

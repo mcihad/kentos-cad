@@ -11,7 +11,7 @@
 use crate::api::Op;
 use crate::api::json::Json;
 use crate::entity::{Entity, Shape};
-use crate::jsmath::{cos, js_max, js_min, sin};
+use crate::jsmath::{cos, maximum, minimum, sin};
 use crate::labels::engine::{CURVED, UNPLACED};
 use crate::op;
 use crate::store::Store;
@@ -362,10 +362,10 @@ impl Store {
             window = Some(match window {
                 None => b,
                 Some(w) => crate::geometry::Bounds {
-                    min_x: js_min(w.min_x, b.min_x),
-                    min_y: js_min(w.min_y, b.min_y),
-                    max_x: js_max(w.max_x, b.max_x),
-                    max_y: js_max(w.max_y, b.max_y),
+                    min_x: minimum(w.min_x, b.min_x),
+                    min_y: minimum(w.min_y, b.min_y),
+                    max_x: maximum(w.max_x, b.max_x),
+                    max_y: maximum(w.max_y, b.max_y),
                 },
             });
             self.count_unwritten(id, k, &mut out);

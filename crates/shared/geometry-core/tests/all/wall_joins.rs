@@ -5,7 +5,7 @@
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::{WallIn, solve};
-use kentos_geometry_core::jsmath::{js_max, js_round};
+use kentos_geometry_core::jsmath::{js_round, maximum};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -285,7 +285,7 @@ fn walls_join_as_the_reference_says() {
                         ring_area(ring) - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>();
                     let wa = wa.as_f64().unwrap();
                     assert!(
-                        (a - wa).abs() <= TOL * js_max(wa, 1.0),
+                        (a - wa).abs() <= TOL * maximum(wa, 1.0),
                         "{name}: {k}/{ci} bandın alanı {a}, başvuru {wa}"
                     );
                 }

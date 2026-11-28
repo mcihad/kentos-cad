@@ -182,7 +182,7 @@ impl Out {
             to,
             object,
         });
-        self.shift = crate::jsmath::js_max(
+        self.shift = crate::jsmath::maximum(
             self.shift,
             crate::jsmath::hypot(to.x - from.x, to.y - from.y),
         );

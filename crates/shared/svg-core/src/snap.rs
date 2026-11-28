@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, cos, hypot, js_floor, js_max, js_min, or, sin};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, or, sin};
 
 use crate::bezier::{
     Cubic, bez, bez_deriv, flatten_cubic, flatten_sub_path_tol, nearest_on_cubic, ring_signed_area,
@@ -237,10 +237,10 @@ impl Cells {
 
     fn add(&mut self, b: &Bounds, i: usize) {
         let s = self.size;
-        let mut x = js_floor(b.min_x / s);
-        while x <= js_floor(b.max_x / s) {
-            let mut y = js_floor(b.min_y / s);
-            while y <= js_floor(b.max_y / s) {
+        let mut x = f64::floor(b.min_x / s);
+        while x <= f64::floor(b.max_x / s) {
+            let mut y = f64::floor(b.min_y / s);
+            while y <= f64::floor(b.max_y / s) {
                 let key = (num_key(x), num_key(y));
                 match self.at.get(&key) {
                     Some(&k) => self.order[k].push(i),
@@ -259,10 +259,10 @@ impl Cells {
     fn near(&self, p: Pt, r: f64, seen: &mut Vec<bool>, out: &mut Vec<usize>) {
         out.clear();
         let s = self.size;
-        let x0 = js_floor((p[0] - r) / s);
-        let x1 = js_floor((p[0] + r) / s);
-        let y0 = js_floor((p[1] - r) / s);
-        let y1 = js_floor((p[1] + r) / s);
+        let x0 = f64::floor((p[0] - r) / s);
+        let x1 = f64::floor((p[0] + r) / s);
+        let y0 = f64::floor((p[1] - r) / s);
+        let y1 = f64::floor((p[1] + r) / s);
         let mut put = |i: usize, out: &mut Vec<usize>| {
             if i >= seen.len() {
                 seen.resize(i + 1, false);
@@ -331,7 +331,7 @@ impl SnapIndex {
 
     pub fn new(src: &SnapSource) -> Result<SnapIndex, String> {
         let (width, height) = (src.width, src.height);
-        let extent = js_max(js_max(width, height), 1e-6);
+        let extent = maximum(maximum(width, height), 1e-6);
         let mut ix = SnapIndex {
             kinds: src.kinds.clone(),
             fixed: Vec::new(),
@@ -431,10 +431,10 @@ impl SnapIndex {
                         let a = pts[k - 1];
                         let bb = pts[k];
                         let chord_box = Bounds {
-                            min_x: js_min(a[0], bb[0]),
-                            min_y: js_min(a[1], bb[1]),
-                            max_x: js_max(a[0], bb[0]),
-                            max_y: js_max(a[1], bb[1]),
+                            min_x: minimum(a[0], bb[0]),
+                            min_y: minimum(a[1], bb[1]),
+                            max_x: maximum(a[0], bb[0]),
+                            max_y: maximum(a[1], bb[1]),
                         };
                         ix.chord_cells.add(&chord_box, ix.chords.len());
                         ix.chords.push(Chord { a, b: bb, seg });
@@ -590,7 +590,7 @@ impl SnapIndex {
         for l in &self.lines {
             let mut t = (p[0] - l.p[0]) * l.d[0] + (p[1] - l.p[1]) * l.d[1];
             if let Some(len) = l.len {
-                t = js_max(0.0, js_min(len, t));
+                t = maximum(0.0, minimum(len, t));
             }
             offer(
                 &mut best,
@@ -674,12 +674,12 @@ fn solve(f: &dyn Fn(f64) -> f64, t0: f64) -> Option<f64> {
     for _ in 0..30 {
         let v = f(t);
         let h = 1e-7;
-        let d = (f(js_min(1.0, t + h)) - f(js_max(0.0, t - h)))
-            / (js_min(1.0, t + h) - js_max(0.0, t - h));
+        let d = (f(minimum(1.0, t + h)) - f(maximum(0.0, t - h)))
+            / (minimum(1.0, t + h) - maximum(0.0, t - h));
         if !d.is_finite() || d.abs() < 1e-18 {
             return None;
         }
-        let next = js_min(1.0, js_max(0.0, t - v / d));
+        let next = minimum(1.0, maximum(0.0, t - v / d));
         if (next - t).abs() < 1e-12 {
             return (f(next).abs() < 1e-6).then_some(next);
         }

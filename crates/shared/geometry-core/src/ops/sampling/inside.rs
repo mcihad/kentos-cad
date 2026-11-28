@@ -7,7 +7,7 @@ use crate::geom::arrangement::{Area, TOL, WindingIndex, tight_box};
 use crate::geom::intersect::closest_on_edge;
 use crate::geom::region::area_source;
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::ops::geoprocess::Place;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
@@ -33,10 +33,10 @@ impl Inside {
             .collect();
         let mut bounds = empty_bounds();
         for (_, b) in &boxes {
-            bounds.min_x = js_min(bounds.min_x, b.min_x);
-            bounds.min_y = js_min(bounds.min_y, b.min_y);
-            bounds.max_x = js_max(bounds.max_x, b.max_x);
-            bounds.max_y = js_max(bounds.max_y, b.max_y);
+            bounds.min_x = minimum(bounds.min_x, b.min_x);
+            bounds.min_y = minimum(bounds.min_y, b.min_y);
+            bounds.max_x = maximum(bounds.max_x, b.max_x);
+            bounds.max_y = maximum(bounds.max_y, b.max_y);
         }
         Some(Inside {
             tree: PackedTree::build(&boxes),

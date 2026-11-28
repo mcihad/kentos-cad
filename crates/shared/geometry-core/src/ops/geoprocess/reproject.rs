@@ -9,7 +9,7 @@ use crate::crs::{Choice, System, Unreached, transform_in};
 use crate::entity::Shape;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{acos, js_max};
+use crate::jsmath::{acos, maximum};
 use crate::vec2::Vec2;
 
 /// How far a chord may stand off its arc (m).
@@ -35,7 +35,7 @@ fn edge_points(e: &Edge, chorded: &mut usize, out: &mut Vec<Vec2>) {
             } else {
                 sweep.abs()
             };
-            let n = js_max((sweep.abs() / step).ceil(), 1.0) as usize;
+            let n = maximum((sweep.abs() / step).ceil(), 1.0) as usize;
             for k in 1..=n {
                 out.push(point_at(e, k as f64 / n as f64));
             }

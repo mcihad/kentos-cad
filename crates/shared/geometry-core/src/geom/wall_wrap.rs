@@ -20,7 +20,7 @@
 use super::{Body, Cut, Line, Path, Solver, Span, line_path, nearest_s};
 use crate::geom::opening::beside;
 use crate::geom::wall::{self, Spec};
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// A stretch of the wall near an end, `p0` to `p1` before it, between the distances `upper` and `lower` to the path's
 /// left: a turning layer's turn, or what an inner component keeps where the two faces' turns differ.
@@ -87,7 +87,7 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
         b[k] = b[k + 1] + t[k];
     }
     let (tl, tr) = (a[l], b[n - r]);
-    let eps = 1e-9 * js_max(1.0, js_max(o[0].abs(), o[n].abs()));
+    let eps = 1e-9 * maximum(1.0, maximum(o[0].abs(), o[n].abs()));
     // Where the turns stop: the frame's faces, else both at `m`.
     let (top, bottom) = match frame {
         Some((top, bottom)) => {
@@ -113,7 +113,7 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
     let inner = |d: f64| {
         let (over, under) = (d >= top - eps, d <= bottom + eps);
         match (over, under) {
-            (true, true) => js_max(tl, tr),
+            (true, true) => maximum(tl, tr),
             (true, false) => tl,
             (false, true) => tr,
             (false, false) => 0.0,
@@ -158,16 +158,16 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
             // deepest, and the shallower pieces are filled up to it.
             let mut pieces: Vec<(f64, f64, f64)> = Vec::new();
             if o[c] > top + eps {
-                pieces.push((o[c], js_max(o[c + 1], top), tl));
+                pieces.push((o[c], maximum(o[c + 1], top), tl));
             }
-            let (hi, lo) = (js_min(o[c], top), js_max(o[c + 1], bottom));
+            let (hi, lo) = (minimum(o[c], top), maximum(o[c + 1], bottom));
             if hi > lo + eps {
                 pieces.push((hi, lo, 0.0));
             }
             if o[c + 1] < bottom - eps {
-                pieces.push((js_min(o[c], bottom), o[c + 1], tr));
+                pieces.push((minimum(o[c], bottom), o[c + 1], tr));
             }
-            let deepest = pieces.iter().fold(0.0, |m, p| js_max(m, p.2));
+            let deepest = pieces.iter().fold(0.0, |m, p| maximum(m, p.2));
             band.push(deepest);
             for &(upper, lower, p) in &pieces {
                 if p < deepest {
@@ -192,7 +192,7 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
     let mut middle = Vec::new();
     if frame.is_none() || meet {
         if l > 0 && r > 0 {
-            middle.push((l - 1, 0.0, js_max(tl, tr), top));
+            middle.push((l - 1, 0.0, maximum(tl, tr), top));
         } else if frame.is_some() && l > 0 {
             middle.push((l - 1, 0.0, tl, top));
         } else if frame.is_some() && r > 0 {
@@ -212,7 +212,7 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
         patches,
         closures,
         middle,
-        reach: js_max(tl, tr),
+        reach: maximum(tl, tr),
     })
 }
 
@@ -270,7 +270,7 @@ impl Solver<'_> {
         let n = lines.len() - 1;
         let o = wall::boundaries(spec);
         let (left, right) = (o[0], o[n]);
-        let eps = 1e-9 * js_max(1.0, js_max(left.abs(), right.abs()));
+        let eps = 1e-9 * maximum(1.0, maximum(left.abs(), right.abs()));
         let paths: Vec<Option<Path>> = lines
             .iter()
             .map(|l| line_path(l, spec.closed).map(|p| p.0))

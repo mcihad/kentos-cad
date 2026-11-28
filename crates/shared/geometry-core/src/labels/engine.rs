@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use crate::jsmath::{atan2, cos, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, maximum, minimum, sin};
 use crate::text::Font;
 use crate::vec2::Vec2;
 
@@ -408,10 +408,10 @@ impl Obstacles {
             let [x0, y0, x1, y1] = match &ob.shape {
                 Shape::Circle(p, r) => [p.x - r, p.y - r, p.x + r, p.y + r],
                 Shape::Segment(a, b) => [
-                    js_min(a.x, b.x),
-                    js_min(a.y, b.y),
-                    js_max(a.x, b.x),
-                    js_max(a.y, b.y),
+                    minimum(a.x, b.x),
+                    minimum(a.y, b.y),
+                    maximum(a.x, b.x),
+                    maximum(a.y, b.y),
                 ],
                 Shape::Area(_, bbox) => *bbox,
             };
@@ -521,7 +521,7 @@ fn forms(u: &Unit<'_>, font: Font, size: f64) -> Vec<Form> {
             .iter()
             .map(|l| line_width(l, font, c.bold, size))
             .collect();
-        let w = widths.iter().copied().fold(0.0, js_max);
+        let w = widths.iter().copied().fold(0.0, maximum);
         let n = lines.len().max(1) as f64;
         Form {
             lines,
@@ -625,7 +625,7 @@ fn middles(s0: f64, s1: f64, w: f64) -> Vec<f64> {
     }
     let mid = (s0 + s1) / 2.0;
     let room = (len - w) / 2.0;
-    let step = js_max(js_max(w / 4.0, (len - w) / 20.0), 2.0);
+    let step = maximum(maximum(w / 4.0, (len - w) / 20.0), 2.0);
     let mut out = vec![mid];
     let mut k = 1.0;
     while out.len() < PATH_CANDIDATES && k * step <= room + 1e-9 {
@@ -682,7 +682,7 @@ fn path_at(
             }
             let mut e2: f64 = 0.0;
             for p in walk.between(a, b) {
-                e2 = js_max(e2, segment_distance2(p, p0, p1));
+                e2 = maximum(e2, segment_distance2(p, p0, p1));
             }
             let e = e2.sqrt();
             if e > f.size / 2.0 {
@@ -824,12 +824,12 @@ fn area_reach(
     free: bool,
 ) -> ((i32, i32), (f64, f64)) {
     let c = u.cls;
-    let (sx, sy) = (js_max(f.w / 4.0, 2.0), js_max(f.h / 2.0, 2.0));
+    let (sx, sy) = (maximum(f.w / 4.0, 2.0), maximum(f.h / 2.0, 2.0));
     let [x0, y0, x1, y1] = bbox;
     let (bw, bh) = (f.w + 2.0 * c.halo, f.h + 2.0 * c.halo);
     let roomy = bw <= x1 - x0 && bh <= y1 - y0;
     let reach = |near: f64, far: f64, step: f64| -> i32 {
-        let n = (js_max(near, far) / step).ceil();
+        let n = (maximum(near, far) / step).ceil();
         if n.is_finite() {
             (n as i32).clamp(3, AREA_STEPS)
         } else {
@@ -928,7 +928,7 @@ fn outside_at(f: &Form, u: &Unit<'_>, bbox: [f64; 4], pole: Vec2, k: usize) -> O
 /// Where the line from a level box's middle toward `to` leaves the box (2 px out).
 fn edge_toward(c: Vec2, hw: f64, hh: f64, to: Vec2) -> Vec2 {
     let (dx, dy) = (to.x - c.x, to.y - c.y);
-    let t = js_min(
+    let t = minimum(
         if dx != 0.0 {
             (hw + 2.0) / dx.abs()
         } else {

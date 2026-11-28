@@ -20,7 +20,7 @@ use super::{DimensionGeom, Look};
 use crate::entity::Shape;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{hypot, js_min};
+use crate::jsmath::{hypot, minimum};
 use crate::vec2::Vec2;
 
 /// What Hızlı ölçü writes: the dimensions, and how many objects were
@@ -195,7 +195,7 @@ pub fn quick_dimensions(
             .iter()
             .flat_map(|(runs, _)| runs.iter())
             .map(|r| r.distance(at))
-            .reduce(js_min)
+            .reduce(minimum)
             .unwrap_or(0.0),
     };
     let mut seen: Vec<Run> = Vec::new();

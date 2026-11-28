@@ -5,7 +5,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use super::{Atom, Error, Format, Glyph, Line, Shift, Style, paragraph};
 use crate::{
-    jsmath::{js_max, js_min},
+    jsmath::{maximum, minimum},
     text::paragraph::{Run, SCRIPT_SIZE, STACK_BAR, STACK_OVER, STACK_UNDER, Script},
 };
 
@@ -50,10 +50,10 @@ fn union(a: Option<[f64; 4]>, b: [f64; 4]) -> Option<[f64; 4]> {
     Some(match a {
         None => b,
         Some(a) => [
-            js_min(a[0], b[0]),
-            js_min(a[1], b[1]),
-            js_max(a[2], b[2]),
-            js_max(a[3], b[3]),
+            minimum(a[0], b[0]),
+            minimum(a[1], b[1]),
+            maximum(a[2], b[2]),
+            maximum(a[3], b[3]),
         ],
     })
 }
@@ -126,7 +126,7 @@ fn stack(
         ));
         width = num + gap + den;
     } else {
-        width = js_max(num, den);
+        width = maximum(num, den);
         parts.push(moved(
             upper,
             SCRIPT_SIZE,
@@ -300,8 +300,8 @@ pub fn layout(
                 .map(|(i, _)| i);
             match (underline.as_mut(), under) {
                 (Some((index, left, right)), Some(next)) if *index == next => {
-                    *left = js_min(*left, glyph.pen);
-                    *right = js_max(*right, glyph.pen + glyph.advance);
+                    *left = minimum(*left, glyph.pen);
+                    *right = maximum(*right, glyph.pen + glyph.advance);
                 }
                 (_, next) => {
                     finish(underline.take());

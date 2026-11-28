@@ -12,7 +12,7 @@
 //! `triangles[e]` to `triangles[next(e)]`; its twin runs the other way in the
 //! triangle across, or is `NONE` on the convex hull.
 
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::predicates::{incircle, orient2d};
 use crate::vec2::Vec2;
 
@@ -204,10 +204,10 @@ pub fn triangulate(points: &[Vec2]) -> Result<Delaunay, String> {
         f64::NEG_INFINITY,
     );
     for p in points {
-        minx = js_min(minx, p.x);
-        miny = js_min(miny, p.y);
-        maxx = js_max(maxx, p.x);
-        maxy = js_max(maxy, p.y);
+        minx = minimum(minx, p.x);
+        miny = minimum(miny, p.y);
+        maxx = maximum(maxx, p.x);
+        maxy = maximum(maxy, p.y);
     }
     let c = Vec2::new((minx + maxx) / 2.0, (miny + maxy) / 2.0);
 
@@ -273,7 +273,7 @@ pub fn triangulate(points: &[Vec2]) -> Result<Delaunay, String> {
     let hash_size = ((n as f64).sqrt().ceil() as usize).max(1);
     let key = |p: Vec2| -> usize {
         let k = (pseudo_angle(p.x - center.x, p.y - center.y) * hash_size as f64).floor();
-        (js_max(k, 0.0) as usize) % hash_size
+        (maximum(k, 0.0) as usize) % hash_size
     };
     let mut hull_hash = vec![NONE; hash_size];
     let most_triangles = (2 * n).saturating_sub(5).max(1);

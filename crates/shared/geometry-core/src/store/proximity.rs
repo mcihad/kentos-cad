@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use super::rtree::{Nearer, NearestQueue, PackedTree};
 use super::{Store, padded};
 use crate::geometry::Bounds;
-use crate::jsmath::js_max;
+use crate::jsmath::maximum;
 use crate::ops::proximity::{
     center_distance, interiors_overlap, nearest_points, overlap_area, shared_boundary,
 };
@@ -72,9 +72,9 @@ const SLACK: f64 = 2.0 * TOLERANCE;
 
 /// The least distance two boxes' contents can have, less `SLACK`.
 fn gap(a: &Bounds, b: &Bounds) -> f64 {
-    let dx = js_max(0.0, js_max(b.min_x - a.max_x, a.min_x - b.max_x));
-    let dy = js_max(0.0, js_max(b.min_y - a.max_y, a.min_y - b.max_y));
-    js_max(0.0, (dx * dx + dy * dy).sqrt() - SLACK)
+    let dx = maximum(0.0, maximum(b.min_x - a.max_x, a.min_x - b.max_x));
+    let dy = maximum(0.0, maximum(b.min_y - a.max_y, a.min_y - b.max_y));
+    maximum(0.0, (dx * dx + dy * dy).sqrt() - SLACK)
 }
 
 fn point_box(p: Vec2) -> Bounds {

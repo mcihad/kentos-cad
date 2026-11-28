@@ -8,7 +8,7 @@ use crate::block::{insert_local_xy, insert_matrix_xy, shows_nothing};
 use crate::block_dynamic::{GripKind, ParamGrip};
 use crate::entity::{ParamValue, Params, Shape};
 use crate::geom::affine::{apply, apply_linear};
-use crate::jsmath::{hypot, js_max};
+use crate::jsmath::{hypot, maximum};
 use crate::vec2::Vec2;
 
 impl Store {
@@ -39,9 +39,9 @@ impl Store {
         let factors = (*scale, y_scale.unwrap_or(*scale));
         let m = insert_matrix_xy(flat.base, *p, factors, *rotation, mirror.unwrap_or(false));
         let reach = self.extent(Some(&[id])).map_or(1.0, |b| {
-            js_max(b.max_x - b.min_x, b.max_y - b.min_y)
+            maximum(b.max_x - b.min_x, b.max_y - b.min_y)
                 / 2.0
-                / js_max(factors.0.abs(), factors.1.abs())
+                / maximum(factors.0.abs(), factors.1.abs())
         });
         dynamic
             .grips(params.as_ref(), reach)

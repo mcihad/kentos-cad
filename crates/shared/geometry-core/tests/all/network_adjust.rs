@@ -7,7 +7,7 @@
 //! test, the refusals word for word; by name, as the web calls them.
 
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::{atan2, hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{atan2, hypot, maximum, minimum};
 use serde_json::{Value, json};
 
 fn file() -> Value {
@@ -32,7 +32,7 @@ fn f(v: &Value) -> f64 {
 /// Within `abs` of the reference, or `rel` of it.
 fn near(got: &Value, want: &Value, abs: f64, rel: f64) -> bool {
     match (got.as_f64(), want.as_f64()) {
-        (Some(g), Some(w)) => (g - w).abs() <= js_max(abs, rel * w.abs()),
+        (Some(g), Some(w)) => (g - w).abs() <= maximum(abs, rel * w.abs()),
         _ => got.is_null() && want.is_null(),
     }
 }
@@ -132,7 +132,7 @@ fn the_adjustments_give_what_the_reference_gives() {
                 // The axis's bearing only where the ellipse is no circle.
                 if (f(&w["a"]) - f(&w["b"])) > 1e-3 * f(&w["a"]) {
                     let d = (f(&g["theta"]) - f(&w["theta"])).abs();
-                    let d = js_min(d, std::f64::consts::PI - d);
+                    let d = minimum(d, std::f64::consts::PI - d);
                     assert!(d <= 1e-6, "{name} {p}: θ {} ≠ {}", g["theta"], w["theta"]);
                 }
             } else {
@@ -154,7 +154,7 @@ fn the_adjustments_give_what_the_reference_gives() {
             {
                 assert_eq!(g["station"], w["station"], "{name}");
                 let d = (f(&g["z"]) - f(&w["z"])).abs();
-                let d = js_min(d, std::f64::consts::TAU - d);
+                let d = minimum(d, std::f64::consts::TAU - d);
                 assert!(
                     d <= angle * 10.0,
                     "{name}: {} yöneltmesi {} ≠ {}",

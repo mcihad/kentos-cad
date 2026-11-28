@@ -5,7 +5,7 @@
 
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::opening::{self, Spec};
-use kentos_geometry_core::jsmath::{js_max, js_min};
+use kentos_geometry_core::jsmath::{maximum, minimum};
 use kentos_geometry_core::vec2::Vec2;
 
 const TOL: f64 = 1e-9;
@@ -85,8 +85,8 @@ fn a_use_zone_stands_out_of_the_face_it_opens_to() {
         assert!((area(&zone) - 0.88 * 1.5).abs() < 1e-9, "{side}: {zone:?}");
         let ys: Vec<f64> = zone.iter().map(|p| p.y).collect();
         let (lo, hi) = (
-            ys.iter().cloned().fold(f64::MAX, js_min),
-            ys.iter().cloned().fold(f64::MIN, js_max),
+            ys.iter().cloned().fold(f64::MAX, minimum),
+            ys.iter().cloned().fold(f64::MIN, maximum),
         );
         // From one face, 1.5 out: never through the wall.
         assert!(((hi - lo) - 1.5).abs() < TOL, "{side}: {ys:?}");
@@ -203,7 +203,7 @@ fn a_door_and_a_window_show_their_parts_by_the_scale() {
                 kentos_geometry_core::entity::Shape::Line { a, b }
                     if matches!(m.part, Face | Glass) =>
                 {
-                    Some((m.part, js_min(a.x, b.x), js_max(a.x, b.x)))
+                    Some((m.part, minimum(a.x, b.x), maximum(a.x, b.x)))
                 }
                 _ => None,
             })

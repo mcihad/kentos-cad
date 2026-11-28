@@ -26,7 +26,7 @@ use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geometry::Bounds;
-use crate::jsmath::{PI, cos, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, maximum, minimum, sin};
 use crate::tools::navigation::{Fit, fit};
 use crate::vec2::Vec2;
 
@@ -99,10 +99,10 @@ impl Store {
             Some(match acc {
                 None => b,
                 Some(a) => Bounds {
-                    min_x: js_min(a.min_x, b.min_x),
-                    min_y: js_min(a.min_y, b.min_y),
-                    max_x: js_max(a.max_x, b.max_x),
-                    max_y: js_max(a.max_y, b.max_y),
+                    min_x: minimum(a.min_x, b.min_x),
+                    min_y: minimum(a.min_y, b.min_y),
+                    max_x: maximum(a.max_x, b.max_x),
+                    max_y: maximum(a.max_y, b.max_y),
                 },
             })
         })
@@ -158,7 +158,7 @@ pub fn overview_picture_of(
     let mut canvas = Canvas::new(request.width, request.height, request.dpr, f);
     let own = canvas.dot;
     for layer in layers {
-        canvas.dot = js_max(own as f64, (layer.dot * request.dpr + 0.5).floor()) as i64;
+        canvas.dot = maximum(own as f64, (layer.dot * request.dpr + 0.5).floor()) as i64;
         canvas.lift = (canvas.dot - own) / 2;
         layer.store.draw_overview_on(&mut canvas, request);
     }
@@ -194,7 +194,7 @@ impl Canvas {
             cx: f.cx,
             cy: f.cy,
             kp: f.k * dpr,
-            dot: js_max(1.0, (dpr + 0.5).floor()) as i64,
+            dot: maximum(1.0, (dpr + 0.5).floor()) as i64,
             lift: 0,
         }
     }
@@ -282,10 +282,10 @@ impl Canvas {
             if ay == by {
                 continue;
             }
-            let lo = (js_min(ay, by) - 0.5).ceil();
-            let hi = (js_max(ay, by) - 0.5).ceil();
-            let first = js_max(lo, 0.0) as usize;
-            let last = js_min(hi, self.h as f64) as usize;
+            let lo = (minimum(ay, by) - 0.5).ceil();
+            let hi = (maximum(ay, by) - 0.5).ceil();
+            let first = maximum(lo, 0.0) as usize;
+            let last = minimum(hi, self.h as f64) as usize;
             for (j, row) in rows.iter_mut().enumerate().take(last).skip(first) {
                 let yc = j as f64 + 0.5;
                 if (ay <= yc) != (by <= yc) {
@@ -296,8 +296,8 @@ impl Canvas {
         for (j, xs) in rows.iter_mut().enumerate() {
             xs.sort_by(f64::total_cmp);
             for pair in xs.as_chunks::<2>().0.iter() {
-                let from = js_max((pair[0] - 0.5).ceil(), 0.0) as i64;
-                let to = js_min((pair[1] - 0.5).ceil(), self.w as f64) as i64;
+                let from = maximum((pair[0] - 0.5).ceil(), 0.0) as i64;
+                let to = minimum((pair[1] - 0.5).ceil(), self.w as f64) as i64;
                 for i in from..to {
                     self.put(i, j as i64, c, FILL_ALPHA);
                 }
@@ -307,7 +307,10 @@ impl Canvas {
 
     /// Circle and arc points: n equal steps from `a0` over `sweep`, both ends.
     fn arc(&self, c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
-        let n = js_min(js_max(4.0, (sweep.abs() * r * self.kp / 4.0).ceil()), 720.0) as usize;
+        let n = minimum(
+            maximum(4.0, (sweep.abs() * r * self.kp / 4.0).ceil()),
+            720.0,
+        ) as usize;
         (0..=n)
             .map(|i| {
                 let a = a0 + sweep * i as f64 / n as f64;

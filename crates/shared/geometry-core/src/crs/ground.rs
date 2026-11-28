@@ -35,7 +35,7 @@ use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geodesy::tm_scale;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
-use crate::jsmath::{PI, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, hypot, maximum, minimum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -325,7 +325,7 @@ fn arc_integral(
 ) -> Option<f64> {
     // At most 2¹⁶ cuts: an arc thousands of kilometres long is not measured finer.
     let turns = arc.sweep.abs() / TURN;
-    let n = (libm::ceil(js_max(turns, arc.r * arc.sweep.abs() / cut)) as usize).clamp(1, 1 << 16);
+    let n = (libm::ceil(maximum(turns, arc.r * arc.sweep.abs() / cut)) as usize).clamp(1, 1 << 16);
     let delta = arc.sweep / n as f64;
     let point = |i: usize| match i {
         0 => a,
@@ -464,8 +464,8 @@ pub fn ground_measures(
         vertices.pop();
         if i == 0 {
             for &(lat, _) in &geo {
-                lat_min = js_min(lat_min, lat);
-                lat_max = js_max(lat_max, lat);
+                lat_min = minimum(lat_min, lat);
+                lat_max = maximum(lat_max, lat);
             }
         }
         // The vertices' geodesic polygon, turned as the plane turns.

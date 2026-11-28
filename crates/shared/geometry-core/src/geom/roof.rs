@@ -20,7 +20,7 @@ use crate::Vec2;
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
 use crate::geom::arch::{HEAD_MM, LABEL_MM, Level};
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::text::TextAlign;
 
 /// Lengths, heights and areas closer than this are one, metres.
@@ -196,7 +196,7 @@ pub fn part_top(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<f64> {
             let high = ring
                 .iter()
                 .map(|q| height_at(pts, spec, *q).unwrap_or(0.0))
-                .fold(f64::NEG_INFINITY, js_max);
+                .fold(f64::NEG_INFINITY, maximum);
             Some(spec.base + high + part.rise)
         }
     }
@@ -377,7 +377,7 @@ fn convex(ring: &[Vec2]) -> bool {
         let cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
         cross
             >= -EPS
-                * js_max(
+                * maximum(
                     1.0,
                     hypot(b.x - a.x, b.y - a.y) * hypot(c.x - b.x, c.y - b.y),
                 )
@@ -399,10 +399,10 @@ fn crosses(ring: &[Vec2]) -> bool {
         }
     };
     let on = |a: Vec2, b: Vec2, c: Vec2| {
-        c.x >= crate::jsmath::js_min(a.x, b.x)
-            && c.x <= crate::jsmath::js_max(a.x, b.x)
-            && c.y >= crate::jsmath::js_min(a.y, b.y)
-            && c.y <= crate::jsmath::js_max(a.y, b.y)
+        c.x >= crate::jsmath::minimum(a.x, b.x)
+            && c.x <= crate::jsmath::maximum(a.x, b.x)
+            && c.y >= crate::jsmath::minimum(a.y, b.y)
+            && c.y <= crate::jsmath::maximum(a.y, b.y)
     };
     let meet = |a: Vec2, b: Vec2, c: Vec2, d: Vec2| {
         let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));
@@ -538,7 +538,7 @@ pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem>
             .find(|f| inside(&f.ring, p))
             .and_then(|f| {
                 let k = edges.iter().position(|e| e.0 == f.edge)?;
-                Some(js_max(
+                Some(maximum(
                     0.0,
                     at(plane(ring[k], ring[(k + 1) % n], f.slope), p),
                 ))
@@ -553,7 +553,7 @@ pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem>
                 .map(|s| at(plane(ring[k], ring[(k + 1) % n], s), p))
         })
         .fold(None, |m: Option<f64>, z| {
-            Some(m.map_or(z, |m| js_min(m, z)))
+            Some(m.map_or(z, |m| minimum(m, z)))
         })
         .unwrap_or(0.0))
 }
@@ -564,7 +564,7 @@ pub fn ridge_rise(pts: &[Vec2], spec: &RoofSpec) -> Result<f64, Problem> {
     let mut top = 0.0_f64;
     for f in &faces {
         for q in &f.ring {
-            top = js_max(top, height_at(pts, spec, *q)?);
+            top = maximum(top, height_at(pts, spec, *q)?);
         }
     }
     Ok(top)
@@ -743,7 +743,7 @@ fn face_middle(f: &Face, a: Vec2, b: Vec2, inward: Vec2) -> Vec2 {
             let s = (px * inward.y - py * inward.x) / den;
             (t > EPS && (0.0..=1.0).contains(&s)).then_some(t)
         })
-        .fold(f64::INFINITY, js_min);
+        .fold(f64::INFINITY, minimum);
     if reach.is_finite() {
         Vec2::new(
             mid.x + inward.x * reach / 2.0,
@@ -868,7 +868,7 @@ pub fn along_eaves(pts: &[Vec2], spec: &RoofSpec, d: f64) -> Vec<(usize, [Vec2; 
     // Each edge's outward normal.
     let normal = |i: usize| {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let l = js_max(hypot(b.x - a.x, b.y - a.y), EPS);
+        let l = maximum(hypot(b.x - a.x, b.y - a.y), EPS);
         if ccw {
             Vec2::new((b.y - a.y) / l, -(b.x - a.x) / l)
         } else {
@@ -983,7 +983,7 @@ pub fn downpipe_way(
             Vec2::new(-along.y, along.x)
         };
         let (px, py) = (part.at.x - a.x, part.at.y - a.y);
-        let t = js_max(0.0, js_min(l, px * along.x + py * along.y));
+        let t = maximum(0.0, minimum(l, px * along.x + py * along.y));
         let d = hypot(px - along.x * t, py - along.y * t);
         if best.is_none_or(|(bd, ..)| d < bd) {
             best = Some((d, along, out));
@@ -992,7 +992,7 @@ pub fn downpipe_way(
     let (_, along, out) = best?;
     // Back from its outlet to the wall: its middle the clips' standoff and its radius off the wall's face.
     let back = wall(part.at, Vec2::new(-out.x, -out.y))
-        .map_or(0.0, |w| js_max(0.0, w - PIPE_STANDOFF - part.width / 2.0));
+        .map_or(0.0, |w| maximum(0.0, w - PIPE_STANDOFF - part.width / 2.0));
     Some(PipeWay {
         outlet: part.at,
         down: Vec2::new(part.at.x - out.x * back, part.at.y - out.y * back),
@@ -1019,7 +1019,7 @@ fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> 
             hypot(p[1].x - p[0].x, p[1].y - p[0].y)
                 .total_cmp(&hypot(q[1].x - q[0].x, q[1].y - q[0].y))
         })?;
-        let l = js_max(hypot(b.x - a.x, b.y - a.y), EPS);
+        let l = maximum(hypot(b.x - a.x, b.y - a.y), EPS);
         let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
         let ccw = area2(pts) >= 0.0;
         let outward = if ccw {
@@ -1137,7 +1137,7 @@ fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
             }
         }
         if let Some(z) = part_top(pts, spec, part) {
-            let right = ring.iter().map(|q| q.x).fold(f64::NEG_INFINITY, js_max);
+            let right = ring.iter().map(|q| q.x).fold(f64::NEG_INFINITY, maximum);
             let mid = ring.iter().map(|q| q.y).sum::<f64>() / ring.len() as f64;
             out.push(piece(text(
                 Vec2::new(right + h * 0.5, mid),
@@ -1369,7 +1369,7 @@ mod tests {
             [Line::Ridge, Line::Hip, Line::Hip, Line::Hip, Line::Hip]
         );
         let ridge = l.iter().find(|l| l.kind == Line::Ridge).unwrap();
-        let (x0, x1) = (js_min(ridge.a.x, ridge.b.x), js_max(ridge.a.x, ridge.b.x));
+        let (x0, x1) = (minimum(ridge.a.x, ridge.b.x), maximum(ridge.a.x, ridge.b.x));
         assert!(
             (x0 - 4.5).abs() < 1e-9 && (x1 - 7.5).abs() < 1e-9 && (ridge.a.y - 4.5).abs() < 1e-9,
             "{ridge:?}"
@@ -1481,7 +1481,7 @@ mod tests {
             .unwrap()
             .iter()
             .map(|q| height_at(&pts, &s, *q).unwrap())
-            .fold(f64::NEG_INFINITY, js_max);
+            .fold(f64::NEG_INFINITY, maximum);
         assert!((part_top(&pts, &s, &vent).unwrap() - (6.0 + high + 0.6)).abs() < 1e-12);
         // A window on the south face: its width along the eaves, its 1.18 m down the slope 1.13 m in plan.
         let window = Part {

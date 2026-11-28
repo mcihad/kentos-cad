@@ -17,7 +17,7 @@
 
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{INLINE_DEGREES, JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, hypot, maximum, minimum, sin};
 use crate::vec2::Vec2;
 
 /// Slack, metres.
@@ -181,8 +181,8 @@ pub fn gaps(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<[Option<Gap>; 2]
                 continue;
             }
             let (tc, td) = (dot(sub(c, a), u), dot(sub(d, a), u));
-            let lo = js_max(0.0, js_min(tc, td));
-            let hi = js_min(l, js_max(tc, td));
+            let lo = maximum(0.0, minimum(tc, td));
+            let hi = minimum(l, maximum(tc, td));
             if hi - lo <= TIE {
                 continue;
             }

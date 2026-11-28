@@ -6,7 +6,7 @@
 //! of `fixtures/navigation/v1/cases.json` (scripts/fixtures/navigation_cases.py).
 
 use crate::geometry::Bounds;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// From the drawing area's edges, logical pixels.
 pub const MARGIN: f64 = 8.0;
@@ -144,12 +144,12 @@ pub struct Fit {
 pub fn fit(extent: &Bounds, size: (f64, f64)) -> Fit {
     let cx = (extent.min_x + extent.max_x) / 2.0;
     let cy = (extent.min_y + extent.max_y) / 2.0;
-    let w = js_max(extent.max_x - extent.min_x, 1.0);
-    let h = js_max(extent.max_y - extent.min_y, 1.0);
+    let w = maximum(extent.max_x - extent.min_x, 1.0);
+    let h = maximum(extent.max_y - extent.min_y, 1.0);
     Fit {
         cx,
         cy,
-        k: js_min((size.0 - 2.0 * PAD) / w, (size.1 - 2.0 * PAD) / h),
+        k: minimum((size.0 - 2.0 * PAD) / w, (size.1 - 2.0 * PAD) / h),
     }
 }
 

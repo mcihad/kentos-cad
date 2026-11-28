@@ -10,7 +10,7 @@ use crate::entity::{Entity, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path, is_arc_bulge, reverse_bulge_path};
 use crate::geometry::dist_to_segment;
-use crate::jsmath::{PI, acos, atan, cos, hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{PI, acos, atan, cos, hypot, maximum, minimum, sin, tan};
 use crate::op;
 use crate::ops::fillet::{CornerOp, CornerResult, corner_of_path};
 use crate::vec2::Vec2;
@@ -85,7 +85,7 @@ fn vertex(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, i: usize, op: &Cor
     ) else {
         return Vertex::Plain;
     };
-    let turn = acos(js_max(-1.0, js_min(1.0, din.x * dout.x + din.y * dout.y)));
+    let turn = acos(maximum(-1.0, minimum(1.0, din.x * dout.x + din.y * dout.y)));
     if turn < STRAIGHT || PI - turn < STRAIGHT {
         return Vertex::Plain;
     }
@@ -167,7 +167,7 @@ pub fn corners_of_path_where(
         let j = (i + 1) % n;
         hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y)
     };
-    let eps = |l: f64| 1e-9 * js_max(1.0, l);
+    let eps = |l: f64| 1e-9 * maximum(1.0, l);
     // First each corner on its own edges.
     let mut take: Vec<bool> = (0..n)
         .map(|i| match vertices[i] {
@@ -398,7 +398,7 @@ fn thin(pts: &[Vec2], from: usize, to: usize, tol: f64, keep: &mut [bool], worst
         thin(pts, from, far, tol, keep, worst);
         thin(pts, far, to, tol, keep, worst);
     } else {
-        *worst = js_max(*worst, far_d);
+        *worst = maximum(*worst, far_d);
     }
 }
 
@@ -471,7 +471,7 @@ fn simplify_path(
             let d = |k: usize| {
                 kept.iter()
                     .map(|q| hypot(pts[k].x - q.x, pts[k].y - q.y))
-                    .fold(f64::INFINITY, js_min)
+                    .fold(f64::INFINITY, minimum)
             };
             d(i).total_cmp(&d(j))
         });
@@ -516,7 +516,7 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
         for part in area_parts(&e.shape).iter() {
             let r = simplify(&e.with(part.clone()), tol)?;
             removed += r.done;
-            deviation = js_max(deviation, r.deviation);
+            deviation = maximum(deviation, r.deviation);
             shapes.push(r.entity.shape);
         }
         return Some(Reshaped {
@@ -557,7 +557,7 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
                     .map(|h| {
                         let (hp, r, d) = simplify_path(&h.pts, h.bulges.as_deref(), true, tol);
                         removed += r;
-                        dev = js_max(dev, d);
+                        dev = maximum(dev, d);
                         Ring {
                             pts: hp.pts,
                             bulges: hp.bulges,

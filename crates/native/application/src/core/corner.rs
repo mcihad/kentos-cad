@@ -31,7 +31,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::intersect::closest_on_edge;
-use kentos_geometry_core::jsmath::{PI, acos, cos, hypot, js_max, js_min, sin, tan};
+use kentos_geometry_core::jsmath::{PI, acos, cos, hypot, maximum, minimum, sin, tan};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::fillet::{
@@ -618,7 +618,7 @@ pub fn line_corners(doc: &Document, lines: &[Slot], size: Size) -> LineCorners {
         .iter()
         .map(|&((k, e), (j, f))| {
             let ((u1, l1), (u2, l2)) = (away(k, e), away(j, f));
-            let phi = acos(js_max(-1.0, js_min(1.0, u1.x * u2.x + u1.y * u2.y)));
+            let phi = acos(maximum(-1.0, minimum(1.0, u1.x * u2.x + u1.y * u2.y)));
             if !(1e-6..=PI - 1e-6).contains(&phi) {
                 return None;
             }
@@ -633,7 +633,7 @@ pub fn line_corners(doc: &Document, lines: &[Slot], size: Size) -> LineCorners {
                 at: ends(k)[e],
                 u1,
                 u2,
-                reach: js_min(l1, l2),
+                reach: minimum(l1, l2),
                 phi,
             };
             Some((geom, d1, d2))

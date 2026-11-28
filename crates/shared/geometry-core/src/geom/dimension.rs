@@ -7,7 +7,7 @@
 use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_max_all, js_min, or, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, maximum_of, minimum, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -258,7 +258,7 @@ fn cut_segment(seg: [Vec2; 2], cuts: &[Vec2], half: f64) -> Vec<[Vec2; 2]> {
         return vec![seg];
     }
     let u = Vec2::new((b.x - a.x) / len, (b.y - a.y) / len);
-    let near = js_max(1e-9, 1e-12 * js_max(a.x.abs(), a.y.abs()));
+    let near = maximum(1e-9, 1e-12 * maximum(a.x.abs(), a.y.abs()));
     let mut gaps: Vec<(f64, f64)> = cuts
         .iter()
         .filter_map(|p| {
@@ -275,9 +275,9 @@ fn cut_segment(seg: [Vec2; 2], cuts: &[Vec2], half: f64) -> Vec<[Vec2; 2]> {
     let mut from = 0.0;
     for (g0, g1) in gaps {
         if g0 > from {
-            out.push([add(a, u, from), add(a, u, js_min(g0, len))]);
+            out.push([add(a, u, from), add(a, u, minimum(g0, len))]);
         }
-        from = js_max(from, g1);
+        from = maximum(from, g1);
     }
     if from < len {
         out.push([add(a, u, from), b]);
@@ -451,7 +451,7 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
             lines.push([at2(c, t, rp + gap), at2(c, t, r + look.ext_beyond() * h)]);
         }
     }
-    let steps = js_max(8.0, (sweep / (PI / 36.0)).ceil());
+    let steps = maximum(8.0, (sweep / (PI / 36.0)).ceil());
     let mut i = 0.0;
     while i < steps {
         lines.push([
@@ -507,7 +507,7 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
         return None;
     }
     let u = Vec2::new((d.b.x - c.x) / r, (d.b.y - c.y) / r);
-    let leader = js_max(0.0, d.offset);
+    let leader = maximum(0.0, d.offset);
     let end = add(d.b, u, leader);
     let start = if diameter { add(c, u, -r) } else { c };
     let mut lines = vec![[start, end]];
@@ -561,7 +561,7 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
             Some(c) => hypot(p.x - c.x, p.y - c.y),
             None => d.offset,
         },
-        "radius" | "diameter" => js_max(
+        "radius" | "diameter" => maximum(
             0.0,
             hypot(p.x - d.a.x, p.y - d.a.y) - hypot(d.b.x - d.a.x, d.b.y - d.a.y),
         ),
@@ -574,13 +574,13 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
         },
         "jogged" => kinds::jog_at(d, p).unwrap_or(d.offset),
         // docs/adr/0322: a centre mark's axis lines past the curve, an axis past its end; a level has none.
-        "centerMark" => js_max(
+        "centerMark" => maximum(
             0.0,
             hypot(p.x - d.a.x, p.y - d.a.y) - hypot(d.b.x - d.a.x, d.b.y - d.a.y),
         ),
         "centerLine" => {
             let l = or(hypot(d.b.x - d.a.x, d.b.y - d.a.y), 1.0);
-            js_max(
+            maximum(
                 0.0,
                 ((p.x - d.b.x) * (d.b.x - d.a.x) + (p.y - d.b.y) * (d.b.y - d.a.y)) / l,
             )
@@ -602,8 +602,8 @@ pub fn ordinate_axis_for(a: Vec2, p: Vec2) -> f64 {
 
 /// Horizontal (ΔY, 0°) or vertical (ΔX, 90°) for a linear dimension placed at p (AutoCAD's rule).
 pub fn linear_angle_for(a: Vec2, b: Vec2, p: Vec2) -> f64 {
-    let out_x = js_max_all([js_min(a.x, b.x) - p.x, p.x - js_max(a.x, b.x), 0.0]);
-    let out_y = js_max_all([js_min(a.y, b.y) - p.y, p.y - js_max(a.y, b.y), 0.0]);
+    let out_x = maximum_of([minimum(a.x, b.x) - p.x, p.x - maximum(a.x, b.x), 0.0]);
+    let out_y = maximum_of([minimum(a.y, b.y) - p.y, p.y - maximum(a.y, b.y), 0.0]);
     if out_x > out_y { 90.0 } else { 0.0 }
 }
 

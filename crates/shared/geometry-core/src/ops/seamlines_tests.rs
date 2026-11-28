@@ -3,7 +3,7 @@
 //! the corners' bisectors to the other), the polygons' areas, the faults, and the grid path's bottleneck.
 
 use super::*;
-use crate::jsmath::js_min;
+use crate::jsmath::minimum;
 
 const X0: f64 = 487_000.0;
 const Y0: f64 = 4_420_000.0;
@@ -103,11 +103,11 @@ fn staggered_strips_take_the_corners_bisectors() {
     // Every seam point is as far from the first's end as from the second's.
     for p in &seam[1..seam.len() - 1] {
         let q = [p[0] - X0, p[1] - Y0];
-        let d1 = js_min(
+        let d1 = minimum(
             to_polyline(q, &[[510.0, 117.0], [510.0, 108.0]]),
             to_polyline(q, &[[520.0, 117.0], [510.0, 117.0]]),
         );
-        let d2 = js_min(
+        let d2 = minimum(
             to_polyline(q, &[[510.0, 108.0], [520.0, 108.0]]),
             to_polyline(q, &[[520.0, 108.0], [520.0, 117.0]]),
         );

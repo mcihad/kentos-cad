@@ -5,7 +5,7 @@
 //! (i.out ?? i) and (i+1.in ?? i+1): both missing makes it a straight line.
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, js_max, js_round, pow, sin, tan};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, js_round, maximum, pow, sin, tan};
 use kentos_style_core::js::number;
 
 use crate::shape::{PathNode, Pt, SubPath};
@@ -400,7 +400,7 @@ pub fn arc_to_cubics(
     }
     let num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
     let den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
-    let coef = (if large != sweep { 1.0 } else { -1.0 }) * js_max(0.0, num / den).sqrt();
+    let coef = (if large != sweep { 1.0 } else { -1.0 }) * maximum(0.0, num / den).sqrt();
     let cxp = (coef * rx * y1p) / ry;
     let cyp = (-coef * ry * x1p) / rx;
     let cx = cs * cxp - sn * cyp + (x1 + x2) / 2.0;
@@ -418,7 +418,7 @@ pub fn arc_to_cubics(
     } else if sweep && dt < 0.0 {
         dt += 2.0 * PI;
     }
-    let n = js_max(1.0, (dt.abs() / (PI / 2.0) - 1e-9).ceil());
+    let n = maximum(1.0, (dt.abs() / (PI / 2.0) - 1e-9).ceil());
     let step = dt / n;
     let k = (4.0 / 3.0) * tan(step / 4.0);
     let point = |t: f64| -> Pt {

@@ -1,7 +1,7 @@
 //! Angles, circles and arcs (`apps/web/src/model/geom/arc.ts`).
 
 use crate::api::Op;
-use crate::jsmath::{TAU, atan2, cos, hypot, js_max, sin, tan};
+use crate::jsmath::{TAU, atan2, cos, hypot, maximum, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -110,7 +110,7 @@ pub const DEFAULT_STEP: f64 = TAU / 72.0;
 
 pub fn tessellate_arc(a: &ArcGeom, max_step: f64) -> Vec<Vec2> {
     let sw = sweep(a.a0, a.a1);
-    let n = js_max(2.0, (sw / max_step).ceil());
+    let n = maximum(2.0, (sw / max_step).ceil());
     let mut pts = Vec::new();
     let mut i = 0.0;
     while i <= n {

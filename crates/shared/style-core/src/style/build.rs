@@ -15,7 +15,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Shape, is_closed_outline};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
     FILL, FILLS, LINE, MARKER, MARKERS, MIXED, REVERSED, SOURCE, drawn, measure_record,
@@ -899,7 +899,7 @@ fn output_parts(
     // Bulged edges as points the same way; a CAD line type's dash is still measured on `s` itself.
     let refined = round.and_then(|d| deep::refined(s, &d));
     let s = refined.as_ref().unwrap_or(s);
-    let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale, 1e-6) * 0.005 / 1000.);
+    let tolerance = (cx.plot_precision).then_some(maximum(env.plot_scale, 1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
         Ok(parts) => match cx.deep {
             Some(d) => parts
@@ -1790,7 +1790,7 @@ fn draw_chart(
         ChartKind::Bar | ChartKind::Stacked => {
             let width = chart.bar_width.unwrap_or(chart.size / 4.0);
             let vals: Vec<f64> = if chart.kind == ChartKind::Stacked {
-                vals.iter().map(|v| js_max(*v, 0.0)).collect()
+                vals.iter().map(|v| maximum(*v, 0.0)).collect()
             } else {
                 vals
             };
@@ -1966,7 +1966,7 @@ fn marker_px(symbol: &Symbol, env: &Env<'_>, cx: &Cx) -> f64 {
             }
             _ => None,
         })
-        .fold(0.0, js_max)
+        .fold(0.0, maximum)
 }
 
 /// The marker symbol an object's point draws with: its renderer's (or a
@@ -2046,7 +2046,7 @@ fn draw_whole(
             };
             let cells = kentos_geometry_core::jsmath::js_round(radius_px / f64::from(*quality));
             let r_cells = if cells.is_finite() {
-                js_max(cells, 1.0) as i64
+                maximum(cells, 1.0) as i64
             } else {
                 1
             };
@@ -2226,9 +2226,9 @@ fn draw_whole(
                         marker_of(program, &values_of(p.i), p.simple)
                             .map_or(0.0, |sym| marker_px(sym, env, cx))
                     })
-                    .fold(0.0, js_max)
+                    .fold(0.0, maximum)
                     * std::f64::consts::SQRT_2;
-                let s = js_max(s, 4.0);
+                let s = maximum(s, 4.0);
                 let csize = centre_symbol.map_or(0.0, |sym| {
                     marker_px(sym, env, cx) * std::f64::consts::SQRT_2
                 });
@@ -2305,7 +2305,7 @@ fn draw_whole(
                     if !(b.max_x > b.min_x && b.max_y > b.min_y) {
                         return;
                     }
-                    let m = 0.1 * js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+                    let m = 0.1 * maximum(b.max_x - b.min_x, b.max_y - b.min_y);
                     Bounds {
                         min_x: b.min_x - m,
                         min_y: b.min_y - m,

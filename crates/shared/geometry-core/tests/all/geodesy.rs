@@ -7,7 +7,7 @@
 
 use kentos_geometry_core::api;
 use kentos_geometry_core::geodesy::{Tm, tm_forward};
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/geodesy/v1/tm-forward.json");
@@ -41,7 +41,7 @@ fn every_case_lands_where_proj_puts_it() {
             c["north"].as_f64().unwrap_or(0.0),
         );
         let got = tm_forward(&tm(&c["tm"]), lat, lon).expect("a point");
-        let far = js_max((got.x - want.0).abs(), (got.y - want.1).abs());
+        let far = maximum((got.x - want.0).abs(), (got.y - want.1).abs());
         if far > 1e-6 {
             off.push(format!("{} {lat},{lon}: {far:e} m", c["grid"]));
         }

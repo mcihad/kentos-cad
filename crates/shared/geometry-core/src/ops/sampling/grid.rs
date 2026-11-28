@@ -6,7 +6,7 @@
 
 use super::MOST;
 use crate::geometry::Bounds;
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 use crate::vec2::Vec2;
 
 /// The most cells a grid looks at.
@@ -81,10 +81,10 @@ pub fn meets_box(ring: &[Vec2], b: &Bounds) -> bool {
         f64::NEG_INFINITY,
     );
     for p in ring {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
     if !(x0 < b.max_x && b.min_x < x1 && y0 < b.max_y && b.min_y < y1) {
         return false;
@@ -256,7 +256,7 @@ fn triangles(b: &Bounds, spec: &Spec, mut keep: Keep<'_>) -> Result<Vec<Piece>, 
     let j0 = ((b.min_x - ox) / a).floor() - 1.0;
     let j1 = ((b.max_x - ox) / a).ceil();
     let r0 = ((b.min_y - oy) / h).floor();
-    let r1 = js_max(((b.max_y - oy) / h).ceil() - 1.0, r0);
+    let r1 = maximum(((b.max_y - oy) / h).ceil() - 1.0, r0);
     if !((j1 - j0 + 1.0) * 2.0 * (r1 - r0 + 1.0) <= MOST_SCANNED) {
         return Err(TOO_BIG_SCAN);
     }

@@ -8,7 +8,7 @@ use std::f64::consts::{PI, TAU};
 
 use crate::Vec2;
 use crate::geom::bulge::{bulge_arc, bulge_at};
-use crate::jsmath::{acos, cos, hypot, js_min, sin};
+use crate::jsmath::{acos, cos, hypot, minimum, sin};
 
 /// Most chords one curve piece may get. Beyond it the tolerance is not met: at
 /// 1 mm a full circle reaches the cap at about 1.3 km radius. The projection is
@@ -25,7 +25,7 @@ pub fn arc_segments(r: f64, sweep: f64, tol: f64) -> usize {
     let step = if tol >= r {
         PI / 4.0
     } else {
-        js_min(2.0 * acos(1.0 - tol / r), PI / 4.0)
+        minimum(2.0 * acos(1.0 - tol / r), PI / 4.0)
     };
     ((sweep / step).ceil() as usize).clamp(1, MAX_SEGMENTS)
 }
@@ -218,14 +218,14 @@ pub fn catmull_rom(pts: &[Vec2], closed: bool, tol: f64) -> Vec<Vec2> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::js_max;
+    use crate::jsmath::maximum;
 
     fn max_sagitta_circle(pts: &[Vec2], c: Vec2, r: f64) -> f64 {
         let mut worst: f64 = 0.0;
         for i in 0..pts.len() {
             let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
             let m = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
-            worst = js_max(worst, r - hypot(m.x - c.x, m.y - c.y));
+            worst = maximum(worst, r - hypot(m.x - c.x, m.y - c.y));
         }
         worst
     }
@@ -259,7 +259,7 @@ mod tests {
         assert_eq!(*open.last().unwrap(), pts[2]);
         assert!(open.contains(&pts[1]));
         // The half circle below the first chord bulges to y = −5 at its middle.
-        let lowest = open.iter().map(|p| p.y).fold(f64::MAX, js_min);
+        let lowest = open.iter().map(|p| p.y).fold(f64::MAX, minimum);
         assert!((-5.0..-4.999).contains(&lowest), "{lowest}");
         let ring = bulge_path(&pts, None, true, 0.001);
         assert_eq!(ring, pts.to_vec());

@@ -14,7 +14,7 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::FaceIndex;
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::op;
 use crate::ops::areas::line_source;
 use crate::ops::edges::entity_edges;
@@ -249,10 +249,10 @@ fn existing_parts(lines: &[Entity]) -> Vec<Part> {
 fn edge_box(e: &Edge) -> Bounds {
     match *e {
         Edge::Seg { a, b } => Bounds {
-            min_x: js_min(a.x, b.x),
-            min_y: js_min(a.y, b.y),
-            max_x: js_max(a.x, b.x),
-            max_y: js_max(a.y, b.y),
+            min_x: minimum(a.x, b.x),
+            min_y: minimum(a.y, b.y),
+            max_x: maximum(a.x, b.x),
+            max_y: maximum(a.y, b.y),
         },
         Edge::Arc { c, r, .. } => Bounds {
             min_x: c.x - r,

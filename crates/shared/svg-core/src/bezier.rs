@@ -4,7 +4,7 @@
 //! nearest points. A straight segment is a cubic whose controls sit on its
 //! ends, so every segment has one form.
 
-use kentos_geometry_core::jsmath::{hypot, js_max, js_min, or};
+use kentos_geometry_core::jsmath::{hypot, maximum, minimum, or};
 
 use crate::shape::{PathNode, Pt, SubPath};
 
@@ -143,7 +143,7 @@ pub fn reverse_cubic(c: &Cubic) -> Cubic {
 /// Number of equal parameter steps that keep the chords within `tol` of the
 /// curve (Wang's bound for cubics), capped for degenerate input.
 pub fn flatten_steps(c: &Cubic, tol: f64, max: f64) -> f64 {
-    let m = js_max(
+    let m = maximum(
         hypot(
             c[0][0] - 2.0 * c[1][0] + c[2][0],
             c[0][1] - 2.0 * c[1][1] + c[2][1],
@@ -156,7 +156,7 @@ pub fn flatten_steps(c: &Cubic, tol: f64, max: f64) -> f64 {
     if !(m > 0.0) || !(tol > 0.0) {
         return 1.0;
     }
-    js_max(1.0, js_min(max, ((0.75 * m) / tol).sqrt().ceil()))
+    maximum(1.0, minimum(max, ((0.75 * m) / tol).sqrt().ceil()))
 }
 
 /// Chord ends along a cubic (both ends included) with their parameters.
@@ -288,7 +288,7 @@ pub fn nearest_on_cubic(c: &Cubic, p: Pt) -> Nearest {
         if df.abs() < 1e-18 {
             break;
         }
-        let next = js_min(1.0, js_max(0.0, t - f / df));
+        let next = minimum(1.0, maximum(0.0, t - f / df));
         if (next - t).abs() < 1e-12 {
             t = next;
             break;

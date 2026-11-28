@@ -12,7 +12,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, param_on, p
 use crate::geom::overlay::overlay;
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_max, js_min};
+use crate::jsmath::{hypot, maximum, minimum};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
@@ -151,8 +151,8 @@ fn overlap(a: &Edge, b: &Edge) -> Option<(f64, Vec2)> {
         return None;
     }
     let (tr, ts) = (param_on(a, r), param_on(a, s));
-    let lo = js_max(0.0, js_min(tr, ts));
-    let hi = js_min(1.0, js_max(tr, ts));
+    let lo = maximum(0.0, minimum(tr, ts));
+    let hi = minimum(1.0, maximum(tr, ts));
     ((hi - lo) * len > TOL).then(|| (lo, point_at(a, lo)))
 }
 

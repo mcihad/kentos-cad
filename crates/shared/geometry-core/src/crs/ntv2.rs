@@ -452,10 +452,10 @@ impl Grid {
         for &i in &self.top {
             let e = self.subs[i].extent;
             b = [
-                crate::jsmath::js_min(b[0], e.west * deg),
-                crate::jsmath::js_min(b[1], e.south * deg),
-                crate::jsmath::js_max(b[2], e.east * deg),
-                crate::jsmath::js_max(b[3], e.north * deg),
+                crate::jsmath::minimum(b[0], e.west * deg),
+                crate::jsmath::minimum(b[1], e.south * deg),
+                crate::jsmath::maximum(b[2], e.east * deg),
+                crate::jsmath::maximum(b[3], e.north * deg),
             ];
         }
         (self.subs.len(), b)

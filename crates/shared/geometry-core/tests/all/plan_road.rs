@@ -7,7 +7,7 @@
 //! reference's first.
 
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::maximum;
 use serde_json::{Value, json};
 
 fn cases() -> Value {
@@ -26,7 +26,7 @@ fn run(name: &str, args: Value) -> Value {
 }
 
 fn close(a: f64, b: f64) -> bool {
-    (a - b).abs() <= 1e-9 * js_max(1.0, b.abs())
+    (a - b).abs() <= 1e-9 * maximum(1.0, b.abs())
 }
 
 fn xy(p: &Value) -> (f64, f64) {

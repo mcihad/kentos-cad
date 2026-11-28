@@ -10,7 +10,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{atan2, cos, hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -369,7 +369,7 @@ const SINGULAR: f64 = 1e-12;
 fn projective(src: &[(f64, f64)], dst: &[(f64, f64)]) -> Result<Vec<f64>, FitError> {
     let largest = |v: &[(f64, f64)]| {
         v.iter()
-            .fold(0.0_f64, |m, &(x, y)| js_max(js_max(m, x.abs()), y.abs()))
+            .fold(0.0_f64, |m, &(x, y)| maximum(maximum(m, x.abs()), y.abs()))
     };
     let (s, t) = (largest(src), largest(dst));
     if s <= 0.0 || t <= 0.0 {
@@ -391,7 +391,7 @@ fn projective(src: &[(f64, f64)], dst: &[(f64, f64)]) -> Result<Vec<f64>, FitErr
             }
         }
     }
-    let largest_diagonal = (0..8).fold(0.0_f64, |m, i| js_max(m, ata[i][i]));
+    let largest_diagonal = (0..8).fold(0.0_f64, |m, i| maximum(m, ata[i][i]));
     let h = solve(ata, atb, SINGULAR * largest_diagonal).ok_or(FitError::Singular)?;
     // Back from the scaled frames: x̂ = x̄/s, X̂ = X̄/t.
     Ok(vec![
@@ -497,7 +497,7 @@ mod tests {
                 let limit = if in_metres {
                     metres
                 } else {
-                    relative * js_max(y.abs(), 1.0)
+                    relative * maximum(y.abs(), 1.0)
                 };
                 if (x - y).abs() <= limit {
                     Ok(())
@@ -567,7 +567,7 @@ mod tests {
             let (east, north, rotation) = (n("east"), n("north"), n("rotation"));
             let expected = <[f64; 4]>::from_json(case.get("m")).expect("m");
             let m = scale_turn(east, north, rotation);
-            let size = js_max(1.0, js_max(east.abs(), north.abs()));
+            let size = maximum(1.0, maximum(east.abs(), north.abs()));
             for (got, want) in m.iter().zip(expected) {
                 assert!(
                     (got - want).abs() <= tolerance * size,

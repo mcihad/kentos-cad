@@ -5,7 +5,7 @@ use super::{
     model::Unit,
     prim::{FillPaint, Sink, StrokeStyle},
 };
-use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_max, js_sign, sin};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, maximum, sign, sin};
 use kentos_geometry_core::{
     Vec2,
     api::json::Json,
@@ -170,7 +170,7 @@ impl Edge {
             let angle = a.a0 + a.sweep * f;
             (
                 Vec2::new(a.c.x + a.r * cos(angle), a.c.y + a.r * sin(angle)),
-                angle + js_sign(a.sweep) * std::f64::consts::FRAC_PI_2,
+                angle + sign(a.sweep) * std::f64::consts::FRAC_PI_2,
             )
         } else {
             (
@@ -189,7 +189,7 @@ impl Route {
         let d = distance.clamp(0., self.total);
         if let Some(e) = &self.ellipse {
             return e
-                .sample(d, js_max(self.total, 1.) * 1e-13)
+                .sample(d, maximum(self.total, 1.) * 1e-13)
                 .ok()
                 .map(|s| s.0);
         }
@@ -597,7 +597,7 @@ impl Marks {
             if distance >= period && at < period {
                 distance -= period;
             }
-            let count = js_max(((total - distance) / period).ceil(), 0.);
+            let count = maximum(((total - distance) / period).ceil(), 0.);
             if count > MAX_MARKS as f64
                 || placed.len().saturating_add(count as usize) > MAX_MARKS
                 || cost.saturating_add((count as usize).saturating_mul(m.cost)) > MAX_POINTS

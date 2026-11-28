@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::jsmath::{js_max, js_min};
+use crate::jsmath::{maximum, minimum};
 
 /// One side's events of a route: (event, least, most measure).
 type Spans = Vec<(usize, f64, f64)>;
@@ -53,7 +53,7 @@ pub fn overlay(a: &[Event], b: &[Event], union: bool) -> Vec<Overlaid> {
                 sides.push((&e.route, Vec::new(), Vec::new()));
                 sides.len() - 1
             });
-            let span = (i, js_min(e.from, e.to), js_max(e.from, e.to));
+            let span = (i, minimum(e.from, e.to), maximum(e.from, e.to));
             if side == 0 {
                 sides[r].1.push(span);
             } else {

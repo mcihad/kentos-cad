@@ -17,7 +17,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
-use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, minimum, sin};
 use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
@@ -183,8 +183,8 @@ fn word_width(t: &str, h: f64) -> f64 {
 /// A bubble's radius at 1:`scale`.
 pub fn bubble_radius(spec: &Spec, scale: f64) -> f64 {
     let h = height(spec, scale);
-    let w = js_max(word_width(&spec.top, h), word_width(&spec.bottom, h));
-    js_max(1.5 * h, w / 2.0 + 0.5 * h)
+    let w = maximum(word_width(&spec.top, h), word_width(&spec.bottom, h));
+    maximum(1.5 * h, w / 2.0 + 0.5 * h)
 }
 
 /// A detail's bubble's middle.
@@ -256,7 +256,7 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
                 let side = if spec.flip { -1.0 } else { 1.0 };
                 // The look side: left of the line's first part, the right when flipped.
                 let look = Vec2::new(-along.y * side, along.x * side);
-                let len = js_min(hypot(end.x - inner.x, end.y - inner.y), 3.0 * h);
+                let len = minimum(hypot(end.x - inner.x, end.y - inner.y), 3.0 * h);
                 let start = Vec2::new(end.x - d.x * len, end.y - d.y * len);
                 let off = 0.15 * h;
                 out.push(line(

@@ -29,7 +29,7 @@
 use kentos_commands::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
-use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, maximum, minimum};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, stretch};
@@ -149,10 +149,10 @@ impl Stretch {
             return;
         };
         let r = Bounds {
-            min_x: js_min(a.x, w.x),
-            min_y: js_min(a.y, w.y),
-            max_x: js_max(a.x, w.x),
-            max_y: js_max(a.y, w.y),
+            min_x: minimum(a.x, w.x),
+            min_y: minimum(a.y, w.y),
+            max_x: maximum(a.x, w.x),
+            max_y: maximum(a.y, w.y),
         };
         let input = Self::request(&r, 0.0, 0.0, cx);
         match stretch::objects_in(cx.doc, Some(cx.spatial.store()), &input) {

@@ -5,7 +5,7 @@
 use std::f64::consts::PI;
 
 use super::voronoi::{centre, normalised};
-use crate::jsmath::{atan2, hypot, js_max, js_min};
+use crate::jsmath::{atan2, hypot, maximum, minimum};
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
 
@@ -108,10 +108,10 @@ pub fn axis_box(points: &[Vec2]) -> Option<Bound> {
     let first = it.next()?;
     let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x, first.y);
     for p in it {
-        x0 = js_min(x0, p.x);
-        y0 = js_min(y0, p.y);
-        x1 = js_max(x1, p.x);
-        y1 = js_max(y1, p.y);
+        x0 = minimum(x0, p.x);
+        y0 = minimum(y0, p.y);
+        x1 = maximum(x1, p.x);
+        y1 = maximum(y1, p.y);
     }
     (x1 > x0 && y1 > y0).then(|| Bound::Box {
         ring: vec![
@@ -256,7 +256,7 @@ fn two(a: Vec2, b: Vec2) -> Disc {
     let c = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     Disc {
         c,
-        r: js_max(hypot(a.x - c.x, a.y - c.y), hypot(b.x - c.x, b.y - c.y)),
+        r: maximum(hypot(a.x - c.x, a.y - c.y), hypot(b.x - c.x, b.y - c.y)),
     }
 }
 
@@ -270,9 +270,9 @@ fn three(a: Vec2, b: Vec2, c: Vec2) -> Option<Disc> {
     } else {
         centre(a, c, b)
     };
-    let r = js_max(
+    let r = maximum(
         hypot(a.x - o.x, a.y - o.y),
-        js_max(hypot(b.x - o.x, b.y - o.y), hypot(c.x - o.x, c.y - o.y)),
+        maximum(hypot(b.x - o.x, b.y - o.y), hypot(c.x - o.x, c.y - o.y)),
     );
     (o.x.is_finite() && o.y.is_finite()).then_some(Disc { c: o, r })
 }
