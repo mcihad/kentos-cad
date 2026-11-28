@@ -1,0 +1,4 @@
+# Commits `git blame` skips (docs/adr/9400 §2): mechanical changes that touch many lines without changing what they say.
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Format the workspace with rustfmt's defaults (BK-01).
+27d390b97681853bcdff4dc477bed1ef4f66719a
