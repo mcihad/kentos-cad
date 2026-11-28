@@ -173,13 +173,14 @@ mod tests {
         let setup = serde_json::json!({
             "format": "kentos.document", "version": 1, "name": "Bant",
             "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2",
-                         "angleUnit": "grad", "plotScale": 1000, "workspace": "gis"},
+                         "angleUnit": "grad", "plotScale": 1000, "workspace": "cad"},
             "origin": {"x": 0.0, "y": 0.0},
             "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false,
                         "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25},
                         "children": []}],
             "activeLayer": "cizim", "entities": [], "styles": {"items": [], "categories": []}
         });
+        // A CAD project: a bound layer is refused in a CBS one, whose data stays in its tables (docs/adr/9196 §2).
         let mut doc = kentos_domain::Document::from_snapshot(
             kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup"),
         )
