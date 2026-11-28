@@ -208,7 +208,9 @@ düzenlenir.
   değişkeni değiştiren üç sınama ayrı), sunucu 41 → 2 (167 geçti, 4 yok sayıldı, 62,7 sn; `disk_full` ayrı). Bir MCP
   sınama programı 0,88 GB: 166 program ≈ 146 GB, 4 program ≈ 3,5 GB. Sınama yığını artık `.cargo/config.toml`'dan
   gelir. Kalan: ortak `call` yardımcısı (BK-53).
-- [ ] **BK-05 — Ölçüm tabanı.** Clippy'nin sonucu; sıfırdan ve tek satır değişiklikte derleme süresi; `docs/perf/`.
+- [x] **BK-05 — Ölçüm tabanı** ([docs/perf/build-bakim-2026-11-28.md](../docs/perf/build-bakim-2026-11-28.md)).
+  Clippy'nin 41 uyarısı giderildi, iki sınama komutu temiz. Tek satır değişiklikte derleme: modül paketi 3,7 sn,
+  masaüstü çekirdeği 7,9 sn, uygulama katmanı 13,6 sn, geometri çekirdeği 36,4 sn; sıfırdan 176 sn.
 
 ### Aşama 1 — Doğruluk düzeltmeleri
 

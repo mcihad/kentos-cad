@@ -129,6 +129,15 @@ Zemin (Aşama 0) hiçbir komutu, aracı ya da arayüz yüzeyini değiştirmez.
   - Kılavuzdaki 155 komut yeni hedefe çevrildi (`--test all <modül>::`). ADR'lerdeki ve `docs/baseline`'daki eski
     komutlar tarihsel kayıttır, değişmedi.
   - Kalan: 133 MCP sınama dosyasındaki aynı `fn call(…)` yardımcısı ortak bir modüle alınacak (BK-53).
+- **BK-05 (28 Kasım 2026).** Ölçümler [docs/perf/build-bakim-2026-11-28.md](../perf/build-bakim-2026-11-28.md)'dedir.
+  - Clippy `-D warnings` ile iki sınama komutunda da kırmızıydı: ortak ve yerel crate'lerde 15, masaüstü paketlerinde 26
+    uyarı. Hepsi clippy'nin kendi önerisiyle giderildi; iki komut temiz.
+  - Tek satır değişiklikte `cargo build -p kentos-cad`: modül paketi 3,7 sn, masaüstü çekirdeği 7,9 sn, uygulama
+    katmanı 13,6 sn, geometri çekirdeği 36,4 sn; sıfırdan 176 sn.
+  - Bulunan öbür kırmızılar (BK-02 ve BK-04'te giderildi): `other_names_tests` (iki metinde ADR atfı),
+    `labels::gpu`'nun genel sayaca dayanan sınaması, MCP kabul sınamasının yığını.
+  - `cargo test -p kentos-ui --lib` tek başına derlenmiyor: sınamaları `snapshot` özelliğini ister
+    (`--features snapshot`; `pnpm rust:test:desktop` vitrinle birlikte koştuğu için derlenir). Olduğu gibi bırakıldı.
 
 ## Doğrulama
 
