@@ -236,7 +236,7 @@ pub struct RastersGpkgReadDone {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub linked: bool,
-    /// `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.
+    /// `[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     /// The table's EPSG code; 0: undefined or not EPSG.

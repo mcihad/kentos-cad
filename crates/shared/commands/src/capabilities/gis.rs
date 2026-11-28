@@ -197,7 +197,14 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.layers.migrate",
         refusals: &[
-            &["no_layer", "no_target", "invalid_name", "layer_not_found"],
+            // `invalid_option`: a move asked to write over the file (docs/adr/9321), which a case answers with.
+            &[
+                "no_layer",
+                "no_target",
+                "invalid_name",
+                "invalid_option",
+                "layer_not_found",
+            ],
             &["not_a_layer", "service_layer", "data_layer", "layer_locked"],
             &[
                 "target_exists",

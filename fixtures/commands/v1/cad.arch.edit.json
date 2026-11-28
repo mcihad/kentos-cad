@@ -1874,7 +1874,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 0 verildi.",
               "path": "uids[0].height"
             }
@@ -2156,7 +2156,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
               "path": "uids[0].name"
             }

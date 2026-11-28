@@ -29,9 +29,9 @@ class _MassesCreate(LocalCommand[MassesCreate, MassesCreated, MassesPlan]):
     (name: Blok A, Podyum; en çok 80 karakter), kat ve tadilat durumu (arch). Kütle bir
     yapı elemanı değildir: IFC'ye yazılmaz (EK-5'in sınıflarında karşılığı yok), binanın
     denetimleri ve metrajı onu görmez; 3B görünüm, kesit, görünüş ve güneş gölgesi onu
-    gösterir. Planda oturumu ve adıyla çizilir. Halkası ya da yüksekliği hatalı kütle
-    invalid_space ile reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli
-    katmana uyarıyla yazılır.
+    gösterir. Planda oturumu ve adıyla çizilir. Halkası, yüksekliği, tabanı ya da adı
+    hatalı kütle invalid_mass ile reddedilir. Katman açıkça verilir; kilitli katmana
+    yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.masses.create"
@@ -62,9 +62,9 @@ class _MassesCreate(LocalCommand[MassesCreate, MassesCreated, MassesPlan]):
         en çok 80 karakter), kat ve tadilat durumu (arch). Kütle bir yapı elemanı değildir:
         IFC'ye yazılmaz (EK-5'in sınıflarında karşılığı yok), binanın denetimleri ve metrajı
         onu görmez; 3B görünüm, kesit, görünüş ve güneş gölgesi onu gösterir. Planda oturumu
-        ve adıyla çizilir. Halkası ya da yüksekliği hatalı kütle invalid_space ile
-        reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla
-        yazılır.
+        ve adıyla çizilir. Halkası, yüksekliği, tabanı ya da adı hatalı kütle invalid_mass
+        ile reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
+        uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

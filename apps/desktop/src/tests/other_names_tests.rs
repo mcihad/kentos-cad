@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 
 /// Other programs' names, as written.
-const NAMES: [&str; 16] = [
+const NAMES: [&str; 17] = [
     "Netcad",
     "NETCAD",
     "AutoCAD",
@@ -31,6 +31,7 @@ const NAMES: [&str; 16] = [
     "Acrobat",
     "Inkscape",
     "LibreOffice",
+    "GDAL",
 ];
 
 /// (file ending, name, why): a name kept because it is a protocol, a service type or a file signature.

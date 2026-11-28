@@ -14127,7 +14127,7 @@
       "id": "cad.masses.create",
       "version": 1,
       "title": "Kütle",
-      "summary": "Kütle çalışması için kütleler ekler; tek geri alma adımı “Kütle”. Her biri oturumu (parts: bir ya da daha çok parça, her biri dış halka ve delikleri — avlu; halka en az üç köşe), yüksekliği (height: sıfırdan büyük, en çok 300 m), katının döşemesine göre tabanı (offset: yoksa 0; en çok ±100 m), adı (name: Blok A, Podyum; en çok 80 karakter), kat ve tadilat durumu (arch). Kütle bir yapı elemanı değildir: IFC'ye yazılmaz (EK-5'in sınıflarında karşılığı yok), binanın denetimleri ve metrajı onu görmez; 3B görünüm, kesit, görünüş ve güneş gölgesi onu gösterir. Planda oturumu ve adıyla çizilir. Halkası ya da yüksekliği hatalı kütle invalid_space ile reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "summary": "Kütle çalışması için kütleler ekler; tek geri alma adımı “Kütle”. Her biri oturumu (parts: bir ya da daha çok parça, her biri dış halka ve delikleri — avlu; halka en az üç köşe), yüksekliği (height: sıfırdan büyük, en çok 300 m), katının döşemesine göre tabanı (offset: yoksa 0; en çok ±100 m), adı (name: Blok A, Podyum; en çok 80 karakter), kat ve tadilat durumu (arch). Kütle bir yapı elemanı değildir: IFC'ye yazılmaz (EK-5'in sınıflarında karşılığı yok), binanın denetimleri ve metrajı onu görmez; 3B görünüm, kesit, görünüş ve güneş gölgesi onu gösterir. Planda oturumu ve adıyla çizilir. Halkası, yüksekliği, tabanı ya da adı hatalı kütle invalid_mass ile reddedilir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -14143,7 +14143,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,\n`invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,\n`invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "description": "Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_mass` (a mass's rings, height, bottom or name), `level_not_found`,\n`invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,\n`invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
         "properties": {
           "color": {
             "type": [
@@ -14243,7 +14243,7 @@
         "refusals": [
           "no_objects",
           "not_finite",
-          "invalid_space",
+          "invalid_mass",
           "level_not_found",
           "invalid_line_weight",
           "layer_not_found",
@@ -14304,7 +14304,7 @@
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_mass); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -14320,7 +14320,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs, railings and masses named by their persistent\nids changed as one undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,\n`level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
+        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs, railings and masses named by their persistent\nids changed as one undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_mass` (a mass), `not_a_grid`, `grids_parallel`,\n`level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -14425,7 +14425,7 @@
           "invalid_beam",
           "invalid_roof",
           "invalid_railing",
-          "invalid_space",
+          "invalid_mass",
           "not_a_grid",
           "grids_parallel",
           "level_not_found",
@@ -19110,7 +19110,7 @@
         "description": "Output of `cad.rasters.mosaic` v1 (its plan's too: what it would write, nothing written).",
         "properties": {
           "affine": {
-            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.",
             "items": {
               "format": "double",
               "type": "number"
@@ -19206,7 +19206,7 @@
         "description": "Output of `cad.rasters.mosaic` v1 (its plan's too: what it would write, nothing written).",
         "properties": {
           "affine": {
-            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.",
             "items": {
               "format": "double",
               "type": "number"
@@ -19791,7 +19791,7 @@
         "description": "Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).",
         "properties": {
           "affine": {
-            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.",
             "items": {
               "format": "double",
               "type": "number"
@@ -19936,7 +19936,7 @@
         "description": "Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).",
         "properties": {
           "affine": {
-            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.",
             "items": {
               "format": "double",
               "type": "number"
@@ -80411,6 +80411,7 @@
           "no_layer",
           "no_target",
           "invalid_name",
+          "invalid_option",
           "layer_not_found",
           "not_a_layer",
           "service_layer",
@@ -105806,7 +105807,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),\na `.csvt` beside it naming each column's GDAL type and a `.prj` naming the project's system. With more than one\nlayer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,\n`file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
+        "description": "Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),\na `.csvt` beside it naming each column's type and a `.prj` naming the project's system. With more than one\nlayer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,\n`file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
         "properties": {
           "geometry": {
             "$ref": "#/$defs/CsvGeometry",
@@ -105855,7 +105856,7 @@
         "description": "What `file.export.csv` wrote (or with `plan` would write).",
         "properties": {
           "columns": {
-            "description": "The columns, in order, and their GDAL types as the `.csvt` names them.",
+            "description": "The columns, in order, and their types as the `.csvt` names them.",
             "items": {
               "type": "string"
             },
@@ -105917,7 +105918,7 @@
         "description": "What `file.export.csv` wrote (or with `plan` would write).",
         "properties": {
           "columns": {
-            "description": "The columns, in order, and their GDAL types as the `.csvt` names them.",
+            "description": "The columns, in order, and their types as the `.csvt` names them.",
             "items": {
               "type": "string"
             },
@@ -106068,7 +106069,7 @@
             "x-unit": "bytes"
           },
           "columns": {
-            "description": "The columns, in order, and their types as GDAL names them.",
+            "description": "The columns, in order, and their types by their simple-features names.",
             "items": {
               "type": "string"
             },
@@ -106081,7 +106082,7 @@
             "x-unit": "count"
           },
           "geometry": {
-            "description": "The layer's geometry type as GDAL names it (`Unknown` for mixed types).",
+            "description": "The layer's geometry type by its simple-features name (`Unknown` for mixed types).",
             "type": "string"
           },
           "indexed": {
@@ -106147,7 +106148,7 @@
             "x-unit": "bytes"
           },
           "columns": {
-            "description": "The columns, in order, and their types as GDAL names them.",
+            "description": "The columns, in order, and their types by their simple-features names.",
             "items": {
               "type": "string"
             },
@@ -106160,7 +106161,7 @@
             "x-unit": "count"
           },
           "geometry": {
-            "description": "The layer's geometry type as GDAL names it (`Unknown` for mixed types).",
+            "description": "The layer's geometry type by its simple-features name (`Unknown` for mixed types).",
             "type": "string"
           },
           "indexed": {
@@ -108948,7 +108949,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y\nnorth in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the\nanswer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or\nnot at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
+        "description": "Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y\nnorth in the project's system, as the common XYZ readers and point cloud tools read them; the file names no system, the\nanswer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or\nnot at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
         "properties": {
           "decimals": {
             "description": "Decimal places (0 to 15), fixed; absent: the shortest text that reads back to the number.",
@@ -121686,6 +121687,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Mahalin alanları bir mahal tanımlamıyor: halka en az üç köşe, sonlu koordinatlar, sıfırdan büyük yükseklik."
+    },
+    {
+      "code": "invalid_mass",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kütlenin alanları bir kütle tanımlamıyor: halka en az üç köşe, sıfırdan büyük ve en çok 300 m yükseklik, kata göre en çok ±100 m taban, 80 karakteri geçmeyen ad."
     },
     {
       "code": "space_not_enclosed",
@@ -142318,12 +142325,12 @@
       "oneOf": [
         {
           "const": "wkt",
-          "description": "ISO WKT in a column named `WKT`, first (GDAL's `GEOMETRY=AS_WKT`).",
+          "description": "ISO WKT in a column named `WKT`, first (the `GEOMETRY=AS_WKT` convention).",
           "type": "string"
         },
         {
           "const": "xy",
-          "description": "Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (GDAL's `GEOMETRY=AS_XY`);\nobjects that are no points are not written, and counted.",
+          "description": "Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (the `GEOMETRY=AS_XY` convention);\nobjects that are no points are not written, and counted.",
           "type": "string"
         },
         {
@@ -158317,7 +158324,7 @@
     },
     "GeorefPoint": {
       "additionalProperties": false,
-      "description": "A control or check point: a pixel of the source (column, row; pixel corners, 0, 0 the upper left corner of the\nupper left pixel, as GDAL's GCPs) and where it is (`target`, in the record's `srid`).",
+      "description": "A control or check point: a pixel of the source (column, row; pixel corners, 0, 0 the upper left corner of the\nupper left pixel, as ground control points are given) and where it is (`target`, in the record's `srid`).",
       "properties": {
         "check": {
           "description": "A check point: kept out of the fit; its error says how good the fit is where no control point is.",
@@ -203137,7 +203144,7 @@
       "description": "A raster (docs/adr/0204 §2).",
       "properties": {
         "affine": {
-          "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+          "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine\ngeotransform's usual order). Invertible.",
           "items": {
             "format": "double",
             "type": "number"
@@ -203440,7 +203447,7 @@
       "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
       "properties": {
         "affine": {
-          "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+          "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine\ngeotransform's usual order). Invertible.",
           "items": {
             "format": "double",
             "type": "number"
@@ -204879,7 +204886,7 @@
       "description": "A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the\nband read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).",
       "properties": {
         "affine": {
-          "description": "`[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
+          "description": "`[x₀, a, b, y₀, c, d]`, the affine geotransform's usual order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
           "items": {
             "format": "double",
             "type": "number"
@@ -219169,7 +219176,7 @@
       "description": "A data band of a preparation.",
       "properties": {
         "affine": {
-          "description": "`[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order).",
+          "description": "`[x₀, a, b, y₀, c, d]` as a raster's (the affine geotransform's usual order).",
           "items": {
             "format": "double",
             "type": "number"

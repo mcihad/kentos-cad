@@ -12,7 +12,7 @@
 //!
 //! The file is written under the system's temporary folder and removed; the open drawing is not changed. The trip is
 //! KentOS's writer and reader together: what another program reads from the file is its own (the ADR's independent
-//! check reads the same files with GDAL).
+//! check reads the same files with an independent reader).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]

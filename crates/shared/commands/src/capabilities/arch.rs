@@ -1203,7 +1203,7 @@ pub(super) const ENTRIES: &[Entry] = &[
             &[
                 "no_objects",
                 "not_finite",
-                "invalid_space",
+                "invalid_mass",
                 "level_not_found",
                 "invalid_line_weight",
             ],
@@ -1248,7 +1248,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "invalid_beam",
                 "invalid_roof",
                 "invalid_railing",
-                "invalid_space",
+                "invalid_mass",
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",

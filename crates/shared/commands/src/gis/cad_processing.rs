@@ -629,7 +629,7 @@ pub struct RecordGrid {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
-    /// `[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.
+    /// `[x₀, a, b, y₀, c, d]`, the affine geotransform's usual order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

@@ -1,5 +1,5 @@
 //! FlatGeobuf in and out (docs/adr/0544, plan/gis.md CBS-05): one layer's features in one file with the packed Hilbert
-//! R-tree of their boxes, as GDAL and the format's own libraries write and read it. Arcs go as circular strings
+//! R-tree of their boxes, as the format's own libraries write and read it. Arcs go as circular strings
 //! and compound curves, exact; the system as its EPSG code.
 
 use std::collections::BTreeMap;
@@ -54,10 +54,10 @@ pub struct FgbExported {
     pub name: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub features: u32,
-    /// The columns, in order, and their types as GDAL names them.
+    /// The columns, in order, and their types by their simple-features names.
     pub columns: Vec<String>,
     pub types: Vec<String>,
-    /// The layer's geometry type as GDAL names it (`Unknown` for mixed types).
+    /// The layer's geometry type by its simple-features name (`Unknown` for mixed types).
     pub geometry: String,
     /// Whether the spatial index is written.
     pub indexed: bool,

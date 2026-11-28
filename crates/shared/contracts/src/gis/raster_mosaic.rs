@@ -1,5 +1,5 @@
 //! `cad.rasters.mosaic` v1 (docs/adr/0517; plan/gis.md `CBS-28`): many GeoTIFF files made one virtual mosaic, a
-//! GDAL VRT that KentOS and GDAL open alike; no pixel is copied. Which file lies on top where they overlap is
+//! VRT (virtual raster) file that KentOS and other VRT readers open alike; no pixel is copied. Which file lies on top where they overlap is
 //! the order given, the finer pixel or the newer date; the mosaic's pixel is the finest, coarsest or mean of the
 //! files' (or one given). Optionally the mosaic is added to the drawing as a raster, as one undo step.
 
@@ -151,7 +151,7 @@ pub struct RastersMosaicked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub bands: u32,
     pub sample: RasterSample,
-    /// `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.
+    /// `[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     /// The files' coordinate system; 0: they name none.

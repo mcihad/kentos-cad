@@ -524,11 +524,7 @@ fn settled(
         // A mass's rings and height follow a space's rules (docs/adr/8178).
         Entity::Mass(m) => {
             if let Some((field, words)) = m.mass.problem() {
-                return Err(fail(
-                    codes::INVALID_SPACE,
-                    words,
-                    &format!("{path}.{field}"),
-                ));
+                return Err(fail(codes::INVALID_MASS, words, &format!("{path}.{field}")));
             }
             Entity::Mass(m)
         }

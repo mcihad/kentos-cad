@@ -2066,7 +2066,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin oturumu yok: en az bir halka verin.",
               "path": "masses[0].parts"
             }
@@ -2120,7 +2120,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin halkası en az üç köşedir; 2 verildi.",
               "path": "masses[0].parts[0].outer"
             }
@@ -2196,7 +2196,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin halkası en az üç köşedir; 2 verildi.",
               "path": "masses[0].parts[0].holes[0]"
             }
@@ -2258,7 +2258,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 0 verildi.",
               "path": "masses[0].height"
             }
@@ -2320,7 +2320,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 320 verildi.",
               "path": "masses[0].height"
             }
@@ -2383,7 +2383,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; 101 verildi.",
               "path": "masses[0].offset"
             }
@@ -2446,7 +2446,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
               "path": "masses[0].name"
             }
@@ -2509,7 +2509,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "invalid_space",
+              "code": "invalid_mass",
               "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
               "path": "masses[0].name"
             }

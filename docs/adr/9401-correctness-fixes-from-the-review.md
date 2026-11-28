@@ -330,12 +330,39 @@ Bekçi genişletilince sekiz metin çıktı:
 - **Açık bırakılanlar (sahibin kararı ya da sonraki iş):**
   - “Excel (.xlsx)” 27 yerde biçimin adı olarak yazılı. Kural dosya biçimi adlarını uygulama adı saymıyor; “.xlsx”in
     herkesin bildiği adı da budur. Dokunulmadı; karar sahibindir.
-  - Sözleşmelerin belge yorumlarında bir kitaplığın adı 17 yerde geçiyor (8 dosya) ve Python'un `help()` metnine
-    14 satır olarak çıkıyor. Sözleşmeleri değiştirmek kataloğu ve SDK'yı yeniden üretir; BK-16 ile birlikte yapılır.
+  - Sözleşmelerin belge yorumlarında bir kitaplığın adı 17 yerde geçiyordu (8 dosya) ve Python'un `help()` metnine
+    14 satır olarak çıkıyordu. BK-16'nın yeniden üretiminde temizlendi (§8).
   - Bir ortak durumun örnek grup adı (`gis_import_cases.py`) arayüz metni değildir; üretecine dokunan işte değişir.
 
 **Sınama.** `other_names_tests` (genişletilmiş hâliyle; düzeltmeden önce iki katalog açıklamasını ve GeoPDF ipucunu
 gösterdi), `kentos-sheet-ui` sınamaları, dokunulan pencerelerin sınamaları.
+
+### 8. Hata kodu tablosu parçalara bölündü; kütlenin kendi kodu (BK-16)
+
+**Bulgu.** `contracts/src/core/codes.rs` 3 387 satırdı ve boy sınırını aştığı için büyüyemiyordu. `cad.masses.create`
+ile `cad.arch.edit` hatalı kütleyi bu yüzden mahalin koduyla (`invalid_space`) reddediyordu; gerekçe dosyanın başında
+yazılıydı. Ajanlar ve betikler koda göre dallanır: kütlenin hatası mahalin hatası gibi görünüyordu.
+
+**Karar.**
+
+- **Tablo altı dosya** (`core/codes/`): çizim, servisler, düzenleme, pafta ve dosyalar, mimari, raster ve konak.
+  Parçalar tablonun sırasını korur (katalog kodları bu sırayla listeler) ve derlenirken birleştirilir; sabitlerin
+  yolları değişmedi. Bölmeden sonra yeniden üretilen katalog bayt bayt aynıydı.
+- **`invalid_mass`:** halkası, yüksekliği, tabanı ya da adı hatalı kütle bu kodla reddedilir (`cad.masses.create` ve
+  `cad.arch.edit`). Komut sürümü artırılmadı: kütle komutu yenidir (ADR 8178) ve ödünç kod belgesinde geçici olarak
+  yazılıydı.
+- **Aynı yeniden üretimde iki düzeltme:**
+  - Sözleşmelerin belge yorumlarındaki kitaplık adı kaldırıldı (19 yer); bekçi artık bu adı da arar. BK-18'in açığı
+    kapandı.
+  - `cad.layers.migrate`'in bir ortak durumu `invalid_option` veriyordu, katalog bu kodu anmıyordu: yetenek sınaması
+    bu dalda kırmızıydı (27 Kasım'daki işten beri). Kod komutun listesine eklendi.
+- **Üretilen TypeScript dosyaları yenilenmedi.** Donmuş web'in içindeki dizin zaten eskiydi (başka işlerin tipleri
+  eksik); `kentos-commands` ve `kentos-contracts` sınamaları her koşuda yeniden yazıyor, çalışma ağacı kirleniyor.
+  Taşınması BK-25'tedir. `commandCatalog.json` ve Python SDK'sı yenilendi.
+
+**Sınama.** `codes::tests`; katalog sınaması; ortak durumlar bağımsız üreteçten (`arch_command_cases.py`):
+`cad.masses.create`'te 8, `cad.arch.edit`'te 2 beklenen kod değişti, öbür durumlar aynı kaldı. Yetenek sınaması
+(düzeltmeden önce kırmızı) yeşil. Rust ve Python koşucuları üç komutta geçti; SDK `--check` temiz.
 
 ## Modül ve kanal tablosu
 
@@ -356,6 +383,7 @@ gösterdi), `kentos-sheet-ui` sınamaları, dokunulan pencerelerin sınamaları.
 | IFC revizyonlarını karşılaştır'ın yanıtı (BK-12) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.ifc.compare` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
 | BCF sorunları'nın okuması (BK-13) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.bcf.read` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
 | Formlar'ın bu aygıtta tutulan taslağı (BK-13) | yok: profilinde yok | var | yok: profilinde yok | var | yok: taslak pencerenindir; kanal formu `cad.forms.edit` ile yazar | yok: aynı | yok: aynı | yok: aynı |
+| Kütle (`tool.mass`) ve kütlenin düzenlenmesi (BK-16) | var | yok: Mimari'nin işi | yok | yok | var: `cad.masses.create`, `cad.arch.edit` | var: `kentos.cad.masses.create` | var: `run`, `document.write` izniyle | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal

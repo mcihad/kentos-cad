@@ -103,7 +103,7 @@ fn is_bilinear(r: &RasterResampling) -> bool {
 }
 
 /// A control or check point: a pixel of the source (column, row; pixel corners, 0, 0 the upper left corner of the
-/// upper left pixel, as GDAL's GCPs) and where it is (`target`, in the record's `srid`).
+/// upper left pixel, as ground control points are given) and where it is (`target`, in the record's `srid`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

@@ -310,6 +310,9 @@ codes! {
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";
     INVALID_SPACE_SEPARATOR = "invalid_space_separator", Failed, false, "Mahal ayırıcı tek parçalı, düzlemsel, genişliksiz ve geçerli bir çoklu çizgi olmalı.";
     INVALID_SPACE = "invalid_space", Failed, false, "Mahalin alanları bir mahal tanımlamıyor: halka en az üç köşe, sonlu koordinatlar, sıfırdan büyük yükseklik.";
+    /// A mass whose rings, height, bottom or name do not make a mass (docs/adr/8178; a space's code stood in for it
+    /// while the table could take no new code, docs/adr/9401 §8).
+    INVALID_MASS = "invalid_mass", Failed, false, "Kütlenin alanları bir kütle tanımlamıyor: halka en az üç köşe, sıfırdan büyük ve en çok 300 m yükseklik, kata göre en çok ±100 m taban, 80 karakteri geçmeyen ad.";
     SPACE_NOT_ENCLOSED = "space_not_enclosed", Failed, false, "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da sınırı çizin.";
     SPACES_NOT_TOUCHING = "spaces_not_touching", Failed, false, "Birleştirilecek mahaller değmiyor; birleşince tek parça olmuyorlar.";
     SPLIT_MISSED = "split_missed", Failed, false, "Çizgi mahali bölmüyor: mahalin içinden geçip sınırını iki yerde kesmeli.";

@@ -239,14 +239,16 @@ düzenlenir.
     rengiyse katman alınmaz (ADR 0560'ın kuralı). Beş yeni ortak durum.
   - Açık kalan: SQLite okuma bağlantılarına yetkilendirici (ADR 9401 §3.4, seçilmeyen); üç CSS renk okuyucusunun
     birleşmesi (BK-52).
-- [ ] **BK-16** (A6) Hata kodu tablosu disiplin başına dosyalara bölünür, `INVALID_MASS` eklenir. Aynı yeniden üretimde:
-  sözleşmelerin belge yorumlarındaki kitaplık adı (BK-18'in açığı).
+- [x] **BK-16** (A6; ADR 9401 §8) Hata kodu tablosu altı dosyaya bölündü (sırası ve üretilen katalog aynı);
+  `invalid_mass` eklendi (`cad.masses.create`, `cad.arch.edit`). Aynı yeniden üretimde: sözleşme yorumlarındaki kitaplık
+  adı kalktı ve bekçiye girdi; `cad.layers.migrate`'in anılmayan `invalid_option` kodu listelendi (yetenek sınaması
+  kırmızıydı). Üretilen TypeScript dosyaları yenilenmedi (BK-25).
 - [ ] **BK-17** (A10) Yerel nokta-alan ve alan kopyaları çekirdektekine bağlanır; çizime yazan yerler
   `display::fixed`'e. Beklenen değerler bağımsız başvuruyla denetlenir.
 - [x] **BK-18** (A11; ADR 9401 §7) Üç değil sekiz metin: bekçi arayüz kitlerinin crate'lerini taramıyordu. Metinler
   yeniden yazıldı; bekçi dört ad daha arar ve `crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`'yi de tarar.
   - Açık: “Excel (.xlsx)” 27 yerde biçim adı olarak duruyor (sahibin kararı).
-  - Açık: sözleşmelerin belge yorumlarındaki kitaplık adı (17 yer, SDK `help()` metninde 14 satır) BK-16 ile temizlenir.
+  - Sözleşmelerin belge yorumlarındaki kitaplık adı BK-16'da temizlendi.
 - [ ] **BK-19** (A5) Doğrudan yazıcılar kilitli katman denetimine ve tek geri alma adımına bağlanır; komuta
   çevrilmeleri Aşama 2'den sonra. Stil yöneticisi `cad.library.edit`'e geçer.
 

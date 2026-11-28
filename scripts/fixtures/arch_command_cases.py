@@ -1988,7 +1988,7 @@ def mass_fields(n):
 def mass_problem(f, path):
     """MassFields::problem's rule and words, in its order (a ring's: a space's, `ring_problem_of`)."""
     if not f["parts"]:
-        return refusal("invalid_space", "Kütlenin oturumu yok: en az bir halka verin.", f"{path}.parts")
+        return refusal("invalid_mass", "Kütlenin oturumu yok: en az bir halka verin.", f"{path}.parts")
     for i, part in enumerate(f["parts"]):
         rings = [(part["outer"], f"{path}.parts[{i}].outer")]
         rings += [(h, f"{path}.parts[{i}].holes[{k}]") for k, h in enumerate(part.get("holes", []))]
@@ -1996,14 +1996,14 @@ def mass_problem(f, path):
             n = len(ring["pts"])
             curved = any(b != 0.0 for b in (ring.get("bulges") or []))
             if n < 3 and not (n == 2 and curved):
-                return refusal("invalid_space", f"Kütlenin halkası en az üç köşedir; {n} verildi.", at)
+                return refusal("invalid_mass", f"Kütlenin halkası en az üç köşedir; {n} verildi.", at)
     h, o, name = f["height"], f.get("offset", 0.0), f.get("name")
     if not (math.isfinite(h) and 0 < h <= 300.0):
-        return refusal("invalid_space", f"Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; {num(h)} verildi.", f"{path}.height")
+        return refusal("invalid_mass", f"Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; {num(h)} verildi.", f"{path}.height")
     if not (math.isfinite(o) and abs(o) <= 100.0):
-        return refusal("invalid_space", f"Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; {num(o)} verildi.", f"{path}.offset")
+        return refusal("invalid_mass", f"Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; {num(o)} verildi.", f"{path}.offset")
     if name is not None and (not name.strip() or name.strip() != name or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in name) or len(name) > 80):
-        return refusal("invalid_space", "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.", f"{path}.name")
+        return refusal("invalid_mass", "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.", f"{path}.name")
     return None
 
 
@@ -2908,7 +2908,7 @@ def mass(**kw):
 
 def mass_cases():
     """docs/adr/8178: masses written with their footprint and height, their bottom only when not 0, their name and
-    level when given; a mass's rings and height refused as a space's (`invalid_space`)."""
+    level when given; a mass's rings, height, bottom and name refused with its own code (`invalid_mass`)."""
     c = Cases()
     life(c, MASSES, mass(arch={"level": "zemin"}), "Zemin katta 20 × 12 m, 15 m yüksek blok")
     court = {"outer": ring((30, 60), (50, 60), (50, 80), (30, 80)), "holes": [ring((36, 66), (44, 66), (44, 74), (36, 74))]}

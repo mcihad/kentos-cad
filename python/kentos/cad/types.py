@@ -2018,8 +2018,8 @@ CrsSourceName = Literal["rfc7946", "geoJsonCrs", "prj", "ncz", "kml"]
 class CsvGeometry(_StrEnum):
     """Where a CSV's geometry is.
 
-    - ``wkt``: ISO WKT in a column named `WKT`, first (GDAL's `GEOMETRY=AS_WKT`).
-    - ``xy``: Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (GDAL's `GEOMETRY=AS_XY`);
+    - ``wkt``: ISO WKT in a column named `WKT`, first (the `GEOMETRY=AS_WKT` convention).
+    - ``xy``: Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (the `GEOMETRY=AS_XY` convention);
     - ``none``: No geometry: the attributes alone.
     """
     WKT = "wkt"
@@ -17711,7 +17711,7 @@ class ArchEdit(_Model):
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
     `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-    `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,
+    `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_mass` (a mass), `not_a_grid`, `grids_parallel`,
     `level_not_found`,
     `invalid_revision`, `revision_conflict`, `layer_locked`.
     Warnings: those of the stairs and ramps written.
@@ -30157,7 +30157,7 @@ class CsvExported(_Model):
     """What `file.export.csv` wrote (or with `plan` would write).
     Attributes:
         rows: Rows written (the header aside). Unit: count.
-        columns: The columns, in order, and their GDAL types as the `.csvt` names them.
+        columns: The columns, in order, and their types as the `.csvt` names them.
         files: The CSV, its `.csvt` and, when the project has a system, its `.prj`.
         left: Objects not written, by kind (a text, a dimension …; with X/Y every object that is no point). Unit: count.
         lost: What the CSV could not hold, a sentence each.
@@ -41247,7 +41247,7 @@ class ExportBlock(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExportCsv(_Model):
     """Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),
-    a `.csvt` beside it naming each column's GDAL type and a `.prj` naming the project's system. With more than one
+    a `.csvt` beside it naming each column's type and a `.prj` naming the project's system. With more than one
     layer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,
     `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
     Attributes:
@@ -42171,7 +42171,7 @@ class ExportTable(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExportXyz(_Model):
     """Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y
-    north in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the
+    north in the project's system, as the common XYZ readers and point cloud tools read them; the file names no system, the
     answer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or
     not at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),
     `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
@@ -43047,8 +43047,8 @@ class FgbExported(_Model):
     Attributes:
         name: The layer's name in the file (the file's name without `.fgb`).
         features: Unit: count.
-        columns: The columns, in order, and their types as GDAL names them.
-        geometry: The layer's geometry type as GDAL names it (`Unknown` for mixed types).
+        columns: The columns, in order, and their types by their simple-features names.
+        geometry: The layer's geometry type by its simple-features name (`Unknown` for mixed types).
         indexed: Whether the spatial index is written.
         bytes: Unit: bytes.
         left: Objects not written, by kind (a text, a dimension …). Unit: count.
@@ -46367,7 +46367,7 @@ class GeorefOutput(_Model):
 @dataclass(kw_only=True, slots=True)
 class GeorefPoint(_Model):
     """A control or check point: a pixel of the source (column, row; pixel corners, 0, 0 the upper left corner of the
-    upper left pixel, as GDAL's GCPs) and where it is (`target`, in the record's `srid`).
+    upper left pixel, as ground control points are given) and where it is (`target`, in the record's `srid`).
     Attributes:
         pixel: Unit: px.
         target: Its east and north (a geographic system's longitude and latitude, degrees). Unit: system.
@@ -63395,7 +63395,7 @@ class MassEntity(Entity):
 class MassesCreate(_Model):
     """Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.
 
-    Refusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_mass` (a mass's rings, height, bottom or name), `level_not_found`,
     `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
     `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
@@ -88910,8 +88910,8 @@ class RasterEntity(Entity):
         id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
-            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
-            geotransform order). Invertible. Unit: system.
+            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine
+            geotransform's usual order). Invertible. Unit: system.
         width: Its size in pixels. Unit: count.
         height: Unit: count.
         bands: Unit: count.
@@ -89116,8 +89116,8 @@ class RasterFields(_Model):
     geometry in the commands (`EntityGeometry::Raster`).
     Attributes:
         affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
-            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
-            geotransform order). Invertible. Unit: system.
+            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine
+            geotransform's usual order). Invertible. Unit: system.
         width: Its size in pixels. Unit: count.
         height: Unit: count.
         bands: Unit: count.
@@ -89559,7 +89559,7 @@ class RastersGpkgReadDone(_Model):
         height: Unit: count.
         bands: 4 for pictures (red, green, blue and alpha), 1 for a coverage. Unit: count.
         sample: `u8` for pictures; a coverage's `u16` or `i16` (integers read as they are), else `f32`.
-        affine: `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform. Unit: system.
+        affine: `[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform. Unit: system.
         srid: The table's EPSG code; 0: undefined or not EPSG. Unit: epsg.
         tiles_read: Tiles taken, and tiles of the window the table does not hold (transparent). Unit: count.
         tiles_missing: Unit: count.
@@ -89829,7 +89829,7 @@ class RastersMosaicked(_Model):
         width: Unit: count.
         height: Unit: count.
         bands: Unit: count.
-        affine: `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform. Unit: system.
+        affine: `[x₀, a, 0, y₀, 0, d]`: north up, the usual affine geotransform. Unit: system.
         srid: The files' coordinate system; 0: they name none. Unit: epsg.
         sources: The files, top first.
         bytes: The VRT's size. Unit: bytes.
@@ -91233,7 +91233,7 @@ class RecordGrid(_Model):
     band read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).
     Attributes:
         role: `input` or `output`.
-        affine: `[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j. Unit: system.
+        affine: `[x₀, a, b, y₀, c, d]`, the affine geotransform's usual order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j. Unit: system.
         width: Unit: count.
         height: Unit: count.
         band: The band read (1 and up); none for a result. Unit: index.
@@ -105886,7 +105886,7 @@ class StacPreparedBand(_Model):
         offset: Unit: value.
         width: Unit: count.
         height: Unit: count.
-        affine: `[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order). Unit: system.
+        affine: `[x₀, a, b, y₀, c, d]` as a raster's (the affine geotransform's usual order). Unit: system.
         epsg: Unit: epsg.
         common_name: The band's common name when the catalog gave one (`red`, `nir`, `nir08`).
         file: The local copy the raster reads (`local`), instead of the address.

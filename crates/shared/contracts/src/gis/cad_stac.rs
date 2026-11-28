@@ -484,7 +484,7 @@ pub struct StacPreparedBand {
     pub width: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub height: u32,
-    /// `[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order).
+    /// `[x₀, a, b, y₀, c, d]` as a raster's (the affine geotransform's usual order).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]

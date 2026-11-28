@@ -751,7 +751,7 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height,
     infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null
     PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label
-    (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space);
+    (adı), height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_mass);
     hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
     field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
     start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
@@ -799,8 +799,8 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
         material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill
         (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY
         38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); kütlenin label (adı),
-        height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_space);
-        hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
+        height, offset (katının döşemesine göre tabanı; hatalı kütle invalid_mass); hepsinin
+        level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
         field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
         start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
         (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach

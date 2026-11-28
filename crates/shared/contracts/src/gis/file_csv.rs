@@ -1,6 +1,6 @@
 //! A CSV table of objects in and out (docs/adr/0522, plan/gis.md CBS-05): the geometry as ISO WKT in its own column
-//! (arcs as circular strings, exact) or as X and Y columns, the attributes in the others; the column types in a GDAL
-//! `.csvt` beside it, the system in a `.prj`. GDAL's CSV driver reads and write the same.
+//! (arcs as circular strings, exact) or as X and Y columns, the attributes in the others; the column types in a
+//! `.csvt` beside it, the system in a `.prj`, as the common CSV drivers read and write them.
 
 use std::collections::BTreeMap;
 
@@ -22,10 +22,10 @@ pub const FILE_IMPORT_CSV_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum CsvGeometry {
-    /// ISO WKT in a column named `WKT`, first (GDAL's `GEOMETRY=AS_WKT`).
+    /// ISO WKT in a column named `WKT`, first (the `GEOMETRY=AS_WKT` convention).
     #[default]
     Wkt,
-    /// Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (GDAL's `GEOMETRY=AS_XY`);
+    /// Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (the `GEOMETRY=AS_XY` convention);
     /// objects that are no points are not written, and counted.
     Xy,
     /// No geometry: the attributes alone.
@@ -46,7 +46,7 @@ pub enum CsvSeparator {
 }
 
 /// Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),
-/// a `.csvt` beside it naming each column's GDAL type and a `.prj` naming the project's system. With more than one
+/// a `.csvt` beside it naming each column's type and a `.prj` naming the project's system. With more than one
 /// layer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,
 /// `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -99,7 +99,7 @@ pub struct CsvExported {
     /// Rows written (the header aside).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
-    /// The columns, in order, and their GDAL types as the `.csvt` names them.
+    /// The columns, in order, and their types as the `.csvt` names them.
     pub columns: Vec<String>,
     pub types: Vec<String>,
     /// The CSV, its `.csvt` and, when the project has a system, its `.prj`.

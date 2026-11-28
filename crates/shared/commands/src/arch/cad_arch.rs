@@ -1197,7 +1197,7 @@ pub struct NewMass {
 
 /// Input of `cad.masses.create` v1 (“Kütle”, docs/adr/8178): masses on a named layer, as one undo step.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_space` (a mass's rings or height), `level_not_found`,
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_mass` (a mass's rings, height, bottom or name), `level_not_found`,
 /// `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
 /// `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1624,7 +1624,7 @@ pub enum ArchOperation {
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
 /// `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-/// `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_space` (a mass), `not_a_grid`, `grids_parallel`,
+/// `invalid_beam`, `invalid_roof`, `invalid_railing`, `invalid_mass` (a mass), `not_a_grid`, `grids_parallel`,
 /// `level_not_found`,
 /// `invalid_revision`, `revision_conflict`, `layer_locked`.
 /// Warnings: those of the stairs and ramps written.

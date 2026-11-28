@@ -1,6 +1,5 @@
 //! `cad.masses.create` (docs/adr/8178): masses, a massing study's prisms, each its footprint, height and bottom over
-//! its storey, its name. A mass's rings and height follow a space's rules, its refusal `invalid_space` with its own
-//! words (the code table is at its size: a code of its own when it is split).
+//! its storey, its name. A mass's rings and height follow a space's rules; its refusal is its own, `invalid_mass`.
 
 use super::*;
 use kentos_commands::{MassesCreated, MassesPlan};
@@ -17,7 +16,7 @@ fn masses_check(doc: &Document, input: &kentos_commands::MassesCreate) -> Result
             "masses",
         ));
     }
-    too_many(input.masses.len(), codes::INVALID_SPACE, "kütle", "masses")?;
+    too_many(input.masses.len(), codes::INVALID_MASS, "kütle", "masses")?;
     let mut made: Vec<Made> = Vec::new();
     for (i, n) in input.masses.iter().enumerate() {
         let at = format!("masses[{i}]");
@@ -42,7 +41,7 @@ fn masses_check(doc: &Document, input: &kentos_commands::MassesCreate) -> Result
             name: n.name.clone(),
         };
         if let Some((field, words)) = m.problem() {
-            return Err(fail(codes::INVALID_SPACE, words, &format!("{at}.{field}")));
+            return Err(fail(codes::INVALID_MASS, words, &format!("{at}.{field}")));
         }
         crate::walls::level_known(doc, &m.arch, &format!("{at}.arch.level"))?;
         made.push((

@@ -1,4 +1,4 @@
-//! GML and XYZ in and out (docs/adr/0545, plan/gis.md CBS-05): OGC GML 3.2 simple features as GDAL's GML driver writes
+//! GML and XYZ in and out (docs/adr/0545, plan/gis.md CBS-05): OGC GML 3.2 simple features as the common GML drivers write
 //! and reads them (one feature type for each layer, an `.xsd` beside it, arcs as `ArcString` segments, exact, the
 //! system as its `urn:ogc:def:crs:EPSG::` name with the axes in EPSG's order), and the points or vertices of a
 //! drawing as text lines of X Y Z.
@@ -206,7 +206,7 @@ pub enum XyzWithoutZ {
 }
 
 /// Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y
-/// north in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the
+/// north in the project's system, as the common XYZ readers and point cloud tools read them; the file names no system, the
 /// answer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or
 /// not at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),
 /// `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.

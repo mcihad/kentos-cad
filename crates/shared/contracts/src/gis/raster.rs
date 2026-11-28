@@ -545,8 +545,8 @@ pub struct RasterEntity {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RasterFields {
     /// `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
-    /// upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
-    /// geotransform order). Invertible.
+    /// upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (the affine
+    /// geotransform's usual order). Invertible.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     /// Its size in pixels.
