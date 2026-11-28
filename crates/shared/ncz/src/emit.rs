@@ -385,8 +385,8 @@ impl Emitter {
         };
         let v = |c: &format::Coord| Vec2 { x: c.x, y: c.y };
         let mut b = self.base(e, layer);
-        // An overlay layer's symbol, from its style's numbers in Netcad's library, as the zoning legend draws it
-        // (docs/adr/9219); the plan's areas keep Netcad's colours (the owner's choice).
+        // An overlay layer's symbol, from its style's numbers in the writing program's library, as the zoning legend draws it
+        // (docs/adr/9219); the plan's areas keep the writing program's colours (the owner's choice).
         if let Some((symbol, area)) = overlay_symbol(&self.fin, e) {
             b.symbol = Some(symbol.to_owned());
             // An area's legend symbol is filled: seen through, the plan's lines under it stay (the owner's choice).
@@ -1224,15 +1224,15 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
-/// The zoning legend's mark a Netcad zoning plan's symbol code stands for (plan/render.md RM-18, docs/adr/9218): the
+/// The zoning legend's mark an NCZ zoning plan's symbol code stands for (plan/render.md RM-18, docs/adr/9218): the
 /// Mekânsal Planlar Yapım Yönetmeliği area symbol of KentOS's system library (MPYY, uygulama imar planı) whose centroid
 /// mark it is, drawn at the point (a fill symbol on a point draws its centroid marks there), and the attribute that
 /// mark reads (a trade area's level: T1, T2).
 ///
 /// Read from the Sivas plan: each code stands inside one kind of area (S75 in 63 kindergarten areas, S96 in the 277
-/// mosque areas…), and its drawing in Netcad's own DXF is that legend's mark (ANA in a triangle, a dome). Netcad's
+/// mosque areas…), and its drawing in the writing program's own DXF is that legend's mark (ANA in a triangle, a dome). The writing program's
 /// drawings are not copied: the marks are KentOS's own of the regulation's legend. Codes without one stay a point with
-/// their code: S101 (2 141 points in parks, which Netcad draws empty), the private institutions' Ö marks (S180, S181,
+/// their code: S101 (2 141 points in parks, which the writing program draws empty), the private institutions' Ö marks (S180, S181,
 /// S185), which the legend has no row for, and S15 (one point).
 fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'static str)>)> {
     let symbol = match code {
@@ -1291,7 +1291,7 @@ fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'stat
 
 /// The zoning legend's symbol an overlay layer's style stands for (plan/render.md RM-18, docs/adr/9219): an area of
 /// it the area symbol its layer's symbol number names (or, without one, its line type's area symbol), a line (or an
-/// area of a layer without either) the line symbol its line type number names. Netcad's layer record keeps only these
+/// area of a layer without either) the line symbol its line type number names. The writing program's layer record keeps only these
 /// numbers into its library (docs/adr/9216 §4½);
 /// their meaning is read from the layers that use them in the Sivas plan.
 /// Whether it is an area symbol comes with it.
@@ -1309,12 +1309,12 @@ fn overlay_symbol(h: &Header, e: &format::Entity) -> Option<(&'static str, bool)
 }
 
 /// How transparent an overlay area drawn with the legend's area symbol is (the owner's choice, 24 November 2026: the
-/// railway protection band's legend fill hid the railway's line under it; Netcad draws the band without a fill).
+/// railway protection band's legend fill hid the railway's line under it; the writing program draws the band without a fill).
 const OVERLAY_TRANSPARENCY: f64 = 0.6;
 
-/// An overlay layer's symbol number in Netcad's library and the zoning legend's area symbol it is: the protection
+/// An overlay layer's symbol number in the writing program's library and the zoning legend's area symbol it is: the protection
 /// bands, the sites and the registered buildings. A plan area layer's symbol number is its legend mark's code
-/// (`legend_mark`), not here: those areas keep Netcad's colours and their marks come from the plan's symbol points.
+/// (`legend_mark`), not here: those areas keep the writing program's colours and their marks come from the plan's symbol points.
 fn overlay_area(symbol: u8) -> Option<&'static str> {
     Some(match symbol {
         35 => "mpyy.uip.ortak-sit.1-derece-arkeolojik-sit-alani",
@@ -1333,13 +1333,13 @@ fn overlay_area(symbol: u8) -> Option<&'static str> {
     })
 }
 
-/// A line type number in Netcad's library and the zoning legend's line symbol it is, each read from the one plan line
+/// A line type number in the writing program's library and the zoning legend's line symbol it is, each read from the one plan line
 /// layer that uses it. Numbers two different lines share (15: plan approval and staging boundaries) or whose meaning
 /// is not certain (31, 32) are left out.
 fn overlay_line(line_type: u8) -> Option<&'static str> {
     Some(match line_type {
         11 => "mpyy.uip.yapi-duzeni.yapi-yaklasma-siniri",
-        // The plan's approval boundaries, whole and by stage: Netcad draws both with this line type.
+        // The plan's approval boundaries, whole and by stage: the writing program draws both with this line type.
         15 => "mpyy.uip.ortak-planlama.plan-onama-siniri",
         19 => "mpyy.uip.enerji.dogalgaz-boru-hatti",
         21 => "mpyy.uip.su.atik-su-ana-kollektoru",
@@ -1356,7 +1356,7 @@ fn overlay_line(line_type: u8) -> Option<&'static str> {
 }
 
 /// An area of a layer without a symbol number and the zoning legend's area symbol its line type stands for: the
-/// registered parcels, which Netcad hatches (its DXF: 188 parcels, 188 hatches).
+/// registered parcels, which the writing program hatches (its DXF: 188 parcels, 188 hatches).
 fn overlay_area_of_line(line_type: u8) -> Option<&'static str> {
     Some(match line_type {
         13 => "mpyy.uip.korunacak.tescilli-parsel",
@@ -1364,7 +1364,7 @@ fn overlay_area_of_line(line_type: u8) -> Option<&'static str> {
     })
 }
 
-/// The height Netcad writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
+/// The height the writing program writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
 /// shows at the 1:1000 an NCZ opens at (docs/adr/9217).
 const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
 
@@ -1372,7 +1372,7 @@ const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
 const LEAST_PARCELS: usize = 10;
 
 /// Whether a label is a parcel's `ada/parsel`: the layers whose areas mostly carry one are the cadastre's. A plan's
-/// areas carry labels too (`70`, `İRT_A952`, `OA_2_1`), and Netcad writes none of them on the plan.
+/// areas carry labels too (`70`, `İRT_A952`, `OA_2_1`), and the writing program writes none of them on the plan.
 fn block_and_parcel(label: &str) -> bool {
     label
         .trim()
@@ -1381,7 +1381,7 @@ fn block_and_parcel(label: &str) -> bool {
         && parcel_number(label).is_some()
 }
 
-/// A parcel's number as Netcad writes it on the plan from the parcel's label: the parcel's part of `ada/parsel`
+/// A parcel's number as the writing program writes it on the plan from the parcel's label: the parcel's part of `ada/parsel`
 /// (`1588/10` → `10`, `103/TH4` → `TH4`), a label without an ada whole (`6587`); none for words (`TESCİL HARİCİ`).
 fn parcel_number(label: &str) -> Option<&str> {
     let label = label.trim();
@@ -1415,28 +1415,21 @@ fn area_centroid(pts: &[Vec2]) -> Option<Vec2> {
     })
 }
 
-/// Whether `p` is inside the ring (even-odd).
+/// Whether `p` is inside the ring (even-odd), decided exactly (the core's test, docs/adr/9401 §9.2).
 fn in_ring(pts: &[Vec2], p: Vec2) -> bool {
-    let mut odd = false;
-    for i in 0..pts.len() {
-        let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
-        if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
-            odd = !odd;
-        }
-    }
-    odd
+    kentos_geometry_core::geometry::point_in_ring(p, pts)
 }
 
-/// The parcel numbers Netcad shows from the parcels' labels that no text shows (plan/render.md RM-18, docs/adr/9216
+/// The parcel numbers the writing program shows from the parcels' labels that no text shows (plan/render.md RM-18, docs/adr/9216
 /// §4, 9217); how many parcels a text of their layer numbers already, and how many were left without one.
 ///
-/// Netcad writes each parcel's number at the area centroid of the parcel, centred, 3 m high, whether or not a text of
+/// The writing program writes each parcel's number at the area centroid of the parcel, centred, 3 m high, whether or not a text of
 /// its own numbers it: the Sivas plan's DXF shows the number twice on most of its parcels. The owner's choice (24
 /// November 2026): only the parcels no text numbers get it. A layer is a cadastre's when at least [`LEAST_PARCELS`] of
 /// its areas, and most of its labelled ones, carry an `ada/parsel` label.
 ///
 /// Only a parcel whose centroid lies in it alone gets it. Where parcels lie over one another (an old parcel under its
-/// divisions), Netcad does not write the label's number: on 183 of the Sivas plan's 1 199 such parcels it writes another
+/// divisions), the writing program does not write the label's number: on 183 of the Sivas plan's 1 199 such parcels it writes another
 /// one, from a field this reader cannot tie to the parcel (docs/adr/0138). A number left out is better than a wrong one.
 fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
     struct Area<'a> {
@@ -1612,9 +1605,9 @@ pub fn read(
         report.about(
             "Parsel numarası",
             &format!(
-                "{} parselin numarası yalnız alanın etiketindeydi; Netcad'in gösterdiği gibi alanın ağırlık merkezine \
+                "{} parselin numarası yalnız alanın etiketindeydi; dosyayı yazan programın gösterdiği gibi alanın ağırlık merkezine \
                  {} m yüksekliğinde yazıldı. Numarası bir yazıyla zaten görünen {} parsele dokunulmadı. Ağırlık \
-                 merkezi başka bir parselin içinde de kalan {} parsele yazılmadı: üst üste parsellerde Netcad'in \
+                 merkezi başka bir parselin içinde de kalan {} parsele yazılmadı: üst üste parsellerde o programın \
                  gösterdiği numara etiketten değil, bu dosyada parsele bağlanamayan bir alandan geliyor.",
                 numbers.len(),
                 PARCEL_NUMBER_HEIGHT,
@@ -1628,9 +1621,9 @@ pub fn read(
         report.about(
             "Katman sembolü",
             &format!(
-                "{} nesne katmanının Netcad stilinin karşılığı olan Mekânsal Planlar Yapım Yönetmeliği lejantı \
+                "{} nesne katmanının dosyadaki stilinin karşılığı olan Mekânsal Planlar Yapım Yönetmeliği lejantı \
                  sembolüyle çizildi (koruma kuşakları, sitler, tescilli yapılar, plan hatları). Plan alanları \
-                 Netcad'in renginde kaldı.",
+                 dosyadaki renginde kaldı.",
                 em.overlays
             ),
         );
@@ -1769,7 +1762,7 @@ mod tests {
             }
         }
         assert_eq!(found, 47);
-        // The overlays' area and line symbols, by their numbers in Netcad's library (docs/adr/9219).
+        // The overlays' area and line symbols, by their numbers in the writing program's library (docs/adr/9219).
         let kind = |id: &str| {
             items
                 .iter()
@@ -1811,7 +1804,7 @@ mod tests {
         assert_eq!(
             legend_mark("S101"),
             None,
-            "Netcad draws a park's mark empty"
+            "the writing program draws a park's mark empty"
         );
         assert_eq!(
             legend_mark("S180"),
@@ -1843,7 +1836,7 @@ mod tests {
             let x = f64::from(i) * 30.0;
             all.push(parcel("KADASTRO", x, &format!("101/{i}")));
             if i % 3 != 0 {
-                // The number inside, as Netcad's own texts are; one of them the whole label.
+                // The number inside, as the writing program's own texts are; one of them the whole label.
                 all.push(text(
                     "KADASTRO",
                     x + 8.0,
@@ -1868,7 +1861,7 @@ mod tests {
         }
         for i in 0..12 {
             all.push(parcel("PLAN", 2000.0 + f64::from(i) * 30.0, "KONUT"));
-            // A plan's areas numbered without a block: Netcad writes none of them.
+            // A plan's areas numbered without a block: the writing program writes none of them.
             all.push(parcel(
                 "PL_KONUT",
                 3000.0 + f64::from(i) * 30.0,

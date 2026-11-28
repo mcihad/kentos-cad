@@ -262,7 +262,7 @@ düzenlenir.
     bağlandı. TM koordinatında 10 m'lik karenin merkezi 3,6 m, küçük bir kolonunki 1,4 km kayıyordu. Yol'un koridor
     denetimi ve yüzey kapsamı çizimi, Mimari denetimin mahal noktası, gölge, çıkma izdüşümü, net genişlik, işlem
     araçlarının denetim olguları, etiket motoru. Üç sınama önce kırmızıydı.
-  - Kalan: NCZ okuyucusundaki kopya (`ncz/src/emit.rs`); dosyadaki 26 ad atfıyla birlikte temizlenir.
+  - NCZ okuyucusundaki kopya da bağlandı; crate'teki 61 ad atfı (ikisi açılış raporunun iletisinde) temizlendi.
   - Kalan: çizime dilin kendi yuvarlamasıyla yazılan sayı dört değilmiş. Tarama (bir yazının ya da özniteliğin
     yanında `{:.N}`) uygulama katmanında yirmi kadar yer daha gösteriyor: Yol'un çizim komutları (koridor, menfez,
     otokorkuluk, kavşak, istinat duvarı, kazı-dolgu, yüzey kapsamı), boru profili çizelgesi, ağ elipsleri,

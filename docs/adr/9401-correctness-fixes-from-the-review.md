@@ -406,8 +406,9 @@ biçimlemeleri BK-50'dedir.
     aynı yazımı kullanır.
   - Nokta bulutunun sınırı (`pointcloud/src/ops/boundary.rs`): sınanan nokta yarım hücrededir, kenara hiç düşmez.
   - Arayüzün ekran pikselleri (`ui/src/spatial/query.rs`): ölçme değil, seçim.
-  - NCZ okuyucusu (`ncz/src/emit.rs`): dosya başka bir programın adını 26 yerde anıyor; dosyaya dokunan iş onları da
-    temizlemek zorundadır. Ayrı iş.
+  - NCZ okuyucusu (`ncz/src/emit.rs`) sonradan bağlandı: dosya başka bir programın adını 26 yerde anıyordu, ikisi
+    açılış raporunda kişiye gösterilen iletideydi. Crate'in tamamındaki 61 atıf aynı işte temizlendi (iletiler
+    “dosyayı yazan program” ve “dosyadaki stil” diyor).
   - Kesişimin kendi değerini kullanan tarama ve kesme hesapları: içerme sınaması değildir.
 - Alan hesabının kopyaları §9.3'tedir.
 

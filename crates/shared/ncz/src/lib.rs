@@ -1,4 +1,4 @@
-//! Netcad NCZ drawings (docs/adr/0138): a file's bytes into the app's
+//! NCZ drawings (docs/adr/0138): a file's bytes into the app's
 //! objects (`ImportResult`, the contract every import gives), with a report
 //! of what was read, converted or left out, like every reader of the formats
 //! crate (CLAUDE.md §9.7). The desktop links it; the browser runs it in a

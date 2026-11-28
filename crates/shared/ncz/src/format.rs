@@ -1,4 +1,4 @@
-//! The Netcad NCZ drawing format, parsed: the records exactly as the
+//! The NCZ drawing format, parsed: the records exactly as the
 //! reference plugin reads them (README.md: a port of `ncz_pure.py` of Erdinç
 //! Örsan ÜNAL's NCZ Reader 1.4.3, GPL-2.0-or-later). `emit` turns them into
 //! the app's objects.
@@ -24,17 +24,17 @@
 //! - WHAT THE REFERENCE DROPS IN SILENCE IS COUNTED: a record too short for its
 //!   type, a coordinate outside the world, a text with no height.
 //! - A BLOCK OF A TYPE IT DOES NOT KNOW IS SEARCHED FOR GEOMETRY, as a container
-//!   is. Netcad 8 writes its settings as `name value` strings between the
+//!   is. Version 8 writes its settings as `name value` strings between the
 //!   geometry; the reference's walk reads a letter of them as a block type and
-//!   skips what that "block" spans — a third of a 72 MB Sivas UİP. A Netcad 5
+//!   skips what that "block" spans — a third of a 72 MB Sivas UİP. A version 5
 //!   file reads exactly as before.
 //! - A SMART OBJECT WITH NO RECTANGLE IS KEPT AS A POINT (the reference needs a
-//!   rectangle of at least a millimetre; Netcad 8's notations are anchored at a
-//!   point), and a Netcad 8 smart object's PROPERTIES are read: its class and
+//!   rectangle of at least a millimetre; version 8's notations are anchored at a
+//!   point), and a version 8 smart object's PROPERTIES are read: its class and
 //!   values (`nizam=AYRIK`, `taks=0.4`), which `symbols` draws.
 //! - THE LINE WIDTH IS READ: the float at +28 of every geometry record, in
 //!   tenths of a millimetre.
-//! - THE WALK RESUMES AFTER A NETCAD 8 SMART OBJECT'S PROPERTIES, which run 81
+//! - THE WALK RESUMES AFTER A VERSION 8 SMART OBJECT'S PROPERTIES, which run 81
 //!   bytes past the size its header declares.
 
 use std::collections::BTreeSet;
@@ -232,11 +232,11 @@ pub mod field {
     pub const CLOSED: u16 = 1 << 12;
 }
 
-/// A Netcad 8 smart object's class ("akıllı nesne"), as the GUID in its
+/// A version 8 smart object's class ("akıllı nesne"), as the GUID in its
 /// record names it: Planet's symbol tools write these.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SmartClass {
-    /// Not a Netcad 8 smart object: the reference's rectangle, or nothing.
+    /// Not a version 8 smart object: the reference's rectangle, or nothing.
     #[default]
     None,
     /// `Yerleşim`: order, storeys, garden distances.
@@ -254,7 +254,7 @@ pub enum SmartClass {
 }
 
 impl SmartClass {
-    /// The words Netcad's menu uses.
+    /// The words the writing program's menu uses.
     pub fn name(self) -> &'static str {
         match self {
             SmartClass::None => "",
@@ -268,7 +268,7 @@ impl SmartClass {
     }
 }
 
-/// One property of a Netcad 8 smart object: every value is TEXT in the
+/// One property of a version 8 smart object: every value is TEXT in the
 /// record (`12`, `0.4`, `AYRIK`, `True`), whatever its type byte says.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SmartProperty {
@@ -276,7 +276,7 @@ pub struct SmartProperty {
     pub name: String,
     /// Its value, as written.
     pub value: String,
-    /// The label Netcad's property grid shows: `Nizam`, `Taks`.
+    /// The label the writing program's property grid shows: `Nizam`, `Taks`.
     pub display: String,
     /// A value the user entered, not a setting of the symbol.
     pub user: bool,
@@ -321,7 +321,7 @@ pub struct Entity {
     /// `field` bits.
     pub set: u16,
     pub coords: Vec<Coord>,
-    /// A Netcad 8 smart object's class and properties; the size and the
+    /// A version 8 smart object's class and properties; the size and the
     /// rotation are `scale` and `rotation`.
     pub smart: SmartClass,
     pub properties: Vec<SmartProperty>,
@@ -335,7 +335,7 @@ pub struct Header {
     pub layer_names: Vec<String>,
     /// LEX.ST2, 0xFFRRGGBB.
     pub layer_colors: Vec<u32>,
-    /// LEX.ST2, each layer's line type and symbol numbers in Netcad's library (docs/adr/9216 §4½, 9219): byte 5 of the
+    /// LEX.ST2, each layer's line type and symbol numbers in the writing program's library (docs/adr/9216 §4½, 9219): byte 5 of the
     /// layer's 256-byte item, and byte 17 when byte 19 says it is set. The drawings are in that library, not the file.
     pub layer_styles: Vec<(u8, Option<u8>)>,
     /// `5.2.0.1035N`.
@@ -369,7 +369,7 @@ pub struct Header {
     pub swept_entities: u64,
     /// Smart objects kept as a point because they have no usable rectangle.
     pub point_smart_objects: u64,
-    /// Netcad 8 smart objects read with their class and properties.
+    /// Version 8 smart objects read with their class and properties.
     pub planet_symbols: u64,
     /// The drawing has at least one smart object (the reference's own test).
     pub smart_object: bool,
@@ -581,7 +581,7 @@ impl Parser<'_, '_> {
                 }
             } else {
                 // A type the reference does not know, searched as a container
-                // is: Netcad 8's interleaved settings make the walk land on a
+                // is: version 8's interleaved settings make the walk land on a
                 // letter as a "block type", and what follows it is geometry.
                 let before = self.appended;
                 let done = self.parse_embedded_geometry(cursor, bsize, watch);
@@ -788,9 +788,9 @@ impl Parser<'_, '_> {
         String::new()
     }
 
-    // ── Netcad 8 smart objects ──
+    // ── Version 8 smart objects ──
 
-    /// Where a Netcad 8 smart object really ends, from `offset`: past its
+    /// Where a version 8 smart object really ends, from `offset`: past its
     /// property block, which the record's header does not count (it declares
     /// 81 bytes fewer); 0 for any other record. The walk resumes there, so
     /// the block's last bytes are never read as blocks of their own: a
@@ -835,9 +835,9 @@ impl Parser<'_, '_> {
     }
 
     /// The property block after a smart object's geometry, into `e`; `false`
-    /// when the record carries none (a Netcad 5 smart object) or does not
+    /// when the record carries none (a version 5 smart object) or does not
     /// hold together — then the record is read the reference's way. Each
-    /// property: its name, a type byte, its value and the label Netcad shows
+    /// property: its name, a type byte, its value and the label the writing program shows
     /// for it (each a varint length and bytes), then seven flag bytes whose
     /// last says whether the value is the user's. Every value is text.
     fn smart_properties(&self, offset: usize, e: &mut Entity) -> bool {
@@ -1539,7 +1539,7 @@ impl Parser<'_, '_> {
         self.append(self.byte(offset + 7), self.byte(offset + 37));
     }
 
-    /// `_parse_smart_object`: Netcad's type 15, a rotated rectangle with a
+    /// `_parse_smart_object`: the writing program's type 15, a rotated rectangle with a
     /// width, a height, a grid and a scale; its rotation in GRADS.
     fn parse_smart_object(&mut self, offset: usize, block_size: usize) {
         let layer_code = self.byte(offset + 7);
@@ -1572,7 +1572,7 @@ impl Parser<'_, '_> {
             }
         }
         // NO RECTANGLE: a plan notation anchored at a point (no size, or a
-        // size field holding something else: Netcad 8 writes 10^222 there for
+        // size field holding something else: version 8 writes 10^222 there for
         // some kinds). What the reference would have KEPT still decides the
         // `S0` rule, so that stays the reference's.
         let reference_keeps = !(width < 0.001 || height < 0.001);
@@ -1598,7 +1598,7 @@ impl Parser<'_, '_> {
             return;
         }
 
-        // A NETCAD 8 SMART OBJECT: a Planet symbol with its properties. Its
+        // A VERSION 8 SMART OBJECT: a Planet symbol with its properties. Its
         // anchor, size and turn are all `symbols` needs to draw it.
         self.begin(Kind::SmartObject);
         let mut e = std::mem::take(&mut self.entity);

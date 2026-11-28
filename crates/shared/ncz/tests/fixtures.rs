@@ -280,7 +280,7 @@ fn a_cut_file_gives_the_whole_records_before_the_cut() {
 }
 
 #[test]
-fn netcad_8_smart_objects_become_their_symbols_on_the_layers_drawn_on_top() {
+fn version_8_smart_objects_become_their_symbols_on_the_layers_drawn_on_top() {
     let r = read("07-akilli-nesneler.ncz");
     assert_eq!(fact(&r, "Sürüm"), Some("NCZ 8.5.6.1095"));
     assert_eq!(

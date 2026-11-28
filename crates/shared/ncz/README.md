@@ -1,6 +1,6 @@
 # kentos-ncz
 
-Netcad NCZ drawings read into KentOS's objects (docs/adr/0138).
+NCZ drawings read into KentOS's objects (docs/adr/0138).
 
 ## Where the code comes from
 
@@ -12,7 +12,7 @@ the same records with the same values in the same order; the places it differs o
 purpose are listed at the top of `src/format.rs`. It was ported to C++ first (in
 KentOSCad, 28 September 2026) and from there to Rust.
 
-What is not from the plugin: reading Netcad 8's smart objects ("akıllı nesne": the
+What is not from the plugin: reading version 8's smart objects ("akıllı nesne": the
 settlement, construction, road-width, plan-note and function-name symbols of Planet)
 and drawing them (`src/symbols.rs`), sweeping unknown blocks for geometry, the line
 width at +28, a map sheet's true frame in the zone the file names (`src/sheet.rs`;

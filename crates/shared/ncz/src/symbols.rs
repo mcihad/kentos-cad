@@ -1,11 +1,11 @@
-//! The drawing of a Netcad 8 smart object. Netcad calls these "akıllı nesne":
+//! The drawing of a version 8 smart object. The writing program calls these "akıllı nesne":
 //! the settlement, construction, road-width, plan-note and function-name
 //! symbols its Planet module places on a zoning plan. A file keeps only their
-//! properties (`nizam=AYRIK`, `kat=3`, `taks=0.4`) and Netcad draws the symbol
+//! properties (`nizam=AYRIK`, `kat=3`, `taks=0.4`) and the writing program draws the symbol
 //! when it shows them; its own DXF export leaves most of them out.
 //!
-//! WHAT THEY LOOK LIKE was taken from Netcad's documentation of the tools that
-//! make them ("2.4 Sembol İşlemleri", wiki.netcad.com.tr), measured against
+//! WHAT THEY LOOK LIKE was taken from the writing program's documentation of the tools that
+//! make them ("2.4 Sembol İşlemleri", the program's own documentation, cited in docs/adr/0138), measured against
 //! the symbol's radius: ten metres at an object size of one, which is what the
 //! record's own bounding box says (20 × size across, on all 15 722 objects of
 //! the Sivas UİP):
@@ -98,7 +98,7 @@ fn number(value: &str) -> Option<f64> {
     v.parse::<f64>().ok().filter(|x| x.is_finite())
 }
 
-/// `value` with `decimals` places, as Netcad prints a TAKS or a road width
+/// `value` with `decimals` places, as the writing program prints a TAKS or a road width
 /// (`0.4` is `0.40`); the value as written when it is not a number.
 fn fixed(value: &str, decimals: usize) -> String {
     match number(value) {
@@ -126,7 +126,7 @@ fn fold(text: &str) -> String {
 }
 
 /// The letters a settlement symbol writes for its order. Only the three
-/// Netcad's documentation shows and a real plan uses are shortened (`A`,
+/// The writing program's documentation shows and a real plan uses are shortened (`A`,
 /// `B`, `BL`); any other order is written out, which is readable, rather
 /// than abbreviated by a guess, which could be wrong.
 fn order_code(nizam: &str) -> String {
@@ -338,7 +338,7 @@ fn plan_note(e: &Entity) -> Option<Symbol> {
     }
     // As tall as the note's paragraphs fit its box, and never wider than the
     // longest line allows: the RTF's own point sizes are relative to a page
-    // Netcad scales into the box, so the box is what is known.
+    // The writing program scales into the box, so the box is what is known.
     let lines = body.split('\n').count();
     let longest = body
         .split('\n')
@@ -375,7 +375,7 @@ fn plan_note(e: &Entity) -> Option<Symbol> {
     })
 }
 
-/// The drawing of a Netcad 8 smart object, or nothing for a class this reader
+/// The drawing of a version 8 smart object, or nothing for a class this reader
 /// does not draw (which is then read as a point with its properties).
 /// `measure(text, height)` is a text's width in the drawing's typeface.
 pub fn planet_symbol(e: &Entity, measure: &dyn Fn(&str, f64) -> f64) -> Option<Symbol> {
@@ -431,7 +431,7 @@ fn cp1254(byte: u8) -> char {
 /// The plain text of an RTF document, paragraphs on their own lines: what a
 /// plan note says, without its fonts. Group destinations (font and colour
 /// tables, pictures, `\*` groups) are skipped; `\uN` is decoded, and `\'hh`
-/// as Windows-1254, which is what a Turkish Netcad writes.
+/// as Windows-1254, which is what the writing program's Turkish edition writes.
 pub fn rtf_text(rtf: &[u8]) -> String {
     const SKIP: [&[u8]; 16] = [
         b"fonttbl",
