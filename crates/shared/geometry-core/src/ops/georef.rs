@@ -1,5 +1,5 @@
-//! Raster oturt's transforms (docs/adr/0204 §6), one for both platforms (the
-//! web through WASM): from a raster's pixels (column, row) to the drawing,
+//! Raster oturt's transforms (docs/adr/0204 §6), one for every host: from a
+//! raster's pixels (column, row) to the drawing,
 //! fitted to control points. Helmert, affine and projective are Vektör
 //! oturtma's least squares (`ops::fit`); polynomials of order 2 and 3 are
 //! least squares in the points' centred and scaled frames; the thin plate is

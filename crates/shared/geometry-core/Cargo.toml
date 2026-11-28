@@ -1,24 +1,25 @@
 [package]
 name = "kentos-geometry-core"
-description = "Pure analytic CAD geometry shared by the browser (WASM) and the server"
+description = "Pure analytic CAD geometry shared by the desktop programs, the server and the automation hosts"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
-# Pure dependencies only: this crate must build for every target (native,
-# wasm32) and never reach for the file system, the network or a runtime
-# (CLAUDE.md §14). rust_decimal carries exact decimals for the numeric
-# policy (§23); libm gives every target the same transcendental functions
-# (§23.4). geographiclib-rs gives geodesics and their polygons' areas on the
-# ellipsoid (docs/adr/0171). Objects cross the WASM boundary through the
-# crate's own small JSON module (api/json.rs, docs/adr/0008); serde is only
-# for the tests.
+# Pure dependencies only: this crate never reaches for the file system, the
+# network or a runtime (CLAUDE.md §14). rust_decimal carries exact decimals
+# for the numeric policy (§23); libm gives every platform the same
+# transcendental functions (§23.4). geographiclib-rs gives geodesics and their
+# polygons' areas on the ellipsoid (docs/adr/0171). Objects cross a host's
+# boundary through the crate's own small JSON module (api/json.rs,
+# docs/adr/0008); serde is only for the tests.
 [dependencies]
+# The numeric base (docs/adr/9403): the correctly rounded functions the core computes with.
+kentos-num = { path = "../num" }
 rust_decimal = { workspace = true }
 libm = { workspace = true }
 geographiclib-rs = { workspace = true }
-# Native plot's existing OpenType shaper; pure Rust on native/WASM.
+# The plot's OpenType shaper; pure Rust.
 rustybuzz = "=0.20.1"
 unicode-bidi = "=0.3.18"
 unicode-script = "=0.5.9"

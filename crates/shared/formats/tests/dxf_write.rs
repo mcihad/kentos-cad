@@ -1233,12 +1233,8 @@ fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
     assert_eq!(weights[1], Some(0.5));
 }
 
-/// FNV-1a over a file's bytes (64 bits): a fingerprint to hold a written file to.
-fn fnv64(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(0xcbf2_9ce4_8422_2325, |h, b| {
-        (h ^ u64::from(*b)).wrapping_mul(0x0000_0100_0000_01b3)
-    })
-}
+#[path = "support/frozen.rs"]
+mod frozen;
 
 /// A drawing without elevations is the file it was before elevations were
 /// (docs/adr/0142): the same bytes, so nothing an old reader was given changes.
@@ -1247,7 +1243,8 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups; a
 /// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more; a
 /// TrueType text's 40 is its capitals' height (§3), 11 bytes more; so is a dimension's DIMTXT, 140 bytes more; an
-/// aligned text's point is lowered so its baseline stays, its own point kept, 1 bytes more.
+/// aligned text's point is lowered so its baseline stays, its own point kept, 1 bytes more; a spline's last knot, its
+/// chord's length, is the nearest double (docs/adr/9403 §6: a last place away in its six places), 12 bytes fewer.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1255,7 +1252,10 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38312, 0x5058_7580_d227_52b9));
+    if frozen::kept("dxf-without-elevations.dxf", &bytes) {
+        return;
+    }
+    assert_eq!(frozen::print(&bytes), (38300, 0xc991_46ae_9db3_425d));
     // And it says nothing of elevations.
     assert!(
         report
@@ -2083,8 +2083,7 @@ fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
 
 /// The blocks' fixture (`fixtures/formats/v1/dxf-write/blocks.input.json`,
 /// written by hand) goes out as its committed bytes: `KENTOS_WRITE_DXF=1`
-/// rewrites them (read the difference first). The web's module writes the
-/// same bytes (`dxf.wasm.test.ts`), and `scripts/fixtures/dxf_write_reference.py`
+/// rewrites them (read the difference first), and `scripts/fixtures/dxf_write_reference.py`
 /// checks them against the input without KentOS's code.
 #[test]
 fn the_blocks_fixture_is_written_to_its_committed_bytes() {

@@ -1,9 +1,9 @@
 //! The frozen answers of the style compiler (fixtures/style/v1/cases.json,
-//! recorded by apps/web/scripts/fixtures/record-style.test.ts after the core
-//! agreed with the TypeScript it replaced), natively: one symbol on one
-//! object through the preview entry, and whole layers from what the page
+//! recorded after the core agreed with the TypeScript it replaced; kept
+//! since by `scripts/fixtures/ulp_diff.py`, docs/adr/9403 §6): one symbol on
+//! one object through the preview entry, and whole layers from what the page
 //! gave the core (the program, the objects' numbers, the expression table)
-//! with a geometry store of the case's objects. Same bits as through WASM.
+//! with a geometry store of the case's objects.
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json as CoreJson;
@@ -42,6 +42,11 @@ fn one_symbol_on_one_object_as_frozen() {
     let cases = file["symbols"]
         .as_array()
         .unwrap_or_else(|| panic!("symbols"));
+    // `KENTOS_WRITE_FROZEN=<folder>`: the symbols whose answer differs are written there as patches, and
+    // `scripts/fixtures/ulp_diff.py --apply` reads the difference and writes it into the file (the web's recorder is
+    // gone, docs/adr/9402; the tool refuses anything but numbers moved in their last places).
+    let writing = std::env::var_os("KENTOS_WRITE_FROZEN");
+    let mut patches: Vec<Json> = Vec::new();
     for (i, c) in cases.iter().enumerate() {
         let input = json!({
             "symbol": c["symbol"],
@@ -56,9 +61,20 @@ fn one_symbol_on_one_object_as_frozen() {
             CoreJson::parse(&input.to_string()).unwrap_or_else(|e| panic!("sembol {i}: {e}"));
         let got = compile_one(&input).unwrap_or_else(|e| panic!("sembol {i}: {e}"));
         let got: Json = serde_json::from_str(&got).unwrap_or_else(|e| panic!("sembol {i}: {e}"));
+        if got != c["primitives"] && writing.is_some() {
+            patches.push(json!({"at": ["symbols", i, "primitives"], "value": got}));
+            continue;
+        }
         assert_eq!(got, c["primitives"], "sembol {i}");
     }
     assert!(cases.len() >= 100, "{}", cases.len());
+    if let Some(dir) = writing {
+        let dir = std::path::PathBuf::from(dir);
+        std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display()));
+        let path = dir.join("style-symbols.patches.json");
+        std::fs::write(&path, Json::Array(patches).to_string() + "\n")
+            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    }
 }
 
 #[test]
@@ -69,9 +85,13 @@ fn whole_layers_as_frozen() {
         .unwrap_or_else(|| panic!("layers"));
     let mut numbers_checked = 0;
     // `KENTOS_WRITE_STYLE_CASES=1`: a change meant to change the layers' numbers writes them anew (the web that
-    // recorded them is paused, ADR 0228); the batches must still be the frozen ones.
+    // recorded them is gone, docs/adr/9402); the batches must still be the frozen ones.
     let writing = std::env::var_os("KENTOS_WRITE_STYLE_CASES").is_some();
     let mut rewritten: Vec<(Vec<f32>, Option<Json>)> = Vec::new();
+    // `KENTOS_WRITE_FROZEN=<folder>`: numbers moved in their last places, in the batches or in the data, go there as
+    // patches for `scripts/fixtures/ulp_diff.py --apply`, which reads how far and refuses anything else.
+    let frozen = std::env::var_os("KENTOS_WRITE_FROZEN");
+    let mut patches: Vec<Json> = Vec::new();
     for (i, c) in cases.iter().enumerate() {
         let mut store = Store::new();
         store
@@ -147,6 +167,31 @@ fn whole_layers_as_frozen() {
             numbers_checked += want.len();
             continue;
         }
+        if frozen.is_some() {
+            if batches != c["batches"] {
+                patches.push(json!({"at": ["layers", i, "batches"], "value": batches}));
+            }
+            let same = out.data.len() == want.len()
+                && out
+                    .data
+                    .iter()
+                    .zip(&want)
+                    .all(|(got, want)| got.to_bits() == (*want as f32).to_bits());
+            if !same {
+                // A float32 as the fewest digits that read back as it, the recorder's form.
+                let data: Vec<Json> = out
+                    .data
+                    .iter()
+                    .map(|x| match format!("{x}").parse::<f64>() {
+                        Ok(v) if x.is_finite() => json!(v),
+                        _ => json!("NaN"),
+                    })
+                    .collect();
+                patches.push(json!({"at": ["layers", i, "data"], "value": data}));
+            }
+            numbers_checked += want.len();
+            continue;
+        }
         assert_eq!(batches, c["batches"], "katman {i}: topluluklar");
         assert_eq!(out.data.len(), want.len(), "katman {i}: sayılar");
         for (k, (got, want)) in out.data.iter().zip(&want).enumerate() {
@@ -162,6 +207,13 @@ fn whole_layers_as_frozen() {
     assert!(numbers_checked > 10_000, "{numbers_checked}");
     if writing {
         write_layer_numbers(&rewritten);
+    }
+    if let Some(dir) = frozen {
+        let dir = std::path::PathBuf::from(dir);
+        std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display()));
+        let path = dir.join("style-layers.patches.json");
+        std::fs::write(&path, Json::Array(patches).to_string() + "\n")
+            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
     }
 }
 

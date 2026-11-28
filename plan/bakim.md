@@ -422,7 +422,13 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
     sayıyı vermiyor (ADR 9403 “Ölçüm”).
   - [x] `kentos-num` crate'i (`crates/shared/num`, bağımlılıksız, her crate'in altında) ve doğru yuvarlanan `hypot`;
     bağımsız başvuru `fixtures/numeric/v1/hypot.json` (5 729 durum, üreteci `scripts/fixtures/numeric_hypot.py`).
-  - [ ] `js_hypot` → `kentos_num::hypot` (sonuçların son basamağı değişir; saklanan çıktılar ayrıştırılır).
+  - [x] `js_hypot` → `kentos_num::hypot`: bağımsız başvuruya karşı 22 682 ortak durumdan ikisi oynadı ve kaynağında
+    düzeltildi (raster oturt'un öntanımlı pikseli, ADR 9403 §7); saklanan beş çıktı farkı okunarak yazıldı (araç
+    `scripts/fixtures/ulp_diff.py`, ADR 9403 §6).
+  - [ ] Adlar: `js_hypot` → `hypot` (702 çağrı; mekanik); platformun `hypot`'una giden 532 doğrudan çağrı
+    (`f64::hypot`, `libm::hypot`) sayısal temele.
+  - Açık, bu işten bağımsız (ADR 9403 §6): DWG codec'inin bir sınaması, Python kanalının tam koşusunda
+    `cad.arch.performance` ve `cad.arch.ifc` durumları, `fixtures/raster/v1/georef.json` üretecinin ortam farkı.
   - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).
   - [ ] Yuvarlama: 159 `js_round` yerinin sınıflandırması ve geçişi.
   - [ ] Metin: tek `trim`, tek katı sayı okuyucu, sayı yazımı (BK-50 ile).

@@ -57,7 +57,7 @@
   "crates/shared/formats/src/dxf/emit.rs": 4241,
   "crates/shared/formats/src/dxf/writer/entities.rs": 2834,
   "crates/shared/formats/tests/all/dxf.rs": 3200,
-  "crates/shared/formats/tests/dxf_write.rs": 4649,
+  "crates/shared/formats/tests/dxf_write.rs": 4646,
   "crates/shared/forms/src/session.rs": 2087,
   "crates/shared/geographiclib-rs/src/geodesic.rs": 2740,
   "crates/shared/geometry-core/src/block.rs": 2082,

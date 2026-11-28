@@ -1,5 +1,5 @@
-//! Kauçuk levha's solution (docs/adr/0158 §2), one for both platforms (the
-//! web through WASM): the thin plate spline of the links' displacements.
+//! Kauçuk levha's solution (docs/adr/0158 §2), one for every host: the
+//! thin plate spline of the links' displacements.
 //! It passes exactly through every link (a fixed point is a link whose
 //! target is its source), bends as little as it can between them, and far
 //! from them follows their affine trend; it needs no triangulation, so it

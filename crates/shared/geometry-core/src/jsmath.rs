@@ -1,10 +1,9 @@
-//! JavaScript's number semantics, for a faithful port of the TypeScript core
-//! (docs/adr/0008). Rust and JavaScript agree on IEEE arithmetic, `sqrt`,
-//! `floor`, `abs` and `%`, but not on these: `Math.round` rounds halves up,
-//! `Math.sign`/`min`/`max` keep NaN and signed zeros their own way, and V8's
-//! `Math.hypot` is a scaled, compensated sum rather than the C function.
-//! Transcendental functions come from `libm` on every target (never the
-//! platform's), so native and WASM give the same bits (CLAUDE.md §23.4);
+//! JavaScript's number semantics, from the port of the TypeScript core
+//! (docs/adr/0008): `Math.round` rounds halves up, and `Math.sign`/`min`/`max`
+//! keep NaN and signed zeros their own way. The numeric base takes their place
+//! family by family (`kentos-num`, docs/adr/9403); a length is its already.
+//! Transcendental functions come from `libm` on every platform (never the
+//! platform's own), so every system gives the same bits (CLAUDE.md §23.4);
 //! `clippy.toml` forbids the std methods.
 
 use std::cmp::Ordering;
@@ -81,9 +80,8 @@ pub fn js_max_all(xs: impl IntoIterator<Item = f64>) -> f64 {
     xs.into_iter().fold(f64::NEG_INFINITY, js_max)
 }
 
-/// V8's `Math.hypot`: every argument divided by the largest, the squares
-/// summed with Kahan compensation, then scaled back. Bit for bit what the
-/// TypeScript core computed.
+/// The length of a vector of any number of parts: every part divided by the largest, the squares summed with
+/// Kahan compensation, then scaled back (the port's form; two parts go to [`js_hypot`], which is correctly rounded).
 pub fn js_hypot_n(xs: &[f64]) -> f64 {
     let mut max = 0.0_f64;
     let mut nan = false;
@@ -116,9 +114,10 @@ pub fn js_hypot_n(xs: &[f64]) -> f64 {
     sum.sqrt() * max
 }
 
-/// `Math.hypot(a, b)`.
+/// The length of the vector (a, b): the double nearest to √(a² + b²), from the numeric base (docs/adr/9403). The
+/// name is the port's; the scaled sum it stood for missed the nearest double for one length in three.
 pub fn js_hypot(a: f64, b: f64) -> f64 {
-    js_hypot_n(&[a, b])
+    kentos_num::hypot(a, b)
 }
 
 /// The ordering a JavaScript comparator `(a, b) => a − b` gives: NaN compares
@@ -138,9 +137,7 @@ pub fn or(x: f64, fallback: f64) -> f64 {
 }
 
 /// A stable sort, as JavaScript's `Array.prototype.sort` is: merge sort
-/// with a buffer. One copy of the code per element type, not per comparator
-/// (std's `sort_by` is instantiated for every closure and weighs ~6 KB each
-/// in the WASM package).
+/// with a buffer. One copy of the code per element type, not per comparator.
 pub fn stable_sort<T: Clone>(v: &mut [T], cmp: &mut dyn FnMut(&T, &T) -> Ordering) {
     if v.len() < 2 {
         return;
@@ -241,15 +238,23 @@ mod tests {
     }
 
     #[test]
-    fn hypot_is_v8s_compensated_sum() {
-        assert_eq!(js_hypot(3.0, 4.0), 5.0);
-        assert_eq!(js_hypot(0.0, -0.0), 0.0);
-        assert_eq!(js_hypot(f64::NAN, f64::INFINITY), f64::INFINITY);
-        assert!(js_hypot(f64::NAN, 1.0).is_nan());
+    fn the_sum_of_many_squares_is_scaled_and_compensated() {
+        assert_eq!(js_hypot_n(&[3.0, 4.0]), 5.0);
+        assert_eq!(js_hypot_n(&[2.0, 3.0, 6.0]), 7.0);
+        assert_eq!(js_hypot_n(&[0.0, -0.0]), 0.0);
+        assert_eq!(js_hypot_n(&[f64::NAN, f64::INFINITY]), f64::INFINITY);
+        assert!(js_hypot_n(&[f64::NAN, 1.0]).is_nan());
         // Large coordinates do not overflow.
-        assert_eq!(js_hypot(1e300, 1e300), 1e300 * 2f64.sqrt());
-        // Recorded from V8 (node 24): Math.hypot(1, 1e-8), Math.hypot(4400000.123, 486512.34).
-        assert_eq!(js_hypot(1.0, 1e-8), 1.0);
-        assert_eq!(js_hypot(4400000.123, 486512.34), 4426815.485128365);
+        assert_eq!(js_hypot_n(&[1e300, 1e300]), 1e300 * 2f64.sqrt());
+    }
+
+    /// A length is the numeric base's: the nearest double, where the port's scaled sum was one place off (the
+    /// base's own cases are in fixtures/numeric/v1/hypot.json).
+    #[test]
+    fn a_length_is_the_nearest_double() {
+        assert_eq!(js_hypot(3.0, 4.0), 5.0);
+        assert_eq!(js_hypot(f64::NAN, f64::INFINITY), f64::INFINITY);
+        let (x, y) = (896.809_549_769_400_7, -294.254_883_547_293_4);
+        assert_eq!(js_hypot(x, y), 943.850_255_627_992_3);
     }
 }

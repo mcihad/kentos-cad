@@ -7,6 +7,7 @@ Kaynaklar:
 - CLAUDE.md §23;
 - ADR 0004 (kadastral sayısal politika), 0149 (ölçü doğruluğu ve gösterim yuvarlaması), 0157 (uzak karolar);
 - ADR 0253 §2 (kanonik JSON), 0256 ve 0257 (birim kuralı);
+- ADR 9403 (sayısal temel: doğru yuvarlanan işlevler);
 - [kcad-v2.md](kcad-v2.md).
 
 Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazılır (plan/cad.md `CAD-DATA-24`).
@@ -37,6 +38,21 @@ Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazıl�
   - Ekrandaki sapma, köşenin karonun merkezinden uzaklığındaki float32 adımı kadardır. Çapadan 12 m'de pikselin ellide biri;
     3 km'de adım 0,24 mm'dir, 1 mm'lik kenar 0,98 mm görünür; 27 km'de adım 2 mm'dir. En derin yakınlıkta milimetre altı çizim
     `REN-16`'da açıktır; bu kaynak koordinatı değil yalnız çizimi etkiler.
+
+### 2.1 Hesaplanan değer: en yakın çift duyarlıklı sayı
+
+Sayısal temel (`kentos-num`, ADR 9403) bir işlevin sonucunu, kesin değere en yakın çift duyarlıklı sayı olarak verir
+(eşit uzaklıkta çift olan; IEEE 754 `roundTiesToEven`). Böyle bir sonuç tanımı gereği her platformda aynıdır ve bağımsız
+başvuruyla (aynı tanım) toleranssız, bit bit karşılaştırılır.
+
+- **Uzunluk** (`kentos_num::hypot`; çekirdekte `js_hypot` ona bağlıdır): her girdide doğru yuvarlanır. Taşıdığı
+  JavaScript biçimi (ölçekli, telafili toplam) uzunlukların üçte birinde bir son basamak uzaktaydı.
+- **Aşkın işlevler** (`sin`, `cos`, `atan2`, `exp`…): bugün `libm`'dendir; her platformda aynıdır ama sonuçların
+  %3–18'i en yakın sayı değildir (1 ulp). Geçişleri ADR 9403 §5'tedir.
+- Platformun matematik kitaplığı hesapta kullanılmaz (sonucu sistemden sisteme değişir); birleşik çarp-topla yalnız
+  yuvarlamayı değiştirmediği yerde (hatasız çarpımın hata terimi) kullanılır.
+- **Bir işlevin son basamağına dayanan hesap kusurludur.** Bir sonuç, girdisinin son basamağı oynayınca milimetre
+  oynuyorsa hesap kaynağında düzeltilir, tolerans büyütülmez (ADR 9403 §7: raster oturt'un öntanımlı pikseli).
 
 ## 3. Ölçekleme ve birim çevirisi
 
@@ -87,10 +103,15 @@ Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazıl�
 
 ## 7. Doğrulama
 
-- Her hesap bağımsız başvuruyla sınanır (mpmath 50–60 basamak, `fractions`, PROJ, GeographicLib, GEOS); native ve WASM eşitliği
-  ayrıca.
+- Her hesap bağımsız başvuruyla sınanır (mpmath 50–60 basamak, `fractions`, PROJ, GeographicLib, GEOS).
 - Gösterim kuralının durumları `fixtures/numeric/v1/display.json`'da, yuvarlama ve dağıtımınkiler `rounding.json`,
-  `distribution.json`, `shares.json`'dadır.
+  `distribution.json`, `shares.json`'dadır; doğru yuvarlanan `hypot`'unkiler `hypot.json`'da (5 729 durum, kesirlerle;
+  `scripts/fixtures/numeric_hypot.py`).
+- **Saklanan çıktılar** (ürünün kendi yanıtının dondurulduğu dosyalar): bir kural bilerek değişince yeniden yazılmadan
+  önce farkları okunur (`scripts/fixtures/ulp_diff.py`): sayı dışında hiçbir şey değişmemiş ve hiçbir sayı sınırdan
+  uzağa gitmemiş olmalıdır. Kaydedicisi kalmamış dosyalar (web'in kaydettikleri) sınamanın yazdığı yamalarla yerinde
+  güncellenir (`KENTOS_WRITE_FROZEN=<klasör>`, sonra `ulp_diff.py --apply`); araç sayı dışı farkı ve sınırı aşan sayıyı
+  reddeder. Bağımsız başvurudan gelen beklenen değer bu yolla değiştirilmez.
 - Küçük ayrıntı ve büyük koordinat birlikte sınanır (`CAD-DATA-25`):
   - TUREF / TM33'te, 4 412 km kuzeyde 1 mm'lik kare ve 1 mm'lik iki çizgi (başsız sunucunun
     `a_millimetre_detail_on_tm_coordinates_survives_measure_edits_and_files` testi):

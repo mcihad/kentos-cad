@@ -1,11 +1,10 @@
 //! The frozen answers of the SVG editor's core (fixtures/svg/v1/cases.json,
-//! recorded by apps/web/scripts/fixtures/record-svg.test.ts after the core
-//! agreed with the TypeScript it replaced), natively: every operation of
-//! the table from the page's arguments, and the typed entries (the snap
-//! index, the picture's bytes, the PNG's). Answers are compared as the
-//! core's JSON reads them: key for key in order, numbers by value (−0 is 0
-//! in the file). The WASM build checks the same file
-//! (apps/web/src/style/svg/fixture.test.ts).
+//! recorded after the core agreed with the TypeScript it replaced; kept
+//! since by `scripts/fixtures/ulp_diff.py`, docs/adr/9403 §6): every
+//! operation of the table from the page's arguments, and the typed entries
+//! (the snap index, the picture's bytes, the PNG's). Answers are compared as
+//! the core's JSON reads them: key for key in order, numbers by value (−0 is
+//! 0 in the file).
 
 use kentos_geometry_core::api::json::{FromJson, Json, to_string};
 use kentos_svg_core::{api, export, snap, trace};
@@ -56,31 +55,67 @@ fn read(answer: &str) -> Json {
     Json::parse(answer).unwrap_or_else(|e| panic!("yanıt okunamadı: {e}: {answer}"))
 }
 
-fn check(i: usize, name: &str, got: &Json, want: &Json) {
-    assert!(
-        got == want,
-        "{i}. durum ({name}):\n  çekirdek: {}\n  dosya:    {}",
-        to_string(got),
-        to_string(want)
-    );
+/// The answers that differ from the file's, when the file is being written anew: `KENTOS_WRITE_FROZEN` names a
+/// folder, the test writes there what the core gives now for the places that differ, and
+/// `scripts/fixtures/ulp_diff.py --apply` reads the difference and writes it into the file (the web's recorder is
+/// gone, docs/adr/9402; the tool refuses anything but numbers moved in their last places).
+struct Patches(Option<Vec<String>>);
+
+impl Patches {
+    fn new() -> Patches {
+        Patches(std::env::var_os("KENTOS_WRITE_FROZEN").map(|_| Vec::new()))
+    }
+
+    /// `got` is the file's answer at `at` (a JSON list of keys and indices), or goes to the patches, or fails.
+    fn check(&mut self, at: &str, name: &str, got: &Json, want: &Json) {
+        if got == want {
+            return;
+        }
+        match &mut self.0 {
+            Some(list) => list.push(format!("{{\"at\":{at},\"value\":{}}}", to_string(got))),
+            None => panic!(
+                "{at} ({name}):\n  çekirdek: {}\n  dosya:    {}",
+                to_string(got),
+                to_string(want)
+            ),
+        }
+    }
+
+    fn write(self, name: &str) {
+        let (Some(list), Some(dir)) = (self.0, std::env::var_os("KENTOS_WRITE_FROZEN")) else {
+            return;
+        };
+        let dir = std::path::PathBuf::from(dir);
+        std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display()));
+        let path = dir.join(format!("{name}.patches.json"));
+        std::fs::write(&path, format!("[{}]\n", list.join(",\n")))
+            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    }
 }
 
 #[test]
 fn table_operations_as_frozen() {
     let file = fixture();
     let mut checked = 0;
+    let mut patches = Patches::new();
     for (i, c) in cases(&file).iter().enumerate() {
         let name = text(c.get("fn"));
         if api::find(name).is_none() {
             continue;
         }
         match api::run_named(name, &to_string(c.get("args"))) {
-            Ok(answer) => check(i, name, &read(&answer), c.get("expect")),
+            Ok(answer) => patches.check(
+                &format!("[\"cases\",{i},\"expect\"]"),
+                name,
+                &read(&answer),
+                c.get("expect"),
+            ),
             Err(message) => assert_eq!(message, text(c.get("throws")), "{i}. durum ({name})"),
         }
         checked += 1;
     }
     assert!(checked > 1000, "{checked}");
+    patches.write("svg-cases-table");
 }
 
 #[test]
@@ -107,6 +142,7 @@ fn every_operation_has_frozen_cases() {
 fn typed_entries_as_frozen() {
     let file = fixture();
     let mut checked = 0;
+    let mut patches = Patches::new();
     for (i, c) in cases(&file).iter().enumerate() {
         let name = text(c.get("fn"));
         let w = || num(c.get("width")) as usize;
@@ -127,7 +163,12 @@ fn typed_entries_as_frozen() {
                     let q = numbers_or_flags(q);
                     let from = (q[3] != 0.0).then_some([q[4], q[5]]);
                     let got = read(&to_string(&index.query([q[0], q[1]], q[2], from)));
-                    check(i, &format!("SnapIndex sorgu {k}"), &got, &want[k]);
+                    patches.check(
+                        &format!("[\"cases\",{i},\"expect\",{k}]"),
+                        "SnapIndex",
+                        &got,
+                        &want[k],
+                    );
                 }
             }
             "inkMask" => {
@@ -151,7 +192,12 @@ fn typed_entries_as_frozen() {
                     w(),
                     h(),
                 )));
-                check(i, name, &got, c.get("expect"));
+                patches.check(
+                    &format!("[\"cases\",{i},\"expect\"]"),
+                    name,
+                    &got,
+                    c.get("expect"),
+                );
             }
             "traceBitmap" => {
                 let o = trace::TraceOptions::from_json(c.get("options"))
@@ -161,7 +207,12 @@ fn typed_entries_as_frozen() {
                 } else {
                     trace::trace_bitmap(w(), h(), bytes(c.get("data")).as_slice(), &o)
                 };
-                check(i, name, &read(&to_string(&r)), c.get("expect"));
+                patches.check(
+                    &format!("[\"cases\",{i},\"expect\"]"),
+                    name,
+                    &read(&to_string(&r)),
+                    c.get("expect"),
+                );
             }
             "crc32" => assert_eq!(
                 f64::from(export::crc32(&bytes(c.get("bytes")))),
@@ -181,6 +232,7 @@ fn typed_entries_as_frozen() {
         checked += 1;
     }
     assert!(checked >= 18, "{checked}");
+    patches.write("svg-cases-typed");
 }
 
 /// A query's six values: x, y, radius, whether it has a start point (as 0 or 1), and that point.

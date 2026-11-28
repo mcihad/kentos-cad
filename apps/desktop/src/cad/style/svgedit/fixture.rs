@@ -1,6 +1,7 @@
-//! The SVG editor's rules held to the web's answers
-//! (`fixtures/style/v1/svgedit.json`, recorded from `ui/svgedit/svgEditModel.ts`
-//! by `apps/web/scripts/fixtures/record-svgedit.test.ts`): the shape a drag
+//! The SVG editor's rules held to their frozen answers
+//! (`fixtures/style/v1/svgedit.json`, recorded from the TypeScript editor
+//! this one took the place of; kept since by `scripts/fixtures/ulp_diff.py`,
+//! docs/adr/9403 §6): the shape a drag
 //! makes with each drawing tool, a box scaled by a handle, the knob's turn,
 //! the measure's readout, the rulers' steps, a corner's tidy size, file
 //! names and the starting grid, stroke widths and panel distance.
@@ -59,7 +60,12 @@ fn text(v: &Json) -> &str {
 #[test]
 fn drags_draw_the_webs_shapes() {
     let data = fixture();
-    for case in items(data.get("drags")) {
+    // `KENTOS_WRITE_FROZEN=<folder>`: the shapes that differ go there as patches for
+    // `scripts/fixtures/ulp_diff.py --apply`, which reads how far their numbers moved and refuses anything else (the
+    // web's recorder is gone).
+    let frozen = std::env::var_os("KENTOS_WRITE_FROZEN");
+    let mut patches = Vec::new();
+    for (i, case) in items(data.get("drags")).iter().enumerate() {
         let spec = case.get("spec");
         let tool = match text(spec.get("tool")) {
             "rect" => ToolId::Rect,
@@ -81,11 +87,29 @@ fn drags_draw_the_webs_shapes() {
             Json::Null => None,
             s => Some(Obj::from_json(s).expect("a shape")),
         };
+        if let (Some(_), Some(shape)) = (&frozen, &got)
+            && got.as_ref().map(to_string) != want.as_ref().map(to_string)
+        {
+            patches.push(format!(
+                "{{\"at\":[\"drags\",{i},\"shape\"],\"value\":{}}}",
+                to_string(shape)
+            ));
+            continue;
+        }
         assert_eq!(
             got.as_ref().map(to_string),
             want.as_ref().map(to_string),
             "{spec:?}"
         );
+    }
+    if let Some(dir) = frozen {
+        let dir = std::path::PathBuf::from(dir);
+        std::fs::create_dir_all(&dir).expect("the folder");
+        std::fs::write(
+            dir.join("svgedit-drags.patches.json"),
+            format!("[{}]\n", patches.join(",\n")),
+        )
+        .expect("the patches");
     }
 }
 

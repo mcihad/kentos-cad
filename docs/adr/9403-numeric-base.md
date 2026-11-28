@@ -200,6 +200,35 @@ Onay gelene kadar §1 ve `hypot` yürür; aşkın işlevler `libm`'de kalır.
   kesin yol sabit bir milyon çiftte aynı sayıyı verir; çarpım hatasının iki hesabı 200 000 çiftte aynıdır.
 - **Bedeli:** çağrı başına 2,1 ns (bugünkü 1,4 ns; yukarıdaki tablo).
 
+**`js_hypot` → `kentos_num::hypot` (28 Kasım 2026).** Çekirdeğin uzunluğu artık sayısal temelindir (702 çağrı; ad
+bir sonraki adımda değişir). Bağlamadan önce ve sonra koşulanlar: paylaşılan crate'lerin tamamı, yerel hesap
+crate'leri (uygulama katmanının 22 682 ortak durumu dahil), masaüstü çekirdeği (2 616), dört modül paketi, birleşik
+program, başsız konak, MCP (313), Python kanalında raster oturt durumları.
+
+- **Bağımsız başvuruya karşı:** 22 682 ortak durumdan ikisi oynadı; ikisi de aynı kusuru gösterdi ve kaynağında
+  düzeltildi (§7). Geometri çekirdeğinin başvuruya ve kaydedilmiş çağrılara karşı sınamalarında fark yok.
+- **Saklanan çıktılar** (ürünün kendi yanıtının dondurulduğu dosyalar) son basamaklarında oynadı. Her dosya,
+  farkı `scripts/fixtures/ulp_diff.py` ile okunduktan sonra yazıldı: sayı dışında hiçbir şey değişmedi.
+
+  | Dosya | Sayı | Değişen | En uzak | Not |
+  |---|---|---|---|---|
+  | `fixtures/geodesy/v1/ground-answers.json` | 460 | 2 | 1 ulp | zemin uzunluğu |
+  | `fixtures/svg/v1/cases.json` | 8 050 (yamalanan 69 durumda) | 1 516 | 7 590 ulp; mutlak 2,7·10⁻¹¹ | eğri uydurma, dış hat ve ofset zincirleri; en uzağı `strokeToPath` |
+  | `fixtures/style/v1/cases.json` | 2 496 (14 durumda) | 235 | mutlak 9,3·10⁻¹⁰ | ülke koordinatındaki eğrinin örnekleme noktası 0,5 nm kayar; işaretçi açısı 7·10⁻¹⁰ rad |
+  | `fixtures/style/v1/svgedit.json` | 11 (1 durumda) | 2 | 2 ulp | çokgen aracının köşesi |
+  | DXF yazımının parmak izi (`dxf_write.rs`) | — | 1 sayı, 6 yerde | 1 ulp | eğrinin son düğümü (kiriş boyu); eski ve yeni dosya satır satır karşılaştırıldı |
+
+- **Araç:** `ulp_diff.py` iki sürümü sayı sayı karşılaştırır (ulp, bağıl ve mutlak sınır) ve sayı dışı her farkı
+  reddeder. Kaydedicisi kalmamış dosyalar için (web'in kaydettikleri) dondurulmuş sınamalar
+  `KENTOS_WRITE_FROZEN=<klasör>` ile şimdi hesapladıklarını yama listesi olarak yazar; `ulp_diff.py --apply` farkı okur
+  ve yalnız oynayan sayıları dosyanın metninde yerinde değiştirir (başka hiçbir bayt değişmez).
+- **Bu işten bağımsız, önceden var olan kırmızılar** (aynı koşularda görüldü, dokunulmadı): DWG codec'inin
+  `layers_blocks_annotations_and_curves_cross_the_codec_boundary` sınaması (17 ≠ 16 nesne; bağlama olmadan da
+  kırmızı); iş koşucusunun üç denetim sınaması macOS'ta (kutulama yalnız Linux'ta); Python kanalının tam koşusunda
+  `cad.arch.performance` (26) ve `cad.arch.ifc` (14) durumları Python koşucusunun belge kurucusunda takılıyor (eğimsiz
+  kalkan çatı, duvarın `curtain` alanı, `compartments` sayısı); `fixtures/raster/v1/georef.json` üretecinin denetimi
+  (ortamın GDAL sürümü).
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

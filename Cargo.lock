@@ -3301,6 +3301,7 @@ name = "kentos-geometry-core"
 version = "0.1.0"
 dependencies = [
  "geographiclib-rs",
+ "kentos-num",
  "libm",
  "rust_decimal",
  "rustybuzz",
