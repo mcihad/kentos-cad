@@ -19,6 +19,7 @@
 //! drawn left to right from the origin, `gap` apart. Each object has a role (`2/opening/<uid>`) the record keeps with
 //! its id, so drawing again keeps the same objects.
 
+use kentos_geometry_core::geometry::point_in_rings;
 use std::collections::BTreeMap;
 
 use kentos_commands::{
@@ -86,21 +87,6 @@ pub fn label_of(s: &kentos_commands::SpaceEntity) -> String {
     } else {
         words.join(" ")
     }
-}
-
-/// Even-odd: whether `p` is inside the rings (their chords).
-fn inside(rings: &[&[Vec2]], p: Vec2) -> bool {
-    let mut odd = false;
-    for r in rings {
-        let n = r.len();
-        for i in 0..n {
-            let (a, b) = (r[i], r[(i + 1) % n]);
-            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
-                odd = !odd;
-            }
-        }
-    }
-    odd
 }
 
 fn pt(x: f64, y: f64) -> Value {
@@ -638,7 +624,7 @@ pub(crate) fn draw(
             Entity::Insert(i) => (ElevationLeft::Fixture, &i.arch.level, vec![i.p]),
             _ => continue,
         };
-        if *lvl != level || !points.iter().any(|p| inside(&rings, *p)) {
+        if *lvl != level || !points.iter().any(|p| point_in_rings(*p, &rings)) {
             continue;
         }
         out.left_out.push(ElevationLeftOut {

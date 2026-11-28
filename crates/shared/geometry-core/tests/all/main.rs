@@ -60,6 +60,7 @@ mod pin_match;
 mod plan_road;
 mod point_calc;
 mod point_editor;
+mod point_in_rings;
 mod point_text;
 mod polygonize;
 mod proximity;

@@ -111,20 +111,15 @@ impl RoomElevationTool {
             if !cx.doc.layers().is_visible(&e.base().layer_id) {
                 continue;
             }
-            let mut odd = false;
-            for part in &s.space.parts {
-                let r = &part.outer.pts;
-                let n = r.len();
-                for i in 0..n {
-                    let (a, b) = (r[i], r[(i + 1) % n]);
-                    if (a.y > at.y) != (b.y > at.y)
-                        && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
-                    {
-                        odd = !odd;
-                    }
-                }
-            }
-            if odd {
+            // The space's rings are the drawing's points; the point asked is the tool's.
+            let outers: Vec<&[kentos_commands::Vec2]> = s
+                .space
+                .parts
+                .iter()
+                .map(|p| p.outer.pts.as_slice())
+                .collect();
+            let held = kentos_commands::Vec2 { x: at.x, y: at.y };
+            if kentos_geometry_core::geometry::point_in_rings(held, &outers) {
                 let area = kentos_native_application::spaces::area_of(&s.space.parts);
                 if best.is_none_or(|(b, _)| area < b) {
                     best = Some((area, Slot(e.base().id)));

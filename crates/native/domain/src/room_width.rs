@@ -11,6 +11,7 @@
 use kentos_contracts::{SpaceFields, SpaceMethod, SpacePart, Vec2};
 use kentos_geometry_core::Vec2 as V;
 use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge};
+use kentos_geometry_core::geometry::point_in_rings;
 
 use crate::space_follow::SpaceSearch;
 
@@ -55,7 +56,7 @@ pub fn width_of(parts: &[SpacePart]) -> (f64, Option<V>) {
             let rings = rings_of(p);
             kentos_geometry_core::labels::geom::pole(&rings, PRECISION).map(|(p, d)| {
                 let c = centroid(&rings[0]);
-                let inside = c.is_some_and(|c| rings_hold(&rings, c));
+                let inside = c.is_some_and(|c| point_in_rings(c, &rings));
                 match c.filter(|_| inside).map(|c| (c, ring_distance(&rings, c))) {
                     Some((c, dc)) if dc >= d - PRECISION => (2.0 * d, c),
                     _ => (2.0 * d, p),
@@ -96,21 +97,6 @@ fn centroid(ring: &[V]) -> Option<V> {
     (a.abs() > 1e-12).then(|| V::new(cx / (3.0 * a), cy / (3.0 * a)))
 }
 
-/// Whether a point lies inside the first ring and outside the others (even–odd).
-fn rings_hold(rings: &[Vec<V>], p: V) -> bool {
-    let mut inside = false;
-    for ring in rings {
-        let n = ring.len();
-        for i in 0..n {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-        }
-    }
-    inside
-}
-
 fn ring_distance(rings: &[Vec<V>], p: V) -> f64 {
     rings
         .iter()
@@ -122,6 +108,21 @@ fn ring_distance(rings: &[Vec<V>], p: V) -> f64 {
 #[cfg(test)]
 mod tests {
     use kentos_contracts::{SpacePart, SpaceRing, Vec2};
+
+    /// A point on the edge two rings share is in exactly one of them (docs/adr/9401 §9; a case of
+    /// fixtures/geometry/v1/point_in_rings.json): the middle of the wall line between two rooms.
+    #[test]
+    fn a_point_on_a_shared_edge_is_in_one_ring() {
+        use kentos_geometry_core::Vec2 as V;
+        let (a, b) = (V::new(3.35, 34.25), V::new(-4.45, 42.08));
+        let p = V::new(-0.55, 38.165);
+        let left = vec![a, b, V::new(-34.45, 42.08), V::new(-34.45, 34.25)];
+        let right = vec![b, a, V::new(33.35, 34.25), V::new(33.35, 42.08)];
+        assert_ne!(
+            super::point_in_rings(p, &[left]),
+            super::point_in_rings(p, &[right])
+        );
+    }
 
     use super::*;
 
