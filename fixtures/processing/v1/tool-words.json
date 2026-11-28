@@ -1,0 +1,27 @@
+{
+ "format": "kentos.processing-tool-words",
+ "version": 1,
+ "note": "What the shared cases of cad.processing.run take from the tools' definitions besides the inventory (docs/inventory/web.json): a features parameter's default scope where it is not the selection, and an output's label (a table output is named by it). The values are the web app's TypeScript definitions as they stood when it was removed (docs/adr/9402), frozen here; scripts/fixtures/processing_command_cases.py reads them.",
+ "scopes": {
+  "selection.byExpression": {
+   "input": "all"
+  },
+  "selection.byLocation": {
+   "input": "all"
+  }
+ },
+ "labels": {
+  "geometry.simplify": {
+   "report": "Sadeleştirme raporu"
+  },
+  "proximity.matrix": {
+   "table": "Uzaklık tablosu"
+  },
+  "proximity.neighbors": {
+   "table": "Komşuluk tablosu"
+  },
+  "statistics.summary": {
+   "table": "Özet tablosu"
+  }
+ }
+}

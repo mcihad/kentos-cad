@@ -635,7 +635,7 @@ fn sheet_step8_screens() {
         .map(|i| i.frame)
         .expect("the ifraz sheet's title block");
     let sign = std::fs::read(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../web/public/favicon.svg"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../portal/public/favicon.svg"),
     )
     .expect("the KentOS sign");
     let pictures = [
@@ -890,7 +890,7 @@ fn sheet_step9_screens() {
         .map(|i| i.frame)
         .expect("the ifraz sheet's title block");
     let sign = std::fs::read(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../web/public/favicon.svg"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../portal/public/favicon.svg"),
     )
     .expect("the KentOS sign");
     let logo = kentos_sheet::units::RectUm {

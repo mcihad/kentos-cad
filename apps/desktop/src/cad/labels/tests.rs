@@ -105,34 +105,23 @@ fn a_zoom_out_while_moving_places_the_labels_again() {
     );
 }
 
-/// The desktop's default label styles are the web's `DEFAULT_LABELS`
-/// (apps/web/src/model/labelDefaults.ts), read from its source.
+/// The contract's default label styles are the frozen reference's (fixtures/labels/v1/defaults.json,
+/// docs/adr/0175 §4): every kind it lists, and no kind beside them.
 #[test]
-fn the_default_labels_are_the_webs() {
-    let source = include_str!("../../../../web/src/model/labelDefaults.ts");
-    let start = source.find("DEFAULT_LABELS").expect("the web's defaults");
-    let body = &source[start..];
-    let body = &body[body.find('{').expect("an object") + 1..body.find("};").expect("its end")];
-    for line in body.lines().map(str::trim).filter(|l| !l.is_empty()) {
-        let (kind, style) = line.split_once(':').expect("kind: style");
-        // The literal as JSON: quoted keys, double quotes.
-        let mut json = String::new();
-        for part in style
-            .trim()
-            .trim_end_matches(',')
-            .replace('\'', "\"")
-            .split(['{', ',', '}'])
-        {
-            let part = part.trim();
-            if part.is_empty() {
-                continue;
-            }
-            let (k, v) = part.split_once(':').expect("key: value");
-            json.push_str(&format!("\"{}\":{},", k.trim(), v.trim()));
-        }
-        let json = format!("{{{}}}", json.trim_end_matches(','));
-        let web: kentos_commands::LabelStyle = serde_json::from_str(&json).expect("a label style");
-        assert_eq!(default_label(kind.trim()), Some(web), "{kind}");
+fn the_default_labels_are_the_reference_s() {
+    let reference: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/labels/v1/defaults.json"
+    ))
+    .expect("the reference reads");
+    let defaults = reference["defaults"].as_object().expect("its defaults");
+    assert_eq!(defaults.len(), 5, "{:?}", defaults.keys());
+    for (kind, style) in defaults {
+        let style: kentos_commands::LabelStyle =
+            serde_json::from_value(style.clone()).expect("a label style");
+        assert_eq!(default_label(kind), Some(style), "{kind}");
+    }
+    for other in ["arc", "text", "insert", "hatch"] {
+        assert_eq!(default_label(other), None, "{other}");
     }
 }
 

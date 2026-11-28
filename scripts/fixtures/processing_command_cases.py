@@ -8,9 +8,11 @@ persistent ids, the run's messages as notes, the undo step as the step, the obje
 The cases the command adds are its own rules: refusals in order, the features input by ids, the input's `selection`
 and `view`, a plan that writes nothing, undo.
 
-The expectations of `cad.processing.tools` come from the web's frozen inventory (docs/inventory/web.json, written
-from the web's TypeScript definitions of the same tools at 1aad00d0): each tool's id, name, aliases and parameters
-(name, label, kind, whether optional), in order.
+The expectations of `cad.processing.tools` come from the frozen inventory (docs/inventory/web.json, written from the
+web app's TypeScript definitions of the same tools at 1aad00d0): each tool's id, name, aliases and parameters (name,
+label, kind, whether optional), in order. Two things the inventory does not hold come from a frozen table beside the
+shared cases (fixtures/processing/v1/tool-words.json, docs/adr/9402): a features parameter's default scope where it is
+not the selection, and an output's label.
 
 Models run through the command too (docs/adr/0529): the shared model case (the three-step parcel sheet) is restated
 as `cad.processing.run`'s case, and a model whose middle step stops (a layer's integer field refuses an edge length)
@@ -34,7 +36,8 @@ PROCESSING = ROOT / "fixtures/processing/v1"
 OUT = ROOT / "fixtures/commands/v1"
 INVENTORY = ROOT / "docs/inventory/web.json"
 
-WEB_TOOLS = ROOT / "apps/web/src/processing/builtin"
+# What the tools' definitions said beyond the inventory, frozen (docs/adr/9402).
+TOOL_WORDS = json.loads((PROCESSING / "tool-words.json").read_text(encoding="utf-8"))
 INVENTORY_TOOLS = {t["id"]: t for t in json.loads(INVENTORY.read_text(encoding="utf-8"))["processing"]}
 
 
@@ -74,19 +77,8 @@ def restated_value(v):
 
 
 def default_scope(tool: str, param: str) -> str:
-    """A features parameter's default scope, from the web's definition of the tool (its `default: { scope: … }`);
-    none written is the selection."""
-    import re
-
-    for f in sorted(WEB_TOOLS.rglob("*.ts")):
-        text = f.read_text(encoding="utf-8")
-        if f"id: '{tool}'" not in text:
-            continue
-        for line in text.splitlines():
-            if f"name: '{param}'" in line and "type: 'features'" in line:
-                m = re.search(r"default: \{ scope: '(\w+)'", line)
-                return m.group(1) if m else "selection"
-    return "selection"
+    """A features parameter's default scope: the selection, unless the frozen table says otherwise."""
+    return TOOL_WORDS["scopes"].get(tool, {}).get(param, "selection")
 
 
 def tool_of(c: dict) -> str:
@@ -524,17 +516,15 @@ def into_cases(geometry: dict) -> list[dict]:
 
 # ── A tool's table output as a table of the file (docs/adr/0551 §3) ───────────────────────────────────────────────
 
-def web_label(tool: str, output: str) -> str:
-    """An output's label in the web's frozen definition of the tool (the table is named by it)."""
-    for f in sorted(WEB_TOOLS.rglob("*.ts")):
-        text = f.read_text(encoding="utf-8")
-        at = text.find(f"id: '{tool}'")
-        if at < 0:
-            continue
-        m = re.compile(r"name: '%s',\s*label: '([^']*)'" % re.escape(output)).search(text, at)
-        if m:
-            return m.group(1)
-    raise KeyError(f"{tool}.{output}")
+def output_label(tool: str, output: str) -> str:
+    """An output's label in the frozen table (the table is named by it)."""
+    try:
+        return TOOL_WORDS["labels"][tool][output]
+    except KeyError:
+        raise KeyError(
+            f"{tool}.{output}: çıktının etiketi fixtures/processing/v1/tool-words.json'da yok; aracın tanımındaki "
+            "etiketi oraya ekleyin."
+        ) from None
 
 
 def unique_columns(headers: list[str]) -> list[str]:
@@ -560,7 +550,7 @@ def table_outputs(c: dict) -> list[dict]:
     found = []
     for name, v in sorted((c["expect"].get("outputs") or {}).items()):
         if isinstance(v, dict) and "columns" in v and "rows" in v:
-            found.append({"output": name, "label": web_label(tool, name), "columns": v["columns"], "rows": v["rows"]})
+            found.append({"output": name, "label": output_label(tool, name), "columns": v["columns"], "rows": v["rows"]})
     return found
 
 

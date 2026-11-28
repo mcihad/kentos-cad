@@ -1,8 +1,7 @@
-//! The type cards' pictures: the web's own SVGs (apps/web/src/ui/settings/art),
-//! drawn in the theme. On the web CSS colours them: the lines in the card's
-//! secondary ink, the `hi` ones quieter until the card is chosen, then in the
-//! accent; the `dim` ones at half strength (wizard.css). Here the same colours
-//! are written into the markup before it is drawn.
+//! The type cards' pictures (the SVGs in `art/`), drawn in the theme: the lines
+//! in the card's secondary ink, the `hi` ones quieter until the card is chosen,
+//! then in the accent; the `dim` ones at half strength. The colours are written
+//! into the markup before it is drawn.
 
 use iced::widget::svg;
 use iced::{Color, Element, Fill, Theme};
@@ -11,8 +10,8 @@ use kentos_ui::theme::Tokens;
 
 use crate::app::Message;
 
-const CAD: &str = include_str!("../../../../../web/src/ui/settings/art/project-cad.svg");
-const GIS: &str = include_str!("../../../../../web/src/ui/settings/art/project-gis.svg");
+const CAD: &str = include_str!("art/project-cad.svg");
+const GIS: &str = include_str!("art/project-gis.svg");
 
 /// A type's picture, chosen or not, in the theme's colours: the handle is
 /// the markup in those colours, one per theme and state (Iced keeps its
