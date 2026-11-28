@@ -378,12 +378,21 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   satırların sayısı (`apps/web` 484, `wasm` 319) yalnız azalır. Kanıt: çalışma alanı bütün hedefleriyle derlendi;
   masaüstü çekirdeğinin ve dört modül paketinin bütün sınamaları koşuldu (çekirdekte bu daldan önce kırmızı olan iki
   sınama dışında yeşil); portalın tür denetimi, sınamaları ve paketi değişmedi; SDK ve manifest denetimleri yeşil.
-- [ ] **BK-86 — Katalogda `web` konağı.** 24 komutun konağı `web` ve `desktop`. Konak listesinden `web` çıkar;
-  katalog ve SDK yeniden üretilir. Sunucunun tarayıcı istemcisi (`x-kentos-client: web`, `Client::Web`) kalır: o
-  portaldır.
-- [ ] **BK-87 — Kurallar ve belgeler.** CLAUDE.md (web ve WASM'ı anan kurallar), kılavuz §4, envanter belgeleri,
-  `Makefile` ve `Cargo.toml` yorumları. Yorumlarda `apps/web/…` yolunu anan satırlar (Rust 439, Python ~230) ve
-  “native/WASM” sözleri: sayısı bekçiyle izlenir, yalnız azalır; dokunulan dosyada temizlenir.
+- [~] **BK-86 — Katalogda `web` konağı.** Yapılan (`f6809f193`): `CommandHost`'tan `Web` çıktı; 24 komutun konağı
+  yalnız `desktop`; katalogda tam 24 satır değişti, SDK ve manifest aynı çıktı. Sunucunun tarayıcı istemcisi
+  (`x-kentos-client: web`, `Client::Web`) kalır: o portaldır.
+  - Kalan: ayar şemasının konakları. 86 ayarın 68'i `web` ve `desktop`, 17'si `desktop`, biri yalnız `web`
+    (`graphics.backend`). Masaüstünün ayar dosyası içe alması web'e özgü ayarı adıyla söylüyor
+    (`apps/desktop/src/shell/settings_view.rs`); `SettingHost::Web` kalkarsa eski bir web ayar dosyasındaki bu
+    anahtar “bilinmeyen anahtar” olur. Davranış değişikliği olduğu için ayrı dilimdir.
+- [~] **BK-87 — Kurallar ve belgeler.** Yapılan: CLAUDE.md bugünkü durumu söylüyor (kaldırma, kataloğun yeri,
+  TypeScript kuralı, bekçi; `native/WASM` koşulu çıktı); kılavuz §4 tarih olarak işaretlendi (koddaki 14 “§4.N”
+  atfının gösterdiği davranış kuralları masaüstünde geçerli); envanter belgesi dondurulmuş olduğunu söylüyor;
+  `Makefile` ve `Cargo.toml` yorumları düzeltildi.
+  - Kalan: kaynakta `apps/web` anan 484 ve `wasm` anan 319 satır (çoğu yorum: “the web's is `apps/web/src/…`”,
+    “native and WASM”). Bekçi (`scripts/dev/removed_paths.py`) sayıyı tutar, yalnız azalır; dokunulan dosyada
+    temizlenir.
+  - Kalan: `TODOS.md`, `DESIGN.md` ve kılavuzun öbür bölümlerindeki web sözleri (BK-70 ile birlikte).
 - [ ] **BK-88 — Sayısal temel.** `jsmath` 696 dosyada kullanılıyor (`js_max` 882, `js_hypot` 702, `js_min` 494,
   `js_round` 159 çağrı; `libm`'den 15 işlev). Sıra: araştırma (doğru yuvarlanan temel işlevler, hatasız dönüşümler,
   kesin yüklemler, aralık aritmetiği; kaynakları ADR'de), karar (ADR 9403), bağımsız yüksek hassasiyetli başvuru,

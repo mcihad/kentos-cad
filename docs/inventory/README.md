@@ -1,5 +1,11 @@
 # Web özellik envanteri
 
+> **Dondurulmuş envanter (28 Kasım 2026, [ADR 9402](../adr/9402-web-and-wasm-removed.md)).** Web uygulaması depodan
+> kaldırıldı; `web.json`'u üreten betik (`pnpm inventory`) onunla birlikte gitti. Dosya artık yeniden üretilmez:
+> masaüstü kataloğunun tabanıdır (`apps/desktop/src/shell/catalog.rs`) ve tek masaüstü kataloğuna geçene kadar
+> (plan/bakim.md BK-23) yerinde durur. Yeni komutların kaydı `catalog/v1/additions.json`'dadır. Aşağıdaki metin
+> envanterin nasıl üretildiğini anlatır; tarih olarak durur.
+
 TODOS.md `BASE-04`: web uygulamasının komutları, araçları, ayarları, dosya alanları, işlem araçları ve ekranları makinece okunabilir tek bir listede. Masaüstü kabuğu (`UI-11`), komut sözleşmesi (`CMD-01`) ve AI kapsam manifesti (`AI-01`) bu listeden başlar.
 
 | Dosya | İçerik |

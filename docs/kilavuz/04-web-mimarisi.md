@@ -4,10 +4,14 @@
 
 ## 4. Web mimarisi
 
-> **Donmuş web uygulamasının mimarisi (yalnız başvuru).** Web uygulaması iptal edildi ve donduruldu (ADR 0228, sahibin
-> kararı F3, 24 Kasım 2026): `apps/web` kodu depoda durur ama geliştirilmez ve komutları kılavuzdan çıkarıldı. Bu bölüm
-> onun nasıl kurulduğunu anlatır; yeni iş için kural değildir. Bulut portalı (`apps/portal`) bunun dışındadır; yalnız
-> `h()`, `Signal`, tasarım jetonları ve üretilmiş sözleşme türleri için `apps/web`'in dosyalarını kullanır.
+> **Kaldırılan web uygulamasının mimarisi (yalnız tarih).** Web uygulaması 24 Kasım 2026'da iptal edildi (ADR 0228)
+> ve 28 Kasım 2026'da WASM bağlayıcılarıyla birlikte depodan silindi
+> ([ADR 9402](../adr/9402-web-and-wasm-removed.md)); son hâli `b00e8afb6` commit'indedir. Bu bölüm onun nasıl
+> kurulduğunu anlatır: andığı klasörler ve TypeScript dosyaları artık yoktur, yeni iş için kural değildir.
+>
+> Koddaki “CLAUDE.md §4.N” atıflarının gösterdiği davranışlar (durum kapsamları §4.4, komutlar §4.5, klavye ve odak
+> §4.6, araçlar §4.7, belge ve kayıt §4.8, çizim hattı §4.9) masaüstünün de uyduğu kurallardır; onlar için bu metin
+> hâlâ başvurudur. Bulut portalı (`apps/portal`) ayrı bir programdır ve kendi dosyalarını kullanır.
 
 ### 4.1 Katmanlar
 

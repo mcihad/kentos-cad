@@ -1,6 +1,6 @@
 # KentOS CAD — Geliştirme kılavuzu
 
-Güncelleme: 4 Kasım 2026. Bu dosya her oturumda okunan çekirdektir: çalışma biçimi, değişmez kurallar ve kılavuzun
+Güncelleme: 28 Kasım 2026. Bu dosya her oturumda okunan çekirdektir: çalışma biçimi, değişmez kurallar ve kılavuzun
 geri kalanının haritası. Ayrıntılı bölümler [docs/kilavuz/](docs/kilavuz/) altındadır. Gelecek işler ve kabul kapıları
 [TODOS.md](TODOS.md), görsel kurallar [DESIGN.md](DESIGN.md), karar gerekçeleri [docs/adr/](docs/adr/) içindedir.
 
@@ -18,7 +18,7 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23, 25, 26) aşağıdadır.
 | 0 | [Güncel karar özeti](docs/kilavuz/00-guncel-karar-ozeti.md) | Bir modüle ya da özelliğe dokunmadan önce: o alanın son kararları, ADR'leri ve açıkları (Yol, mimari, form, bulut…) |
 | 1 | [Ürün ve mevcut durum](docs/kilavuz/01-urun-ve-durum.md) | Ürünün kapsamı, modüller, neyin var neyin hedef olduğu |
 | 2 | [Çalıştırma](docs/kilavuz/02-calistirma.md) | Bir komutun, testin, ortak durum betiğinin, resim testinin tam satırı |
-| 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Donmuş web uygulamasının mimarisi (ADR 0228, F3); yalnız başvuru, yeni iş için kural değil |
+| 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Kaldırılan web uygulamasının mimarisi (ADR 9402; tarih). Koddaki “§4.N” atıflarının gösterdiği davranışlar (durum kapsamı, komut, klavye, araç, kayıt) masaüstünde geçerlidir |
 | 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi, ayrı işletim sistemi penceresi (§9.8), yeni modül ve yeni istemci (§9.9) eklerken |
 | 10 | [Yol haritası](docs/kilavuz/10-yol-haritasi.md) | Devir notu ve faz geçmişi |
 | 12 | [Dosya haritası](docs/kilavuz/12-dosya-haritasi.md) | Hangi iş hangi dizinde |
@@ -47,10 +47,13 @@ satıra (749 KB) büyüdüğü için bölündü.
 
 ## Çalışırken
 
-- **Masaüstü ve bulut:** web uygulaması iptal edildi (sahibin sözü, 24 Kasım 2026; ADR 0228'in arası kalıcı oldu); web'e
-  ait adım ve not yazılmaz, TODOS.md §0.2'ye yeni satır eklenmez. Web uygulaması donduruldu (`apps/web` kodu durur; kuralları
-  ve komutları çıkarıldı; 24 Kasım 2026, F3); web istemcisi ileride web görüntüleyici için ortak tanımda (`kentos_launch::Client::Web`)
-  kalır. Bulut portalı (`apps/portal`, ADR 9000) bunun dışındadır.
+- **Masaüstü ve bulut:** web uygulaması ve WASM desteği sistemden kaldırıldı (sahibin sözü, 28 Kasım 2026;
+  [ADR 9402](docs/adr/9402-web-and-wasm-removed.md)). `apps/web` ve `crates/wasm` yoktur ve geri gelemez (`make guard`);
+  web'e ya da WASM'a ait adım, not ve atıf yazılmaz. Tarayıcıda çalışan tek program bulut portalıdır (`apps/portal`,
+  ADR 9000); sunucunun tarayıcı istemcisi (`x-kentos-client: web`, `kentos_launch::Client::Web`) odur.
+  - Komut kataloğu `catalog/v1/commands.json`'dadır; ayar şeması `catalog/v1/settings-schema.json`'da.
+  - TypeScript yalnız portal için üretilir (`apps/portal/src/api/generated`, elle düzenlenmez): portalın kullandığı tür
+    `derive(TS)`, adını andığı tür ayrıca `ts(export)` alır. Başka türe `ts` özniteliği yazılmaz.
 - **Modül ve istemci ayrımı (kesin kural, 23 Kasım 2026):** §25'in sekiz kuralı her değişiklikte uygulanır; yeni
   panel, sekme, menü öğesi, komut, modül ya da istemci onlarla eklenir.
 - **Modül ve otomasyon denetimi (kesin kural, 24 Kasım 2026):** yeni yapılan ya da güncellenen her işte üç şey açıkça
@@ -65,7 +68,7 @@ satıra (749 KB) büyüdüğü için bölündü.
   al, yinele ve dosya işleri eklentiye kapalıdır. Var olan bir işe dokunulunca aynı denetim onun için de yapılır.
   Kanalların nerede bağlandığı ve hangi sınamanın koşacağı §9.2'dedir; biri kırmızıyken iş bitmiş sayılmaz.
 - **Bekçiler ve biçim (28 Kasım 2026, ADR 9400):** kod `cargo fmt --all` ile biçimlenir; commit'ten önce `make guard`
-  yeşildir (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim; derleme istemez). Boy sınırı
+  yeşildir (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, biçim; derleme istemez). Boy sınırı
   biçimlenmiş kodu ölçer: satır sıkıştırmak ya da başka bir dolanma yok, dosya bölünür. Bir crate'in bütünleşik
   sınamaları tek ikilidir (`tests/all/main.rs`).
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
@@ -102,11 +105,11 @@ satıra (749 KB) büyüdüğü için bölündü.
 
 ## 3. Teknik kısıtlar
 
-- TypeScript kuralları bulut portalı (`apps/portal`) içindir; web uygulaması donmuştur (ADR 0228, F3). Strict,
+- TypeScript kuralları bulut portalı (`apps/portal`) içindir. Strict,
   `erasableSyntaxOnly`, `verbatimModuleSyntax`: `enum`, `namespace`, constructor parameter property
   kullanmayın; `import type`, union ve `as const` tercih edin. Portalın araç zinciri pnpm/Vite/TypeScript'tir.
-- Portal UI çatısı DOM `h()` ve `Signal`'dır (`apps/portal/src/lib/dom.ts` ve `signal.ts`; ikisi de donmuş
-  `apps/web`'in `ui/dom.ts` ve `core/signal.ts`'ini yeniden dışa aktarır). React/Vue/Lit geçişi yapmayın.
+- Portal UI çatısı DOM `h()` ve `Signal`'dır (`apps/portal/src/lib/dom.ts` ve `signal.ts`, portalın kendi
+  dosyaları). React/Vue/Lit geçişi yapmayın.
 - Yeni runtime bağımlılığı veya sürüm değişikliği bakım, lisans, platform ve
   ölçüm gerekçesi ister; mevcut küçük/pure çekirdek sınırını koruyun.
   Yeni portal runtime kütüphanesi küçük, tree-shaking'e uygun, MIT/BSD lisanslı
@@ -176,8 +179,8 @@ dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
 İlgili testler, sözleşme/undo/yetki, UI gerekiyorsa gerçek klavye/fare ve
 tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedenini bildirin.
 Üretim iddiası veya tamamlandı işareti için TODOS.md kabul kapılarını kullanın.
-Web uygulaması iptal edilip donduruldu (ADR 0228, F3, 24 Kasım 2026): web envanteri (`docs/inventory`) donmuştur ve
-`pnpm inventory` kaldırıldı; komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse yeni komutların kaydı
+Masaüstü kataloğunun tabanı dondurulmuş envanterdir (`docs/inventory/web.json`; tek kataloğa geçene kadar,
+plan/bakim.md BK-23); komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse yeni komutların kaydı
 `catalog/v1/additions.json`'dadır.
 Çizimi ya da projeyi değiştiren yeni araç ve komut, §9.2'deki komut, Python ve MCP bütünlüğü olmadan tamamlandı sayılmaz.
 
@@ -218,12 +221,12 @@ doğrulamada `AppError::invalid_at` kullanın; istemci yeniden denemeyi bu alanl
 ## 14. Workspace ve tek hesaplama kaynağı
 
 Saf Rust hesap crate'leri DOM, Iced, SQLx, ağ veya host runtime bilmez.
-Masaüstü ve sunucu bunları native çağırır (WASM bağlayıcıları donmuş web içindir). Rust'tan üretilen veri/komut
-sözleşmesi ortak olabilir; web uygulama runtime'ı ortaklaştırılmaz.
+Masaüstü ve sunucu bunları native çağırır. Rust'tan üretilen veri/komut sözleşmesi ortaktır.
 Sıcak yollarda toplu tipli buffer kullanın; nesne başına JSON/FFI üretmeyin.
-Mevcut `jsmath`/`libm`, lint ve deterministic davranış kurallarını koruyun;
+Mevcut `jsmath`/`libm`, lint ve deterministic davranış kurallarını koruyun (yerlerine geçecek sayısal temel
+araştırılıyor: ADR 9402 §7, plan/bakim.md BK-88; karar çıkana kadar bu kurallar sürer);
 `unwrap/expect` ile kullanıcı girdisinde panic üretmeyin.
-Yeni hesap çağrısına sınır/rastgele fixture, native/WASM ve bağımsız referans
+Yeni hesap çağrısına sınır/rastgele fixture ve bağımsız referans
 ekleyin. Taşıma ayrıntıları [ADR 0008](docs/adr/0008-shared-core-boundary.md)'dedir.
 
 **IFC (kesin kural):** IFC ile ilgili her şey `crates/shared/ifc` (`kentos-ifc`) içindedir: yazma, okuma, sınıf,
@@ -245,7 +248,7 @@ bağımsız yazılabilir otorite kurmayın. Ayrıntı TODOS.md §10–11, ADR 00
 
 Ürün komutları tipli/sürümlü, yetkili, iptal/önizleme/sonuç sözleşmeli olmalı.
 Python ve AI bunları sarar; repository/SQL/DOM'dan iş kurallarını atlamaz.
-Web processing worker'ı donmuş web'dedir; kalıcı server worker ayrı teslimdir.
+Kalıcı server worker ayrı teslimdir.
 Server job tasarımında lease/heartbeat/fencing, idempotency, staged sonuç,
 revision/yetkiyi commit anında doğrulama ve kaynak kotaları gerekir.
 Uzun hesap API event loop/UI thread'de çalışmaz; socket kapanması işi yok etmez.
@@ -318,7 +321,7 @@ veya atomik ret, dayanağı kayıtlı çözüm gerekir.
 
 ### 23.4 Bağımsız doğrulama
 
-Native/WASM eşitliği yanında bağımsız yüksek hassasiyetli referans gerekir.
+Bağımsız yüksek hassasiyetli referans gerekir; sonuç her platformda (macOS, Windows, Linux; masaüstü ve sunucu) aynıdır.
 Sınır, yarım değer, negatif, yakın paralel/teğet, büyük koordinat, delik/eğri,
 ortak sınır ve alan/hisse korunumu fixture'larını koruyun.
 Nihai decimal, yuvarlama yönü ve topolojik karar platformlar arasında aynı
