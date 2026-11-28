@@ -21,9 +21,10 @@ pub const MARK_ATTR: &str = "Renk planı";
 /// The undo step's name.
 pub const STEP: &str = "Renk planı lejandı";
 
-/// Metres as a legend writes an area: 36,40.
+/// Metres as a legend writes an area: 36,40. By the display rule (docs/adr/0149): the room's tag writes the same
+/// area the same way.
 fn m2(v: f64) -> String {
-    format!("{v:.2}").replace('.', ",")
+    kentos_geometry_core::display::fixed(v, 2).replace('.', ",")
 }
 
 /// A row's words: its label, its rooms and their area.
@@ -166,5 +167,22 @@ pub fn draw(
         CommandResult::Completed { .. } => Ok(rows.len()),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Renk planının lejandı yazılamadı.".into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// A room area that is a half at the digits shown is written as the room's own tag writes it (docs/adr/0149,
+    /// docs/adr/9401 §9): 12.125 m² is 12,13, not 12,12.
+    #[test]
+    fn a_half_is_written_by_the_display_rule() {
+        assert_eq!(
+            super::row_words("Konut", 3, 12.125),
+            "Konut — 3 mahal, 12,13 m²"
+        );
+        assert_eq!(
+            super::row_words("Konut", 1, 36.4),
+            "Konut — 1 mahal, 36,40 m²"
+        );
     }
 }

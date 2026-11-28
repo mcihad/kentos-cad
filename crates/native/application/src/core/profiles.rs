@@ -565,9 +565,9 @@ pub mod apply {
 
 // ── Check ────────────────────────────────────────────────────────────────────
 
-/// A number as the messages write it: two decimals, a decimal comma.
+/// A number as the messages write it: two decimals, a decimal comma, by the display rule (docs/adr/0149).
 fn m2(x: f64) -> String {
-    format!("{x:.2}").replace('.', ",")
+    kentos_geometry_core::display::fixed(x, 2).replace('.', ",")
 }
 
 fn finding(
@@ -1063,5 +1063,15 @@ pub mod check {
             }
             Err(stop) => stop.into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod display_tests {
+    /// A half at the digits shown is written by the display rule (docs/adr/0149, docs/adr/9401 §9).
+    #[test]
+    fn a_half_is_written_by_the_display_rule() {
+        assert_eq!(super::m2(0.125), "0,13");
+        assert_eq!(super::m2(12.5), "12,50");
     }
 }

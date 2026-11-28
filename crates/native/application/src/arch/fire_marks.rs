@@ -32,9 +32,9 @@ pub struct Drawn {
     pub over: usize,
 }
 
-/// Metres with a decimal comma, as a plan writes them: “28,07”.
+/// Metres with a decimal comma, as a plan writes them: “28,07”. By the display rule (docs/adr/0149).
 fn comma(v: f64) -> String {
-    format!("{v:.2}").replace('.', ",")
+    kentos_geometry_core::display::fixed(v, 2).replace('.', ",")
 }
 
 /// A walk's words on the plan: “tek yön 28,07 m > 15,00 m”, “daire içi 12,40 m ≤ 20,00 m”, “9,80 m”.
@@ -190,5 +190,21 @@ mod tests {
             ..w
         };
         assert_eq!(words(&unasked), "9,80 m");
+    }
+
+    /// A measure that is a half at the digits shown is written as the display rule writes it everywhere else
+    /// (docs/adr/0149, docs/adr/9401 §9): a half away from zero, not to the even digit.
+    #[test]
+    fn a_half_is_written_by_the_display_rule() {
+        let w = crate::fire_audit::Walk {
+            level: None,
+            path: vec![V::new(0.0, 0.0), V::new(28.125, 0.0)],
+            length: 28.125,
+            measure: 28.125,
+            limit: Some(15.125),
+            words: "tek yön",
+            over: true,
+        };
+        assert_eq!(words(&w), "tek yön 28,13 m > 15,13 m");
     }
 }
