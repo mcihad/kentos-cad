@@ -17,8 +17,9 @@ use crate::tool_settings::{Setting, choices};
 
 pub const ID: &str = "sunShadow";
 
-/// The days a shadow is drawn for most: the winter solstice, the equinoxes, the summer solstice.
-const DAYS: [(&str, &str, u32, u32); 4] = [
+/// The days a shadow is drawn for most: the winter solstice, the equinoxes, the summer solstice (their key, name, day
+/// and month); 3B görünüm's Güneş offers them too.
+pub const DAYS: [(&str, &str, u32, u32); 4] = [
     ("aralik", "21 Aralık", 21, 12),
     ("mart", "21 Mart", 21, 3),
     ("haziran", "21 Haziran", 21, 6),

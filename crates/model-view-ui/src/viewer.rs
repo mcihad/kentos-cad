@@ -172,6 +172,9 @@ pub struct Viewer {
     refit: bool,
     /// Aksonometri (docs/adr/8175 §3.1): the camera's lines parallel; off: a perspective.
     pub axonometric: bool,
+    /// Towards the sun in the model's space (docs/adr/8177 §4): the light, and the faces cast its shadows; none: the
+    /// light over the viewer's shoulder. The host sets it from the place, the day and the hour.
+    pub sun: Option<[f64; 3]>,
     /// The scene's size as it last drew, logical pixels (0: not drawn yet): a picture of it is made at its shape.
     pub(crate) size: (f32, f32),
     pub seen: Arc<Mutex<Seen>>,
@@ -216,6 +219,7 @@ impl Viewer {
             aspect: 0.0,
             refit: false,
             axonometric: false,
+            sun: None,
             size: (0.0, 0.0),
             seen: Arc::default(),
             pending: Arc::default(),

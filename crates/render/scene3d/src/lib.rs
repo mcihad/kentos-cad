@@ -30,6 +30,7 @@
 pub mod edges;
 pub mod offscreen;
 pub mod residency;
+pub mod shadow;
 
 use std::collections::HashMap;
 
@@ -88,10 +89,25 @@ struct ViewBlock {
     look: [f32; 4],
     edge: [f32; 4],
     planes: [[f32; 4]; MAX_PLANES],
+    /// The sun's projection (docs/adr/8177 §4, `shadow::projection`) and `sun`: x 1 while it casts shadows, y a texel
+    /// in the map's coordinates, z in metres, w the depth bias.
+    shadow: [f32; 16],
+    sun: [f32; 4],
 }
 
 /// The most planes a section clips with: a box's six.
 pub const MAX_PLANES: usize = 6;
+
+/// A content's vertex as the faces', the edges' and the shadow's pipelines read it: position float32 × 3, part u32,
+/// normal snorm8 × 4.
+pub(crate) fn vertex_layout() -> wgpu::VertexBufferLayout<'static> {
+    const ATTRIBUTES: [wgpu::VertexAttribute; 3] = [
+        wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
+        wgpu::VertexAttribute { format: wgpu::VertexFormat::Uint32, offset: 12, shader_location: 1 },
+        wgpu::VertexAttribute { format: wgpu::VertexFormat::Snorm8x4, offset: 16, shader_location: 2 },
+    ];
+    wgpu::VertexBufferLayout { array_stride: 20, step_mode: wgpu::VertexStepMode::Vertex, attributes: &ATTRIBUTES }
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -126,7 +142,8 @@ impl Style {
 /// as the budgets allow, in the order given), the parts' styles (indexed by part), the light (towards it, in the shown
 /// space) and its ambient share, the sky's and the fill's shares (docs/adr/8120; 0: the light alone), and the
 /// half-spaces a section keeps (`[a, b, c, d]` keeping a·x + b·y + c·z + d ≥ 0 in the shown space, at most
-/// [`MAX_PLANES`]; none: nothing is cut).
+/// [`MAX_PLANES`]; none: nothing is cut), and the box (low and high corners, the model's space) whose faces cast the
+/// sun's shadows, the light being the sun (docs/adr/8177 §4; none: no shadow).
 pub struct Frame<'a> {
     pub camera: &'a Camera,
     pub exaggeration: Exaggeration,
@@ -138,6 +155,7 @@ pub struct Frame<'a> {
     pub sky: f32,
     pub fill: f32,
     pub clip: &'a [[f64; 4]],
+    pub shadows: Option<[[f64; 3]; 2]>,
 }
 
 /// What a frame did.
@@ -213,6 +231,10 @@ pub struct Scene3dRenderer {
     /// Whether this frame's occlusion is drawn (a perspective at the highest quality).
     occluding: bool,
     edge_draws: Vec<(u64, u32)>,
+    shadows: shadow::Shadows,
+    /// Whether this frame casts the sun's shadows, and the shadow pass's view group (the view and the styles).
+    shadowing: bool,
+    shadow_bind: wgpu::BindGroup,
     view_layout: wgpu::BindGroupLayout,
     tile_layout: wgpu::BindGroupLayout,
     view: wgpu::Buffer,
@@ -261,32 +283,58 @@ impl Scene3dRenderer {
             label: Some("kentos.scene3d"),
             source: wgpu::ShaderSource::Wgsl(SCENE3D_WGSL.into()),
         });
+        let block = [
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<ViewBlock>() as u64),
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                // The vertex stage reads whether a part is cut: a section's cap is drawn nearer, as edges are
+                // (docs/adr/8131).
+                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: wgpu::BufferSize::new(16),
+                },
+                count: None,
+            },
+        ];
+        // The faces read the sun's map and compare against it (docs/adr/8177 §4); the shadow pass that draws the map
+        // binds the view and the styles alone.
         let view_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("kentos.scene3d.view"),
             entries: &[
+                block[0],
+                block[1],
                 wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<ViewBlock>() as u64),
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Depth,
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
                     },
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    // The vertex stage reads whether a part is cut: a section's cap is drawn nearer, as edges are
-                    // (docs/adr/8131).
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(16),
-                    },
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Comparison),
                     count: None,
                 },
             ],
+        });
+        let shadow_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("kentos.scene3d.shadowView"),
+            entries: &block,
         });
         let tile_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("kentos.scene3d.tile"),
@@ -326,15 +374,7 @@ impl Scene3dRenderer {
                     module: &module,
                     entry_point: Some("meshVs"),
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
-                    buffers: &[wgpu::VertexBufferLayout {
-                        array_stride: 20,
-                        step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Uint32, offset: 12, shader_location: 1 },
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Snorm8x4, offset: 16, shader_location: 2 },
-                        ],
-                    }],
+                    buffers: &[vertex_layout()],
                 },
                 primitive: wgpu::PrimitiveState { cull_mode: None, ..wgpu::PrimitiveState::default() },
                 depth_stencil: Some(wgpu::DepthStencilState {
@@ -381,15 +421,7 @@ impl Scene3dRenderer {
                     module: &module,
                     entry_point: Some("edgeVs"),
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
-                    buffers: &[wgpu::VertexBufferLayout {
-                        array_stride: 20,
-                        step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Uint32, offset: 12, shader_location: 1 },
-                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Snorm8x4, offset: 16, shader_location: 2 },
-                        ],
-                    }],
+                    buffers: &[vertex_layout()],
                 },
                 primitive: wgpu::PrimitiveState { topology: wgpu::PrimitiveTopology::LineList, ..wgpu::PrimitiveState::default() },
                 depth_stencil: Some(wgpu::DepthStencilState {
@@ -420,7 +452,9 @@ impl Scene3dRenderer {
             mapped_at_creation: false,
         });
         let styles = styles_buffer(device, 16);
-        let view_bind = Self::view_bind(device, &view_layout, &view, &styles);
+        let shadows = shadow::Shadows::new(device, &module, &tile_layout, shadow_layout, quality);
+        let view_bind = Self::view_bind(device, &view_layout, &view, &styles, &shadows);
+        let shadow_bind = Self::shadow_bind(device, &shadows.layout, &view, &styles);
         let tiles = tiles_buffer(device, 64);
         let tile_bind = Self::tile_bind(device, &tile_layout, &tiles);
         Scene3dRenderer {
@@ -433,6 +467,9 @@ impl Scene3dRenderer {
             targets: None,
             occluding: false,
             edge_draws: Vec::new(),
+            shadows,
+            shadowing: false,
+            shadow_bind,
             view_layout,
             tile_layout,
             view,
@@ -451,9 +488,28 @@ impl Scene3dRenderer {
         }
     }
 
-    fn view_bind(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, view: &wgpu::Buffer, styles: &wgpu::Buffer) -> wgpu::BindGroup {
+    fn view_bind(
+        device: &wgpu::Device,
+        layout: &wgpu::BindGroupLayout,
+        view: &wgpu::Buffer,
+        styles: &wgpu::Buffer,
+        shadows: &shadow::Shadows,
+    ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.scene3d.view"),
+            layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: view.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: styles.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::TextureView(shadows.bound()) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::Sampler(&shadows.sampler) },
+            ],
+        })
+    }
+
+    fn shadow_bind(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, view: &wgpu::Buffer, styles: &wgpu::Buffer) -> wgpu::BindGroup {
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("kentos.scene3d.shadowView"),
             layout,
             entries: &[
                 wgpu::BindGroupEntry { binding: 0, resource: view.as_entire_binding() },
@@ -580,12 +636,25 @@ impl Scene3dRenderer {
             *out = [p[0] as f32, p[1] as f32, p[2] as f32, w as f32];
         }
         let perspective = matches!(frame.camera.projection, kentos_scene3d::Projection::Perspective { .. });
+        // The sun's shadows: its projection fitted to the box as shown; the map made the first time.
+        self.shadowing = frame.shadows.is_some();
+        let (mut shadow, mut sun) = ([0.0f32; 16], [0.0f32; 4]);
+        if let Some([low, high]) = frame.shadows {
+            let (low, high) = (frame.exaggeration.shown(low), frame.exaggeration.shown(high));
+            let p = shadow::projection(low, high, eye, light, self.shadows.side);
+            (shadow, sun) = (p.clip, [1.0, p.texel_uv, p.texel_m, p.bias]);
+            if self.shadows.ensure(device) {
+                self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles, &self.shadows);
+            }
+        }
         let block = ViewBlock {
             clip: frame.camera.rotation_projection(aspect).to_f32(),
             light: [light[0] as f32, light[1] as f32, light[2] as f32, frame.ambient],
             look: [frame.exaggeration.factor as f32, used as f32, frame.sky, frame.fill],
             edge: [if perspective { 1.0 } else { 0.0 }, EDGE_NEAR, EDGE_DARK, self.quality.samples() as f32],
             planes,
+            shadow,
+            sun,
         };
         queue.write_buffer(&self.view, 0, bytemuck::bytes_of(&block));
         // The occlusion's lens: a perspective's (an orthographic view has no distance to measure it by).
@@ -607,7 +676,8 @@ impl Scene3dRenderer {
         if n > self.styles_capacity {
             self.styles_capacity = n.next_power_of_two();
             self.styles = styles_buffer(device, self.styles_capacity);
-            self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles);
+            self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles, &self.shadows);
+            self.shadow_bind = Self::shadow_bind(device, &self.shadows.layout, &self.view, &self.styles);
         }
         let colors: Vec<[f32; 4]> = frame.styles.iter().map(|s| s.gpu()).collect();
         if !colors.is_empty() {
@@ -698,11 +768,32 @@ impl Scene3dRenderer {
         }
     }
 
+    /// Draws the sun's map of the prepared frame when it casts shadows (docs/adr/8177 §4): before the faces' pass, which
+    /// reads it. [`Scene3dRenderer::render_offscreen`] draws it itself; a host drawing into its own pass
+    /// ([`Scene3dRenderer::render`]) encodes it first.
+    pub fn render_shadows(&self, encoder: &mut wgpu::CommandEncoder) {
+        let Some(map) = self.shadows.map.as_ref().filter(|_| self.shadowing) else { return };
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("kentos.scene3d.shadow"),
+            color_attachments: &[],
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: map,
+                depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }),
+                stencil_ops: None,
+            }),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_bind_group(0, &self.shadow_bind, &[]);
+        self.faces(&mut pass, &self.shadows.pipeline, &self.opaque_draws);
+    }
+
     /// Draws the prepared frame into the view's own targets ([`Scene3dRenderer::ensure_targets`]) and lays them over
     /// `output` at `viewport` (pixels: x, y, width, height) within `scissor` (x0, y0, x1, y1), darkened by the
-    /// occlusion when the quality asks.
+    /// occlusion when the quality asks; the sun's map first when the frame casts shadows.
     pub fn render_offscreen(&self, encoder: &mut wgpu::CommandEncoder, output: &wgpu::TextureView, viewport: [f32; 4], scissor: [u32; 4]) {
         let Some(t) = &self.targets else { return };
+        self.render_shadows(encoder);
         {
             let mut pass = t.scene_pass(encoder);
             self.render(&mut pass);

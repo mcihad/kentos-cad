@@ -1,14 +1,17 @@
 # ADR 8177: Güneş ve gölge: güneşin konumu, binanın zemindeki gölgesi
 
-- **Durum:** 1. bölüm kabul edildi ve uygulandı (28 Kasım 2026): güneşin konumu, plandaki gölge, Gölge aracı (GL).
-  Kalan: 3B görünümde güneş ışığı ve gölge (2. bölüm).
+- **Durum:** kabul edildi ve uygulandı (28 Kasım 2026). 1. bölüm: güneşin konumu, plandaki gölge, Gölge aracı (GL).
+  2. bölüm: 3B görünümde güneş ışığı ve gölge haritası, Güneş düğmesi.
 - **Plan:** [plan/mimari-bim.md](../../plan/mimari-bim.md) MB-15. Karar: [ADR 8171](8171-mimari-3d-section-quality-and-missing-tools.md)
   §2.6.
 - **İstek** (sahip, 27 Kasım 2026): "mimari proje çizimlerinde birçok eksik aracımız var". Araştırma raporunun 5.
   bölümü ([2026-11-27](../research/2026-11-27-mimari-3b-kesit-ve-araclar.md)): konum ve tarihle güneş ve gölge
   piyasadaki araçların hepsinde var, KentOS'ta yok.
-- **Sözleşmeler:** değişmedi. Gölge düz nesnelerdir (tarama, kapalı çoklu çizgi, yazı); `.kcad` ve belge şeması
-  aynı. Aracın hatırladıkları (konum, saat dilimi, tarih, saat) uygulama belleğindedir, dosyaya yazılmaz.
+- **Sözleşmeler:**
+  - Belge değişmedi. Gölge düz nesnelerdir (tarama, kapalı çoklu çizgi, yazı); `.kcad` ve belge şeması aynı. Aracın
+    hatırladıkları (konum, saat dilimi, tarih, saat) uygulama belleğindedir, dosyaya yazılmaz.
+  - 3B gölgelendiricinin düzen sözleşmesi 5. sürüm (`shaders/wgsl/scene3d.layout.json`): View bloğu 208 → 288 bayt
+    (`shadow`, `sun`), grup 0'ın 2. ve 3. bağlamaları (gölge haritası ve karşılaştıran örnekleyici), `shadow` hattı.
 
 ## §1 Sorun
 
@@ -117,13 +120,46 @@
 - **Hatırlanır:** yazılan enlem, boylam, saat dilimi, seçilen tarih ve saat uygulama açık kaldıkça bir sonraki
   çalıştırmada gelir.
 
-### §3.4 Modüller ve kanallar
+### §3.4 3B'de güneş ve gölge (2. bölüm)
+
+- **Gölge haritası** (`crates/render/scene3d/src/shadow.rs`): saydam olmayan yüzler güneşten bir kez daha, derinlik
+  haritasına çizilir. Harita 4096 × 4096 texel (Hızlı'da 2048), Depth32Float, standart derinlik (güneşe yakın 0).
+  - Dik izdüşüm sahnenin kutusuna (sahne ve kesit kapakları) güneşin bakışından sıkı oturur, bir texel payla: 30 m'lik
+    bir binanın gölgesi texel başına 7 mm. Kutu köşelerinin tabanına düşen gölgeleri de derinlik aralığına girer:
+    zemine düşen uzak gölge ışın boyunca her köşeden derindedir; girmeseydi aydınlık sayılırdı.
+  - Kesit düzlemleri gölge düşürenleri de keser: kesitin kaldırdığı parça gölge düşürmez. Saydam parça (cam, mahal)
+    gölge düşürmez.
+  - Görüntünün dışında kalan döşemeler gölge düşürmez (yalnız çizilenler); tek binada hepsi çizilir.
+- **Zemin:** güneş açıkken görüntüleyici sahnenin altına bir zemin koyar (`model-view-ui` `Ground`): sahnenin
+  genişliğinin üç katı (en az 40 m) kare, açık sıcak gri. Yükseklikler ±0,00'ı kapsıyorsa 2 cm altında (zemin katın
+  döşemesi üstünde görünür), kapsamıyorsa sahnenin 2 cm altında. Zeminsiz bina gökyüzünde duruyor, gölgesi hiçbir
+  şeye düşmüyordu (gerçek pencerede görüldü). Piyasadaki güneş çalışmalarının da bir zemin düzlemi var.
+- **Yüzlerin ışığı:** doğrudan ışık, haritayla yapılan 25 karşılaştırmanın (5 × 5, her biri dört texelde süzülür)
+  aydınlık bulduğu paydır: gölgenin kenarı iki texel kadar yumuşak, basamaksız. Ortam ışığı, gökyüzü ve dolgu ışığı
+  gölgelenmez.
+- **Çizgilenmeye karşı alıcı düzlem:** her karşılaştırma, yüzün haritadaki derinlik eğimiyle (pikselin
+  türevlerinden) kendi yerindeki derinlikte yapılır; örnek noktası normal boyunca güneşe dönük yüzde yarım, sıyıran
+  güneşte iki texel kaydırılır, derinlikten bir texel düşülür. İlk sürümde sapma tek texeldi: 45°'lik güneşte dış
+  karşılaştırmalar yüzün kendisini gölgede buluyor, zeminde ve kolonun tepesinde yatay bantlar çıkıyordu (ekran
+  kartında çekilen resimde görüldü). Alıcı düzlemle bantlar gitti, ama 14°'lik Aralık 15:00 güneşinde aydınlık zemin
+  hafif kumlanıyordu; 12°'lik güneşte ölçüldü: 84…91 (255 üzerinden). Sıyıran güneşte kaydırma büyüyünce düzgün.
+- **Güneş düğmesi** (3B görünümün şeridi, `apps/desktop/src/shell/scene3d_sun.rs`):
+  - Açılınca bina seçilen gün ve saatin güneşiyle aydınlanır, gölgelerini düşürür; Tarih ▾ dört gün, ◀ saat ▶ bir
+    saatlik adımlar.
+  - Konum, saat dilimi ve ilk gün/saat Gölge aracınındır (`Memory::sun_shadow`; gün boyu seçiliyse 12:00). Konum
+    yoksa düğme açılmaz, Gölge (GL) aracında enlem ve boylamın verilmesini söyler.
+  - Güneşin ufkun altında (0,5°'den alçak) olduğu saate geçilmez, söylenir. Başka güne geçince o saatte güneş
+    doğmamışsa o günün öğlesine gidilir.
+  - Durum çubuğu güneşi yazar: "Güneş: 21 Aralık 12:00, yüksekliği 26,5°, azimut 172°".
+  - Paftaya koy'un resmi pencere gibi aydınlanır (`Viewer::picture`).
+
+### §3.5 Modüller ve kanallar
 
 | | Var mı | Gerekçe |
 |---|---|---|
 | Mimari | var | Kesit modeli ve vaziyet Mimari'nin. |
 | Harita, Yol, CBS | yok | Bina modeli yok. |
-| MCP, Python, eklenti, yapay zekâ ajanı | düz nesne | Gölge düz nesnelerdir (`cad.entities.create`, `cad.entities.delete`). Gölgeyi hesaplayan anlamsal bir işlem yok (Kalanlar). |
+| MCP, Python, eklenti, yapay zekâ ajanı | düz nesne | Gölge düz nesnelerdir (`cad.entities.create`, `cad.entities.delete`). Gölgeyi hesaplayan anlamsal bir işlem yok (Kalanlar). 3B'nin Güneş'i pencerenin kendisidir. |
 
 ## §4 Kanıt
 
@@ -145,7 +181,26 @@
     çıkıyor, geri alma hepsini götürüyor.
   - 09:00–15:00 saatlik yedi saat, taramasız. Araç yeniden açılınca konum ve saat seçimi geliyor. 21 Haziran
     12:00'da güneş 72,3°, azimut 154°; eski gölge gidiyor.
-- **Gerçek pencere** (`.run/gui-evidence/mimari-bim/{once,sonra}/mb15-*`; dosya: kesit binası ve çerçevesi,
+- **Ekran kartı** (`crates/render/wgpu/tests/gpu/scene3d.rs`, `KENTOS_GPU_TESTS=1`, Intel UHD 770, Vulkan):
+  - 10 m'lik zemin üstünde 1 × 1 × 3 m kolon, güneş güneyden 45°: kolonun kuzeyi 61 (yalnız ortam ışığı: 0,8 × 0,3),
+    güneyi ve kuzeydoğusu 163 (0,8 × (0,3 + 0,7 × 0,707)). Gölge istenmeyince kuzey güney kadar aydınlık.
+  - Kesit kolonun alttaki 1 m'sini bırakınca gölge 1 m: kuzeyde 2 m aydınlık, yarım metre gölgede.
+  - 12°'lik güneşte kolonun güneyindeki aydınlık zemin düzgün (91 noktada en çok 2 fark; önce 84…91).
+  - Resim: `.run/gui-evidence/3b-kalite-8120/gpu-gunes-golgesi{,-kesit,-alcak}.png`. Alıcı düzlemden önce zeminde
+    bantlar vardı, sonra yok.
+  - İzdüşüm (`shadow::tests`): kutunun ortası haritanın ortasında, köşesi kenarından bir texel içeride; güneşe yakın
+    sığ; tepenin 33 m kuzeydeki zemin gölgesi haritanın içinde ve derinlik aralığında.
+  - Düzen sözleşmesi (`styled_contract::the_scene3d_module_validates_and_is_the_contract_s`): naga gölgelendiriciyi
+    doğruluyor; View 288 bayt; bağlamalar ve `shadowVs`/`shadowFs` sözleşmede.
+- **Masaüstü** (`scene3d_building_tests::the_sun_lights_the_building_by_the_shadow_tool_s_place_and_steps_its_hours`):
+  konumsuz projede Güneş açılmıyor ve nerede verileceğini söylüyor; Gölge'nin konumuyla 21 Aralık 12:00 (26,5°);
+  13:00; 21 Haziran 13:00 (güneş 0,9'un üstünde yüksekte); Aralık'ta saat saat geri: güneşin doğmadığı saate inilmiyor,
+  söyleniyor; kapanıyor.
+- **Gerçek pencere, 3B** (`.run/gui-evidence/mimari-bim/sonra/mb15-3b-*`): Güneş kapalıyken bina gökyüzünde, gölge
+  yok. Açılınca zemin geliyor; 21 Aralık 12:00'de binanın ve çerçevenin gölgesi kuzeye (kameraya doğru), çerçevenin
+  döşeme ve kirişleri ızgara gölge, kirişler arasından ışık; 15:00'te gölge uzayıp kuzeydoğuya dönüyor; 21 Haziran
+  15:00'te kısa ve zemin parlak. Kontrast açılınca da zemin pürüzsüz. Şeritte Güneş, 21 Aralık ▾, ◀ 12:00 ▶.
+- **Gerçek pencere, plan** (`.run/gui-evidence/mimari-bim/{once,sonra}/mb15-*`; dosya: kesit binası ve çerçevesi,
   koordinat sistemi yok):
   - Önce: GOLGE "birden çok komutu anlatıyor: Gölgeli kabartma…"; gölge çizen araç yok.
   - Sonra: istem "binanın enlemini (E) ve boylamını (B) verin", Enlem ve Boylam düğmeleri görünür. E, 39,75 ve
@@ -158,7 +213,8 @@
 
 ## Kalanlar
 
-- **2. bölüm, 3B'de güneş:** görüntüleyicide güneş ışığı ve gölgesi aynı konum, tarih ve saatten.
+- **3B'de görüntü dışındaki döşemelerin gölgesi:** gölge geçişi yalnız çizilen döşemeleri çizer.
+- **IFC görüntüleyicide Güneş:** model dosyasının kendi konumundan (IfcSite enlem/boylam).
 - **Gölge tesviye zeminde ve komşu yapılarda:** zemin bugün ±0,00'da düz.
 - **Gölge süresi:** bir alanın gün boyu kaç saat gölgede kaldığı (saatlik gölgelerin üst üste sayımı).
 - **Güneş yörüngesi şeması** (stereografik), vaziyette.
@@ -175,3 +231,10 @@
 - Araç: `crates/native/interaction/src/arch/shadow_tool.rs` (yeni), `core/session.rs` (kayıt), `core/tool.rs`
   (`Memory::sun_shadow`), `arch/arch_layer.rs` (MM-XXXX-GOLGE).
 - Katalog: `tool.sunShadow` ve simgesi, kısa adı GL; Proje ▾.
+- 3B çizici: `crates/render/scene3d/src/shadow.rs` (yeni: izdüşüm, harita, hat), `lib.rs` (`Frame::shadows`,
+  `render_shadows`, View bloğu), `shaders/wgsl/scene3d/mesh.wgsl` (`sunSlope`, `sunlit`, `shadowVs`, `shadowFs`),
+  `scene3d.layout.json` (5. sürüm).
+- Görüntüleyici: `crates/model-view-ui/src/{scene.rs, viewer.rs, viewer_view.rs}` (`SceneView::sun`, `Viewer::sun`,
+  `Ground`).
+- Masaüstü: `apps/desktop/src/shell/scene3d_sun.rs` (yeni), `scene3d_window.rs` (`Event::Sun`), `scene3d_view.rs`
+  (şerit), `scene3d_building.rs` (`Building3d::sun`), `scene3d_sheet.rs`.

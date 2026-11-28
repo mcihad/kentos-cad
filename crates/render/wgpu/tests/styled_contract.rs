@@ -430,9 +430,9 @@ fn the_composition_module_validates_and_is_the_contract_s() {
 }
 
 /// The 3D scene's module (`shaders/wgsl/scene3d`, `scene3d.layout.json`, docs/adr/0910 §5, 8120): naga validates it
-/// within core WebGPU, its entry points are the contract's, its View block is the 208 bytes and its Tile block the 16
-/// the renderer writes, its bindings are the contract's, and its version is the contract's; the composite's and the
-/// occlusion's modules validate and have their passes' entry points.
+/// within core WebGPU, its entry points are the contract's, its View block is the 288 bytes (the sun's shadows' blocks
+/// too, docs/adr/8177 §4) and its Tile block the 16 the renderer writes, its bindings are the contract's, and its
+/// version is the contract's; the composite's and the occlusion's modules validate and have their passes' entry points.
 #[test]
 fn the_scene3d_module_validates_and_is_the_contract_s() {
     use kentos_render_wgpu::scene3d::{COMPOSITE_WGSL, OCCLUSION_WGSL, SCENE3D_LAYOUT_JSON, SCENE3D_WGSL};
@@ -445,7 +445,7 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
             assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
         }
     }
-    for (name, size) in [("View", 208u64), ("Tile", 16)] {
+    for (name, size) in [("View", 288u64), ("Tile", 16)] {
         let got = module
             .types
             .iter()

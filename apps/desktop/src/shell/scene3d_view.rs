@@ -139,10 +139,12 @@ impl App {
     /// What the window holds: a building's viewer, else the road's strip, scene and bar.
     fn scene3d_body<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         match &w.building {
-            Some(b) => b.viewer.layout(self.viewer_host(
-                |m| msg(Event::Viewer(m)),
-                vec![b.storeys_menu(), crate::scene3d_sheet::sheet_button()],
-            )),
+            Some(b) => {
+                let mut items = vec![b.storeys_menu()];
+                items.extend(crate::scene3d_sun::sun_items(b.sun));
+                items.push(crate::scene3d_sheet::sheet_button());
+                b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), items))
+            }
             None => column![self.scene3d_strip(w), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
         }
     }
@@ -233,6 +235,7 @@ impl App {
             marked: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
             seen: w.seen.clone(),
             pending: w.pending.clone(),
+            sun: false,
         };
         let swatches: Vec<(&str, [f32; 4])> = PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect();
         look::framed(

@@ -293,7 +293,7 @@ impl Viewer {
             camera: self.camera(),
             exaggeration: kentos_scene3d::Exaggeration::NONE,
             styles: self.styles(),
-            light: self.orbit.light(),
+            light: self.sun.unwrap_or_else(|| self.orbit.light()),
             sky: SKY,
             fill: FILL,
             quality,
@@ -305,6 +305,7 @@ impl Viewer {
             active: None,
             seen: std::sync::Arc::default(),
             pending: std::sync::Arc::default(),
+            sun: self.sun.is_some(),
         };
         Some((view, size))
     }
@@ -323,7 +324,7 @@ impl Viewer {
             camera: self.camera(),
             exaggeration: kentos_scene3d::Exaggeration::NONE,
             styles: self.styles(),
-            light: self.orbit.light(),
+            light: self.sun.unwrap_or_else(|| self.orbit.light()),
             // A building's faces under a sky and with a fill (docs/adr/8120): a roof lighter than the wall under it,
             // two walls seen at a corner never the same.
             sky: SKY,
@@ -338,6 +339,7 @@ impl Viewer {
             active: self.gripped,
             seen: self.seen.clone(),
             pending: self.pending.clone(),
+            sun: self.sun.is_some(),
         };
         let swatches = self.swatches();
         look::framed(

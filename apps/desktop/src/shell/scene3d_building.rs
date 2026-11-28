@@ -169,6 +169,8 @@ pub struct Building3d {
     found: Option<u64>,
     /// The underlay models shown in it (docs/adr/8101).
     pub underlays: Vec<Shown>,
+    /// Güneş's day and hour while it lights the building (docs/adr/8177 §4).
+    pub sun: Option<crate::scene3d_sun::SunAt>,
 }
 
 impl std::fmt::Debug for Building3d {
@@ -390,6 +392,7 @@ impl App {
             taken: 0,
             found: None,
             underlays: Vec::new(),
+            sun: None,
         };
         let mut window = Window::new(crate::scene3d_window::Scene::of(Vec::new(), 0), Vec::new(), Some(b), (0, 0));
         // The scene drawn is the viewer's: its frames are the window's.

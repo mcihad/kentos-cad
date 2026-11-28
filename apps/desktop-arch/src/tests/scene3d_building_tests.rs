@@ -246,6 +246,50 @@ fn an_edit_makes_the_model_again_and_the_view_stays() {
     assert_eq!(hidden, Some(1), "the storey hidden stays hidden");
 }
 
+/// Güneş (scene3d_sun.rs, docs/adr/8177 §4): without a place it says where to give one and stays off; with the Gölge
+/// tool's latitude and longitude it lights the building by its day's noon sun (21 Aralık in Sivas: from the south, 26°
+/// up), steps an hour, takes another day, never steps to an hour the sun is down, and goes off.
+#[test]
+fn the_sun_lights_the_building_by_the_shadow_tool_s_place_and_steps_its_hours() {
+    use crate::scene3d_sun::SunChange;
+    use kentos_interaction::Level;
+    let mut app = open(building());
+    let _ = app.update(Message::Run("scene3d.view"));
+    let sun = |app: &App| {
+        let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+        (b.sun, b.viewer.sun)
+    };
+    send(&mut app, W::Sun(SunChange::Toggle));
+    assert_eq!(sun(&app), (None, None), "no place: off");
+    assert!(app.log.said(Level::Warn, "Gölge (GL) aracında enlem (E) ve boylamla (B) verin"), "{:?}", app.log.last());
+    app.memory.sun_shadow.lat = Some(39.75);
+    app.memory.sun_shadow.lon = Some(37.02);
+    send(&mut app, W::Sun(SunChange::Toggle));
+    let (at, towards) = sun(&app);
+    let at = at.expect("on");
+    assert_eq!((at.day, at.hour), (0, 12.0), "the tool's day and hour");
+    let up = towards.expect("lit by the sun")[2];
+    assert!((up - 26.5f64.to_radians().sin()).abs() < 0.01, "21 Aralık 12:00, 26,5° up: {up}");
+    assert!(app.log.said(Level::Info, "Güneş: 21 Aralık 12:00, yüksekliği 26,5°"), "{:?}", app.log.last());
+    send(&mut app, W::Sun(SunChange::Hour(1)));
+    assert_eq!(sun(&app).0.map(|a| a.hour), Some(13.0));
+    send(&mut app, W::Sun(SunChange::Day(2)));
+    let (at, towards) = sun(&app);
+    assert_eq!(at.map(|a| (a.day, a.hour)), Some((2, 13.0)), "21 Haziran at 13:00");
+    assert!(towards.expect("lit")[2] > 0.9, "the summer sun high: {towards:?}");
+    // Back to December and back an hour at a time: the hour never goes where the sun is down, and says so.
+    send(&mut app, W::Sun(SunChange::Day(0)));
+    for _ in 0..8 {
+        send(&mut app, W::Sun(SunChange::Hour(-1)));
+    }
+    let hour = sun(&app).0.expect("on").hour;
+    assert!((7.0..=9.0).contains(&hour) && hour >= 7.5, "the earliest hour the sun is up: {hour}");
+    assert!(app.log.said(Level::Warn, "güneş ufkun altında"), "{:?}", app.log.last());
+    assert!(sun(&app).1.expect("still lit")[2] > 0.0);
+    send(&mut app, W::Sun(SunChange::Toggle));
+    assert_eq!(sun(&app), (None, None), "off");
+}
+
 /// The section building with a 1 m square room drawn about the centre of its first rectangular room, on that room's
 /// storey.
 fn with_an_overlapping_room() -> (kentos_commands::DocumentSnapshotV2, String, String) {

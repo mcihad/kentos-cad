@@ -62,6 +62,7 @@ fn again(v: &SceneView) -> SceneView {
         active: None,
         seen: v.seen.clone(),
         pending: v.pending.clone(),
+        sun: v.sun,
     }
 }
 

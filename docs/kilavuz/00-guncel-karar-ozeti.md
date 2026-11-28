@@ -75,7 +75,7 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
-- **Güneş ve gölge (28 Kasım 2026, MB-15 1. bölüm; [ADR 8177](../adr/8177-sun-and-shadow.md)).**
+- **Güneş ve gölge (28 Kasım 2026, MB-15; [ADR 8177](../adr/8177-sun-and-shadow.md)).**
   - `geom::sun::at`: güneşin azimutu ve yüksekliği enlem, boylam, saat dilimi, gün ve saatten (NOAA genel güneş konumu
     formülleri; ölçülen sapma 0,15°'nin altında, kırılma yok). Türkiye saati güneşin yarım saat önünde: Sivas'ta güneş
     öğlesi 12:30–12:34; saatler saat dilimiyle yazılır. `Sun::in_plan`: coğrafi kuzey `north::model_north`'tan, yoksa
@@ -89,6 +89,14 @@
     konumsuz projede E/B istemin seçeneği (masaüstü harfi araca ancak seçenekse verir), saat dilimi Z (UTC+3). Önizlemeli; tek saat taramalı, birden çok saat çerçeve ve uçta saat;
     MM-XXXX-GOLGE, tek adım, eskisinin yerine. Canlı değil. Konum ve seçimler `Memory::sun_shadow`'da (uygulama açık
     kaldıkça). Sözleşme ve `.kcad` değişmedi.
+  - 3B'de Güneş (2. bölüm): `Frame::shadows` kutusu verilince çizici saydam olmayan yüzleri güneşten derinlik
+    haritasına çizer (`shadow.rs`: 4096², Hızlı 2048; dik izdüşüm kutuya sıkı; kesit düzlemleri gölge düşürenleri de
+    keser; saydam parça düşürmez; köşelerin zemindeki gölgeleri derinlik aralığına girer) ve doğrudan ışığı 5 × 5
+    karşılaştırmanın payıyla söndürür. **Alıcı düzlem sapması şart:** tek texellik sapmayla 45° güneşte zeminde
+    bantlar çıktı (ekran kartı resmi); 12° güneşte kumlanma (84…91) normal kaydırmasını sıyıran güneşte iki texele
+    çıkarınca gitti. Güneş açıkken görüntüleyici bir zemin koyar (±0,00'ın 2 cm altında, sahnenin üç katı). Düzen sözleşmesi 5. sürüm,
+    View 288 bayt. Masaüstünde Güneş düğmesi, Tarih ▾ ve ◀ saat ▶; konum Gölge'nin belleğinden; ufkun altındaki saate
+    geçilmez.
 
 - **Mahal renk planı (28 Kasım 2026, MB-14 1. bölüm; [ADR 8176](../adr/8176-room-colour-plan.md)).**
   - `ArchSettings.colorPlan` (`usage` | `unit`), Mimari verisi 44. Belge: `space_fills`, `color_legend`,
