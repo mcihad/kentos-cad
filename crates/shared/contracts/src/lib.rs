@@ -170,8 +170,6 @@ pub mod parcel_register;
 pub mod particulars;
 #[path = "arch/performance.rs"]
 pub mod performance;
-#[path = "core/point_xy.rs"]
-mod point_xy;
 #[path = "core/profile_files.rs"]
 pub mod profile_files;
 #[path = "arch/program.rs"]

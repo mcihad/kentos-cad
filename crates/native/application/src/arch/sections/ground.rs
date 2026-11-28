@@ -76,6 +76,18 @@ pub(super) fn draw(
     }
 }
 
+/// Whether `at` lies inside `ring` (even-odd).
+fn inside(ring: &[P], at: P) -> bool {
+    let mut odd = false;
+    for i in 0..ring.len() {
+        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+        if (a.y > at.y) != (b.y > at.y) && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+            odd = !odd;
+        }
+    }
+    odd
+}
+
 /// The ground of `s` along the line over `span`: its section's places relative to ±0.00 (`datum`), broken where the
 /// line leaves the surface and where it passes through what is cut, each run a polyline on its layer.
 fn drape(
@@ -126,10 +138,7 @@ fn drape(
         let mut from = u0;
         for to in cuts.into_iter().chain(std::iter::once(u1)) {
             let middle = at((from + to) / 2.0);
-            if cut
-                .iter()
-                .any(|c| kentos_geometry_core::geometry::point_in_polygon(middle, &c.ring))
-            {
+            if cut.iter().any(|c| inside(&c.ring, middle)) {
                 end(&mut run, &mut runs);
             } else {
                 if run.is_empty() {

@@ -37,9 +37,20 @@ pub(super) struct SlabAt {
 }
 
 impl SlabAt {
-    /// Whether the slab's rings hold the point: the core's exact even-odd test (docs/adr/9401 §9).
     pub(super) fn holds(&self, at: P) -> bool {
-        kentos_geometry_core::geometry::point_in_rings(at, &self.rings)
+        let mut odd = false;
+        for r in &self.rings {
+            let n = r.len();
+            for i in 0..n {
+                let (a, b) = (r[i], r[(i + 1) % n]);
+                if (a.y > at.y) != (b.y > at.y)
+                    && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
+                {
+                    odd = !odd;
+                }
+            }
+        }
+        odd
     }
 
     pub(super) fn structure_top(&self) -> f64 {

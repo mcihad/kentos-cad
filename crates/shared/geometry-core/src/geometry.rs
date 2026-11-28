@@ -109,43 +109,23 @@ pub fn centroid(pts: &[Vec2]) -> Vec2 {
 /// §23.3), not by comparing p with a rounded crossing. A point exactly on an
 /// edge may still fall either way, but always the same way.
 pub fn point_in_polygon(p: Vec2, pts: &[Vec2]) -> bool {
-    point_in_ring(p, pts)
-}
-
-/// [`point_in_polygon`] for any point type that gives its `[x, y]` (this core's `Vec2`, the contracts' `Vec2`): the
-/// test is written once, so no crate keeps a copy of it for its own points (docs/adr/9401 §9).
-pub fn point_in_ring<P: Copy + Into<[f64; 2]>>(p: P, ring: &[P]) -> bool {
-    let at = |q: P| {
-        let [x, y] = q.into();
-        Vec2::new(x, y)
-    };
-    let Some(&last) = ring.last() else {
-        return false;
-    };
-    let p = at(p);
     let mut inside = false;
-    let mut b = at(last);
-    for &q in ring {
-        let a = at(q);
+    if pts.is_empty() {
+        return false;
+    }
+    let mut j = pts.len() - 1;
+    for i in 0..pts.len() {
+        let a = pts[i];
+        let b = pts[j];
         if (a.y > p.y) != (b.y > p.y) {
             let side = orientation(a, b, p);
             if if b.y > a.y { side > 0 } else { side < 0 } {
                 inside = !inside;
             }
         }
-        b = a;
+        j = i;
     }
     inside
-}
-
-/// Even-odd point in rings test: whether `p` is inside an odd number of `rings` (an area's outer ring with its holes; a
-/// multipart area's rings). Each ring is decided as [`point_in_polygon`] decides it, on exact values: a point on the
-/// edge two areas share is in exactly one of them. A crossing computed in floating point and then compared put such a
-/// point in both areas or in neither (fixtures/geometry/v1/point_in_rings.json, docs/adr/9401 §9).
-pub fn point_in_rings<P: Copy + Into<[f64; 2]>, R: AsRef<[P]>>(p: P, rings: &[R]) -> bool {
-    rings
-        .iter()
-        .fold(false, |odd, ring| odd != point_in_ring(p, ring.as_ref()))
 }
 
 pub fn dist_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {

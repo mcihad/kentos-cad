@@ -2020,7 +2020,17 @@ fn rings_meet(a: &[kentos_geometry_core::Vec2], b: &[kentos_geometry_core::Vec2]
         ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
             && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
     };
-    let inside = |ring: &[V], p: V| kentos_geometry_core::geometry::point_in_polygon(p, ring);
+    let inside = |ring: &[V], p: V| {
+        let mut odd = false;
+        let n = ring.len();
+        for i in 0..n {
+            let (u, v) = (ring[i], ring[(i + n - 1) % n]);
+            if (u.y > p.y) != (v.y > p.y) && p.x < (v.x - u.x) * (p.y - u.y) / (v.y - u.y) + u.x {
+                odd = !odd;
+            }
+        }
+        odd
+    };
     let (n, m) = (a.len(), b.len());
     (0..n).any(|i| (0..m).any(|k| crosses(a[i], a[(i + 1) % n], b[k], b[(k + 1) % m])))
         || a.iter().any(|p| inside(b, *p))

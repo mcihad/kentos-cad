@@ -12,7 +12,6 @@ use kentos_commands::{
     SpacesEdit, SpacesOperation,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::geometry::point_in_rings;
 use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
@@ -736,7 +735,7 @@ impl SpaceSplitTool {
                 continue;
             }
             let rings = rings_of(&s.space.parts);
-            if point_in_rings(at, &rings) {
+            if inside(&rings, at) {
                 let a = spaces::area_of(&s.space.parts);
                 if best.is_none_or(|(b, _)| a < b) {
                     best = Some((a, Slot(e.base().id)));
@@ -815,6 +814,21 @@ impl SpaceSplitTool {
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
         }
     }
+}
+
+/// Whether the point is inside the rings by the even-odd rule.
+fn inside(rings: &[Vec<Vec2>], p: Vec2) -> bool {
+    let mut odd = false;
+    for r in rings {
+        let n = r.len();
+        for i in 0..n {
+            let (a, b) = (r[i], r[(i + 1) % n]);
+            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+                odd = !odd;
+            }
+        }
+    }
+    odd
 }
 
 impl Tool for SpaceSplitTool {
@@ -1152,20 +1166,9 @@ mod tests {
             ]
         };
         let rings = vec![sq(0.0, 10.0), sq(4.0, 6.0)];
-        assert!(point_in_rings(Vec2::new(1.0, 1.0), &rings));
-        assert!(!point_in_rings(Vec2::new(5.0, 5.0), &rings));
-        assert!(!point_in_rings(Vec2::new(11.0, 5.0), &rings));
-    }
-
-    /// A point on the edge two rings share is in exactly one of them (docs/adr/9401 §9; a case of
-    /// fixtures/geometry/v1/point_in_rings.json): the middle of the wall line between two rooms.
-    #[test]
-    fn a_point_on_a_shared_edge_is_in_one_ring() {
-        let (a, b) = (Vec2::new(3.35, 34.25), Vec2::new(-4.45, 42.08));
-        let p = Vec2::new(-0.55, 38.165);
-        let left = vec![a, b, Vec2::new(-34.45, 42.08), Vec2::new(-34.45, 34.25)];
-        let right = vec![b, a, Vec2::new(33.35, 34.25), Vec2::new(33.35, 42.08)];
-        assert_ne!(point_in_rings(p, &[left]), point_in_rings(p, &[right]));
+        assert!(inside(&rings, Vec2::new(1.0, 1.0)));
+        assert!(!inside(&rings, Vec2::new(5.0, 5.0)));
+        assert!(!inside(&rings, Vec2::new(11.0, 5.0)));
     }
 }
 

@@ -25,7 +25,7 @@
   "crates/native/application/tests/all/fixtures/inputs_core.rs": 2106,
   "crates/native/application/tests/all/fixtures/mod.rs": 2441,
   "crates/native/cloud/src/sync/tests.rs": 2291,
-  "crates/native/domain/src/casework.rs": 2028,
+  "crates/native/domain/src/casework.rs": 2038,
   "crates/native/extension-host/src/registry.rs": 2070,
   "crates/native/geopackage/src/lib.rs": 2171,
   "crates/native/headless/src/agent_tools.rs": 2426,

@@ -17,7 +17,6 @@ use kentos_commands::{
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
-use kentos_geometry_core::geometry::point_in_rings;
 use kentos_geometry_core::jsmath::{atan2, js_hypot};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_pattern, shape};
@@ -462,6 +461,21 @@ impl ViewMarkTool {
     }
 }
 
+/// Whether the point is inside the rings by the even-odd rule.
+fn inside(rings: &[Vec<Vec2>], p: Vec2) -> bool {
+    let mut odd = false;
+    for r in rings {
+        let n = r.len();
+        for i in 0..n {
+            let (a, b) = (r[i], r[(i + 1) % n]);
+            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+                odd = !odd;
+            }
+        }
+    }
+    odd
+}
+
 // ── Döşeme deseni and Tavan ızgarası ───────────────────────────────────────────────────────────────────────────
 
 /// What a finish tool waits for after its key.
@@ -517,7 +531,7 @@ impl FinishTool {
                 .flat_map(|p| std::iter::once(&p.outer).chain(&p.holes))
                 .map(|r| r.pts.iter().map(|q| Vec2::new(q.x, q.y)).collect())
                 .collect();
-            if point_in_rings(at, &rings) {
+            if inside(&rings, at) {
                 let a = kentos_native_application::spaces::area_of(&s.space.parts);
                 if best.is_none_or(|(b, _)| a < b) {
                     best = Some((a, Slot(e.base().id)));

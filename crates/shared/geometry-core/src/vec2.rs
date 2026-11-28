@@ -13,10 +13,3 @@ impl Vec2 {
         Self { x, y }
     }
 }
-
-/// A point's `[x, y]`: what the tests written for any point type ask of it (geometry.rs `point_in_ring`).
-impl From<Vec2> for [f64; 2] {
-    fn from(p: Vec2) -> [f64; 2] {
-        [p.x, p.y]
-    }
-}
