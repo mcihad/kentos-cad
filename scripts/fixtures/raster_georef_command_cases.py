@@ -21,7 +21,9 @@ Writes fixtures/commands/v1/cad.rasters.georef.json without KentOS code, from AD
 - the refusals in the contract's order, in the command's words.
 
 Numbers are rounded to 9 decimals here (GDAL and numpy differ in the last bits between versions); the steps compare
-within 10⁻⁶ (a grid by the default pixel within 10⁻³ m).
+within 10⁻⁶. A grid by the default pixel is held to that too: the pixel is worked out from the transform less its
+constant (docs/adr/9403 §7). Only where the targets were carried from another system is it held to 10⁻³ m
+(raster_georef_crs_cases.py, `PIXEL_WITHIN`).
 """
 import base64
 import hashlib
@@ -54,9 +56,12 @@ GRAY = fx("raster/v1/files/gray-lzw-strips.tif")  # 333 × 257, u8
 DEM = fx("raster/v1/files/i16-dem-tiled128.tif")  # 400 × 300, i16
 I8 = fx("raster/v1/files/i8.tif")  # 50 × 40, i8
 WITHIN = 1e-6
-# A grid by the default pixel: its corner is a multiple of a pixel worked out from the thin plate's differences, some
-# million pixels from the origin; numpy's and KentOS's last bits move it by a fraction of a millimetre. The record keeps
-# the pixel, and the same pixel given makes the same grid (docs/adr/0518 §2).
+# A grid by the default pixel from targets carried from another system (raster_georef_crs_cases.py): its corner is a
+# multiple of a pixel worked out from the targets, some eight million pixels from the origin. PROJ's and KentOS's
+# projections part by nanometres in a target; over a raster a hundred metres across that is a hundred-billionth of
+# the pixel, and a tenth of a millimetre at the corner. The record keeps the pixel, and the same pixel given makes
+# the same grid (docs/adr/0518 §2). Targets given in the project's own system are held to `WITHIN` like the rest:
+# the pixel is worked out from the transform less its constant (`default_pixel`).
 PIXEL_WITHIN = 1e-3
 
 
@@ -87,10 +92,15 @@ def poly_fit(order, used):
     cx = np.linalg.lstsq(A, dst[:, 0] - t0[0], rcond=None)[0]
     cy = np.linalg.lstsq(A, dst[:, 1] - t0[1], rcond=None)[0]
 
-    def fwd(col, row):
+    def local(col, row):
         v = np.array(terms((col - c[0]) / s, (row - c[1]) / s, order))
-        return (t0[0] + float(v @ cx), t0[1] + float(v @ cy))
+        return (float(v @ cx), float(v @ cy))
 
+    def fwd(col, row):
+        x, y = local(col, row)
+        return (t0[0] + x, t0[1] + y)
+
+    fwd.local = local
     return fwd
 
 
@@ -111,11 +121,16 @@ def tps_fit(used):
     wx = np.linalg.solve(M, np.concatenate([dst[:, 0] - t0[0], np.zeros(3)]))
     wy = np.linalg.solve(M, np.concatenate([dst[:, 1] - t0[1], np.zeros(3)]))
 
-    def fwd(col, row):
+    def local(col, row):
         p = (np.array([col, row]) - c) / s
         k = np.array([phi(math.hypot(*(p - q[i]))) for i in range(n)] + [1.0, p[0], p[1]])
-        return (t0[0] + float(k @ wx), t0[1] + float(k @ wy))
+        return (float(k @ wx), float(k @ wy))
 
+    def fwd(col, row):
+        x, y = local(col, row)
+        return (t0[0] + x, t0[1] + y)
+
+    fwd.local = local
     return fwd
 
 
@@ -172,6 +187,10 @@ def covering(points, size):
 
 
 def default_pixel(fwd, pixels):
+    # The differences are taken of the transform less its constant (`local`): two whole coordinates are millions of
+    # metres, their difference good to a nanometre, a billionth of a half-metre pixel; and the grid's corner is a
+    # multiple of the pixel millions of pixels from the origin (docs/adr/9403 §7).
+    fwd = fwd.local
     sizes = []
     for c, r in pixels:
         a, b, d = fwd(c, r), fwd(c + 1.0, r), fwd(c, r + 1.0)
@@ -489,8 +508,7 @@ def resampled_plan(name, method, points, *, file=GRAY, w=333, h=257, sample="u8"
 
 RGBA = {"render": "rgb", "bands": [1, 2, 3, 4]}
 resampled_plan("Plan: ince plaka, 8 bitlik kaynak RGBA'ya; ızgara kaynağın sınırından, piksel ortalama ölçekten",
-               "thinPlate", with_roles(BENT[:9] + BENT[10:12], checks=(9, 10)), out_bands=4, out_style=RGBA,
-               within=PIXEL_WITHIN)
+               "thinPlate", with_roles(BENT[:9] + BENT[10:12], checks=(9, 10)), out_bands=4, out_style=RGBA)
 resampled_plan("Plan: polinom 2, 0,6 m piksel, en yakın örnekleme", "poly2",
                with_roles(BENT[:9] + BENT[9:10], checks=(9,)), pixel=0.6, nearest=True, out_bands=4, out_style=RGBA)
 resampled_plan("Plan: projektif, denetim noktasız uyarılır", "projective", with_roles(BENT[:8]), out_bands=4,
@@ -517,7 +535,7 @@ add("İnce plaka: gömülü kaynak yeniden örneklenir, çıktı kitaplığa gö
     {"uid": "$uidOf:1", "method": "thinPlate", "points": I8_PTS, "resampling": "nearest"}, completed(f, s),
     expect={"canUndo": True, "revision": "changed",
             "fields": {"1": {"width": output["width"], "height": output["height"], "bands": 1, "sample": "i8"}}},
-    within=PIXEL_WITHIN)
+    within=WITHIN)
 
 # A resampled raster put back on its source by the affine: its record's source, its pixels.
 WARPED_OUT = {"affine": [486999.5, 0.3, 0.0, 4420101.0, 0.0, -0.3], "width": 45, "height": 38, "pixel": 0.3,

@@ -347,3 +347,55 @@ fn a_resampling_job_writes_the_tiles_it_works_out() {
     }
     assert_eq!(off, 0, "{off} samples differ");
 }
+
+/// A raster placed far from the origin by an exact map (half a metre a pixel, north up), by every method. The default
+/// pixel is half a metre to its last places when it is taken from the transform's values without their constant; the
+/// difference of two whole coordinates is good to a billionth only. A grid's corner is a multiple of the pixel some
+/// eight million pixels from the origin, where that billionth is millimetres (docs/adr/9403 §7).
+#[test]
+fn the_default_pixel_does_not_carry_the_coordinates_last_place() {
+    let mut points = Vec::new();
+    for r in [0.0, 64.25, 128.5, 192.75, 257.0] {
+        for c in [0.0, 83.25, 166.5, 249.75, 333.0] {
+            points.push(Gcp {
+                pixel: Vec2::new(c, r),
+                target: Vec2::new(487_101.25 + 0.5 * c, 4_420_306.125 - 0.5 * r),
+                used: true,
+            });
+        }
+    }
+    let pixels: Vec<Vec2> = points.iter().map(|p| p.pixel).collect();
+    for name in [
+        "helmert",
+        "affine",
+        "projective",
+        "poly2",
+        "poly3",
+        "thinPlate",
+    ] {
+        let method = Method::from_name(name).expect("a method");
+        let g = solve(&points, method).unwrap_or_else(|e| panic!("{name}: {e:?}"));
+        let pixel = warp::default_pixel(&|p| g.forward_offset(p), &pixels).expect("a pixel");
+        assert!(
+            (pixel - 0.5).abs() < 1e-12,
+            "{name}: {:e} off",
+            (pixel - 0.5).abs()
+        );
+        // The whole coordinates give the same pixel, with their last place's noise.
+        let whole = warp::default_pixel(&|p| g.forward(p), &pixels).expect("a pixel");
+        assert!(
+            (whole - 0.5).abs() < 1e-8,
+            "{name}: {:e}",
+            (whole - 0.5).abs()
+        );
+        // And the two are the same map but for a constant.
+        let (a, b) = (Vec2::new(12.5, 200.0), Vec2::new(300.0, 31.0));
+        let (fa, fb) = (g.forward(a).expect("a"), g.forward(b).expect("b"));
+        let (oa, ob) = (
+            g.forward_offset(a).expect("a"),
+            g.forward_offset(b).expect("b"),
+        );
+        assert!(((fa.x - fb.x) - (oa.x - ob.x)).abs() < 1e-8, "{name}");
+        assert!(((fa.y - fb.y) - (oa.y - ob.y)).abs() < 1e-8, "{name}");
+    }
+}

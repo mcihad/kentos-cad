@@ -200,6 +200,36 @@ Onay gelene kadar §1 ve `hypot` yürür; aşkın işlevler `libm`'de kalır.
   kesin yol sabit bir milyon çiftte aynı sayıyı verir; çarpım hatasının iki hesabı 200 000 çiftte aynıdır.
 - **Bedeli:** çağrı başına 2,1 ns (bugünkü 1,4 ns; yukarıdaki tablo).
 
+### 7. Geçişin ortaya çıkardıkları
+
+Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle
+her yer kaynağında düzeltilir; tolerans büyütülmez.
+
+**Raster oturt'un öntanımlı pikseli (28 Kasım 2026).** `js_hypot` bağlanınca 22 682 ortak durumdan ikisi oynadı:
+ince plaka ile oturtulan rasterin çıktı ızgarasının köşesi 1,4 ve 2,3 mm kaydı.
+
+- **Neden:** ızgaranın köşesi piksel boyunun katına oturtulur (ADR 0204 §6) ve köşe orijinden sekiz milyon piksel
+  uzaktadır. Öntanımlı piksel boyu, dönüşümün komşu piksellerdeki değerlerinin farkından hesaplanıyordu; o değerler
+  milyonlarca metrelik koordinatlardır, son basamakları bir nanometredir, yarım metrelik pikselin farkı milyarda bire
+  kadar doğrudur. Milyarda bir, köşede milimetredir. İnce plakanın denklemleri de yer değiştirmeyi bütün olarak
+  (`hedef − piksel`, milyonlarca metre) çözüyordu.
+- **Üretecin notu** bunu biliyordu (“son basamaklar köşeyi milimetrenin kesri kadar oynatır”) ve bu durumlara 10⁻³ m
+  tolerans vermişti; gerçek gürültü birkaç milimetreydi, durumlar şans eseri sınırın içindeydi.
+- **Düzeltme:**
+  - `Georef::forward_offset`: dönüşümün sabiti eklenmeden önceki değeri (raster boyutunda bir sayı). Öntanımlı piksel
+    onun farklarından hesaplanır (`warp::default_pixel`).
+  - `Sheet::solve` denklemleri iki merkezin birbirine taşınması çevresindeki yer değiştirmeler için çözer; taşımayı a₀
+    taşır. Lastik levhanın çizimdeki kullanımında (yer değiştirme küçük) sonuç değişmez.
+  - Üreteçler aynı tanımı izler (`fwd.local`).
+- **Sonuç (ölçüldü):** başvurunun kendi köşe değerleri, gürültüsü giderilince 0,3–0,8 mm oynadı (dört durum). Ürün ile
+  bağımsız başvuru arasındaki köşe farkı şimdi en çok 3·10⁻⁸ m (ince plaka), 10⁻⁸ m (projektif, polinom 3); bu
+  durumların toleransı 10⁻³'ten öbürleriyle aynı 10⁻⁶'ya çekildi. Hedefleri başka sistemden taşınan tek durumda 10⁻³ kaldı:
+  orada PROJ ile KentOS'un izdüşümü hedeflerde nanometre ayrışır ve köşe bunu aynı oranda büyütür (tasarımın kendi
+  duyarlılığı; kayıt pikseli saklar, aynı piksel verilince ızgara aynıdır).
+- Yeniden projeksiyonun öntanımlı pikseli altı anlamlı basamağa yuvarlandığı için (`six_figures`) etkilenmez.
+- Açık: `fixtures/raster/v1/georef.json` üretecinin denetimi bu değişiklikten önce de farklıydı (ortamın GDAL sürümü);
+  dokunulmadı.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |

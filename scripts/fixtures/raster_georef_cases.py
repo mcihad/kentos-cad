@@ -97,6 +97,8 @@ def helmert(gcps):
     pb = sum(x * ty - y * tx for (x, y), (tx, ty) in zip(src, dst))
     a, b = pa / s, pb / s
     fwd = lambda c, r: (to[0] + a * (c - frm[0]) - b * (-r - frm[1]), to[1] + b * (c - frm[0]) + a * (-r - frm[1]))
+    # The map less its constant: what a difference of two places is taken from (docs/adr/9403 §7).
+    fwd.local = lambda c, r: (a * (c - frm[0]) - b * (-r - frm[1]), b * (c - frm[0]) + a * (-r - frm[1]))
 
     def inv(x, y):
         tx, ty = x - to[0], y - to[1]
@@ -121,10 +123,16 @@ def projective(gcps):
     h = np.linalg.solve(A.T @ A, A.T @ B)
     p = [h[0] * t / s, h[1] * t / s, h[2] * t, h[3] * t / s, h[4] * t / s, h[5] * t, h[6] / s, h[7] / s]
 
-    def fwd(c, r):
+    def local(c, r):
         x, y = c - frm[0], r - frm[1]
         d = p[6] * x + p[7] * y + 1
-        return (to[0] + (p[0] * x + p[1] * y + p[2]) / d, to[1] + (p[3] * x + p[4] * y + p[5]) / d)
+        return ((p[0] * x + p[1] * y + p[2]) / d, (p[3] * x + p[4] * y + p[5]) / d)
+
+    def fwd(c, r):
+        x, y = local(c, r)
+        return (to[0] + x, to[1] + y)
+
+    fwd.local = local
 
     def inv(X, Y):
         tx, ty = X - to[0], Y - to[1]

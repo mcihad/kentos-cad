@@ -123,6 +123,16 @@ impl Sheet {
             .iter()
             .map(|l| Vec2::new((l.from.x - centre.x) / size, (l.from.y - centre.y) / size))
             .collect();
+        // The targets' centre, found the same way. The equations are solved for the displacements about the move
+        // of one centre to the other, and a₀ carries that move by itself: a raster's pixels go millions of metres to
+        // the drawing, and a displacement taken whole (`to − from`) is good to that size's last place only, the
+        // sheet's slope to a billionth.
+        let (mut tx, mut ty) = (0.0, 0.0);
+        for l in links {
+            tx += l.to.x - links[0].to.x;
+            ty += l.to.y - links[0].to.y;
+        }
+        let target = Vec2::new(links[0].to.x + tx / n as f64, links[0].to.y + ty / n as f64);
         // [K P; Pᵀ 0] [w; a] = [d; 0], both components at once.
         let m = n + 3;
         let mut a = vec![vec![0.0_f64; m]; m];
@@ -138,8 +148,8 @@ impl Sheet {
                 a[n + k][i] = v;
             }
             b[i] = [
-                links[i].to.x - links[i].from.x,
-                links[i].to.y - links[i].from.y,
+                (links[i].to.x - target.x) - (links[i].from.x - centre.x),
+                (links[i].to.y - target.y) - (links[i].from.y - centre.y),
             ];
         }
         let x = gauss(a, b).ok_or(RubberError::Singular)?;
@@ -148,7 +158,14 @@ impl Sheet {
             size,
             sources,
             weights: x[..n].to_vec(),
-            affine: [x[n], x[n + 1], x[n + 2]],
+            affine: [
+                [
+                    x[n][0] + (target.x - centre.x),
+                    x[n][1] + (target.y - centre.y),
+                ],
+                x[n + 1],
+                x[n + 2],
+            ],
         })
     }
 
@@ -180,6 +197,22 @@ impl Sheet {
     pub fn map(&self, p: Vec2) -> Vec2 {
         let d = self.displacement(p);
         Vec2::new(p.x + d.x, p.y + d.y)
+    }
+
+    /// Where `p` goes, less the sheet's own constant (its centre moved by a₀): a number the size of the frame, where
+    /// `map`'s is the size of the drawing's coordinates. The difference of two of these keeps its digits; the
+    /// difference of two `map`s has lost as many as the coordinates are long.
+    pub fn offset(&self, p: Vec2) -> Vec2 {
+        let q = self.frame(p);
+        let [_, a1, a2] = self.affine;
+        let mut d = [a1[0] * q.x + a2[0] * q.y, a1[1] * q.x + a2[1] * q.y];
+        for (s, w) in self.sources.iter().zip(&self.weights) {
+            let (dx, dy) = (q.x - s.x, q.y - s.y);
+            let f = phi(dx * dx + dy * dy);
+            d[0] += w[0] * f;
+            d[1] += w[1] * f;
+        }
+        Vec2::new((p.x - self.centre.x) + d[0], (p.y - self.centre.y) + d[1])
     }
 
     /// The map's derivative at `p` as [a, b, c, d], its columns (a, b) and

@@ -304,6 +304,21 @@ impl Map {
         }
     }
 
+    /// Where `p` goes less the map's own constant (the fitted targets' centre): `map` before its last addition, so
+    /// a number the size of the raster where `map`'s is the size of the drawing's coordinates.
+    fn offset(&self, p: Vec2) -> Option<Vec2> {
+        match self {
+            Map::Fit(f) => fit::map_centred(f.kind, &f.params, p.x - f.from.x, p.y - f.from.y)
+                .map(|(x, y)| Vec2::new(x, y)),
+            Map::Poly(q) => {
+                let (x, y) = q.local(p);
+                let t = terms(x, y);
+                Some(Vec2::new(dot(&q.cx, &t), dot(&q.cy, &t)))
+            }
+            Map::Sheet(s) => Some(s.offset(p)),
+        }
+    }
+
     /// Where `p` goes and the derivative there (`Sheet::jacobian`'s order).
     fn map_and_jacobian(&self, p: Vec2) -> Option<(Vec2, [f64; 4])> {
         match self {
@@ -371,6 +386,16 @@ impl Georef {
     /// Where a pixel (column, row) lands; none beyond a projective's horizon.
     pub fn forward(&self, p: Vec2) -> Option<Vec2> {
         self.forward.map(self.mirror(p))
+    }
+
+    /// Where a pixel lands, less the transform's own constant: for the step a pixel's move makes in the drawing.
+    ///
+    /// `forward(a) − forward(b)` is the same step with nine digits fewer: the drawing's coordinates are millions of
+    /// metres, their last place a nanometre, and a half-metre pixel measured between two of them is good to a
+    /// billionth of itself. A grid whose corner is a multiple of such a pixel, millions of pixels from the origin,
+    /// moved by millimetres with the transform's last bit (docs/adr/9403 §7).
+    pub fn forward_offset(&self, p: Vec2) -> Option<Vec2> {
+        self.forward.offset(self.mirror(p))
     }
 
     fn mirror(&self, p: Vec2) -> Vec2 {

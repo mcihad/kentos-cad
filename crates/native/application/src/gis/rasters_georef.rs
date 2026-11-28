@@ -687,7 +687,7 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
             Some(s) => Some(s),
             None => {
                 let used: Vec<Vec2> = gcps.iter().filter(|p| p.used).map(|p| p.pixel).collect();
-                warp::default_pixel(&|p| g.forward(p), &used)
+                warp::default_pixel(&|p| g.forward_offset(p), &used)
             }
         };
         let edge: Vec<Vec2> = warp::border(source.width, source.height, BORDER_STEPS)

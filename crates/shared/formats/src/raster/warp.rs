@@ -372,6 +372,10 @@ pub fn border(width: u32, height: u32, per_side: u32) -> Vec<Vec2> {
 /// The output's pixel by default (docs/adr/0204 §6): the transform's mean
 /// scale at the used points' pixels, the square root of the area a pixel
 /// covers there; none when no used point gives one.
+///
+/// Only differences of `forward`'s values are taken, so it may be the transform less a constant, and should be where
+/// there is one (`Georef::forward_offset`): the grid's corner is a multiple of this pixel some millions of pixels
+/// from the origin, and what a difference of two full coordinates loses comes back that many times larger.
 pub fn default_pixel(forward: &dyn Fn(Vec2) -> Option<Vec2>, pixels: &[Vec2]) -> Option<f64> {
     let (mut sum, mut n) = (0.0, 0.0);
     for &p in pixels {
