@@ -4,6 +4,18 @@
 
 ## 0. Güncel karar özeti
 
+- **Bakım planı: kod incelemesi, biçim tabanı, tek denetim komutu (28 Kasım 2026;
+  [ADR 9400](../adr/9400-maintenance-plan.md), [plan/bakim.md](../../plan/bakim.md)).**
+  - İnceleme kodun okunmasından çıkar: bulgu dosyası ve satırıyla yazılır, alt ajanın bulgusu kodda doğrulanmadan plana
+    girmez.
+  - Biçim rustfmt'ın varsayılanıdır; `cargo fmt --all -- --check` denetimin parçasıdır. Boy sınırı biçimlenmiş kodu
+    ölçer: satır sıkıştırmak ya da başka bir dolanma kabul edilmez, dosya bölünür.
+  - Derleme istemeyen bekçiler tek komuttur (`make guard`); Claude Code'un `Stop` hook'u onu koşar. CI ve git hook'u
+    yok.
+  - Bir crate'in bütünleşik sınamaları tek ikilide toplanır (`tests/all/main.rs`).
+  - Sıra: zemin → doğruluk düzeltmeleri → tek kaynak → masaüstü kabuğu → dev işlevler → ortak yardımcılar → `.kcad`
+    şema zinciri → harness. ADR'ler 9400–9449.
+
 - **Etiketler ve Katman stili pencereleri (27 Kasım 2026, T22–T27;
   [ADR 9357](../adr/9357-labels-and-layer-style-windows-second-round.md)).**
   - Kurallı sınıf listesi esner, araçları, Ad ve Koşul altta sabit. Etiketler'in son düğmesi “Tamam”; Uygula tek
