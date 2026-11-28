@@ -126,7 +126,7 @@ impl Inside {
         let mut odd = false;
         for &e in list {
             let [a, b] = self.edges[e as usize];
-            if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
+            if kentos_geometry_core::geometry::ray_crosses(p, a, b) {
                 odd = !odd;
             }
         }

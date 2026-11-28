@@ -29,6 +29,7 @@
 //!
 //! `scripts/fixtures/section_cases.py` computes the same from these rules without KentOS's code, in exact fractions.
 
+use crate::geometry::point_in_rings;
 use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
@@ -285,21 +286,6 @@ pub struct Section {
     pub seen: Vec<Seen>,
 }
 
-/// Even-odd: whether `p` is inside the rings.
-fn inside(rings: &[Vec<Vec2>], p: Vec2) -> bool {
-    let mut odd = false;
-    for r in rings {
-        let n = r.len();
-        for i in 0..n {
-            let (a, b) = (r[i], r[(i + 1) % n]);
-            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
-                odd = !odd;
-            }
-        }
-    }
-    odd
-}
-
 /// The stretches of the line through `at` along `along` (unit), `w` from `lo` to `hi` (the points `at + w·along`),
 /// that run through the rings: inside them on both sides of the line, `SIDE` away along `normal`. In order, joined
 /// where they meet.
@@ -343,7 +329,7 @@ fn through(
         let m = (a + b) / 2.0;
         let p = Vec2::new(at.x + along.x * m, at.y + along.y * m);
         let off = |s: f64| Vec2::new(p.x + normal.x * s, p.y + normal.y * s);
-        if inside(rings, off(SIDE)) && inside(rings, off(-SIDE)) {
+        if point_in_rings(off(SIDE), rings) && point_in_rings(off(-SIDE), rings) {
             match out.last_mut() {
                 Some(last) if (a - last.1).abs() <= EPS => last.1 = b,
                 _ => out.push((a, b)),
@@ -987,7 +973,7 @@ fn outward(rings: &[Vec<Vec2>]) -> Vec<(Vec2, Vec2, Vec2)> {
             }
             let m = Vec2::new((q.y - p.y) / len, -(q.x - p.x) / len);
             let mid = Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0);
-            let m = if inside(rings, Vec2::new(mid.x + m.x * SIDE, mid.y + m.y * SIDE)) {
+            let m = if point_in_rings(Vec2::new(mid.x + m.x * SIDE, mid.y + m.y * SIDE), rings) {
                 Vec2::new(-m.x, -m.y)
             } else {
                 m
@@ -1466,7 +1452,7 @@ fn sloped_seen_at(frame: &Frame, solid: &Solid, s: &Sloped, at: Vec2) -> Option<
     for (lift, shown) in [(0.0, kd > 1e-9), (-s.thickness, kd < -1e-9)] {
         if shown {
             let d = (at.y - k0 - lift - ku * at.x) / kd;
-            if inside(&rings, frame.at(at.x, d)) {
+            if point_in_rings(frame.at(at.x, d), &rings) {
                 take(d);
             }
         }

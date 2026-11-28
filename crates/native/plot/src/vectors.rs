@@ -101,21 +101,6 @@ fn signed(p: &[[f64; 2]]) -> f64 {
     2.0 * kentos_geometry_core::geometry::signed_area(&points)
 }
 
-/// Whether a point is inside a ring (even-odd crossing).
-fn inside(x: f64, y: f64, p: &[[f64; 2]]) -> bool {
-    let mut at = false;
-    let n = p.len();
-    let mut j = n.wrapping_sub(1);
-    for i in 0..n {
-        let (a, b) = (p[i], p[j]);
-        if (a[1] > y) != (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0] {
-            at = !at;
-        }
-        j = i;
-    }
-    at
-}
-
 /// A look's parts as the core's paths (the web's `corePaths`): a filled one as rings with their
 /// holes, a line as it is.
 fn core_paths(s: Shape) -> Vec<MapPath> {
@@ -151,10 +136,9 @@ fn core_paths(s: Shape) -> Vec<MapPath> {
         let Some(first) = h.points.first() else {
             continue;
         };
-        if let Some(owner) = outers
-            .iter()
-            .position(|o| inside(first[0], first[1], &o.points))
-        {
+        if let Some(owner) = outers.iter().position(|o| {
+            kentos_geometry_core::geometry::point_in_ring([first[0], first[1]], &o.points)
+        }) {
             out[owner].holes.push(h.points.clone());
         }
     }

@@ -364,6 +364,71 @@ yazılıydı. Ajanlar ve betikler koda göre dallanır: kütlenin hatası mahali
 `cad.masses.create`'te 8, `cad.arch.edit`'te 2 beklenen kod değişti, öbür durumlar aynı kaldı. Yetenek sınaması
 (düzeltmeden önce kırmızı) yeşil. Rust ve Python koşucuları üç komutta geçti; SDK `--check` temiz.
 
+### 9. Tek yuvarlama kuralı ve kesin nokta-alan kararı (BK-17)
+
+#### 9.1 Çizime yazılan sayılar gösterim kuralıyla yuvarlanır
+
+**Bulgu.** Dört yer sayıyı Rust'ın kendi biçimlemesiyle yazıyordu (`format!("{v:.2}")`): tam yarım çift basamağa
+yuvarlanır, 12,125 m² “12,12” olur. Gösterim kuralı (ADR 0149) aynı değeri “12,13” yazar; mahalin kendi etiketi de
+öyle. Yerler: renk lejandının alanları, yangın yürüyüşlerinin uzunlukları, blok düğmelerinin uzunlukları, profil
+denetiminin iletileri.
+
+**Karar.** Dördü de `kentos_geometry_core::display::fixed` ile yazar. Beklenen değer kuralın kendi bağımsız
+dosyasındandır (`fixtures/numeric/v1/display.json`: 12.125, iki basamak, 12.13). Masaüstündeki öbür `{:.N}`
+biçimlemeleri BK-50'dedir.
+
+#### 9.2 Bir nokta halkaların içinde mi: tek, kesin karar
+
+**Bulgu.**
+
+- Çekirdekte kesin bir sınama vardı (`point_in_polygon`: kesişimin noktanın sağında olup olmadığına yönelimle karar
+  verir). Depoda aynı ışın sınamasını, kesişimi kayan noktayla hesaplayıp karşılaştırarak yapan yaklaşık otuz yerel
+  kopya duruyordu (ölçüm: 52 ışın sınaması yerinden biri kesindi).
+- Yuvarlanmış yazım, iki alanın ortak kenarının tam üstündeki noktayı iki alana birden ya da hiçbirine koyabiliyor.
+  Çizim ölçeğindeki koordinatlarda (metre, santimetre basamaklı, başlangıca yakın) kenarın tam üstünde duran
+  77 157 orta noktanın 3 353'ünde (%4,3) böyle oldu. Mimari'de bu, ortak duvar çizgisinin ortasındaki bir noktanın
+  (kapı, kolon) iki mahalde birden ya da hiçbirinde sayılmasıdır.
+- Transverse Mercator ölçeğinde iki yazım aynı sonucu verir: büyük sayıya yapılan toplamanın yuvarlaması kesişimi
+  noktanın kendisine çeker. Sorun yerel koordinatlı çizimlerdedir.
+- Kopyaların bir nedeni ikinci nokta türüdür: sözleşmelerin `Vec2`'si ile geometri çekirdeğinin `Vec2`'si ayrı
+  türlerdir ve iki crate birbirini bilmez.
+
+**Karar.**
+
+- **Tek karar çekirdekte:** `ray_crosses(p, a, b)` (bir kenar için), `point_in_ring` (bir halka; `[x, y]`'sini
+  veren her nokta türü için), `point_in_rings` (çok halka, çift-tek: delikli ve çok parçalı alan).
+  Sözleşmelerin `Vec2`'si `[x, y]`'sini verir (`contracts/src/core/point_xy.rs`).
+- **23 kopya ona bağlandı:** domain 4, application 4, interaction 4; geometri çekirdeğinin kendi içinde 4 (kesit,
+  etiket motorunun `inside_rings` ve tek yürüyüşlü `signed_distance`'ı, iç ölçüler); stil çekirdeği 2, stil 1, baskı
+  3, proje 1 (koordinat sisteminin alan sınırı; halkanın kendi kenarları korunarak), yol 1, model görünümü 1.
+- **Bırakılanlar, gerekçesiyle:**
+  - Shapefile'ın halka eşlemesi (`formats/src/shp/shape.rs`): ADR 0046'nın yazdığı kuraldır, bağımsız başvurusu
+    aynı yazımı kullanır.
+  - Nokta bulutunun sınırı (`pointcloud/src/ops/boundary.rs`): sınanan nokta yarım hücrededir, kenara hiç düşmez.
+  - Arayüzün ekran pikselleri (`ui/src/spatial/query.rs`): ölçme değil, seçim.
+  - NCZ okuyucusu (`ncz/src/emit.rs`): dosya başka bir programın adını 26 yerde anıyor; dosyaya dokunan iş onları da
+    temizlemek zorundadır. Ayrı iş.
+  - Kesişimin kendi değerini kullanan tarama ve kesme hesapları: içerme sınaması değildir.
+- **Yapılmayan:** alan hesabının ilk köşeye kaydırmayan kopyaları (`geom/column_join.rs` ve benzerleri). BK-17'nin
+  kalanıdır.
+
+**Bağımsız başvuru.** `scripts/fixtures/point_in_rings_cases.py` kuralı kesirlerle (`fractions`) uygular ve
+`fixtures/geometry/v1/point_in_rings.json`'u yazar: 222 ortak kenar durumu (120'sinde yuvarlanmış yazım yanılıyor;
+çizim ve TM ölçeği, yatay ve düşey kenar) ve 17 çok halkalı durum.
+
+**Sınama.** Çekirdek başvuruyla 239 durumda aynı sonucu veriyor (`tests/all/point_in_rings.rs`). Üç kopyanın sınaması
+düzeltmeden önce kırmızıydı (domain, application, interaction). Dokunulan on crate'in bütün sınamaları koşuldu;
+geometri çekirdeğinin (800 + 377), etiket motorunun ve stilin altın dosyaları değişmedi.
+
+**Bu sırada bulunan, bu işten bağımsız kırmızı sınamalar.**
+
+- `file_digest` (uygulama) ve `bands` (baskı) sınamaları bağlı katmanı CBS projesinde kuruyordu; CBS projesi bağlı
+  katmanı 23 Kasım'dan beri reddediyor (ADR 9196 §2). İki sınama CAD projesine çevrildi.
+- `module_features` (`gis/lineage` özelliğinin arkasında değil) ve `ifc_revisions` (saklanan BCF'de kameranın bir
+  değeri 16. hanede farklı) uygulama katmanında kırmızı. İkisi de bu dalın değiştirmediği koddan, 27 Kasım'daki
+  başka işlerden; dokunulmadı, sahibine bildirildi.
+- `scene3d_building_tests` tam koşuda ara sıra düşüyor: iki sınama aynı geçici klasörü kullanıyor.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -384,6 +449,7 @@ yazılıydı. Ajanlar ve betikler koda göre dallanır: kütlenin hatası mahali
 | BCF sorunları'nın okuması (BK-13) | var | yok: Mimari'nin işi | yok | yok | yok: pencere yok, `cad.bcf.read` cevabıyla döner | yok: aynı | yok: aynı | yok: aynı |
 | Formlar'ın bu aygıtta tutulan taslağı (BK-13) | yok: profilinde yok | var | yok: profilinde yok | var | yok: taslak pencerenindir; kanal formu `cad.forms.edit` ile yazar | yok: aynı | yok: aynı | yok: aynı |
 | Kütle (`tool.mass`) ve kütlenin düzenlenmesi (BK-16) | var | yok: Mimari'nin işi | yok | yok | var: `cad.masses.create`, `cad.arch.edit` | var: `kentos.cad.masses.create` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Çizime yazılan sayılar ve nokta-alan kararı (BK-17) | var | var | var | var | var: aynı çekirdek işlevi | var: aynı | var: aynı | var: aynı |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal

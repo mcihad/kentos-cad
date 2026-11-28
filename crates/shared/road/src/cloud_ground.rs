@@ -274,18 +274,6 @@ pub struct Coverage {
     pub density: f64,
 }
 
-fn inside(ring: &[[f64; 2]], x: f64, y: f64) -> bool {
-    let mut odd = false;
-    let n = ring.len();
-    for i in 0..n {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        if (a[1] > y) != (b[1] > y) && x < a[0] + (y - a[1]) / (b[1] - a[1]) * (b[0] - a[0]) {
-            odd = !odd;
-        }
-    }
-    odd
-}
-
 fn ring_area(ring: &[[f64; 2]]) -> f64 {
     let n = ring.len();
     (0..n)
@@ -315,7 +303,10 @@ pub fn coverage(thinned: &Thinned, cell: f64, ring: Option<&[[f64; 2]]>) -> Opti
             let (mut cells, mut occupied) = (0u64, 0u64);
             for i in (x0 / cell).floor() as i64..=(x1 / cell).floor() as i64 {
                 for j in (y0 / cell).floor() as i64..=(y1 / cell).floor() as i64 {
-                    if inside(r, (i as f64 + 0.5) * cell, (j as f64 + 0.5) * cell) {
+                    if kentos_geometry_core::geometry::point_in_ring(
+                        [(i as f64 + 0.5) * cell, (j as f64 + 0.5) * cell],
+                        r,
+                    ) {
                         cells += 1;
                         occupied += u64::from(thinned.occupied.contains(&(i, j)));
                     }

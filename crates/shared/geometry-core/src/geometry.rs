@@ -127,15 +127,23 @@ pub fn point_in_ring<P: Copy + Into<[f64; 2]>>(p: P, ring: &[P]) -> bool {
     let mut b = at(last);
     for &q in ring {
         let a = at(q);
-        if (a.y > p.y) != (b.y > p.y) {
-            let side = orientation(a, b, p);
-            if if b.y > a.y { side > 0 } else { side < 0 } {
-                inside = !inside;
-            }
+        if ray_crosses(p, a, b) {
+            inside = !inside;
         }
         b = a;
     }
     inside
+}
+
+/// Whether the ray from `p` to its right crosses the edge between `a` and `b` (in either order): one end is above
+/// `p` and the other is not, and the crossing lies to `p`'s right, decided exactly (`orientation`). The one edge
+/// decision of the even-odd tests; a walk that does more with each edge (the label engine's distance) asks it here.
+pub fn ray_crosses(p: Vec2, a: Vec2, b: Vec2) -> bool {
+    if (a.y > p.y) == (b.y > p.y) {
+        return false;
+    }
+    let side = orientation(a, b, p);
+    if b.y > a.y { side > 0 } else { side < 0 }
 }
 
 /// Even-odd point in rings test: whether `p` is inside an odd number of `rings` (an area's outer ring with its holes; a

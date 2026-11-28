@@ -128,11 +128,9 @@ pub fn polygon_holds(rings: &[Vec<[f64; 2]>], x: f64, y: f64) -> bool {
     for r in rings {
         for w in r.windows(2) {
             let ([x1, y1], [x2, y2]) = (w[0], w[1]);
-            if (y1 > y) != (y2 > y) {
-                let at = x1 + (y - y1) * (x2 - x1) / (y2 - y1);
-                if x < at {
-                    inside = !inside;
-                }
+            let v = kentos_geometry_core::Vec2::new;
+            if kentos_geometry_core::geometry::ray_crosses(v(x, y), v(x1, y1), v(x2, y2)) {
+                inside = !inside;
             }
         }
     }

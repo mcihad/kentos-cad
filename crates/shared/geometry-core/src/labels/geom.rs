@@ -150,22 +150,7 @@ impl Obb {
 
 /// Whether `p` is inside the rings (even-odd: holes are rings too).
 pub fn inside_rings(p: Vec2, rings: &[Vec<Vec2>]) -> bool {
-    let mut inside = false;
-    for ring in rings {
-        let n = ring.len();
-        if n < 3 {
-            continue;
-        }
-        let mut j = n - 1;
-        for i in 0..n {
-            let (a, b) = (ring[i], ring[j]);
-            if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-            j = i;
-        }
-    }
-    inside
+    crate::geometry::point_in_rings(p, rings)
 }
 
 /// The distance from `p` to the segment `a`–`b`, squared.
@@ -201,10 +186,7 @@ pub fn signed_distance(p: Vec2, rings: &[Vec<Vec2>]) -> f64 {
         for i in 0..n {
             let (a, b) = (ring[i], ring[j]);
             least = js_min(least, segment_distance2(p, a, b));
-            if crossings
-                && (a.y > p.y) != (b.y > p.y)
-                && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x
-            {
+            if crossings && crate::geometry::ray_crosses(p, a, b) {
                 inside = !inside;
             }
             j = i;

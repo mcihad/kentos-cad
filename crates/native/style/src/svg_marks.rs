@@ -538,20 +538,6 @@ fn area(r: &[Vec2]) -> f64 {
         / 2.0
 }
 
-fn inside(p: Vec2, r: &[Vec2]) -> bool {
-    let mut c = false;
-    let n = r.len();
-    let mut j = n - 1;
-    for i in 0..n {
-        let (a, b) = (r[i], r[j]);
-        if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
-            c = !c;
-        }
-        j = i;
-    }
-    c
-}
-
 /// Rings filled by the SVG's rule. Inside a ring the winding is its own turn and its outer rings' summed: the nonzero
 /// rule fills it where that is not 0, the even-odd rule where its depth is even. A filled ring whose outer ring is not
 /// filled starts an area; its holes are the first rings inside it that are not filled. Each area is triangulated
@@ -693,7 +679,11 @@ fn nested(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
     for (k, &i) in order.iter().enumerate() {
         let p = rings[i][0];
         let turn = if area(&rings[i]) > 0.0 { 1 } else { -1 };
-        match order[..k].iter().rev().find(|&&j| inside(p, &rings[j])) {
+        match order[..k]
+            .iter()
+            .rev()
+            .find(|&&j| kentos_geometry_core::geometry::point_in_ring(p, &rings[j]))
+        {
             Some(&j) => {
                 parent[i] = Some(j);
                 depth[i] = depth[j] + 1;

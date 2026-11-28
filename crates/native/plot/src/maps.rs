@@ -477,16 +477,7 @@ fn box_meets_ring(b: [f64; 4], ring: &[[f64; 2]]) -> bool {
     if ring.iter().any(inside_box) {
         return true;
     }
-    let inside_ring = |x: f64, y: f64| {
-        let mut inside = false;
-        for (i, a) in ring.iter().enumerate() {
-            let c = ring[(i + 1) % ring.len()];
-            if (a[1] > y) != (c[1] > y) && x < a[0] + (y - a[1]) * (c[0] - a[0]) / (c[1] - a[1]) {
-                inside = !inside;
-            }
-        }
-        inside
-    };
+    let inside_ring = |x: f64, y: f64| kentos_geometry_core::geometry::point_in_ring([x, y], ring);
     if [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]]
         .iter()
         .any(|p| inside_ring(p[0], p[1]))

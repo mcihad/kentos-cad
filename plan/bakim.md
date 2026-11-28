@@ -243,8 +243,13 @@ düzenlenir.
   `invalid_mass` eklendi (`cad.masses.create`, `cad.arch.edit`). Aynı yeniden üretimde: sözleşme yorumlarındaki kitaplık
   adı kalktı ve bekçiye girdi; `cad.layers.migrate`'in anılmayan `invalid_option` kodu listelendi (yetenek sınaması
   kırmızıydı). Üretilen TypeScript dosyaları yenilenmedi (BK-25).
-- [ ] **BK-17** (A10) Yerel nokta-alan ve alan kopyaları çekirdektekine bağlanır; çizime yazan yerler
-  `display::fixed`'e. Beklenen değerler bağımsız başvuruyla denetlenir.
+- [~] **BK-17** (A10; ADR 9401 §9) Yapılan: çizime yazan dört yer `display::fixed`'e bağlandı; nokta-alan kararı
+  çekirdekte tek (`ray_crosses`, `point_in_ring`, `point_in_rings`; iki nokta türü için) ve 23 kopya ona bağlı;
+  bağımsız başvuru `point_in_rings_cases.py` (239 durum). Ölçüm: çizim ölçeğinde ortak kenardaki orta noktaların
+  %4,3'ü yuvarlanmış yazımda iki alana ya da hiçbirine düşüyordu.
+  - Kalan: alan hesabının kaydırmasız kopyaları (`geom/column_join.rs` ve benzerleri).
+  - Kalan: NCZ okuyucusundaki kopya (`ncz/src/emit.rs`); dosyadaki 26 ad atfıyla birlikte temizlenir.
+  - Gerekçesiyle bırakılan üç kopya ADR'de yazılı.
 - [x] **BK-18** (A11; ADR 9401 §7) Üç değil sekiz metin: bekçi arayüz kitlerinin crate'lerini taramıyordu. Metinler
   yeniden yazıldı; bekçi dört ad daha arar ve `crates/ui`, `crates/sheet-ui`, `crates/model-view-ui`'yi de tarar.
   - Açık: “Excel (.xlsx)” 27 yerde biçim adı olarak duruyor (sahibin kararı).

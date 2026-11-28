@@ -7,6 +7,7 @@
 //! its faces turned to the cut-away side, where it is seen from. A see-through body (a space, an opening, glass) and a
 //! body not closed where it is cut have no cap.
 
+use kentos_geometry_core::geometry::point_in_ring;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -380,7 +381,7 @@ fn fill(
     let depth: Vec<usize> = (0..rings.len())
         .map(|i| {
             (0..rings.len())
-                .filter(|&j| j != i && inside(probes[i], &rings[j]))
+                .filter(|&j| j != i && point_in_ring(probes[i], &rings[j]))
                 .count()
         })
         .collect();
@@ -398,14 +399,14 @@ fn fill(
         .filter(|(i, _)| depth[*i].is_multiple_of(2))
     {
         let holes: Vec<usize> = (0..rings.len())
-            .filter(|&h| depth[h] == depth[o] + 1 && inside(probes[h], outer))
+            .filter(|&h| depth[h] == depth[o] + 1 && point_in_ring(probes[h], outer))
             .filter(|&h| {
                 // The smallest outer loop that holds it is its.
                 !rings.iter().enumerate().any(|(k, r)| {
                     k != o
                         && depth[k].is_multiple_of(2)
                         && depth[k] > depth[o]
-                        && inside(probes[h], r)
+                        && point_in_ring(probes[h], r)
                         && area(r) < area(outer)
                 })
             })
@@ -554,19 +555,6 @@ fn clip(ring: &[[f64; 3]], q: &[f64; 4]) -> Vec<[f64; 3]> {
         }
     }
     out
-}
-
-/// Whether `p` is inside the ring (even-odd crossings).
-fn inside(p: Vec2, ring: &[Vec2]) -> bool {
-    let n = ring.len();
-    let mut odd = false;
-    for k in 0..n {
-        let (a, b) = (ring[k], ring[(k + 1) % n]);
-        if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (b.x - a.x) * (p.y - a.y) / (b.y - a.y) {
-            odd = !odd;
-        }
-    }
-    odd
 }
 
 #[cfg(test)]

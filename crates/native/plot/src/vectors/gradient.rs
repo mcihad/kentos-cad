@@ -298,7 +298,7 @@ mod tests {
     }
 
     fn contains(p: &[[f64; 2]], q: [f64; 2]) -> bool {
-        super::super::inside(q[0], q[1], p)
+        kentos_geometry_core::geometry::point_in_ring([q[0], q[1]], p)
     }
 
     /// Every band of every shape covers the square once, and at each sample point the band's grey is the shader's

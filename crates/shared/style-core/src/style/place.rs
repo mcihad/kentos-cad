@@ -496,20 +496,7 @@ pub fn wave_paths_counted(pts: &[Vec2], closed: bool, w: &WaveSpec) -> (Vec<Vec<
 // ── Inside point ───────────────────────────────────────────────────────
 
 fn inside_rings(rings: &[Vec<Vec2>], p: Vec2) -> bool {
-    let mut inside = false;
-    for r in rings {
-        let n = r.len();
-        let mut j = n.wrapping_sub(1);
-        for i in 0..n {
-            let a = r[i];
-            let b = r[j];
-            if (a.y > p.y) != (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-            j = i;
-        }
-    }
-    inside
+    kentos_geometry_core::geometry::point_in_rings(p, rings)
 }
 
 /// A point inside the area where a symbol or text sits well: the centroid

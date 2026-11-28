@@ -94,20 +94,7 @@ fn off_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
 
 /// Whether `p` is inside the rings by the even-odd rule.
 fn in_rings(p: Vec2, rings: &[Vec<Vec2>]) -> bool {
-    let mut inside = false;
-    for ring in rings {
-        let n = ring.len();
-        for i in 0..n {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            if (a.y > p.y) != (b.y > p.y) {
-                let x = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
-                if p.x < x {
-                    inside = !inside;
-                }
-            }
-        }
-    }
-    inside
+    crate::geometry::point_in_rings(p, rings)
 }
 
 /// Whether `p` is inside the body by more than [`TIE`].
