@@ -1,7 +1,7 @@
 {
  "note": "scripts/dev/source_size.py: 2 000 satırı bugün aşan Rust dosyaları ve satır sayıları; büyüyemezler, taban yalnız küçülür.",
  "files": {
-  "apps/desktop-arch/src/tests/scene3d_building_tests.rs": 2511,
+  "apps/desktop-arch/src/tests/scene3d_building_tests.rs": 2510,
   "apps/desktop-road/src/corridor_window.rs": 2197,
   "apps/desktop-road/src/profile_window.rs": 2488,
   "apps/desktop-road/src/tests/volume_window_tests.rs": 2072,

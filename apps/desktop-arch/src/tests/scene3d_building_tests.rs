@@ -85,8 +85,7 @@ fn bodies_in_the_file(app: &mut App) -> usize {
         "IFCSPACE",
         "IFCSPATIALZONE",
     ];
-    let dir = std::env::temp_dir().join(format!("kentos-bina-3b-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).expect("a folder");
+    let dir = kentos_desktop::files_testing::scratch("bina-3b");
     let path = dir.join("bina.ifc");
     let doc = &mut app.document.as_mut().expect("the building").model;
     let answer = kentos_native_application::registry::run(
