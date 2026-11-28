@@ -273,12 +273,10 @@ düzenlenir.
   sonra. Yapılan (§10.1): dört aracın eski işaretleri (renk planı lejandı, kaçış yolları, gölge, vaziyet ölçüleri)
   kilitli katmandaysa silinmez ve yenisi çizilmez; tek yardımcı `marks::take_away`, silme `cad.entities.delete`'in
   işleyicisiyle. Dört sınama önce kırmızıydı.
-  - Kalan: `cad.xrefs.edit`'in `detach`'i yerleştirmeleri kilide bakmadan siler
-    (`application/src/core/xrefs.rs`, `Plan::Detach`, `inserts_of`; dosyada kilit denetimi yok). Ortak durum ve
-    üreteci (`xref_command_cases.py`) ister.
-  - Kalan: `road.project.rebuild`, `edited` ile istenen çizimin nesnelerini başka (kilitli) bir katmana taşınmış
-    olsalar da siler (`road_project_rebuild.rs` `run_drawing`, `road_project_regional.rs`); komutun denetimi yalnız
-    çizimin kendi katmanına bakar.
+  - Yapılan (§10.2): `cad.xrefs.edit`'in `detach`'i, yerleştirmesi kilitli katmandaysa reddedilir. Ortak durumu
+    üreteçten; önce kırmızıydı.
+  - Yapılan (§10.3): `road.project.rebuild`, nesnesi kilitli katmanda olan çizimi yeniden üretmez (`edited` ile de).
+    Ortak durumu üreteçten; önce kırmızıydı.
   - Kalan: stil pencereleri (yönetici, tasarımcı, SVG düzenleyicisi, şablonlar; 20 çağrı) projenin kitaplığını
     `Styles::changed` → `doc.set_styles` ile bütün olarak yazar. `cad.library.edit` öğe öğe çalışır ve dokuz
     işleminde kategori yoktur: geçiş komuta kategori işlemleri eklemeyi ister (§9.2 zinciri), Aşama 2'den sonra.

@@ -726,6 +726,17 @@ def rebuild_cases():
     b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
     r = rebuilt(st, {"drawings": ["cz-1"], "edited": True}, ["cz-1"])
     add("Elle değişen çizim edited ile yeniden üretilir, değişikliği gider", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    # An object on a locked layer is not deleted (CLAUDE.md §7, docs/adr/9401 §10.3): moved by hand to another layer
+    # that is then locked, it keeps the drawing from being drawn again, even when the hand's changes are given up.
+    st = State(s0)
+    a = drawn(st, GUARDRAIL)
+    st.drawings[0]["edited"] = True
+    b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "layer", "layerId": "bos"})
+    c = locked_layer(st, "bos")
+    add("Nesnesi kilitli katmana alınmış çizim edited ile de yeniden üretilmez", [a, b, c, step(
+        "execute", {"drawings": ["cz-1"], "edited": True}, failed(
+            "layer_locked", "“cz-1” çiziminin bir nesnesi kilitli “Boş” katmanında; yeniden üretmek onu silerdi. Kilidi Katmanlar "
+            "panelinden açın.", "drawings"), {"revision": "same"})])
     st = State(s0)
     a = drawn(st, JUNCTION)
     st.road["junctions"] = [j for j in st.road["junctions"] if j["id"] != "j-1"]

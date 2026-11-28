@@ -4758,6 +4758,78 @@
    ]
   },
   {
+   "name": "Nesnesi kilitli katmana alınmış çizim edited ile de yeniden üretilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "guardrail": "o-1",
+      "layerId": "korkuluk"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "within": 1e-06,
+     "command": "road.guardrails.draw"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:124"
+      ],
+      "operation": "layer",
+      "layerId": "bos"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "within": 1e-06,
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "locked",
+      "layer": "bos",
+      "value": true
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "within": 1e-06,
+     "command": "cad.layers.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "drawings": [
+       "cz-1"
+      ],
+      "edited": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“cz-1” çiziminin bir nesnesi kilitli “Boş” katmanında; yeniden üretmek onu silerdi. Kilidi Katmanlar panelinden açın.",
+       "path": "drawings"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Kaynağı silinen çizim hepsinde kalır",
    "steps": [
     {

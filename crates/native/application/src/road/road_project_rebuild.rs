@@ -1,7 +1,8 @@
 //! `road.project.rebuild` v1 and drawing again by itself (plan/road.md Y13.2, docs/adr/0911 §3; ROAD-MOD-06): a road
 //! drawing drawn again with the input it was drawn with, in one step: its objects removed, its command's check and
 //! write run (they refuse what no longer draws: a layer gone or locked, a source that does not build), the drawing kept
-//! anew with its sources' stamps and objects. The shared cases are `fixtures/commands/v1/road.project.rebuild.json`.
+//! anew with its sources' stamps and objects. A drawing one of whose objects is on a locked layer is not drawn again:
+//! its objects would be deleted (docs/adr/9401 §10.3). The shared cases are `fixtures/commands/v1/road.project.rebuild.json`.
 
 use std::collections::BTreeMap;
 
@@ -46,6 +47,35 @@ pub(crate) fn in_share<T>(
     out
 }
 
+/// The refusal when one of a drawing's objects is on a locked layer (locked by itself or by a group above it): drawing
+/// it again would delete the object, and a locked layer's object is not deleted (docs/adr/9401 §10.3). Asked after the
+/// command's own check, so a locked target layer is still said in the command's words.
+fn locked_object(
+    doc: &kentos_domain::Document,
+    id: &str,
+    slots: &[kentos_domain::Slot],
+) -> Option<Refused> {
+    let layers = doc.layers();
+    let layer = slots
+        .iter()
+        .filter_map(|s| doc.get(*s))
+        .map(|e| &e.base().layer_id)
+        .find(|l| layers.is_locked(l))?;
+    let name = layers
+        .get(layer)
+        .map_or(layer.as_str(), |n| n.name.as_str());
+    Some(Box::new(
+        Stop::failed(error(
+            codes::LAYER_LOCKED,
+            format!(
+                "“{id}” çiziminin bir nesnesi kilitli “{name}” katmanında; yeniden üretmek onu silerdi. Kilidi Katmanlar panelinden açın."
+            ),
+            Some("drawings".into()),
+        ))
+        .into(),
+    ))
+}
+
 /// Runs drawing command `command` on `input` (a drawing's or, docs/adr/3240, a recipe's; `id` names it in a refusal):
 /// its check, the objects `remove` removed (a drawing drawn again: its own; a new one: none), then its write in the step
 /// it runs in. Answers the objects written and the command's warnings, or its refusal (nothing written: the check runs
@@ -77,6 +107,9 @@ pub(crate) fn run_drawing(
             match crate::$m::validate(cx, &input) {
                 CommandResult::Completed { .. } => {}
                 other => return Err((Box::new(relay(other)), false)),
+            }
+            if let Some(refused) = locked_object(cx.doc, id, remove) {
+                return Err((refused, false));
             }
             if !remove.is_empty() {
                 cx.doc.remove(remove);

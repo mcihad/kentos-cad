@@ -498,6 +498,23 @@ Boşaltma, yeniden yükleme ve bağlama yerleştirmeyi değil tanımı değişti
 katmanda; ret, hiçbir şey yazılmaz). Düzeltmeden önce kırmızıydı (“removed: 1”). Rust çalıştırıcısı ve Python
 kanalı aynı durumdan geçiyor; yetenek sınaması yeşil (kod komutun listesinde zaten vardı: ekleme katmanı için).
 
+#### 10.3 Yol çizimi, nesnesi kilitli katmandaysa yeniden üretilmez
+
+**Bulgu.** `road.project.rebuild` bir çizimi yeniden üretirken onun nesnelerini siler, sonra çizim komutunu yeniden
+çalıştırır. Çizim komutunun denetimi yalnız çizimin kendi katmanına bakar. Çizimin bir nesnesi elle başka bir
+katmana alınmış ve o katman kilitlenmişse, `edited` ile istenen yeniden üretim onu kilide rağmen siliyordu
+(`run_drawing`, doğrudan `doc.remove`).
+
+**Karar.** Çizimin silinecek nesnelerinden biri kilitli katmandaysa çizim yeniden üretilmez: `layer_locked`, çizimin
+ve katmanın adıyla. Denetim çizim komutunun kendi denetiminden sonradır; kilitli hedef katman eskisi gibi komutun
+kendi sözüyle söylenir. Yalnız değişeni yazan yol (`regional`) aynı denetimden geçer: iki yol aynı cevabı verir.
+Kendiliğinden yeniden üretimde ret, öbür retler gibi uyarı olur ve çizim olduğu gibi kalır.
+
+**Sınama.** Ortak duruma bağımsız üreteçten bir durum eklendi (`road_project_cases.py`: nesne başka katmana alınır,
+katman kilitlenir, `edited` ile istenir; ret, hiçbir şey yazılmaz). Düzeltmeden önce kırmızıydı (“removed: 2”). Rust
+çalıştırıcısı ve Python kanalı geçiyor. Üretecin yazdığı `road.project.query.json` son basamaklarda eskimiş çıktı
+(bu işten önce de; üreteç ortamının farkı): dokunulmadı.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -521,6 +538,7 @@ kanalı aynı durumdan geçiyor; yetenek sınaması yeşil (kod komutun listesin
 | Çizime yazılan sayılar ve nokta-alan kararı (BK-17) | var | var | var | var | var: aynı çekirdek işlevi | var: aynı | var: aynı | var: aynı |
 | Renk planı lejandı, Kaçış yolları, Gölge, Parsel'in ölçüleri (BK-19, §10.1) | var | yok: Mimari'nin araçları | yok | yok | yok: araçların komutu yok (BK-19'un kalanı) | yok: aynı | yok: aynı | yok: aynı |
 | Dış başvuruyu kaldır (BK-19, §10.2) | var | var | var | yok: profilinde yok (CAD dış başvurusu) | var: `cad.xrefs.edit` | var: `kentos.cad.xrefs.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Yol çizimlerini yeniden üret (BK-19, §10.3) | yok: Yol'un işi | yok | var | yok | var: `road.project.rebuild` | var: `kentos.cad.road.project.rebuild` | var: `run`, `document.write` izniyle | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal
