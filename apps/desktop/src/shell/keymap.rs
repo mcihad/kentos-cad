@@ -418,10 +418,12 @@ pub fn user_line(
 
 /// A list of names made `'static` once (the command line's rows are borrowed for the program's life): each list the
 /// user's names ever made is kept, a few bytes each.
-fn interned(list: &[&str]) -> (&'static str, &'static [&'static str]) {
+/// A list of names kept for the program's life: the names joined, and each.
+type Interned = (&'static str, &'static [&'static str]);
+
+fn interned(list: &[&str]) -> Interned {
     thread_local! {
-        static MADE: RefCell<HashMap<Vec<String>, (&'static str, &'static [&'static str])>> =
-            RefCell::new(HashMap::new());
+        static MADE: RefCell<HashMap<Vec<String>, Interned>> = RefCell::new(HashMap::new());
     }
     let key: Vec<String> = list.iter().map(|s| (*s).to_owned()).collect();
     MADE.with(|made| {

@@ -40,6 +40,9 @@ fn message(e: Event) -> Message {
     Message::Gis(crate::gis::Event::SourceCounts(e))
 }
 
+/// The sources' rows as the inspector says them: in all, how many layers, and each layer's name and count.
+pub(crate) type CountsSaid = (String, String, Vec<(String, String)>);
+
 impl App {
     fn source_counts_stamp(&self, layer: &str) -> Option<Stamp> {
         let doc = self.document.as_ref()?;
@@ -134,7 +137,7 @@ impl App {
 
     /// The sources' rows as the inspector says them with nothing selected: in all, how many layers, and each layer's
     /// (its name and count, the first eight); none without a data layer. A count not known yet is “sayılıyor…”, never 0.
-    pub(crate) fn source_counts_said(&self) -> Option<(String, String, Vec<(String, String)>)> {
+    pub(crate) fn source_counts_said(&self) -> Option<CountsSaid> {
         let doc = self.document.as_ref()?;
         let layers: Vec<(String, String)> = doc
             .model

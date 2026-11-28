@@ -126,7 +126,9 @@ impl App {
         let live = self.measure_live().is_some();
         let m = self.measure_shown()?;
         // The total large, as the figure the measurement is for (the path's total, the area).
-        let (lead, rest): (Option<(String, String)>, Vec<(String, String)>) = match m.title {
+        // A figure of the measurement: its words and its value.
+        type Figure = (String, String);
+        let (lead, rest): (Option<Figure>, Vec<Figure>) = match m.title {
             "Mesafe" => {
                 let total = m.rows.iter().find(|(w, _)| w == "Toplam").cloned();
                 (

@@ -71,7 +71,7 @@ fn a_new_tab_asks_nothing_aç_asks_after_the_file_and_closing_names_the_unsaved_
     );
     // Closing the window: one question naming both unsaved drawings.
     let _ = app.update(Message::CloseRequested(iced::window::Id::unique()));
-    let Some(Dialog::Unsaved(then @ Then::Close(_))) = app.dialog.clone() else {
+    let Some(Dialog::Unsaved(then @ Then::Close(_))) = app.dialog else {
         panic!("{:?}", app.dialog);
     };
     let q = app.unsaved_question(then);

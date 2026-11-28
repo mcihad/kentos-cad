@@ -87,9 +87,12 @@ pub const ADDED_KEYS: [(&str, u16, bool); 8] = [
 /// shaper keeps the faces it parsed).
 static GIVEN: std::sync::OnceLock<Vec<Option<&'static [u8]>>> = std::sync::OnceLock::new();
 
+/// A face the host gives: its key (family, weight, italic) and its file's bytes.
+pub type GivenFace<'a> = ((&'a str, u16, bool), &'static [u8]);
+
 /// Gives the host's faces by key (`("arial", 400, false)`), each in place of its bundled twin; a key that is not one of
 /// [`ADDED_KEYS`] is left out. False when faces were given, or the core read its own, before.
-pub fn give(faces: &[((&str, u16, bool), &'static [u8])]) -> bool {
+pub fn give(faces: &[GivenFace<'_>]) -> bool {
     let mut given = vec![None; ADDED_KEYS.len()];
     for (key, bytes) in faces {
         if let Some(i) = ADDED_KEYS.iter().position(|k| k == key) {

@@ -174,7 +174,7 @@ fn the_last_verification_goes_with_the_journal_and_comes_back() {
     e.base_mut().attrs.insert("kullanim".into(), "Okul".into());
     assert!(doc.model.update(slot, e));
     // The table reads its pages: the source answered now.
-    assert!(app.gis.data_edits.verified.get(&id).is_none());
+    assert!(!app.gis.data_edits.verified.contains_key(&id));
     app.gis.features.layer = Some(id.clone());
     app.command_expanded = true;
     app.bottom_tab = crate::bottom::BottomTab::Table;

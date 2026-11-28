@@ -994,9 +994,8 @@ pub(crate) fn the_sun_casts_shadows_and_a_section_takes_its_caster_away(gpu: &mu
         &[],
         (sun, 0.3, None),
     );
-    assert_eq!(
+    assert!(
         value(&plain, north).abs_diff(value(&plain, south)) <= 1,
-        true,
         "no shadows asked"
     );
     // Kept: z ≤ 1. The shadow runs a metre north of the column: lit two metres north, shaded a half.

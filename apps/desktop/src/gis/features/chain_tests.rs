@@ -120,7 +120,7 @@ fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
         panic!("{p:?}")
     };
     let (found, said) = crate::data_info::ask(
-        &[n.clone()],
+        std::slice::from_ref(&n),
         &settings,
         kentos_interaction::Vec2::new(c.x, c.y),
         0.5,

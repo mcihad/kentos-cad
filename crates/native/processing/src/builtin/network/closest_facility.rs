@@ -173,8 +173,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                     ("Maliyet".to_owned(), cost_names[cost].clone()),
                 ]);
                 // Each cost with its unit in its column's name (docs/adr/9355).
-                for c in 0..cost_names.len() {
-                    attrs.insert(def.cost_column(c), values[c].clone());
+                for (c, value) in values.iter().enumerate().take(cost_names.len()) {
+                    attrs.insert(def.cost_column(c), value.clone());
                 }
                 if let Some(e) = edit_object(&line_geometry(l), layer, attrs) {
                     add.push(e);

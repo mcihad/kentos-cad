@@ -123,8 +123,10 @@ pub(crate) fn object(
     if kind == Kind::Record && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında geometrisiz kayıt olamaz"));
     }
-    let mut f = Fields::default();
-    f.name_links = has.name_links;
+    let mut f = Fields {
+        name_links: has.name_links,
+        ..Fields::default()
+    };
     map(r, |r, key| {
         if !allowed(kind, key, has) {
             return Err(unknown(r));

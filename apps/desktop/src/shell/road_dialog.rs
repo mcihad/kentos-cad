@@ -690,6 +690,10 @@ pub fn percent_text(grade: f64) -> String {
 }
 
 /// A percent field's text as the grade the sources hold (docs/adr/0977): “-2,5” is −0.025; empty is none.
+#[allow(
+    clippy::result_unit_err,
+    reason = "the window says what could not be read in its own field's words"
+)]
 pub fn grade_of(text: &str) -> Result<Option<f64>, ()> {
     let t = text.trim().replace(',', ".");
     if t.is_empty() {

@@ -151,7 +151,7 @@ fn a_never_written_value_an_empty_text_and_a_code_are_told_apart_on_a_data_layer
             .settings()
             .clone();
         let (found, said) = crate::data_info::ask(
-            &[layer.clone()],
+            std::slice::from_ref(&layer),
             &settings,
             kentos_interaction::Vec2::new(486_520.0, 4_420_200.0),
             0.5,
@@ -288,7 +288,7 @@ fn a_data_layers_table_and_card_leave_out_what_the_role_does_not_read() {
         .settings()
         .clone();
     let (found, _) = crate::data_info::ask(
-        &[layer.clone()],
+        std::slice::from_ref(&layer),
         &settings,
         kentos_interaction::Vec2::new(486_500.0, 4_420_200.0),
         0.5,

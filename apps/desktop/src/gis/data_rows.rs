@@ -17,6 +17,9 @@ use crate::app::{App, Message};
 /// A data layer's row with its key (none: a new row) and, for an object of the drawing, its slot (docs/adr/9156).
 pub(crate) type KeyedRow = (Option<i64>, Option<kentos_domain::Slot>, Entity);
 
+/// A data layer's rows as read, or why they could not be.
+pub(crate) type RowsRead = Result<Arc<Vec<(i64, Entity)>>, String>;
+
 /// What the rows' stamp is: the drawing's session and its writes to the sources.
 type Stamp = (u64, u64);
 
@@ -77,10 +80,7 @@ impl App {
     /// A data layer's rows as read, for the shell's exports (shell/exchange, docs/adr/9344) without naming this core's
     /// types: `Some(Ok(rows))` read, `Some(Err(why))` unreadable, `None` while read (asked: read after this message) and
     /// for another layer.
-    pub(crate) fn data_rows_read(
-        &self,
-        layer: &str,
-    ) -> Option<Result<Arc<Vec<(i64, Entity)>>, String>> {
+    pub(crate) fn data_rows_read(&self, layer: &str) -> Option<RowsRead> {
         match self.data_rows_of(layer)? {
             Rows::Ready(rows) => Some(Ok(rows)),
             Rows::Failed(why) => Some(Err(why)),

@@ -381,13 +381,12 @@ fn outside_of(
     Ok(out)
 }
 
+/// What a rules plan gives: the answer, the layer's source and the ruled columns.
+type Ruled = (LayersColumnsDone, Arc<dyn Source>, Vec<RuledColumn>);
+
 /// What `rules` would do: the rules the fields give, whether the source and the account may write them, and the values
 /// the rows hold outside them; nothing written.
-fn rules_planned(
-    doc: &Document,
-    node: &LayerNode,
-    data: &DataLayer,
-) -> Result<(LayersColumnsDone, Arc<dyn Source>, Vec<RuledColumn>), Stop> {
+fn rules_planned(doc: &Document, node: &LayerNode, data: &DataLayer) -> Result<Ruled, Stop> {
     let columns = rules_of(node, data);
     if columns.is_empty() {
         return Err(fail(

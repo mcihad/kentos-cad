@@ -33,6 +33,7 @@ pub(crate) type Hole<'a> = (&'a [[f64; 2]], &'a [Option<f64>]);
 pub(crate) type Part<'a> = (&'a [[f64; 2]], &'a [&'a [[f64; 2]]]);
 
 /// One object of a scene: its kind's fields and its layer.
+#[derive(Default)]
 pub struct Objects(pub(crate) Vec<Value>);
 
 impl Objects {

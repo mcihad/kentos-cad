@@ -162,6 +162,10 @@ pub enum Kind {
 
 /// The open exchange window.
 #[derive(Debug)]
+#[allow(
+    clippy::large_enum_variant,
+    reason = "one window is open at a time and the app keeps it in place: its size is paid once"
+)]
 pub enum Window {
     /// DXF or NCZ in (drawing_import.rs).
     DrawingImport(drawing_import::State),

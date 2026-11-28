@@ -54,6 +54,9 @@ fn message(e: Event) -> Message {
     Message::Gis(crate::gis::Event::DataSelection(e))
 }
 
+/// A selected source row as the inspector says it: its head, its values by field, and what is said under them.
+pub(crate) type RowLines = (String, Vec<(String, String)>, String);
+
 impl App {
     /// After every message: the table's selection outlined when it changed (read off the thread).
     pub(crate) fn data_selection_tasks(&mut self) -> Task<Message> {
@@ -172,7 +175,7 @@ impl App {
     /// layer and the key, the values by the layer's fields (a code by its label), and what is said under them. A row
     /// taken into the edit session shows its values waiting to be written (docs/adr/9346), as the table does; rows read
     /// again after a write are said so.
-    pub(crate) fn source_row_lines(&self) -> Option<(String, Vec<(String, String)>, String)> {
+    pub(crate) fn source_row_lines(&self) -> Option<RowLines> {
         let (layer, rows) = self.selected_source_rows()?;
         let doc = &self.document.as_ref()?.model;
         let node = doc.layers().get(layer)?;

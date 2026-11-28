@@ -637,6 +637,48 @@ impl Answers {
     }
 }
 
+/// Kısayol ve açıklamalarını iki sütunda listeler.
+pub struct ShortcutList<'a> {
+    items: Vec<(Fragment<'a>, Fragment<'a>)>,
+    key_width: f32,
+}
+
+impl<'a> ShortcutList<'a> {
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            key_width: 160.0,
+        }
+    }
+
+    pub fn item(mut self, keys: impl IntoFragment<'a>, description: impl IntoFragment<'a>) -> Self {
+        self.items
+            .push((keys.into_fragment(), description.into_fragment()));
+        self
+    }
+}
+
+impl<'a> Default for ShortcutList<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a, Message: 'a> From<ShortcutList<'a>> for Element<'a, Message> {
+    fn from(list: ShortcutList<'a>) -> Self {
+        Column::with_children(list.items.into_iter().map(|(keys, description)| {
+            row![
+                label::mono(keys).width(typography::scaled(list.key_width)),
+                label::muted(description),
+            ]
+            .spacing(12)
+            .into()
+        }))
+        .spacing(7)
+        .into()
+    }
+}
+
 #[cfg(test)]
 mod confirm_tests {
     use super::{ANSWERS_MOST, Answers, CONFIRM_PAD, CONFIRM_WIDTH};
@@ -706,47 +748,5 @@ mod confirm_tests {
         assert!(stacked, "{width}");
         assert!(width < super::typography::scaled(ANSWERS_MOST) + 1.0);
         assert_eq!(width, 72.0 + 6.0 + 150.0 + 6.0 + 260.0 + 2.0 * CONFIRM_PAD);
-    }
-}
-
-/// Kısayol ve açıklamalarını iki sütunda listeler.
-pub struct ShortcutList<'a> {
-    items: Vec<(Fragment<'a>, Fragment<'a>)>,
-    key_width: f32,
-}
-
-impl<'a> ShortcutList<'a> {
-    pub fn new() -> Self {
-        Self {
-            items: Vec::new(),
-            key_width: 160.0,
-        }
-    }
-
-    pub fn item(mut self, keys: impl IntoFragment<'a>, description: impl IntoFragment<'a>) -> Self {
-        self.items
-            .push((keys.into_fragment(), description.into_fragment()));
-        self
-    }
-}
-
-impl<'a> Default for ShortcutList<'a> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'a, Message: 'a> From<ShortcutList<'a>> for Element<'a, Message> {
-    fn from(list: ShortcutList<'a>) -> Self {
-        Column::with_children(list.items.into_iter().map(|(keys, description)| {
-            row![
-                label::mono(keys).width(typography::scaled(list.key_width)),
-                label::muted(description),
-            ]
-            .spacing(12)
-            .into()
-        }))
-        .spacing(7)
-        .into()
     }
 }

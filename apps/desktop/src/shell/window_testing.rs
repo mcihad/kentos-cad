@@ -90,6 +90,12 @@ pub fn click(position: Point) -> [Event; 3] {
     ]
 }
 
+impl Default for Harness {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Harness {
     pub fn new() -> Self {
         typography::load();

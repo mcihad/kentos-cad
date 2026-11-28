@@ -62,9 +62,8 @@ fn the_typed_columns_carry_a_point_s_name() {
 
 #[test]
 fn schema_256_refuses_a_point_s_name() {
-    let e = kentos_kcad::decode(&read("broken/name-links-in-schema-256.kcad"))
-        .err()
-        .expect("refused");
+    let e =
+        kentos_kcad::decode(&read("broken/name-links-in-schema-256.kcad")).expect_err("refused");
     assert_eq!(e.code, Code::BadValue, "{e}");
     // The drawing without one keeps its schema: the linked texts' sample is still schema 18's.
     let linked = kentos_kcad::encode(&content("linked-texts.json")).expect("writes");

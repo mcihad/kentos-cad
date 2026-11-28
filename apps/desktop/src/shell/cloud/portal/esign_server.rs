@@ -77,6 +77,12 @@ mod mock {
         format!("KentOS deneme belgesi {file_id}").into_bytes()
     }
 
+    impl Default for MockServer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl MockServer {
         /// A new test server, with a key of its own.
         ///

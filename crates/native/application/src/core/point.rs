@@ -42,7 +42,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCreate) -> CommandResult<Poi
         Ok(warnings) => CommandResult::Completed {
             output: PointPlan {
                 entity: point(settled(cx.doc, input.clone()), 0),
-                text: name_text(cx.doc, &input, None),
+                text: name_text(cx.doc, input, None),
                 revision: cx.doc.revision().to_string(),
             },
             warnings,

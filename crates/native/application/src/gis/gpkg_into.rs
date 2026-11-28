@@ -168,9 +168,7 @@ fn unfit(code: &'static str, message: String) -> WriteStop {
 fn geometry_unfit(have: &str, rows: &str) -> Option<String> {
     let (tf, tm, tc) = shape(have);
     let (rf, rm, rc) = shape(rows);
-    if tf.is_none() {
-        return None;
-    }
+    tf?;
     if rf != tf {
         return Some(format!(
             "tablo {} geometri tutuyor, katmanın nesneleri {}",

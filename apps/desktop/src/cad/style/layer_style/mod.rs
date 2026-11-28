@@ -1751,7 +1751,7 @@ impl App {
                     self.dialog = None;
                     self.toast_saved(
                         "Katman stili uygulandı",
-                        &format!("“{path}” katmanına; Ctrl+Z geri alır."),
+                        format!("“{path}” katmanına; Ctrl+Z geri alır."),
                     );
                 }
             }

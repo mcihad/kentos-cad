@@ -1009,7 +1009,10 @@ fn on_postgresql_the_catalogue_says_a_tables_column_extent_and_related_tables() 
     let parcel = find(&parcels);
     assert_eq!(parcel.geometry_column.as_deref(), Some("geom"));
     assert_eq!(parcel.related, [format!("{schema}.malik")]);
-    assert_eq!(find(&format!("{schema}.malik")).related, [parcels.clone()]);
+    assert_eq!(
+        find(&format!("{schema}.malik")).related,
+        std::slice::from_ref(&parcels)
+    );
     let view = find(&format!("{schema}.parsel_ozeti"));
     assert!(
         view.why_not().is_some(),

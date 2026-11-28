@@ -216,7 +216,7 @@ fn on_postgresql_a_write_outside_makes_the_findings_old() {
     assert!(app.topology_stale(), "written outside: old");
     assert_eq!(
         app.topology_sources_changed(),
-        [name.clone()],
+        std::slice::from_ref(&name),
         "said as the source's change"
     );
     check(&mut app);

@@ -138,25 +138,26 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             }
         }
         // To edit on the phone is the mobile app's, on a CBS project's data layer alone (docs/adr/9198 §2.2).
-        if op == Op::Mobile && input.mobile == Some(kentos_commands::LayerMobile::Edit) {
-            if !crate::layer_kind::mobile_choices(doc, n).contains(&kentos_launch::Mobile::Edit) {
-                let why = match crate::layer_kind::storage(doc) {
-                    kentos_launch::Storage::File => {
-                        "mobil uygulama CAD projesini yazmaz, yalnız görüntüler"
-                    }
-                    kentos_launch::Storage::Database => {
-                        "mobil uygulama yalnız veri tablosunun satırlarını yazar"
-                    }
-                };
-                return Err(fail(
-                    codes::MOBILE_NOT_OFFERED,
-                    format!(
-                        "“{}” mobilde düzenlenemez: {why}. Göster ya da gösterme seçin.",
-                        n.name
-                    ),
-                    "mobile",
-                ));
-            }
+        if op == Op::Mobile
+            && input.mobile == Some(kentos_commands::LayerMobile::Edit)
+            && !crate::layer_kind::mobile_choices(doc, n).contains(&kentos_launch::Mobile::Edit)
+        {
+            let why = match crate::layer_kind::storage(doc) {
+                kentos_launch::Storage::File => {
+                    "mobil uygulama CAD projesini yazmaz, yalnız görüntüler"
+                }
+                kentos_launch::Storage::Database => {
+                    "mobil uygulama yalnız veri tablosunun satırlarını yazar"
+                }
+            };
+            return Err(fail(
+                codes::MOBILE_NOT_OFFERED,
+                format!(
+                    "“{}” mobilde düzenlenemez: {why}. Göster ya da gösterme seçin.",
+                    n.name
+                ),
+                "mobile",
+            ));
         }
         if op == Op::Frozen && input.value == Some(true) {
             let active = doc.layers().active();

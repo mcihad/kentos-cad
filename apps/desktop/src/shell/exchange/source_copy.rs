@@ -61,8 +61,7 @@ impl App {
         if nodes.is_empty() {
             return None;
         }
-        let read: Vec<Option<Result<std::sync::Arc<Vec<(i64, Entity)>>, String>>> =
-            nodes.iter().map(|n| self.data_rows_read(&n.id)).collect();
+        let read: Vec<_> = nodes.iter().map(|n| self.data_rows_read(&n.id)).collect();
         let stamp: Stamp = (
             doc.session,
             doc.model.generation(),

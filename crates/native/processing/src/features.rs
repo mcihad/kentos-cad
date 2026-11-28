@@ -370,11 +370,14 @@ pub fn summarize_layers(ids: &[String], host: &dyn Scene) -> InputSummary {
     }
 }
 
+/// A parameter that acts on only some of an input's objects: its name and its rule (docs/adr/9333).
+pub type Acting<'a> = (&'a str, fn(&Entity) -> bool);
+
 pub fn summarize_features(
     value: &FeaturesValue,
     kinds: Option<&[String]>,
     host: &dyn Scene,
-    acts: &[(&str, fn(&Entity) -> bool)],
+    acts: &[Acting<'_>],
 ) -> InputSummary {
     let candidates = fitting(value, kinds, host);
     let mut by_kind: Vec<(String, usize)> = Vec::new();

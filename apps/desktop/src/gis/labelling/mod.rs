@@ -608,15 +608,12 @@ impl App {
     }
 
     pub(crate) fn labelling_event(&mut self, event: Event) -> Task<Message> {
-        match event {
-            Event::OpenAt(layer, tab) => {
-                let task = self.open_labelling(Some(layer));
-                if let Some(w) = self.gis.labelling.as_mut() {
-                    w.tab = tab;
-                }
-                return task;
+        if let Event::OpenAt(layer, tab) = event {
+            let task = self.open_labelling(Some(layer));
+            if let Some(w) = self.gis.labelling.as_mut() {
+                w.tab = tab;
             }
-            _ => {}
+            return task;
         }
         let Some(mut w) = self.gis.labelling.take() else {
             return Task::none();

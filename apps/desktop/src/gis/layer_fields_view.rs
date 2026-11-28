@@ -695,7 +695,7 @@ fn fields_status<'a>(w: &Window) -> Element<'a, Message> {
     let problem = problem_of(&w.rows);
     let renamed = renames_of(&w.rows).len();
     let n = w.rows.len();
-    let line = match (&w.said, &problem) {
+    match (&w.said, &problem) {
         (Some((kind, text)), _) => words::text_line(*kind, text.clone()),
         (None, Some(p)) => words::text_line(Kind::Error, p.clone()),
         (None, None) if w.rows.is_empty() => words::text_line(
@@ -711,8 +711,7 @@ fn fields_status<'a>(w: &Window) -> Element<'a, Message> {
             format!("{n} alan; değişiklikler Kaydet ile yazılır."),
         ),
         (None, None) => words::text_line(Kind::Ok, format!("{n} alan.")),
-    };
-    line
+    }
 }
 
 /// Bölünce and Birleşince of the row (docs/adr/0419): only what its kind takes.

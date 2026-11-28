@@ -206,7 +206,7 @@ fn masses(doc: &Document) -> Option<Input> {
                 .chain(pts.iter().map(|q| [q.x, q.y, top]))
                 .collect();
             let mut triangles: Vec<[u32; 3]> = Vec::new();
-            for t in flat.chunks_exact(3) {
+            for t in flat.as_chunks::<3>().0 {
                 // The top faces up, the bottom down, whatever way the triangulation turned.
                 let (a, mut b, mut c) = (t[0], t[1], t[2]);
                 let (pa, pb, pc) = (pts[a as usize], pts[b as usize], pts[c as usize]);

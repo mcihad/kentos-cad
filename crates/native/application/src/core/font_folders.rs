@@ -19,10 +19,13 @@ use kentos_geometry_core::text::font_data::{
 /// A face the core takes in place of a bundled twin, by its key (`("arial", 400, false)`).
 type Given = ((&'static str, u16, bool), &'static [u8]);
 
+/// A face's key (family, weight, italic) and the file names an operating system keeps it under.
+type SystemFace = ((&'static str, u16, bool), &'static [&'static str]);
+
 /// Where an operating system keeps its own Arial and Times New Roman, by key (docs/adr/9311): KentOS uses them but
 /// does not ship them (their licences do not allow it). A family without a file of its own (Arial 500) takes the
 /// nearest weight a browser would.
-const SYSTEM_FILES: [((&str, u16, bool), &[&str]); 8] = [
+const SYSTEM_FILES: [SystemFace; 8] = [
     (("arial", 400, false), &["Arial.ttf", "arial.ttf"]),
     (("arial", 500, false), &["Arial.ttf", "arial.ttf"]),
     (
@@ -107,7 +110,7 @@ pub fn choices(also: Option<DrawingFont>) -> Vec<DrawingFont> {
         .filter(|f| f.role == FontRole::Family)
         .filter_map(|f| f.face)
         .collect();
-    families.sort_by(|a, b| a.label().to_lowercase().cmp(&b.label().to_lowercase()));
+    families.sort_by_key(|f| f.label().to_lowercase());
     families.dedup();
     out.extend(families);
     if let Some(f) = also.filter(|f| !out.contains(f)) {
@@ -295,7 +298,7 @@ fn classify(
         });
         return;
     }
-    if FALLBACK_FACES.iter().any(|d| *d == bytes.as_slice()) {
+    if FALLBACK_FACES.contains(&bytes.as_slice()) {
         files.push(FontFile {
             role: FontRole::Fallback,
             note: Some("yazı tiplerinde olmayan harfler için".to_owned()),

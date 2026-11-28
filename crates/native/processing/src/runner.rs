@@ -169,7 +169,7 @@ struct Input {
 }
 
 /// The parameters that act on only some of `input`'s objects, with their rule (docs/adr/9333).
-fn acting_on<'t>(tool: &'t Tool, input: &str) -> Vec<(&'t str, fn(&Entity) -> bool)> {
+fn acting_on<'t>(tool: &'t Tool, input: &str) -> Vec<crate::features::Acting<'t>> {
     tool.parameters
         .iter()
         .filter_map(|q| {

@@ -13,6 +13,10 @@ use sqlx::{Connection, Row};
 
 use crate::connections::{self, DbConnection, Key};
 
+/// A table's first geometry or geography column: its type, its SRID when it has one, how many such columns the table
+/// has, and its name.
+type SpatialColumn = (String, Option<u32>, usize, String);
+
 /// How long Bağlantıyı dene and the browser wait for a server.
 const PROBE: Duration = Duration::from_secs(10);
 
@@ -466,10 +470,8 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
     .fetch_all(&mut *conn)
     .await?;
     // The geometry and geography columns, first by each table (PostGIS's catalogs: none without it; docs/adr/0745).
-    let mut columns: std::collections::HashMap<
-        (String, String),
-        (String, Option<u32>, usize, String),
-    > = std::collections::HashMap::new();
+    let mut columns: std::collections::HashMap<(String, String), SpatialColumn> =
+        std::collections::HashMap::new();
     if postgis {
         let geometry: Vec<(String, String, String, i32, String)> = sqlx::query_as(
             "SELECT f_table_schema::text, f_table_name::text, type::text, srid, f_geometry_column::text FROM geometry_columns

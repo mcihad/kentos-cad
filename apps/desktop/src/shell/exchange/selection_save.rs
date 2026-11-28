@@ -174,7 +174,7 @@ impl App {
                             write_selection(&drawing, &uids, &path)
                         }
                     },
-                    |done| Exchange::SelectionSaved(done),
+                    Exchange::SelectionSaved,
                 );
             }
         }
