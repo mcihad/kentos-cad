@@ -354,7 +354,7 @@ pub fn wall_fit(p: Vec2, reach: f64, cx: &Context<'_>) -> Option<(Vec2, f64)> {
                 }
                 let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0);
                 let q = Vec2::new(a.x + dx * t, a.y + dy * t);
-                let d = (p.x - q.x).hypot(p.y - q.y);
+                let d = kentos_num::hypot(p.x - q.x, p.y - q.y);
                 if d > reach || best.is_some_and(|(bd, ..)| d >= bd) {
                     continue;
                 }
@@ -691,7 +691,7 @@ impl BlockInsert {
                 m.block_mirror,
             );
             let p = |u| Vec2::new(tx + a * u + c * front, ty + b * u + d * front);
-            let norm = c.hypot(d);
+            let norm = kentos_num::hypot(c, d);
             if norm > 0.0 {
                 let outward = Vec2::new(c / norm, d / norm);
                 let edge = [p(left), p(right)];

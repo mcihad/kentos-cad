@@ -83,7 +83,7 @@ pub fn run(
         .filter(|p| p[1][0] > p[0][0])
         .map(|p| {
             let (dx, dz) = (p[1][0] - p[0][0], p[1][1] - p[0][1]);
-            let l = dx.hypot(dz);
+            let l = kentos_num::hypot(dx, dz);
             (p[0][0], l, dx / l, dz / l)
         })
         .collect();

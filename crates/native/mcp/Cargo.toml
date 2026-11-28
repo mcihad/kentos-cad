@@ -52,6 +52,8 @@ mod-gis = ["kentos-headless/mod-gis", "kentos-native-application/mod-gis", "dep:
 mod-road = ["kentos-headless/mod-road", "kentos-native-application/mod-road"]
 
 [dev-dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 # Writing a shared cases' drawing to a file the tools open (tests/road_structures.rs).
 kentos-kcad = { path = "../../shared/kcad" }
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).

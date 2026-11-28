@@ -70,7 +70,7 @@ fn a_room_hatch_follows_the_wall_getting_thicker() {
     let span = |doc: &Document| {
         doc.entities()
             .find_map(|e| match e {
-                Entity::Dimension(d) => Some((d.b.x - d.a.x).hypot(d.b.y - d.a.y)),
+                Entity::Dimension(d) => Some(kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y)),
                 _ => None,
             })
             .expect("a dimension")

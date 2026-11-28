@@ -255,7 +255,7 @@ impl GridSystemTool {
     fn x_gaps(&self) -> Vec<f64> {
         match (self.two_points && self.equal, self.origin, self.hover) {
             (true, Some(o), Some(h)) if !self.x.is_empty() => {
-                let total = (h.x - o.x).hypot(h.y - o.y);
+                let total = kentos_num::hypot(h.x - o.x, h.y - o.y);
                 if total > 0.0 {
                     vec![total / self.x.len() as f64; self.x.len()]
                 } else {

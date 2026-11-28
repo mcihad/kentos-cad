@@ -7,6 +7,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
 
 use kentos_mcp::{LEGACY, MODERN, Server};
+use kentos_num::hypot;
 use serde_json::{Value, json};
 
 /// Veri çıkarımı (docs/adr/1030): the run reads the other drawing and the description table without writing them or
@@ -4038,7 +4039,7 @@ fn an_elliptical_arc_grip_target_and_follower_share_mcp_plan_query_and_undo() {
     let ratio = e["ratio"].as_f64().unwrap();
     let x = e["c"]["x"].as_f64().unwrap() + a * t.cos() - b * ratio * t.sin();
     let y = e["c"]["y"].as_f64().unwrap() + b * t.cos() + a * ratio * t.sin();
-    assert!((x - 4. * 0.3f64.cos()).hypot(y - 2. * 0.3f64.sin()) < 1e-8);
+    assert!(hypot(x - 4. * 0.3f64.cos(), y - 2. * 0.3f64.sin()) < 1e-8);
     assert_eq!(e["attrs"], before[0]["entity"]["attrs"]);
     assert_eq!(after[0]["uid"], before[0]["uid"]);
     assert_ne!(after[1]["entity"]["a"], before[1]["entity"]["a"]);
@@ -4317,9 +4318,10 @@ fn full_ellipse_seam_survives_axis_swap_plan_save_and_undo_through_mcp() {
     assert_eq!(after[0]["entity"]["attrs"]["QA"], "full-phase");
     let p = &after[1]["entity"]["a"];
     assert!(
-        (p["x"].as_f64().unwrap() - (487000. + 1.5 * 0.6f64.cos()))
-            .hypot(p["y"].as_f64().unwrap() - (4420000. + 2. * 0.6f64.sin()))
-            < 3e-9
+        hypot(
+            p["x"].as_f64().unwrap() - (487000. + 1.5 * 0.6f64.cos()),
+            p["y"].as_f64().unwrap() - (4420000. + 2. * 0.6f64.sin())
+        ) < 3e-9
     );
     let q = call(
         &mut server,
@@ -4394,10 +4396,8 @@ fn named_ellipse_axis_grip_keeps_measure_follower_save_and_single_undo_through_m
     assert_eq!(after[0]["uid"], items[0]["uid"]);
     assert_ne!(after[1]["entity"]["a"], items[1]["entity"]["a"]);
     let e = &after[0]["entity"];
-    let a = e["major"]["x"]
-        .as_f64()
-        .unwrap()
-        .hypot(e["major"]["y"].as_f64().unwrap());
+    let major = &e["major"];
+    let a = hypot(major["x"].as_f64().unwrap(), major["y"].as_f64().unwrap());
     assert!((a * e["ratio"].as_f64().unwrap() - 3.).abs() < 1e-8);
     let q = call(
         &mut server,
@@ -4523,7 +4523,7 @@ fn technical_plate_parameters_grip_lock_and_explicit_relax_share_atomic_mcp_path
                 .find(|c| c["constraint"]["reference"] == true)
                 .unwrap();
             let width: f64 = if name == "taban" { 14. } else { 12. };
-            assert!((reference["measured"].as_f64().unwrap() - width.hypot(8.)).abs() < 1e-8);
+            assert!((reference["measured"].as_f64().unwrap() - hypot(width, 8.)).abs() < 1e-8);
         }
         call(
             &mut server,

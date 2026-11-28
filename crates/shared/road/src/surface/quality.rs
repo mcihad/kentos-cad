@@ -67,7 +67,7 @@ impl Buckets {
 }
 
 fn plan(a: [f64; 3], b: [f64; 3]) -> f64 {
-    (b[0] - a[0]).hypot(b[1] - a[1])
+    kentos_num::hypot(b[0] - a[0], b[1] - a[1])
 }
 
 fn before(a: [f64; 3], b: [f64; 3]) -> bool {

@@ -172,7 +172,7 @@ fn refine(al: &Alignment, d: f64, mut a: f64, mut b: f64) -> Option<(f64, f64)> 
     for _ in 0..60 {
         let ((pa, ta), (pb, tb)) = (with_tangent(al, a, d)?, with_tangent(al, b, d)?);
         let f = [pa[0] - pb[0], pa[1] - pb[1]];
-        if f[0].hypot(f[1]) < 1e-11 {
+        if kentos_num::hypot(f[0], f[1]) < 1e-11 {
             return Some((a, b));
         }
         // [ta  −tb]·[da db]ᵀ = −f.
@@ -186,7 +186,7 @@ fn refine(al: &Alignment, d: f64, mut a: f64, mut b: f64) -> Option<(f64, f64)> 
         b = (b + db).clamp(0.0, al.length);
     }
     let ((pa, _), (pb, _)) = (with_tangent(al, a, d)?, with_tangent(al, b, d)?);
-    ((pa[0] - pb[0]).hypot(pa[1] - pb[1]) < 1e-9).then_some((a, b))
+    (kentos_num::hypot(pa[0] - pb[0], pa[1] - pb[1]) < 1e-9).then_some((a, b))
 }
 
 /// Where segments ab and cd cross strictly inside both: the parameters along each.

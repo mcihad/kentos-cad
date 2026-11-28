@@ -144,7 +144,7 @@ fn a_staged_solve_waits_for_the_drawing_it_saw() {
     let kentos_commands::Entity::Line(l) = bottom else {
         panic!("a line")
     };
-    assert!(((l.b.x - l.a.x).hypot(l.b.y - l.a.y) - 10.0).abs() < 1e-9);
+    assert!((kentos_num::hypot(l.b.x - l.a.x, l.b.y - l.a.y) - 10.0).abs() < 1e-9);
     // An edge the solve moves changed meanwhile: nothing written.
     let mut job = Job::start("p2".into(), &doc, width_to("12"));
     let right = uid(&doc, 2);

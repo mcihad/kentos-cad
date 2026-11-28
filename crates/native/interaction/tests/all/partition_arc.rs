@@ -59,7 +59,11 @@ fn the_arc_is_picked_where_it_is_drawn_and_the_partition_goes_inside_or_outside(
         .find(|s| s.dash == Some([4.0, 4.0]))
         .expect("the dashed source face");
     assert!(face.pts.len() > 2, "an arc, not its chord: {:?}", face.pts);
-    let radii: Vec<f64> = face.pts.iter().map(|p| (p.x - E).hypot(p.y - N)).collect();
+    let radii: Vec<f64> = face
+        .pts
+        .iter()
+        .map(|p| kentos_num::hypot(p.x - E, p.y - N))
+        .collect();
     assert!(
         radii
             .iter()

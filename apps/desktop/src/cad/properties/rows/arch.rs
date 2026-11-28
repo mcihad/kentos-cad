@@ -541,8 +541,11 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             );
             if let [a, b] = x.pts.as_slice() {
                 out.push(
-                    Row::figure("Uzunluk", f.length_bare((b.x - a.x).hypot(b.y - a.y)))
-                        .unit(f.length_unit_label()),
+                    Row::figure(
+                        "Uzunluk",
+                        f.length_bare(kentos_num::hypot(b.x - a.x, b.y - a.y)),
+                    )
+                    .unit(f.length_unit_label()),
                 );
             }
             out.extend(arch_rows(doc, slot, &x.arch, &edit));

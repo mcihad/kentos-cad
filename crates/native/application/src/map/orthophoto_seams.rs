@@ -293,7 +293,7 @@ fn seam_line(doc: &Document, uid: &str) -> Result<(Vec<[f64; 2]>, Vec<f64>), Sto
 fn edge(a: [f64; 2], b: [f64; 2], bulge: f64) -> (f64, Option<BulgeArc>) {
     match bulge_arc(Vec2::new(a[0], a[1]), Vec2::new(b[0], b[1]), bulge) {
         Some(arc) => (arc.r * arc.sweep.abs(), Some(arc)),
-        None => ((b[0] - a[0]).hypot(b[1] - a[1]), None),
+        None => (kentos_num::hypot(b[0] - a[0], b[1] - a[1]), None),
     }
 }
 
@@ -374,7 +374,7 @@ pub(crate) fn measure(
     }
     // The margin's pixel: the first's along its axes; a turned first's longer side.
     let (px, py) = if turned {
-        let side = fa[1].hypot(fa[4]).max(fa[2].hypot(fa[5]));
+        let side = kentos_num::hypot(fa[1], fa[4]).max(kentos_num::hypot(fa[2], fa[5]));
         (side, side)
     } else {
         (fa[1], -fa[5])
@@ -770,7 +770,7 @@ pub(crate) fn measure(
                             [sa[0] + i * sa[1], sa[3] + j * sa[5]]
                         };
                         let (dx, dy) = (xb - at[0], yb - at[1]);
-                        let d = dx.hypot(dy);
+                        let d = kentos_num::hypot(dx, dy);
                         let ok = a.correlation.is_none_or(|m| c >= m);
                         OrthoPatch {
                             at,

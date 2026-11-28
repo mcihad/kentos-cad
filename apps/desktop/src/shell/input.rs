@@ -790,7 +790,7 @@ impl App {
                 match (own, self.data_snap(raw, &view, &draft)) {
                     (Some(a), Some(b)) => {
                         let far = |h: &kentos_geometry_core::store::snap::SnapHit| {
-                            (h.point.x - raw.x).hypot(h.point.y - raw.y)
+                            kentos_num::hypot(h.point.x - raw.x, h.point.y - raw.y)
                         };
                         Some(if far(&b) < far(&a) { b } else { a })
                     }

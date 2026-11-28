@@ -381,7 +381,10 @@ mod tests {
                 }
                 (Entity::Ellipse(a), Entity::Ellipse(b)) => {
                     assert!(
-                        (a.major.x.hypot(a.major.y) - b.major.x.hypot(b.major.y)).abs() < 1e-12
+                        (kentos_num::hypot(a.major.x, a.major.y)
+                            - kentos_num::hypot(b.major.x, b.major.y))
+                        .abs()
+                            < 1e-12
                     );
                     assert!((a.ratio - b.ratio).abs() < 1e-12);
                 }
@@ -448,7 +451,7 @@ mod tests {
         let Entity::Ellipse(e) = &out[0] else {
             panic!()
         };
-        assert!((e.major.x.hypot(e.major.y) - 0.02).abs() < 1e-12);
+        assert!((kentos_num::hypot(e.major.x, e.major.y) - 0.02).abs() < 1e-12);
         assert!((e.ratio - 0.5).abs() < 1e-12);
         let fixture: Value = serde_json::from_str(include_str!(
             "../../../../../fixtures/sheet/v1/paper-cad.json"

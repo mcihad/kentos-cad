@@ -701,7 +701,7 @@ fn filler_ring(
         let [sl, sr, el, er] = place else {
             return None;
         };
-        let t = libm::hypot(sr.x - sl.x, sr.y - sl.y);
+        let t = kentos_num::hypot(sr.x - sl.x, sr.y - sl.y);
         let frame = HoleFrame {
             depth: build?.frame_depth?,
             offset: build?.frame_offset,

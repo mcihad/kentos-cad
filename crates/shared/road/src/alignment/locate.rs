@@ -87,7 +87,7 @@ impl Alignment {
                     // The side by the mean direction.
                     let mean = e.theta(e.length)
                         + super::chain::wrap(next.theta0 - e.theta(e.length)) / 2.0;
-                    c.offset = side(mean, end, p) * (p[0] - end[0]).hypot(p[1] - end[1]);
+                    c.offset = side(mean, end, p) * kentos_num::hypot(p[0] - end[0], p[1] - end[1]);
                     feet.push(c);
                 }
             }
@@ -110,8 +110,8 @@ impl Alignment {
             let e = &self.elements[last];
             let a = foot(first, 0, 0.0, p, false);
             let b = foot(e, last, e.length, p, false);
-            let da = (p[0] - a.at.x).hypot(p[1] - a.at.y);
-            let db = (p[0] - b.at.x).hypot(p[1] - b.at.y);
+            let da = kentos_num::hypot(p[0] - a.at.x, p[1] - a.at.y);
+            let db = kentos_num::hypot(p[0] - b.at.x, p[1] - b.at.y);
             Some(if da <= db {
                 (End::Start, a)
             } else {
@@ -149,7 +149,7 @@ fn side(direction: f64, at: [f64; 2], p: [f64; 2]) -> f64 {
 
 fn foot(e: &Element, i: usize, s: f64, p: [f64; 2], corner: bool) -> Foot {
     let at = located(e, i, s);
-    let d = (p[0] - at.x).hypot(p[1] - at.y);
+    let d = kentos_num::hypot(p[0] - at.x, p[1] - at.y);
     let offset = side(at.direction, [at.x, at.y], p) * d;
     Foot { at, offset, corner }
 }

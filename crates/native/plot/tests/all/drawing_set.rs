@@ -101,7 +101,9 @@ fn drawing_set_title_fields_and_live_index_follow_a_revision_in_the_real_pdf() {
         }
         assert_eq!(doc.to_snapshot_v2(), before);
         assert!(crate::files::pdf_pages(&pdf.bytes)[0].ink.iter().any(|p| {
-            ((p.segment[2] - p.segment[0]).hypot(p.segment[3] - p.segment[1]) - 100.).abs() < 0.002
+            (kentos_num::hypot(p.segment[2] - p.segment[0], p.segment[3] - p.segment[1]) - 100.)
+                .abs()
+                < 0.002
         }));
     }
     std::fs::remove_dir_all(root).unwrap();

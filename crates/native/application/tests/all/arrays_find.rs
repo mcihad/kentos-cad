@@ -653,7 +653,7 @@ fn full_circle_gaps_and_an_interior_source_retain_fixed_and_rotating_roots() {
                 panic!()
             };
             assert_eq!((count, fill, r), (8, 360., rotate));
-            assert!((center.x - 20.).hypot(center.y + 15.) < 1e-8);
+            assert!(kentos_num::hypot(center.x - 20., center.y + 15.) < 1e-8);
             assert!(candidate.adoption.items.iter().all(|i| !i.kept));
             let applied = arrays_adopt::execute(
                 &mut ExecutionContext::new(&mut doc),

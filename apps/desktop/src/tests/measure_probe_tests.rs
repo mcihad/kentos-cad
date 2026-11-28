@@ -99,7 +99,7 @@ fn measure_probe() {
             kentos_render_wgpu::Vec2::new(v[0], v[1]),
             kentos_render_wgpu::Vec2::new(v[2], v[3]),
         );
-        let span = ((v[2] - v[0]).hypot(v[3] - v[1])).max(0.5) * 3.0;
+        let span = (kentos_num::hypot(v[2] - v[0], v[3] - v[1])).max(0.5) * 3.0;
         app.viewport.camera.fit_size(
             kentos_render_wgpu::Vec2::new((v[0] + v[2]) / 2.0, (v[1] + v[3]) / 2.0),
             span,

@@ -293,7 +293,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             if !(x.ratio > 0.0 && x.ratio <= 1.0) {
                 return Err("Elipsin eksen oranı 0 ile 1 arasında olmalı".into());
             }
-            positive("Büyük eksen", x.major.x.hypot(x.major.y))?;
+            positive("Büyük eksen", kentos_num::hypot(x.major.x, x.major.y))?;
         }
         Spline(x) => check_len("Eğri", x.pts.len(), 2)?,
         // A NURBS curve's numbers make a curve (docs/adr/0259 §1).
@@ -302,7 +302,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
-        Xline(x) | Ray(x) => positive("Doğrultu", x.dir.x.hypot(x.dir.y))?,
+        Xline(x) | Ray(x) => positive("Doğrultu", kentos_num::hypot(x.dir.x, x.dir.y))?,
         Text(x) => {
             positive("Yazı yüksekliği", x.height)?;
             if x.text.len() > 10_000 {

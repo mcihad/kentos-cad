@@ -443,7 +443,7 @@ fn axis(out: &mut Vec<NewObject>, b: &Built, parallel: bool, _m: f64) {
                 let q = [p.x, p.y];
                 if pts
                     .last()
-                    .is_none_or(|l| (l[0] - q[0]).hypot(l[1] - q[1]) > 1e-9)
+                    .is_none_or(|l| kentos_num::hypot(l[0] - q[0], l[1] - q[1]) > 1e-9)
                 {
                     pts.push(q);
                 }
@@ -578,7 +578,7 @@ fn curves(
         };
         let pt = [pi.x, pi.y];
         let away = [pt[0] - c.centre[0], pt[1] - c.centre[1]];
-        let len = away[0].hypot(away[1]);
+        let len = kentos_num::hypot(away[0], away[1]);
         let u = if len > 1e-9 {
             [away[0] / len, away[1] / len]
         } else {

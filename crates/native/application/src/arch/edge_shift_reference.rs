@@ -21,7 +21,7 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
 }
 
 fn unit(a: Vec2, b: Vec2) -> Vec2 {
-    let l = (b.x - a.x).hypot(b.y - a.y);
+    let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
     Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)
 }
 

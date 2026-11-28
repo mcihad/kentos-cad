@@ -37,14 +37,14 @@ fn a_drop_runs_down_a_plane_to_its_edge() {
         assert!(w[1][2] < w[0][2] + 1e-12, "{w:?}");
         let (dx, dy) = (w[1][0] - w[0][0], w[1][1] - w[0][1]);
         assert!(
-            (dx * 0.02 - dy * 0.1).abs() < 1e-9 * dx.hypot(dy).max(1.0),
+            (dx * 0.02 - dy * 0.1).abs() < 1e-9 * kentos_num::hypot(dx, dy).max(1.0),
             "{w:?}"
         );
     }
     let last = d.path.last().expect("a path");
     assert!(last[0].abs() < 1e-9, "{last:?}");
     assert!(
-        (d.length - 5.3_f64.hypot(5.3 * 0.2)).abs() < 1e-9,
+        (d.length - kentos_num::hypot(5.3_f64, 5.3 * 0.2)).abs() < 1e-9,
         "{}",
         d.length
     );
@@ -78,7 +78,7 @@ fn a_drop_follows_a_valley_to_its_low_end() {
 #[test]
 fn a_bowl_is_a_pond_up_to_its_rim() {
     // A cone bowl z = |r| on a lattice, its rim the lowest edge corner: (±5, 0) and (0, ±5) at 5.
-    let s = surface_of(|x, y| x.hypot(y), -5.0, 5.0, 1.0);
+    let s = surface_of(|x, y| kentos_num::hypot(x, y), -5.0, 5.0, 1.0);
     let tin = Tin::new(&s);
     let ponds = drainage::ponds(&tin, 0.0);
     assert_eq!(ponds.len(), 1, "{ponds:?}");

@@ -75,7 +75,7 @@ fn ring_measures(ring: &[kentos_interaction::Vec2]) -> (f64, f64) {
     let perimeter: f64 = (0..n)
         .map(|i| {
             let (a, b) = (ring[i], ring[(i + 1) % n]);
-            (b.x - a.x).hypot(b.y - a.y)
+            kentos_num::hypot(b.x - a.x, b.y - a.y)
         })
         .sum();
     (

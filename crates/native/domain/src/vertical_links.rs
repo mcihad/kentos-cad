@@ -100,7 +100,7 @@ fn side_points(r: &Ring) -> Vec<(Vec2, Vec2)> {
     let mut out = Vec::new();
     for i in 0..n {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if l <= 1e-9 {
             continue;
         }
@@ -279,7 +279,7 @@ impl Document {
             link.stair_well = stairs.iter().any(|(_, l, pts)| {
                 *l == low && pts.len() >= 2 && {
                     let (a, b) = (pts[pts.len() - 2], pts[pts.len() - 1]);
-                    let len = (b.x - a.x).hypot(b.y - a.y).max(1e-9);
+                    let len = kentos_num::hypot(b.x - a.x, b.y - a.y).max(1e-9);
                     let before = Vec2::new(
                         b.x - (b.x - a.x) / len * BEFORE_HEAD,
                         b.y - (b.y - a.y) / len * BEFORE_HEAD,
@@ -337,7 +337,7 @@ impl Document {
             };
             let up = above(level);
             let along = |from: Vec2, to: Vec2, lvl: &Option<String>| -> Option<String> {
-                let len = (to.x - from.x).hypot(to.y - from.y).max(1e-9);
+                let len = kentos_num::hypot(to.x - from.x, to.y - from.y).max(1e-9);
                 let (ux, uy) = ((to.x - from.x) / len, (to.y - from.y) / len);
                 let steps = (REACH / 0.3).floor() as usize;
                 (0..=steps).find_map(|k| {

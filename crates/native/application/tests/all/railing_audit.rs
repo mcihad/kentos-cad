@@ -93,7 +93,7 @@ fn a_void_s_open_sides_a_low_railing_a_wide_gap_and_a_balcony_s_sides_are_said_a
         .iter()
         .map(|(p, _)| {
             p.windows(2)
-                .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+                .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                 .sum()
         })
         .collect();

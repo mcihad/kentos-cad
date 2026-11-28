@@ -1444,7 +1444,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     key,
                     bounds,
                     origin,
-                    reach: w.max(dh).max(dw) * 1.5 + offset[0].hypot(offset[1]) + 2.0,
+                    reach: w.max(dh).max(dw) * 1.5 + kentos_num::hypot(offset[0], offset[1]) + 2.0,
                     reach_unit: unit,
                     min_scale,
                     max_scale,

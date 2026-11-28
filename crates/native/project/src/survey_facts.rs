@@ -92,7 +92,10 @@ pub fn survey_facts_where(
         };
     }
     let sigmas: Vec<[f64; 3]> = points.iter().filter_map(|p| p.result.sigma).collect();
-    let position = sigmas.iter().map(|s| s[0].hypot(s[1])).reduce(f64::max);
+    let position = sigmas
+        .iter()
+        .map(|s| kentos_num::hypot(s[0], s[1]))
+        .reduce(f64::max);
     let height = sigmas.iter().map(|s| s[2]).reduce(f64::max);
     let network = networks(survey, &points);
     let mut note = format!("GNSS ile {} nokta", points.len());

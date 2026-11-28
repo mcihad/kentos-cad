@@ -89,7 +89,7 @@ pub fn fixtures(doc: &Document) -> Vec<Fixture> {
                 None => continue,
             },
         };
-        let d = |a: V, b: V| (b.x - a.x).hypot(b.y - a.y);
+        let d = |a: V, b: V| kentos_num::hypot(b.x - a.x, b.y - a.y);
         let size = (d(zone[0], zone[1]), d(zone[1], zone[2]));
         out.push(Fixture {
             slot: Slot(i.base.id),

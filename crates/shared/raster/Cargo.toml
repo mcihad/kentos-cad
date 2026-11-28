@@ -23,3 +23,7 @@ kentos-geometry-core = { path = "../geometry-core" }
 libm = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+# The numeric base (docs/adr/9403): the tests measure lengths with it.
+kentos-num = { path = "../num" }

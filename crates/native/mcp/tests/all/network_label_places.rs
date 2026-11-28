@@ -58,10 +58,10 @@ fn a_crowded_label_moves_over_mcp() {
         .find(|v| v.get("text").is_some() && v["attrs"]["İşaret"] == "N1")
         .unwrap();
     assert_eq!(label["align"], "bottomLeft");
-    let a = ellipse["major"]["x"]
-        .as_f64()
-        .unwrap()
-        .hypot(ellipse["major"]["y"].as_f64().unwrap());
+    let a = kentos_num::hypot(
+        ellipse["major"]["x"].as_f64().unwrap(),
+        ellipse["major"]["y"].as_f64().unwrap(),
+    );
     let d = (a + label["height"].as_f64().unwrap()) / 2f64.sqrt();
     let near = |got: &Value, want: f64| {
         assert!(

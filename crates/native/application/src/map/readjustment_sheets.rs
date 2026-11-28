@@ -147,7 +147,7 @@ pub(crate) fn crossings_at(part: &ScopePart, y: f64) -> Vec<f64> {
             let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
             let k = (1.0 - bulge * bulge) / (4.0 * bulge);
             let (cx, cy) = ((a[0] + b[0]) / 2.0 - dy * k, (a[1] + b[1]) / 2.0 + dx * k);
-            let r_ = dx.hypot(dy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs());
+            let r_ = kentos_num::hypot(dx, dy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs());
             let h = r_ * r_ - (y - cy) * (y - cy);
             if h < 0.0 {
                 continue;
@@ -287,7 +287,7 @@ fn turns(part: &ScopePart) -> Vec<f64> {
             .unwrap_or(0.0)
             == 0.0;
         let (a, b) = (outer.pts[i], outer.pts[(i + 1) % n]);
-        let length = (b[0] - a[0]).hypot(b[1] - a[1]);
+        let length = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
         if straight && longest.is_none_or(|(l, _, _)| length > l) {
             longest = Some((length, a, b));
         }

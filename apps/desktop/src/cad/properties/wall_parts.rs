@@ -87,7 +87,7 @@ pub fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, String)> {
                     at,
                     kentos_native_application::spaces::label_point(&sp.space.parts),
                 ) {
-                    (Some(a), Some(b)) => (a.x - b.x).hypot(a.y - b.y),
+                    (Some(a), Some(b)) => kentos_num::hypot(a.x - b.x, a.y - b.y),
                     _ => f64::INFINITY,
                 };
                 Some((d, uid, space_words(&sp.space)))

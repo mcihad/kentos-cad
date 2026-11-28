@@ -201,7 +201,7 @@ impl ViewCrop {
         let mut best: Option<(f64, Grip)> = None;
         for g in Grip::ALL {
             let at = cx.view.to_screen(f.grip_at(g));
-            let d = (at[0] - p.screen[0]).hypot(at[1] - p.screen[1]);
+            let d = kentos_num::hypot(at[0] - p.screen[0], at[1] - p.screen[1]);
             if d <= GRIP_REACH && best.is_none_or(|(b, _)| d < b) {
                 best = Some((d, g));
             }
@@ -348,7 +348,7 @@ impl Tool for ViewCrop {
             None
         };
         if let Some(h) = self.held.as_mut() {
-            if (p.screen[0] - h.screen[0]).hypot(p.screen[1] - h.screen[1]) > STILL {
+            if kentos_num::hypot(p.screen[0] - h.screen[0], p.screen[1] - h.screen[1]) > STILL {
                 h.moved = true;
             }
             self.draft = Some(h.start.dragged(h.grip, h.from, p.world));
@@ -586,7 +586,7 @@ mod tests {
     }
 
     fn near(a: Vec2, b: Vec2) -> bool {
-        (a.x - b.x).hypot(a.y - b.y) < 1e-9
+        kentos_num::hypot(a.x - b.x, a.y - b.y) < 1e-9
     }
 
     /// An edge moves alone, the opposite one stays; a corner moves two; the middle moves the whole frame.

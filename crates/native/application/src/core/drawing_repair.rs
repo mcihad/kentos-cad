@@ -31,7 +31,7 @@ fn fail(code: &str, message: String, path: String) -> Stop {
 const NEAR: f64 = 1e-9;
 
 fn len(a: Vec2, b: Vec2) -> f64 {
-    (b.x - a.x).hypot(b.y - a.y)
+    kentos_num::hypot(b.x - a.x, b.y - a.y)
 }
 
 /// Whether a constraint or an associative dimension reads `uid`.
@@ -67,7 +67,7 @@ fn meeting(target: &Entity, from: Vec2, end: Vec2, gap: f64) -> Option<Vec2> {
         };
         let (ux, uy) = (b.x - a.x, b.y - a.y);
         let den = d.x * uy - d.y * ux;
-        let edge_len = ux.hypot(uy);
+        let edge_len = kentos_num::hypot(ux, uy);
         if den.abs() <= NEAR * edge_len {
             continue;
         }

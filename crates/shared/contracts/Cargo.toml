@@ -7,6 +7,8 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 # The parameters' expressions (`constraint_expr`, docs/adr/0334 §3): the same bits on every target.

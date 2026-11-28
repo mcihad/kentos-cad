@@ -76,11 +76,11 @@ fn check(
             let mut run: f64 = l
                 .points
                 .windows(2)
-                .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+                .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
                 .sum();
             if l.closed && l.points.len() > 2 {
                 let (a, z) = (l.points[0], l.points[l.points.len() - 1]);
-                run += (a[0] - z[0]).hypot(a[1] - z[1]);
+                run += kentos_num::hypot(a[0] - z[0], a[1] - z[1]);
             }
             length += run;
             TerrainZeroLine {

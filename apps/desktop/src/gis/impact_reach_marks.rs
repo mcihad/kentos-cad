@@ -214,7 +214,7 @@ impl ReachMarks {
                 kentos_geometry_core::entity::Shape::Polyline { pts, bulges, .. } => {
                     let size: f64 = pts
                         .windows(2)
-                        .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+                        .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                         .sum();
                     Some(kentos_geometry_core::tessellate::bulge_path(
                         &pts,

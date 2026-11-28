@@ -411,7 +411,7 @@ fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
     let near = |t: &kentos_commands::TextEntity, [x, y]: [f64; 2]| {
         let [dx, dy] = rel(t.p);
         assert!(
-            (dx - x).hypot(dy - y) < 1e-9,
+            kentos_num::hypot(dx - x, dy - y) < 1e-9,
             "{:?} ≠ {:?}",
             [dx, dy],
             [x, y]

@@ -76,7 +76,7 @@ impl Measured {
     /// Its middle's point on the face.
     pub fn middle_at(&self) -> Vec2 {
         let [a, b] = self.line;
-        let length = (b.x - a.x).hypot(b.y - a.y);
+        let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
         let t = if length > 0.0 {
             self.middle() / length
         } else {
@@ -150,7 +150,7 @@ pub(crate) fn measure(
                 path,
             )
         })?;
-    let length = (b.x - a.x).hypot(b.y - a.y);
+    let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
     let u = ((b.x - a.x) / length, (b.y - a.y) / length);
     let along = |q: Vec2| (q.x - a.x) * u.0 + (q.y - a.y) * u.1;
     // The jambs on the face: its place's points 0 and 2 on the left face, 1 and 3 on the right.

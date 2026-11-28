@@ -216,7 +216,7 @@ pub fn boxes<'a>(
                 )
             };
             let (wc, ws) = (f64::from(x[0]), f64::from(x[1]));
-            let w = wc.hypot(ws);
+            let w = kentos_num::hypot(wc, ws);
             let h = w * mark.aspect;
             let turn = ws.atan2(wc);
             let (s, c) = turn.sin_cos();
@@ -470,7 +470,7 @@ fn rings(path: &tiny_skia::Path, ts: tiny_skia::Transform, tolerance: f64) -> Ve
     let mut ring: Vec<Vec2> = Vec::new();
     let mut last = Vec2::new(0.0, 0.0);
     let steps = |a: Vec2, b: Vec2| {
-        ((a.x - b.x).hypot(a.y - b.y) / tolerance)
+        (kentos_num::hypot(a.x - b.x, a.y - b.y) / tolerance)
             .sqrt()
             .ceil()
             .clamp(1.0, 64.0) as usize
@@ -884,7 +884,7 @@ mod tests {
         let m64 = m.map(f64::from);
         let mut corners: Vec<[f64; 2]> = mesh.chunks(2).map(|q| p(q[0], q[1])).collect();
         corners.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        corners.dedup_by(|a, b| (a[0] - b[0]).hypot(a[1] - b[1]) < 1e-4);
+        corners.dedup_by(|a, b| kentos_num::hypot(a[0] - b[0], a[1] - b[1]) < 1e-4);
         let mut want: Vec<[f64; 2]> = [(0.0, 0.0), (0.5, 0.0), (0.5, 0.5), (0.0, 0.5)]
             .iter()
             .map(|&(u, v)| shader_place(m64, [0.25, -0.5], [1.0, 2.0], 0.5, u, v))
@@ -893,7 +893,7 @@ mod tests {
         assert_eq!(corners.len(), 4, "{corners:?}");
         for (a, b) in corners.iter().zip(&want) {
             assert!(
-                (a[0] - b[0]).hypot(a[1] - b[1]) < 1e-4,
+                kentos_num::hypot(a[0] - b[0], a[1] - b[1]) < 1e-4,
                 "{corners:?} != {want:?}"
             );
         }
@@ -903,7 +903,7 @@ mod tests {
         assert_eq!(got.len(), 1);
         let (at, size, turn) = got[0];
         assert!(
-            (at[0] - middle[0]).hypot(at[1] - middle[1]) < 1e-4,
+            kentos_num::hypot(at[0] - middle[0], at[1] - middle[1]) < 1e-4,
             "{at:?} != {middle:?}"
         );
         assert!(

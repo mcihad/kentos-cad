@@ -582,7 +582,7 @@ pub(crate) fn to_geocentric((a, inv_f): (f64, f64), lat: f64, lon: f64, height: 
 pub(crate) fn from_geocentric((a, inv_f): (f64, f64), x: [f64; 3]) -> (f64, f64, f64) {
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
-    let p = libm::hypot(x[0], x[1]);
+    let p = kentos_num::hypot(x[0], x[1]);
     let lon = libm::atan2(x[1], x[0]);
     let mut lat = libm::atan2(x[2], p * (1.0 - e2));
     for _ in 0..10 {

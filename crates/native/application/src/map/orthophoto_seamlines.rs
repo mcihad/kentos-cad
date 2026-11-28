@@ -636,7 +636,7 @@ fn run(
     }
     let length: f64 = seam
         .windows(2)
-        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
         .sum();
     let overlap_area = fp.overlap_area();
     let method_word = match input.method {

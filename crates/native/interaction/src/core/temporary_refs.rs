@@ -123,7 +123,7 @@ pub fn square_at(squares: &[(Vec2, Switch)], screen: [f64; 2], cx: &Context<'_>)
         .iter()
         .filter_map(|(at, switch)| {
             let p = cx.view.to_screen(*at);
-            let d = (p[0] - screen[0]).hypot(p[1] - screen[1]);
+            let d = kentos_num::hypot(p[0] - screen[0], p[1] - screen[1]);
             (d <= REACH_PX).then_some((d, *switch))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))

@@ -117,7 +117,7 @@ fn key(p: Vec2) -> (u64, u64) {
 
 /// An edge's length: its chord, or its arc's.
 fn length(a: Vec2, b: Vec2, bulge: f64) -> f64 {
-    let c = (b.x - a.x).hypot(b.y - a.y);
+    let c = kentos_num::hypot(b.x - a.x, b.y - a.y);
     if bulge == 0.0 || c == 0.0 {
         return c;
     }
@@ -152,7 +152,7 @@ fn circle(a: Vec2, b: Vec2, bulge: f64) -> (Vec2, f64) {
     let centre = Vec2::new(ux / 2.0 - uy * k, uy / 2.0 + ux * k);
     (
         centre,
-        ux.hypot(uy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs()),
+        kentos_num::hypot(ux, uy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs()),
     )
 }
 
@@ -165,7 +165,7 @@ fn on_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> bool {
         return false;
     }
     let (o, r) = circle(a, b, bulge);
-    ((px - o.x).hypot(py - o.y) - r).abs() <= NEAR
+    (kentos_num::hypot(px - o.x, py - o.y) - r).abs() <= NEAR
 }
 
 /// Where `p` lies on the arc from `a` to `b` with `bulge` (non-zero), as the fraction of the arc's angle from `a`: within
@@ -177,7 +177,7 @@ fn along_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64, tol: f64) -> Option<f64> {
         return None;
     }
     let (o, r) = circle(a, b, bulge);
-    if ((px - o.x).hypot(py - o.y) - r).abs() > tol {
+    if (kentos_num::hypot(px - o.x, py - o.y) - r).abs() > tol {
         return None;
     }
     let theta = 4.0 * bulge.atan();
@@ -201,7 +201,7 @@ fn boundary_box(a: Vec2, b: Vec2, bulge: f64) -> [f64; 4] {
         return ends;
     }
     if bulge.abs() <= 1.0 {
-        let rise = bulge.abs() * (b.x - a.x).hypot(b.y - a.y) / 2.0;
+        let rise = bulge.abs() * kentos_num::hypot(b.x - a.x, b.y - a.y) / 2.0;
         return [
             ends[0] - rise,
             ends[1] - rise,
@@ -506,7 +506,7 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             continue;
         }
         // The strip: the arc's closed curve against the chain's, both closed by the chord, relative to the lower end.
-        let c = (b.x - a.x).hypot(b.y - a.y);
+        let c = kentos_num::hypot(b.x - a.x, b.y - a.y);
         let mut ring: Vec<Vec2> = vec![Vec2::new(0.0, 0.0)];
         let mut segments = 0.0;
         let mut widest: Option<(f64, [f64; 2])> = None;
@@ -518,10 +518,10 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             } else {
                 -edges[f].bulge
             };
-            segments += segment((pw.x - pu.x).hypot(pw.y - pu.y), forward);
+            segments += segment(kentos_num::hypot(pw.x - pu.x, pw.y - pu.y), forward);
             let mid = arc_point(a, b, edge.bulge, (on[&u] + on[&w]) / 2.0);
             let own = middle(pu, pw, forward);
-            let gap = (mid[0] - own[0]).hypot(mid[1] - own[1]);
+            let gap = kentos_num::hypot(mid[0] - own[0], mid[1] - own[1]);
             if widest.is_none_or(|(g, _)| gap > g) {
                 widest = Some((gap, [(mid[0] + own[0]) / 2.0, (mid[1] + own[1]) / 2.0]));
             }
@@ -604,7 +604,7 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             if corners[j].x - corners[i].x > NEAR {
                 break;
             }
-            if (corners[j].x - corners[i].x).hypot(corners[j].y - corners[i].y) <= NEAR {
+            if kentos_num::hypot(corners[j].x - corners[i].x, corners[j].y - corners[i].y) <= NEAR {
                 let mut on: Vec<usize> =
                     at_corner[i].iter().chain(&at_corner[j]).copied().collect();
                 on.sort_unstable();
@@ -630,7 +630,7 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         for pair in list.windows(2) {
             let (e1, e2) = (&edges[pair[0]], &edges[pair[1]]);
             let (a, b) = (corners[e1.lo], corners[e1.hi]);
-            let c = (b.x - a.x).hypot(b.y - a.y);
+            let c = kentos_num::hypot(b.x - a.x, b.y - a.y);
             let (m1, m2) = (middle(a, b, e1.bulge), middle(a, b, e2.bulge));
             let mut on: Vec<usize> = e1.sides.iter().chain(&e2.sides).map(|s| s.parcel).collect();
             on.sort_unstable();

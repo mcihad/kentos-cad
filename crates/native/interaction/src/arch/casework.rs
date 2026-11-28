@@ -176,7 +176,7 @@ impl Casework {
         }
         let (a, b) = (self.pts[n - 2], self.pts[n - 1]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         if len.is_nan() || len <= 0.0 {
             return p;
         }

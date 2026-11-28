@@ -425,8 +425,10 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [x] `js_hypot` → `kentos_num::hypot`: bağımsız başvuruya karşı 22 682 ortak durumdan ikisi oynadı ve kaynağında
     düzeltildi (raster oturt'un öntanımlı pikseli, ADR 9403 §7); saklanan beş çıktı farkı okunarak yazıldı (araç
     `scripts/fixtures/ulp_diff.py`, ADR 9403 §6).
-  - [ ] Adlar: `js_hypot` → `hypot` (702 çağrı; mekanik); platformun `hypot`'una giden 532 doğrudan çağrı
-    (`f64::hypot`, `libm::hypot`) sayısal temele.
+  - [x] Platformun `hypot`'una giden 586 çağrı ve `libm::hypot` sayısal temele (20 crate); bekçi
+    `scripts/dev/platform_math.py` platformun matematik yöntemlerini ve `js_` yardımcılarını sayar, sayı yalnız azalır.
+    Bu sırada bulunan: eşit uzunluktaki kaçış yollarının seçimi son basamağa bağlıydı (düzeltildi, ADR 9403 §7).
+  - [ ] Adlar: `js_hypot` → `hypot` (702 çağrı; mekanik).
   - Açık, bu işten bağımsız (ADR 9403 §6): DWG codec'inin bir sınaması, Python kanalının tam koşusunda
     `cad.arch.performance` ve `cad.arch.ifc` durumları, `fixtures/raster/v1/georef.json` üretecinin ortam farkı.
   - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).

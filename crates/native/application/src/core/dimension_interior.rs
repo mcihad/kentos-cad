@@ -61,7 +61,7 @@ fn sources(doc: &Document, input: &DimensionsInterior) -> (Vec<Slot>, Vec<Shape>
             ),
             Entity::Column(c) => {
                 let f = &c.column;
-                let r = f.width.hypot(f.depth.unwrap_or(f.width));
+                let r = kentos_num::hypot(f.width, f.depth.unwrap_or(f.width));
                 (
                     f.arch.level.as_deref(),
                     meets([f.at.x - r, f.at.y - r, f.at.x + r, f.at.y + r]),

@@ -47,7 +47,7 @@ impl DrawTool {
     /// Dragging out of the pen's new node gives it symmetric handles.
     pub fn pen_drag(&mut self, q: Pt, zoom: f64) {
         if let Some(n) = self.draft.last_mut()
-            && (q[0] - n.x).hypot(q[1] - n.y) > 2.0 / zoom
+            && kentos_num::hypot(q[0] - n.x, q[1] - n.y) > 2.0 / zoom
         {
             // `in` before `out`: the order the core writes nodes in.
             n.in_ = Some([2.0 * n.x - q[0], 2.0 * n.y - q[1]]);
@@ -188,7 +188,7 @@ impl SvgEditor {
         let zoom = self.camera.zoom;
         if let Some(first) = self.draw.draft.first()
             && self.draw.draft.len() > 2
-            && (first.x - q[0]).hypot(first.y - q[1]) < 8.0 / zoom
+            && kentos_num::hypot(first.x - q[0], first.y - q[1]) < 8.0 / zoom
         {
             self.finish_draft(true);
             return true;

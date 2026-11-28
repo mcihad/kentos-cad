@@ -373,7 +373,7 @@ pub fn sample_png() -> Vec<u8> {
     for y in 0..h {
         for x in 0..w {
             let (dx, dy) = (x as f64 - 45.0, y as f64 - 45.0);
-            let d = dx.hypot(dy);
+            let d = kentos_num::hypot(dx, dy);
             let ink = (d < 36.0 && d > 14.0) || (x > 90 && x < 110 && y > 15 && y < 75);
             let v = if ink { 30 } else { 245 };
             rgba.extend_from_slice(&[v, v, v, 255]);

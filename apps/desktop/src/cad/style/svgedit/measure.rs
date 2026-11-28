@@ -142,7 +142,7 @@ impl SvgEditor {
         if self.measure.pressed
             && self.measure.stage == Stage::Placing
             && let (Some(a), Some(b)) = (self.measure.a, self.measure.b)
-            && (b[0] - a[0]).hypot(b[1] - a[1]) * self.camera.zoom > 4.0
+            && kentos_num::hypot(b[0] - a[0], b[1] - a[1]) * self.camera.zoom > 4.0
         {
             self.measure.stage = Stage::Done;
         }

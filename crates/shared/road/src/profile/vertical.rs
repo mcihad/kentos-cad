@@ -91,12 +91,12 @@ impl Piece {
     /// `asin((s − sc)/R)` from the centre's vertical.
     pub fn length_to(&self, s: f64) -> f64 {
         match *self {
-            Piece::Grade { s0, g, .. } => (s - s0) * g.hypot(1.0),
+            Piece::Grade { s0, g, .. } => (s - s0) * kentos_num::hypot(g, 1.0),
             Piece::Parabola { s0, g0, r, .. } => {
                 let t = s - s0;
                 let (u0, u1) = (g0, g0 + r * t);
                 if (u1 - u0).abs() > 1e-3 {
-                    let f = |u: f64| 0.5 * (u * u.hypot(1.0) + u.asinh());
+                    let f = |u: f64| 0.5 * (u * kentos_num::hypot(u, 1.0) + u.asinh());
                     (f(u1) - f(u0)) / r
                 } else {
                     const X: [f64; 5] = [
@@ -116,7 +116,7 @@ impl Piece {
                     let h = 0.5 * t;
                     X.iter()
                         .zip(W)
-                        .map(|(x, w)| w * (g0 + r * h * (1.0 + x)).hypot(1.0))
+                        .map(|(x, w)| w * kentos_num::hypot(g0 + r * h * (1.0 + x), 1.0))
                         .sum::<f64>()
                         * h
                 }

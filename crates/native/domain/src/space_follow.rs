@@ -185,7 +185,7 @@ fn column_spec(c: &kentos_contracts::ColumnFields) -> arch::ColumnSpec {
 fn column_box(e: &Entity) -> Option<Box4> {
     let Entity::Column(c) = e else { return None };
     let c = &c.column;
-    let r = c.width.hypot(c.depth()) / 2.;
+    let r = kentos_num::hypot(c.width, c.depth()) / 2.;
     let spec = column_spec(c);
     let middle = arch::column_center(CoreVec2::new(c.at.x, c.at.y), &spec);
     if c.problem().is_some()
@@ -645,7 +645,7 @@ impl<'a> SpaceSearch<'a> {
                         let r = if spec.round {
                             c.width / 2.
                         } else {
-                            c.width.hypot(c.depth()) / 2.
+                            kentos_num::hypot(c.width, c.depth()) / 2.
                         };
                         let middle = arch::column_center(at, &spec);
                         Ok((

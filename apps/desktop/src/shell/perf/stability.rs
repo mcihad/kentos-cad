@@ -512,7 +512,7 @@ fn stability() {
             })
         });
         let off_radius = circle
-            .and_then(|(c, rad)| hits[0].map(|h| ((h[0] - c.x).hypot(h[1] - c.y) - rad).abs()));
+            .and_then(|(c, rad)| hits[0].map(|h| (kentos_num::hypot(h[0] - c.x, h[1] - c.y) - rad).abs()));
         let row =
             json!({ "snap": name, "hits": hits, "sameToTheBit": same, "offRadius": off_radius });
         println!("kenet {row}");

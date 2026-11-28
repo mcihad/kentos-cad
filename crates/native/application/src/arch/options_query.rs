@@ -30,7 +30,7 @@ fn path_length(pts: &[kentos_commands::Vec2], bulges: Option<&[f64]>, closed: bo
     (0..edges)
         .map(|i| {
             let (a, b) = (pts[i], pts[(i + 1) % n]);
-            let chord = (b.x - a.x).hypot(b.y - a.y);
+            let chord = kentos_num::hypot(b.x - a.x, b.y - a.y);
             let bulge = bulges.and_then(|bs| bs.get(i)).copied().unwrap_or(0.0);
             if bulge == 0.0 {
                 chord

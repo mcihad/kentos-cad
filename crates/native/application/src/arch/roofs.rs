@@ -62,7 +62,7 @@ pub fn slopes_for(pts: &[Vec2], form: RoofForm, slope: f64, front: usize) -> Vec
         RoofForm::Gable => {
             let dir = |i: usize| {
                 let (a, b) = (pts[i], pts[(i + 1) % n]);
-                let len = (b.x - a.x).hypot(b.y - a.y).max(f64::MIN_POSITIVE);
+                let len = kentos_num::hypot(b.x - a.x, b.y - a.y).max(f64::MIN_POSITIVE);
                 ((b.x - a.x) / len, (b.y - a.y) / len)
             };
             let f = dir(front);
@@ -92,7 +92,7 @@ pub fn nearest_edge(pts: &[Vec2], at: Vec2) -> usize {
         } else {
             0.0
         };
-        (a.x + dx * t - at.x).hypot(a.y + dy * t - at.y)
+        kentos_num::hypot(a.x + dx * t - at.x, a.y + dy * t - at.y)
     };
     (0..n)
         .min_by(|i, j| distance(*i).total_cmp(&distance(*j)))
@@ -113,7 +113,8 @@ fn turning(pts: Vec<Vec2>) -> Vec<Vec2> {
             let (u, v) = ((b.x - a.x, b.y - a.y), (c.x - b.x, c.y - b.y));
             let cross = u.0 * v.1 - u.1 * v.0;
             let dot = u.0 * v.0 + u.1 * v.1;
-            dot > 0.0 && cross.abs() <= 1e-9 * u.0.hypot(u.1) * v.0.hypot(v.1)
+            dot > 0.0
+                && cross.abs() <= 1e-9 * kentos_num::hypot(u.0, u.1) * kentos_num::hypot(v.0, v.1)
         });
         match straight {
             Some(i) => {

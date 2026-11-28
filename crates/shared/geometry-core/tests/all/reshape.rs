@@ -47,7 +47,8 @@ fn canonical(mut r: Vec<Vertex>) -> Vec<Vertex> {
                 break;
             }
             let cross = (q.0 - p.0) * (s.1 - p.1) - (q.1 - p.1) * (s.0 - p.0);
-            let scale = (q.0 - p.0).hypot(q.1 - p.1) * (s.0 - p.0).hypot(s.1 - p.1);
+            let scale =
+                kentos_num::hypot(q.0 - p.0, q.1 - p.1) * kentos_num::hypot(s.0 - p.0, s.1 - p.1);
             if p.2.abs() <= 1e-12 && q.2.abs() <= 1e-12 && cross.abs() <= 1e-12 * scale.max(1.0) {
                 drop = Some(i);
                 break;

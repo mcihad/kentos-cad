@@ -72,7 +72,7 @@ pub(crate) fn nearest_number<'a, T>(
             let p = cx.view.to_screen(text_at(item));
             let (dx, dy) = ((p[0] - screen[0]).abs(), (p[1] - screen[1]).abs());
             (dx <= REACH_PX[0] && dy <= REACH_PX[1])
-                .then(|| ((dx / REACH_PX[0]).hypot(dy / REACH_PX[1]), item))
+                .then(|| (kentos_num::hypot(dx / REACH_PX[0], dy / REACH_PX[1]), item))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, item)| item)
@@ -129,7 +129,7 @@ fn selected(cx: &Context<'_>) -> Option<(Slot, Uuid)> {
 fn face_by(left: &Measured, right: &Measured, at: Vec2) -> DimensionSetFace {
     let off = |m: &Measured| {
         let [a, b] = m.line;
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         ((at.x - a.x) * -(b.y - a.y) / l + (at.y - a.y) * (b.x - a.x) / l).abs()
     };
     if off(right) < off(left) {
@@ -202,7 +202,7 @@ impl Overlay {
         let Some(uid) = self.uid else { return };
         let face_key = u32::from(face == DimensionSetFace::Right);
         let [a, b] = m.line;
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         let u = ((b.x - a.x) / l, (b.y - a.y) / l);
         // Out of the wall: the left face's left, the right face's right.
         let out = match face {
@@ -252,7 +252,7 @@ impl Overlay {
                 ));
             }
             let along = (to.x - jamb.x, to.y - jamb.y);
-            let length = along.0.hypot(along.1);
+            let length = kentos_num::hypot(along.0, along.1);
             // A dimension's offset is measured to the left of its first point → its second.
             let left = if length > 0.0 {
                 (-along.1 / length, along.0 / length)

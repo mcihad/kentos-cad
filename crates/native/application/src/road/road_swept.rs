@@ -297,7 +297,7 @@ pub(crate) fn answer(
     let estimate: f64 = path
         .windows(2)
         .map(|w| {
-            ((w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]) / step)
+            (kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]) / step)
                 .ceil()
                 .max(1.0)
         })

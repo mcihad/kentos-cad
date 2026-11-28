@@ -378,7 +378,7 @@ impl App {
             for k in 0..edges {
                 let (a, b) = (path.pts[k], path.pts[(k + 1) % n]);
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
-                let len = dx.hypot(dy);
+                let len = kentos_num::hypot(dx, dy);
                 if len.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
                     continue;
                 }

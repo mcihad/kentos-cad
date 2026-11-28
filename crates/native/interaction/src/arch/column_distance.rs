@@ -128,7 +128,7 @@ impl Overlay {
                     },
                 ));
             }
-            let length = (to.x - from.x).hypot(to.y - from.y);
+            let length = kentos_num::hypot(to.x - from.x, to.y - from.y);
             let mut text_at = Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0);
             if length > 1e-9 {
                 let entity = crate::opening_distance::dimension(from, to, 0.0, height);

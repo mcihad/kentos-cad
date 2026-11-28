@@ -257,8 +257,8 @@ impl App {
                 hit
             })
             .min_by(|a, b| {
-                let da = (a.point.x - at.x).hypot(a.point.y - at.y);
-                let db = (b.point.x - at.x).hypot(b.point.y - at.y);
+                let da = kentos_num::hypot(a.point.x - at.x, a.point.y - at.y);
+                let db = kentos_num::hypot(b.point.x - at.x, b.point.y - at.y);
                 da.total_cmp(&db)
             })
     }

@@ -30,7 +30,7 @@ fn off_curve(p: [f64; 2], c: &[[f64; 2]; 4]) -> f64 {
     };
     let dist = |t: f64| {
         let q = at(t);
-        libm::hypot(q[0] - p[0], q[1] - p[1])
+        kentos_num::hypot(q[0] - p[0], q[1] - p[1])
     };
     let mut best = (0.0, f64::INFINITY);
     for i in 0..=4000 {

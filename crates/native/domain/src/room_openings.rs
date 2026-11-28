@@ -34,7 +34,7 @@ pub fn opening_sides(f: &OpeningFields) -> Option<(V, V, V)> {
     let (left, right) = (mid(p[0], p[2]), mid(p[1], p[3]));
     let c = mid(left, right);
     let (dx, dy) = (left.x - right.x, left.y - right.y);
-    let len = dx.hypot(dy);
+    let len = kentos_num::hypot(dx, dy);
     if len < 1e-9 {
         return None;
     }

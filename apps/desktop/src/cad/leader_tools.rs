@@ -328,7 +328,7 @@ impl App {
                 let nearest = std::iter::once(l.pts.first())
                     .chain(l.arms.iter().map(|a| a.pts.first()))
                     .enumerate()
-                    .filter_map(|(i, q)| q.map(|q| (i, (q.x - p.x).hypot(q.y - p.y))))
+                    .filter_map(|(i, q)| q.map(|q| (i, kentos_num::hypot(q.x - p.x, q.y - p.y))))
                     .min_by(|a, b| a.1.total_cmp(&b.1))
                     .map(|(i, _)| i as u32);
                 if let Some(arm) = nearest {
@@ -369,7 +369,7 @@ impl App {
                 let tips = std::iter::once(l.pts[0]).chain(l.arms.iter().map(|a| a.pts[0]));
                 let nearest = tips
                     .enumerate()
-                    .map(|(i, q)| (i, (q.x - p.x).hypot(q.y - p.y)))
+                    .map(|(i, q)| (i, kentos_num::hypot(q.x - p.x, q.y - p.y)))
                     .min_by(|a, b| a.1.total_cmp(&b.1))
                     .map_or(0, |(i, _)| i);
                 let uid = self.uids_of(&[leader]).pop().unwrap_or_default();

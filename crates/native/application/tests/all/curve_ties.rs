@@ -115,7 +115,7 @@ fn nurbs_knot_insertion_keeps_bound_measurements_and_refs_live() {
     edit(&mut doc, CurveEdit::InsertKnot { at: 3. });
     assert_eq!(dimension(&doc, 2), &a);
     let d = dimension(&doc, 3);
-    assert!((d.b.x - b.b.x).hypot(d.b.y - b.b.y) < 1e-14);
+    assert!(kentos_num::hypot(d.b.x - b.b.x, d.b.y - b.b.y) < 1e-14);
     assert_eq!(d.refs, b.refs);
     assert_eq!(doc.undo().as_deref(), Some("Eğriyi düzenle"));
     assert_eq!(doc.to_snapshot_v2(), before);
@@ -145,7 +145,7 @@ fn nurbs_split_relocates_end_and_along_refs_to_the_actual_piece() {
         middle.refs.as_ref().unwrap().b.as_ref().unwrap().live(),
         "{middle:?}"
     );
-    assert!((middle.b.x - s).hypot(middle.b.y - s) < 1e-12);
+    assert!(kentos_num::hypot(middle.b.x - s, middle.b.y - s) < 1e-12);
     assert!(
         doc.entities()
             .filter(|e| matches!(e, Entity::Nurbs(_)))

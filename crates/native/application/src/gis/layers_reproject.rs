@@ -150,7 +150,7 @@ fn shift_of(
     };
     let (mut least, mut most) = (f64::INFINITY, 0.0_f64);
     for (p, q) in before.iter().zip(after) {
-        let d = (q.x - p.x).hypot(q.y - p.y);
+        let d = kentos_num::hypot(q.x - p.x, q.y - p.y);
         least = least.min(d);
         most = most.max(d);
         let here = mover
@@ -172,7 +172,7 @@ fn shift_of(
         after: q,
         dx: q.x - p.x,
         dy: q.y - p.y,
-        shift: (q.x - p.x).hypot(q.y - p.y),
+        shift: kentos_num::hypot(q.x - p.x, q.y - p.y),
         least,
         most,
         notes: REPROJECT_NOTES
@@ -264,7 +264,7 @@ pub(crate) fn preview(
                 if !before.is_empty() && before.len() == after.len() {
                     for (p, q) in before.iter().zip(&after) {
                         let (dx, dy) = (q.x - p.x, q.y - p.y);
-                        let d = dx.hypot(dy);
+                        let d = kentos_num::hypot(dx, dy);
                         sum_x += dx;
                         sum_y += dy;
                         preview.least = Some(preview.least.map_or(d, |l| l.min(d)));

@@ -88,7 +88,7 @@ fn drawn(def: &kentos_commands::AlignmentDef, b: &Built) -> Drawn {
                     && out
                         .marks
                         .iter()
-                        .all(|(_, q)| (q[0] - p[0]).hypot(q[1] - p[1]) > 1e-6)
+                        .all(|(_, q)| kentos_num::hypot(q[0] - p[0], q[1] - p[1]) > 1e-6)
                 {
                     out.marks.push((names[i], p));
                 }
@@ -163,7 +163,7 @@ impl Layer<'_> {
         // Metres per pixel, near enough for leaving out what is too close.
         let o = self.camera.world_to_screen(Vec2::new(0.0, 0.0));
         let one = self.camera.world_to_screen(Vec2::new(1.0, 0.0));
-        let px = (one[0] - o[0]).hypot(one[1] - o[1]).max(1e-12);
+        let px = kentos_num::hypot(one[0] - o[0], one[1] - o[1]).max(1e-12);
         for d in all {
             if d.pis.len() > 1 {
                 frame.stroke(

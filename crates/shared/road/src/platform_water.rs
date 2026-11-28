@@ -55,7 +55,7 @@ pub fn slope(t: &[[f64; 3]; 3]) -> f64 {
         u[2] * v[0] - u[0] * v[2],
         u[0] * v[1] - u[1] * v[0],
     ];
-    n[0].hypot(n[1]) / n[2].abs()
+    kentos_num::hypot(n[0], n[1]) / n[2].abs()
 }
 
 fn plan_area(t: &[[f64; 3]; 3]) -> f64 {
@@ -87,7 +87,7 @@ fn crossfalls(features: &[Feature], region: usize, right: bool) -> Vec<(f64, f64
         .flat_map(|f| f.points.iter())
         .filter_map(|p| {
             let a = axis.iter().find(|a| a[0] == p[0])?;
-            let run = (p[1] - a[1]).hypot(p[2] - a[2]);
+            let run = kentos_num::hypot(p[1] - a[1], p[2] - a[2]);
             (run > 0.0).then(|| (p[0], (p[3] - a[3]) / run))
         })
         .collect();

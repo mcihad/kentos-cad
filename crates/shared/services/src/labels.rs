@@ -269,7 +269,9 @@ pub fn place<C: std::borrow::Borrow<Candidate>>(
     let mut shown: Vec<(&str, &str, [f64; 2])> = Vec::new();
     let near = |shown: &Vec<(&str, &str, [f64; 2])>, c: &Candidate, at: [f64; 2], within: f64| {
         shown.iter().any(|(t, l, p)| {
-            *t == c.text && *l == c.style.layer && (p[0] - at[0]).hypot(p[1] - at[1]) < within
+            *t == c.text
+                && *l == c.style.layer
+                && kentos_num::hypot(p[0] - at[0], p[1] - at[1]) < within
         })
     };
     let margin = 64.0;
@@ -348,7 +350,8 @@ pub fn place<C: std::borrow::Borrow<Candidate>>(
                 let mut total = 0.0;
                 cum.push(0.0);
                 for k in 1..pts.len() {
-                    total += (pts[k][0] - pts[k - 1][0]).hypot(pts[k][1] - pts[k - 1][1]);
+                    total +=
+                        kentos_num::hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
                     cum.push(total);
                 }
                 if total < w + s.size {
@@ -361,7 +364,8 @@ pub fn place<C: std::borrow::Borrow<Candidate>>(
                     cum.push(0.0);
                     let mut t = 0.0;
                     for k in 1..pts.len() {
-                        t += (pts[k][0] - pts[k - 1][0]).hypot(pts[k][1] - pts[k - 1][1]);
+                        t +=
+                            kentos_num::hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
                         cum.push(t);
                     }
                 }

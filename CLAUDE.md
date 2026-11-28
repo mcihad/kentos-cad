@@ -40,6 +40,7 @@ Veri sürücüleri (GeoPackage, PostGIS; ortak sözleşme `kentos-data`), canlı
 Render motoru (arayüzden bağımsız tuval, LOD, NCZ ve DWG alımı) [plan/render.md](plan/render.md) ve [ADR 9200](docs/adr/9200-render-engine-research.md)'dedir.
 Mimari'nin 3B görünümü, kesiti ve eksik araçları [plan/mimari-bim.md](plan/mimari-bim.md) ve [ADR 8171](docs/adr/8171-mimari-3d-section-quality-and-missing-tools.md)'dedir.
 Bakım ve refactor planı (kod incelemesinin bulguları, biçim tabanı, `make guard`) [plan/bakim.md](plan/bakim.md) ve [ADR 9400](docs/adr/9400-maintenance-plan.md)'dedir.
+Sayısal temel (`kentos-num`: doğru yuvarlanan işlevler, saklanan çıktıların güncellenmesi) [ADR 9403](docs/adr/9403-numeric-base.md) ve [docs/specs/numeric-policy.md](docs/specs/numeric-policy.md)'dedir.
 
 **Bu dosyaya ne yazılır:** yalnız her oturumda gereken kural ve haritanın satırı. Bir özelliğin kararı, ölçümü ve
 geçmişi o alanın ADR'sine, planına ve §0'ın dosyasına yazılır; buraya en çok bir satırlık bağlantı. Dosya 4432
@@ -68,9 +69,9 @@ satıra (749 KB) büyüdüğü için bölündü.
   al, yinele ve dosya işleri eklentiye kapalıdır. Var olan bir işe dokunulunca aynı denetim onun için de yapılır.
   Kanalların nerede bağlandığı ve hangi sınamanın koşacağı §9.2'dedir; biri kırmızıyken iş bitmiş sayılmaz.
 - **Bekçiler ve biçim (28 Kasım 2026, ADR 9400):** kod `cargo fmt --all` ile biçimlenir; commit'ten önce `make guard`
-  yeşildir (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, biçim; derleme istemez). Boy sınırı
-  biçimlenmiş kodu ölçer: satır sıkıştırmak ya da başka bir dolanma yok, dosya bölünür. Bir crate'in bütünleşik
-  sınamaları tek ikilidir (`tests/all/main.rs`).
+  yeşildir (bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, platform matematiği, biçim;
+  derleme istemez). Boy sınırı biçimlenmiş kodu ölçer: satır sıkıştırmak ya da başka bir dolanma yok, dosya bölünür.
+  Bir crate'in bütünleşik sınamaları tek ikilidir (`tests/all/main.rs`).
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
 - **Masaüstü testleri:** sınama iş parçacığının 64 MB yığınını cargo verir (`.cargo/config.toml` `RUST_MIN_STACK`, ADR 9400);
@@ -223,8 +224,11 @@ doğrulamada `AppError::invalid_at` kullanın; istemci yeniden denemeyi bu alanl
 Saf Rust hesap crate'leri DOM, Iced, SQLx, ağ veya host runtime bilmez.
 Masaüstü ve sunucu bunları native çağırır. Rust'tan üretilen veri/komut sözleşmesi ortaktır.
 Sıcak yollarda toplu tipli buffer kullanın; nesne başına JSON/FFI üretmeyin.
-Mevcut `jsmath`/`libm`, lint ve deterministic davranış kurallarını koruyun (yerlerine geçecek sayısal temel
-araştırılıyor: ADR 9402 §7, plan/bakim.md BK-88; karar çıkana kadar bu kurallar sürer);
+Hesap sayısal temelden (`kentos-num`: en yakın çift duyarlıklı sayı, her platformda aynı; ADR 9403) ya da, işlevi
+oraya geçene kadar, `libm`'den yapılır: uzunluk `kentos_num::hypot`'tur. Platformun matematik yöntemleri (`x.sin()`,
+`x.hypot(y)`, `powi`…) hesap crate'lerinde yazılmaz ve `jsmath`'in taşınan yardımcılarına (`js_…`) yenisi eklenmez;
+`make guard` ikisini de sayar, sayı yalnız azalır (plan/bakim.md BK-88). Bir sonucun, girdisinin son basamağına
+dayanması kusurdur: kaynağında düzeltilir, tolerans büyütülmez (ADR 9403 §7).
 `unwrap/expect` ile kullanıcı girdisinde panic üretmeyin.
 Yeni hesap çağrısına sınır/rastgele fixture ve bağımsız referans
 ekleyin. Taşıma ayrıntıları [ADR 0008](docs/adr/0008-shared-core-boundary.md)'dedir.

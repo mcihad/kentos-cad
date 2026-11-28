@@ -18,6 +18,8 @@ linker_messages = "allow"
 # desktop's wgpu renderer draws what this crate hands it.
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-style-core = { path = "../../shared/style-core" }

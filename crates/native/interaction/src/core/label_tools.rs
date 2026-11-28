@@ -332,7 +332,7 @@ impl Tool for LabelTool {
             // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
             press.from = cx.view.to_screen(press.from_world);
             press.to_world = p.raw;
-            let moved = (press.to[0] - press.from[0]).hypot(press.to[1] - press.from[1]);
+            let moved = kentos_num::hypot(press.to[0] - press.from[0], press.to[1] - press.from[1]);
             if !press.dragging && moved > DRAG_THRESHOLD {
                 press.dragging = true;
             }

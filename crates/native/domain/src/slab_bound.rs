@@ -139,7 +139,7 @@ fn solve_edges(
             return Err(missing);
         }
         let d = sub(b, a);
-        let len = d.x.hypot(d.y);
+        let len = kentos_num::hypot(d.x, d.y);
         if len < 1e-8 {
             return Err(missing);
         }
@@ -156,7 +156,7 @@ fn solve_edges(
         let (a, u) = lines[(i + n - 1) % n];
         let (b, v) = lines[i];
         let den = cross(u, v);
-        if den.abs() <= 1e-10 * u.x.hypot(u.y) * v.x.hypot(v.y) {
+        if den.abs() <= 1e-10 * kentos_num::hypot(u.x, u.y) * kentos_num::hypot(v.x, v.y) {
             return Err(invalid);
         }
         let p = add_scaled(a, u, cross(sub(b, a), v) / den);

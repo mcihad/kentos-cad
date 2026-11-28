@@ -223,7 +223,7 @@ fn screens() {
             let Some((x, y, _)) = cam.project(ex.shown(lane), &vp) else { continue };
             send(&mut app, W::Pick(x as f32, y as f32, 1240.0, 560.0));
             let p = app.scene3d_window.as_ref().expect("the window").picked.clone();
-            if p.is_some_and(|p| p.what.contains("Şerit") && (p.point[0] - lane[0]).hypot(p.point[1] - lane[1]) < 1e-3) {
+            if p.is_some_and(|p| p.what.contains("Şerit") && kentos_num::hypot(p.point[0] - lane[0], p.point[1] - lane[1]) < 1e-3) {
                 on_lane = true;
                 break;
             }

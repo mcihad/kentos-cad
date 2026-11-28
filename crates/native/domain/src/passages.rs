@@ -62,7 +62,7 @@ pub fn passages(doc: &Document) -> Vec<Passage> {
                 width: x.width,
                 a: mid(&p[0], &p[1]),
                 b: mid(&p[2], &p[3]),
-                half: (p[0].x - p[1].x).hypot(p[0].y - p[1].y) / 2.0,
+                half: kentos_num::hypot(p[0].x - p[1].x, p[0].y - p[1].y) / 2.0,
                 level: e.level(by_uid).map(str::to_owned),
             })
         })
@@ -81,7 +81,7 @@ fn signed(pts: &[Vec2]) -> f64 {
 /// (+1 left of the axis, −1 right) by its longest such edge; none when no edge does.
 pub fn along(parts: &[SpacePart], p: &Passage) -> Option<(f64, f64)> {
     let (dx, dy) = (p.b.x - p.a.x, p.b.y - p.a.y);
-    let len = dx.hypot(dy);
+    let len = kentos_num::hypot(dx, dy);
     if len.is_nan() || len <= 0.0 {
         return None;
     }
@@ -103,7 +103,7 @@ pub fn along(parts: &[SpacePart], p: &Passage) -> Option<(f64, f64)> {
                 }
                 let (s, t) = (ring.pts[i], ring.pts[(i + 1) % n]);
                 let (ex, ey) = (t.x - s.x, t.y - s.y);
-                let el = ex.hypot(ey);
+                let el = kentos_num::hypot(ex, ey);
                 if el.is_nan() || el <= 0.0 || (ux * ey - uy * ex).abs() / el > PARALLEL {
                     continue;
                 }

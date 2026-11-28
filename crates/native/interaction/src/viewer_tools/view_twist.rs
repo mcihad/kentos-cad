@@ -54,7 +54,7 @@ impl ViewTwist {
             self.first = Some(p);
             return;
         };
-        if (p.x - a.x).hypot(p.y - a.y) < SAME {
+        if kentos_num::hypot(p.x - a.x, p.y - a.y) < SAME {
             cx.say(
                 Level::Warn,
                 "İki nokta aynı yerde; doğrultu bulunamadı. İkinci noktayı ilkinden uzakta verin.",

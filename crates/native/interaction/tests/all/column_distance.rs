@@ -193,9 +193,8 @@ fn the_south_padlock_bonds_the_column_to_its_wall() {
             .temporary_locks()
             .into_iter()
             .min_by(|p, q| {
-                (p.x - south.x)
-                    .hypot(p.y - south.y)
-                    .total_cmp(&(q.x - south.x).hypot(q.y - south.y))
+                kentos_num::hypot(p.x - south.x, p.y - south.y)
+                    .total_cmp(&kentos_num::hypot(q.x - south.x, q.y - south.y))
             })
             .expect("a padlock")
     };

@@ -68,7 +68,7 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    (p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t))
+    kentos_num::hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /// The nearest an outline comes to a segment: its corners to the segment and the segment's ends to its sides (the two

@@ -83,7 +83,7 @@ impl Mesh {
 
     pub(super) fn edge_length(&self, xy: &[Vec2], e: u32) -> f64 {
         let (a, b) = (xy[self.from(e) as usize], xy[self.to(e) as usize]);
-        (b.x - a.x).hypot(b.y - a.y)
+        kentos_num::hypot(b.x - a.x, b.y - a.y)
     }
 
     /// The constrained edges as corner pairs, the lower index first, each once.

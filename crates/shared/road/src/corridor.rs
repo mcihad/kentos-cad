@@ -450,7 +450,7 @@ fn plan_area(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> f64 {
 pub const SAME_DIAGONAL: f64 = 1e-9;
 
 fn plan_distance(a: [f64; 3], b: [f64; 3]) -> f64 {
-    (b[0] - a[0]).hypot(b[1] - a[1])
+    kentos_num::hypot(b[0] - a[0], b[1] - a[1])
 }
 
 /// The strip of triangles between two lines across the road (the earlier station's `a`, the later's `b`, both left to

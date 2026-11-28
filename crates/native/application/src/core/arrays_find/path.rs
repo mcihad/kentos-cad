@@ -69,7 +69,7 @@ pub(super) fn find(
         return Err(refuse(codes::INVALID_PATH, "Kılavuz seçin.", "path"));
     };
     let start = point_at_s(&path, 0.);
-    if (seed.x - start.x).hypot(seed.y - start.y) > tolerance {
+    if kentos_num::hypot(seed.x - start.x, seed.y - start.y) > tolerance {
         return Err(refuse(
             codes::RECOGNITION_UNSUPPORTED,
             "Seçilen kaynak kılavuzun kayıtlı başlangıcında değil. Başlangıçtaki bloğu kaynak seçin; kılavuz veya blok taşınmadı.",
@@ -91,7 +91,7 @@ pub(super) fn find(
             nearest_s(&path, Vec2::new(p.x, p.y))
         };
         let at = point_at_s(&path, s);
-        if s.is_finite() && (p.x - at.x).hypot(p.y - at.y) <= tolerance {
+        if s.is_finite() && kentos_num::hypot(p.x - at.x, p.y - at.y) <= tolerance {
             stations.push((s, *p));
         }
     }
@@ -182,7 +182,7 @@ pub(super) fn find(
                         unreachable!()
                     };
                     let angle = (actual.rotation - at.rotation).rem_euclid(std::f64::consts::TAU);
-                    if (actual.p.x - at.p.x).hypot(actual.p.y - at.p.y) > tolerance
+                    if kentos_num::hypot(actual.p.x - at.p.x, actual.p.y - at.p.y) > tolerance
                         || angle.min(std::f64::consts::TAU - angle) > 1e-10
                     {
                         continue;

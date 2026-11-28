@@ -216,9 +216,10 @@ GUARDS := "node scripts/arch/deps.mjs" \
 	"python3 scripts/dev/module_deps.py --check" \
 	"python3 scripts/cad/manifest.py --check" \
 	"python3 scripts/dev/removed_paths.py" \
+	"python3 scripts/dev/platform_math.py" \
 	"cargo fmt --all -- --check -l"
 
-guard: ## Derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, biçim (ADR 9400, 9402)
+guard: ## Derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, platform matematiği, biçim (ADR 9400, 9402, 9403)
 	@fail=0; \
 	for step in $(GUARDS); do \
 	  echo "• $$step"; $$step || fail=1; \

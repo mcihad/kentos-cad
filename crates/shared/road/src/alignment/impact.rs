@@ -49,7 +49,7 @@ pub fn foot(line: &Alignment, other: &Alignment, s: f64) -> Option<(f64, f64)> {
     got.nearest.map(|f| (f.at.station, f.offset)).or_else(|| {
         got.beyond
             .map(|(_, f)| f)
-            .filter(|f| (p.x - f.at.x).hypot(p.y - f.at.y) <= 1e-7)
+            .filter(|f| kentos_num::hypot(p.x - f.at.x, p.y - f.at.y) <= 1e-7)
             .map(|f| (f.at.station, 0.0))
     })
 }

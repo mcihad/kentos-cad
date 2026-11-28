@@ -74,7 +74,7 @@ impl Health {
 }
 
 fn len(a: Vec2, b: Vec2) -> f64 {
-    (b.x - a.x).hypot(b.y - a.y)
+    kentos_num::hypot(b.x - a.x, b.y - a.y)
 }
 
 fn finding(
@@ -276,11 +276,11 @@ pub(super) fn inspect(
         let ys: Vec<f64> = centres.iter().map(|c| c.1.y).collect();
         let (x0, x1) = (pick(xs.clone(), 0.1), pick(xs, 0.9));
         let (y0, y1) = (pick(ys.clone(), 0.1), pick(ys, 0.9));
-        let reach = 10.0 * (x1 - x0).hypot(y1 - y0).max(0.1);
+        let reach = 10.0 * kentos_num::hypot(x1 - x0, y1 - y0).max(0.1);
         for (uid, c) in centres.iter().map(|c| (&c.0, &c.1)) {
             let dx = (x0 - c.x).max(c.x - x1).max(0.0);
             let dy = (y0 - c.y).max(c.y - y1).max(0.0);
-            let away = dx.hypot(dy);
+            let away = kentos_num::hypot(dx, dy);
             if away > reach {
                 push(
                     out,

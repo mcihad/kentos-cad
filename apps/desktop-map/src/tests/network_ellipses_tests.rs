@@ -278,7 +278,7 @@ fn etiket_writes_each_ellipse_s_semi_axes_beside_it() {
     assert_eq!(labels.len(), 3);
     for (t, e) in labels.iter().zip(&drawn) {
         // The ellipse drawn 2000 times: its semi-axes in millimetres are the drawn ones over 2000, times 1000.
-        let major = e.major.x.hypot(e.major.y) / 2000.0 * 1000.0;
+        let major = kentos_num::hypot(e.major.x, e.major.y) / 2000.0 * 1000.0;
         assert_eq!(
             t.text,
             format!("a {:.1} · b {:.1} mm", major, major * e.ratio)
@@ -286,7 +286,7 @@ fn etiket_writes_each_ellipse_s_semi_axes_beside_it() {
         assert!((t.height - 2.5 * plot / 1000.0).abs() < 1e-12);
         assert_eq!(t.align, Some(kentos_commands::TextAlign::MiddleLeft));
         assert!(
-            t.p.x > e.c.x + (e.major.x.hypot(e.major.y)),
+            t.p.x > e.c.x + (kentos_num::hypot(e.major.x, e.major.y)),
             "east of the ellipse"
         );
         assert_eq!(t.base.attrs.get("İşaret"), e.base.attrs.get("İşaret"));
@@ -426,7 +426,7 @@ fn a_label_that_would_cover_a_neighbour_goes_to_a_free_place() {
         .expect("N1's ellipse");
     let t = label_of("N1");
     assert_eq!(t.align, Some(kentos_commands::TextAlign::BottomLeft));
-    let d = (n1.major.x.hypot(n1.major.y) + t.height) / 2f64.sqrt();
+    let d = (kentos_num::hypot(n1.major.x, n1.major.y) + t.height) / 2f64.sqrt();
     assert!(
         (t.p.x - (n1.c.x + d)).abs() < 1e-9 && (t.p.y - (n1.c.y + d)).abs() < 1e-9,
         "{:?}",

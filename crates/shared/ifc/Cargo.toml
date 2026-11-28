@@ -9,6 +9,8 @@ publish.workspace = true
 # Pure, like the other shared cores (CLAUDE.md §14): no file system, network or UI. The application gives it its model
 # (the section model's solids, its openings, the drawing's objects and settings) and writes the text it returns.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-contracts = { path = "../contracts", default-features = false }
 # The regulation's data model (sources, levels, decisions, the profile's layers) and its 2D annexes (docs/adr/8062).
 kentos-digital-project = { path = "../digital-project" }

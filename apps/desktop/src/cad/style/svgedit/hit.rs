@@ -171,7 +171,7 @@ impl SvgEditor {
             && !locked
         {
             let mx = (a[0] + c[0]) / 2.0;
-            if (s[0] - mx).hypot(s[1] - (a[1] - 26.0)) <= HANDLE_PX + 1.0 {
+            if kentos_num::hypot(s[0] - mx, s[1] - (a[1] - 26.0)) <= HANDLE_PX + 1.0 {
                 return Hit::Rot;
             }
             for (i, h) in Self::handles(a, c).iter().enumerate() {

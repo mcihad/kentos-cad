@@ -324,7 +324,7 @@ fn path_length(pts: &[V], bulges: Option<&[f64]>, closed: bool) -> f64 {
     bulge_path_edges(pts, bulges, closed)
         .iter()
         .map(|e| match *e {
-            Edge::Seg { a, b } => (b.x - a.x).hypot(b.y - a.y),
+            Edge::Seg { a, b } => kentos_num::hypot(b.x - a.x, b.y - a.y),
             Edge::Arc { r, sweep, .. } => r * sweep.abs(),
         })
         .sum()
@@ -335,7 +335,7 @@ fn path_length(pts: &[V], bulges: Option<&[f64]>, closed: bool) -> f64 {
 fn along_each_other(a: [V; 2], b: [V; 2]) -> Option<(f64, V, f64)> {
     let (dx, dy) = (a[1].x - a[0].x, a[1].y - a[0].y);
     let (ex, ey) = (b[1].x - b[0].x, b[1].y - b[0].y);
-    let (la, lb) = (dx.hypot(dy), ex.hypot(ey));
+    let (la, lb) = (kentos_num::hypot(dx, dy), kentos_num::hypot(ex, ey));
     if la <= 1e-12 || lb <= 1e-12 || (dx * ey - dy * ex).abs() > 1f64.to_radians().sin() * la * lb {
         return None;
     }
@@ -587,7 +587,7 @@ impl Audit<'_> {
                     && !ends.iter().any(|o| {
                         (o.wall, o.end) != (e.wall, e.end)
                             && same_level(o.wall, e.wall)
-                            && (o.at.x - e.at.x).hypot(o.at.y - e.at.y) <= JOIN_TOLERANCE
+                            && kentos_num::hypot(o.at.x - e.at.x, o.at.y - e.at.y) <= JOIN_TOLERANCE
                     })
                     && !bodies.iter().enumerate().any(|(j, b)| {
                         j != e.wall
@@ -649,7 +649,7 @@ impl Audit<'_> {
                 if !same_level(p.wall, q.wall) {
                     continue;
                 }
-                let dist = (q.at.x - p.at.x).hypot(q.at.y - p.at.y);
+                let dist = kentos_num::hypot(q.at.x - p.at.x, q.at.y - p.at.y);
                 if !(dist > JOIN_TOLERANCE && dist <= limits.max_gap) {
                     continue;
                 }

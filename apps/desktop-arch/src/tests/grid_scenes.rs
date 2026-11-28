@@ -290,7 +290,7 @@ mod tests {
             .expect("B-2");
         assert!((b2.rotation - 30f64.to_radians()).abs() < 1e-9);
         // The centre where the click's pixel fell, within a hundredth of a millimetre of the origin.
-        let r = (b2.at.x - E).hypot(b2.at.y - N);
+        let r = kentos_num::hypot(b2.at.x - E, b2.at.y - N);
         assert!((r - 10.0).abs() < 1e-5, "on arc B: {r}");
 
         let mut app = app_with_drawing();
@@ -333,7 +333,7 @@ mod tests {
             })
             .collect();
         assert_eq!(xs.len(), 4);
-        let gap = (xs[1].x - xs[0].x).hypot(xs[1].y - xs[0].y);
+        let gap = kentos_num::hypot(xs[1].x - xs[0].x, xs[1].y - xs[0].y);
         // Its distance where the clicks' pixels fell.
         assert!((gap - 20.0 / 3.0).abs() < 1e-5, "{gap}");
 

@@ -133,7 +133,7 @@ fn known_open(e: &Entity) -> bool {
                 && p.pts
                     .first()
                     .zip(p.pts.last())
-                    .is_none_or(|(a, b)| (a.x - b.x).hypot(a.y - b.y) > EPS)
+                    .is_none_or(|(a, b)| kentos_num::hypot(a.x - b.x, a.y - b.y) > EPS)
         }
         Entity::Ellipse(e) => {
             kentos_geometry_core::geom::arc::sweep(e.t0, e.t1) < std::f64::consts::TAU - 1e-12

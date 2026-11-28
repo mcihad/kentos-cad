@@ -783,7 +783,7 @@ fn refreshing_plan_dimensions_preserves_manual_work_and_reads_the_new_jambs() {
         };
         *d.clone()
     };
-    let length = |d: &DimensionEntity| (d.b.x - d.a.x).hypot(d.b.y - d.a.y);
+    let length = |d: &DimensionEntity| kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y);
     // If the wall or openings row already measures the whole side, the overall row suppresses the duplicate.
     let overall: Vec<_> = members.iter().filter_map(|member| {
         let width = length(&dimension(doc, member.uid));

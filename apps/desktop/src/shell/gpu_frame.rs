@@ -64,7 +64,7 @@ fn join(
 ) {
     let unit = |p: [f64; 2], q: [f64; 2]| {
         let (dx, dy) = (q[0] - p[0], q[1] - p[1]);
-        let l = dx.hypot(dy);
+        let l = kentos_num::hypot(dx, dy);
         (l > 0.0 && l.is_finite()).then(|| [dx / l, dy / l])
     };
     let (Some(d1), Some(d2)) = (unit(a, b), unit(b, c)) else {
@@ -83,7 +83,7 @@ fn join(
     match how {
         LineJoin::Miter if half > 0.0 && 1.0 / half <= MITER_LIMIT => {
             let m = [n1[0] + n2[0], n1[1] + n2[1]];
-            let l = m[0].hypot(m[1]);
+            let l = kentos_num::hypot(m[0], m[1]);
             let tip = [b[0] + m[0] / l * hw / half, b[1] + m[1] / l * hw / half];
             out.push(GlyphQuad::triangle(b, p1, tip, color));
             out.push(GlyphQuad::triangle(b, tip, p2, color));

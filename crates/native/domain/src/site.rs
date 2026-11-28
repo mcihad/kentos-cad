@@ -110,7 +110,7 @@ fn segment_segment(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> (f64, Vec2, Vec2) {
     ];
     pairs
         .into_iter()
-        .map(|(p, q)| ((p.x - q.x).hypot(p.y - q.y), p, q))
+        .map(|(p, q)| (kentos_num::hypot(p.x - q.x, p.y - q.y), p, q))
         .min_by(|x, y| x.0.total_cmp(&y.0))
         // Four pairs: there is always a nearest.
         .unwrap_or((0.0, a, a))
@@ -121,7 +121,9 @@ fn facing(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<(f64, f64)> {
     let (ux, uy) = (b.x - a.x, b.y - a.y);
     let len2 = ux * ux + uy * uy;
     let (vx, vy) = (d.x - c.x, d.y - c.y);
-    if len2 <= 1e-18 || (ux * vy - uy * vx).abs() > 1e-9 * len2.sqrt() * vx.hypot(vy).max(1e-9) {
+    if len2 <= 1e-18
+        || (ux * vy - uy * vx).abs() > 1e-9 * len2.sqrt() * kentos_num::hypot(vx, vy).max(1e-9)
+    {
         return None;
     }
     let t = |p: Vec2| ((p.x - a.x) * ux + (p.y - a.y) * uy) / len2;

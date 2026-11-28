@@ -204,7 +204,7 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
                     dx,
                     dy,
                     dz: oz.zip(*z).map(|(a, b)| a - b),
-                    d: dx.hypot(dy),
+                    d: kentos_num::hypot(dx, dy),
                 });
             }
             None => unmatched.push(name.clone()),

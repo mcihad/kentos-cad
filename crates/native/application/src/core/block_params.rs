@@ -250,7 +250,7 @@ fn derive(
         let value = match parameter {
             BlockParameter::Polar { from, to, .. } => {
                 let (dx, dy) = (to.x - from.x, to.y - from.y);
-                let length = dx.hypot(dy);
+                let length = kentos_num::hypot(dx, dy);
                 if x < 0.0 || !length.is_finite() || length == 0.0 {
                     return Err((name.to_owned(), "kutupsal formülün uzaklığı negatif olamaz; tanımın yönü sonlu ve sıfırdan farklı olmalı".into()));
                 }

@@ -35,7 +35,7 @@ fn distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
         return f64::INFINITY;
     }
     let t = (((p.x - a.x) * x + (p.y - a.y) * y) / den).clamp(0.0, 1.0);
-    (p.x - a.x - x * t).hypot(p.y - a.y - y * t)
+    kentos_num::hypot(p.x - a.x - x * t, p.y - a.y - y * t)
 }
 
 fn points_of(line: &wall::Line, i: usize, closed: bool) -> Option<[Vec2; 2]> {

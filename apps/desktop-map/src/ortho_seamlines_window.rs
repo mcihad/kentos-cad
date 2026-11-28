@@ -475,7 +475,8 @@ impl OrthoSeamlinesWindowApp for App {
                 let mut along = 0.0;
                 for (k, p) in r.seam.iter().enumerate() {
                     if k > 0 {
-                        along += (p[0] - r.seam[k - 1][0]).hypot(p[1] - r.seam[k - 1][1]);
+                        along +=
+                            kentos_num::hypot(p[0] - r.seam[k - 1][0], p[1] - r.seam[k - 1][1]);
                     }
                     rows.push(vec![
                         (k + 1).to_string(),

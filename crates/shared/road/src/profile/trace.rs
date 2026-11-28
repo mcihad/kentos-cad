@@ -44,7 +44,7 @@ pub enum TraceError {
 /// An arc's centre and turn in the drawing from its chord and bulge.
 fn arc(a: [f64; 2], b: [f64; 2], bulge: f64) -> ([f64; 2], f64) {
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-    let chord = dx.hypot(dy);
+    let chord = kentos_num::hypot(dx, dy);
     let turn = 4.0 * bulge.atan();
     let r = chord / (2.0 * (0.5 * turn).sin()).abs();
     let h = r * (0.5 * turn).cos() * turn.signum();

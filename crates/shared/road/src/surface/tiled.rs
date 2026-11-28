@@ -143,7 +143,7 @@ fn circle(t: &[[f64; 3]; 3]) -> Option<([f64; 2], f64)> {
     let (bb, cc) = (b0[0] * b0[0] + b0[1] * b0[1], c0[0] * c0[0] + c0[1] * c0[1]);
     let ux = (c0[1] * bb - b0[1] * cc) / d;
     let uy = (b0[0] * cc - c0[0] * bb) / d;
-    Some(([a[0] + ux, a[1] + uy], ux.hypot(uy)))
+    Some(([a[0] + ux, a[1] + uy], kentos_num::hypot(ux, uy)))
 }
 
 #[derive(Clone, Copy)]

@@ -10,6 +10,8 @@ publish.workspace = true
 # component (crates/model-view-ui) draws what it gives; an adapter fills its input (kentos-ifc's `view` feature for a
 # file). It knows no IFC name: the adapter gives each object its category.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-scene3d = { path = "../scene3d" }
 # The shared ear-clipper for a section's caps (docs/adr/8131); pure and wasm32 as this core.
 kentos-geometry-core = { path = "../geometry-core" }

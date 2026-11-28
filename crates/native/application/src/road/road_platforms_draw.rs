@@ -170,7 +170,7 @@ fn check(
     }
     for l in &r.lines {
         if let Some(to) = l.to
-            && (to[0] - l.from[0]).hypot(to[1] - l.from[1]) > 1e-9
+            && kentos_num::hypot(to[0] - l.from[0], to[1] - l.from[1]) > 1e-9
         {
             objects.push(object(EntityGeometry::Line {
                 a: Vec2 {

@@ -116,7 +116,7 @@ impl Focus {
                     return vec![a, e];
                 }
                 // A chord's sagitta under a two-thousandth of the boundary: smooth at any view that shows it whole.
-                let tol = ((e.x - a.x).hypot(e.y - a.y) / 2000.0).max(1e-6);
+                let tol = (kentos_num::hypot(e.x - a.x, e.y - a.y) / 2000.0).max(1e-6);
                 kentos_geometry_core::tessellate::bulge_path(&[a, e], Some(&[b.bulge]), false, tol)
             }
             Focus::Corner(id) => corner(id).into_iter().collect(),
@@ -217,7 +217,7 @@ fn curve(a: Vec2, e: Vec2, bulge: f64, finer: Option<f64>) -> Vec<Vec2> {
     if bulge == 0.0 {
         return vec![a, e];
     }
-    let tol = ((e.x - a.x).hypot(e.y - a.y) / 2000.0).max(1e-6);
+    let tol = (kentos_num::hypot(e.x - a.x, e.y - a.y) / 2000.0).max(1e-6);
     let tol = finer.map_or(tol, |f| f.min(tol));
     kentos_geometry_core::tessellate::bulge_path(&[a, e], Some(&[bulge]), false, tol)
 }

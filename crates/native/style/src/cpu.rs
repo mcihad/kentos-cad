@@ -334,7 +334,7 @@ fn dot_cover(
             let centre = x - e;
             // A sixty-fourth of a pixel decides a centre the rounding puts on a joint: the next segment draws it.
             if centre >= -JOINT && (centre < len - JOINT || (last && centre <= len + JOINT)) {
-                a = a.max(disc(e.hypot(y)));
+                a = a.max(disc(kentos_num::hypot(e, y)));
             }
         }
         acc += raw * k;
@@ -428,7 +428,7 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         }
     };
     let cap_cover = |x: f64, y: f64, cap: u32| match cap {
-        1 => cover(half_w - x.hypot(y)),
+        1 => cover(half_w - kentos_num::hypot(x, y)),
         2 => cover(half_w - y) * cover(half_w - x),
         _ => cover(half_w - y) * cover(-x),
     };
@@ -438,7 +438,7 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         let a = view.px(seg[0] + b.origin[0], seg[1] + b.origin[1]);
         let e = view.px(seg[2] + b.origin[0], seg[3] + b.origin[1]);
         let d = [e[0] - a[0], e[1] - a[1]];
-        let len = d[0].hypot(d[1]);
+        let len = kentos_num::hypot(d[0], d[1]);
         let dir = if len > 1e-4 {
             [d[0] / len, d[1] / len]
         } else {
@@ -536,7 +536,7 @@ fn joins_of(meta: u32, len: f64, ext: f64, flipped: bool) -> [f64; 4] {
     let mut joins = [0.0; 4];
     if len > ext * reach + 1.0 {
         let unit = |x: f64, y: f64| {
-            let l = x.hypot(y);
+            let l = kentos_num::hypot(x, y);
             [x / l, y / l]
         };
         if cs != 0 {
@@ -993,7 +993,7 @@ fn pattern(st: &Style, p: [f64; 2], k: f64, dpr: f64) -> V4 {
 // ── Shapes (`shapes.wgsl`) ────────────────────────────────────────────────
 
 fn length(p: [f64; 2]) -> f64 {
-    p[0].hypot(p[1])
+    kentos_num::hypot(p[0], p[1])
 }
 
 fn m_box(p: [f64; 2], b: [f64; 2]) -> f64 {

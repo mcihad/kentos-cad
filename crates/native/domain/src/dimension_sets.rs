@@ -169,7 +169,7 @@ fn on_path(w: &WallFields, q: Vec2) -> bool {
         }
         let t = ((q.x - a.x) * dx + (q.y - a.y) * dy) / l2;
         let (px, py) = (a.x + dx * t, a.y + dy * t);
-        (-1e-9..=1.0 + 1e-9).contains(&t) && (q.x - px).hypot(q.y - py) <= 1e-6
+        (-1e-9..=1.0 + 1e-9).contains(&t) && kentos_num::hypot(q.x - px, q.y - py) <= 1e-6
     })
 }
 
@@ -277,7 +277,7 @@ fn follow_sources(
             return turned;
         }
         let (a, b) = (former.pts[k], former.pts[(k + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if l.is_nan() || l <= 0.0 {
             return turned;
         }

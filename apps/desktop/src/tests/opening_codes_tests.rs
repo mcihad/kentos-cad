@@ -106,7 +106,7 @@ fn the_apartment_s_doors_and_windows_get_their_joinery_codes_and_tags_in_one_ste
         let (l, r) = (mid(p[0], p[2]), mid(p[1], p[3]));
         let c = ((l.0 + r.0) / 2.0, (l.1 + r.1) / 2.0);
         let (nx, ny) = (l.0 - r.0, l.1 - r.1);
-        let thick = nx.hypot(ny);
+        let thick = kentos_num::hypot(nx, ny);
         let across = ((t.tag.at.x - c.0) * nx + (t.tag.at.y - c.1) * ny).abs() / thick;
         assert!(
             across > thick / 2.0,
@@ -115,7 +115,7 @@ fn the_apartment_s_doors_and_windows_get_their_joinery_codes_and_tags_in_one_ste
             thick / 2.0
         );
         // Near it: read as its own, not a neighbour's.
-        let far = (t.tag.at.x - c.0).hypot(t.tag.at.y - c.1);
+        let far = kentos_num::hypot(t.tag.at.x - c.0, t.tag.at.y - c.1);
         assert!(far < 2.5, "{} {far:.2} m from its opening", t.tag.text);
     }
     // Clear of each other and of the rooms' tags.

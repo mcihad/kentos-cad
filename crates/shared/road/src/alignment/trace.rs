@@ -64,7 +64,7 @@ pub fn elements_of(points: &[[f64; 2]], bulges: &[f64]) -> Vec<FitElement> {
         .enumerate()
         .map(|(i, w)| {
             let (a, b) = (w[0], w[1]);
-            let chord = (b[0] - a[0]).hypot(b[1] - a[1]);
+            let chord = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
             let bulge = bulges.get(i).copied().unwrap_or(0.0);
             if bulge == 0.0 {
                 return FitElement {
@@ -137,9 +137,9 @@ pub fn circumradius(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
         return f64::INFINITY;
     }
     let (ab, bc, ca) = (
-        (b[0] - a[0]).hypot(b[1] - a[1]),
-        (c[0] - b[0]).hypot(c[1] - b[1]),
-        (a[0] - c[0]).hypot(a[1] - c[1]),
+        kentos_num::hypot(b[0] - a[0], b[1] - a[1]),
+        kentos_num::hypot(c[0] - b[0], c[1] - b[1]),
+        kentos_num::hypot(a[0] - c[0], a[1] - c[1]),
     );
     ab * bc * ca / (2.0 * cross.abs())
 }
@@ -193,14 +193,14 @@ fn misfit(v: [f64; 2], d: [f64; 2], e: [f64; 2], r: f64, points: &[[f64; 2]]) ->
     let half = 0.5 * turn.abs();
     // The bisector inward: the sum of the reversed in direction and the out direction.
     let (bx, by) = (e[0] - d[0], e[1] - d[1]);
-    let bl = bx.hypot(by);
+    let bl = kentos_num::hypot(bx, by);
     let c = [
         v[0] + bx / bl * r / half.cos(),
         v[1] + by / bl * r / half.cos(),
     ];
     points
         .iter()
-        .map(|p| ((p[0] - c[0]).hypot(p[1] - c[1]) - r).powi(2))
+        .map(|p| (kentos_num::hypot(p[0] - c[0], p[1] - c[1]) - r).powi(2))
         .sum()
 }
 
@@ -279,7 +279,7 @@ pub fn best_fit(points: &[[f64; 2]], max_radius: f64) -> Result<Vec<PiInput>, Tr
             let turn = (d0[0] * d1[1] - d0[1] * d1[0])
                 .atan2(d0[0] * d1[0] + d0[1] * d1[1])
                 .abs();
-            let reach = |q: [f64; 2]| (q[0] - v[0]).hypot(q[1] - v[1]);
+            let reach = |q: [f64; 2]| kentos_num::hypot(q[0] - v[0], q[1] - v[1]);
             let room = reach(p[runs[k - 1].0]).min(reach(p[runs[k].1]));
             best_radius(v, d0, d1, &between, room / (0.5 * turn).tan())
         };

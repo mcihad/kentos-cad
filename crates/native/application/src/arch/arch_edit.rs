@@ -771,8 +771,8 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 }
             };
             let from = c.column.at;
-            let still =
-                (to.x - from.x).hypot(to.y - from.y) <= kentos_geometry_core::ops::wall_shift::TIE;
+            let still = kentos_num::hypot(to.x - from.x, to.y - from.y)
+                <= kentos_geometry_core::ops::wall_shift::TIE;
             // The distance kept as it is (docs/adr/8049 §3): only the bond is written.
             if still && !*keep {
                 return Err(fail(

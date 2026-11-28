@@ -486,7 +486,7 @@ impl App {
                     measures(e).1.map_or_else(String::new, |l| format.length(l))
                 ),
                 Entity::Ellipse(el) => {
-                    let major = el.major.x.hypot(el.major.y);
+                    let major = kentos_num::hypot(el.major.x, el.major.y);
                     format!(
                         "Yarı eksenler {} / {}   Uzunluk {}",
                         format.length(major),

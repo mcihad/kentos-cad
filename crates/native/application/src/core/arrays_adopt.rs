@@ -242,7 +242,7 @@ fn check(
             kept += 1;
             continue;
         }
-        let distance = (actual.p.x - at.p.x).hypot(actual.p.y - at.p.y);
+        let distance = kentos_num::hypot(actual.p.x - at.p.x, actual.p.y - at.p.y);
         let angle = (actual.rotation - at.rotation).rem_euclid(std::f64::consts::TAU);
         let angle = angle.min(std::f64::consts::TAU - angle);
         if actual.block != source.block

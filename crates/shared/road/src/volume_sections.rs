@@ -100,7 +100,7 @@ enum Segment {
 impl Segment {
     fn of(a: [f64; 2], b: [f64; 2], bulge: f64) -> Option<Segment> {
         let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-        let chord = dx.hypot(dy);
+        let chord = kentos_num::hypot(dx, dy);
         if chord.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
             return None;
         }
@@ -155,7 +155,7 @@ impl Segment {
 
 /// The unit vector of `v`, or none for a zero vector.
 fn unit(v: [f64; 2]) -> Option<[f64; 2]> {
-    let n = v[0].hypot(v[1]);
+    let n = kentos_num::hypot(v[0], v[1]);
     (n > 0.0).then(|| [v[0] / n, v[1] / n])
 }
 
@@ -787,12 +787,12 @@ mod tests {
         for r in &s.rows {
             // The polygonal ring's chords leave a sliver at its edges: within 0.002 m².
             assert!((r.fill - 20.0).abs() < 2e-3, "{r:?}");
-            let radius = r.at[0].hypot(r.at[1]);
+            let radius = kentos_num::hypot(r.at[0], r.at[1]);
             assert!((radius - 20.0).abs() < 1e-9, "{r:?}");
             // The left end towards the centre (counterclockwise), the right end out.
             assert!(
-                (r.left[0].hypot(r.left[1]) - 10.0).abs() < 1e-9
-                    && (r.right[0].hypot(r.right[1]) - 30.0).abs() < 1e-9,
+                (kentos_num::hypot(r.left[0], r.left[1]) - 10.0).abs() < 1e-9
+                    && (kentos_num::hypot(r.right[0], r.right[1]) - 30.0).abs() < 1e-9,
                 "{r:?}"
             );
         }

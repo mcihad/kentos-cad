@@ -103,7 +103,7 @@ fn carry(doc: &Document, work: &Work) -> Vec<(Slot, OpeningEntity, Carrier)> {
             let Some(m) = centre(&place) else { continue };
             let off = |l: &WallLine| {
                 let p = point_at_s(&l.path, nearest_s(&l.path, m));
-                (p.x - m.x).hypot(p.y - m.y)
+                kentos_num::hypot(p.x - m.x, p.y - m.y)
             };
             let Some((carrier, l)) = cands
                 .iter()
@@ -260,7 +260,7 @@ fn same_kind(a: &WallFields, b: &WallFields) -> bool {
 }
 
 fn close(a: Vec2, b: Vec2) -> bool {
-    (a.x - b.x).hypot(a.y - b.y) <= JOIN_TOLERANCE
+    kentos_num::hypot(a.x - b.x, a.y - b.y) <= JOIN_TOLERANCE
 }
 
 /// `a` with `b` run on from its end (`b` starting where `a` ends).
@@ -581,7 +581,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                             tpath.path().map_or(f64::INFINITY, |tp| {
                                 let s = kentos_geometry_core::ops::path::nearest_s(&tp, q);
                                 let r = kentos_geometry_core::ops::path::point_at_s(&tp, s);
-                                (r.x - q.x).hypot(r.y - q.y)
+                                kentos_num::hypot(r.x - q.x, r.y - q.y)
                             })
                         };
                         d(p.pts[p.pts.len() - 1]) <= d(p.pts[0])

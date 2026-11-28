@@ -416,7 +416,7 @@ pub(super) fn read_rule(
                 let d = child(pp, "Displacement").map(|d| {
                     let x = number(child(d, "DisplacementX")).unwrap_or(0.0);
                     let y = number(child(d, "DisplacementY")).unwrap_or(0.0);
-                    libm::hypot(x, y)
+                    kentos_num::hypot(x, y)
                 });
                 let centred = ax.unwrap_or(0.0) == 0.5
                     && ay.unwrap_or(0.0) == 0.5

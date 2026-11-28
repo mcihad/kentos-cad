@@ -143,7 +143,7 @@ fn class_named(profile: &DataProfile, text: &str) -> Option<usize> {
 }
 
 fn distance(a: Vec2, b: Vec2) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// A point's distance to a segment.

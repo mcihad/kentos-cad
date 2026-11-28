@@ -52,7 +52,8 @@ fn twenty_two_real_vector_pages_embed_the_requested_faces_and_keep_curves_and_te
                         + t * t * t * p[7],
                 ];
                 assert!(
-                    ((point[0] - center[0]).hypot(point[1] - center[1]) - radius).abs() < 0.002,
+                    (kentos_num::hypot(point[0] - center[0], point[1] - center[1]) - radius).abs()
+                        < 0.002,
                     "{} {point:?}",
                     c["name"]
                 );
@@ -84,7 +85,7 @@ fn twenty_two_real_vector_pages_embed_the_requested_faces_and_keep_curves_and_te
                 let a = (20. * x - 10. * y) / 500.;
                 let b = (-4. * x - 8. * y) / 80.;
                 assert!(
-                    (a.hypot(b) - 1.).abs() * 500_f64.sqrt() < 0.002,
+                    (kentos_num::hypot(a, b) - 1.).abs() * 500_f64.sqrt() < 0.002,
                     "ellipse {x} {y}"
                 );
             }
@@ -128,7 +129,10 @@ fn twenty_two_real_vector_pages_embed_the_requested_faces_and_keep_curves_and_te
             for t in [0., 0.5, 1.] {
                 let x = edge.segment[0] * (1. - t) + edge.segment[2] * t - 100.;
                 let y = edge.segment[1] * (1. - t) + edge.segment[3] * t - 227.;
-                assert!((x.hypot(y) - 50.).abs() < 0.002, "rational {x} {y}");
+                assert!(
+                    (kentos_num::hypot(x, y) - 50.).abs() < 0.002,
+                    "rational {x} {y}"
+                );
             }
         }
         let hatch: Vec<_> = page
@@ -166,7 +170,7 @@ fn twenty_two_real_vector_pages_embed_the_requested_faces_and_keep_curves_and_te
                 [edge.segment[2], edge.segment[3]],
             ] {
                 assert!(
-                    ((point[0] - 130.).hypot(point[1] - 97.) - 20.).abs() < 0.002,
+                    (kentos_num::hypot(point[0] - 130., point[1] - 97.) - 20.).abs() < 0.002,
                     "endpoint {point:?}"
                 );
             }
@@ -175,7 +179,7 @@ fn twenty_two_real_vector_pages_embed_the_requested_faces_and_keep_curves_and_te
                 (edge.segment[1] + edge.segment[3]) / 2.,
             ];
             assert!(
-                ((point[0] - 130.).hypot(point[1] - 97.) - 20.).abs() < 0.01,
+                (kentos_num::hypot(point[0] - 130., point[1] - 97.) - 20.).abs() < 0.01,
                 "chord {point:?} {:?}",
                 edge.segment
             );

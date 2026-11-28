@@ -109,10 +109,10 @@ impl Document {
             // The rooms on each side, walking out from the middle of the longest straight segment.
             let side = |sign: f64| -> Option<String> {
                 let (a, b) = pts.windows(2).map(|p| (p[0], p[1])).max_by(|x, y| {
-                    let l = |s: &(Vec2, Vec2)| (s.1.x - s.0.x).hypot(s.1.y - s.0.y);
+                    let l = |s: &(Vec2, Vec2)| kentos_num::hypot(s.1.x - s.0.x, s.1.y - s.0.y);
                     l(x).total_cmp(&l(y))
                 })?;
-                let len = (b.x - a.x).hypot(b.y - a.y);
+                let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
                 if len <= 0.0 {
                     return None;
                 }

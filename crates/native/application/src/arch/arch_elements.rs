@@ -396,7 +396,7 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
             "series",
         )?;
         let (dx, dy) = (s.to.x - s.from.x, s.to.y - s.from.y);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         if len == 0.0 {
             return Err(fail(
                 codes::INVALID_GRID,
@@ -1775,7 +1775,7 @@ fn segment_distance(
     } else {
         0.0
     };
-    (a.x + dx * t - p.x).hypot(a.y + dy * t - p.y)
+    kentos_num::hypot(a.x + dx * t - p.x, a.y + dy * t - p.y)
 }
 
 /// `invalid_roof` for a part that cannot stand where it is given (docs/adr/8044 §6): a chimney or a vent whose middle is

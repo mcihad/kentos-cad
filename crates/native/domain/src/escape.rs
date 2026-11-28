@@ -187,7 +187,7 @@ impl Room {
 
     /// Whether the straight walk from `a` to `b` stays inside it.
     fn sees(&self, a: V, b: V) -> bool {
-        if (a.x - b.x).hypot(a.y - b.y) < 1e-9 {
+        if kentos_num::hypot(a.x - b.x, a.y - b.y) < 1e-9 {
             return true;
         }
         for ring in &self.rings {
@@ -257,7 +257,7 @@ impl Room {
 }
 
 fn unit(v: V) -> Option<V> {
-    let l = v.x.hypot(v.y);
+    let l = kentos_num::hypot(v.x, v.y);
     (l > 1e-12).then(|| V::new(v.x / l, v.y / l))
 }
 
@@ -284,11 +284,11 @@ fn distance_to_segment(p: V, a: V, b: V) -> f64 {
     } else {
         (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
     };
-    (p.x - a.x - t * dx).hypot(p.y - a.y - t * dy)
+    kentos_num::hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
 }
 
 fn dist(a: V, b: V) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// A room's net outline: its inner faces found again from its seed, else its own.

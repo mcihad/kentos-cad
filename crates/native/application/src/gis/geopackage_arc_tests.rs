@@ -67,7 +67,7 @@ fn perimeter(r: &Ring) -> f64 {
     (0..n)
         .map(|i| {
             let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
-            let chord = (b.x - a.x).hypot(b.y - a.y);
+            let chord = kentos_num::hypot(b.x - a.x, b.y - a.y);
             let k = r.bulges.as_ref().map_or(0.0, |v| v[i]);
             let half = 2.0 * k.atan();
             if half == 0.0 {

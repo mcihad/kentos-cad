@@ -15,7 +15,7 @@ use kentos_domain::{Document, Uuid};
 use crate::exchange_check::{places, to_original};
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// Whether the insert read back (`b` in `back`) shows another block than the original (`a` in `doc`).

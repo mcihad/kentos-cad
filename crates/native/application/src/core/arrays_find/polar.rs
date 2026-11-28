@@ -35,7 +35,7 @@ impl<F: FnMut() -> bool> Search<'_, '_, F> {
         {
             return Ok(true);
         }
-        let radius = (self.seed.x - center.x).hypot(self.seed.y - center.y);
+        let radius = kentos_num::hypot(self.seed.x - center.x, self.seed.y - center.y);
         if !radius.is_finite() || radius <= self.tolerance * 2. {
             return Ok(true);
         }
@@ -45,7 +45,7 @@ impl<F: FnMut() -> bool> Search<'_, '_, F> {
             if !self.budget.tick(self.stopped)? {
                 return Ok(false);
             }
-            let r = (p.x - center.x).hypot(p.y - center.y);
+            let r = kentos_num::hypot(p.x - center.x, p.y - center.y);
             if (r - radius).abs() <= self.tolerance {
                 let angle = ((p.y - center.y).atan2(p.x - center.x) - start).rem_euclid(TAU);
                 ring.push((angle, *p));
@@ -109,7 +109,7 @@ impl<F: FnMut() -> bool> Search<'_, '_, F> {
                     }
                     let slot = (angle / TAU * f64::from(count)).round() as usize % count as usize;
                     let pose = &poses[slot];
-                    if (p.x - pose.p.x).hypot(p.y - pose.p.y) > self.tolerance {
+                    if kentos_num::hypot(p.x - pose.p.x, p.y - pose.p.y) > self.tolerance {
                         continue;
                     }
                     let Some(Entity::Insert(actual)) = self

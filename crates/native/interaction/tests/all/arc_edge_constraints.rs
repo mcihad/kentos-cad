@@ -138,7 +138,7 @@ fn horizontal_then_vertical_on_one_line_is_refused_not_collapsed() {
     b.confirm();
     let line = b.newest().clone();
     let length = |e: &kentos_commands::Entity| match e {
-        kentos_commands::Entity::Line(l) => (l.b.x - l.a.x).hypot(l.b.y - l.a.y),
+        kentos_commands::Entity::Line(l) => kentos_num::hypot(l.b.x - l.a.x, l.b.y - l.a.y),
         other => panic!("a line: {other:?}"),
     };
     b.start("constraint");

@@ -74,7 +74,7 @@ impl Surface {
         for w in line.windows(2) {
             let (p, q) = (w[0], w[1]);
             let d = [q[0] - p[0], q[1] - p[1]];
-            let length = d[0].hypot(d[1]);
+            let length = kentos_num::hypot(d[0], d[1]);
             if length == 0.0 {
                 continue;
             }
@@ -96,7 +96,7 @@ impl Surface {
                 let r = [b[0] - a[0], b[1] - a[1]];
                 let denom = d[0] * r[1] - d[1] * r[0];
                 let ap = [a[0] - p[0], a[1] - p[1]];
-                let rl = r[0].hypot(r[1]);
+                let rl = kentos_num::hypot(r[0], r[1]);
                 if denom.abs() <= PARALLEL * length * rl {
                     // Parallel, or so nearly that the crossing is lost in rounding (a line along an edge whose
                     // direction is rounded): on the same line, the edge's ends within the segment are places.

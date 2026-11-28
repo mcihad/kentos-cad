@@ -128,7 +128,7 @@ pub(crate) fn shape_words(shape: &serde_json::Value) -> String {
     if shape["type"] == "LineString" {
         let length: f64 = points
             .windows(2)
-            .map(|w| (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1))
+            .map(|w| kentos_num::hypot(w[1].0 - w[0].0, w[1].1 - w[0].1))
             .sum();
         return format!("{}\u{a0}nokta, {}\u{a0}m", points.len(), decimal(length));
     }

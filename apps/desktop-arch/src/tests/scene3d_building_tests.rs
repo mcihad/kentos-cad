@@ -613,7 +613,7 @@ fn masses_open_in_3d_each_a_body_and_join_a_building_s_bodies_outside_its_ifc_fi
         round
             .positions
             .iter()
-            .all(|q| ((q[0] - 30.0).hypot(q[1] - 8.0) - 3.0).abs() < 1e-6),
+            .all(|q| (kentos_num::hypot(q[0] - 30.0, q[1] - 8.0) - 3.0).abs() < 1e-6),
         "on its circle"
     );
     // Beside the section building: one body more in the view, none more in the file.

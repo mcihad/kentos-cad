@@ -115,7 +115,7 @@ fn deviation(b: &Built, points: &[[f64; 2]]) -> (f64, [f64; 2]) {
         let s = b.core.locate(*p);
         let d = match (&s.nearest, &s.beyond) {
             (Some(f), _) => f.offset.abs(),
-            (None, Some((_, f))) => (p[0] - f.at.x).hypot(p[1] - f.at.y),
+            (None, Some((_, f))) => kentos_num::hypot(p[0] - f.at.x, p[1] - f.at.y),
             _ => 0.0,
         };
         if d > worst.0 {

@@ -61,7 +61,7 @@ pub enum FitError {
 
 fn unit(a: [f64; 2], b: [f64; 2]) -> Option<[f64; 2]> {
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-    let l = dx.hypot(dy);
+    let l = kentos_num::hypot(dx, dy);
     (l > 1e-12).then(|| [dx / l, dy / l])
 }
 

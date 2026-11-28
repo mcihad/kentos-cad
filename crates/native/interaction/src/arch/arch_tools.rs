@@ -659,7 +659,7 @@ impl ColumnTool {
         for (i, (_, ua, ea)) in grids.iter().enumerate() {
             for (_, ub, eb) in &grids[i + 1..] {
                 for p in arch::grid_crossings(ea, eb) {
-                    let d = (p.x - at.x).hypot(p.y - at.y);
+                    let d = kentos_num::hypot(p.x - at.x, p.y - at.y);
                     if d <= reach && best.as_ref().is_none_or(|(b, _)| d < *b) {
                         best = Some((d, [ua.clone(), ub.clone()]));
                     }
@@ -1514,7 +1514,7 @@ impl FlightTool {
         } else {
             self.turned
         };
-        let r = (a.x - c.x).hypot(a.y - c.y);
+        let r = kentos_num::hypot(a.x - c.x, a.y - c.y);
         let t = (a.y - c.y).atan2(a.x - c.x) + sweep;
         Some((
             vec![a, Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())],
@@ -1547,7 +1547,7 @@ impl FlightTool {
             && let Some(h) = self.hover
             && pts
                 .last()
-                .is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
+                .is_none_or(|l| kentos_num::hypot(l.x - h.x, l.y - h.y) > 1e-6)
         {
             if pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
                 pts.pop();
@@ -1784,8 +1784,8 @@ impl FlightTool {
             return;
         };
         let fitted = Vec2::new(end.x, end.y);
-        let delta = (fitted.x - turn.x).hypot(fitted.y - turn.y)
-            - (entered.x - turn.x).hypot(entered.y - turn.y);
+        let delta = kentos_num::hypot(fitted.x - turn.x, fitted.y - turn.y)
+            - kentos_num::hypot(entered.x - turn.x, entered.y - turn.y);
         if delta.abs() <= 1e-6 {
             return;
         }
@@ -1817,7 +1817,7 @@ impl FlightTool {
         let Some(at) = self.pts.get(1).copied().or(self.hover) else {
             return;
         };
-        let r = (at.x - c.x).hypot(at.y - c.y);
+        let r = kentos_num::hypot(at.x - c.x, at.y - c.y);
         if r <= 0.0 {
             return;
         }

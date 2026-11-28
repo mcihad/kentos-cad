@@ -119,7 +119,7 @@ impl Surface {
     pub fn longest_edge(&self, t: usize) -> f64 {
         let p = self.plan(&self.triangles[t]);
         (0..3)
-            .map(|k| (p[k][0] - p[(k + 1) % 3][0]).hypot(p[k][1] - p[(k + 1) % 3][1]))
+            .map(|k| kentos_num::hypot(p[k][0] - p[(k + 1) % 3][0], p[k][1] - p[(k + 1) % 3][1]))
             .fold(0.0, f64::max)
     }
 
@@ -265,7 +265,8 @@ pub(super) fn chain(
             .filter(|&i| {
                 let (a, b, c) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
                 let cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
-                let scale = (b[0] - a[0]).hypot(b[1] - a[1]) * (c[0] - b[0]).hypot(c[1] - b[1]);
+                let scale = kentos_num::hypot(b[0] - a[0], b[1] - a[1])
+                    * kentos_num::hypot(c[0] - b[0], c[1] - b[1]);
                 cross.abs() > 1e-12 * scale.max(1e-300)
             })
             .map(|i| pts[i])

@@ -139,7 +139,7 @@ fn dimensions(app: &App) -> Vec<(f64, String)> {
     doc.entities()
         .filter_map(|e| match e {
             kentos_commands::Entity::Dimension(d) => Some((
-                (d.b.x - d.a.x).hypot(d.b.y - d.a.y),
+                kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y),
                 d.base.layer_id.clone(),
             )),
             _ => None,

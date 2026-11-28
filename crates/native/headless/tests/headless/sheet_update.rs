@@ -424,7 +424,7 @@ fn the_same_parcels_at_1_500_1_1000_and_1_5000_read_back_at_their_scales_and_gro
         let edges = page
             .segments
             .iter()
-            .filter(|s| ((s[2] - s[0]).hypot(s[3] - s[1]) - edge).abs() < 0.005)
+            .filter(|s| (kentos_num::hypot(s[2] - s[0], s[3] - s[1]) - edge).abs() < 0.005)
             .count();
         assert!(
             edges > 0,

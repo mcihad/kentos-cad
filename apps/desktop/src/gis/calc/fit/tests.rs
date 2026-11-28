@@ -155,7 +155,7 @@ fn named(app: &App, layer: &str, name: &str) -> kentos_commands::Vec2 {
 
 fn gap(app: &App, name: &str) -> f64 {
     let (a, b) = (named(app, "yerel", name), named(app, "tm", name));
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// The summary's first line's m0 in millimetres.
@@ -259,7 +259,7 @@ fn copies_are_fitted_and_selected() {
         });
     let tm = named(&app, "tm", "P1");
     let p = copied_p1.expect("P1's copy, selected");
-    assert!((p.x - tm.x).hypot(p.y - tm.y) < 0.01);
+    assert!(kentos_num::hypot(p.x - tm.x, p.y - tm.y) < 0.01);
     assert!(last_said(&app).starts_with("Vektör oturtma: 10 nesnenin kopyası Helmert"));
 }
 
@@ -672,7 +672,10 @@ fn kaucuk_levha_meets_every_link_in_one_step() {
     assert_eq!(app.dialog, None, "the window closes");
     assert!(worst(&app) < 1e-6, "{}", worst(&app));
     let held = named(&app, "yerel", "P3");
-    assert!((held.x - p3.x).hypot(held.y - p3.y) < 1e-6, "P3 stays");
+    assert!(
+        kentos_num::hypot(held.x - p3.x, held.y - p3.y) < 1e-6,
+        "P3 stays"
+    );
     assert!(gap(&app, "P5") > 0.1, "the blunder is no link");
     assert!(
         logged(

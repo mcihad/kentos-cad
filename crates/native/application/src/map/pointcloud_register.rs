@@ -984,7 +984,7 @@ pub(crate) fn registered_from(
         let mut s = Sums::default();
         for p in points {
             let (u, v) = (p[0] - cx, p[1] - cy);
-            if u.abs() <= radius && v.abs() <= radius && u.hypot(v) <= radius {
+            if u.abs() <= radius && v.abs() <= radius && kentos_num::hypot(u, v) <= radius {
                 s.add(u, v, p[2]);
             }
         }

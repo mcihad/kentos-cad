@@ -232,7 +232,7 @@ pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
         });
         out.push(format!(
             "{point} kabul noktası bu yerden {:.1} mm uzakta{dz}.",
-            dx.hypot(dy) * 1000.0
+            kentos_num::hypot(dx, dy) * 1000.0
         ));
         // Docs/adr/4520: against the user's tolerance.
         match p.beyond {

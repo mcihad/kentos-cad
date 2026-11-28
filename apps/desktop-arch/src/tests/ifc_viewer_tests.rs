@@ -614,7 +614,7 @@ fn the_section_building_s_file_opens_whole_and_chooses_with_the_plan() {
             .parse()
             .expect("a number");
         assert!(
-            (length - (q.x - p.x).hypot(q.y - p.y)).abs() < 1e-6,
+            (length - kentos_num::hypot(q.x - p.x, q.y - p.y)).abs() < 1e-6,
             "{length}"
         );
     }

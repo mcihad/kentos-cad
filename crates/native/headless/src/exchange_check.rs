@@ -112,7 +112,7 @@ fn heights(e: &Entity) -> (Vec<Option<f64>>, Vec<Option<f64>>) {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {

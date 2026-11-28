@@ -19,7 +19,7 @@
       "op": "crsPointScale"
     },
     {
-      "answer": 1.000201911341204,
+      "answer": 1.0002019113412037,
       "args": [
         {
           "centralMeridian": 30,
@@ -91,7 +91,7 @@
       "op": "crsPointScale"
     },
     {
-      "answer": 0.999601769042499,
+      "answer": 0.9996017690424988,
       "args": [
         {
           "centralMeridian": 33,
@@ -1462,14 +1462,14 @@
     },
     {
       "answer": {
-        "ellipsoidArea": 1254.411319994045,
+        "ellipsoidArea": 1254.4113199940452,
         "ellipsoidLength": 125.5523697486604,
-        "groundArea": 1254.804933522039,
+        "groundArea": 1254.8049335220392,
         "groundLength": 125.57206633235486,
         "heightFactor": 0.9998431451813791,
         "planeArea": 1256.6370614359173,
         "planeLength": 125.66370614359172,
-        "scale": 1.000886772536483
+        "scale": 1.0008867725364827
       },
       "args": [
         {

@@ -53,7 +53,7 @@ fn distance(p: V, (a, b): (V, V)) -> f64 {
     } else {
         0.0
     };
-    (p.x - a.x - dx * t).hypot(p.y - a.y - dy * t)
+    kentos_num::hypot(p.x - a.x - dx * t, p.y - a.y - dy * t)
 }
 
 /// How much of `sides` no railing of `level` guards, metres: walked every [`STEP`], a point guarded when a railing's line
@@ -80,7 +80,7 @@ fn unguarded(doc: &Document, level: Option<&str>, sides: &[(Vec<V>, bool)]) -> f
             pts.push(first);
         }
         for w in pts.windows(2) {
-            let l = (w[1].x - w[0].x).hypot(w[1].y - w[0].y);
+            let l = kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y);
             let n = (l / STEP).ceil().max(1.0) as usize;
             for k in 0..n {
                 let t = (k as f64 + 0.5) / n as f64;

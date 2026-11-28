@@ -145,7 +145,7 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
         match second.iter().find(|(n, ..)| n == name) {
             Some((_, sx, sy, _)) => {
                 let (dx, dy) = (sx - x, sy - y);
-                let d = dx.hypot(dy);
+                let d = kentos_num::hypot(dx, dy);
                 pairs.push(OrthoPair {
                     name: name.clone(),
                     dx,

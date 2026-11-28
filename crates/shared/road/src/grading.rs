@@ -231,7 +231,7 @@ pub fn ring_of(p: &Platform) -> Result<Vec<[f64; 2]>, GradingError> {
 /// The outward square of edge a→b of a counterclockwise ring.
 fn outward(a: [f64; 2], b: [f64; 2]) -> [f64; 2] {
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-    let l = dx.hypot(dy);
+    let l = kentos_num::hypot(dx, dy);
     [dy / l, -dx / l]
 }
 
@@ -332,12 +332,12 @@ pub fn grade_told(
         } else {
             // Straight or reflex: one line along the bisector.
             let b = [n1[0] + n2[0], n1[1] + n2[1]];
-            let l = b[0].hypot(b[1]);
+            let l = kentos_num::hypot(b[0], b[1]);
             let d = if l > 1e-12 { [b[0] / l, b[1] / l] } else { n1 };
             push(here, d, i, true);
         }
         // Along the edge after the corner.
-        let length = (next[0] - here[0]).hypot(next[1] - here[1]);
+        let length = kentos_num::hypot(next[0] - here[0], next[1] - here[1]);
         let k = (length / p.step).ceil() as usize;
         for j in 1..k {
             let t = j as f64 / k as f64;
@@ -399,7 +399,7 @@ pub fn grade_told(
     ];
     for l in &graded.lines {
         if let Some(d) = l.daylight
-            && (d[0] - l.from[0]).hypot(d[1] - l.from[1]) > 1e-9
+            && kentos_num::hypot(d[0] - l.from[0], d[1] - l.from[1]) > 1e-9
         {
             breaklines.push(Breakline {
                 points: vec![l.from, d],

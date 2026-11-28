@@ -170,7 +170,7 @@ fn places(items: &[ArrayItem], limit: usize) -> String {
 fn spacing(layout: &ArrayLayout) -> f64 {
     match *layout {
         ArrayLayout::Line { count, dx, dy, fit } => {
-            dx.hypot(dy)
+            kentos_num::hypot(dx, dy)
                 / if fit {
                     count.saturating_sub(1).max(1) as f64
                 } else {
@@ -434,7 +434,10 @@ impl App {
                 if let ArrayLayout::Polar { center, .. } = plan.array.layout {
                     body = body.push(label::caption(format!(
                         "Yarıçap (blok taban noktasından): {}",
-                        f.length((plan.array.p.x - center.x).hypot(plan.array.p.y - center.y))
+                        f.length(kentos_num::hypot(
+                            plan.array.p.x - center.x,
+                            plan.array.p.y - center.y
+                        ))
                     )));
                 }
                 body = body.push(label::caption(format!(

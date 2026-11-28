@@ -142,7 +142,7 @@ fn the_length_in_space_is_the_arc_length() {
     let simpson = |a: f64, b: f64| {
         let m = 20_000;
         let h = (b - a) / m as f64;
-        let f = |s: f64| v.at(s).unwrap().1.hypot(1.0);
+        let f = |s: f64| kentos_num::hypot(v.at(s).unwrap().1, 1.0);
         (0..=m)
             .map(|i| {
                 f(a + i as f64 * h)
@@ -178,7 +178,7 @@ fn the_length_in_space_is_the_arc_length() {
         let c = &flat.curves[0];
         let m = 20_000;
         let h = (c.end[0] - c.start[0]) / m as f64;
-        let f = |s: f64| flat.at(s).unwrap().1.hypot(1.0);
+        let f = |s: f64| kentos_num::hypot(flat.at(s).unwrap().1, 1.0);
         let simpson = (0..=m)
             .map(|i| {
                 f(c.start[0] + i as f64 * h)

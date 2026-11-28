@@ -397,7 +397,7 @@ impl BlockAction {
 pub const MAX_DYNAMIC_ITEMS: usize = 256;
 
 fn distance(a: Vec2, b: Vec2) -> f64 {
-    (b.x - a.x).hypot(b.y - a.y)
+    kentos_num::hypot(b.x - a.x, b.y - a.y)
 }
 
 fn finite(p: Vec2) -> bool {

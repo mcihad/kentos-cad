@@ -182,7 +182,7 @@ fn v(p: [f64; 2]) -> Vec2 {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// A pipe's plan, the same path the slope and cover are measured along: a line's segment, a polyline's segments and
@@ -398,7 +398,7 @@ fn closest(a: &Edge, b: &Edge) -> (f64, Vec2, Vec2) {
 /// segment: (foot on the segment, place on the arc).
 fn normal_feet(s0: Vec2, s1: Vec2, c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<(Vec2, Vec2)> {
     let (dx, dy) = (s1.x - s0.x, s1.y - s0.y);
-    let l = dx.hypot(dy);
+    let l = kentos_num::hypot(dx, dy);
     if l == 0.0 {
         return Vec::new();
     }

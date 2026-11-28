@@ -38,7 +38,7 @@ pub fn flatten(points: &[[f64; 2]], bulges: &[f64], closed: bool) -> Vec<[f64; 2
     for i in 0..edges {
         let (a, b) = (points[i], points[(i + 1) % n]);
         let bulge = bulges.get(i).copied().unwrap_or(0.0);
-        let chord = (b[0] - a[0]).hypot(b[1] - a[1]);
+        let chord = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
         if bulge.abs() > 1e-12 && chord > 0.0 {
             let sweep = 4.0 * bulge.atan();
             let r = chord / (2.0 * (0.5 * sweep).sin().abs());
@@ -123,7 +123,7 @@ pub struct Network {
 }
 
 fn dist(a: [f64; 2], b: [f64; 2]) -> f64 {
-    (a[0] - b[0]).hypot(a[1] - b[1])
+    kentos_num::hypot(a[0] - b[0], a[1] - b[1])
 }
 
 /// The nearest point of a polyline to `p`: its distance, the length along it and the point.
@@ -157,7 +157,7 @@ fn crossing(
     let (rx, ry) = (a1[0] - a0[0], a1[1] - a0[1]);
     let (sx, sy) = (b1[0] - b0[0], b1[1] - b0[1]);
     let den = rx * sy - ry * sx;
-    if den.abs() <= 1e-15 * (rx.hypot(ry) * sx.hypot(sy)).max(1e-300) {
+    if den.abs() <= 1e-15 * (kentos_num::hypot(rx, ry) * kentos_num::hypot(sx, sy)).max(1e-300) {
         return None;
     }
     let (qx, qy) = (b0[0] - a0[0], b0[1] - a0[1]);
@@ -564,7 +564,10 @@ mod tests {
             exact - length >= 0.0 && exact - length <= exact * SAG / (3.0 * 10.0) * 1.01,
             "{length} vs {exact}"
         );
-        assert!(pts.iter().all(|p| (p[0].hypot(p[1]) - 10.0).abs() < 1e-9));
+        assert!(
+            pts.iter()
+                .all(|p| (kentos_num::hypot(p[0], p[1]) - 10.0).abs() < 1e-9)
+        );
     }
 
     #[test]

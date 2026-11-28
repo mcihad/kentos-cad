@@ -385,14 +385,14 @@ impl SvgEditor {
 
     /// Whether a move, scale or turn has begun: the pointer has travelled a few pixels since the press.
     fn travelled(&self, p0: Pt, moved: bool, p: Pt) -> bool {
-        moved || (p[0] - p0[0]).hypot(p[1] - p0[1]) * self.camera.zoom >= DRAG_PX
+        moved || kentos_num::hypot(p[0] - p0[0], p[1] - p0[1]) * self.camera.zoom >= DRAG_PX
     }
 
     fn moved(&mut self, s: [f64; 2], shift: bool, alt: bool) {
         self.draw.shift = shift;
         if let Some(press) = &mut self.press
             && !press.travelled
-            && (s[0] - press.s[0]).hypot(s[1] - press.s[1]) > CLICK_SLOP_PX
+            && kentos_num::hypot(s[0] - press.s[0], s[1] - press.s[1]) > CLICK_SLOP_PX
         {
             press.travelled = true;
         }
@@ -589,7 +589,7 @@ impl SvgEditor {
         };
         let double = self.last_click.as_ref().is_some_and(|c| {
             press.at.duration_since(c.at) <= DOUBLE
-                && (press.s[0] - c.s[0]).hypot(press.s[1] - c.s[1]) <= CLICK_SLOP_PX
+                && kentos_num::hypot(press.s[0] - c.s[0], press.s[1] - c.s[1]) <= CLICK_SLOP_PX
         });
         if double {
             self.last_click = None;

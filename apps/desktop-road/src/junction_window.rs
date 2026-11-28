@@ -1222,8 +1222,8 @@ impl canvas::Program<Message> for Crossing<'_> {
             .iter()
             .flat_map(|q| {
                 [
-                    (q.on_a.x - r.x).hypot(q.on_a.y - r.y),
-                    (q.on_b.x - r.x).hypot(q.on_b.y - r.y),
+                    kentos_num::hypot(q.on_a.x - r.x, q.on_a.y - r.y),
+                    kentos_num::hypot(q.on_b.x - r.x, q.on_b.y - r.y),
                 ]
             })
             .fold(

@@ -137,12 +137,9 @@ fn independent_publication_cases_keep_order_names_physics_and_atomic_delivery() 
                         );
                         for length in [100., fx["markers"][id.as_str().unwrap()].as_f64().unwrap()]
                         {
-                            assert!(
-                                page.segments
-                                    .iter()
-                                    .any(|p| ((p[2] - p[0]).hypot(p[3] - p[1]) - length).abs()
-                                        < 0.002)
-                            );
+                            assert!(page.segments.iter().any(|p| {
+                                (kentos_num::hypot(p[2] - p[0], p[3] - p[1]) - length).abs() < 0.002
+                            }));
                         }
                     }
                 }

@@ -99,7 +99,7 @@ fn off_segment(p: Vec2, [a, b]: [Vec2; 2]) -> f64 {
     } else {
         0.0
     };
-    (p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t))
+    kentos_num::hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /// A wall's faces as offsets to its path's left: its left face, its right face.
@@ -276,7 +276,7 @@ impl Overlay {
                 (DistanceTo::Grid, _, Some(x)) => (v(x.from), v(x.to), x.distance),
                 _ => continue,
             };
-            let length = (at.x - from.x).hypot(at.y - from.y);
+            let length = kentos_num::hypot(at.x - from.x, at.y - from.y);
             let mut text_at = Vec2::new((from.x + at.x) / 2.0, (from.y + at.y) / 2.0);
             if length > 1e-9 {
                 text_at = self.dimension(from, at, 0.0, cx);
@@ -431,7 +431,7 @@ impl Overlay {
         let text_at = self.dimension(a, b, offset, cx);
         let anchor = anchor_of(l.start_free, l.end_free, choices.anchor(uid, g.edge));
         // The marks on the dimension line's ends, `offset` to the left of the edge, clear of the wall's own grips.
-        let length = (b.x - a.x).hypot(b.y - a.y);
+        let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
         let on_line = |p: Vec2| {
             if length > 1e-12 {
                 Vec2::new(
@@ -971,7 +971,7 @@ pub fn make_permanent(switch: crate::temporary_refs::Switch, cx: &mut Context<'_
     let crate::temporary_refs::Switch::Permanent { from, to } = switch else {
         return;
     };
-    let length = (to.x - from.x).hypot(to.y - from.y);
+    let length = kentos_num::hypot(to.x - from.x, to.y - from.y);
     if length <= 1e-9 {
         return;
     }

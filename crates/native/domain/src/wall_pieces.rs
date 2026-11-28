@@ -56,7 +56,7 @@ pub fn reach(e: &Entity) -> Option<Box4> {
             let q = &w.pts[(i + 1) % n];
             // The arc lies within its chord's box grown by its sagitta (|bulge| half chords), and that by the radius
             // when it bulges past a half circle.
-            let half = ((q.x - p.x).hypot(q.y - p.y)) / 2.0;
+            let half = (kentos_num::hypot(q.x - p.x, q.y - p.y)) / 2.0;
             let sagitta = bulge.abs() * half;
             let radius = half * (1.0 + bulge * bulge) / (2.0 * bulge.abs());
             let out = sagitta.max(radius) + 1e-9;

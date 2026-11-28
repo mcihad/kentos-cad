@@ -101,7 +101,10 @@ fn a_round_mass_is_round_and_a_mass_without_its_storey_stands_on_zero() {
     let r = &s.rings[0];
     assert!(r.len() > 16, "the arc in many points: {}", r.len());
     for p in r {
-        assert!((p.x.hypot(p.y) - 3.0).abs() < 1e-6, "on the circle: {p:?}");
+        assert!(
+            (kentos_num::hypot(p.x, p.y) - 3.0).abs() < 1e-6,
+            "on the circle: {p:?}"
+        );
     }
 }
 

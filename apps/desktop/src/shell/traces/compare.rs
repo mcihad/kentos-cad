@@ -137,7 +137,7 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
         let have = [got.view_center[0] - ox, got.view_center[1] - oy];
         check(
             "viewCenter",
-            (have[0] - wx).hypot(have[1] - wy) <= trace.click_tolerance,
+            kentos_num::hypot(have[0] - wx, have[1] - wy) <= trace.click_tolerance,
             format!("{have:?}"),
             format!("{:?} (±{} m)", [wx, wy], trace.click_tolerance),
         );
@@ -149,7 +149,10 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
         let same = got.named_views.len() == want.len()
             && got.named_views.iter().zip(want).all(|(v, w)| {
                 v.name == w.name
-                    && (v.center.x - ox - w.center[0]).hypot(v.center.y - oy - w.center[1]) <= t
+                    && kentos_num::hypot(
+                        v.center.x - ox - w.center[0],
+                        v.center.y - oy - w.center[1],
+                    ) <= t
                     && (v.width - w.width).abs() <= t
                     && (v.height - w.height).abs() <= t
             });
@@ -178,7 +181,9 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
     }
     // Object tracking (docs/adr/0085): points within the click tolerance, angles exact.
     let rel = |p: [f64; 2]| [p[0] - trace.view.center[0], p[1] - trace.view.center[1]];
-    let near = |a: [f64; 2], b: [f64; 2]| (a[0] - b[0]).hypot(a[1] - b[1]) <= trace.click_tolerance;
+    let near = |a: [f64; 2], b: [f64; 2]| {
+        kentos_num::hypot(a[0] - b[0], a[1] - b[1]) <= trace.click_tolerance
+    };
     if let Some(want) = &expect.track_points {
         let have: Vec<[f64; 2]> = got.track_points.iter().map(|&p| rel(p)).collect();
         check(
@@ -336,7 +341,9 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             .map(|p| [p[0] - trace.view.center[0], p[1] - trace.view.center[1]]);
         let same = match (have, want) {
             (None, None) => true,
-            (Some(h), Some(w)) => (h[0] - w[0]).hypot(h[1] - w[1]) <= trace.click_tolerance,
+            (Some(h), Some(w)) => {
+                kentos_num::hypot(h[0] - w[0], h[1] - w[1]) <= trace.click_tolerance
+            }
             _ => false,
         };
         check(
@@ -377,7 +384,7 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
                     && w.side.as_deref().is_none_or(|s| s == side)
                     && w.center.is_none_or(|wc| {
                         at.is_some_and(|h| {
-                            (h[0] - wc[0]).hypot(h[1] - wc[1]) <= trace.click_tolerance
+                            kentos_num::hypot(h[0] - wc[0], h[1] - wc[1]) <= trace.click_tolerance
                         })
                     })
             }
@@ -488,7 +495,7 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
                         && match (h.at, w.at) {
                             (None, None) => true,
                             (Some(a), Some(b)) => {
-                                (a.x - b[0]).hypot(a.y - b[1]) <= trace.click_tolerance
+                                kentos_num::hypot(a.x - b[0], a.y - b[1]) <= trace.click_tolerance
                             }
                             _ => false,
                         }
@@ -704,7 +711,7 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     // A circle's or an arc's centre and radius: from clicks, within the click tolerance.
     if let Some([wx, wy]) = want.center {
         let have = seen.center.map(|[x, y]| [x - ox, y - oy]);
-        if !have.is_some_and(|[x, y]| (x - wx).hypot(y - wy) <= trace.click_tolerance) {
+        if !have.is_some_and(|[x, y]| kentos_num::hypot(x - wx, y - wy) <= trace.click_tolerance) {
             bad.push(format!(
                 "{name}.center: {have:?}, beklenen {:?} (±{} m)",
                 [wx, wy],
@@ -726,7 +733,7 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
         // Clicked points come from screen pixels: within the trace's tolerance.
         let near = pts.len() == points.len()
             && pts.iter().zip(points).all(|([x, y], [wx, wy])| {
-                (x - ox - wx).hypot(y - oy - wy) <= trace.click_tolerance
+                kentos_num::hypot(x - ox - wx, y - oy - wy) <= trace.click_tolerance
             });
         if !near {
             let relative: Vec<[f64; 2]> = pts.iter().map(|[x, y]| [x - ox, y - oy]).collect();

@@ -39,7 +39,7 @@ fn zincir_joins_the_chain_of_the_object_clicked_and_says_where_it_stopped() {
         panic!("line 2 became the polyline");
     };
     let pts: Vec<[f64; 2]> = p.pts.iter().map(|q| rel(*q)).collect();
-    let near = |a: [f64; 2], w: [f64; 2]| (a[0] - w[0]).hypot(a[1] - w[1]) < 1e-9;
+    let near = |a: [f64; 2], w: [f64; 2]| kentos_num::hypot(a[0] - w[0], a[1] - w[1]) < 1e-9;
     let want = [[-25.0, -5.0], [-15.0, -5.0], [-5.0, 0.0], [5.0, 0.0]];
     assert!(
         pts.len() == 4 && pts.iter().zip(want).all(|(a, w)| near(*a, w)),

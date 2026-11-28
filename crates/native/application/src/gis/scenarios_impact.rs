@@ -282,7 +282,7 @@ fn nearest_of(
     }
     let mut best = ([p.x, p.y], f64::INFINITY);
     for q in &t.points {
-        let d = (q.x - p.x).hypot(q.y - p.y);
+        let d = kentos_num::hypot(q.x - p.x, q.y - p.y);
         if d < best.1 {
             best = ([q.x, q.y], d);
         }
@@ -424,7 +424,7 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
             if n[2] == 0.0 {
                 return None;
             }
-            let slope = n[0].hypot(n[1]) / n[2].abs() * 100.0;
+            let slope = kentos_num::hypot(n[0], n[1]) / n[2].abs() * 100.0;
             let up = if n[2] > 0.0 {
                 [n[0], n[1]]
             } else {

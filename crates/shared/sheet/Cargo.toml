@@ -7,6 +7,8 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 # The project's work mode and type (`Workspace`, `ProjectType`): the profiles and the template
 # gallery read the project's own types, never a copy of them.
 kentos-contracts = { path = "../contracts", default-features = false }

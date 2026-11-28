@@ -133,8 +133,8 @@ fn coord_json(c: &Coord) -> J {
 fn arc_bulge(a: &Coord, m: &Coord, b: &Coord) -> Option<f64> {
     let (ux, uy) = (a.x - m.x, a.y - m.y);
     let (vx, vy) = (b.x - m.x, b.y - m.y);
-    let lu = ux.hypot(uy);
-    let lv = vx.hypot(vy);
+    let lu = kentos_num::hypot(ux, uy);
+    let lv = kentos_num::hypot(vx, vy);
     // Counter-clockwise a → m → b turns left: (m − a) × (b − a), which is v × u.
     let turn = vx * uy - vy * ux;
     let under = lu * lv - (ux * vx + uy * vy);

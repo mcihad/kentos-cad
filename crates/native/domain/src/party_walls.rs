@@ -67,7 +67,7 @@ impl Document {
                 continue;
             }
             let (a, b) = (e.a, e.b);
-            let len = (b.x - a.x).hypot(b.y - a.y);
+            let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
             if len <= 2.0 * CORNER {
                 continue;
             }

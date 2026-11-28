@@ -328,7 +328,7 @@ pub(crate) fn objects(doc: &kentos_domain::Document, out: &TerrainsCutFilled) ->
         let s = &out.sections[k / 2];
         let [l, r] = s.ends;
         let (from, to) = if k % 2 == 0 { (r, l) } else { (l, r) };
-        let len = (to[0] - from[0]).hypot(to[1] - from[1]);
+        let len = kentos_num::hypot(to[0] - from[0], to[1] - from[1]);
         let out_way = if len > 0.0 {
             [(to[0] - from[0]) / len, (to[1] - from[1]) / len]
         } else {

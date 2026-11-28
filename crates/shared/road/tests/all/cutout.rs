@@ -134,7 +134,7 @@ fn cutout_timing() {
         .collect();
     for p in line.windows(2) {
         let (dx, dy) = (p[1][0] - p[0][0], p[1][1] - p[0][1]);
-        let l = dx.hypot(dy);
+        let l = kentos_num::hypot(dx, dy);
         let (nx, ny) = (-dy / l * 7.0, dx / l * 7.0);
         let a = [p[0][0] + nx, p[0][1] + ny, 0.0];
         let b = [p[0][0] - nx, p[0][1] - ny, 0.0];

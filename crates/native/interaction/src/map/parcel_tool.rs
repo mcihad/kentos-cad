@@ -50,7 +50,7 @@ fn near(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    (p.x - (a.x + t * dx)).hypot(p.y - (a.y + t * dy))
+    kentos_num::hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
 }
 
 fn m2(v: f64) -> String {

@@ -327,7 +327,7 @@ fn nearest(areas: &[Area], c: [f64; 2]) -> usize {
                 } else {
                     0.0
                 };
-                (a.x + dx * t - c[0]).hypot(a.y + dy * t - c[1])
+                kentos_num::hypot(a.x + dx * t - c[0], a.y + dy * t - c[1])
             })
             .fold(f64::INFINITY, f64::min)
     };
@@ -351,7 +351,7 @@ fn between(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> bool {
     let (vx, vy) = (b[0] - a[0], b[1] - a[1]);
     let len2 = ux * ux + uy * uy;
     if len2 == 0.0 {
-        return vx.hypot(vy) <= STRAIGHT;
+        return kentos_num::hypot(vx, vy) <= STRAIGHT;
     }
     let t = (vx * ux + vy * uy) / len2;
     0.0 < t && t < 1.0 && (ux * vy - uy * vx).abs() / len2.sqrt() <= STRAIGHT

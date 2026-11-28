@@ -57,7 +57,7 @@ fn a_pad_above_a_flat_terrain_is_filled_to_its_closed_form() {
     for l in &g.lines {
         let d = l.daylight.expect("meets");
         assert!(
-            ((d[0] - l.from[0]).hypot(d[1] - l.from[1]) - 4.0).abs() < 1e-9,
+            (kentos_num::hypot(d[0] - l.from[0], d[1] - l.from[1]) - 4.0).abs() < 1e-9,
             "{l:?}"
         );
         assert!((d[2] - 10.0).abs() < 1e-9);

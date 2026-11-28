@@ -184,7 +184,7 @@ fn frame(bodies: &[&Vec<Vec2>]) -> Option<Frame> {
         let n = ring.len();
         for i in 0..n {
             let (a, b) = (ring[i], ring[(i + 1) % n]);
-            let l = (b.x - a.x).hypot(b.y - a.y);
+            let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
             if best.is_none_or(|(bl, _)| l > bl + 1e-9) {
                 best = Some((l, Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)));
             }
@@ -300,8 +300,8 @@ fn refresh_interior(doc: &mut Document, scope: &str, fresh: Vec<Entity>) -> Resu
             continue;
         };
         let distance = |dim: &DimensionEntity| {
-            (dim.a.x - next.a.x).hypot(dim.a.y - next.a.y)
-                + (dim.b.x - next.b.x).hypot(dim.b.y - next.b.y)
+            kentos_num::hypot(dim.a.x - next.a.x, dim.a.y - next.a.y)
+                + kentos_num::hypot(dim.b.x - next.b.x, dim.b.y - next.b.y)
         };
         if let Some((index, _)) = old
             .iter()

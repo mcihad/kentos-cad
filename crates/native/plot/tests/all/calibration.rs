@@ -34,7 +34,10 @@ fn twenty_physical_calibration_pages_match_model_and_paper_rulers() {
                         .all(|(a, b)| (a - b).abs() < 0.002)
                 })
                 .map(|line| {
-                    (line.segment[2] - line.segment[0]).hypot(line.segment[3] - line.segment[1])
+                    kentos_num::hypot(
+                        line.segment[2] - line.segment[0],
+                        line.segment[3] - line.segment[1],
+                    )
                 })
                 .collect();
             assert!(
@@ -105,7 +108,8 @@ fn the_calibration_template_keeps_100_mm_marks_and_a_bound_1_to_50_view_on_every
         ] {
             assert!(pages[0].ink.iter().any(|p| {
                 p.color.iter().zip(rgb).all(|(a, b)| (a - b).abs() < 0.002)
-                    && ((p.segment[2] - p.segment[0]).hypot(p.segment[3] - p.segment[1]) - 100.)
+                    && (kentos_num::hypot(p.segment[2] - p.segment[0], p.segment[3] - p.segment[1])
+                        - 100.)
                         .abs()
                         < 0.002
             }));

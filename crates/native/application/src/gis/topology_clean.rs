@@ -267,7 +267,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 
 /// How far a vertex moved, metres.
 fn far(a: Vec2, b: Vec2) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 /// The vertices of a shape's paths, as the core takes them.

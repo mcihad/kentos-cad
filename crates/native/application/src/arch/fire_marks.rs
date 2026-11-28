@@ -99,7 +99,7 @@ pub fn draw(doc: &mut Document, level: Option<&str>) -> Result<Drawn, String> {
         // The arrowhead at the exit: two strokes 25° off the last leg, as long as the text is high.
         let (a, b) = (w.path[w.path.len() - 2], w.path[w.path.len() - 1]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         if len > 1e-9 {
             let (ux, uy) = (dx / len, dy / len);
             let s = height * 1.4;

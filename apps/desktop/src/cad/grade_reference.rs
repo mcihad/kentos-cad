@@ -142,7 +142,7 @@ impl App {
             };
             let mut seen = |x: f64, y: f64, z: Option<f64>| {
                 let Some(z) = z else { return };
-                let d = (x - p.x).hypot(y - p.y);
+                let d = kentos_num::hypot(x - p.x, y - p.y);
                 if d <= reach && best.is_none_or(|b| d < b.0) {
                     best = Some((d, kentos_commands::Vec2 { x, y }, z));
                 }

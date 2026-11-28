@@ -70,7 +70,7 @@ pub(super) fn find(
                 if !(col.is_finite() && row.is_finite()) || col.abs() > 9999. || row.abs() > 9999. {
                     continue;
                 }
-                if (p.x - col * dx).hypot(p.y - row * dy) > tolerance {
+                if kentos_num::hypot(p.x - col * dx, p.y - row * dy) > tolerance {
                     continue;
                 }
                 if places.insert((row as i32, col as i32), p.uid).is_some() {

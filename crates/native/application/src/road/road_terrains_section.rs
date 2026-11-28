@@ -175,7 +175,7 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
     };
 
     // The contour lines the section crosses, each crossing once, in order along it.
-    let l = (b[0] - a[0]).hypot(b[1] - a[1]);
+    let l = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
     let mut crossings: Vec<[f64; 2]> = Vec::new();
     let mut unlevelled = 0;
     // Each contour layer's objects from its index (a layer named twice read once).

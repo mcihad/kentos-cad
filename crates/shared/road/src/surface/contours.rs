@@ -81,7 +81,7 @@ impl Surface {
         // z = a + gx·(x − ax) + gy·(y − ay)
         let gx = (uz * vy - uy * vz) / d;
         let gy = (ux * vz - uz * vx) / d;
-        let slope = gx.hypot(gy);
+        let slope = kentos_num::hypot(gx, gy);
         let aspect = (slope > 0.0).then(|| {
             let az = (-gx).atan2(-gy);
             if az < 0.0 {

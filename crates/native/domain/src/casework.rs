@@ -1888,8 +1888,8 @@ fn moved_path(
     }
     let (p0, p1, q0, q1) = (b.pts[0], b.pts[1], a.pts[0], a.pts[1]);
     let (lb, la) = (
-        (p1.x - p0.x).hypot(p1.y - p0.y),
-        (q1.x - q0.x).hypot(q1.y - q0.y),
+        kentos_num::hypot(p1.x - p0.x, p1.y - p0.y),
+        kentos_num::hypot(q1.x - q0.x, q1.y - q0.y),
     );
     if lb.is_nan() || lb <= SLACK || (la - lb).abs() > 1e-9 * lb.max(1.0) {
         return None;

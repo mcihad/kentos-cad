@@ -332,14 +332,14 @@ impl Places {
         let (c, left, right) = crate::opening_codes::sides(f)?;
         let unit = |a: V, b: V| {
             let (dx, dy) = (b.x - a.x, b.y - a.y);
-            let l = dx.hypot(dy).max(1e-12);
+            let l = kentos_num::hypot(dx, dy).max(1e-12);
             V::new(dx / l, dy / l)
         };
         let n_left = unit(c, left);
         let n_right = V::new(-n_left.x, -n_left.y);
         let u = V::new(-n_left.y, n_left.x);
         // Half the wall: from the middle to a face (the side points are 0.3 m beyond).
-        let t = (c.x - left.x).hypot(c.y - left.y) - 0.3;
+        let t = kentos_num::hypot(c.x - left.x, c.y - left.y) - 0.3;
         let level = crate::opening_types::level_of(doc, f);
         let swing_left = f.side == kentos_commands::OpeningSide::Left;
         let (first, second) = match f.form {

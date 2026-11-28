@@ -116,7 +116,7 @@ impl NodeTool {
         let (show_all, handle_of) = handles_shown(&subs, &ed.node_selected());
         let near = |p: Pt, r: f64| {
             let q = ed.camera.to_screen(p);
-            (q[0] - s[0]).hypot(q[1] - s[1]) <= r
+            kentos_num::hypot(q[0] - s[0], q[1] - s[1]) <= r
         };
         for (si, sp) in subs.iter().enumerate() {
             for (ni, n) in sp.nodes.iter().enumerate() {
@@ -384,7 +384,7 @@ impl SvgEditor {
                 else {
                     return true;
                 };
-                if !moved && (p[0] - p0[0]).hypot(p[1] - p0[1]) * zoom < 3.0 {
+                if !moved && kentos_num::hypot(p[0] - p0[0], p[1] - p0[1]) * zoom < 3.0 {
                     return true;
                 }
                 if let Some(NodeOp::Nodes { moved, .. }) = &mut self.nodes.op {
@@ -410,7 +410,7 @@ impl SvgEditor {
                 moved,
             } => {
                 // As with nodes: a click on a handle does not snap it anywhere.
-                if !moved && (p[0] - p0[0]).hypot(p[1] - p0[1]) * zoom < 3.0 {
+                if !moved && kentos_num::hypot(p[0] - p0[0], p[1] - p0[1]) * zoom < 3.0 {
                     return true;
                 }
                 if let Some(NodeOp::Handle { moved, .. }) = &mut self.nodes.op {
@@ -681,7 +681,7 @@ impl SvgEditor {
         let mut best = None;
         for (si, sp) in subs.iter().enumerate() {
             for (ni, n) in sp.nodes.iter().enumerate() {
-                let d = (n.x - p[0]).hypot(n.y - p[1]);
+                let d = kentos_num::hypot(n.x - p[0], n.y - p[1]);
                 if d > best_d {
                     continue;
                 }
@@ -737,13 +737,13 @@ fn drag_handle(
     let dx = q[0] - n.x;
     let dy = q[1] - n.y;
     let l = {
-        let l = dx.hypot(dy);
+        let l = kentos_num::hypot(dx, dy);
         if l == 0.0 { 1.0 } else { l }
     };
     let len = if ty == "symmetric" {
         l
     } else {
-        (oh[0] - n.x).hypot(oh[1] - n.y)
+        kentos_num::hypot(oh[0] - n.x, oh[1] - n.y)
     };
     let mirrored = [n.x - dx / l * len, n.y - dy / l * len];
     match part {

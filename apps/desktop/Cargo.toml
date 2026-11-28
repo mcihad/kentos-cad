@@ -23,6 +23,8 @@ doctest = false
 # The programs are their own package (apps/kentos-cad, docs/adr/9199 §3.1): the core with the modules' packages.
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../crates/shared/num" }
 kentos-postgis = { path = "../../crates/native/postgis" }
 # The data drivers (docs/adr/9100): a data layer reads its table as it draws.
 kentos-data = { path = "../../crates/native/data" }

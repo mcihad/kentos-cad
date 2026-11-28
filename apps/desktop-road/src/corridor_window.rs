@@ -1537,7 +1537,7 @@ impl canvas::Program<Message> for Plan<'_> {
             let mut far = (0.0, pts[0], pts[0]);
             for (i, a) in pts.iter().enumerate() {
                 for b in &pts[i + 1..] {
-                    let d = (a[0] - b[0]).hypot(a[1] - b[1]);
+                    let d = kentos_num::hypot(a[0] - b[0], a[1] - b[1]);
                     if d > far.0 {
                         far = (d, *a, *b);
                     }
@@ -1607,7 +1607,7 @@ impl canvas::Program<Message> for Plan<'_> {
                     let mut far = (0.0, pts[0], pts[0]);
                     for (i, a) in pts.iter().enumerate() {
                         for b in &pts[i + 1..] {
-                            let d = (a[0] - b[0]).hypot(a[1] - b[1]);
+                            let d = kentos_num::hypot(a[0] - b[0], a[1] - b[1]);
                             if d > far.0 {
                                 far = (d, *a, *b);
                             }

@@ -471,7 +471,7 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
             ]);
         }
         Entity::Ellipse(el) => {
-            let a = el.major.x.hypot(el.major.y);
+            let a = kentos_num::hypot(el.major.x, el.major.y);
             geo.extend([
                 len("Merkez Y", el.c.x),
                 len("Merkez X", el.c.y),

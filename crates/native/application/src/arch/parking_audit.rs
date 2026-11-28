@@ -70,7 +70,7 @@ fn overlap(a: &[V; 4], b: &[V; 4]) -> bool {
         for k in 0..4 {
             let (p, q) = (poly[k], poly[(k + 1) % 4]);
             let (nx, ny) = (p.y - q.y, q.x - p.x);
-            let len = nx.hypot(ny);
+            let len = kentos_num::hypot(nx, ny);
             if len == 0.0 {
                 continue;
             }

@@ -159,7 +159,7 @@ impl Gathered {
                 .iter()
                 .zip(&f.objects)
                 .all(|(u, &k)| self.uids.get(k).is_some_and(|v| v == u))
-            && (x.anywhere || (x.at.x - f.at.x).hypot(x.at.y - f.at.y) <= self.tolerance)
+            && (x.anywhere || kentos_num::hypot(x.at.x - f.at.x, x.at.y - f.at.y) <= self.tolerance)
     }
 
     /// The review mark that names `f`: one that holds first, else a lapsed one.

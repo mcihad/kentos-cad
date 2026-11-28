@@ -51,7 +51,7 @@ fn ellipse_axis_distance_uses_two_clicks_and_one_typed_confirmation() {
         panic!()
     };
     // Aligned distance leaves the two free points to share movement, but keeps the true 10 m radius.
-    assert!((e.major.x.hypot(e.major.y) - 10.).abs() < 1e-7);
+    assert!((kentos_num::hypot(e.major.x, e.major.y) - 10.).abs() < 1e-7);
     assert_eq!(e.t0, e.t1);
 }
 #[test]
@@ -268,20 +268,20 @@ fn an_elliptical_arc_end_grip_previews_readonly_and_follows_its_dimension_in_one
     let start = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t0);
     let end = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t1);
     assert!(
-        (start.x - E - target[0]).hypot(start.y - N - target[1]) < 1e-8,
+        kentos_num::hypot(start.x - E - target[0], start.y - N - target[1]) < 1e-8,
         "{:?}",
         b.log
     );
     let Some(Entity::Line(l)) = b.doc.get(Slot(2)) else {
         panic!()
     };
-    assert!((l.a.x - end.x).hypot(l.a.y - end.y) < 1e-8);
+    assert!(kentos_num::hypot(l.a.x - end.x, l.a.y - end.y) < 1e-8);
     assert!(
         preview
             .strokes
             .iter()
             .flat_map(|s| &s.pts)
-            .any(|p| (p.x - end.x).hypot(p.y - end.y) < 1e-8),
+            .any(|p| kentos_num::hypot(p.x - end.x, p.y - end.y) < 1e-8),
         "the hover must show the same solved endpoint as commit: {preview:?}"
     );
 
@@ -328,7 +328,7 @@ fn a_named_full_axis_previews_and_commits_without_freezing_its_other_radius() {
     let c = part(1, "center");
     let s = part(1, "start");
     let f = part(2, "start");
-    let distance = (4. * 0.6f64.cos()).hypot(2. * 0.6f64.sin());
+    let distance = kentos_num::hypot(4. * 0.6f64.cos(), 2. * 0.6f64.sin());
     let result=constraints_edit::execute(&mut ExecutionContext::new(&mut b.doc),serde_json::from_value(json!({"edit":{"kind":"add","constraints":[
         {"rule":{"kind":"fix","a":c}},{"rule":{"kind":"distance","a":c,"b":s,"parameter":"uzaklik"},"value":format!("{distance:.17}m")},
         {"rule":{"kind":"coincident","a":s,"b":f}}]}})).unwrap());
@@ -354,7 +354,7 @@ fn a_named_full_axis_previews_and_commits_without_freezing_its_other_radius() {
     let Some(Entity::Ellipse(e)) = b.doc.get(Slot(1)) else {
         panic!()
     };
-    let a = e.major.x.hypot(e.major.y);
+    let a = kentos_num::hypot(e.major.x, e.major.y);
     assert!((a * e.ratio - 3.).abs() < 1e-8);
     assert!(a < 4. && a > 3.);
     let q = constraints_query::read(&b.doc, &ConstraintsQuery::default());

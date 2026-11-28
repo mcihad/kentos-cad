@@ -113,7 +113,7 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
                 row.dy = Some(dy);
                 row.dz = p.z.zip(pt.result.z).map(|(a, b)| a - b);
                 // docs/adr/4520: their horizontal distance.
-                row.horizontal = Some(dx.hypot(dy));
+                row.horizontal = Some(kentos_num::hypot(dx, dy));
             }
         }
         Err(stop) => row.why = Some(stop.into_error().message),

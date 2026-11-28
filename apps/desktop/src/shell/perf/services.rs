@@ -363,7 +363,7 @@ fn services_style_split() {
                 + p01.1 * (1.0 - s) * r
                 + p11.1 * s * r;
             if let Some(e) = exact(u, v) {
-                worst = worst.max((x - e.x).hypot(y - e.y));
+                worst = worst.max(kentos_num::hypot(x - e.x, y - e.y));
             }
         }
         println!("ağ {n} × {n}: en büyük sapma {:.4} mm", worst * 1000.0);

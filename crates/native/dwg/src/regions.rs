@@ -318,7 +318,8 @@ fn ring(
             // A spline edge: points along it (its own span), from this coedge's start.
             let mut points: Vec<(f64, f64, f64)> =
                 points.into_iter().map(|p| apply(tf, p)).collect();
-            let gap = |p: (f64, f64, f64), q: (f64, f64, f64)| (p.0 - q.0).hypot(p.1 - q.1);
+            let gap =
+                |p: (f64, f64, f64), q: (f64, f64, f64)| kentos_num::hypot(p.0 - q.0, p.1 - q.1);
             if gap(points[0], from) > gap(points[points.len() - 1], from) {
                 points.reverse();
             }
@@ -588,7 +589,7 @@ mod tests {
         for i in 0..n {
             let (a, b) = (square[i], square[(i + 1) % n]);
             let d = [b[0] - a[0], b[1] - a[1]];
-            let length = d[0].hypot(d[1]);
+            let length = kentos_num::hypot(d[0], d[1]);
             records.push(format!(
                 "coedge $-1 -1 $-1 ${} ${} $-1 ${} forward $5 $-1",
                 at(i + 1, 0),
@@ -680,7 +681,7 @@ mod tests {
         );
         for (x, y) in &hole.pts {
             assert!(
-                ((x - 5.0).hypot(y - 5.0) - 2.0).abs() < 1e-9,
+                (kentos_num::hypot(x - 5.0, y - 5.0) - 2.0).abs() < 1e-9,
                 "on the circle: ({x}, {y})"
             );
         }

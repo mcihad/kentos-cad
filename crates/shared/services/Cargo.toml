@@ -15,6 +15,8 @@ publish.workspace = true
 # engine's batches (`kentos-style-core`), so both platforms draw them as they
 # draw a layer.
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-contracts = { path = "../contracts", default-features = false }
 # A service's GeoJSON is read by the formats core as a file is (docs/adr/0046).
 kentos-formats = { path = "../formats" }

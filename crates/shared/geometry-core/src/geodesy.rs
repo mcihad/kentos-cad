@@ -147,8 +147,9 @@ pub fn tm_scale(p: &Tm, lat: f64, lon: f64) -> Option<f64> {
         im -= k * a * libm::sin(k * xi_p) * libm::sinh(k * eta_p);
     }
     let cos_phi = libm::cos(lat * (PI / 180.0));
-    let on_sphere = libm::sqrt(1.0 - e2 * sin_phi * sin_phi) / cos_phi / libm::hypot(t, cos_lambda);
-    let k = p.scale_factor * (a_big / p.semi_major) * libm::hypot(re, im) * on_sphere;
+    let on_sphere =
+        libm::sqrt(1.0 - e2 * sin_phi * sin_phi) / cos_phi / kentos_num::hypot(t, cos_lambda);
+    let k = p.scale_factor * (a_big / p.semi_major) * kentos_num::hypot(re, im) * on_sphere;
     (k.is_finite() && k > 0.0).then_some(k)
 }
 

@@ -113,13 +113,13 @@ fn facing(a: &[(V, V)], b: &[(V, V)], gap: f64) -> Option<(V, V)> {
     let mut best: Option<(f64, (V, V))> = None;
     for &(s, t) in a {
         let (dx, dy) = (t.x - s.x, t.y - s.y);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         let (ux, uy) = (dx / len, dy / len);
         // Outward: the right of a side whose room is on its left.
         let (ox, oy) = (uy, -ux);
         for &(p, q) in b {
             let (ex, ey) = (q.x - p.x, q.y - p.y);
-            let el = ex.hypot(ey);
+            let el = kentos_num::hypot(ex, ey);
             // Opposite directions, parallel.
             if (ux * ey - uy * ex).abs() / el > 1e-9 || ux * ex + uy * ey >= 0.0 {
                 continue;
@@ -149,7 +149,7 @@ fn facing(a: &[(V, V)], b: &[(V, V)], gap: f64) -> Option<(V, V)> {
 /// Where a passage meets a room: its face toward the room, from jamb to jamb.
 fn door_span(p: &Passage, side: f64) -> (V, V) {
     let (dx, dy) = (p.b.x - p.a.x, p.b.y - p.a.y);
-    let len = dx.hypot(dy);
+    let len = kentos_num::hypot(dx, dy);
     let (nx, ny) = (-dy / len, dx / len);
     let off = |q: V| V::new(q.x + side * p.half * nx, q.y + side * p.half * ny);
     (off(p.a), off(p.b))
@@ -250,8 +250,8 @@ pub fn passage(areas: &[Area], doors: &[(V, V)], width: f64) -> f64 {
 fn closest(a: (V, V), b: (V, V)) -> (f64, V, V) {
     let (dx, dy) = (a.1.x - a.0.x, a.1.y - a.0.y);
     let (ex, ey) = (b.1.x - b.0.x, b.1.y - b.0.y);
-    let la = dx.hypot(dy);
-    let lb = ex.hypot(ey);
+    let la = kentos_num::hypot(dx, dy);
+    let lb = kentos_num::hypot(ex, ey);
     if (dx * ey - dy * ex).abs() <= 1e-12 * la * lb {
         // Parallel: the middle of their overlap along a, if any.
         let (ux, uy) = (dx / la, dy / la);

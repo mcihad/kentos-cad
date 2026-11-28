@@ -92,7 +92,7 @@ pub(crate) fn rings(doc: &Document, uid: &str, path: &str) -> Result<Vec<Vec<[f6
 fn edges(ring: &[[f64; 2]]) -> Vec<([f64; 2], [f64; 2])> {
     (0..ring.len())
         .map(|k| (ring[k], ring[(k + 1) % ring.len()]))
-        .filter(|(a, b)| (b[0] - a[0]).hypot(b[1] - a[1]) > 0.0)
+        .filter(|(a, b)| kentos_num::hypot(b[0] - a[0], b[1] - a[1]) > 0.0)
         .collect()
 }
 
@@ -108,12 +108,12 @@ fn stretches(
     theirs: &[([f64; 2], [f64; 2])],
     tol: f64,
 ) -> Vec<(f64, f64)> {
-    let l = (q[0] - p[0]).hypot(q[1] - p[1]);
+    let l = kentos_num::hypot(q[0] - p[0], q[1] - p[1]);
     let (ux, uy) = ((q[0] - p[0]) / l, (q[1] - p[1]) / l);
     let along = |v: [f64; 2]| (v[0] - p[0]) * ux + (v[1] - p[1]) * uy;
     let mut found: Vec<(f64, f64)> = Vec::new();
     for &(r, s) in theirs {
-        let m = (s[0] - r[0]).hypot(s[1] - r[1]);
+        let m = kentos_num::hypot(s[0] - r[0], s[1] - r[1]);
         let near = (off(p, q, l, r) <= tol && off(p, q, l, s) <= tol)
             || (off(r, s, m, p) <= tol && off(r, s, m, q) <= tol);
         if !near {
@@ -151,7 +151,7 @@ fn at(p: [f64; 2], q: [f64; 2], l: f64, t: f64) -> [f64; 2] {
 /// A run's length.
 pub(crate) fn run_length(run: &[[f64; 2]]) -> f64 {
     run.windows(2)
-        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
         .sum()
 }
 
@@ -169,7 +169,7 @@ pub(crate) fn shared(
         let mut runs: Vec<(Vec<[f64; 2]>, bool)> = Vec::new();
         let mut open = false;
         for (k, &(p, q)) in mine.iter().enumerate() {
-            let l = (q[0] - p[0]).hypot(q[1] - p[1]);
+            let l = kentos_num::hypot(q[0] - p[0], q[1] - p[1]);
             let found = stretches(p, q, &theirs, tol);
             if found.is_empty() {
                 open = false;

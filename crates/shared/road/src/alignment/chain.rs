@@ -97,7 +97,7 @@ impl Alignment {
                     station: b.station,
                     before: a.id.clone(),
                     after: b.id.clone(),
-                    place: (end[0] - b.start[0]).hypot(end[1] - b.start[1]),
+                    place: kentos_num::hypot(end[0] - b.start[0], end[1] - b.start[1]),
                     direction: wrap(a.theta(a.length) - b.theta0).abs(),
                     curvature: (a.curvature(a.length) - b.k0).abs(),
                 }
@@ -335,7 +335,7 @@ fn solve_ove(
     let din = (b.y - a0.y).atan2(b.x - a0.x);
     let dmid = (c.y - b.y).atan2(c.x - b.x);
     let dout = (d.y - c.y).atan2(d.x - c.x);
-    let bc = (c.x - b.x).hypot(c.y - b.y);
+    let bc = kentos_num::hypot(c.x - b.x, c.y - b.y);
     let (r1, r2, sign) = (c1.radius, c2.radius, c1.sign);
     let closing = r1 > r2;
     let s = if closing { -1.0 } else { 1.0 };
@@ -416,7 +416,8 @@ fn solve_ove(
         1 => {
             let a = roots[0];
             let ((centre1, t1, u1), (centre2, _, u2), x1, _) = parts(a);
-            let gap = (r1 - r2).abs() - (centre1[0] - centre2[0]).hypot(centre1[1] - centre2[1]);
+            let gap = (r1 - r2).abs()
+                - kentos_num::hypot(centre1[0] - centre2[0], centre1[1] - centre2[1]);
             let part = OvePart { a, closing, gap };
             let o = u1 + s * x1;
             let first = Planned {
@@ -469,7 +470,7 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
         {
             return Err(ChainError::BadCurve { pi: p.id.clone() });
         }
-        if i > 0 && (p.x - pis[i - 1].x).hypot(p.y - pis[i - 1].y) == 0.0 {
+        if i > 0 && kentos_num::hypot(p.x - pis[i - 1].x, p.y - pis[i - 1].y) == 0.0 {
             return Err(ChainError::SamePlace { pi: p.id.clone() });
         }
     }
@@ -526,7 +527,7 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
             tangents.push(0.0);
             continue;
         }
-        let len = (b.x - a.x).hypot(b.y - a.y) - t_out(i) - t_in(i + 1);
+        let len = kentos_num::hypot(b.x - a.x, b.y - a.y) - t_out(i) - t_in(i + 1);
         if len < -MEET {
             return Err(ChainError::CurvesOverlap {
                 a: a.id.clone(),
@@ -663,7 +664,7 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
             out.residual.place = out
                 .residual
                 .place
-                .max((place[0] - st[0]).hypot(place[1] - st[1]));
+                .max(kentos_num::hypot(place[0] - st[0], place[1] - st[1]));
             out.residual.direction = out.residual.direction.max(wrap(theta - dout).abs());
         }
         out.curves.push(CurveReport {

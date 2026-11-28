@@ -67,7 +67,7 @@ struct Reference {
 
 impl Reference {
     fn unit(&self) -> Vec2 {
-        let l = (self.b.x - self.a.x).hypot(self.b.y - self.a.y);
+        let l = kentos_num::hypot(self.b.x - self.a.x, self.b.y - self.a.y);
         Vec2::new((self.b.x - self.a.x) / l, (self.b.y - self.a.y) / l)
     }
 
@@ -169,7 +169,7 @@ fn signed(text: String, v: f64) -> String {
 
 /// The sine of the angle between a picked edge and a reference.
 fn sine(k: &Picked, r: &Reference) -> f64 {
-    let l = (k.b.x - k.a.x).hypot(k.b.y - k.a.y);
+    let l = kentos_num::hypot(k.b.x - k.a.x, k.b.y - k.a.y);
     let w = Vec2::new((k.b.x - k.a.x) / l, (k.b.y - k.a.y) / l);
     let u = r.unit();
     (u.x * w.y - u.y * w.x).abs()

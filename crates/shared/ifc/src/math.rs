@@ -18,8 +18,9 @@ pub(crate) fn tan(x: f64) -> f64 {
     libm::tan(x)
 }
 
+/// The numeric base's: the nearest double (docs/adr/9403).
 pub(crate) fn hypot(x: f64, y: f64) -> f64 {
-    libm::hypot(x, y)
+    kentos_num::hypot(x, y)
 }
 
 pub(crate) fn atan2(y: f64, x: f64) -> f64 {

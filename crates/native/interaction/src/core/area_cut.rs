@@ -227,13 +227,13 @@ fn seg_distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    (p.x - (a.x + t * dx)).hypot(p.y - (a.y + t * dy))
+    kentos_num::hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
 }
 
 /// A point's distance from the reference edge's line.
 fn from_edge(e: &Edged, p: Vec2) -> f64 {
     let (dx, dy) = (e.b.x - e.a.x, e.b.y - e.a.y);
-    ((p.x - e.a.x) * dy - (p.y - e.a.y) * dx).abs() / dx.hypot(dy)
+    ((p.x - e.a.x) * dy - (p.y - e.a.y) * dx).abs() / kentos_num::hypot(dx, dy)
 }
 
 /// The middle of an area's outer ring (its vertices' mean: enough to tell two pieces apart across a straight cut).
@@ -250,7 +250,7 @@ fn middle(a: &Area) -> Vec2 {
 /// The cut drawn a little past the boundary at both ends, along its own line.
 fn past(cut: &Cut) -> (Vec2, Vec2) {
     let (dx, dy) = (cut.b.x - cut.a.x, cut.b.y - cut.a.y);
-    let l = dx.hypot(dy);
+    let l = kentos_num::hypot(dx, dy);
     let (ux, uy) = (dx / l * PAST, dy / l * PAST);
     (
         Vec2::new(cut.a.x - ux, cut.a.y - uy),

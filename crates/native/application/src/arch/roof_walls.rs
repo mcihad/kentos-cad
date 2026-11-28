@@ -131,7 +131,7 @@ fn samples(face: &[V], ring: &[V]) -> Vec<V> {
     let n = ring.len();
     for s in face.windows(2) {
         let (a, b) = (s[0], s[1]);
-        let len = (b.x - a.x).hypot(b.y - a.y);
+        let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if len <= 0.0 {
             continue;
         }
@@ -208,12 +208,12 @@ fn kind_of(doc: &Document, w: &kentos_commands::WallFields, path: &[V]) -> WallO
 fn middle(path: &[V]) -> Option<(V, V)> {
     let total: f64 = path
         .windows(2)
-        .map(|s| (s[1].x - s[0].x).hypot(s[1].y - s[0].y))
+        .map(|s| kentos_num::hypot(s[1].x - s[0].x, s[1].y - s[0].y))
         .sum();
     let mut left = total / 2.0;
     for s in path.windows(2) {
         let (a, b) = (s[0], s[1]);
-        let len = (b.x - a.x).hypot(b.y - a.y);
+        let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if len <= 0.0 {
             continue;
         }

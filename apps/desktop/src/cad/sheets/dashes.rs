@@ -29,7 +29,7 @@ pub(super) fn runs(
     for edge in points.windows(2) {
         let (a, b) = (edge[0], edge[1]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         if !len.is_finite() {
             return None;
         }

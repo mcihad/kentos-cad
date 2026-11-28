@@ -239,7 +239,7 @@ impl WallEditTool {
         if w.wall.closed {
             return None;
         }
-        let d = |p: &kentos_commands::Vec2| (p.x - at.x).hypot(p.y - at.y);
+        let d = |p: &kentos_commands::Vec2| kentos_num::hypot(p.x - at.x, p.y - at.y);
         let (first, last) = (&w.wall.pts[0], &w.wall.pts[w.wall.pts.len() - 1]);
         Some(if d(last) <= d(first) {
             WallEnd::End

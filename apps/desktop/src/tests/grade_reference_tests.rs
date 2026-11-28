@@ -161,7 +161,7 @@ fn two_clicks_take_the_reference_and_the_vertex() {
         .clone()
         .expect("a plan")
         .expect("previewed");
-    assert!((r.distance - (30.0f64).hypot(140.0)).abs() < 1e-9);
+    assert!((r.distance - kentos_num::hypot(30.0f64, 140.0)).abs() < 1e-9);
     // By no elevation: the place, the elevation kept to type.
     let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::Grade(G::Pick)));
     assert!(app.grade_picked(Some(kentos_interaction::Vec2 {

@@ -96,7 +96,7 @@ fn slope(i: u32, j: u32) -> f64 {
 
 fn distance(i: u32, j: u32) -> f64 {
     let (x, y) = (f64::from(i), f64::from(j));
-    5.0 * (libm::hypot(x - 1800.0, y - 2300.0) % 900.0)
+    5.0 * (kentos_num::hypot(x - 1800.0, y - 2300.0) % 900.0)
 }
 
 fn classes(i: u32, j: u32) -> f64 {

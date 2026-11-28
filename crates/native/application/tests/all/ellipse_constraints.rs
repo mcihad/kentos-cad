@@ -245,12 +245,12 @@ fn an_elliptical_arc_grip_keeps_only_the_requested_endpoint_and_solves_its_other
     };
     let start = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t0);
     let end = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t1);
-    assert!((start.x - target_point.0).hypot(start.y - target_point.1) < 1e-8);
-    assert!(end.x.hypot(end.y - 2.) > 1e-3);
+    assert!(kentos_num::hypot(start.x - target_point.0, start.y - target_point.1) < 1e-8);
+    assert!(kentos_num::hypot(end.x, end.y - 2.) > 1e-3);
     let Some(Entity::Line(l)) = d.get(Slot(2)) else {
         panic!()
     };
-    assert!((l.a.x - end.x).hypot(l.a.y - end.y) < 1e-8);
+    assert!(kentos_num::hypot(l.a.x - end.x, l.a.y - end.y) < 1e-8);
     assert_eq!((l.b.x, l.b.y), (-2., 3.));
     let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));
     assert!(q.constraints.iter().all(|c| c.holds));
@@ -413,9 +413,10 @@ fn full_ellipse_axis_grips_keep_nonzero_seam_and_followers_across_axis_swaps() {
                     panic!()
                 };
                 assert!(
-                    (l.a.x - (origin.0 + a * 0.6f64.cos()))
-                        .hypot(l.a.y - (origin.1 + b * 0.6f64.sin()))
-                        < 3e-9,
+                    kentos_num::hypot(
+                        l.a.x - (origin.0 + a * 0.6f64.cos()),
+                        l.a.y - (origin.1 + b * 0.6f64.sin())
+                    ) < 3e-9,
                     "{index} {length} {l:?}"
                 );
                 let e = ellipse(&d);
@@ -463,7 +464,7 @@ fn axis_dimension_drawing(origin: (f64, f64)) -> Document {
     let c = part(&d, 1, "center");
     let s = part(&d, 1, "start");
     let f = part(&d, 2, "start");
-    let length = (p.x - origin.0).hypot(p.y - origin.1);
+    let length = kentos_num::hypot(p.x - origin.0, p.y - origin.1);
     add(
         &mut d,
         json!([{"rule":{"kind":"fix","a":c}},
@@ -504,7 +505,7 @@ fn named_axis_grips_keep_the_axis_target_and_let_the_other_radius_satisfy_its_di
             let point =
                 ellipse_axis_point(&geometry::shape(d.get(Slot(1)).unwrap()), axis).unwrap();
             assert!(
-                (point.x - at.x).hypot(point.y - at.y) < 3e-9,
+                kentos_num::hypot(point.x - at.x, point.y - at.y) < 3e-9,
                 "{index}: {point:?} != {at:?}"
             );
             let Some(Entity::Line(line)) = d.get(Slot(2)) else {
@@ -513,7 +514,7 @@ fn named_axis_grips_keep_the_axis_target_and_let_the_other_radius_satisfy_its_di
             let old = before.entities[1].clone();
             let Entity::Line(old) = old else { panic!() };
             assert!(
-                (line.a.x - old.a.x).hypot(line.a.y - old.a.y) > 0.1,
+                kentos_num::hypot(line.a.x - old.a.x, line.a.y - old.a.y) > 0.1,
                 "the seam must be free to follow its dimension"
             );
             let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));

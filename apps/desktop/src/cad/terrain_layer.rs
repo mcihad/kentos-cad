@@ -122,7 +122,7 @@ impl Layer<'_> {
                         || (p[0] > w && q[0] > w)
                         || (p[1] < 0.0 && q[1] < 0.0)
                         || (p[1] > h && q[1] > h);
-                    if off || (q[0] - p[0]).hypot(q[1] - p[1]) < least {
+                    if off || kentos_num::hypot(q[0] - p[0], q[1] - p[1]) < least {
                         continue;
                     }
                     b.move_to(Point::new(p[0] as f32, p[1] as f32));

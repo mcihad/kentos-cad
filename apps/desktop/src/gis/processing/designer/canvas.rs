@@ -160,7 +160,7 @@ impl Diagram<'_> {
             if let Some(port) = self.port_of(&node) {
                 // The ring's centre stands 1 px right of the box's edge (the web's -7 px, 12 px wide).
                 let centre = Pt::new(port.x + 1.0, port.y);
-                if (w.x - centre.x).hypot(w.y - centre.y) <= reach {
+                if kentos_num::hypot(w.x - centre.x, w.y - centre.y) <= reach {
                     return Some(Hit::Port(node));
                 }
             }

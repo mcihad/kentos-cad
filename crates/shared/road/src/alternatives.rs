@@ -42,7 +42,7 @@ fn gap(base: &Alignment, p: [f64; 2]) -> (f64, Option<f64>) {
     let found = base.locate(p);
     match (found.nearest, found.beyond) {
         (Some(f), _) => (f.offset.abs(), Some(f.at.station)),
-        (None, Some((_, f))) => ((p[0] - f.at.x).hypot(p[1] - f.at.y), None),
+        (None, Some((_, f))) => (kentos_num::hypot(p[0] - f.at.x, p[1] - f.at.y), None),
         (None, None) => (f64::INFINITY, None),
     }
 }

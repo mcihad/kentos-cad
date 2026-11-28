@@ -163,7 +163,7 @@ pub fn program(image: &AtlasImage) -> Option<Vec<f64>> {
             (bbox[0], bbox[3]),
         ]
         .iter()
-        .map(|&(x, y)| (x - sw / 2.0).hypot(sh / 2.0 - y))
+        .map(|&(x, y)| kentos_num::hypot(x - sw / 2.0, sh / 2.0 - y))
         .fold(0.0, f64::max);
         let total: usize = fills.iter().map(|(_, t)| t.len()).sum();
         let (bx, by) = ((bbox[2] - bbox[0]).max(1e-9), (bbox[3] - bbox[1]).max(1e-9));

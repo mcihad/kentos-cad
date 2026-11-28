@@ -76,7 +76,7 @@ pub fn inside(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
 /// The length of the segment a→b inside the ring.
 pub fn length_inside(ring: &[[f64; 2]], a: [f64; 2], b: [f64; 2]) -> f64 {
     let d = [b[0] - a[0], b[1] - a[1]];
-    let len = d[0].hypot(d[1]);
+    let len = kentos_num::hypot(d[0], d[1]);
     if len == 0.0 || ring.len() < 3 {
         return 0.0;
     }

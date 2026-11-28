@@ -46,11 +46,15 @@ Sayısal temel (`kentos-num`, ADR 9403) bir işlevin sonucunu, kesin değere en 
 başvuruyla (aynı tanım) toleranssız, bit bit karşılaştırılır.
 
 - **Uzunluk** (`kentos_num::hypot`; çekirdekte `js_hypot` ona bağlıdır): her girdide doğru yuvarlanır. Taşıdığı
-  JavaScript biçimi (ölçekli, telafili toplam) uzunlukların üçte birinde bir son basamak uzaktaydı.
+  JavaScript biçimi (ölçekli, telafili toplam) uzunlukların üçte birinde bir son basamak uzaktaydı. Hesap
+  crate'lerinde platformun `hypot`'u çağrılmaz.
 - **Aşkın işlevler** (`sin`, `cos`, `atan2`, `exp`…): bugün `libm`'dendir; her platformda aynıdır ama sonuçların
   %3–18'i en yakın sayı değildir (1 ulp). Geçişleri ADR 9403 §5'tedir.
 - Platformun matematik kitaplığı hesapta kullanılmaz (sonucu sistemden sisteme değişir); birleşik çarp-topla yalnız
-  yuvarlamayı değiştirmediği yerde (hatasız çarpımın hata terimi) kullanılır.
+  yuvarlamayı değiştirmediği yerde (hatasız çarpımın hata terimi) kullanılır. Kalan çağrılar sayılır ve yalnız azalır
+  (`scripts/dev/platform_math.py`, `make guard`).
+- **Eşitlik son basamağa bırakılmaz:** iki aday aynı uzunluktaysa (simetrik bir odanın iki köşesi) seçim yazılı
+  kuralla yapılır, toplamların son basamağıyla değil (ADR 9403 §7: kaçış yolları, bir nanometre tolerans).
 - **Bir işlevin son basamağına dayanan hesap kusurludur.** Bir sonuç, girdisinin son basamağı oynayınca milimetre
   oynuyorsa hesap kaynağında düzeltilir, tolerans büyütülmez (ADR 9403 §7: raster oturt'un öntanımlı pikseli).
 

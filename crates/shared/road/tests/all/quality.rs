@@ -70,7 +70,7 @@ fn long_triangles_are_gaps() {
     let g = s.gaps(2.0);
     assert_eq!(g.triangles, 4);
     assert!(
-        (g.area - 16.0).abs() < 1e-9 && (g.longest - 8.0_f64.hypot(1.0)).abs() < 1e-12,
+        (g.area - 16.0).abs() < 1e-9 && (g.longest - kentos_num::hypot(8.0_f64, 1.0)).abs() < 1e-12,
         "{g:?}"
     );
 }

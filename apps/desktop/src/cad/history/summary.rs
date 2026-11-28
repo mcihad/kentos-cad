@@ -134,11 +134,11 @@ fn path_length(pts: &[Value], closed: bool) -> f64 {
     let p: Vec<(f64, f64)> = pts.iter().filter_map(xy).collect();
     let mut total: f64 = p
         .windows(2)
-        .map(|w| (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1))
+        .map(|w| kentos_num::hypot(w[1].0 - w[0].0, w[1].1 - w[0].1))
         .sum();
     if closed && p.len() > 2 {
         let (a, b) = (p[p.len() - 1], p[0]);
-        total += (b.0 - a.0).hypot(b.1 - a.1);
+        total += kentos_num::hypot(b.0 - a.0, b.1 - a.1);
     }
     total
 }
@@ -656,7 +656,7 @@ fn tags_create(input: &Value) -> Vec<String> {
 /// A drawn segment's length (`from` → `to`).
 fn segment(input: &Value, n: &Names) -> Option<String> {
     let (a, b) = (xy(input.get("from")?)?, xy(input.get("to")?)?);
-    Some(n.length((b.0 - a.0).hypot(b.1 - a.1)))
+    Some(n.length(kentos_num::hypot(b.0 - a.0, b.1 - a.1)))
 }
 
 #[cfg(test)]

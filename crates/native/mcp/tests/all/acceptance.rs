@@ -1276,7 +1276,9 @@ fn an_agent_creates_the_calibration_template_and_measures_real_pdf_marks() {
     ] {
         assert!(pages[0].ink.iter().any(|p| {
             p.color.iter().zip(rgb).all(|(a, b)| (a - b).abs() < 0.002)
-                && ((p.segment[2] - p.segment[0]).hypot(p.segment[3] - p.segment[1]) - 100.).abs()
+                && (kentos_num::hypot(p.segment[2] - p.segment[0], p.segment[3] - p.segment[1])
+                    - 100.)
+                    .abs()
                     < 0.002
         }));
     }
@@ -1595,12 +1597,12 @@ fn sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer() {
                     .ink
                     .iter()
                     .filter(|l| l.color.iter().zip(rgb).all(|(a, b)| (a - b).abs() < 0.002))
-                    .any(
-                        |l| ((l.segment[2] - l.segment[0]).hypot(l.segment[3] - l.segment[1])
-                            - 100.)
-                            .abs()
-                            < 0.002
-                    ),
+                    .any(|l| (kentos_num::hypot(
+                        l.segment[2] - l.segment[0],
+                        l.segment[3] - l.segment[1]
+                    ) - 100.)
+                        .abs()
+                        < 0.002),
                 "{} {rgb:?}",
                 c["name"]
             );

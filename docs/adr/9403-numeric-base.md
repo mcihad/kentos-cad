@@ -229,6 +229,22 @@ program, başsız konak, MCP (313), Python kanalında raster oturt durumları.
   kalkan çatı, duvarın `curtain` alanı, `compartments` sayısı); `fixtures/raster/v1/georef.json` üretecinin denetimi
   (ortamın GDAL sürümü).
 
+**Platformun `hypot`'una giden çağrılar (28 Kasım 2026).** Hesap crate'lerinde uzunluk 586 yerde platformun kendi
+kitaplığıyla (`x.hypot(y)`), 7 yerde ve iki crate'in kendi sarmalayıcısında `libm` ile hesaplanıyordu. Platformun
+sonucu sistemden sisteme değişir ve bu makinede uzunlukların %16'sında en yakın sayı değildir.
+
+- Hepsi `kentos_num::hypot`'a bağlandı (20 crate, 280 dosya; mekanik dönüşüm, derleyiciyle denetlendi). Arayüzün
+  kendi crate'leri (kit, pencerelerin çizimi, çizim hattı) piksel ve float32 çalışır, kapsam dışıdır; masaüstü
+  crate'lerinde kalan üç çağrı float32 ekran hesabıdır.
+- **Oynayan saklı çıktılar:** `ground-answers.json` (460 sayıdan 5'i, en çok 2 ulp); saklanan BCF konusu (kameranın
+  “yukarı” vektörünün üç bileşeni, 1 ulp; iki zip açılıp karşılaştırıldı). Ortak durumların ve öbür saklı
+  çıktıların hiçbiri oynamadı; bir seçim oynadı ve kaynağında düzeltildi (§7, kaçış yolları).
+- **Bekçi:** `scripts/dev/platform_math.py` (`make guard`) hesap crate'lerinde platformun matematik yöntemlerini
+  (bugün `sin` 248, `cos` 238, `atan2` 109, `powi` 101, `sin_cos` 51… `hypot` 3) ve taşınan `js_` yardımcılarının
+  anılışını (4 489) sayar; sayı yalnız azalır. Öbür işlevlerin geçişi (§5, sıra 5–6) bu sayıları sıfıra indirir.
+- Koşulanlar: paylaşılan ve yerel crate'lerin tamamı (22 682 ortak durum), masaüstü çekirdeği (2 616), dört modül
+  paketi, birleşik program, başsız konak, MCP (313), Python kanalının tamamı (yalnız önceden var olan 40 sorun).
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

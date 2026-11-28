@@ -17,6 +17,8 @@ linker_messages = "allow"
 # browser. The package is not `kentos-application`: that name is the server's use cases.
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../shared/num" }
 # The read-only viewer core (docs/adr/8054 §8); its modules are re-exported here under their old paths.
 kentos-scene-query = { path = "../scene-query" }
 kentos-commands = { path = "../../shared/commands", default-features = false }

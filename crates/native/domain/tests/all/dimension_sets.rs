@@ -77,7 +77,7 @@ fn lengths(doc: &Document) -> Vec<f64> {
         .iter()
         .map(|m| {
             let d = dim(doc, m.uid);
-            (d.b.x - d.a.x).hypot(d.b.y - d.a.y)
+            kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y)
         })
         .collect()
 }

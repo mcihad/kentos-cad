@@ -250,7 +250,7 @@ fn from_origin(p: (f64, f64), q: (f64, f64)) -> f64 {
     } else {
         0.0
     };
-    (p.0 + t * dx).hypot(p.1 + t * dy)
+    kentos_num::hypot(p.0 + t * dx, p.1 + t * dy)
 }
 
 /// Whether segment pq passes through box `f`'s inside (Liang–Barsky; along an edge is not).
@@ -279,7 +279,7 @@ fn segment_meets(f: &Frame, p: Vec2, q: Vec2) -> bool {
 /// ellipse's own frame scaled to the unit circle, the box is a parallelogram; they meet when the centre is inside the
 /// box or an edge comes nearer than 1. A flat ellipse is its major axis.
 fn ellipse_meets(f: &Frame, c: Vec2, major: Vec2, ratio: f64) -> bool {
-    let a = major.x.hypot(major.y);
+    let a = kentos_num::hypot(major.x, major.y);
     let b = a * ratio;
     if !(a > 0.0 && b > 0.0) {
         return segment_meets(

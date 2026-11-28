@@ -50,7 +50,7 @@ fn spans(server: &mut Server, drawing: &Value) -> Vec<f64> {
             (e["kind"] == "dimension").then(|| {
                 let dx = e["b"]["x"].as_f64().unwrap() - e["a"]["x"].as_f64().unwrap();
                 let dy = e["b"]["y"].as_f64().unwrap() - e["a"]["y"].as_f64().unwrap();
-                dx.hypot(dy)
+                kentos_num::hypot(dx, dy)
             })
         })
         .collect();

@@ -122,7 +122,7 @@ fn to_segment(p: [f64; 2], a: [f64; 3], b: [f64; 3]) -> f64 {
     } else {
         0.0
     };
-    (p[0] - a[0] - t * dx).hypot(p[1] - a[1] - t * dy)
+    kentos_num::hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
 }
 
 /// The edit a pick at `p` makes on `s` with the window's height `z`, or why none is made.
@@ -153,9 +153,8 @@ pub fn edit_at(
                 .vertices
                 .iter()
                 .min_by(|a, b| {
-                    (a[0] - p[0])
-                        .hypot(a[1] - p[1])
-                        .total_cmp(&(b[0] - p[0]).hypot(b[1] - p[1]))
+                    kentos_num::hypot(a[0] - p[0], a[1] - p[1])
+                        .total_cmp(&kentos_num::hypot(b[0] - p[0], b[1] - p[1]))
                 })
                 .ok_or("Yüzeyin köşesi yok.")?;
             Ok(SurfaceEdit::SetHeight {

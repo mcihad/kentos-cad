@@ -94,7 +94,7 @@ fn elements(a: &LxAlignment) -> Result<Vec<FitElement>, String> {
             };
             let length = e
                 .length
-                .unwrap_or_else(|| (e.end[0] - e.start[0]).hypot(e.end[1] - e.start[1]));
+                .unwrap_or_else(|| kentos_num::hypot(e.end[0] - e.start[0], e.end[1] - e.start[1]));
             Ok(FitElement {
                 kind,
                 start: e.start,
@@ -336,7 +336,7 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
             );
             continue;
         }
-        let gap = |p: [f64; 2], q: [f64; 2]| (p[0] - q[0]).hypot(p[1] - q[1]);
+        let gap = |p: [f64; 2], q: [f64; 2]| kentos_num::hypot(p[0] - q[0], p[1] - q[1]);
         let deviation = els
             .iter()
             .zip(&a.elements)

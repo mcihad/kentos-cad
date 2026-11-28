@@ -185,7 +185,7 @@ impl InteriorDimensions {
         match dimensions_interior::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, warnings } => {
                 let mark = cx.view.world_length(MARK_PX);
-                let length = (to.x - from.x).hypot(to.y - from.y).max(f64::MIN_POSITIVE);
+                let length = kentos_num::hypot(to.x - from.x, to.y - from.y).max(f64::MIN_POSITIVE);
                 let (ux, uy) = ((to.x - from.x) / length, (to.y - from.y) / length);
                 for e in &output.entities {
                     let own = crate::wall_dimensions::dimension_preview(
@@ -287,7 +287,7 @@ impl InteriorDimensions {
                 self.hover = Some(at);
             }
             (Some(from), None) => {
-                if (at.x - from.x).hypot(at.y - from.y) < 1e-3 {
+                if kentos_num::hypot(at.x - from.x, at.y - from.y) < 1e-3 {
                     cx.say(
                         Level::Warn,
                         "Kesen çizgi çok kısa; ölçülecek duvarların içinden geçen bir çizgi çizin.",

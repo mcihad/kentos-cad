@@ -80,7 +80,7 @@ fn sub(a: [f64; 2], b: [f64; 2]) -> [f64; 2] {
 }
 
 fn norm(a: [f64; 2]) -> f64 {
-    a[0].hypot(a[1])
+    kentos_num::hypot(a[0], a[1])
 }
 
 fn unit(a: [f64; 2]) -> [f64; 2] {
@@ -153,7 +153,7 @@ pub fn bulge_places(a: [f64; 2], b: [f64; 2], bulge: f64, step: f64) -> Vec<[f64
         return vec![a, b];
     }
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-    let c = dx.hypot(dy);
+    let c = kentos_num::hypot(dx, dy);
     if c == 0.0 {
         return vec![a, b];
     }
@@ -163,7 +163,7 @@ pub fn bulge_places(a: [f64; 2], b: [f64; 2], bulge: f64, step: f64) -> Vec<[f64
         (a[0] + b[0]) / 2.0 - dy / c * h,
         (a[1] + b[1]) / 2.0 + dx / c * h,
     ];
-    let radius = (a[0] - centre[0]).hypot(a[1] - centre[1]);
+    let radius = kentos_num::hypot(a[0] - centre[0], a[1] - centre[1]);
     let start = (a[1] - centre[1]).atan2(a[0] - centre[0]);
     let mut out = arc_places(centre, radius, start, 4.0 * bulge.atan(), step);
     if let Some(last) = out.last_mut() {
@@ -218,7 +218,7 @@ fn segment_point(a: [f64; 2], b: [f64; 2], p: [f64; 2]) -> f64 {
     } else {
         0.0
     };
-    (p[0] - a[0] - t * d[0]).hypot(p[1] - a[1] - t * d[1])
+    kentos_num::hypot(p[0] - a[0] - t * d[0], p[1] - a[1] - t * d[1])
 }
 
 /// The front axle driven along `path` (its places in order, sampled every `step` metres along its chords), the

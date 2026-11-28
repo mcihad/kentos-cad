@@ -174,7 +174,7 @@ fn constraint_point_near(
 ) -> Option<(Place, SubPlace, f64)> {
     let mut best = place_near(core, at, tol).and_then(|(p, d)| point_place(p).map(|s| (p, s, d)));
     if let Some(c) = kentos_geometry_core::ops::subref::point(core, Place::Center) {
-        let d = (c.x - at.x).hypot(c.y - at.y);
+        let d = kentos_num::hypot(c.x - at.x, c.y - at.y);
         if d <= tol && best.as_ref().is_none_or(|(_, _, distance)| d < *distance) {
             best = Some((Place::Center, SubPlace::Center, d));
         }
@@ -270,7 +270,7 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
     let segment = || {
         let place = edge_place_near(&core, EdgeKind::Straight, at)?;
         let on = kentos_geometry_core::ops::subref::point(&core, place)?;
-        if (on.x - at.x).hypot(on.y - at.y) > tol * 1.5 {
+        if kentos_num::hypot(on.x - at.x, on.y - at.y) > tol * 1.5 {
             return None;
         }
         let (a, b) = edge_line(&core, place)?;
@@ -315,7 +315,7 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
                     t,
                 },
             )?;
-            if (on.x - at.x).hypot(on.y - at.y) > tol * 1.5 {
+            if kentos_num::hypot(on.x - at.x, on.y - at.y) > tol * 1.5 {
                 return None;
             }
             kentos_geometry_core::ops::subref::arc_edge_of(&core.shape, part, ring, index)?;
@@ -719,7 +719,7 @@ impl Tool for ConstraintTool {
         }
         if let Some((at, generation)) = self.completed_at {
             if generation == cx.doc.generation()
-                && (p.raw.x - at.x).hypot(p.raw.y - at.y) <= cx.view.world_length(4.0)
+                && kentos_num::hypot(p.raw.x - at.x, p.raw.y - at.y) <= cx.view.world_length(4.0)
             {
                 self.hover = None;
                 self.drawn = Preview::default();

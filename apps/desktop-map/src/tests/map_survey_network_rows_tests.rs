@@ -517,7 +517,7 @@ fn a_known_point_s_row_says_its_own_place() {
         dx: Some(0.006),
         dy: Some(-0.004),
         dz: Some(0.012),
-        horizontal: Some(0.006_f64.hypot(0.004)),
+        horizontal: Some(kentos_num::hypot(0.006_f64, 0.004)),
         beyond: None,
         why: None,
     };

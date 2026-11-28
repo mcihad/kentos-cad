@@ -306,7 +306,7 @@ fn rotate_by_a_reference_direction() {
     let [a, e] = line(&b, 2);
     assert!((a[0] - 0.0).abs() < 1e-9 && (a[1] - 4.0).abs() < 1e-9);
     assert!(e[0].abs() < 1e-9, "north of the centre: {e:?}");
-    assert!((e[1] - 4.0 - (24.0f64.hypot(12.0))).abs() < 1e-9);
+    assert!((e[1] - 4.0 - (kentos_num::hypot(24.0f64, 12.0))).abs() < 1e-9);
 }
 
 // ── Ölçekle ─────────────────────────────────────────────────────────────────

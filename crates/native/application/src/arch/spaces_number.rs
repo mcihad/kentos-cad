@@ -63,7 +63,7 @@ fn check(doc: &Document, input: &SpacesNumber) -> Result<Work, Stop> {
         checks::point(from, "Yön başlangıcının", "order.from")?;
         checks::point(to, "Yön bitişinin", "order.to")?;
         let (dx, dy) = (to.x - from.x, to.y - from.y);
-        let length = dx.hypot(dy);
+        let length = kentos_num::hypot(dx, dy);
         if !length.is_finite() || length == 0. {
             return Err(invalid(
                 "Numaralandırma yönü için birbirinden farklı, sonlu iki nokta verin.",

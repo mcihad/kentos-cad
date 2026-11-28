@@ -145,7 +145,8 @@ fn regular_polygon_circles_are_set() {
     let (pts, _) = ring(&b);
     assert_eq!(pts.len(), 6);
     assert!(
-        pts.iter().all(|p| near(p[0].hypot(p[1]), 10.0)),
+        pts.iter()
+            .all(|p| near(kentos_num::hypot(p[0], p[1]), 10.0)),
         "corners on the circle: {pts:?}"
     );
 }

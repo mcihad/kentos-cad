@@ -110,7 +110,7 @@ fn tin_line(triangles: &[[[f64; 3]; 3]]) -> String {
             (dz1 * e2[1] - dz2 * e1[1]) / det,
             (e1[0] * dz2 - e2[0] * dz1) / det,
         );
-        100.0 * a.hypot(b)
+        100.0 * kentos_num::hypot(a, b)
     };
     let slopes: Vec<f64> = triangles
         .iter()
@@ -332,7 +332,7 @@ impl App {
             });
             format!(
                 "Taban düzlemi: eğimi %{}{at}.",
-                fixed(100.0 * a.hypot(b), 2)
+                fixed(100.0 * kentos_num::hypot(a, b), 2)
             )
         }
     }

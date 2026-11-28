@@ -101,15 +101,17 @@ fn nearest_edge(e: &Entity, p: Vec2, reach: f64) -> Option<Found> {
                 let d = if t <= arc.sweep.abs() {
                     ((vx * vx + vy * vy).sqrt() - arc.r).abs()
                 } else {
-                    (p.x - a.x)
-                        .hypot(p.y - a.y)
-                        .min((p.x - b.x).hypot(p.y - b.y))
+                    kentos_num::hypot(p.x - a.x, p.y - a.y)
+                        .min(kentos_num::hypot(p.x - b.x, p.y - b.y))
                 };
                 (d, Some((arc.c, arc.r, arc.sweep)))
             }
             None => {
                 let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0);
-                ((p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t)), None)
+                (
+                    kentos_num::hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t)),
+                    None,
+                )
             }
         };
         if best.as_ref().is_none_or(|(bd, ..)| d < *bd) {
@@ -142,7 +144,7 @@ impl WallShift {
             return;
         };
         let Some(uid) = cx.doc.uid(slot) else { return };
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         self.picked = Some(Picked {
             uid,
             edge,
@@ -171,7 +173,7 @@ impl WallShift {
     fn by_at(&self, p: Vec2) -> Option<f64> {
         let k = self.picked.as_ref()?;
         if let Some((c, r, sweep)) = k.arc {
-            return Some((r - (p.x - c.x).hypot(p.y - c.y)) * sweep.signum());
+            return Some((r - kentos_num::hypot(p.x - c.x, p.y - c.y)) * sweep.signum());
         }
         Some((p.x - k.a.x) * k.left.x + (p.y - k.a.y) * k.left.y)
     }

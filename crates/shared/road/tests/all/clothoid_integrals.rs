@@ -17,7 +17,8 @@ fn the_clothoid_integral_is_the_fresnel_one() {
         for at in c["at"].as_array().expect("rows") {
             let s = at["s"].as_f64().unwrap();
             let [x, y] = integral(f("theta0"), f("k0"), f("c"), s);
-            let err = (x - at["x"].as_f64().unwrap()).hypot(y - at["y"].as_f64().unwrap());
+            let err =
+                kentos_num::hypot(x - at["x"].as_f64().unwrap(), y - at["y"].as_f64().unwrap());
             let name = c["name"].as_str().unwrap();
             assert!(err <= 1e-12 * s.max(1.0), "{name} s {s}: {err:e} m");
             if err > worst.0 {

@@ -295,7 +295,7 @@ fn sensed(doc: &Document, mut rule: ConstraintRule) -> ConstraintRule {
                 *inside = false;
             } else {
                 if let Some(((a, ra), (b, rb))) = circle(*a).zip(circle(*b)) {
-                    let d = (b.x - a.x).hypot(b.y - a.y);
+                    let d = kentos_num::hypot(b.x - a.x, b.y - a.y);
                     *inside = (d - (ra - rb).abs()).abs() < (d - (ra + rb)).abs();
                 }
                 *left = false;
@@ -1049,7 +1049,7 @@ fn fixed_arc_radius_limits(
         let (Some(p), Some(q), Some(&requested)) = (at(i), at(j), values.get(name)) else {
             continue;
         };
-        let chord = (q.x - p.x).hypot(q.y - p.y) * unit.per_metre();
+        let chord = kentos_num::hypot(q.x - p.x, q.y - p.y) * unit.per_metre();
         let minimum = chord / divisor;
         if minimum.is_finite() && requested < minimum {
             return Err(refuse_ids(
@@ -1132,7 +1132,9 @@ pub(crate) fn add_bond_given(
 fn collapses(before: Option<&kentos_commands::Entity>, after: &kentos_commands::Entity) -> bool {
     use kentos_commands::Entity;
     const NONE: f64 = 1e-9;
-    let len = |a: &kentos_commands::Vec2, b: &kentos_commands::Vec2| (b.x - a.x).hypot(b.y - a.y);
+    let len = |a: &kentos_commands::Vec2, b: &kentos_commands::Vec2| {
+        kentos_num::hypot(b.x - a.x, b.y - a.y)
+    };
     let edges = |pts: &[kentos_commands::Vec2], closed: bool| -> Vec<f64> {
         let n = pts.len();
         let count = if closed { n } else { n.saturating_sub(1) };

@@ -96,13 +96,16 @@ fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<Terrai
                         longest: corners.map(|c| {
                             (0..3)
                                 .map(|k| {
-                                    (c[k][0] - c[(k + 1) % 3][0]).hypot(c[k][1] - c[(k + 1) % 3][1])
+                                    kentos_num::hypot(
+                                        c[k][0] - c[(k + 1) % 3][0],
+                                        c[k][1] - c[(k + 1) % 3][1],
+                                    )
                                 })
                                 .fold(0.0, f64::max)
                         }),
                         corner: corners.map(|c| {
                             c.iter()
-                                .map(|v| (v[0] - p[0]).hypot(v[1] - p[1]))
+                                .map(|v| kentos_num::hypot(v[0] - p[0], v[1] - p[1]))
                                 .fold(f64::INFINITY, f64::min)
                         }),
                         corners,

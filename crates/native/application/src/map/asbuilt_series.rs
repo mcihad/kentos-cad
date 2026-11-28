@@ -226,7 +226,7 @@ fn fit_of(
         sigma_east: east.sigma,
         sigma_north: north.sigma,
         sigma_up: up.map(|v| v.sigma),
-        speed: east.rate.hypot(north.rate),
+        speed: kentos_num::hypot(east.rate, north.rate),
         moving,
     })
 }
@@ -334,7 +334,7 @@ pub(crate) fn tracks(
                 q.map(|q| {
                     let (de, dn) = (q.p.x - r.p.x, q.p.y - r.p.y);
                     let dz = q.z.zip(r.z).map(|(a, b)| a - b);
-                    let horizontal = de.hypot(dn);
+                    let horizontal = kentos_num::hypot(de, dn);
                     let outside = input.horizontal.is_some_and(|h| horizontal > h)
                         || input.vertical.zip(dz).is_some_and(|(v, dz)| dz.abs() > v);
                     AsbuiltStep {

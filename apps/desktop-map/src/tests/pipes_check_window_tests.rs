@@ -382,7 +382,7 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
     let ellipses: Vec<(f64, f64)> = drawn
         .iter()
         .filter_map(|e| match e {
-            Entity::Ellipse(e) => Some((e.major.x.hypot(e.major.y), e.ratio)),
+            Entity::Ellipse(e) => Some((kentos_num::hypot(e.major.x, e.major.y), e.ratio)),
             _ => None,
         })
         .collect();

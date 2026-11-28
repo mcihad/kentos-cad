@@ -102,7 +102,7 @@ impl App {
             // A screen pixel in the service's units, from two points a pixel apart.
             let px = 1.0 / self.viewport.camera.scale;
             let units = (pair.to_grid)(p.x + px, p.y)
-                .map(|(x2, y2)| (x2 - x).hypot(y2 - y))
+                .map(|(x2, y2)| kentos_num::hypot(x2 - x, y2 - y))
                 .filter(|u| u.is_finite() && *u > 0.0)
                 .unwrap_or(px);
             let conn = s

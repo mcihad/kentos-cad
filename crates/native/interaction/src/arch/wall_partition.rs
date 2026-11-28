@@ -133,7 +133,7 @@ impl Partition {
                 ));
                 // The distance as a dimension with its number over a mask, as the temporary dimensions.
                 let [a, b] = output.dimension.map(map);
-                if (b.x - a.x).hypot(b.y - a.y) > 1e-9 {
+                if kentos_num::hypot(b.x - a.x, b.y - a.y) > 1e-9 {
                     let height = cx.view.world_length(12.0);
                     let entity = crate::opening_distance::dimension(a, b, 0.0, height);
                     let drawn = crate::wall_dimensions::dimension_preview(
@@ -241,7 +241,7 @@ impl Partition {
             edge_bulge(&w.wall, r.edge),
         ) {
             // A counter-clockwise arc's left is its inside (docs/adr/0734).
-            let inside = (p.x - arc.c.x).hypot(p.y - arc.c.y) < arc.r;
+            let inside = kentos_num::hypot(p.x - arc.c.x, p.y - arc.c.y) < arc.r;
             return Some(if inside == (arc.sweep > 0.0) {
                 PartitionSide::Left
             } else {
@@ -667,11 +667,9 @@ fn edge_distance(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
             let along = (arc.sweep.signum() * ((p.y - arc.c.y).atan2(p.x - arc.c.x) - arc.a0))
                 .rem_euclid(2.0 * std::f64::consts::PI);
             if along <= arc.sweep.abs() {
-                ((p.x - arc.c.x).hypot(p.y - arc.c.y) - arc.r).abs()
+                (kentos_num::hypot(p.x - arc.c.x, p.y - arc.c.y) - arc.r).abs()
             } else {
-                (p.x - a.x)
-                    .hypot(p.y - a.y)
-                    .min((p.x - b.x).hypot(p.y - b.y))
+                kentos_num::hypot(p.x - a.x, p.y - a.y).min(kentos_num::hypot(p.x - b.x, p.y - b.y))
             }
         }
     }

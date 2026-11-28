@@ -109,7 +109,7 @@ fn line(p: &BlockParameter) -> Option<(V, V)> {
     let BlockParameter::Linear { from, to, .. } = p else {
         return None;
     };
-    let l = (to.x - from.x).hypot(to.y - from.y);
+    let l = kentos_num::hypot(to.x - from.x, to.y - from.y);
     (l > 0.0).then(|| {
         (
             V::new(from.x, from.y),

@@ -1300,11 +1300,11 @@ impl canvas::Program<Message> for NetworkMap<'_> {
 fn along(pts: &[[f64; 2]], share: f64) -> Option<[f64; 2]> {
     let total: f64 = pts
         .windows(2)
-        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
         .sum();
     let mut left = total * share;
     for w in pts.windows(2) {
-        let l = (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]);
+        let l = kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]);
         if l >= left && l > 0.0 {
             let t = left / l;
             return Some([

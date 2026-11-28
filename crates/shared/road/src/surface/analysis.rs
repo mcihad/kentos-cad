@@ -379,7 +379,7 @@ impl Surface {
                 let gy = ((w[2][0] + 2.0 * w[2][1] + w[2][2])
                     - (w[0][0] + 2.0 * w[0][1] + w[0][2]))
                     / (8.0 * cell);
-                let raster = gx.hypot(gy) * 100.0;
+                let raster = kentos_num::hypot(gx, gy) * 100.0;
                 let Some(facet) = self.slope_of(t) else {
                     continue;
                 };

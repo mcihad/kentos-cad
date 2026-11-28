@@ -295,7 +295,7 @@ fn a_free_endpoint_is_allowed_to_shorten_the_chord_for_a_smaller_radius() {
         panic!("path")
     };
     assert_eq!(p.pts[0], kentos_commands::Vec2 { x: 0.0, y: 0.0 });
-    assert!(p.pts[1].x.hypot(p.pts[1].y) <= 3.0 + 1e-8);
+    assert!(kentos_num::hypot(p.pts[1].x, p.pts[1].y) <= 3.0 + 1e-8);
     assert!(
         done(constraints_query::read(&d, &ConstraintsQuery::default()))
             .constraints

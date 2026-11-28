@@ -97,7 +97,7 @@ impl<'s> Tin<'s> {
         }
         let gx = (uz * vy - vz * uy) / det;
         let gy = (vz * ux - uz * vx) / det;
-        let g = gx.hypot(gy);
+        let g = kentos_num::hypot(gx, gy);
         if g.is_nan() || g <= 1e-12 {
             return None;
         }
@@ -197,7 +197,7 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                     // On a corner of the triangle, or on an edge it leaves across: the drop goes on from there.
                     if let Some(&v) = tri.iter().find(|&&v| {
                         let c = tin.v(v);
-                        (c[0] - p[0]).hypot(c[1] - p[1]) < 1e-9
+                        kentos_num::hypot(c[0] - p[0], c[1] - p[1]) < 1e-9
                     }) {
                         at = At::Corner(v);
                         continue;
@@ -205,7 +205,7 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                     let on = (0..3).find(|&i| {
                         let (a, b) = (tin.v(tri[i]), tin.v(tri[(i + 1) % 3]));
                         let e = [b[0] - a[0], b[1] - a[1]];
-                        let len = e[0].hypot(e[1]);
+                        let len = kentos_num::hypot(e[0], e[1]);
                         len > 0.0 && (cross(e, [p[0] - a[0], p[1] - a[1]]) / len).abs() < 1e-9
                     });
                     let Some(i) = on else {
@@ -228,7 +228,7 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                 // Leaving by a corner: the drop is at that corner.
                 let near = |v: u32| {
                     let c = tin.v(v);
-                    (c[0] - q[0]).hypot(c[1] - q[1]) < 1e-9
+                    kentos_num::hypot(c[0] - q[0], c[1] - q[1]) < 1e-9
                 };
                 if near(a) || near(b) {
                     at = At::Corner(if near(a) { a } else { b });
@@ -278,7 +278,7 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                 }
                 for &w in &tin.corners[v as usize] {
                     let p = tin.v(w);
-                    let len = (p[0] - c[0]).hypot(p[1] - c[1]);
+                    let len = kentos_num::hypot(p[0] - c[0], p[1] - c[1]);
                     if len > 0.0 && p[2] < c[2] {
                         let g = (c[2] - p[2]) / len;
                         if best.is_none_or(|(bg, _, _)| g > bg) {
@@ -315,7 +315,7 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                         let i = (k + 1) % 3;
                         let near = |x: u32| {
                             let p = tin.v(x);
-                            (p[0] - q[0]).hypot(p[1] - q[1]) < 1e-9
+                            kentos_num::hypot(p[0] - q[0], p[1] - q[1]) < 1e-9
                         };
                         let (a, b) = (tri[i], tri[(i + 1) % 3]);
                         if near(a) || near(b) {
@@ -373,10 +373,10 @@ fn cross_edge(tin: &Tin<'_>, t: u32, i: usize, q: [f64; 2]) -> Result<At, DropEn
 }
 
 fn finish(mut path: Vec<[f64; 3]>, end: DropEnd) -> Drop {
-    path.dedup_by(|a, b| (a[0] - b[0]).hypot(a[1] - b[1]) < 1e-12);
+    path.dedup_by(|a, b| kentos_num::hypot(a[0] - b[0], a[1] - b[1]) < 1e-12);
     let length = path
         .windows(2)
-        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
         .sum();
     Drop { path, length, end }
 }
@@ -579,7 +579,7 @@ fn nearest_on(path: &[[f64; 3]], p: [f64; 2]) -> Option<(f64, usize, [f64; 3])> 
             0.0
         };
         let q = [a[0] + t * dx, a[1] + t * dy, a[2] + t * (b[2] - a[2])];
-        let d = (q[0] - p[0]).hypot(q[1] - p[1]);
+        let d = kentos_num::hypot(q[0] - p[0], q[1] - p[1]);
         if best.is_none_or(|(bd, _, _)| d < bd) {
             best = Some((d, i, q));
         }
@@ -587,7 +587,7 @@ fn nearest_on(path: &[[f64; 3]], p: [f64; 2]) -> Option<(f64, usize, [f64; 3])> 
     if best.is_none()
         && let Some(a) = path.first()
     {
-        best = Some(((a[0] - p[0]).hypot(a[1] - p[1]), 0, *a));
+        best = Some((kentos_num::hypot(a[0] - p[0], a[1] - p[1]), 0, *a));
     }
     best
 }
@@ -633,7 +633,7 @@ pub fn catchment(tin: &Tin<'_>, discharge: [f64; 2], cell: f64, radius: f64) -> 
             part.push(q);
             let length: f64 = part
                 .windows(2)
-                .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+                .map(|w| kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]))
                 .sum();
             if longest.as_ref().is_none_or(|(l, _)| length > *l) {
                 longest = Some((length, part));

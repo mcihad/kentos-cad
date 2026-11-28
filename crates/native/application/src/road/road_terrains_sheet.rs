@@ -287,7 +287,7 @@ fn built_up_spots(
             let (mut at, mut walked) = (d / 2.0, 0.0);
             for w in piece.windows(2) {
                 let (p, q) = (w[0], w[1]);
-                let len = (q[0] - p[0]).hypot(q[1] - p[1]);
+                let len = kentos_num::hypot(q[0] - p[0], q[1] - p[1]);
                 if len == 0.0 {
                     continue;
                 }
@@ -359,7 +359,7 @@ fn built_up_spots(
         }
         let near = |c: P, list: &[SheetSpot]| {
             list.iter()
-                .any(|s| (s.x - c[0]).hypot(s.y - c[1]) < d / 2.0)
+                .any(|s| kentos_num::hypot(s.x - c[0], s.y - c[1]) < d / 2.0)
         };
         let mut j = j0;
         while j <= j1 {
@@ -495,7 +495,7 @@ fn clip(points: &[P], closed: bool, details: &[Detail]) -> (Vec<Vec<P>>, f64, bo
             let b = [p[0] + t1 * (q[0] - p[0]), p[1] + t1 * (q[1] - p[1])];
             let mid = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
             if details.iter().any(|d| inside(d, mid)) {
-                cut += (b[0] - a[0]).hypot(b[1] - a[1]);
+                cut += kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
                 touched = true;
                 if current.len() >= 2 {
                     parts.push(std::mem::take(&mut current));
@@ -552,7 +552,7 @@ fn labels(
     let mut s = every / 2.0;
     let mut walked = 0.0;
     for (p, q) in segments {
-        let len = (q[0] - p[0]).hypot(q[1] - p[1]);
+        let len = kentos_num::hypot(q[0] - p[0], q[1] - p[1]);
         if len == 0.0 {
             continue;
         }

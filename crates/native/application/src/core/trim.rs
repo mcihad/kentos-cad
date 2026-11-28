@@ -800,8 +800,8 @@ impl Run<'_> {
         // folded paths: Euclidean distance, ties to the end. Arc-length
         // midpoint can name a different end and suppress a later valid pick.
         let end = usize::from(
-            (at.x - ends[1].x).hypot(at.y - ends[1].y)
-                <= (at.x - ends[0].x).hypot(at.y - ends[0].y),
+            kentos_num::hypot(at.x - ends[1].x, at.y - ends[1].y)
+                <= kentos_num::hypot(at.x - ends[0].x, at.y - ends[0].y),
         );
         if std::mem::replace(&mut w.used[k][end], true) {
             return;

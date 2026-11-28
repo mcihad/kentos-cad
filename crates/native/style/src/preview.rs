@@ -164,7 +164,7 @@ fn marker_reach(symbol: &Value, sample: &Entity) -> f64 {
         // An anchored marker stands beside its point (a pin on its tip, a flag on its foot): its middle is that far
         // from the point, so the whole of it is within the reach.
         let [ax, ay] = crate::batches::anchor_of(common["anchor"].as_str().unwrap_or(""));
-        reach = reach.max((at(0) - ax * w).hypot(at(1) - ay * h) + w.max(h) / 2.0);
+        reach = reach.max(kentos_num::hypot(at(0) - ax * w, at(1) - ay * h) + w.max(h) / 2.0);
     }
     reach
 }

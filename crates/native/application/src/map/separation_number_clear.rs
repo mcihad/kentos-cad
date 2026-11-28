@@ -93,7 +93,7 @@ pub fn reach_of(parts: &[&ScopePart], height: f64, width: f64) -> Bounds {
                 let most = (0..n)
                     .map(|i| {
                         let (a, c) = (r.pts[i], r.pts[(i + 1) % n]);
-                        (c[0] - a[0]).hypot(c[1] - a[1])
+                        kentos_num::hypot(c[0] - a[0], c[1] - a[1])
                     })
                     .fold(0.0, f64::max);
                 b.min_x -= most;

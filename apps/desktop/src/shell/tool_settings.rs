@@ -567,7 +567,7 @@ mod tests {
         assert!((hit.point.x - expected).abs() < 1e-14);
         assert_eq!(hit.point.y, 0.1);
         let p = app.viewport.camera.world_to_screen(hit.point);
-        let distance = (p[0] - f64::from(target.x)).hypot(p[1] - f64::from(target.y));
+        let distance = kentos_num::hypot(p[0] - f64::from(target.x), p[1] - f64::from(target.y));
         assert!(distance <= app.draft.snap_aperture);
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),

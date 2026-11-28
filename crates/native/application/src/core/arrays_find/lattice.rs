@@ -20,8 +20,8 @@ fn layout(p: &Proposal, column: Vector, row: Vector) -> ArrayLayout {
     ArrayLayout::Lattice {
         rows: p.rows,
         cols: p.cols,
-        dx: column.0.hypot(column.1),
-        dy: row.0.hypot(row.1),
+        dx: kentos_num::hypot(column.0, column.1),
+        dy: kentos_num::hypot(row.0, row.1),
         column_angle: column.1.atan2(column.0).to_degrees(),
         row_angle: row.1.atan2(row.0).to_degrees(),
     }
@@ -38,7 +38,10 @@ fn rectangle(
     stopped: &mut impl FnMut() -> bool,
 ) -> Result<Option<Proposal>, Stop> {
     let det = column.0 * row.1 - column.1 * row.0;
-    if !det.is_finite() || det.abs() / column.0.hypot(column.1) / row.0.hypot(row.1) < 1e-6 {
+    if !det.is_finite()
+        || det.abs() / kentos_num::hypot(column.0, column.1) / kentos_num::hypot(row.0, row.1)
+            < 1e-6
+    {
         return Ok(None);
     }
     let mut places = BTreeMap::new();
@@ -58,7 +61,11 @@ fn rectangle(
         } else {
             tolerance
         };
-        if (p.x - c * column.0 - r * row.0).hypot(p.y - c * column.1 - r * row.1) > bound {
+        if kentos_num::hypot(
+            p.x - c * column.0 - r * row.0,
+            p.y - c * column.1 - r * row.1,
+        ) > bound
+        {
             continue;
         }
         if places.insert((r as i32, c as i32), p.uid).is_some() {
@@ -225,15 +232,15 @@ pub(super) fn find(
                 x = -x;
                 y = -y;
             }
-            let length = x.hypot(y);
+            let length = kentos_num::hypot(x, y);
             if length.is_finite() && length > tolerance * 2. && length > 1e-9 {
                 deltas.push((x, y));
             }
         }
     }
     deltas.sort_by(|a, b| {
-        a.0.hypot(a.1)
-            .total_cmp(&b.0.hypot(b.1))
+        kentos_num::hypot(a.0, a.1)
+            .total_cmp(&kentos_num::hypot(b.0, b.1))
             .then(a.0.total_cmp(&b.0))
             .then(a.1.total_cmp(&b.1))
     });
@@ -243,7 +250,7 @@ pub(super) fn find(
             if !budget.tick(stopped)? {
                 break 'vectors;
             }
-            if (v.0 - d.0).hypot(v.1 - d.1) <= tolerance * 2. {
+            if kentos_num::hypot(v.0 - d.0, v.1 - d.1) <= tolerance * 2. {
                 continue 'vectors;
             }
         }

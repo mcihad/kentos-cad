@@ -78,7 +78,7 @@ fn grow(b: &mut Bounds, r: &Ring, pad: f64) {
             .copied()
             .unwrap_or(0.0)
             .abs();
-        let chord = (q.x - p.x).hypot(q.y - p.y);
+        let chord = kentos_num::hypot(q.x - p.x, q.y - p.y);
         let arc = if k > 0.0 {
             chord * (1.0 + k * k) / (2.0 * k)
         } else {

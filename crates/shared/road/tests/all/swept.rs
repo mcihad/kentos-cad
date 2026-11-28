@@ -46,7 +46,7 @@ fn on_a_circle_the_rear_settles_inside() {
     // Front on R = 20 for three turns: the rear's radius tends to √(R² − L²).
     let s = swept::drive(&car(6.0), &circle(20.0, 3.0, 7200), 0.05).expect("drives");
     let last = s.samples.last().expect("samples");
-    let r = last.rear[0].hypot(last.rear[1] - 20.0);
+    let r = kentos_num::hypot(last.rear[0], last.rear[1] - 20.0);
     assert!((r - (400.0_f64 - 36.0).sqrt()).abs() < 1e-3, "{r}");
     assert!(
         (s.offtracking - (20.0 - 364.0_f64.sqrt())).abs() < 1e-3,
@@ -66,7 +66,7 @@ fn on_a_circle_the_rear_settles_inside() {
     let s = swept::drive(&t, &circle(20.0, 4.0, 7200), 0.05).expect("drives");
     let last = s.samples.last().expect("samples");
     let ta = last.trailer.expect("a trailer");
-    let rt = ta[0].hypot(ta[1] - 20.0);
+    let rt = kentos_num::hypot(ta[0], ta[1] - 20.0);
     assert!((rt - (400.0_f64 - 36.0 - 64.0).sqrt()).abs() < 2e-3, "{rt}");
     assert_eq!(last.bodies.len(), 2);
 }
@@ -162,7 +162,7 @@ fn arcs_as_places() {
     );
     let mid = r[8];
     assert!(
-        (mid[0] - 10.0).hypot(mid[1] - 10.0) - 10.0 < 1e-9,
+        kentos_num::hypot(mid[0] - 10.0, mid[1] - 10.0) - 10.0 < 1e-9,
         "{mid:?}"
     );
 }

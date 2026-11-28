@@ -301,7 +301,7 @@ pub fn seams(regions: &[RegionCrosses]) -> Vec<Seam> {
         for (code, p) in &pa {
             match pb.iter().find(|(c, _)| c == code) {
                 Some((_, q)) => {
-                    let shift = (p[0] - q[0]).hypot(p[1] - q[1]);
+                    let shift = kentos_num::hypot(p[0] - q[0], p[1] - q[1]);
                     let step = (p[2] - q[2]).abs();
                     if shift > seam.shift {
                         seam.shift = shift;

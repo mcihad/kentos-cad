@@ -168,7 +168,7 @@ fn edge_basis(doc: &Document, uid: Uuid, edge: u32) -> Option<(Vec2, Vec2, f64)>
     }
     let a = Vec2::new(w.wall.pts[k].x, w.wall.pts[k].y);
     let b = Vec2::new(w.wall.pts[(k + 1) % n].x, w.wall.pts[(k + 1) % n].y);
-    let length = (b.x - a.x).hypot(b.y - a.y);
+    let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
     if !length.is_finite() || length <= 0.0 {
         return None;
     }
@@ -227,7 +227,7 @@ fn longest(pts: &[kentos_commands::Vec2], bulges: Option<&[f64]>, closed: bool) 
             continue;
         }
         let (a, b) = (pts[k], pts[(k + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if l > 0.0 && best.is_none_or(|(m, _)| l > m) {
             best = Some((l, Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)));
         }
@@ -419,7 +419,7 @@ impl WallDimensions {
         let points = doc.dimension_set_wall_face(uid, face, edge).ok()?;
         let a = Vec2::new(points[0].x, points[0].y);
         let b = Vec2::new(points[1].x, points[1].y);
-        let length = (b.x - a.x).hypot(b.y - a.y);
+        let length = kentos_num::hypot(b.x - a.x, b.y - a.y);
         (length.is_finite() && length > 0.0).then(|| {
             (
                 a,

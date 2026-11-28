@@ -468,9 +468,8 @@ fn wall_distance_bonded(app: &mut App) {
         .temporary_squares()
         .into_iter()
         .min_by(|a, b| {
-            (a.x - east.x)
-                .hypot(a.y - east.y)
-                .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+            kentos_num::hypot(a.x - east.x, a.y - east.y)
+                .total_cmp(&kentos_num::hypot(b.x - east.x, b.y - east.y))
         })
         .expect("a padlock");
     click(app, [lock.x - E, lock.y - N]);
@@ -610,9 +609,8 @@ fn remove_east_bond(app: &mut App) {
         .temporary_squares()
         .into_iter()
         .min_by(|a, b| {
-            (a.x - east.x)
-                .hypot(a.y - east.y)
-                .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+            kentos_num::hypot(a.x - east.x, a.y - east.y)
+                .total_cmp(&kentos_num::hypot(b.x - east.x, b.y - east.y))
         })
         .expect("a padlock");
     click(app, [lock.x - E, lock.y - N]);
@@ -917,9 +915,8 @@ mod bond_tests {
             .temporary_squares()
             .into_iter()
             .min_by(|a, b| {
-                (a.x - east.x)
-                    .hypot(a.y - east.y)
-                    .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+                kentos_num::hypot(a.x - east.x, a.y - east.y)
+                    .total_cmp(&kentos_num::hypot(b.x - east.x, b.y - east.y))
             })
             .expect("a padlock");
         click(&mut app, [lock.x - E, lock.y - N]);

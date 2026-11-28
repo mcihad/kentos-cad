@@ -126,7 +126,10 @@ impl App {
         let (mut a, mut b, mut far) = (0, 1, -1.0);
         for i in 0..picked.len() {
             for j in i + 1..picked.len() {
-                let d = (picked[i].1[0] - picked[j].1[0]).hypot(picked[i].1[1] - picked[j].1[1]);
+                let d = kentos_num::hypot(
+                    picked[i].1[0] - picked[j].1[0],
+                    picked[i].1[1] - picked[j].1[1],
+                );
                 if d > far {
                     (a, b, far) = (i, j, d);
                 }

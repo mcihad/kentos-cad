@@ -280,7 +280,7 @@ const CONFIDENCE: f64 = 0.95;
 fn error_ellipse(c: [f64; 6], p: f64) -> ErrorEllipse {
     let (ee, en, nn, uu) = (c[0], c[1], c[3], c[5]);
     let mid = (nn + ee) / 2.0;
-    let half = ((nn - ee) / 2.0).hypot(en);
+    let half = kentos_num::hypot((nn - ee) / 2.0, en);
     let (k2, k1) = (chi2_quantile(2.0, p).sqrt(), chi2_quantile(1.0, p).sqrt());
     let mut azimuth = 0.5 * (2.0 * en).atan2(nn - ee) * RAD;
     if azimuth < 0.0 {

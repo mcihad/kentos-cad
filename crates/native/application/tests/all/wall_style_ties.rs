@@ -40,7 +40,7 @@ fn dimensions(doc: &Document) -> Vec<(f64, Vec<Option<String>>)> {
     doc.entities()
         .filter_map(|e| match e {
             Entity::Dimension(d) => Some((
-                (d.b.x - d.a.x).hypot(d.b.y - d.a.y),
+                kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y),
                 d.refs
                     .as_ref()
                     .map(|r| {

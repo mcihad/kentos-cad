@@ -191,7 +191,7 @@ pub(super) fn inspect(
                 }
                 let x = tangent(&a.edge, hit.p);
                 let y = tangent(&b.edge, hit.p);
-                let length = x.x.hypot(x.y) * y.x.hypot(y.y);
+                let length = kentos_num::hypot(x.x, x.y) * kentos_num::hypot(y.x, y.y);
                 let touch = length > 0. && (x.x * y.y - x.y * y.x).abs() / length < 1e-6;
                 let (code, message) = if touch {
                     (

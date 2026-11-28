@@ -211,7 +211,7 @@ fn check(doc: &Document, input: &EntitiesRaise) -> Result<(Slot, Entity, Entitie
         ));
     };
     let r = input.reference;
-    let distance = (p.x - r.x).hypot(p.y - r.y);
+    let distance = kentos_num::hypot(p.x - r.x, p.y - r.y);
     let (after, path) = match (input.grade, input.difference) {
         (Some(g), None) => (r.z + g * distance, "grade"),
         (None, Some(d)) => (r.z + d, "difference"),

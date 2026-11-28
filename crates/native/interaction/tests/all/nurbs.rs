@@ -381,7 +381,7 @@ fn tangent_settings_show_the_semantic_plan_before_the_click_and_keep_directed_en
     for p in &preview.strokes.first().unwrap().pts {
         let on = c.view().point(c.view().closest(*p));
         assert!(
-            (on.x - p.x).hypot(on.y - p.y) < 1e-6,
+            kentos_num::hypot(on.x - p.x, on.y - p.y) < 1e-6,
             "preview must lie on the planned curve"
         );
     }

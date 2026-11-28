@@ -64,7 +64,7 @@ pub fn area(height: f64, shape: &Shape) -> f64 {
 pub fn totals(places: &[[f64; 2]], slices: &[Slice]) -> (f64, f64, f64) {
     let (mut length, mut face, mut concrete) = (0.0, 0.0, 0.0);
     for (p, s) in places.windows(2).zip(slices.windows(2)) {
-        let l = (p[1][0] - p[0][0]).hypot(p[1][1] - p[0][1]);
+        let l = kentos_num::hypot(p[1][0] - p[0][0], p[1][1] - p[0][1]);
         length += l;
         face += l * (s[0].height + s[1].height) / 2.0;
         concrete += l * (s[0].area + s[1].area) / 2.0;

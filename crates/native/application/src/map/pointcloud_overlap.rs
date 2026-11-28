@@ -227,7 +227,7 @@ fn run(
         cells[k].entry((i, j)).or_default().add(x - cx, y - cy, z);
         for (c, sums) in controls.iter().zip(around.iter_mut()) {
             let (u, v) = (x - c.1, y - c.2);
-            if u.abs() <= radius && v.abs() <= radius && u.hypot(v) <= radius {
+            if u.abs() <= radius && v.abs() <= radius && kentos_num::hypot(u, v) <= radius {
                 sums[k].add(u, v, z);
             }
         }

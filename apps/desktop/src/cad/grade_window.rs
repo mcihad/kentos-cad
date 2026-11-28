@@ -446,7 +446,7 @@ impl App {
                 let bent = bulges.as_deref().and_then(|b| b.get(from..to));
                 let size = span
                     .windows(2)
-                    .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+                    .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                     .sum::<f64>();
                 let to_core = |p: &kentos_commands::Vec2| kentos_geometry_core::Vec2::new(p.x, p.y);
                 let core: Vec<_> = span.iter().map(to_core).collect();
@@ -524,7 +524,7 @@ impl App {
                 .flat_map(|r| {
                     r.1.iter()
                         .enumerate()
-                        .map(move |(i, v)| (r.0, i, (v.x - p.x).hypot(v.y - p.y)))
+                        .map(move |(i, v)| (r.0, i, kentos_num::hypot(v.x - p.x, v.y - p.y)))
                 })
                 .filter(|(_, _, d)| *d <= reach)
                 .min_by(|a, b| a.2.total_cmp(&b.2));
@@ -544,7 +544,7 @@ impl App {
             .grade_vertices()
             .iter()
             .enumerate()
-            .map(|(i, v)| (i, (v.x - p.x).hypot(v.y - p.y)))
+            .map(|(i, v)| (i, kentos_num::hypot(v.x - p.x, v.y - p.y)))
             .filter(|(_, d)| *d <= reach)
             .min_by(|a, b| a.1.total_cmp(&b.1))
             .map(|(i, _)| i);

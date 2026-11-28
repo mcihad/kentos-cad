@@ -104,7 +104,7 @@ impl CoreWall {
             return None;
         }
         let (a, b) = (self.pts[k], self.pts[(k + 1) % self.pts.len()]);
-        ((b.x - a.x).hypot(b.y - a.y) > 0.0).then_some((a, b))
+        (kentos_num::hypot(b.x - a.x, b.y - a.y) > 0.0).then_some((a, b))
     }
 
     /// Arc edge `k`'s circle (docs/adr/8049 §4).
@@ -125,7 +125,7 @@ impl CoreWall {
 }
 
 fn unit(a: P, b: P) -> P {
-    let l = (b.x - a.x).hypot(b.y - a.y);
+    let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
     P::new((b.x - a.x) / l, (b.y - a.y) / l)
 }
 
@@ -138,7 +138,7 @@ fn grid_line(g: &kentos_commands::GridFields) -> Option<(P, P)> {
         P::new(g.pts[0].x, g.pts[0].y),
         P::new(g.pts[1].x, g.pts[1].y),
     );
-    ((b.x - a.x).hypot(b.y - a.y) > 0.0).then(|| (a, unit(a, b)))
+    (kentos_num::hypot(b.x - a.x, b.y - a.y) > 0.0).then(|| (a, unit(a, b)))
 }
 
 impl<'a> View<'a> {
@@ -191,7 +191,7 @@ impl<'a> View<'a> {
         }
         let a = w.pts[edge as usize];
         let d = P::new(a.x - arc.c.x, a.y - arc.c.y);
-        let l = d.x.hypot(d.y);
+        let l = kentos_num::hypot(d.x, d.y);
         let at = P::new(arc.c.x + d.x / l * r, arc.c.y + d.y / l * r);
         Some((
             at,
@@ -238,7 +238,9 @@ impl<'a> View<'a> {
         let k = side as usize;
         let (a, b) = *sides.get(k)?;
         let (a0, b0) = sides[k % 2];
-        if (b0.x - a0.x).hypot(b0.y - a0.y) <= 0.0 || (b.x - a.x).hypot(b.y - a.y) <= 0.0 {
+        if kentos_num::hypot(b0.x - a0.x, b0.y - a0.y) <= 0.0
+            || kentos_num::hypot(b.x - a.x, b.y - a.y) <= 0.0
+        {
             return None;
         }
         let dir = unit(a0, b0);
@@ -854,7 +856,7 @@ fn held(
                     // An arc moved when its circle did (docs/adr/8049 §4): its centre or its radius.
                     (None, None) => match (then.arc(*e), now.as_ref().and_then(|n| n.arc(*e))) {
                         (Some(x), Some(y)) => {
-                            (x.c.x - y.c.x).hypot(x.c.y - y.c.y) > core::TIE
+                            kentos_num::hypot(x.c.x - y.c.x, x.c.y - y.c.y) > core::TIE
                                 || (x.r - y.r).abs() > core::TIE
                                 || x.sweep.signum() != y.sweep.signum()
                         }
@@ -905,7 +907,7 @@ fn held(
             }
             // A grid the write turned or moved across (docs/adr/8049 §2); one only lengthened along itself is not.
             (Var::Grid(_), Shape::Grid { pts, .. }) => match (pts.as_slice(), view.grid(id)) {
-                ([a0, b0], Some((a1, u1))) if (b0.x - a0.x).hypot(b0.y - a0.y) > 0.0 => {
+                ([a0, b0], Some((a1, u1))) if kentos_num::hypot(b0.x - a0.x, b0.y - a0.y) > 0.0 => {
                     let u0 = unit(*a0, *b0);
                     let turned = (u0.x * u1.y - u0.y * u1.x).abs() > core::PARALLEL;
                     let n = P::new(-u0.y, u0.x);

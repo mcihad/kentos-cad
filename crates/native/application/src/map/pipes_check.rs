@@ -238,7 +238,7 @@ pub(crate) fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
     };
     let mut stations = vec![0.0];
     for (i, w) in pts.windows(2).enumerate() {
-        let chord = (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]);
+        let chord = kentos_num::hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]);
         stations.push(stations[i] + arc_length(chord, bulges[i]));
     }
     let curved = other || bulges.iter().any(|b| *b != 0.0);

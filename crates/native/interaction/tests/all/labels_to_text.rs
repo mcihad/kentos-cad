@@ -184,7 +184,7 @@ fn writes_the_labels_as_a_sheet_would_in_one_step_on_the_text_layer_it_opens() {
     assert!(near(first.height, 14.0 / k, 1e-12), "{}", first.height);
     // The third parcel's number is not on the first's.
     let third = by("104");
-    assert!((third.p.x - first.p.x).hypot(third.p.y - first.p.y) > 0.5);
+    assert!(kentos_num::hypot(third.p.x - first.p.x, third.p.y - first.p.y) > 0.5);
     // The point's name at its first place round it: to its top right.
     let point = by("P1");
     assert_eq!(point.align, Some(TextAlign::MiddleCenter));

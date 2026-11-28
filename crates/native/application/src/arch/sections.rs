@@ -1268,7 +1268,7 @@ fn railing(r: &kentos_commands::RailingFields, owner: Option<String>, m: &mut Mo
             let mut at = step / 2.0;
             let mut walked = 0.0;
             for w in line.windows(2) {
-                let l = (w[1].x - w[0].x).hypot(w[1].y - w[0].y);
+                let l = kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y);
                 while at <= walked + l && l > 0.0 {
                     let t = (at - walked) / l;
                     let q = P::new(
@@ -1801,7 +1801,7 @@ fn push_rails(
     for run in runs {
         let part = Some(Part::Rail(usize::from(!run.left)));
         let (ex, ey) = (run.b.x - run.a.x, run.b.y - run.a.y);
-        let l = ex.hypot(ey);
+        let l = kentos_num::hypot(ex, ey);
         if l <= 1e-9 {
             continue;
         }
@@ -2836,7 +2836,7 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             continue;
         }
         let ku = sl.dx * frame.right.x + sl.dy * frame.right.y;
-        let grade = sl.dx.hypot(sl.dy);
+        let grade = kentos_num::hypot(sl.dx, sl.dy);
         if ku.abs() <= 1e-6 || (ku.abs() - grade).abs() > 1e-6 * grade.max(1.0) {
             continue;
         }
@@ -3245,7 +3245,7 @@ fn merged(mut pieces: Vec<(P, P)>) -> Vec<(P, P)> {
             (off * 1e6).round() as i64,
         )
     };
-    pieces.retain(|(a, b)| (b.x - a.x).hypot(b.y - a.y) > 1e-6);
+    pieces.retain(|(a, b)| kentos_num::hypot(b.x - a.x, b.y - a.y) > 1e-6);
     // Each line (its direction and offset, to a micrometre) with its pieces: their spans along it and ends.
     type Pieces = Vec<(f64, f64, P, P)>;
     let mut lines: BTreeMap<(i64, i64, i64), Pieces> = BTreeMap::new();

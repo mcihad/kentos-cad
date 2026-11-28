@@ -349,7 +349,7 @@ pub fn fixture_front(
     limit: f64,
 ) -> Option<(V, f64, &'static str)> {
     let [base, last] = edge;
-    let width = (last.x - base.x).hypot(last.y - base.y);
+    let width = kentos_num::hypot(last.x - base.x, last.y - base.y);
     if width < SLACK {
         return None;
     }
@@ -430,8 +430,8 @@ pub(crate) type Turn = Option<(&'static str, &'static str)>;
 /// Project only material inside the rectangle. Holes in a closed wall do not cast an obstruction.
 fn straight_clearance(rect: [V; 4], obstacles: &[&Obstacle]) -> f64 {
     let [a, b, _, d] = rect;
-    let width = (b.x - a.x).hypot(b.y - a.y);
-    let depth = (d.x - a.x).hypot(d.y - a.y);
+    let width = kentos_num::hypot(b.x - a.x, b.y - a.y);
+    let depth = kentos_num::hypot(d.x - a.x, d.y - a.y);
     let local = |p: V| {
         let (x, y) = (p.x - a.x, p.y - a.y);
         V::new(

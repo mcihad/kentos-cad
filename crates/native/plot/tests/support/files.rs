@@ -442,7 +442,7 @@ fn styled_segments(content: &[u8]) -> (Vec<PdfInk>, Vec<PdfCubic>) {
                 cubics.append(&mut pending);
                 for sub in path.drain(..) {
                     for w in sub.windows(2) {
-                        let scale = ctm[0].hypot(ctm[1]);
+                        let scale = kentos_num::hypot(ctm[0], ctm[1]);
                         out.push(PdfInk {
                             segment: [w[0].0, w[0].1, w[1].0, w[1].1],
                             width: pen.width * scale,

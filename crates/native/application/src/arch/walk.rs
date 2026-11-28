@@ -25,7 +25,7 @@ fn wire(p: Point) -> Vec2 {
 }
 
 fn distance(a: Point, b: Point) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+    kentos_num::hypot(a.x - b.x, a.y - b.y)
 }
 
 fn edges(areas: &[Area]) -> Vec<Edge> {

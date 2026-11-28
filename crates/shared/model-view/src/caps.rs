@@ -320,8 +320,8 @@ fn joined(loops: &mut [(usize, Vec<[f64; 3]>)], flat: &dyn Fn([f64; 3]) -> Vec2)
                         if t <= 1e-9 || t >= 1.0 - 1e-9 {
                             continue;
                         }
-                        let off = (f.x - (fa.x + d.x * t)).hypot(f.y - (fa.y + d.y * t));
-                        let apart = |g: Vec2| (f.x - g.x).hypot(f.y - g.y) > MEET;
+                        let off = kentos_num::hypot(f.x - (fa.x + d.x * t), f.y - (fa.y + d.y * t));
+                        let apart = |g: Vec2| kentos_num::hypot(f.x - g.x, f.y - g.y) > MEET;
                         if off <= MEET && apart(fa) && apart(fb) {
                             on.push((t, q));
                         }
@@ -330,7 +330,7 @@ fn joined(loops: &mut [(usize, Vec<[f64; 3]>)], flat: &dyn Fn([f64; 3]) -> Vec2)
             }
             on.sort_by(|x, y| x.0.total_cmp(&y.0));
             on.dedup_by(|x, y| {
-                (flat(x.1).x - flat(y.1).x).hypot(flat(x.1).y - flat(y.1).y) <= MEET
+                kentos_num::hypot(flat(x.1).x - flat(y.1).x, flat(x.1).y - flat(y.1).y) <= MEET
             });
             out.extend(on.into_iter().map(|(_, q)| q));
         }
@@ -347,13 +347,12 @@ fn probe(ring: &[Vec2]) -> Vec2 {
     let (a, b) = (0..n)
         .map(|k| (ring[k], ring[(k + 1) % n]))
         .max_by(|x, y| {
-            (x.1.x - x.0.x)
-                .hypot(x.1.y - x.0.y)
-                .total_cmp(&(y.1.x - y.0.x).hypot(y.1.y - y.0.y))
+            kentos_num::hypot(x.1.x - x.0.x, x.1.y - x.0.y)
+                .total_cmp(&kentos_num::hypot(y.1.x - y.0.x, y.1.y - y.0.y))
         })
         .unwrap_or((ring[0], ring[0]));
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let l = dx.hypot(dy).max(f64::MIN_POSITIVE);
+    let l = kentos_num::hypot(dx, dy).max(f64::MIN_POSITIVE);
     // The inside is on the left of a counter-clockwise ring, on the right of a clockwise one.
     let s = if twice >= 0.0 { 1.0 } else { -1.0 };
     let step = (l * 1e-4).min(1e-4);
@@ -428,7 +427,7 @@ fn fill(
                 .map(|k| {
                     let (a, b, c) = (ring2[(k + m - 1) % m], ring2[k], ring2[(k + 1) % m]);
                     let (dx, dy) = (c.x - a.x, c.y - a.y);
-                    let l = dx.hypot(dy);
+                    let l = kentos_num::hypot(dx, dy);
                     l <= 0.0 || ((b.x - a.x) * dy - (b.y - a.y) * dx).abs() / l > MEET * 0.1
                 })
                 .collect();

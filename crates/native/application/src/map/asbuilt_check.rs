@@ -186,7 +186,7 @@ pub(crate) fn lines(doc: &Document, layer: &str) -> Vec<Line> {
 fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let side = |d: f64, cross: f64| if cross < 0.0 { -d } else { d };
-    let chord = dx.hypot(dy);
+    let chord = kentos_num::hypot(dx, dy);
     if bulge != 0.0 && chord > 0.0 {
         let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
         let (ux, uy) = (dx / chord, dy / chord);
@@ -200,11 +200,14 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
         let a0 = (start.y - c.y).atan2(start.x - c.x);
         let rel = ((p.y - c.y).atan2(p.x - c.x) - a0).rem_euclid(std::f64::consts::TAU);
         if rel <= theta.abs() {
-            let d = (p.x - c.x).hypot(p.y - c.y);
+            let d = kentos_num::hypot(p.x - c.x, p.y - c.y);
             // A counter-clockwise arc has its centre on the left: inside the circle is left.
             return if bulge > 0.0 { r - d } else { d - r };
         }
-        let (da, db) = ((p.x - a.x).hypot(p.y - a.y), (p.x - b.x).hypot(p.y - b.y));
+        let (da, db) = (
+            kentos_num::hypot(p.x - a.x, p.y - a.y),
+            kentos_num::hypot(p.x - b.x, p.y - b.y),
+        );
         return side(da.min(db), dx * (p.y - a.y) - dy * (p.x - a.x));
     }
     let l2 = dx * dx + dy * dy;
@@ -213,7 +216,7 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     } else {
         (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
     };
-    let d = (p.x - a.x - t * dx).hypot(p.y - a.y - t * dy);
+    let d = kentos_num::hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
     side(d, dx * (p.y - a.y) - dy * (p.x - a.x))
 }
 
@@ -522,7 +525,9 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
                     let near: Vec<usize> = design
                         .iter()
                         .enumerate()
-                        .filter(|(i, d)| !claimed[*i] && (d.p.x - m.p.x).hypot(d.p.y - m.p.y) <= r)
+                        .filter(|(i, d)| {
+                            !claimed[*i] && kentos_num::hypot(d.p.x - m.p.x, d.p.y - m.p.y) <= r
+                        })
                         .map(|(i, _)| i)
                         .collect();
                     match near[..] {
@@ -561,7 +566,7 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
             used[i] = true;
             let d = &design[i];
             let (de, dn) = (m.p.x - d.p.x, m.p.y - d.p.y);
-            let h = de.hypot(dn);
+            let h = kentos_num::hypot(de, dn);
             point.design_uid = Some(d.uid.clone());
             point.design_name = Some(d.name.clone());
             point.de = Some(de);

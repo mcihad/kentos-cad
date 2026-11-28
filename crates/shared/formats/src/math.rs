@@ -28,8 +28,9 @@ pub fn tan(x: f64) -> f64 {
     libm::tan(x)
 }
 
+/// The numeric base's: the nearest double (docs/adr/9403).
 pub fn hypot(x: f64, y: f64) -> f64 {
-    libm::hypot(x, y)
+    kentos_num::hypot(x, y)
 }
 
 /// Degrees to radians as the app converts them (multiply, then divide).

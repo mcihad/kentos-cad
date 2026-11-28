@@ -451,11 +451,11 @@ pub fn along_edge(
         return Ok((Vec::new(), 0));
     }
     // The edge's move square to itself: the new line's distance from the old one along the old one's left normal.
-    let l = (b.x - a.x).hypot(b.y - a.y);
+    let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
     let n = Vec2::new(-(b.y - a.y) / l, (b.x - a.x) / l);
     let by = (a2.x - a.x) * n.x + (a2.y - a.y) * n.y;
     let (ex, ey) = (b2.x - a2.x, b2.y - a2.y);
-    let l2 = ex.hypot(ey);
+    let l2 = kentos_num::hypot(ex, ey);
     let mut moves = Vec::with_capacity(inside.len());
     for v in inside {
         let to = Vec2::new(v.x + n.x * by, v.y + n.y * by);

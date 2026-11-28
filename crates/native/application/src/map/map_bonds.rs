@@ -26,7 +26,7 @@ fn line(s: &Shape, part: u32, ring: u32, index: u32) -> Option<(P, P)> {
         index: index as usize,
     };
     let (a, b) = edge_line(&core, place)?;
-    let l = (b.x - a.x).hypot(b.y - a.y);
+    let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
     (l > 0.0).then(|| (a, P::new((b.x - a.x) / l, (b.y - a.y) / l)))
 }
 

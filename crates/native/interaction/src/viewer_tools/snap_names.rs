@@ -67,7 +67,7 @@ fn wall_line(
 fn opening_place(place: &[Vec2], at: Vec2) -> Option<&'static str> {
     let mid = |a: Vec2, b: Vec2| Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     let middle = mid(mid(place[0], place[1]), mid(place[2], place[3]));
-    if (middle.x - at.x).hypot(middle.y - at.y) <= ON {
+    if kentos_num::hypot(middle.x - at.x, middle.y - at.y) <= ON {
         return Some("Açıklık ortası");
     }
     let jamb = near_segment(place[0], place[1], at).min(near_segment(place[2], place[3], at));
@@ -78,7 +78,7 @@ fn opening_place(place: &[Vec2], at: Vec2) -> Option<&'static str> {
 fn near_path(pts: &[Vec2], closed: bool, at: Vec2) -> f64 {
     let n = pts.len();
     if n == 1 {
-        return (pts[0].x - at.x).hypot(pts[0].y - at.y);
+        return kentos_num::hypot(pts[0].x - at.x, pts[0].y - at.y);
     }
     let pieces = if closed { n } else { n.saturating_sub(1) };
     (0..pieces)
@@ -94,7 +94,7 @@ fn near_segment(a: Vec2, b: Vec2, at: Vec2) -> f64 {
     } else {
         0.0
     };
-    (a.x + dx * t - at.x).hypot(a.y + dy * t - at.y)
+    kentos_num::hypot(a.x + dx * t - at.x, a.y + dy * t - at.y)
 }
 
 #[cfg(test)]

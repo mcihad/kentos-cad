@@ -442,7 +442,7 @@ fn breaks_and_crossing_arms_are_typed_said_and_clipped() {
         .preview
         .rows
         .iter()
-        .map(|r| (r.ends[0][0] - r.ends[1][0]).hypot(r.ends[0][1] - r.ends[1][1]))
+        .map(|r| kentos_num::hypot(r.ends[0][0] - r.ends[1][0], r.ends[0][1] - r.ends[1][1]))
         .collect();
     assert!(lengths.iter().all(|l| *l <= 205.0 + 1e-6), "{lengths:?}");
     assert!(

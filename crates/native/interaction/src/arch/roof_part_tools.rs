@@ -237,7 +237,7 @@ impl RoofPartTool {
                 }
                 let t = (((at.x - a.x) * dx + (at.y - a.y) * dy) / len2).clamp(0.0, 1.0);
                 let foot = Vec2::new(a.x + dx * t, a.y + dy * t);
-                let d = (foot.x - at.x).hypot(foot.y - at.y);
+                let d = kentos_num::hypot(foot.x - at.x, foot.y - at.y);
                 if d > DOWNPIPE_REACH || best.as_ref().is_some_and(|(bd, ..)| *bd <= d) {
                     continue;
                 }

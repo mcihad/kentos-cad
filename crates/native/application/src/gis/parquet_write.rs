@@ -46,7 +46,7 @@ fn circle(a: &Coord, m: &Coord, b: &Coord) -> Option<(f64, f64, f64)> {
     let (m2, b2) = (mx * mx + my * my, bx * bx + by * by);
     let ux = (by * m2 - my * b2) / d;
     let uy = (mx * b2 - bx * m2) / d;
-    Some((a.x + ux, a.y + uy, ux.hypot(uy)))
+    Some((a.x + ux, a.y + uy, kentos_num::hypot(ux, uy)))
 }
 
 /// An arc from `a` through `m` to `b` as chords, `a` and `b` as they are; Z taken along by the turn.
@@ -761,7 +761,7 @@ mod tests {
         arc(&a, &m, &b, &mut out);
         let worst = out
             .iter()
-            .map(|p| ((p.x - cx).hypot(p.y - cy) - r).abs())
+            .map(|p| (kentos_num::hypot(p.x - cx, p.y - cy) - r).abs())
             .fold(0.0, f64::max);
         assert!(worst < 1e-9, "{worst}");
     }

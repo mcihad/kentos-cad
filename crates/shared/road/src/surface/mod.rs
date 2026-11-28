@@ -649,7 +649,8 @@ fn triangulate(
                         corners.xy[p.b as usize],
                         corners.xy[w as usize],
                     );
-                    let along = ((c.x - a.x).hypot(c.y - a.y)) / ((b.x - a.x).hypot(b.y - a.y));
+                    let along = (kentos_num::hypot(c.x - a.x, c.y - a.y))
+                        / (kentos_num::hypot(b.x - a.x, b.y - a.y));
                     let (za, zb) = (corners.z[p.a as usize], corners.z[p.b as usize]);
                     let line = za + along * (zb - za);
                     let had = corners.z[w as usize];

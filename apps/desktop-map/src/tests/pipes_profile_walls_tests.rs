@@ -48,7 +48,7 @@ fn ellipses(app: &App, before: usize) -> Vec<([f64; 2], f64)> {
         .skip(before)
         .filter_map(|e| match e {
             Entity::Ellipse(e) => {
-                let m = e.major.x.hypot(e.major.y);
+                let m = kentos_num::hypot(e.major.x, e.major.y);
                 Some((
                     [e.c.x, e.c.y],
                     if e.major.x.abs() > e.major.y.abs() {

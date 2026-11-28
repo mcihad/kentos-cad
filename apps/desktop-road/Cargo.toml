@@ -18,6 +18,8 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../../crates/shared/num" }
 kentos-desktop = { path = "../desktop" }
 kentos-launch = { path = "../../crates/native/launch" }
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }

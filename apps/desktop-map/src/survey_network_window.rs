@@ -258,7 +258,7 @@ pub(crate) fn epoch_line(a: &MapSurveyNetworked) -> String {
         let horizontal = a
             .moved
             .iter()
-            .map(|m| m.shift[0].hypot(m.shift[1]))
+            .map(|m| kentos_num::hypot(m.shift[0], m.shift[1]))
             .fold(0.0, f64::max);
         let up = a.moved.iter().map(|m| m.shift[2].abs()).fold(0.0, f64::max);
         // By their own velocity, the campaign's grid, or both (docs/adr/2520).

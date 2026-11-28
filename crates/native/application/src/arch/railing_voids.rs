@@ -49,7 +49,7 @@ pub fn arrivals(doc: &Document, level: Option<&str>) -> Vec<(V, V)> {
             {
                 let p = &s.stair.pts;
                 let (a, b) = (p.get(p.len().checked_sub(2)?)?, p.last()?);
-                let l = (b.x - a.x).hypot(b.y - a.y);
+                let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
                 (l > 0.0).then(|| {
                     let (nx, ny) = (-(b.y - a.y) / l, (b.x - a.x) / l);
                     let h = s.stair.width / 2.0;
@@ -73,7 +73,7 @@ pub fn cut_run(run: &[V], closed: bool, cuts: &[(V, V)]) -> Vec<Piece> {
     let removed: Vec<Vec<(f64, f64)>> = (0..count)
         .map(|i| {
             let (a, b) = (run[i], run[(i + 1) % n]);
-            let l = (b.x - a.x).hypot(b.y - a.y);
+            let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
             if l <= 0.0 {
                 return Vec::new();
             }
@@ -109,7 +109,7 @@ pub fn cut_run(run: &[V], closed: bool, cuts: &[(V, V)]) -> Vec<Piece> {
     for k in 0..count {
         let i = (start + k) % count.max(1);
         let (a, b) = (run[i], run[(i + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         let at = |t: f64| V::new(a.x + (b.x - a.x) * t / l, a.y + (b.y - a.y) * t / l);
         let mut from = 0.0;
         for &(s0, s1) in &removed[i] {
@@ -140,7 +140,7 @@ pub fn cut_run(run: &[V], closed: bool, cuts: &[(V, V)]) -> Vec<Piece> {
 
 fn length(line: &[V]) -> f64 {
     line.windows(2)
-        .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+        .map(|w| kentos_num::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
         .sum()
 }
 

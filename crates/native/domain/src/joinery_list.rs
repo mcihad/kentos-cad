@@ -125,7 +125,7 @@ impl Shapes {
     /// An arrow from `a` to `b`: its line and a head of two strokes.
     fn arrow(&mut self, a: (f64, f64), b: (f64, f64)) {
         let (dx, dy) = (b.0 - a.0, b.1 - a.1);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         if len < 1e-9 {
             return;
         }

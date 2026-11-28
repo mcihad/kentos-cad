@@ -163,7 +163,7 @@ pub fn validate(cad: &CadShape) -> Result<()> {
         } => {
             point(center)
                 && point(major)
-                && positive(major[0].hypot(major[1]))
+                && positive(kentos_num::hypot(major[0], major[1]))
                 && ratio.is_finite()
                 && *ratio > 0.
                 && *ratio <= 1.
@@ -267,7 +267,7 @@ fn arc_steps(
     gain: f64,
     connect: bool,
 ) -> Result<()> {
-    let radius = major[0].hypot(major[1]);
+    let radius = kentos_num::hypot(major[0], major[1]);
     // Conservative sixth-order bound for the standard tangent-matched cubic arc. The retained model is analytic.
     let max_angle = libm::pow(0.025 * 50000. / (radius * gain).max(1.), 1. / 6.)
         .min(core::f64::consts::FRAC_PI_4);
@@ -573,7 +573,7 @@ pub fn flatten_cubic(start: Point, c: [Point; 3], tolerance: f64) -> Vec<Point> 
             0.
         }
         .clamp(0., 1.);
-        (p[0] - a[0] - dx * t).hypot(p[1] - a[1] - dy * t)
+        kentos_num::hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t)
     }
     fn split(a: Point, c: [Point; 3], tol: f64, depth: u8, out: &mut Vec<Point>) {
         if depth >= 11 || (distance(c[0], a, c[2]) <= tol && distance(c[1], a, c[2]) <= tol) {
@@ -663,7 +663,8 @@ mod tests {
                                         + t * t * t * c[2][j]
                                 };
                                 assert!(
-                                    (at(0).hypot(at(1)) - radius * gain).abs() < 0.0251,
+                                    (kentos_num::hypot(at(0), at(1)) - radius * gain).abs()
+                                        < 0.0251,
                                     "{radius} {gain}"
                                 );
                             }
@@ -698,7 +699,7 @@ mod tests {
         let paths = paths(&cad, &RectUm::new(0, 0, 50000, 50000)).unwrap();
         for step in &paths[0].steps {
             if let Step::Move(p) | Step::Line(p) = step {
-                assert!((p[0].hypot(p[1]) - 50000.).abs() < 1e-8);
+                assert!((kentos_num::hypot(p[0], p[1]) - 50000.).abs() < 1e-8);
             }
         }
         assert_eq!(original, cad);

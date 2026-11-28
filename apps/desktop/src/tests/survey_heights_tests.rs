@@ -346,7 +346,7 @@ fn traverse_round(app: &mut App) {
     calc(app, Event::TraverseHeights(true));
     for i in 0..4 {
         let prev = if i == 0 { back } else { path[i - 1] };
-        let s = (path[i + 1].0 - path[i].0).hypot(path[i + 1].1 - path[i].1);
+        let s = kentos_num::hypot(path[i + 1].0 - path[i].0, path[i + 1].1 - path[i].1);
         let (inst, target) = (1.55, 1.70);
         let dh = heights[i + 1] - heights[i] + if i == 2 { 0.006 } else { 0.0 };
         let cot = (dh - inst + target - (1.0 - k) * s * s / (2.0 * 6_371_000.0)) / s;

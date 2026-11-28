@@ -205,7 +205,7 @@ pub fn building_corners(doc: &Document) -> Option<Vec<Vec2>> {
         let off = w.wall.width + 0.05;
         for seg in w.wall.pts.windows(2) {
             let (a, b) = (&seg[0], &seg[1]);
-            let len = (b.x - a.x).hypot(b.y - a.y);
+            let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
             if len <= 1e-9 {
                 continue;
             }
@@ -236,7 +236,7 @@ fn corners(ring: &[Vec2]) -> Vec<Vec2> {
         .filter(|&i| {
             let (p, c, q) = (&pts[(i + n - 1) % n], &pts[i], &pts[(i + 1) % n]);
             let (ax, ay, bx, by) = (c.x - p.x, c.y - p.y, q.x - c.x, q.y - c.y);
-            (ax * by - ay * bx).abs() > 2e-4 * ax.hypot(ay) * bx.hypot(by)
+            (ax * by - ay * bx).abs() > 2e-4 * kentos_num::hypot(ax, ay) * kentos_num::hypot(bx, by)
         })
         .map(|i| pts[i])
         .collect()

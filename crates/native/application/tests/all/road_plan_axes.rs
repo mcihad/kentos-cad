@@ -79,7 +79,7 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     // R·Δ + Ls: the rise starts 44.7 m before TS, and the way out is back to normal 7.9 m before ST (La 0).
     let shift = ls.powi(2) / (24.0 * r) - ls.powi(4) / (2688.0 * r.powi(3));
     let k = ls / 2.0 - ls.powi(3) / (240.0 * r * r);
-    let ts = (b[0] - a[0]).hypot(b[1] - a[1]) - ((r + shift) * (0.5 * delta).tan() + k);
+    let ts = kentos_num::hypot(b[0] - a[0], b[1] - a[1]) - ((r + shift) * (0.5 * delta).tan() + k);
     let st = ts + r * delta + ls;
     assert!(has("Se = % 6.00"), "Se in {words:?}");
     assert!(
@@ -119,7 +119,7 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
         v.replace(' ', "").parse().unwrap()
     };
     let unit = |v: [f64; 2]| {
-        let l = v[0].hypot(v[1]);
+        let l = kentos_num::hypot(v[0], v[1]);
         [v[0] / l, v[1] / l]
     };
     let (ua, uc) = (

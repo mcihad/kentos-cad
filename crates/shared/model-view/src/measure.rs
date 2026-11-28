@@ -132,7 +132,7 @@ pub fn snap(
     tolerance: f64,
     project: impl Fn(V3) -> Option<(f64, f64)>,
 ) -> (V3, Snap) {
-    let on_screen = |p: V3| project(p).map(|(x, y)| (x - cursor.0).hypot(y - cursor.1));
+    let on_screen = |p: V3| project(p).map(|(x, y)| kentos_num::hypot(x - cursor.0, y - cursor.1));
     let mut best: Option<(f64, V3)> = None;
     let consider = |p: V3, best: &mut Option<(f64, V3)>| {
         if let Some(d) = on_screen(p).filter(|d| *d <= tolerance)
@@ -184,7 +184,7 @@ impl Distance {
         let delta = math::sub(b, a);
         Distance {
             length: math::length(delta),
-            horizontal: delta[0].hypot(delta[1]),
+            horizontal: kentos_num::hypot(delta[0], delta[1]),
             delta,
         }
     }

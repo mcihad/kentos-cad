@@ -98,7 +98,7 @@ impl SectionTool {
                     continue;
                 };
                 let h = v.mark.size.unwrap_or(2.5) * cx.doc.settings().plot_scale / 1000.0;
-                let d = (at.x - c.x).hypot(at.y - c.y);
+                let d = kentos_num::hypot(at.x - c.x, at.y - c.y);
                 if d <= (2.0 * h).max(tol) && best.is_none_or(|(b, _)| d < b) {
                     best = Some((d, Slot(e.base().id)));
                 }
@@ -113,7 +113,7 @@ impl SectionTool {
                 } else {
                     0.0
                 };
-                let d = (at.x - (a.x + dx * t)).hypot(at.y - (a.y + dy * t));
+                let d = kentos_num::hypot(at.x - (a.x + dx * t), at.y - (a.y + dy * t));
                 if d <= tol && best.is_none_or(|(b, _)| d < b) {
                     best = Some((d, Slot(e.base().id)));
                 }

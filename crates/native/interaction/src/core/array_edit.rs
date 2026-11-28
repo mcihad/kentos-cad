@@ -216,7 +216,7 @@ impl ArrayEdit {
                 Ask::Count,
             ) => *count = whole()?,
             (ArrayLayout::Line { count, dx, dy, fit }, Ask::Spacing) => {
-                let old = dx.hypot(*dy);
+                let old = kentos_num::hypot(*dx, *dy);
                 if !length.is_finite() || length <= 0.0 || !old.is_finite() || old <= 1e-9 {
                     cx.say(
                         Level::Warn,
@@ -365,7 +365,7 @@ impl Tool for ArrayEdit {
                     "Aralık",
                     "A",
                     f.length(
-                        dx.hypot(dy)
+                        kentos_num::hypot(dx, dy)
                             / if fit {
                                 count.saturating_sub(1).max(1) as f64
                             } else {

@@ -144,7 +144,7 @@ pub fn crossings(al: &Alignment, stations: &[f64], widths: &[(f64, f64)]) -> Vec
             let (lj, rj) = widths[j];
             // Quick: the two segments' centres farther apart than their half lengths cannot meet.
             let reach = li.max(ri) + lj.max(rj);
-            if (q[0] - p[0]).hypot(q[1] - p[1]) > reach {
+            if kentos_num::hypot(q[0] - p[0], q[1] - p[1]) > reach {
                 continue;
             }
             // p + t·n = q + u·m.

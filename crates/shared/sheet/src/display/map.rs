@@ -398,7 +398,7 @@ fn thinned(ring: &[[f64; 2]], tol: f64) -> Vec<[f64; 2]> {
     }
     let far = (1..n)
         .max_by(|&i, &j| {
-            let d = |k: usize| (ring[k][0] - ring[0][0]).hypot(ring[k][1] - ring[0][1]);
+            let d = |k: usize| kentos_num::hypot(ring[k][0] - ring[0][0], ring[k][1] - ring[0][1]);
             d(i).total_cmp(&d(j))
         })
         .unwrap_or(n / 2);
@@ -409,13 +409,13 @@ fn thinned(ring: &[[f64; 2]], tol: f64) -> Vec<[f64; 2]> {
     while let Some((a, b)) = spans.pop() {
         let (p, q) = (ring[a], ring[b % n]);
         let (dx, dy) = (q[0] - p[0], q[1] - p[1]);
-        let len = dx.hypot(dy);
+        let len = kentos_num::hypot(dx, dy);
         let mut worst = (0.0, a);
         for (k, r) in ring.iter().enumerate().take(b).skip(a + 1) {
             let d = if len > 0.0 {
                 ((r[0] - p[0]) * dy - (r[1] - p[1]) * dx).abs() / len
             } else {
-                (r[0] - p[0]).hypot(r[1] - p[1])
+                kentos_num::hypot(r[0] - p[0], r[1] - p[1])
             };
             if d > worst.0 {
                 worst = (d, k);

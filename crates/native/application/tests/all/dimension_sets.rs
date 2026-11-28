@@ -88,7 +88,7 @@ fn values(doc: &Document, id: DimensionSetId) -> Vec<f64> {
         .iter()
         .map(|uid| {
             let d = dim(doc, *uid);
-            (d.b.x - d.a.x).hypot(d.b.y - d.a.y)
+            kentos_num::hypot(d.b.x - d.a.x, d.b.y - d.a.y)
         })
         .collect()
 }

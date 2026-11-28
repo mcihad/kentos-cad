@@ -207,7 +207,7 @@ impl Document {
                     let n = ring.len();
                     for i in 0..n {
                         let (a, b) = (ring[i], ring[(i + 1) % n]);
-                        let len = (b.x - a.x).hypot(b.y - a.y);
+                        let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
                         if len <= 2.0 * CORNER {
                             continue;
                         }
@@ -363,7 +363,7 @@ impl Document {
                     .sum();
                 for i in 0..n {
                     let (a, b) = (ring[i], ring[(i + 1) % n]);
-                    let len = (b.x - a.x).hypot(b.y - a.y);
+                    let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
                     let corner = (len / 4.0).min(SHAFT_CORNER);
                     if len - 2.0 * corner <= ACROSS {
                         continue;

@@ -135,12 +135,12 @@ pub fn pattern_reach(
     mark_offset: [f64; 2],
     jitter: f64,
 ) -> ([f64; 2], u32) {
-    let ext = half[0].hypot(half[1]) + stroke_width / 2.0;
+    let ext = kentos_num::hypot(half[0], half[1]) + stroke_width / 2.0;
     let j = [
         (size[0] - 2.0 * ext).max(0.0) * jitter,
         (size[1] - 2.0 * ext).max(0.0) * jitter,
     ];
-    let out = ext + mark_offset[0].hypot(mark_offset[1]) + j[0].max(j[1]) / 2.0;
+    let out = ext + kentos_num::hypot(mark_offset[0], mark_offset[1]) + j[0].max(j[1]) / 2.0;
     (j, u32::from(out > size[0].min(size[1]) / 2.0))
 }
 

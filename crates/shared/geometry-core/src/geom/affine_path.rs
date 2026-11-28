@@ -1,14 +1,13 @@
 //! A vertex path under a non-similar affine map, kept exact (docs/adr/1061 §3, docs/adr/1008): its arcs as one
 //! rational quadratic B-spline and its straight edges' widths measured again across their images. The DXF reader's
 //! nonuniform block (`kentos_formats::dxf::emit`) and Patlat's (`block::Blocks::explode`) both use it: one rule for
-//! what a drawing opens and what it explodes. `libm::hypot` (not `js_hypot`) because the reader's numbers came from
-//! it before this rule moved here; the results stay bit for bit.
+//! what a drawing opens and what it explodes.
 
 use crate::geom::affine::{Affine, apply};
 use crate::vec2::Vec2;
 
 fn hypot(x: f64, y: f64) -> f64 {
-    libm::hypot(x, y)
+    kentos_num::hypot(x, y)
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {

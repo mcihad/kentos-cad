@@ -184,7 +184,7 @@ fn slope(s: &Surface, t: u32) -> f64 {
     }
     let gx = (uz * vy - vz * uy) / det;
     let gy = (ux * vz - vx * uz) / det;
-    gx.hypot(gy)
+    kentos_num::hypot(gx, gy)
 }
 
 /// The terrain profile of `al` on `surface`, in station order.

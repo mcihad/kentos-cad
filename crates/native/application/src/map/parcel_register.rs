@@ -717,7 +717,7 @@ struct Arc {
 
 fn arc_of(from: Vec2, to: Vec2, bulge: f64) -> Arc {
     let (dx, dy) = (to.x - from.x, to.y - from.y);
-    let c = dx.hypot(dy);
+    let c = kentos_num::hypot(dx, dy);
     let sweep = 4.0 * bulge.atan();
     let radius = c / (2.0 * (sweep.abs() / 2.0).sin());
     // The centre lies off the chord's middle, on its left for a counter-clockwise arc: (1 − b²) / (4b) of the chord's
@@ -745,7 +745,7 @@ impl Arc {
     /// Whether `q` is on the circle (within 1 µm) and inside the arc, farther than 1 µm along it from both ends; how
     /// far round it is.
     fn inside(&self, q: Vec2) -> Option<f64> {
-        let off = ((q.x - self.centre.x).hypot(q.y - self.centre.y) - self.radius).abs();
+        let off = (kentos_num::hypot(q.x - self.centre.x, q.y - self.centre.y) - self.radius).abs();
         let t = self.turn(q);
         (off <= INSIDE && t * self.radius > INSIDE && (self.sweep.abs() - t) * self.radius > INSIDE)
             .then_some(t)
@@ -867,7 +867,7 @@ fn straight_pieces(
     index: &HashMap<[u64; 4], Vec<usize>>,
 ) -> Option<Vec<i32>> {
     let (dx, dy) = (b.to.x - b.from.x, b.to.y - b.from.y);
-    let l = dx.hypot(dy);
+    let l = kentos_num::hypot(dx, dy);
     if l.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return None;
     }
@@ -948,9 +948,12 @@ fn arc_pieces(
                         // Its middle on the circle and on this side of the two corners (the other side's middle is
                         // a diameter away): the same arc, drawn either way.
                         let mid = arc_middle(c.from, c.to, c.bulge);
-                        let off =
-                            ((mid.x - arc.centre.x).hypot(mid.y - arc.centre.y) - arc.radius).abs();
-                        off <= INSIDE && (mid.x - expected.x).hypot(mid.y - expected.y) < arc.radius
+                        let off = (kentos_num::hypot(mid.x - arc.centre.x, mid.y - arc.centre.y)
+                            - arc.radius)
+                            .abs();
+                        off <= INSIDE
+                            && kentos_num::hypot(mid.x - expected.x, mid.y - expected.y)
+                                < arc.radius
                     })
                     .map(|k| {
                         let n = reg.boundaries[k].number as i32;
@@ -1042,7 +1045,7 @@ pub(crate) fn recorded_area(paths: &[(u32, bool, Vec<Vec2>, Vec<f64>)]) -> f64 {
 
 /// A boundary's length: the chord's, an arc's c·θ / (2 sin(θ/2)).
 fn length(b: &RecordedBoundary) -> f64 {
-    let c = (b.to.x - b.from.x).hypot(b.to.y - b.from.y);
+    let c = kentos_num::hypot(b.to.x - b.from.x, b.to.y - b.from.y);
     let theta = (4.0 * b.bulge.atan()).abs();
     if theta <= 1e-12 {
         c

@@ -419,7 +419,7 @@ pub fn closest_on_triangle(p: [f64; 3], t: &Triangle) -> [f64; 3] {
 fn holds(t: &Triangle, p: [f64; 2]) -> bool {
     (0..3).all(|k| {
         let (a, b) = ([t[k][0], t[k][1]], [t[(k + 1) % 3][0], t[(k + 1) % 3][1]]);
-        let len = (b[0] - a[0]).hypot(b[1] - a[1]);
+        let len = kentos_num::hypot(b[0] - a[0], b[1] - a[1]);
         len > 0.0 && area2(a, b, p) / len >= -1e-9
     })
 }
@@ -859,7 +859,8 @@ fn straighten(l: &mut ZeroLine) {
         let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
         let cross = u[0] * v[1] - u[1] * v[0];
         let dot = u[0] * v[0] + u[1] * v[1];
-        dot > 0.0 && cross.abs() <= 1e-12 * u[0].hypot(u[1]) * v[0].hypot(v[1])
+        dot > 0.0
+            && cross.abs() <= 1e-12 * kentos_num::hypot(u[0], u[1]) * kentos_num::hypot(v[0], v[1])
     };
     let mut out: Vec<[f64; 2]> = Vec::with_capacity(n);
     for (k, p) in l.points.iter().enumerate() {

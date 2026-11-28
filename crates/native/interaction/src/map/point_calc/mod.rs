@@ -344,7 +344,7 @@ impl PointCalc {
     /// The view as the last event saw it: how far reference lines run.
     fn see(&mut self, cx: &Context<'_>) {
         let b = cx.view.visible();
-        let diagonal = (b.max_x - b.min_x).hypot(b.max_y - b.min_y);
+        let diagonal = kentos_num::hypot(b.max_x - b.min_x, b.max_y - b.min_y);
         if diagonal.is_finite() && diagonal > 0.0 {
             self.far = diagonal * 2.0;
         }

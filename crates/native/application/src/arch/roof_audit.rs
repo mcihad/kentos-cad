@@ -202,7 +202,7 @@ fn past(pts: &[V], ring: &[V]) -> f64 {
                 } else {
                     0.0
                 };
-                (q.x - (a.x + dx * t)).hypot(q.y - (a.y + dy * t))
+                kentos_num::hypot(q.x - (a.x + dx * t), q.y - (a.y + dy * t))
             })
             .fold(f64::INFINITY, f64::min)
     };
@@ -245,7 +245,7 @@ fn past_projections(
                 .sum();
             for k in 0..n {
                 let (a, b) = (ring[k], ring[(k + 1) % n]);
-                let len = (b.x - a.x).hypot(b.y - a.y);
+                let len = kentos_num::hypot(b.x - a.x, b.y - a.y);
                 if len < 0.02 {
                     continue;
                 }
@@ -318,7 +318,7 @@ fn inside(pts: &[V], q: V) -> f64 {
     (0..n)
         .filter_map(|i| {
             let (a, b) = (pts[i], pts[(i + 1) % n]);
-            let l = (b.x - a.x).hypot(b.y - a.y);
+            let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
             (l > 1e-12).then(|| turn * ((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)) / l)
         })
         .fold(f64::INFINITY, f64::min)

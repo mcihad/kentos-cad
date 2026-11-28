@@ -191,7 +191,7 @@ pub fn check(al: &Alignment, pis: &[PiInput], rules: &AlignmentRules) -> Vec<Fin
             let at = al
                 .elements
                 .iter()
-                .find(|e| (e.start[0] - p.x).hypot(e.start[1] - p.y) < MEET)
+                .find(|e| kentos_num::hypot(e.start[0] - p.x, e.start[1] - p.y) < MEET)
                 .map_or(f64::NAN, |e| e.station);
             out.push(Finding {
                 rule: Rule::Kink,

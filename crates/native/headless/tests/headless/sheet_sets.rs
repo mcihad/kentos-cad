@@ -99,7 +99,7 @@ fn temp(name: &str) -> std::path::PathBuf {
 fn lengths(page: &files::Page) -> Vec<f64> {
     page.segments
         .iter()
-        .map(|p| (p[2] - p[0]).hypot(p[3] - p[1]))
+        .map(|p| kentos_num::hypot(p[2] - p[0], p[3] - p[1]))
         .collect()
 }
 

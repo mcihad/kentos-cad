@@ -122,7 +122,7 @@ fn measured_edges(
     // Outward from the face: its left normal on the left face, the right one on the right.
     let outward = |[a, b]: [Vec2; 2]| {
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let l = dx.hypot(dy);
+        let l = kentos_num::hypot(dx, dy);
         let n = (-dy / l, dx / l);
         match face {
             DimensionSetFace::Left => n,
@@ -260,7 +260,7 @@ fn longest_edge(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<Ve
             continue;
         }
         let (a, b) = (pts[k], pts[(k + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
+        let l = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if l > 0.0 && best.is_none_or(|(m, _)| l > m) {
             best = Some((
                 l,
@@ -460,7 +460,7 @@ fn span_recipes(
         match input.direction {
             Some(d) => {
                 checks::point(d, "Ölçü doğrultusu", "direction")?;
-                let l = d.x.hypot(d.y);
+                let l = kentos_num::hypot(d.x, d.y);
                 if l.is_nan() || l <= 1e-12 {
                     return Err(fail("Ölçü doğrultusu sıfır olamaz.", "direction"));
                 }

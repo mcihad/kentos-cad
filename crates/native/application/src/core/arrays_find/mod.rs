@@ -336,7 +336,7 @@ fn search(
                 break;
             }
             let (dx, dy) = (other.x - seed.x, other.y - seed.y);
-            let length = dx.hypot(dy);
+            let length = kentos_num::hypot(dx, dy);
             if !length.is_finite() || length <= tolerance {
                 continue;
             }
@@ -412,7 +412,7 @@ fn search(
                         continue;
                     }
                     let (x, y) = (seed.x + k * step * ux, seed.y + k * step * uy);
-                    if (point.x - x).hypot(point.y - y) > tolerance {
+                    if kentos_num::hypot(point.x - x, point.y - y) > tolerance {
                         continue;
                     }
                     if places.insert(k as i32, point.uid).is_some() {

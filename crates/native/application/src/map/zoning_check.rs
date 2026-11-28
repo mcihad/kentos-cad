@@ -115,7 +115,7 @@ fn middle_of(paths: &[Vec<Edge>]) -> Option<Vec2> {
     let mut best: Option<(f64, &Edge)> = None;
     for e in paths.iter().flatten() {
         let (a, b) = (point_at(e, 0.0), point_at(e, 1.0));
-        let chord = (b.x - a.x).hypot(b.y - a.y);
+        let chord = kentos_num::hypot(b.x - a.x, b.y - a.y);
         if best.is_none_or(|(c, _)| chord > c) {
             best = Some((chord, e));
         }

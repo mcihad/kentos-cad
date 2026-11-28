@@ -236,7 +236,7 @@ fn arc_extremes(a: &Coord, m: &Coord, b: &Coord, f: &mut dyn FnMut(f64, f64)) {
     let sq = |c: &Coord| c.x * c.x + c.y * c.y;
     let cx = (sq(a) * (m.y - b.y) + sq(m) * (b.y - a.y) + sq(b) * (a.y - m.y)) / d;
     let cy = (sq(a) * (b.x - m.x) + sq(m) * (a.x - b.x) + sq(b) * (m.x - a.x)) / d;
-    let r = (a.x - cx).hypot(a.y - cy);
+    let r = kentos_num::hypot(a.x - cx, a.y - cy);
     let tau = std::f64::consts::TAU;
     let ang = |c: &Coord| (c.y - cy).atan2(c.x - cx);
     let (t0, t2) = (ang(a), ang(b));
