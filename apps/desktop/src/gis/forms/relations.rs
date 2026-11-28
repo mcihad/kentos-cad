@@ -22,12 +22,12 @@ use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, LayerNodeType, ProjectRelation, RelateOp, RelationDelete, RelationState,
-    RelationsEdit, RelationsOp, SourcesRelate, SourcesRelated,
+    CAD_RELATIONS_EDIT, CommandResult, LayerNodeType, ProjectRelation, RelateOp, RelationDelete,
+    RelationState, RelationsEdit, RelationsOp, SourcesRelate, SourcesRelated,
 };
 use kentos_interaction::Level;
+use kentos_native_application::ExecutionContext;
 use kentos_native_application::sources::relate;
-use kentos_native_application::{ExecutionContext, relations_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -297,7 +297,8 @@ impl App {
         Task::none()
     }
 
-    /// Kaydet: what changed through `cad.relations.edit`: the removed, the changed, the new.
+    /// Kaydet: what changed through `cad.relations.edit`: the removed, the changed, the new; all of them or none
+    /// (docs/adr/9401 §4).
     fn save_relations(&mut self) -> Task<Message> {
         let Some(w) = self.gis.relations_window.clone() else {
             return Task::none();
@@ -323,26 +324,16 @@ impl App {
                 }),
             }
         }
-        for edit in edits {
-            let Some(doc) = self.document.as_mut() else {
-                return Task::none();
-            };
-            let result = relations_edit::execute(
-                &mut ExecutionContext::new(&mut doc.model),
-                RelationsEdit {
-                    edit,
-                    expected_revision: None,
-                },
-            );
-            if self.answered(result).is_none() {
-                // The window stays on what did not go in; the rest is written.
-                if let Some(doc) = &self.document
-                    && let Some(w) = self.gis.relations_window.as_mut()
-                {
-                    w.kept = doc.model.settings().relations.clone();
-                }
-                return Task::none();
-            }
+        let inputs: Vec<RelationsEdit> = edits
+            .into_iter()
+            .map(|edit| RelationsEdit {
+                edit,
+                expected_revision: None,
+            })
+            .collect();
+        // Every edit or none: the window stays as it is on what did not go in.
+        if !self.save_together(TITLE, CAD_RELATIONS_EDIT, &inputs) {
+            return Task::none();
         }
         self.gis.relations_window = None;
         self.dialog = None;

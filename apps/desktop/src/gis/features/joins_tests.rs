@@ -99,6 +99,53 @@ fn the_window_saves_a_new_view_through_the_command() {
     assert_eq!(read(&app).report.cardinality, "N:N");
 }
 
+/// Kaydet writes every edit or none (docs/adr/9401 §4): a view the command refuses leaves the one made before it
+/// unwritten, and the window stays open on both.
+#[test]
+fn a_refused_view_leaves_the_others_unwritten() {
+    let mut app = app_with_views();
+    let _ = app.update(Message::Run("data.joinViews"));
+    for e in [
+        W::New,
+        W::Name("Hisseler".into()),
+        W::With("hisse".into()),
+        W::Key("no".into()),
+        W::WithKey("parseller".into()),
+        // A second view by a key its layer does not have.
+        W::New,
+        W::Name("Bozuk".into()),
+        W::With("hisse".into()),
+        W::Key("yok-alan".into()),
+        W::WithKey("parseller".into()),
+        W::Save,
+    ] {
+        let _ = app.update(Message::Gis(gis::Event::Joins(e)));
+    }
+    assert!(
+        app.gis.joins_window.is_some(),
+        "the window stays on what did not go in"
+    );
+    let doc = app.document.as_ref().expect("open");
+    let names: Vec<&str> = doc
+        .model
+        .settings()
+        .join_views
+        .iter()
+        .map(|v| v.name.as_str())
+        .collect();
+    assert_eq!(
+        names.len(),
+        1,
+        "nothing of the Kaydet is written: {names:?}"
+    );
+    // Said in the edit's own words: the user sent views, not a set's numbered steps.
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.contains("yok-alan") && !said.contains(". adım"),
+        "{said}"
+    );
+}
+
 /// The land registry's GeoPackage the source cases read (scripts/fixtures/join_source_cases.py).
 fn tapu() -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

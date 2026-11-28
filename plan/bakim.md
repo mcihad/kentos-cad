@@ -216,8 +216,10 @@ düzenlenir.
 
 - [x] **BK-10** (A1; [ADR 9401](../docs/adr/9401-correctness-fixes-from-the-review.md) §1) İmar takımı önce planlanır,
   sonra yazar; paftalar reddedilirse ayarlar geri konur. Kalıcı çözüm takımın kendi komutudur (BK-19).
-- [ ] **BK-11** (A2) Çok adımlı Kaydet için tek yardımcı (`document::in_step`, `shell/document.rs:691` üstüne); üç
-  pencere ve `leader_tools`.
+- [x] **BK-11** (A2; ADR 9401 §4) Dört pencerenin Kaydet'i (İlişkiler, Birleşik görünümler, Olay bağları, Kılavuz
+  stilleri) bütün düzenlemeleri yazar ya da hiçbirini: tek yardımcı `App::save_together`, birden çok düzenleme
+  `cad.changeset.apply` ile. `document::in_step` yetmiyordu: bu komutlar ayarları yazar, `transact` ayarları geri
+  almaz. Değer listeleri penceresi zaten doğruydu.
 - [ ] **BK-12** (A3) Arka plan yanıtı koşu kimliği taşır; beş aktarım ve IFC karşılaştırması.
 - [ ] **BK-13** (A4) BCF okuması kendi iş parçacığında; form taslağı gecikmeli ve hatası görünür yazılır.
 - [x] **BK-14** (A7; ADR 9401 §2) İfade dili: en çok 64 düzey ve 1 000 işlem; stil süzgeci: 64 düzey. Ölçüm: 2 MB'lık

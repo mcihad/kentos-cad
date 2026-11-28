@@ -25,11 +25,10 @@ use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    JoinAggregate, JoinHow, JoinKeep, JoinSource, JoinView, JoinsEdit, JoinsOp,
+    CAD_JOINS_EDIT, JoinAggregate, JoinHow, JoinKeep, JoinSource, JoinView, JoinsEdit, JoinsOp,
     MOST_JOIN_AGGREGATES, SourceTable, UID_KEY,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, joins_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
@@ -383,7 +382,8 @@ impl App {
         Task::none()
     }
 
-    /// Kaydet: what changed through `cad.joins.edit`: the removed, the changed, the new.
+    /// Kaydet: what changed through `cad.joins.edit`: the removed, the changed, the new; all of them or none
+    /// (docs/adr/9401 §4).
     fn save_joins(&mut self) -> Task<Message> {
         let Some(w) = self.gis.joins_window.clone() else {
             return Task::none();
@@ -401,25 +401,16 @@ impl App {
                 None => edits.push(JoinsOp::Create { view: v.clone() }),
             }
         }
-        for edit in edits {
-            let Some(doc) = self.document.as_mut() else {
-                return Task::none();
-            };
-            let result = joins_edit::execute(
-                &mut ExecutionContext::new(&mut doc.model),
-                JoinsEdit {
-                    edit,
-                    expected_revision: None,
-                },
-            );
-            if self.answered(result).is_none() {
-                if let Some(doc) = &self.document
-                    && let Some(w) = self.gis.joins_window.as_mut()
-                {
-                    w.kept = doc.model.settings().join_views.clone();
-                }
-                return Task::none();
-            }
+        let inputs: Vec<JoinsEdit> = edits
+            .into_iter()
+            .map(|edit| JoinsEdit {
+                edit,
+                expected_revision: None,
+            })
+            .collect();
+        // Every edit or none: the window stays as it is on what did not go in.
+        if !self.save_together(TITLE, CAD_JOINS_EDIT, &inputs) {
+            return Task::none();
         }
         self.gis.joins_window = None;
         self.dialog = None;

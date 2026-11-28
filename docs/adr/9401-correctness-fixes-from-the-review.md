@@ -203,6 +203,44 @@ renkler” dahil) ve “renk okunamazsa katman alınmaz” der. Kod ikisini de t
   kendi koduyla uygular; Rust ve Python koşucuları 66 durumda onunla aynı sonucu verdi. Bir beklenen renk bilerek
   bozulunca Rust koşucusu yakaladı.
 
+### 4. Bir Kaydet: bütün düzenlemeler ya da hiçbiri (BK-11)
+
+**Bulgu.** Dört pencerenin Kaydet'i değişiklikleri sırayla, her birini kendi komutuyla yazıyordu: İlişkiler
+(`cad.relations.edit`), Birleşik görünümler (`cad.joins.edit`), Olay bağları (`cad.linearref.define`) ve Kılavuz
+stilleri (`cad.styles.edit`). Bir düzenleme reddedilince öncekiler yazılı kalıyordu; ilk üçünde kod bunu yorumuyla
+söylüyordu. Kılavuz stilleri yalnız `Failed` cevabına bakıyordu: çakışma ve eksik girdi “kaydedildi” sayılıyordu.
+
+- Bu dört komut proje ayarlarını yazar. Ayarlar geri alma adımı değildir: `Document::transact` ve
+  `begin_group`/`cancel_group` yalnız geri alma işlemlerini geri alır (`domain/src/history/mod.rs`). Planın önerdiği
+  `document::in_step` (o da `transact`'tir) bu pencerelere yetmez.
+- Değer listeleri penceresi (`gis/forms/domains.rs`) doğrudur ve dokunulmadı: `cad.domains.edit` listeyi geri alınabilen
+  bir işlemle yazar, pencerenin açtığı grup ret gelince hepsini geri alır. Sınaması vardı.
+
+**Karar.**
+
+- Tek yardımcı: `App::save_together(label, command, inputs)` (`apps/desktop/src/cad/layer_commands.rs`).
+  - Tek düzenleme kendi komutuyla yazılır; kayıttaki satırı eskisi gibi komutun kendisidir.
+  - Birden çok düzenleme tek değişiklik olarak `cad.changeset.apply` ile yazılır: bir adım reddedilirse bütün adımlar,
+    ayarlar da, geri alınır (ADR 0253 §8). Python, MCP ve ajan aynı işi aynı komutla yapar.
+  - Ret, düzenlemenin kendi sözleriyle söylenir (`changeset::step_refusal`): kullanıcı düzenleme gönderdi, kümenin
+    “2. adım:” öneki ona bir şey söylemez.
+  - Ret gelince pencere olduğu gibi kalır; hiçbir şey yazılmamıştır.
+- Bütünü bir `Document::run_step`'e sarmak seçilmedi: içteki komut kendi kayıt satırını yazmaz (§1'deki gerekçe). Küme
+  kendi satırını adımlarıyla yazar.
+- Davranış değişikliği:
+  - reddedilen Kaydet hiçbir şey yazmaz;
+  - birden çok düzenleme Komut geçmişi'nde tek satırdır (`cad.changeset.apply`, pencerenin adıyla);
+  - Kılavuz stilleri çakışmada “kaydedildi” demez.
+
+**Sınama.** Dördü de düzeltmeden önce kırmızıydı (reddedilen Kaydet'ten sonra ilk düzenleme yazılı kalıyordu):
+
+- `joins_tests::a_refused_view_leaves_the_others_unwritten`; sözün düzenlemenin kendi sözü olduğunu da denetler;
+- `relation_keys_tests::a_refused_relation_leaves_the_others_unwritten`;
+- `event_links_window::tests::a_refused_link_leaves_the_others_unwritten`: Yeni'ye iki kez basıp aynı olay katmanını
+  seçen kullanıcının durumu;
+- `leader_tools::styles_tests::a_refused_style_leaves_the_others_unwritten`;
+- uygulama katmanında `changeset::tests::a_refused_step_s_error_is_given_back_as_its_own`.
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -214,6 +252,10 @@ renkler” dahil) ve “renk okunamazsa katman alınmaz” der. Kod ikisini de t
 | Nokta bulutu işlem araçlarının yazdığı LAS (BK-15, §3.3) | yok: araçlar profilinde yok | var | var | var | var: `cad.processing.run` | var: `kentos.cad.processing.run` | var: `run`, `document.write` izniyle | var: aynı komut |
 | GeoPackage sorgu katmanı (BK-15, §3.4) | yok: veri katmanı türü yok | var | var | var | var: `cad.layers.data`, `cad.layers.rows` | var: `kentos.cad.layers.data` | var: `run`, okuma ve yazma izinleriyle | var: aynı komut |
 | MapLibre stilinden görünüş al (BK-15, §3.5) | yok: stil içe alma yalnız CBS'de (ADR 9316) | yok | yok | var | var: `file.import.maplibre` | var: `kentos.cad.file.import_.maplibre` | yok: dosya işleri eklentiye kapalı | var: aynı komut |
+| İlişkiler'in Kaydet'i (BK-11) | yok: veri katmanı türü yok | var | yok: profilinde yok | var | var: `cad.relations.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.relations.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Birleşik görünümler'in Kaydet'i (BK-11) | yok: veri katmanı türü yok | var | yok: profilinde yok | var | var: `cad.joins.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.joins.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Olay bağları'nın Kaydet'i (BK-11) | yok: profilinde yok | var | var | var | var: `cad.linearref.define`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.linearref.define` | var: `run`, `document.write` izniyle | var: aynı komut |
+| Kılavuz stilleri'nin Kaydet'i (BK-11) | var | var | var | yok: profilinde yok (CAD açıklaması) | var: `cad.styles.edit`; birden çoğu `cad.changeset.apply` | var: `kentos.cad.styles.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal
@@ -223,3 +265,7 @@ Kaynak: modüller `catalog/v1/modules.json`, Python ve MCP adları `docs/cad/man
 §9.2. BK-15 için koşulan kanal sınaması: ortak durumlar Rust koşucusunda (`file.import.maplibre`) ve Python
 koşucusunda (`file.import.maplibre`, `cad.layers.data`, `cad.layers.rows`, `file.import.dxf`) geçti. MCP'nin ve
 eklentinin kendi sınamaları bu dilimde koşulmadı: aynı işleyiciyi çağırırlar, sözleşmeleri değişmedi.
+
+BK-11 kanalların yapabildiğini değiştirmedi: çok düzenlemeyi tek değişiklik olarak yazmak onlarda `cad.changeset.apply`
+ile zaten vardı; masaüstünün pencereleri artık aynı komutu kullanıyor. Koşulan sınamalar pencerelerinkidir (masaüstü,
+209 sınama: dört pencere, form akışı ve çapraz süzgeçler).

@@ -11,13 +11,13 @@ use std::fmt;
 use iced::widget::{Column, button, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    AnnotationStyleKind, CommandResult, Entity, LeaderArrow, LeaderEdit, LeaderStyleDef,
-    LeadersEdit, SnapFind, StyleEditOperation, StylesEdit, SubRef, Vec2,
+    AnnotationStyleKind, CAD_STYLES_EDIT, CommandResult, Entity, LeaderArrow, LeaderEdit,
+    LeaderStyleDef, LeadersEdit, SnapFind, StyleEditOperation, StylesEdit, SubRef, Vec2,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
-use kentos_native_application::{ExecutionContext, leaders_edit, snap_find, styles_edit};
+use kentos_native_application::{ExecutionContext, leaders_edit, snap_find};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
@@ -500,12 +500,12 @@ impl App {
     }
 
     /// Kaydet: the table's styles by `cad.styles.edit` (created, updated, removed), the leaders that follow them in
-    /// the same steps.
+    /// the same steps; all of them or none (docs/adr/9401 §4).
     fn leader_styles_save(&mut self) {
         let Some(w) = self.leader_tools.styles.clone() else {
             return;
         };
-        let Some(doc) = self.document.as_mut() else {
+        let Some(doc) = self.document.as_ref() else {
             return;
         };
         let before = doc.model.settings().leader_styles.clone();
@@ -544,22 +544,11 @@ impl App {
                 )),
             }
         }
-        let mut said = Vec::new();
-        for input in inputs {
-            if let CommandResult::Failed { error } =
-                styles_edit::execute(&mut ExecutionContext::new(&mut doc.model), input)
-            {
-                said.push(error.message);
-                break;
-            }
-        }
-        if said.is_empty() {
+        // Every edit or none; any refusal keeps the window (a conflict was read as saved).
+        if self.save_together(STYLES_TITLE, CAD_STYLES_EDIT, &inputs) {
             self.say(Level::Success, "Kılavuz stilleri kaydedildi.");
             self.leader_tools.styles = None;
             self.dialog = None;
-        }
-        for s in said {
-            self.warn(s);
         }
     }
 
@@ -978,6 +967,54 @@ mod binding_tests {
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
+        );
+    }
+}
+
+#[cfg(test)]
+mod styles_tests {
+    use super::*;
+
+    /// Kaydet writes every style or none (docs/adr/9401 §4): two new styles of one name, the second refused; the
+    /// first is not left written and the window does not say it saved.
+    #[test]
+    fn a_refused_style_leaves_the_others_unwritten() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let before = app
+            .document
+            .as_ref()
+            .expect("open")
+            .model
+            .settings()
+            .leader_styles
+            .clone();
+        let new = |id: &str| LeaderStyleDef {
+            id: id.into(),
+            name: "Boru notu".into(),
+            height: 2.5,
+            arrow: None,
+            arrow_size: None,
+            mask: false,
+            text_style: None,
+        };
+        let mut styles = before.clone();
+        styles.extend([new("yeni-1"), new("yeni-2")]);
+        app.leader_tools.styles = Some(StylesWindow {
+            styles,
+            chosen: None,
+            height: String::new(),
+            size: String::new(),
+        });
+        app.leader_styles_save();
+        assert!(
+            app.leader_tools.styles.is_some(),
+            "the window stays on what did not go in"
+        );
+        let doc = app.document.as_ref().expect("open");
+        assert_eq!(
+            doc.model.settings().leader_styles,
+            before,
+            "nothing of the Kaydet is written"
         );
     }
 }

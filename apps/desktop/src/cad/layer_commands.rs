@@ -5,12 +5,29 @@
 //! warnings too; the panel says what it did itself.
 
 use kentos_commands::{
-    CommandResult, LayerSetOperation, LayerStatesDone, LayersChanged, LayersEdit, LayersEdited,
-    LayersSet, LayersStates,
+    CallOp, ChangesetApply, ChangesetStep, CommandError, CommandResult, LayerSetOperation,
+    LayerStatesDone, LayersChanged, LayersEdit, LayersEdited, LayersSet, LayersStates,
 };
-use kentos_native_application::{ExecutionContext, layers_edit, layers_set, layers_states};
+use kentos_native_application::{
+    ExecutionContext, changeset, layers_edit, layers_set, layers_states, registry,
+};
 
 use crate::app::App;
+
+/// A command's answer without its output: what [`App::answered`] says of it is all a Kaydet needs.
+fn done<T>(result: CommandResult<T>) -> CommandResult<()> {
+    match result {
+        CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
+        CommandResult::Failed { error } => CommandResult::Failed { error },
+        CommandResult::Conflict { error } => CommandResult::Conflict { error },
+        CommandResult::NeedsInput { error } => CommandResult::NeedsInput { error },
+        CommandResult::Queued { job_id } => CommandResult::Queued { job_id },
+        CommandResult::Cancelled => CommandResult::Cancelled,
+    }
+}
 
 impl App {
     /// The answer's output, its warnings said; its refusal said and none.
@@ -30,6 +47,82 @@ impl App {
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => None,
         }
+    }
+
+    /// A window's Kaydet that holds several edits of one command (docs/adr/9401 §4). One edit goes in by its own
+    /// command. Several go in as one change (`cad.changeset.apply`) or not at all: a refused edit takes the others
+    /// back, the project's settings too (a loop of the command's own calls left the earlier ones written). A refusal
+    /// is said in the edit's own words. Whether the edits went in; none to write is none refused.
+    pub(crate) fn save_together<I: serde::Serialize>(
+        &mut self,
+        label: &str,
+        command: &str,
+        inputs: &[I],
+    ) -> bool {
+        let mut steps = Vec::with_capacity(inputs.len());
+        for input in inputs {
+            match serde_json::to_value(input) {
+                Ok(input) => steps.push(ChangesetStep {
+                    command: command.to_owned(),
+                    version: None,
+                    input,
+                    name: None,
+                }),
+                Err(e) => {
+                    self.warn(format!(
+                        "Değişiklik hazırlanamadı ({e}); hiçbir şey yazılmadı."
+                    ));
+                    return false;
+                }
+            }
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
+        let cx = &mut ExecutionContext::new(&mut doc.model);
+        let result: CommandResult<()> = match steps.len() {
+            0 => return true,
+            1 => {
+                let input = steps.remove(0).input;
+                let answer = registry::run(cx, command, CallOp::Execute, input)
+                    .map_err(|unrun| unrun.message)
+                    .and_then(|answer| {
+                        serde_json::from_value::<CommandResult<serde_json::Value>>(answer)
+                            .map_err(|e| format!("Komutun cevabı okunamadı: {e}"))
+                    });
+                match answer {
+                    Ok(result) => done(result),
+                    Err(why) => {
+                        self.warn(why);
+                        return false;
+                    }
+                }
+            }
+            _ => {
+                // The step's own words: the user sent edits, not a set's numbered steps.
+                let own = |error: CommandError| match changeset::step_refusal(&error) {
+                    Some((_, own)) => own,
+                    None => error,
+                };
+                let set = ChangesetApply {
+                    model_scope: None,
+                    steps,
+                    label: Some(label.to_owned()),
+                    expected_revision: None,
+                };
+                match changeset::execute(cx, set) {
+                    CommandResult::Failed { error } => CommandResult::Failed { error: own(error) },
+                    CommandResult::Conflict { error } => {
+                        CommandResult::Conflict { error: own(error) }
+                    }
+                    CommandResult::NeedsInput { error } => {
+                        CommandResult::NeedsInput { error: own(error) }
+                    }
+                    other => done(other),
+                }
+            }
+        };
+        self.answered(result).is_some()
     }
 
     /// `cad.layers.edit` on the open drawing.

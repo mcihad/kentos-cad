@@ -239,6 +239,11 @@ fn write_steps(
     }
 }
 
+/// What the set says before a refused step's words.
+fn step_said(i: usize) -> String {
+    format!("{}. adım: ", i + 1)
+}
+
 /// A step's error as the set's: at the step's input, and saying which step.
 fn within(error: CommandError, at: &str, i: usize) -> CommandError {
     CommandError {
@@ -246,9 +251,31 @@ fn within(error: CommandError, at: &str, i: usize) -> CommandError {
             Some(p) => format!("{at}.{p}"),
             None => at.to_owned(),
         }),
-        message: format!("{}. adım: {}", i + 1, error.message),
+        message: format!("{}{}", step_said(i), error.message),
         ..error
     }
+}
+
+/// A refused set's error as its step's own (docs/adr/9401 §4): the step's place in the set and the error as the step
+/// said it, its words and its path. A window that sends its own edits as a set says the edit's words, not the set's.
+/// None for a refusal of the set itself (no steps, a file command among them, an older revision).
+pub fn step_refusal(error: &CommandError) -> Option<(usize, CommandError)> {
+    let (i, rest) = error
+        .path
+        .as_deref()?
+        .strip_prefix("steps[")?
+        .split_once(']')?;
+    let i: usize = i.parse().ok()?;
+    let path = rest.strip_prefix(".input")?;
+    let message = error.message.strip_prefix(&step_said(i))?.to_owned();
+    Some((
+        i,
+        CommandError {
+            path: path.strip_prefix('.').map(str::to_owned),
+            message,
+            ..error.clone()
+        },
+    ))
 }
 
 /// The set's own checks, in order (see the contract).
@@ -474,5 +501,33 @@ mod tests {
         assert_eq!(reference("$5"), None);
         assert_eq!(reference("fiyat $5"), None);
         assert_eq!(reference("$a b"), None);
+    }
+
+    /// A refused step's error comes back as the step said it; the set's own refusal is no step's.
+    #[test]
+    fn a_refused_step_s_error_is_given_back_as_its_own() {
+        use super::{error, step_refusal, within};
+        let own = error(
+            "layer_not_found",
+            "“yok” katmanı çizimde yok.".into(),
+            Some("edit/layer".into()),
+        );
+        let (i, back) = step_refusal(&within(own.clone(), "steps[2].input", 2)).expect("a step's");
+        assert_eq!((i, &back), (2, &own));
+        let bare = error("invalid_relation", "Ad boş.".into(), None);
+        let (i, back) = step_refusal(&within(bare.clone(), "steps[0].input", 0)).expect("a step's");
+        assert_eq!((i, &back), (0, &bare));
+        let set = error(
+            "no_steps",
+            "En az bir adım verin.".into(),
+            Some("steps".into()),
+        );
+        assert_eq!(step_refusal(&set), None);
+        let command = error(
+            "nested_changeset",
+            "İç içe verilemez.".into(),
+            Some("steps[1].command".into()),
+        );
+        assert_eq!(step_refusal(&command), None);
     }
 }

@@ -192,3 +192,34 @@ fn removing_a_relation_says_what_it_touches_before_saving() {
     );
     let _ = std::fs::remove_file(&path);
 }
+
+/// Kaydet writes every relation or none (docs/adr/9401 §4): a relation the command refuses leaves the one made before
+/// it unwritten, and the window stays open on both.
+#[test]
+fn a_refused_relation_leaves_the_others_unwritten() {
+    let (mut app, parent, child, path) = opened("butun");
+    // A second relation by a field the child layer does not have.
+    ev(&mut app, Event::New);
+    ev(&mut app, Event::Name("Bozuk".into()));
+    ev(&mut app, Event::Parent(parent));
+    ev(&mut app, Event::Child(child));
+    ev(&mut app, Event::Field("yok-alan".into()));
+    ev(&mut app, Event::Save);
+    assert!(
+        app.gis.relations_window.is_some(),
+        "the window stays on what did not go in"
+    );
+    let doc = app.document.as_ref().expect("open");
+    let names: Vec<&str> = doc
+        .model
+        .settings()
+        .relations
+        .iter()
+        .map(|r| r.name.as_str())
+        .collect();
+    assert!(
+        names.is_empty(),
+        "nothing of the Kaydet is written: {names:?}"
+    );
+    let _ = std::fs::remove_file(&path);
+}

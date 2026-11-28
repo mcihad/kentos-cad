@@ -21,10 +21,10 @@ use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    EventLink, EventLinkKind, EventSide, LinearRefDefine, LinearRefDefineOperation,
+    CAD_LINEARREF_DEFINE, EventLink, EventLinkKind, EventSide, LinearRefDefine,
+    LinearRefDefineOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, linearref_define};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -274,7 +274,8 @@ impl App {
         Task::none()
     }
 
-    /// Kaydet: what changed through `cad.linearref.define`: the removed, then the changed and the new.
+    /// Kaydet: what changed through `cad.linearref.define`: the removed, then the changed and the new; all of them or
+    /// none (docs/adr/9401 §4).
     fn save_event_links(&mut self) -> Task<Message> {
         let Some(w) = self.gis.event_links_window.clone() else {
             return Task::none();
@@ -320,20 +321,9 @@ impl App {
                 });
             }
         }
-        for edit in edits {
-            let Some(doc) = self.document.as_mut() else {
-                return Task::none();
-            };
-            let result =
-                linearref_define::execute(&mut ExecutionContext::new(&mut doc.model), edit);
-            if self.answered(result).is_none() {
-                if let Some(doc) = &self.document
-                    && let Some(w) = self.gis.event_links_window.as_mut()
-                {
-                    w.kept = doc.model.settings().linear_events.clone();
-                }
-                return Task::none();
-            }
+        // Every edit or none: the window stays as it is on what did not go in.
+        if !self.save_together(TITLE, CAD_LINEARREF_DEFINE, &edits) {
+            return Task::none();
         }
         self.gis.event_links_window = None;
         self.dialog = None;
@@ -621,6 +611,40 @@ mod tests {
 
     fn send(app: &mut App, e: W) {
         let _ = app.update(Message::Gis(crate::gis::Event::EventLinks(e)));
+    }
+
+    /// Kaydet writes every link or none (docs/adr/9401 §4): a second link on the first's event layer is refused, and
+    /// the first is not left written.
+    #[test]
+    fn a_refused_link_leaves_the_others_unwritten() {
+        let mut app = app();
+        let _ = app.update(Message::Run("linearRef.eventLinks"));
+        for name in ["Kazalar", "Bakımlar"] {
+            send(&mut app, W::New);
+            send(&mut app, W::Name(name.into()));
+            send(&mut app, W::Events("kaza".into()));
+            send(&mut app, W::Route("yol".into()));
+            send(&mut app, W::RouteField("Yol".into()));
+            send(&mut app, W::NamesRoute("Yol".into()));
+            send(&mut app, W::Measure("Km".into()));
+        }
+        send(&mut app, W::Save);
+        assert!(
+            app.gis.event_links_window.is_some(),
+            "the window stays on what did not go in"
+        );
+        let doc = app.document.as_ref().expect("open");
+        let names: Vec<&str> = doc
+            .model
+            .settings()
+            .linear_events
+            .iter()
+            .map(|l| l.name.as_str())
+            .collect();
+        assert!(
+            names.is_empty(),
+            "nothing of the Kaydet is written: {names:?}"
+        );
     }
 
     #[test]
