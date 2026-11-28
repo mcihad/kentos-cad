@@ -15,6 +15,7 @@ mod query;
 mod receipts;
 mod source;
 mod sql;
+mod statement;
 mod write;
 
 use std::path::Path;

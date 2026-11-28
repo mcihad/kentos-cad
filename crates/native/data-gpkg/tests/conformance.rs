@@ -103,6 +103,37 @@ fn a_new_table_writes_its_system_by_name_and_definition() {
     let _ = std::fs::remove_file(&path);
 }
 
+/// A query layer's text is one statement for SQLite too (docs/adr/9401 §3). SQLite reads `` `…` `` and `[…]` as names,
+/// which the shared check does not: a `;` after such a name ends the statement, and what followed it was run with the
+/// query. Here it would hide a table behind an empty one of its name on the kept connection.
+#[test]
+fn a_query_s_text_cannot_change_what_the_connection_reads() {
+    let path = fresh("tek-deyim");
+    let source = Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let report = conformance::run(source.as_ref(), "parseller", 5256).expect("run");
+    assert!(report.failures.is_empty(), "{}", report.failures.join("\n"));
+    let all = kentos_data::Request::default();
+    let before = source.count("parseller", &all, false).expect("count");
+    assert!(before > 0);
+    for hides in [
+        "SELECT 1 AS `a\"`; CREATE TEMP VIEW parseller AS SELECT * FROM main.parseller WHERE 0; --\"",
+        "SELECT 1 AS [a\"]; CREATE TEMP VIEW parseller AS SELECT * FROM main.parseller WHERE 0; --\"",
+    ] {
+        assert!(
+            kentos_data::query::check(hides).is_ok(),
+            "the shared check reads one statement: {hides}"
+        );
+        let refused = source.query_columns(hides).expect_err("refused");
+        assert_eq!(
+            source.count("parseller", &all, false).expect("count"),
+            before,
+            "after {hides}"
+        );
+        assert!(refused.to_string().contains("Tek bir sorgu"), "{refused}");
+    }
+    let _ = std::fs::remove_file(&path);
+}
+
 #[test]
 fn a_table_without_a_system_text_is_named_by_its_code() {
     let path = fresh("kod");

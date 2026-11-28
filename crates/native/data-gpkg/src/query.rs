@@ -7,6 +7,9 @@
 //!   its system, type and dimensions are those of its first value (a GeoPackage geometry's header says its system).
 //! - It is read as `(<query>)` on the source's read connections, which are opened read-only: the query cannot change the
 //!   file. It has no spatial index: the box is asked of each geometry's own (`ST_MinX` …). It is never writable.
+//! - It reaches SQLite as one statement only ([`crate::statement::one_statement`], docs/adr/9401 §3): a read-only
+//!   connection still takes a temporary table, an attached file and a `PRAGMA`, and a kept connection would carry
+//!   them to the next read.
 
 use kentos_data::{DataError, QueryTable};
 use kentos_geopackage::{
@@ -15,7 +18,16 @@ use kentos_geopackage::{
 use rusqlite::types::ValueRef;
 
 fn unreadable(e: rusqlite::Error) -> DataError {
-    DataError::Invalid(format!("Sorgu okunamadı: {e}"))
+    DataError::Invalid(match e {
+        rusqlite::Error::MultipleStatement => kentos_data::query::MANY_STATEMENTS.to_owned(),
+        e => format!("Sorgu okunamadı: {e}"),
+    })
+}
+
+/// A text a layer can read, for this database: the shared check, then SQLite's own reading of it.
+fn checked(sql: &str) -> Result<(), DataError> {
+    kentos_data::query::check(sql).map_err(DataError::Invalid)?;
+    crate::statement::one_statement(sql).map_err(DataError::Invalid)
 }
 
 /// A value's type as a declared type: what a computed column is read as.
@@ -31,11 +43,13 @@ fn declared_by(v: ValueRef<'_>) -> Option<&'static str> {
 
 /// The query's columns with their declared types (empty: a computed column's), as a temporary view of it says them:
 /// the view is made in the connection's own temporary schema, which a read-only connection may write, and dropped.
+/// The view is made by a call that takes one statement: a text of several is refused, none of it run
+/// (docs/adr/9401 §3).
 fn declared(c: &rusqlite::Connection, sql: &str) -> Result<Vec<(String, String)>, DataError> {
-    c.execute_batch(&format!(
-        "DROP VIEW IF EXISTS temp.kentos_sorgu; CREATE TEMP VIEW kentos_sorgu AS {sql}"
-    ))
-    .map_err(unreadable)?;
+    c.execute("DROP VIEW IF EXISTS temp.kentos_sorgu", [])
+        .map_err(unreadable)?;
+    c.execute(&format!("CREATE TEMP VIEW kentos_sorgu AS {sql}"), [])
+        .map_err(unreadable)?;
     let read = c
         .prepare("SELECT name, type FROM pragma_table_info('kentos_sorgu', 'temp') ORDER BY cid")
         .and_then(|mut st| {
@@ -47,7 +61,7 @@ fn declared(c: &rusqlite::Connection, sql: &str) -> Result<Vec<(String, String)>
             })?
             .collect::<Result<Vec<_>, _>>()
         });
-    let _ = c.execute_batch("DROP VIEW IF EXISTS temp.kentos_sorgu");
+    let _ = c.execute("DROP VIEW IF EXISTS temp.kentos_sorgu", []);
     read.map_err(unreadable)
 }
 
@@ -77,7 +91,7 @@ pub(crate) fn columns(
     gp: &GeoPackage,
     sql: &str,
 ) -> Result<Vec<kentos_data::QueryColumn>, DataError> {
-    kentos_data::query::check(sql).map_err(DataError::Invalid)?;
+    checked(sql)?;
     let c = gp.connection();
     let declared = declared(c, sql)?;
     let mut stmt = c
@@ -103,7 +117,7 @@ pub(crate) fn columns(
 
 /// The query's layer, as the catalog would say a table's (`table` its text).
 pub(crate) fn layer(gp: &GeoPackage, table: &str, q: &QueryTable) -> Result<Layer, DataError> {
-    kentos_data::query::check(&q.sql).map_err(DataError::Invalid)?;
+    checked(&q.sql)?;
     let c = gp.connection();
     let declared = declared(c, &q.sql)?;
     let mut stmt = c
@@ -209,4 +223,43 @@ pub(crate) fn layer(gp: &GeoPackage, table: &str, q: &QueryTable) -> Result<Laye
         columns,
         indexed: false,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A GeoPackage opened as the driver's read connections are: read-only.
+    fn opened(name: &str) -> (GeoPackage, std::path::PathBuf) {
+        let path = std::env::temp_dir().join(format!(
+            "kentos-gpkg-sorgu-{name}-{}.gpkg",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&path);
+        drop(GeoPackage::create(&path).expect("create"));
+        (GeoPackage::open(&path, false).expect("open"), path)
+    }
+
+    /// What follows the statement is not compiled either: SQLite sets some of its switches as it compiles a `PRAGMA`,
+    /// before the statement is ever run (docs/adr/9401 §3).
+    #[test]
+    fn what_follows_the_statement_is_not_compiled() {
+        let (gp, path) = opened("derleme");
+        let c = gp.connection();
+        let folds = || {
+            c.query_row("SELECT 'a' LIKE 'A'", [], |r| r.get::<_, bool>(0))
+                .expect("like")
+        };
+        assert!(folds());
+        for hides in [
+            "SELECT 1 AS `a\"`; PRAGMA case_sensitive_like = 1; --\"",
+            "SELECT 1 AS [a\"]; PRAGMA case_sensitive_like = 1; --\"",
+        ] {
+            assert!(kentos_data::query::check(hides).is_ok(), "{hides}");
+            assert!(columns(&gp, hides).is_err(), "{hides}");
+            assert!(folds(), "the connection compares as before, after {hides}");
+        }
+        drop(gp);
+        let _ = std::fs::remove_file(&path);
+    }
 }

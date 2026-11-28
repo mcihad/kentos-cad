@@ -45,7 +45,12 @@ pub struct QueryTable {
     pub geometry: Option<String>,
 }
 
-/// Why a text is not a query a layer can read.
+/// What a text of several statements is told. A driver whose database reads a text's quotes its own way says the same.
+pub const MANY_STATEMENTS: &str =
+    "Tek bir sorgu yazın: noktalı virgülle ayrılmış birden çok deyim olmaz.";
+
+/// Why a text is not a query a layer can read. It knows the quotes every dialect has (`'…'`, `"…"`); a driver adds what
+/// its own database reads besides, and runs the text only where a second statement cannot run.
 pub fn check(sql: &str) -> Result<(), String> {
     let body = emptied(&strip_comments(sql));
     let body = body.trim().trim_end_matches(';').trim();
@@ -64,9 +69,7 @@ pub fn check(sql: &str) -> Result<(), String> {
         );
     }
     if body.contains(';') {
-        return Err(
-            "Tek bir sorgu yazın: noktalı virgülle ayrılmış birden çok deyim olmaz.".to_owned(),
-        );
+        return Err(MANY_STATEMENTS.to_owned());
     }
     Ok(())
 }
