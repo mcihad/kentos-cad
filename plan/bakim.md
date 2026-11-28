@@ -411,12 +411,23 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   altına özelliksiz eklenen `lineage` çekirdeğe taşındı) ve `ifc_revisions` (BCF'nin kamerası platformun `tan`'ını
   kullanıyordu; IFC crate'indeki beş platform çağrısı `libm`'e bağlandı, crate'e clippy.toml eklendi; saklanan dosya
   değişmeden yeşile döndü).
-- [ ] **BK-88 — Sayısal temel.** `jsmath` 696 dosyada kullanılıyor (`js_max` 882, `js_hypot` 702, `js_min` 494,
-  `js_round` 159 çağrı; `libm`'den 15 işlev). Sıra: araştırma (doğru yuvarlanan temel işlevler, hatasız dönüşümler,
-  kesin yüklemler, aralık aritmetiği; kaynakları ADR'de), karar (ADR 9403), bağımsız yüksek hassasiyetli başvuru,
-  işlev ailesi başına geçiş. Beklenen değerler başvurudan yeniden üretilir, koddan değil. JavaScript'in metin
-  davranışını taşıyan yardımcılar (`js_trim`, `js_number`, `parse_number`) aynı işte adlandırılır ve kuralları
-  yazılır.
+- [~] **BK-88 — Sayısal temel** ([ADR 9403](../docs/adr/9403-numeric-base.md)). `jsmath` 696 dosyada kullanılıyor
+  (`js_max` 882, `js_hypot` 702, `js_min` 494, `js_round` 159 çağrı; `libm`'den 15 işlev). Sıra: araştırma (doğru
+  yuvarlanan temel işlevler, hatasız dönüşümler, kesin yüklemler, aralık aritmetiği; kaynakları ADR'de), karar,
+  bağımsız yüksek hassasiyetli başvuru, işlev ailesi başına geçiş. Beklenen değerler başvurudan yeniden üretilir,
+  koddan değil. JavaScript'in metin davranışını taşıyan yardımcılar (`js_trim`, `js_number`, `parse_number`) aynı işte
+  adlandırılır ve kuralları yazılır.
+  - [x] Araştırma ve ölçüm: `libm` sonuçlarının %3–18'i en yakın sayı değil (1 ulp); `pxfm` 13 işlevde 297 812 girdinin
+    hepsinde doğru; `hypot`'u hiçbir kitaplık doğru yuvarlamıyor; bugünkü `js_hypot` uzunlukların %35'inde en yakın
+    sayıyı vermiyor (ADR 9403 “Ölçüm”).
+  - [x] `kentos-num` crate'i (`crates/shared/num`, bağımlılıksız, her crate'in altında) ve doğru yuvarlanan `hypot`;
+    bağımsız başvuru `fixtures/numeric/v1/hypot.json` (5 729 durum, üreteci `scripts/fixtures/numeric_hypot.py`).
+  - [ ] `js_hypot` → `kentos_num::hypot` (sonuçların son basamağı değişir; saklanan çıktılar ayrıştırılır).
+  - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).
+  - [ ] Yuvarlama: 159 `js_round` yerinin sınıflandırması ve geçişi.
+  - [ ] Metin: tek `trim`, tek katı sayı okuyucu, sayı yazımı (BK-50 ile).
+  - [ ] Aşkın işlevler: `pxfm` doğrudan bağımlılık olacaksa **sahibin onayı** (ADR 9403 §3).
+  - [ ] Platform kitaplığı yasağının bütün hesap crate'lerine yayılması; `jsmath`'in silinmesi.
 
 ## Doğrulama
 

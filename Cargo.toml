@@ -5,6 +5,8 @@
 resolver = "3"
 members = [
     # Platform-neutral libraries: the desktop programs, the server and the automation hosts share them.
+    # The numeric base under them all (docs/adr/9403): correctly rounded functions, no dependency.
+    "crates/shared/num",
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/commands",
@@ -137,6 +139,7 @@ members = [
     "apps/imza-agent",
 ]
 default-members = [
+    "crates/shared/num",
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/commands",

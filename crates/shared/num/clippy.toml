@@ -1,0 +1,23 @@
+# The numeric base gives the same bits on every platform (CLAUDE.md §23.4, docs/adr/9403): the std transcendental
+# methods call the platform's C library, whose last digit differs from one system to another, and a fused multiply-add
+# rounds once where two operations round twice (and is slow where the processor has none). None of them is used here;
+# `sqrt`, `abs` and `floor` are IEEE 754's exact operations and stay.
+disallowed-methods = [
+  { path = "f64::sin", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::cos", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::tan", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::sin_cos", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::asin", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::acos", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::atan", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::atan2", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::hypot", reason = "use kentos_num::hypot: the platform's is not correctly rounded" },
+  { path = "f64::exp", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::ln", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::log10", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::log2", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::cbrt", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::powf", reason = "the platform's library: not the same bits everywhere" },
+  { path = "f64::powi", reason = "write the product: powi is not the same bits on every platform" },
+  { path = "f64::mul_add", reason = "a fused multiply-add rounds once where two operations round twice" },
+]
